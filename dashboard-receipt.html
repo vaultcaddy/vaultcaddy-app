@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receipt Converter - VaultCaddy</title>
+    <link rel="stylesheet" href="dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- 側邊欄 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>VaultCaddy <span>AI</span></h2>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <h3>Models</h3>
+                <ul>
+                    <li class="nav-item">
+                        <a href="dashboard-bank.html">
+                            <i class="fas fa-university"></i>
+                            <span>Bank statements</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="dashboard-invoice.html">
+                            <i class="fas fa-file-invoice"></i>
+                            <span>Invoices</span>
+                        </a>
+                    </li>
+                    <li class="nav-item active">
+                        <a href="dashboard-receipt.html">
+                            <i class="fas fa-receipt"></i>
+                            <span>Receipts</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="dashboard-general.html">
+                            <i class="fas fa-file-alt"></i>
+                            <span>General</span>
+                        </a>
+                    </li>
+                </ul>
+                
+                <h3>Configurations</h3>
+                <ul>
+                    <li class="nav-item">
+                        <a href="#integrations">
+                            <i class="fas fa-plug"></i>
+                            <span>Integrations</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+        
+        <!-- 主要內容區域 -->
+        <main class="main-content">
+            <!-- 頂部導航 -->
+            <header class="top-header">
+                <div class="header-left">
+                    <h1>Receipt converter</h1>
+                    <p>Manage and view your documents</p>
+                </div>
+                <div class="header-right">
+                    <div class="credits-info">
+                        <span>Credits: <strong id="dashboard-credits">7</strong></span>
+                        <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face&auto=format" alt="User" class="user-avatar">
+                    </div>
+                    <button class="help-btn">Need Help?</button>
+                </div>
+            </header>
+            
+            <!-- 工具欄 -->
+            <div class="toolbar">
+                <div class="search-filter">
+                    <input type="text" placeholder="Filter document name..." class="filter-input">
+                </div>
+                <div class="toolbar-actions">
+                    <button class="upload-btn primary">
+                        <i class="fas fa-upload"></i>
+                        Upload files
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <button class="view-btn">
+                        <i class="fas fa-th"></i>
+                        View
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 文檔表格 -->
+            <div class="documents-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>
+                                <input type="checkbox" class="select-all">
+                                Document
+                            </th>
+                            <th>Statement Period</th>
+                            <th>Reconciliation</th>
+                            <th>Balance Info</th>
+                            <th>Status</th>
+                            <th>Review Status</th>
+                            <th>Notes</th>
+                            <th>Date Uploaded</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="documents-tbody">
+                        <!-- 收據表格內容將通過JavaScript動態生成 -->
+                        <tr>
+                            <td colspan="9" style="text-align: center; padding: 3rem; color: #9ca3af;">
+                                No results.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 分頁控制 -->
+            <div class="pagination">
+                <div class="pagination-info">
+                    <span>0 of 0 row(s) selected.</span>
+                </div>
+                <div class="pagination-controls">
+                    <label>
+                        Rows per page
+                        <select class="rows-select">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                        </select>
+                    </label>
+                    <span class="page-info">Page 1 of 0</span>
+                    <div class="page-buttons">
+                        <button class="page-btn" disabled><i class="fas fa-angle-double-left"></i></button>
+                        <button class="page-btn" disabled><i class="fas fa-angle-left"></i></button>
+                        <button class="page-btn" disabled><i class="fas fa-angle-right"></i></button>
+                        <button class="page-btn" disabled><i class="fas fa-angle-double-right"></i></button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- 上傳模態框 -->
+    <div id="upload-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Upload Receipts</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="upload-area">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <h4>Drop your PDF receipts here</h4>
+                    <p>or <button class="browse-files-btn">browse files</button></p>
+                    <input type="file" id="file-upload" multiple accept=".pdf" style="display: none;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>
