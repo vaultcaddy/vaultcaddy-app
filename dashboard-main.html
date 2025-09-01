@@ -258,6 +258,31 @@
             background: #f9fafb !important;
         }
         
+        .documents-grid tr.selected {
+            background: #1f2937 !important;
+            color: white !important;
+        }
+        
+        .documents-grid tr.selected td {
+            color: white !important;
+        }
+        
+        .documents-grid tr.selected .doc-name {
+            color: white !important;
+        }
+        
+        .documents-grid tr.selected .doc-details {
+            color: #d1d5db !important;
+        }
+        
+        .documents-grid tr.selected .status-text {
+            color: #d1d5db !important;
+        }
+        
+        .documents-grid tr.selected .balance-info div {
+            color: #d1d5db !important;
+        }
+        
         /* 合併的狀態和評價列 */
         .status-review-cell {
             display: flex !important;
@@ -352,6 +377,158 @@
             color: #6b7280 !important;
             font-size: 0.75rem !important;
             line-height: 1.2 !important;
+        }
+        
+        /* Solutions下拉選單樣式 */
+        .solutions-menu {
+            display: none !important;
+            position: absolute !important;
+            top: 100% !important;
+            left: 0 !important;
+            background: white !important;
+            border: 1px solid #e5e7eb !important;
+            border-radius: 8px !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+            min-width: 320px !important;
+            z-index: 1000 !important;
+            padding: 0.5rem 0 !important;
+        }
+        
+        .solutions-menu.show {
+            display: block !important;
+        }
+        
+        .solutions-menu .dropdown-item {
+            display: flex !important;
+            align-items: flex-start !important;
+            gap: 1rem !important;
+            padding: 1rem 1.5rem !important;
+            color: #374151 !important;
+            text-decoration: none !important;
+            border-bottom: 1px solid #f3f4f6 !important;
+            transition: background-color 0.2s ease !important;
+        }
+        
+        .solutions-menu .dropdown-item:last-child {
+            border-bottom: none !important;
+        }
+        
+        .solutions-menu .dropdown-item:hover {
+            background: #f9fafb !important;
+        }
+        
+        .solutions-menu .dropdown-item i {
+            color: #2563eb !important;
+            font-size: 1.25rem !important;
+            margin-top: 0.25rem !important;
+        }
+        
+        .solutions-menu .dropdown-item div {
+            flex: 1 !important;
+        }
+        
+        .solutions-menu .dropdown-item strong {
+            display: block !important;
+            color: #1f2937 !important;
+            font-weight: 600 !important;
+            margin-bottom: 0.25rem !important;
+        }
+        
+        .solutions-menu .dropdown-item small {
+            color: #6b7280 !important;
+            font-size: 0.875rem !important;
+            line-height: 1.4 !important;
+        }
+        
+        /* 用戶下拉選單 */
+        .user-dropdown-menu {
+            display: none !important;
+            position: absolute !important;
+            top: 100% !important;
+            right: 0 !important;
+            background: white !important;
+            border: 1px solid #e5e7eb !important;
+            border-radius: 8px !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+            min-width: 200px !important;
+            z-index: 1000 !important;
+            padding: 0.5rem 0 !important;
+        }
+        
+        .user-dropdown-menu.show {
+            display: block !important;
+        }
+        
+        .user-info {
+            padding: 1rem 1.5rem !important;
+            background: #f9fafb !important;
+        }
+        
+        .user-credits {
+            display: block !important;
+            font-weight: 600 !important;
+            color: #1f2937 !important;
+        }
+        
+        .user-email {
+            display: block !important;
+            font-size: 0.875rem !important;
+            color: #6b7280 !important;
+        }
+        
+        .user-menu-item {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            padding: 0.75rem 1.5rem !important;
+            color: #374151 !important;
+            text-decoration: none !important;
+            transition: background-color 0.2s ease !important;
+        }
+        
+        .user-menu-item:hover {
+            background: #f3f4f6 !important;
+        }
+        
+        .user-menu-item.logout {
+            color: #dc2626 !important;
+        }
+        
+        .user-menu-item i {
+            width: 16px !important;
+            margin-right: 0.75rem !important;
+        }
+        
+        .shortcut {
+            font-size: 0.75rem !important;
+            color: #9ca3af !important;
+        }
+        
+        .user-dropdown-menu hr {
+            margin: 0.5rem 0 !important;
+            border: none !important;
+            border-top: 1px solid #e5e7eb !important;
+        }
+        
+        /* 語言選擇器 */
+        .language-selector {
+            margin: 0 1rem !important;
+        }
+        
+        .language-select {
+            padding: 0.5rem 0.75rem !important;
+            border: 1px solid #d1d5db !important;
+            border-radius: 6px !important;
+            background: white !important;
+            color: #374151 !important;
+            font-size: 0.875rem !important;
+            cursor: pointer !important;
+        }
+        
+        .language-select:focus {
+            outline: none !important;
+            border-color: #2563eb !important;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
         }
         
         /* 文檔單元格 */
@@ -969,27 +1146,98 @@
                 </a>
             </div>
             <div class="nav-menu" id="nav-menu">
-                <div class="nav-dropdown">
-                    <a href="#" class="nav-link dropdown-toggle">
+                <div class="nav-dropdown" id="solutions-dropdown">
+                    <a href="#" class="nav-link dropdown-toggle" onclick="toggleSolutionsDropdown(event)">
                         <span data-translate="nav_solutions">Solutions</span>
                         <i class="fas fa-chevron-down"></i>
                     </a>
-                    <div class="dropdown-menu">
-                        <a href="#" class="dropdown-item">銀行對帳單</a>
-                        <a href="#" class="dropdown-item">發票處理</a>
-                        <a href="#" class="dropdown-item">收據掃描</a>
-                        <a href="#" class="dropdown-item">通用文檔</a>
+                    <div class="dropdown-menu solutions-menu" id="solutions-menu">
+                        <a href="#" class="dropdown-item" onclick="selectSolution('bank-statement')">
+                            <i class="fas fa-university"></i>
+                            <div>
+                                <strong>銀行對帳單</strong>
+                                <small>Convert bank statements to excel and csv</small>
+                            </div>
+                        </a>
+                        <a href="#" class="dropdown-item" onclick="selectSolution('invoice')">
+                            <i class="fas fa-file-invoice"></i>
+                            <div>
+                                <strong>發票處理</strong>
+                                <small>Extract numbers, dates, item details, prices, and vendor information</small>
+                            </div>
+                        </a>
+                        <a href="#" class="dropdown-item" onclick="selectSolution('receipt')">
+                            <i class="fas fa-receipt"></i>
+                            <div>
+                                <strong>收據掃描</strong>
+                                <small>Classify dates, items, prices, and totals for financial management</small>
+                            </div>
+                        </a>
+                        <a href="#" class="dropdown-item" onclick="selectSolution('general')">
+                            <i class="fas fa-file-alt"></i>
+                            <div>
+                                <strong>通用文檔</strong>
+                                <small>Extract text, tables, and other data from any document</small>
+                            </div>
+                        </a>
                     </div>
                 </div>
                 <a href="#" class="nav-link" data-translate="nav_jobs">Jobs</a>
                 <a href="dashboard-main.html" class="nav-link active" data-translate="nav_dashboard">Dashboard</a>
-                <a href="index.html#pricing" class="nav-link" data-translate="nav_pricing">Pricing</a>
+                <a href="index.html#pricing" class="nav-link" data-translate="nav_pricing">價格</a>
+                
+                <!-- 語言選擇 -->
+                <div class="language-selector">
+                    <select class="language-select" onchange="changeLanguage(this.value)">
+                        <option value="zh-tw">繁體中文</option>
+                        <option value="en">English</option>
+                        <option value="zh-cn">简体中文</option>
+                        <option value="ja">日本語</option>
+                    </select>
+                </div>
+                
+                <!-- Credits 顯示 -->
                 <div class="credits-display">
                     <span data-translate="nav_credits">Credits: 7</span>
                     <i class="fas fa-star" style="color: #ffd700; margin-left: 0.5rem;"></i>
                 </div>
-                <div class="user-profile">
-                    <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face&auto=format" alt="User" class="user-avatar">
+                
+                <!-- 用戶資料與下拉選單 -->
+                <div class="user-profile" id="user-profile">
+                    <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face&auto=format" alt="User" class="user-avatar" onclick="toggleUserDropdown(event)">
+                    <div class="user-dropdown-menu" id="user-dropdown-menu">
+                        <div class="user-info">
+                            <span class="user-credits">Credits: 7</span>
+                            <span class="user-email">oscar2011@gmail.com</span>
+                        </div>
+                        <hr>
+                        <a href="#" class="user-menu-item" onclick="userAction('account')">
+                            <i class="fas fa-user"></i>
+                            <span>Account</span>
+                            <span class="shortcut">⌘A</span>
+                        </a>
+                        <a href="#" class="user-menu-item" onclick="userAction('integrations')">
+                            <i class="fas fa-puzzle-piece"></i>
+                            <span>Integrations</span>
+                            <span class="shortcut">⌘A</span>
+                        </a>
+                        <a href="#" class="user-menu-item" onclick="userAction('billing')">
+                            <i class="fas fa-credit-card"></i>
+                            <span>Billing</span>
+                            <span class="shortcut">⌘D</span>
+                        </a>
+                        <a href="#" class="user-menu-item" onclick="userAction('settings')">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                            <span class="shortcut">⌘S</span>
+                        </a>
+                        <hr>
+                        <a href="#" class="user-menu-item logout" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Log out</span>
+                            <span class="shortcut">⌘Q</span>
+                        </a>
+                    </div>
                 </div>
             </div>
             <div class="nav-toggle" id="nav-toggle">
@@ -1136,7 +1384,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
+                            <tr onclick="toggleRowSelection(event)" style="cursor: pointer;">
                                 <td>
                                     <div class="document-cell">
                                         <input type="checkbox">
@@ -1178,7 +1426,7 @@
                                     <span class="notes">—</span>
                                 </td>
                             </tr>
-                            <tr>
+                            <tr onclick="toggleRowSelection(event)" style="cursor: pointer;">
                                 <td>
                                     <div class="document-cell">
                                         <input type="checkbox">
@@ -1220,7 +1468,7 @@
                                     <span class="notes">完成</span>
                                 </td>
                             </tr>
-                            <tr>
+                            <tr onclick="toggleRowSelection(event)" style="cursor: pointer;">
                                 <td>
                                     <div class="document-cell">
                                         <input type="checkbox">
@@ -1432,6 +1680,67 @@
             window.location.href = 'index.html';
         }
         
+        // Solutions下拉選單功能
+        function toggleSolutionsDropdown(event) {
+            event.preventDefault();
+            const menu = document.getElementById('solutions-menu');
+            menu.classList.toggle('show');
+            
+            // 關閉其他下拉選單
+            const userMenu = document.getElementById('user-dropdown-menu');
+            userMenu.classList.remove('show');
+        }
+        
+        function selectSolution(type) {
+            // 關閉下拉選單
+            const menu = document.getElementById('solutions-menu');
+            menu.classList.remove('show');
+            
+            // 更新側邊欄選擇
+            switchModel(type);
+            
+            // 滾動到主要內容
+            document.querySelector('.main-content').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // 用戶下拉選單功能
+        function toggleUserDropdown(event) {
+            event.preventDefault();
+            const menu = document.getElementById('user-dropdown-menu');
+            menu.classList.toggle('show');
+            
+            // 關閉其他下拉選單
+            const solutionsMenu = document.getElementById('solutions-menu');
+            solutionsMenu.classList.remove('show');
+        }
+        
+        function userAction(action) {
+            // 關閉下拉選單
+            const menu = document.getElementById('user-dropdown-menu');
+            menu.classList.remove('show');
+            
+            switch(action) {
+                case 'account':
+                    alert('Account settings coming soon!');
+                    break;
+                case 'integrations':
+                    alert('Integrations page coming soon!');
+                    break;
+                case 'billing':
+                    alert('Billing page coming soon!');
+                    break;
+                case 'settings':
+                    alert('Settings page coming soon!');
+                    break;
+            }
+        }
+        
+        // 語言切換功能
+        function changeLanguage(language) {
+            console.log('Language changed to:', language);
+            // 這裡可以添加實際的語言切換邏輯
+        }
+        
         function showUserMenu() {
             const userMenu = document.getElementById('user-menu');
             if (userMenu.style.display === 'none' || userMenu.style.display === '') {
@@ -1543,6 +1852,30 @@
             
             document.querySelector('.table-info').textContent = 
                 `${checkedCount} of ${totalCount} row(s) selected.`;
+                
+            // 更新行的選中狀態
+            const rows = document.querySelectorAll('tbody tr');
+            rows.forEach((row, index) => {
+                const checkbox = row.querySelector('input[type="checkbox"]');
+                if (checkbox && checkbox.checked) {
+                    row.classList.add('selected');
+                } else {
+                    row.classList.remove('selected');
+                }
+            });
+        }
+        
+        // 表格行點擊選擇
+        function toggleRowSelection(event) {
+            if (event.target.type === 'checkbox') return; // 如果點擊的是checkbox，讓默認行為處理
+            
+            const row = event.currentTarget;
+            const checkbox = row.querySelector('input[type="checkbox"]');
+            
+            if (checkbox) {
+                checkbox.checked = !checkbox.checked;
+                updateSelectionInfo();
+            }
         }
         
         // 過濾文檔
@@ -1560,13 +1893,21 @@
             });
         }
         
-        // 點擊外部關閉用戶選單
+        // 點擊外部關閉下拉選單
         document.addEventListener('click', function(event) {
-            const userMenu = document.getElementById('user-menu');
-            const userProfile = document.querySelector('.user-profile');
+            const solutionsDropdown = document.getElementById('solutions-dropdown');
+            const solutionsMenu = document.getElementById('solutions-menu');
+            const userProfile = document.getElementById('user-profile');
+            const userDropdown = document.getElementById('user-dropdown-menu');
             
-            if (userMenu && !userProfile.contains(event.target)) {
-                userMenu.style.display = 'none';
+            // 關閉Solutions下拉選單
+            if (solutionsMenu && !solutionsDropdown.contains(event.target)) {
+                solutionsMenu.classList.remove('show');
+            }
+            
+            // 關閉用戶下拉選單
+            if (userDropdown && !userProfile.contains(event.target)) {
+                userDropdown.classList.remove('show');
             }
         });
 
