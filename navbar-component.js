@@ -127,11 +127,17 @@ class VaultCaddyNavbar {
      * 獲取主導航
      */
     getMainNavigation() {
-        return `
+        let navigation = `
             <a href="#features" class="nav-link" data-translate="nav_features">功能</a>
             <a href="#pricing" class="nav-link" data-translate="nav_pricing">價格</a>
-            <a href="#api" class="nav-link" data-translate="nav_api">API</a>
         `;
+        
+        // 只有登入後才顯示 Dashboard 連結
+        if (this.isLoggedIn) {
+            navigation += `<a href="dashboard-main.html" class="nav-link" data-translate="nav_dashboard">Dashboard</a>`;
+        }
+        
+        return navigation;
     }
     
     /**
@@ -150,27 +156,10 @@ class VaultCaddyNavbar {
     }
     
     /**
-     * 獲取語言選擇器
+     * 獲取語言選擇器（暫時移除，沒有實際功能）
      */
     getLanguageSelector() {
-        const languages = [
-            { code: 'zh-tw', name: '繁體中文' },
-            { code: 'en', name: 'English' },
-            { code: 'zh-cn', name: '简体中文' },
-            { code: 'ja', name: '日本語' }
-        ];
-        
-        const options = languages.map(lang => 
-            `<option value="${lang.code}" ${lang.code === this.language ? 'selected' : ''}>${lang.name}</option>`
-        ).join('');
-        
-        return `
-            <div class="language-selector">
-                <select class="language-select" onchange="window.VaultCaddyNavbar.changeLanguage(this.value)">
-                    ${options}
-                </select>
-            </div>
-        `;
+        return ''; // 移除語言選擇器
     }
     
     /**
@@ -179,39 +168,48 @@ class VaultCaddyNavbar {
     getUserSection() {
         if (this.isLoggedIn && this.user) {
             return `
-                <div class="user-profile" id="user-profile">
-                    <img src="${this.user.avatar}" alt="User" class="user-avatar" onclick="window.VaultCaddyNavbar.toggleUserDropdown(event)">
-                    <div class="user-dropdown-menu" id="user-dropdown-menu">
-                        <div class="user-info">
-                            <span class="user-credits">Credits: ${this.credits}</span>
-                            <span class="user-email">${this.user.email}</span>
+                <div class="user-profile" id="user-profile" style="position: relative;">
+                    <img src="${this.user.avatar}" alt="User" class="user-avatar" onclick="window.VaultCaddyNavbar.toggleUserDropdown(event)" style="cursor: pointer;">
+                    <div class="user-dropdown-menu" id="user-dropdown-menu" style="display: none; position: absolute; top: 100%; right: 0; background: white; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15); min-width: 220px; z-index: 1000; padding: 0.5rem 0; margin-top: 8px;">
+                        <div class="user-info" style="padding: 1rem 1.5rem; background: #f9fafb; border-bottom: 1px solid #e5e7eb;">
+                            <div style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem;">Credits: ${this.credits}</div>
+                            <div style="font-size: 0.875rem; color: #6b7280;">${this.user.email}</div>
                         </div>
-                        <hr>
-                        <a href="#" class="user-menu-item" onclick="window.VaultCaddyNavbar.userAction('account')">
-                            <i class="fas fa-user"></i>
-                            <span>Account</span>
-                            <span class="shortcut">⌘A</span>
+                        <a href="#" class="user-menu-item" onclick="window.VaultCaddyNavbar.userAction('account')" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.5rem; color: #374151; text-decoration: none; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
+                            <div style="display: flex; align-items: center;">
+                                <i class="fas fa-user" style="width: 16px; margin-right: 0.75rem;"></i>
+                                <span>Account</span>
+                            </div>
+                            <span style="font-size: 0.75rem; color: #9ca3af;">⌘A</span>
                         </a>
-                        <a href="#" class="user-menu-item" onclick="window.VaultCaddyNavbar.userAction('integrations')">
-                            <i class="fas fa-puzzle-piece"></i>
-                            <span>Integrations</span>
-                            <span class="shortcut">⌘I</span>
+                        <a href="#" class="user-menu-item" onclick="window.VaultCaddyNavbar.userAction('integrations')" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.5rem; color: #374151; text-decoration: none; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
+                            <div style="display: flex; align-items: center;">
+                                <i class="fas fa-puzzle-piece" style="width: 16px; margin-right: 0.75rem;"></i>
+                                <span>Integrations</span>
+                            </div>
+                            <span style="font-size: 0.75rem; color: #9ca3af;">⌘I</span>
                         </a>
-                        <a href="#" class="user-menu-item" onclick="window.VaultCaddyNavbar.userAction('billing')">
-                            <i class="fas fa-credit-card"></i>
-                            <span>Billing</span>
-                            <span class="shortcut">⌘B</span>
+                        <a href="#" class="user-menu-item" onclick="window.VaultCaddyNavbar.userAction('billing')" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.5rem; color: #374151; text-decoration: none; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
+                            <div style="display: flex; align-items: center;">
+                                <i class="fas fa-credit-card" style="width: 16px; margin-right: 0.75rem;"></i>
+                                <span>Billing</span>
+                            </div>
+                            <span style="font-size: 0.75rem; color: #9ca3af;">⌘B</span>
                         </a>
-                        <a href="#" class="user-menu-item" onclick="window.VaultCaddyNavbar.userAction('settings')">
-                            <i class="fas fa-cog"></i>
-                            <span>Settings</span>
-                            <span class="shortcut">⌘S</span>
+                        <a href="#" class="user-menu-item" onclick="window.VaultCaddyNavbar.userAction('settings')" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.5rem; color: #374151; text-decoration: none; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
+                            <div style="display: flex; align-items: center;">
+                                <i class="fas fa-cog" style="width: 16px; margin-right: 0.75rem;"></i>
+                                <span>Settings</span>
+                            </div>
+                            <span style="font-size: 0.75rem; color: #9ca3af;">⌘S</span>
                         </a>
-                        <hr>
-                        <a href="#" class="user-menu-item logout" onclick="window.VaultCaddyNavbar.logout()">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span>Log out</span>
-                            <span class="shortcut">⌘Q</span>
+                        <div style="margin: 0.5rem 0; border-top: 1px solid #e5e7eb;"></div>
+                        <a href="#" class="user-menu-item logout" onclick="window.VaultCaddyNavbar.logout()" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.5rem; color: #dc2626; text-decoration: none; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#fef2f2'" onmouseout="this.style.backgroundColor='transparent'">
+                            <div style="display: flex; align-items: center;">
+                                <i class="fas fa-sign-out-alt" style="width: 16px; margin-right: 0.75rem;"></i>
+                                <span>Log out</span>
+                            </div>
+                            <span style="font-size: 0.75rem; color: #9ca3af;">⌘Q</span>
                         </a>
                     </div>
                 </div>
@@ -233,7 +231,7 @@ class VaultCaddyNavbar {
             const userDropdown = document.getElementById('user-dropdown-menu');
             
             if (userDropdown && userProfile && !userProfile.contains(event.target)) {
-                userDropdown.classList.remove('show');
+                userDropdown.style.display = 'none';
             }
         });
         
@@ -317,7 +315,7 @@ class VaultCaddyNavbar {
     userAction(action) {
         const userDropdown = document.getElementById('user-dropdown-menu');
         if (userDropdown) {
-            userDropdown.classList.remove('show');
+            userDropdown.style.display = 'none';
         }
         
         switch(action) {
@@ -341,9 +339,16 @@ class VaultCaddyNavbar {
      */
     toggleUserDropdown(event) {
         event.preventDefault();
+        event.stopPropagation();
+        
         const menu = document.getElementById('user-dropdown-menu');
         if (menu) {
-            menu.classList.toggle('show');
+            // 切換顯示狀態
+            if (menu.style.display === 'none' || menu.style.display === '') {
+                menu.style.display = 'block';
+            } else {
+                menu.style.display = 'none';
+            }
         }
     }
     
