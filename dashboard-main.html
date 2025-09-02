@@ -1503,6 +1503,44 @@
         
         // 用戶相關功能已移至 navbar-component.js
         
+        // 檢查登入狀態函數 - 支持多種認證方式
+        function checkLoginStatus() {
+            // 方式1: 檢查新的認證系統
+            const vaultcaddyToken = localStorage.getItem('vaultcaddy_token');
+            const vaultcaddyUser = localStorage.getItem('vaultcaddy_user');
+            
+            if (vaultcaddyToken && vaultcaddyUser) {
+                console.log('✅ 發現新認證系統登入狀態');
+                return true;
+            }
+            
+            // 方式2: 檢查簡單認證系統
+            const userLoggedIn = localStorage.getItem('userLoggedIn');
+            
+            if (userLoggedIn === 'true') {
+                console.log('✅ 發現簡單認證系統登入狀態');
+                return true;
+            }
+            
+            // 方式3: 檢查統一認證管理器
+            if (window.UnifiedAuthManager) {
+                const authManager = window.UnifiedAuthManager;
+                if (authManager.isLoggedIn && authManager.isLoggedIn()) {
+                    console.log('✅ 統一認證管理器確認已登入');
+                    return true;
+                }
+            }
+            
+            console.log('❌ 所有認證方式都顯示未登入');
+            console.log('localStorage 內容:', {
+                userLoggedIn: localStorage.getItem('userLoggedIn'),
+                vaultcaddyToken: localStorage.getItem('vaultcaddy_token') ? '存在' : '不存在',
+                vaultcaddyUser: localStorage.getItem('vaultcaddy_user') ? '存在' : '不存在'
+            });
+            
+            return false;
+        }
+        
         // 切換模型
         function switchModel(modelType) {
             currentModel = modelType;
@@ -1665,75 +1703,104 @@
         document.addEventListener('DOMContentLoaded', function() {
             // navbar-component.js 已經自動初始化了，無需手動調用
             
-            // 檢查登入狀態
-            if (localStorage.getItem('userLoggedIn') !== 'true') {
-                window.location.href = 'index.html';
-                return;
+            // 檢查登入狀態 - 支持多種認證方式，包含延遲重試
+            function performLoginCheck() {
+                const isLoggedIn = checkLoginStatus();
+                console.log('🔐 Dashboard 登入狀態檢查:', isLoggedIn);
+                
+                if (!isLoggedIn) {
+                    console.log('❌ 未登入，延遲 500ms 後重試一次...');
+                    // 延遲重試一次，以防認證狀態還沒完全設置
+                    setTimeout(() => {
+                        const secondCheck = checkLoginStatus();
+                        console.log('🔐 Dashboard 第二次登入狀態檢查:', secondCheck);
+                        
+                        if (!secondCheck) {
+                            console.log('❌ 確認未登入，重定向到首頁');
+                            window.location.href = 'index.html';
+                        } else {
+                            console.log('✅ 延遲檢查發現已登入，初始化 Dashboard');
+                            initializeDashboard();
+                        }
+                    }, 500);
+                    return;
+                }
+                
+                console.log('✅ 已登入，初始化 Dashboard');
+                initializeDashboard();
             }
             
-            // 設置初始選擇狀態
-            updateSelectionInfo();
-            
-            // 為所有checkbox添加事件監聽器
-            const checkboxes = document.querySelectorAll('tbody input[type="checkbox"]');
-            checkboxes.forEach(checkbox => {
-                checkbox.addEventListener('change', updateSelectionInfo);
-            });
-            
-            // 為全選checkbox添加事件監聽器
-            const selectAllCheckbox = document.querySelector('.select-all');
-            if (selectAllCheckbox) {
-                selectAllCheckbox.addEventListener('change', toggleSelectAll);
-            }
-            
-            // 舊的導航欄功能已移至 navbar-component.js
-            
-            // 全選checkbox事件
-            const selectAll = document.querySelector('.select-all');
-            if (selectAll) {
-                selectAll.addEventListener('change', toggleSelectAll);
-            }
-            
-            // 表格行checkbox事件
-            document.querySelectorAll('tbody input[type="checkbox"]').forEach(checkbox => {
-                checkbox.addEventListener('change', updateSelectionInfo);
-            });
-            
-            // 搜索過濾事件
-            const filterInput = document.querySelector('.filter-input');
-            if (filterInput) {
-                filterInput.addEventListener('input', filterDocuments);
-            }
-            
-            // 文件上傳事件
-            const fileInput = document.getElementById('file-upload');
-            if (fileInput) {
-                fileInput.addEventListener('change', function(e) {
-                    selectedFiles = Array.from(e.target.files);
-                    updateUploadForm();
-                });
-            }
-            
-            // 拖拽上傳事件
-            const uploadArea = document.getElementById('upload-area');
-            if (uploadArea) {
-                uploadArea.addEventListener('dragover', function(e) {
-                    e.preventDefault();
-                    uploadArea.classList.add('dragover');
+            function initializeDashboard() {
+                console.log('🚀 開始初始化 Dashboard...');
+                
+                // 設置初始選擇狀態
+                updateSelectionInfo();
+                
+                // 為所有checkbox添加事件監聽器
+                const checkboxes = document.querySelectorAll('tbody input[type="checkbox"]');
+                checkboxes.forEach(checkbox => {
+                    checkbox.addEventListener('change', updateSelectionInfo);
                 });
                 
-                uploadArea.addEventListener('dragleave', function(e) {
-                    e.preventDefault();
-                    uploadArea.classList.remove('dragover');
+                // 為全選checkbox添加事件監聽器
+                const selectAllCheckbox = document.querySelector('.select-all');
+                if (selectAllCheckbox) {
+                    selectAllCheckbox.addEventListener('change', toggleSelectAll);
+                }
+                
+                // 舊的導航欄功能已移至 navbar-component.js
+                
+                // 全選checkbox事件
+                const selectAll = document.querySelector('.select-all');
+                if (selectAll) {
+                    selectAll.addEventListener('change', toggleSelectAll);
+                }
+                
+                // 表格行checkbox事件
+                document.querySelectorAll('tbody input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.addEventListener('change', updateSelectionInfo);
                 });
                 
-                uploadArea.addEventListener('drop', function(e) {
-                    e.preventDefault();
-                    uploadArea.classList.remove('dragover');
-                    selectedFiles = Array.from(e.dataTransfer.files);
-                    updateUploadForm();
-                });
+                // 搜索過濾事件
+                const filterInput = document.querySelector('.filter-input');
+                if (filterInput) {
+                    filterInput.addEventListener('input', filterDocuments);
+                }
+                
+                // 文件上傳事件
+                const fileInput = document.getElementById('file-upload');
+                if (fileInput) {
+                    fileInput.addEventListener('change', function(e) {
+                        selectedFiles = Array.from(e.target.files);
+                        updateUploadForm();
+                    });
+                }
+                
+                // 拖拽上傳事件
+                const uploadArea = document.getElementById('upload-area');
+                if (uploadArea) {
+                    uploadArea.addEventListener('dragover', function(e) {
+                        e.preventDefault();
+                        uploadArea.classList.add('dragover');
+                    });
+                    
+                    uploadArea.addEventListener('dragleave', function(e) {
+                        e.preventDefault();
+                        uploadArea.classList.remove('dragover');
+                    });
+                    
+                    uploadArea.addEventListener('drop', function(e) {
+                        e.preventDefault();
+                        uploadArea.classList.remove('dragover');
+                        selectedFiles = Array.from(e.target.files);
+                        updateUploadForm();
+                    });
+                }
+                
+                console.log('✅ Dashboard 初始化完成');
             }
+            
+            performLoginCheck();
         });
     </script>
 </body>
