@@ -95,14 +95,23 @@ class VaultCaddyNavbar {
     getNavbarHTML() {
         return `
             <div class="nav-logo">
-                <a href="index.html">
-                    <div class="logo-container">
-                        <div class="logo-icon">
-                            <i class="fas fa-file-contract"></i>
+                <a href="index.html" style="text-decoration: none;">
+                    <div class="logo-container" style="display: flex; align-items: center; gap: 0.75rem;">
+                        <div class="logo-icon" style="position: relative;">
+                            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <defs>
+                                    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stop-color="#2563eb"/>
+                                        <stop offset="50%" stop-color="#7c3aed"/>
+                                        <stop offset="100%" stop-color="#c026d3"/>
+                                    </linearGradient>
+                                </defs>
+                                <path d="M5 8 L20 32 L35 8 Z" fill="url(#logoGradient)" stroke="none" stroke-width="0"/>
+                            </svg>
                         </div>
-                        <div class="logo-text">
-                            <h2>VaultCaddy</h2>
-                            <span>AI Document Processing</span>
+                        <div class="logo-text" style="display: flex; flex-direction: column;">
+                            <h2 style="margin: 0; font-size: 1.5rem; font-weight: 700; color: #1f2937; letter-spacing: -0.025em;">VaultCaddy</h2>
+                            <span style="margin: 0; font-size: 0.75rem; color: #6b7280; font-weight: 500;">AI Document Processing</span>
                         </div>
                     </div>
                 </a>
@@ -134,7 +143,7 @@ class VaultCaddyNavbar {
         
         // 只有登入後才顯示 Dashboard 連結
         if (this.isLoggedIn) {
-            navigation += `<a href="dashboard-main.html" class="nav-link" data-translate="nav_dashboard">Dashboard</a>`;
+            navigation += `<a href="dashboard-main.html" class="nav-link" data-translate="nav_dashboard" onclick="window.location.href='dashboard-main.html'">Dashboard</a>`;
         }
         
         return navigation;
@@ -175,28 +184,28 @@ class VaultCaddyNavbar {
                             <div style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem;">Credits: ${this.credits}</div>
                             <div style="font-size: 0.875rem; color: #6b7280;">${this.user.email}</div>
                         </div>
-                        <a href="#" class="user-menu-item" onclick="window.VaultCaddyNavbar.userAction('account')" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.5rem; color: #374151; text-decoration: none; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
+                        <a href="account.html" class="user-menu-item" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.5rem; color: #374151; text-decoration: none; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
                             <div style="display: flex; align-items: center;">
                                 <i class="fas fa-user" style="width: 16px; margin-right: 0.75rem;"></i>
                                 <span>Account</span>
                             </div>
                             <span style="font-size: 0.75rem; color: #9ca3af;">⌘A</span>
                         </a>
-                        <a href="#" class="user-menu-item" onclick="window.VaultCaddyNavbar.userAction('integrations')" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.5rem; color: #374151; text-decoration: none; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
+                        <a href="integrations.html" class="user-menu-item" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.5rem; color: #374151; text-decoration: none; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
                             <div style="display: flex; align-items: center;">
                                 <i class="fas fa-puzzle-piece" style="width: 16px; margin-right: 0.75rem;"></i>
                                 <span>Integrations</span>
                             </div>
                             <span style="font-size: 0.75rem; color: #9ca3af;">⌘I</span>
                         </a>
-                        <a href="#" class="user-menu-item" onclick="window.VaultCaddyNavbar.userAction('billing')" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.5rem; color: #374151; text-decoration: none; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
+                        <a href="billing.html" class="user-menu-item" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.5rem; color: #374151; text-decoration: none; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
                             <div style="display: flex; align-items: center;">
                                 <i class="fas fa-credit-card" style="width: 16px; margin-right: 0.75rem;"></i>
                                 <span>Billing</span>
                             </div>
                             <span style="font-size: 0.75rem; color: #9ca3af;">⌘B</span>
                         </a>
-                        <a href="#" class="user-menu-item" onclick="window.VaultCaddyNavbar.userAction('settings')" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.5rem; color: #374151; text-decoration: none; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
+                        <a href="security.html" class="user-menu-item" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.5rem; color: #374151; text-decoration: none; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
                             <div style="display: flex; align-items: center;">
                                 <i class="fas fa-cog" style="width: 16px; margin-right: 0.75rem;"></i>
                                 <span>Settings</span>

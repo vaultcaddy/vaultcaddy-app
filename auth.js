@@ -60,10 +60,19 @@ class VaultCaddyAuth {
 
             if (response.success) {
                 // 註冊成功後自動登入
-                return await this.login({
+                const loginResult = await this.login({
                     email: userData.email,
                     password: userData.password
                 });
+                
+                // 註冊成功後跳轉到首頁
+                if (loginResult.success) {
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1500);
+                }
+                
+                return loginResult;
             } else {
                 throw new Error(response.message || '註冊失敗');
             }

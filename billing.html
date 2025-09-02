@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Billing & Credits - VaultCaddy</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="pages.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="translations.js"></script>
+    <script src="unified-auth.js"></script>
+    <script src="navbar-component.js"></script>
+    <style>
+        body {
+            background: #0f172a;
+            color: white;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        
+        .navbar {
+            background: #1e293b;
+            border-bottom: 1px solid #334155;
+        }
+        
+        .account-container {
+            display: flex;
+            min-height: calc(100vh - 80px);
+            margin-top: 80px;
+        }
+        
+        .sidebar {
+            width: 256px;
+            background: #1e293b;
+            border-right: 1px solid #334155;
+            padding: 2rem 0;
+        }
+        
+        .sidebar-nav {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .sidebar-nav li {
+            margin: 0;
+        }
+        
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            color: #94a3b8;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border-radius: 0;
+        }
+        
+        .sidebar-nav a:hover {
+            background: #334155;
+            color: white;
+        }
+        
+        .sidebar-nav a.active {
+            background: #334155;
+            color: white;
+            border-right: 3px solid #3b82f6;
+        }
+        
+        .sidebar-nav i {
+            width: 20px;
+            margin-right: 0.75rem;
+            font-size: 1rem;
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 2rem 3rem;
+            overflow-y: auto;
+        }
+        
+        .page-header {
+            margin-bottom: 2rem;
+        }
+        
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0 0 0.5rem 0;
+            color: white;
+        }
+        
+        .page-subtitle {
+            color: #94a3b8;
+            margin: 0;
+            font-size: 1rem;
+        }
+        
+        .billing-overview {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .billing-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 2rem;
+        }
+        
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0 0 0.5rem 0;
+            color: white;
+        }
+        
+        .card-subtitle {
+            color: #94a3b8;
+            margin: 0 0 2rem 0;
+            font-size: 0.875rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .btn-primary {
+            background: #7c3aed;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #6d28d9;
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: #94a3b8;
+            border: 1px solid #334155;
+        }
+        
+        .btn-secondary:hover {
+            background: #334155;
+            color: white;
+        }
+        
+        .plans-section {
+            margin-bottom: 3rem;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0 0 2rem 0;
+            color: white;
+        }
+        
+        .plans-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+        
+        .plan-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 2rem;
+            position: relative;
+        }
+        
+        .plan-card.featured {
+            border-color: #7c3aed;
+            background: linear-gradient(135deg, #1e293b 0%, #2d1b69 100%);
+        }
+        
+        .plan-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0 0 0.5rem 0;
+            color: white;
+        }
+        
+        .plan-description {
+            color: #94a3b8;
+            margin: 0 0 2rem 0;
+            font-size: 0.875rem;
+        }
+        
+        .plan-price {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: white;
+            margin: 0 0 1.5rem 0;
+        }
+        
+        .plan-price span {
+            font-size: 1rem;
+            font-weight: 400;
+            color: #94a3b8;
+        }
+        
+        .plan-features {
+            list-style: none;
+            margin: 0 0 2rem 0;
+            padding: 0;
+        }
+        
+        .plan-features li {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            color: #94a3b8;
+            font-size: 0.875rem;
+        }
+        
+        .plan-features li i {
+            color: #10b981;
+            margin-right: 0.75rem;
+            width: 16px;
+        }
+        
+        .current-plan-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: #10b981;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        @media (max-width: 1024px) {
+            .plans-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .billing-overview {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 導航欄 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <!-- 會由 navbar-component.js 動態渲染 -->
+        </div>
+    </nav>
+
+    <!-- 帳戶管理容器 -->
+    <div class="account-container">
+        <!-- 左側邊欄 -->
+        <aside class="sidebar">
+            <ul class="sidebar-nav">
+                <li>
+                    <a href="account.html">
+                        <i class="fas fa-user"></i>
+                        <span>Account</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="billing.html" class="active">
+                        <i class="fas fa-credit-card"></i>
+                        <span>Billing</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="integrations.html">
+                        <i class="fas fa-puzzle-piece"></i>
+                        <span>Integrations</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="settings.html">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- 主要內容區域 -->
+        <main class="main-content">
+            <!-- 頁面標題 -->
+            <header class="page-header">
+                <h1 class="page-title">Billing & Credits</h1>
+                <p class="page-subtitle">Manage your billing, subscription, and credits</p>
+            </header>
+
+            <!-- 計費概覽 -->
+            <div class="billing-overview">
+                <!-- 當前方案 -->
+                <div class="billing-card">
+                    <h3 class="card-title">Current plan:</h3>
+                    <p class="card-subtitle">Manage your current subscription plan</p>
+                    <button class="btn btn-primary" onclick="managePlan()">
+                        <span>Manage</span>
+                    </button>
+                </div>
+
+                <!-- 添加 Credits -->
+                <div class="billing-card">
+                    <h3 class="card-title">Add credits</h3>
+                    <p class="card-subtitle">Add credits to your account to convert more documents.</p>
+                    <button class="btn btn-primary" onclick="addCredits()">
+                        <i class="fas fa-plus"></i>
+                        <span>Add credits</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 訂閱方案 -->
+            <div class="plans-section">
+                <h2 class="section-title">Subscription plans</h2>
+                <div class="plans-grid">
+                    <!-- Basic 方案 -->
+                    <div class="plan-card">
+                        <h3 class="plan-name">Basic</h3>
+                        <p class="plan-description">Perfect for individuals and freelancers.</p>
+                        <div class="plan-price">$29<span>/month</span></div>
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i> 200 page conversions per month</li>
+                            <li><i class="fas fa-check"></i> Convert all files with one click</li>
+                            <li><i class="fas fa-check"></i> Excel & CSV export formats</li>
+                            <li><i class="fas fa-check"></i> QuickBooks integration</li>
+                            <li><i class="fas fa-check"></i> AI-powered OCR processing</li>
+                            <li><i class="fas fa-check"></i> 30 day data retention</li>
+                            <li><i class="fas fa-check"></i> Email support</li>
+                            <li><i class="fas fa-check"></i> Secure file upload</li>
+                        </ul>
+                        <button class="btn btn-secondary" onclick="selectPlan('basic')">Get started</button>
+                    </div>
+
+                    <!-- Pro 方案 (推薦) -->
+                    <div class="plan-card featured">
+                        <h3 class="plan-name">Pro</h3>
+                        <p class="plan-description">Small businesses and accounting firms.</p>
+                        <div class="plan-price">$49<span>/month</span></div>
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i> 500 page conversions per month</li>
+                            <li><i class="fas fa-check"></i> Everything in Basic, plus:</li>
+                            <li><i class="fas fa-check"></i> Batch processing up to 20 files</li>
+                            <li><i class="fas fa-check"></i> Faster processing times</li>
+                            <li><i class="fas fa-check"></i> Data accuracy validation</li>
+                            <li><i class="fas fa-check"></i> Multiple export formats</li>
+                            <li><i class="fas fa-check"></i> API access (coming soon)</li>
+                            <li><i class="fas fa-check"></i> Priority email support</li>
+                        </ul>
+                        <button class="btn btn-primary" onclick="selectPlan('pro')">Get started</button>
+                    </div>
+
+                    <!-- Business 方案 -->
+                    <div class="plan-card">
+                        <h3 class="plan-name">Business</h3>
+                        <p class="plan-description">Growing businesses with high volume needs.</p>
+                        <div class="plan-price">$99<span>/month</span></div>
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i> 1,200 page conversions per month</li>
+                            <li><i class="fas fa-check"></i> Everything in Pro, plus:</li>
+                            <li><i class="fas fa-check"></i> Batch processing up to 20 files</li>
+                            <li><i class="fas fa-check"></i> Team collaboration features</li>
+                            <li><i class="fas fa-check"></i> Advanced analytics dashboard</li>
+                            <li><i class="fas fa-check"></i> White-label options</li>
+                            <li><i class="fas fa-check"></i> 365 day data retention</li>
+                            <li><i class="fas fa-check"></i> Dedicated account manager</li>
+                            <li><i class="fas fa-check"></i> Phone & video support</li>
+                        </ul>
+                        <button class="btn btn-secondary" onclick="selectPlan('business')">Get started</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // 檢查登入狀態
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!window.UnifiedAuthManager.isLoggedIn()) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // 初始化頁面
+            initBillingPage();
+        });
+
+        function initBillingPage() {
+            console.log('Billing page initialized');
+        }
+
+        // 管理方案
+        function managePlan() {
+            window.VaultCaddyNavbar.showNotification('Plan management coming soon!', 'info');
+        }
+
+        // 添加 Credits
+        function addCredits() {
+            window.VaultCaddyNavbar.showNotification('Add credits feature coming soon!', 'info');
+        }
+
+        // 選擇方案
+        function selectPlan(planType) {
+            window.VaultCaddyNavbar.showNotification(`${planType.charAt(0).toUpperCase() + planType.slice(1)} plan selection coming soon!`, 'info');
+        }
+    </script>
+</body>
+</html>
