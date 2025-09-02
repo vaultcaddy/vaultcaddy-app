@@ -840,8 +840,27 @@ checkBrowserSupport();
 
 // 登入功能
 function handleLogin() {
+    console.log('🔐 執行模擬登入 (script.js)...');
+    
     // 簡單的模擬登入 - 實際應用中應該有真實的認證流程
     localStorage.setItem('userLoggedIn', 'true');
     localStorage.setItem('userCredits', '7'); // 設置初始Credits
+    
+    // 設置用戶數據（兼容新認證系統）
+    const userData = {
+        id: 'demo_user',
+        email: 'demo@vaultcaddy.com',
+        name: 'Demo User',
+        credits: 7,
+        avatar: 'https://ui-avatars.com/api/?name=Demo+User&background=3b82f6&color=ffffff&size=32'
+    };
+    
+    localStorage.setItem('vaultcaddy_user', JSON.stringify(userData));
+    localStorage.setItem('vaultcaddy_token', 'demo_token_' + Date.now());
+    localStorage.setItem('vaultcaddy_login_time', Date.now().toString());
+    
+    console.log('✅ 登入狀態已設置 (script.js)');
+    console.log('🔄 跳轉到 Dashboard...');
+    
     window.location.href = 'dashboard-main.html';
 }

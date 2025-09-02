@@ -289,22 +289,39 @@ class VaultCaddyNavbar {
      */
     async handleLogin() {
         try {
-            // 如果有真實的認證系統
-            if (window.VaultCaddyAuth) {
-                window.location.href = 'auth.html';
-            } else {
-                // 簡單模擬登入
-                localStorage.setItem('userLoggedIn', 'true');
-                localStorage.setItem('userCredits', '7');
-                
-                // 觸發狀態更新
-                window.dispatchEvent(new CustomEvent('userStateChanged'));
-                
-                // 跳轉到 dashboard
-                window.location.href = 'dashboard-main.html';
-            }
+            // 使用簡單模擬登入（開發階段）
+            console.log('🔐 執行模擬登入...');
+            
+            // 設置登入狀態
+            localStorage.setItem('userLoggedIn', 'true');
+            localStorage.setItem('userCredits', '7');
+            
+            // 設置用戶數據（兼容新認證系統）
+            const userData = {
+                id: 'demo_user',
+                email: 'demo@vaultcaddy.com',
+                name: 'Demo User',
+                credits: 7,
+                avatar: 'https://ui-avatars.com/api/?name=Demo+User&background=3b82f6&color=ffffff&size=32'
+            };
+            
+            localStorage.setItem('vaultcaddy_user', JSON.stringify(userData));
+            localStorage.setItem('vaultcaddy_token', 'demo_token_' + Date.now());
+            localStorage.setItem('vaultcaddy_login_time', Date.now().toString());
+            
+            console.log('✅ 登入狀態已設置');
+            
+            // 重新載入 navbar 以更新登入狀態
+            await this.loadUserState();
+            this.render();
+            
+            // 跳轉到 dashboard
+            console.log('🔄 跳轉到 Dashboard...');
+            window.location.href = 'dashboard-main.html';
+            
         } catch (error) {
             console.error('登入失敗:', error);
+            alert('登入失敗，請重試');
         }
     }
     
