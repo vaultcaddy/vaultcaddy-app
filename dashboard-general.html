@@ -3,168 +3,286 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>General Document Converter - VaultCaddy</title>
+    <title>General Document Processing - VaultCaddy</title>
+    <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="dashboard.css">
+    <style>
+        /* Dashboard 白色主題覆蓋樣式 */
+        body {
+            background: #f8fafc !important;
+            color: #1f2937 !important;
+            padding-top: 80px !important;
+        }
+        
+        .dashboard-container {
+            display: flex !important;
+            min-height: calc(100vh - 80px) !important;
+            margin-top: 0 !important;
+        }
+        
+        .sidebar {
+            width: 280px !important;
+            background: #ffffff !important;
+            border-right: 1px solid #e5e7eb !important;
+            flex-shrink: 0 !important;
+            overflow-y: auto !important;
+        }
+        
+        .main-content {
+            flex: 1 !important;
+            background: #ffffff !important;
+            overflow-y: auto !important;
+        }
+        
+        .content-header {
+            padding: 2rem !important;
+            border-bottom: 1px solid #e5e7eb !important;
+            background: #ffffff !important;
+        }
+        
+        .content-body {
+            padding: 2rem !important;
+        }
+        
+        .feature-highlight {
+            background: #fef3c7;
+            border: 1px solid #fcd34d;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+        
+        .upload-area {
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 3rem;
+            text-align: center;
+            background: #f9fafb;
+            margin: 2rem 0;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-area:hover {
+            border-color: #f59e0b;
+            background: #fffbeb;
+        }
+        
+        .btn-primary {
+            background: #f59e0b;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .btn-primary:hover {
+            background: #d97706;
+        }
+    </style>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="translations.js"></script>
+    <script src="navbar-component.js"></script>
 </head>
 <body>
+    <!-- 導航欄 - 由 navbar-component.js 動態載入 -->
+    <div id="navbar-placeholder"></div>
+
+    <!-- Dashboard 容器 -->
     <div class="dashboard-container">
-        <!-- 側邊欄 -->
+        <!-- 左側邊欄 -->
         <aside class="sidebar">
-            <div class="sidebar-header">
-                <h2>VaultCaddy <span>AI</span></h2>
+            <div class="sidebar-header" style="padding: 1.5rem; border-bottom: 1px solid #e5e7eb;">
+                <h2 style="color: #1f2937; font-size: 1.25rem; font-weight: 600; margin: 0;">Models</h2>
             </div>
-            
-            <nav class="sidebar-nav">
-                <h3>Models</h3>
-                <ul>
-                    <li class="nav-item">
-                        <a href="dashboard-bank.html">
-                            <i class="fas fa-university"></i>
+            <nav class="sidebar-nav" style="padding: 1rem;">
+                <ul style="list-style: none; padding: 0; margin: 0;">
+                    <li class="nav-item" style="margin: 0.5rem 0;">
+                        <a href="dashboard-main.html" style="display: flex; align-items: center; padding: 0.75rem 1rem; color: #6b7280; text-decoration: none; border-radius: 6px; transition: all 0.2s ease;">
+                            <i class="fas fa-university" style="margin-right: 0.75rem; width: 1rem;"></i>
                             <span>Bank statements</span>
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a href="dashboard-invoice.html">
-                            <i class="fas fa-file-invoice"></i>
+                    <li class="nav-item" style="margin: 0.5rem 0;">
+                        <a href="dashboard-invoice.html" style="display: flex; align-items: center; padding: 0.75rem 1rem; color: #6b7280; text-decoration: none; border-radius: 6px; transition: all 0.2s ease;">
+                            <i class="fas fa-file-invoice" style="margin-right: 0.75rem; width: 1rem;"></i>
                             <span>Invoices</span>
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a href="dashboard-receipt.html">
-                            <i class="fas fa-receipt"></i>
+                    <li class="nav-item" style="margin: 0.5rem 0;">
+                        <a href="dashboard-receipt.html" style="display: flex; align-items: center; padding: 0.75rem 1rem; color: #6b7280; text-decoration: none; border-radius: 6px; transition: all 0.2s ease;">
+                            <i class="fas fa-receipt" style="margin-right: 0.75rem; width: 1rem;"></i>
                             <span>Receipts</span>
                         </a>
                     </li>
-                    <li class="nav-item active">
-                        <a href="dashboard-general.html">
-                            <i class="fas fa-file-alt"></i>
+                    <li class="nav-item active" style="margin: 0.5rem 0;">
+                        <a href="dashboard-general.html" style="display: flex; align-items: center; padding: 0.75rem 1rem; color: #f59e0b; text-decoration: none; border-radius: 6px; background: #fffbeb;">
+                            <i class="fas fa-file-alt" style="margin-right: 0.75rem; width: 1rem;"></i>
                             <span>General</span>
                         </a>
                     </li>
                 </ul>
                 
-                <h3>Configurations</h3>
-                <ul>
-                    <li class="nav-item">
-                        <a href="#integrations">
-                            <i class="fas fa-plug"></i>
-                            <span>Integrations</span>
+                <h3 style="color: #6b7280; font-size: 0.875rem; font-weight: 600; margin: 2rem 0 1rem 0; text-transform: uppercase; letter-spacing: 0.05em;">Configurations</h3>
+                <ul style="list-style: none; padding: 0; margin: 0;">
+                    <li class="nav-item" style="margin: 0.5rem 0;">
+                        <a href="account.html" style="display: flex; align-items: center; padding: 0.75rem 1rem; color: #6b7280; text-decoration: none; border-radius: 6px; transition: all 0.2s ease;">
+                            <i class="fas fa-user" style="margin-right: 0.75rem; width: 1rem;"></i>
+                            <span>Account</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" style="margin: 0.5rem 0;">
+                        <a href="billing.html" style="display: flex; align-items: center; padding: 0.75rem 1rem; color: #6b7280; text-decoration: none; border-radius: 6px; transition: all 0.2s ease;">
+                            <i class="fas fa-credit-card" style="margin-right: 0.75rem; width: 1rem;"></i>
+                            <span>Billing</span>
                         </a>
                     </li>
                 </ul>
             </nav>
         </aside>
-        
+
         <!-- 主要內容區域 -->
         <main class="main-content">
-            <!-- 頂部導航 -->
-            <header class="top-header">
-                <div class="header-left">
-                    <h1>General document converter</h1>
-                    <p>Manage and view your documents</p>
+            <div class="content-header">
+                <h1 style="font-size: 2rem; font-weight: 700; color: #1f2937; margin: 0 0 0.5rem 0;">General Document Processing</h1>
+                <p style="color: #6b7280; margin: 0;">Process any type of document with flexible AI-powered extraction</p>
+            </div>
+
+            <div class="content-body">
+                <div class="feature-highlight">
+                    <h3 style="color: #92400e; margin: 0 0 1rem 0;">
+                        <i class="fas fa-file-alt" style="margin-right: 0.5rem;"></i>
+                        General Processing Features
+                    </h3>
+                    <ul style="margin: 0; padding-left: 1.5rem; color: #374151;">
+                        <li>Extract text from any document type</li>
+                        <li>Custom field detection and extraction</li>
+                        <li>Multi-language support</li>
+                        <li>Flexible output formats (JSON, CSV, XML)</li>
+                        <li>Advanced OCR for handwritten documents</li>
+                    </ul>
                 </div>
-                <div class="header-right">
-                    <div class="credits-info">
-                        <span>Credits: <strong id="dashboard-credits">7</strong></span>
-                        <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face&auto=format" alt="User" class="user-avatar">
+
+                <div class="upload-area" id="general-upload-area">
+                    <div style="margin-bottom: 1rem;">
+                        <i class="fas fa-file-upload" style="font-size: 3rem; color: #9ca3af;"></i>
                     </div>
-                    <button class="help-btn">Need Help?</button>
-                </div>
-            </header>
-            
-            <!-- 工具欄 -->
-            <div class="toolbar">
-                <div class="search-filter">
-                    <input type="text" placeholder="Filter document name..." class="filter-input">
-                </div>
-                <div class="toolbar-actions">
-                    <button class="upload-btn primary">
-                        <i class="fas fa-upload"></i>
-                        Upload files
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
-                    <button class="view-btn">
-                        <i class="fas fa-th"></i>
-                        View
+                    <h3 style="color: #374151; margin: 0 0 0.5rem 0;">Upload Any Documents</h3>
+                    <p style="color: #6b7280; margin: 0 0 1.5rem 0;">
+                        Drag and drop your documents here, or click to browse<br>
+                        <small>Supports PDF, Images, Word documents, and more</small>
+                    </p>
+                    <input type="file" id="general-file-input" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.txt" multiple style="display: none;">
+                    <button class="btn-primary" onclick="document.getElementById('general-file-input').click()">
+                        <i class="fas fa-plus" style="margin-right: 0.5rem;"></i>
+                        Select Files
                     </button>
                 </div>
-            </div>
-            
-            <!-- 文檔表格 -->
-            <div class="documents-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>
-                                <input type="checkbox" class="select-all">
-                                Document
-                            </th>
-                            <th>Statement Period</th>
-                            <th>Reconciliation</th>
-                            <th>Balance Info</th>
-                            <th>Status</th>
-                            <th>Review Status</th>
-                            <th>Notes</th>
-                            <th>Date Uploaded</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="documents-tbody">
-                        <!-- 一般文檔表格內容將通過JavaScript動態生成 -->
-                        <tr>
-                            <td colspan="9" style="text-align: center; padding: 3rem; color: #9ca3af;">
-                                No results.
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            
-            <!-- 分頁控制 -->
-            <div class="pagination">
-                <div class="pagination-info">
-                    <span>0 of 0 row(s) selected.</span>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
+                    <div style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1.5rem;">
+                        <h4 style="color: #1f2937; margin: 0 0 1rem 0;">Processing Summary</h4>
+                        <div style="color: #6b7280;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span>Documents Processed:</span>
+                                <span style="font-weight: 600;">0</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span>Text Extracted:</span>
+                                <span style="font-weight: 600; color: #f59e0b;">0 chars</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Credits Used:</span>
+                                <span style="font-weight: 600;">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1.5rem;">
+                        <h4 style="color: #1f2937; margin: 0 0 1rem 0;">Output Options</h4>
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            <button class="btn-primary" style="width: 100%;">
+                                <i class="fas fa-download" style="margin-right: 0.5rem;"></i>
+                                Download JSON
+                            </button>
+                            <button class="btn-primary" style="width: 100%; background: #6b7280;">
+                                <i class="fas fa-table" style="margin-right: 0.5rem;"></i>
+                                Export CSV
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div class="pagination-controls">
-                    <label>
-                        Rows per page
-                        <select class="rows-select">
-                            <option value="10">10</option>
-                            <option value="25">25</option>
-                            <option value="50">50</option>
-                        </select>
-                    </label>
-                    <span class="page-info">Page 1 of 0</span>
-                    <div class="page-buttons">
-                        <button class="page-btn" disabled><i class="fas fa-angle-double-left"></i></button>
-                        <button class="page-btn" disabled><i class="fas fa-angle-left"></i></button>
-                        <button class="page-btn" disabled><i class="fas fa-angle-right"></i></button>
-                        <button class="page-btn" disabled><i class="fas fa-angle-double-right"></i></button>
+
+                <div style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1.5rem; margin-top: 2rem;">
+                    <h4 style="color: #1f2937; margin: 0 0 1rem 0;">Custom Extraction Fields</h4>
+                    <p style="color: #6b7280; margin: 0 0 1rem 0;">Define specific fields you want to extract from your documents:</p>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                        <input type="text" placeholder="Field name (e.g., Date)" style="padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px;">
+                        <input type="text" placeholder="Field name (e.g., Amount)" style="padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px;">
+                        <input type="text" placeholder="Field name (e.g., Description)" style="padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px;">
+                        <button class="btn-primary">
+                            <i class="fas fa-plus" style="margin-right: 0.5rem;"></i>
+                            Add Field
+                        </button>
                     </div>
                 </div>
             </div>
         </main>
     </div>
-    
-    <!-- 上傳模態框 -->
-    <div id="upload-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Upload General Documents</h3>
-                <button class="close-btn">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="upload-area">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                    <h4>Drop your PDF documents here</h4>
-                    <p>or <button class="browse-files-btn">browse files</button></p>
-                    <input type="file" id="file-upload" multiple accept=".pdf" style="display: none;">
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <script src="dashboard.js"></script>
+    <script>
+        // 檢查登入狀態
+        function checkLoginStatus() {
+            const vaultcaddyToken = localStorage.getItem('vaultcaddy_token');
+            const vaultcaddyUser = localStorage.getItem('vaultcaddy_user');
+            const userLoggedIn = localStorage.getItem('userLoggedIn');
+            
+            return (vaultcaddyToken && vaultcaddyUser) || userLoggedIn === 'true';
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 檢查登入狀態
+            if (!checkLoginStatus()) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // 文件上傳處理
+            const fileInput = document.getElementById('general-file-input');
+            const uploadArea = document.getElementById('general-upload-area');
+
+            fileInput.addEventListener('change', function(e) {
+                handleFileUpload(e.target.files);
+            });
+
+            // 拖拽上傳
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                uploadArea.style.borderColor = '#f59e0b';
+                uploadArea.style.backgroundColor = '#fffbeb';
+            });
+
+            uploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                uploadArea.style.borderColor = '#d1d5db';
+                uploadArea.style.backgroundColor = '#f9fafb';
+            });
+
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                uploadArea.style.borderColor = '#d1d5db';
+                uploadArea.style.backgroundColor = '#f9fafb';
+                handleFileUpload(e.dataTransfer.files);
+            });
+        });
+
+        function handleFileUpload(files) {
+            console.log('上傳文件:', files);
+            // 這裡將來會添加實際的文件處理邏輯
+            alert(`已選擇 ${files.length} 個文件，處理功能開發中...`);
+        }
+    </script>
 </body>
 </html>

@@ -150,7 +150,7 @@ class VaultCaddyNavbar {
                         <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
                     </a>
                     <div class="solutions-menu" id="solutions-menu" style="display: none; position: absolute; top: 100%; left: 0; background: white; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); min-width: 200px; z-index: 1000; margin-top: 8px;">
-                        <a href="dashboard-bank.html" style="display: block; padding: 12px 16px; color: #374151; text-decoration: none; border-bottom: 1px solid #f3f4f6;" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='transparent'">
+                        <a href="dashboard-main.html" style="display: block; padding: 12px 16px; color: #374151; text-decoration: none; border-bottom: 1px solid #f3f4f6;" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='transparent'">
                             <i class="fas fa-university" style="margin-right: 8px; width: 16px;"></i>
                             銀行對帳單
                         </a>
