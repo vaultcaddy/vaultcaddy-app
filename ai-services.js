@@ -1,10 +1,22 @@
 /**
- * SmartDoc Parser - AI服務整合模塊
+ * VaultCaddy AI Services - AI服務整合模塊
  * 整合Google Vision API + AWS Textract + Azure Form Recognizer
  */
 
 class AIDocumentProcessor {
     constructor() {
+        // 生產環境配置
+        this.config = {
+            isProduction: window.location.hostname === 'vaultcaddy.com' || window.location.hostname === 'www.vaultcaddy.com',
+            apiKey: '', // 將在運行時設置
+            projectId: 'vaultcaddy-production', // 您的 Google Cloud 項目 ID
+            apiEndpoints: {
+                vision: 'https://vision.googleapis.com/v1',
+                documentai: 'https://documentai.googleapis.com/v1',
+                translation: 'https://translation.googleapis.com/language/translate/v2'
+            }
+        };
+        
         this.services = {
             googleVision: new GoogleVisionService(),
             awsTextract: new AWSTextractService(),
@@ -13,6 +25,53 @@ class AIDocumentProcessor {
         
         this.processingQueue = [];
         this.isProcessing = false;
+        
+        // 初始化生產環境設置
+        if (this.config.isProduction) {
+            this.initProductionMode();
+        }
+    }
+    
+    /**
+     * 初始化生產環境模式
+     */
+    initProductionMode() {
+        console.log('🔗 初始化生產環境 AI 服務...');
+        
+        // 驗證域名安全性
+        if (!this.validateDomain()) {
+            throw new Error('未授權的域名訪問');
+        }
+        
+        // 設置 API Key（建議從安全存儲獲取）
+        this.config.apiKey = this.getSecureApiKey();
+        
+        console.log('✅ 生產環境 AI 服務初始化完成');
+    }
+    
+    /**
+     * 驗證域名安全性
+     */
+    validateDomain() {
+        const allowedDomains = ['vaultcaddy.com', 'www.vaultcaddy.com'];
+        const currentDomain = window.location.hostname;
+        return allowedDomains.includes(currentDomain);
+    }
+    
+    /**
+     * 安全獲取 API Key
+     */
+    getSecureApiKey() {
+        // 生產環境中，API Key 應該從安全的地方獲取
+        // 例如：環境變量、安全的 API 端點、或加密存儲
+        
+        // 臨時方案：從 localStorage 獲取（僅用於演示）
+        const apiKey = localStorage.getItem('google_api_key');
+        if (!apiKey) {
+            console.warn('⚠️ 未找到 Google API Key，使用模擬模式');
+            return null;
+        }
+        return apiKey;
     }
     
     /**

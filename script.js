@@ -1,4 +1,4 @@
-// JavaScript文件 - AI Bank Parser網站互動功能
+// JavaScript文件 - VaultCaddy網站互動功能
 
 document.addEventListener('DOMContentLoaded', function() {
     

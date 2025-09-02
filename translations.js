@@ -81,7 +81,7 @@ const translations = {
         'faq_a5': 'Yes! You can convert up to 3 pages per day for free. We also offer paid subscriptions for higher conversion needs.',
         'faq_q6': 'How long does the conversion take?',
         'faq_a6': 'The conversion process can take seconds or minutes, depending on the size of your file, saving you hours of manual data entry.',
-        'faq_q7': 'Who can benefit from using SmartDoc Parser?',
+        'faq_q7': 'Who can benefit from using VaultCaddy?',
         'faq_a7_accountant': 'Accountants:',
         'faq_a7_accountant_desc': 'Speed up working with client bank statements.',
         'faq_a7_finance': 'Finance Specialists:',
@@ -227,7 +227,7 @@ const translations = {
         'faq_a5': '是的！您每天可以免費轉換最多3頁。我們也提供付費訂閱以滿足更高的轉換需求。',
         'faq_q6': '轉換需要多長時間？',
         'faq_a6': '轉換過程可能需要幾秒鐘或幾分鐘，取決於您文件的大小，為您節省數小時的手動資料輸入時間。',
-        'faq_q7': '誰可以從使用SmartDoc Parser中受益？',
+        'faq_q7': '誰可以從使用VaultCaddy中受益？',
         'faq_a7_accountant': '會計師：',
         'faq_a7_accountant_desc': '加快處理客戶銀行對帳單的工作。',
         'faq_a7_finance': '財務專家：',
@@ -567,9 +567,9 @@ const translations = {
         
         // FAQ
         'faq_title': '자주 묻는 질문',
-        'faq_subtitle': '포괄적인 SmartDoc Parser FAQ에서 알아야 할 모든 것을 자세히 살펴보세요.',
-        'faq_q1': 'SmartDoc Parser 변환기란 무엇인가요?',
-        'faq_a1': 'SmartDoc Parser는 PDF 은행 명세서를 CSV, EXCEL, QBO 또는 JSON 형식으로 변환하도록 특별히 설계된 소프트웨어입니다. 표에 저장된 거래 데이터를 감지하고 추출하여 빠르고 정확하게 새 파일을 생성합니다.',
+        'faq_subtitle': '포괄적인 VaultCaddy FAQ에서 알아야 할 모든 것을 자세히 살펴보세요.',
+        'faq_q1': 'VaultCaddy 변환기란 무엇인가요?',
+        'faq_a1': 'VaultCaddy는 PDF 은행 명세서를 CSV, EXCEL, QBO 또는 JSON 형식으로 변환하도록 특별히 설계된 소프트웨어입니다. 표에 저장된 거래 데이터를 감지하고 추출하여 빠르고 정확하게 새 파일을 생성합니다.',
         'faq_q2': '어떻게 작동하나요?',
         'faq_a2': 'PDF 은행 명세서를 업로드하면 소프트웨어가 표를 감지하고 내용을 추출한 후 필요한 형식으로 변환합니다. 처리된 파일은 자동으로 컴퓨터에 다운로드됩니다.',
         'faq_q3': '내 데이터가 안전한가요?',
@@ -580,21 +580,21 @@ const translations = {
         'faq_a5': '네! 매일 최대 3페이지까지 무료로 변환할 수 있습니다. 더 많은 변환이 필요한 경우 유료 구독도 제공합니다.',
         'faq_q6': '변환에 얼마나 걸리나요?',
         'faq_a6': '파일 크기에 따라 변환 과정은 몇 초에서 몇 분이 걸리며, 수 시간의 수동 데이터 입력 시간을 절약해 줍니다.',
-        'faq_q7': 'SmartDoc Parser를 사용하면 누가 혜택을 받을 수 있나요?',
+        'faq_q7': 'VaultCaddy를 사용하면 누가 혜택을 받을 수 있나요?',
         'faq_a7': '<ul><li><strong>회계사:</strong> 고객 은행 명세서 작업 속도 향상</li><li><strong>재무 전문가:</strong> 분석 및 보고 효율성 향상</li><li><strong>사업주:</strong> 예산 편성 및 계획을 위한 더 나은 재무 통찰력 확보</li></ul>',
         'faq_q8': '내 은행에서 작동하지 않으면 어떻게 하나요?',
         'faq_a8': '소프트웨어가 귀하의 은행에서 작동하지 않는 경우, 페이지 오른쪽 하단의 채팅 위젯을 통해 문의하십시오. 이메일을 제공해 주시면 귀하의 요구사항에 맞게 스크립트를 조정해 드리겠습니다.',
         'faq_contact': '더 궁금한 점이 있으신가요? 채팅 위젯을 통해 문의하거나 고객 지원팀에 직접 이메일을 보내주세요.',
         
         // 부트스트랩
-        'blog_title': 'PDF 은행 명세서를 CSV로 변환하는데 SmartDoc Parser를 사용하는 이유는?',
-        'blog_intro': '오늘날 빠르게 변화하는 금융 세계에서 효율성과 정확성이 무엇보다 중요합니다. PDF 은행 명세서를 CSV 형식으로 변환하는 것은 수동으로 할 경우 지루하고 오류가 발생하기 쉬운 작업일 수 있습니다. SmartDoc Parser는 이 과정을 자동화하여 시간을 절약하고 오류를 줄이도록 설계된 강력한 도구입니다.',
+        'blog_title': 'PDF 은행 명세서를 CSV로 변환하는데 VaultCaddy를 사용하는 이유는?',
+        'blog_intro': '오늘날 빠르게 변화하는 금융 세계에서 효율성과 정확성이 무엇보다 중요합니다. PDF 은행 명세서를 CSV 형식으로 변환하는 것은 수동으로 할 경우 지루하고 오류가 발생하기 쉬운 작업일 수 있습니다. VaultCaddy는 이 과정을 자동화하여 시간을 절약하고 오류를 줄이도록 설계된 강력한 도구입니다.',
         
         // 페이지 하단
         'footer_privacy': '개인정보 처리방침',
         'footer_terms': '이용약관',
         'footer_gdpr': 'GDPR',
-        'footer_copyright': '© 2024 SmartDoc Parser Inc. 모든 권리 보유.'
+        'footer_copyright': '© 2024 VaultCaddy Inc. 모든 권리 보유.'
     },
     
     'es': {
