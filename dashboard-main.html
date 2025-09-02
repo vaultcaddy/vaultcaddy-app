@@ -1064,89 +1064,8 @@
     <script src="navbar-component.js"></script>
 </head>
 <body>
-    <!-- 導航欄 - 與index.html統一設計 -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-logo">
-                <a href="index.html">
-                    <div class="logo-container">
-                        <div class="logo-icon">
-                            <i class="fas fa-file-contract"></i>
-                        </div>
-                        <div class="logo-text">
-                            <h2>VaultCaddy</h2>
-                            <span>AI Document Processing</span>
-                        </div>
-                    </div>
-                </a>
-            </div>
-            <div class="nav-menu" id="nav-menu">
-                <a href="#features" class="nav-link" data-translate="nav_features">功能</a>
-                <a href="#pricing" class="nav-link" data-translate="nav_pricing">價格</a>
-                <a href="#api" class="nav-link" data-translate="nav_api">API</a>
-                <div class="credits-display">
-                    <span data-translate="nav_credits">Credits:</span>
-                    <span class="credits-count" id="credits-count">7</span>
-                    <div class="credits-icon">
-                        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiIGZpbGw9IiNGRkQ3MDAiLz4KPHN2ZyB3aWR0aD0iMTQiIGhlaWdodD0iMTQiIHZpZXdCb3g9IjAgMCAxNCAxNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4PSI1IiB5PSI1Ij4KPHBhdGggZD0iTTcgMUw4LjA5IDQuMjZMMTIgNUw4LjA5IDUuNzRMNyA5TDUuOTEgNS43NEwyIDVMNS45MSA0LjI2TDcgMVoiIGZpbGw9IiNGRkZGRkYiLz4KPHN2Zz4KPHN2Zz4=" alt="Credits" />
-                    </div>
-                </div>
-                
-                <!-- 語言選擇器 -->
-                <div class="language-selector">
-                    <select class="language-select" onchange="changeLanguage(this.value)">
-                        <option value="zh-tw">繁體中文</option>
-                        <option value="en">English</option>
-                        <option value="zh-cn">简体中文</option>
-                        <option value="ja">日本語</option>
-                    </select>
-                </div>
-                
-                <!-- 用戶頭像和下拉選單 -->
-                <div class="user-profile" id="user-profile">
-                    <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face&auto=format" alt="User" class="user-avatar" onclick="toggleUserDropdown(event)">
-                    <div class="user-dropdown-menu" id="user-dropdown-menu">
-                        <div class="user-info">
-                            <span class="user-credits">Credits: 7</span>
-                            <span class="user-email">oscar2011@gmail.com</span>
-                        </div>
-                        <hr>
-                        <a href="#" class="user-menu-item" onclick="userAction('account')">
-                            <i class="fas fa-user"></i>
-                            <span>Account</span>
-                            <span class="shortcut">⌘A</span>
-                        </a>
-                        <a href="#" class="user-menu-item" onclick="userAction('integrations')">
-                            <i class="fas fa-puzzle-piece"></i>
-                            <span>Integrations</span>
-                            <span class="shortcut">⌘A</span>
-                        </a>
-                        <a href="#" class="user-menu-item" onclick="userAction('billing')">
-                            <i class="fas fa-credit-card"></i>
-                            <span>Billing</span>
-                            <span class="shortcut">⌘D</span>
-                        </a>
-                        <a href="#" class="user-menu-item" onclick="userAction('settings')">
-                            <i class="fas fa-cog"></i>
-                            <span>Settings</span>
-                            <span class="shortcut">⌘S</span>
-                        </a>
-                        <hr>
-                        <a href="#" class="user-menu-item logout" onclick="logout()">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span>Log out</span>
-                            <span class="shortcut">⌘Q</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <div class="nav-toggle" id="nav-toggle">
-                <span class="bar"></span>
-                <span class="bar"></span>
-                <span class="bar"></span>
-            </div>
-        </div>
-    </nav>
+    <!-- 導航欄 - 由 navbar-component.js 動態載入 -->
+    <div id="navbar-placeholder"></div>
 
     <!-- Dashboard 容器 -->
     <div class="dashboard-container">
@@ -1582,52 +1501,7 @@
         
 
         
-        // 用戶下拉選單功能
-        function toggleUserDropdown(event) {
-            event.preventDefault();
-            const menu = document.getElementById('user-dropdown-menu');
-            menu.classList.toggle('show');
-            
-            // 關閉其他下拉選單
-            const solutionsMenu = document.getElementById('solutions-menu');
-            solutionsMenu.classList.remove('show');
-        }
-        
-        function userAction(action) {
-            // 關閉下拉選單
-            const menu = document.getElementById('user-dropdown-menu');
-            menu.classList.remove('show');
-            
-            switch(action) {
-                case 'account':
-                    alert('Account settings coming soon!');
-                    break;
-                case 'integrations':
-                    alert('Integrations page coming soon!');
-                    break;
-                case 'billing':
-                    alert('Billing page coming soon!');
-                    break;
-                case 'settings':
-                    alert('Settings page coming soon!');
-                    break;
-            }
-        }
-        
-        // 語言切換功能
-        function changeLanguage(language) {
-            console.log('Language changed to:', language);
-            // 這裡可以添加實際的語言切換邏輯
-        }
-        
-        function showUserMenu() {
-            const userMenu = document.getElementById('user-menu');
-            if (userMenu.style.display === 'none' || userMenu.style.display === '') {
-                userMenu.style.display = 'block';
-            } else {
-                userMenu.style.display = 'none';
-            }
-        }
+        // 用戶相關功能已移至 navbar-component.js
         
         // 切換模型
         function switchModel(modelType) {
@@ -1789,6 +1663,9 @@
 
         // 初始化
         document.addEventListener('DOMContentLoaded', function() {
+            // 初始化導航欄
+            window.VaultCaddyNavbar.init();
+            
             // 檢查登入狀態
             if (localStorage.getItem('userLoggedIn') !== 'true') {
                 window.location.href = 'index.html';
@@ -1810,15 +1687,7 @@
                 selectAllCheckbox.addEventListener('change', toggleSelectAll);
             }
             
-            // 初始化導航欄功能
-            const navToggle = document.getElementById('nav-toggle');
-            const navMenu = document.getElementById('nav-menu');
-            
-            if (navToggle && navMenu) {
-                navToggle.addEventListener('click', function() {
-                    navMenu.classList.toggle('active');
-                });
-            }
+            // 舊的導航欄功能已移至 navbar-component.js
             
             // 全選checkbox事件
             const selectAll = document.querySelector('.select-all');
@@ -1870,5 +1739,3 @@
     </script>
 </body>
 </html>
-
-
