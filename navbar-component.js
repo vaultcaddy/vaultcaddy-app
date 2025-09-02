@@ -141,9 +141,35 @@ class VaultCaddyNavbar {
             <a href="#pricing" class="nav-link" data-translate="nav_pricing">價格</a>
         `;
         
-        // 只有登入後才顯示 Dashboard 連結
+        // 只有登入後才顯示 Solutions 和 Dashboard 連結
         if (this.isLoggedIn) {
-            navigation += `<a href="dashboard-main.html" class="nav-link" data-translate="nav_dashboard" onclick="window.location.href='dashboard-main.html'">Dashboard</a>`;
+            navigation += `
+                <div class="solutions-dropdown" style="position: relative; display: inline-block;">
+                    <a href="#" class="nav-link" onclick="toggleSolutionsDropdown(event)" style="display: flex; align-items: center; gap: 0.5rem;">
+                        Solutions
+                        <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
+                    </a>
+                    <div class="solutions-menu" id="solutions-menu" style="display: none; position: absolute; top: 100%; left: 0; background: white; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); min-width: 200px; z-index: 1000; margin-top: 8px;">
+                        <a href="dashboard-bank.html" style="display: block; padding: 12px 16px; color: #374151; text-decoration: none; border-bottom: 1px solid #f3f4f6;" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='transparent'">
+                            <i class="fas fa-university" style="margin-right: 8px; width: 16px;"></i>
+                            銀行對帳單
+                        </a>
+                        <a href="dashboard-invoice.html" style="display: block; padding: 12px 16px; color: #374151; text-decoration: none; border-bottom: 1px solid #f3f4f6;" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='transparent'">
+                            <i class="fas fa-file-invoice" style="margin-right: 8px; width: 16px;"></i>
+                            發票處理
+                        </a>
+                        <a href="dashboard-receipt.html" style="display: block; padding: 12px 16px; color: #374151; text-decoration: none; border-bottom: 1px solid #f3f4f6;" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='transparent'">
+                            <i class="fas fa-receipt" style="margin-right: 8px; width: 16px;"></i>
+                            收據掃描
+                        </a>
+                        <a href="dashboard-general.html" style="display: block; padding: 12px 16px; color: #374151; text-decoration: none;" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='transparent'">
+                            <i class="fas fa-file-alt" style="margin-right: 8px; width: 16px;"></i>
+                            通用文檔
+                        </a>
+                    </div>
+                </div>
+                <a href="dashboard-main.html" class="nav-link" data-translate="nav_dashboard" onclick="window.location.href='dashboard-main.html'">Dashboard</a>
+            `;
         }
         
         return navigation;
@@ -191,12 +217,12 @@ class VaultCaddyNavbar {
                             </div>
                             <span style="font-size: 0.75rem; color: #9ca3af;">⌘A</span>
                         </a>
-                        <a href="integrations.html" class="user-menu-item" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.5rem; color: #374151; text-decoration: none; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
+                        <a href="billing.html" class="user-menu-item" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.5rem; color: #374151; text-decoration: none; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
                             <div style="display: flex; align-items: center;">
-                                <i class="fas fa-puzzle-piece" style="width: 16px; margin-right: 0.75rem;"></i>
-                                <span>Integrations</span>
+                                <i class="fas fa-credit-card" style="width: 16px; margin-right: 0.75rem;"></i>
+                                <span>Billing</span>
                             </div>
-                            <span style="font-size: 0.75rem; color: #9ca3af;">⌘I</span>
+                            <span style="font-size: 0.75rem; color: #9ca3af;">⌘B</span>
                         </a>
                         <div style="margin: 0.5rem 0; border-top: 1px solid #e5e7eb;"></div>
                         <a href="#" class="user-menu-item logout" onclick="window.VaultCaddyNavbar.logout()" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.5rem; color: #dc2626; text-decoration: none; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#fef2f2'" onmouseout="this.style.backgroundColor='transparent'">
@@ -414,6 +440,32 @@ class VaultCaddyNavbar {
 
 // 創建全局實例
 window.VaultCaddyNavbar = new VaultCaddyNavbar();
+
+// Solutions 下拉選單功能
+function toggleSolutionsDropdown(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const menu = document.getElementById('solutions-menu');
+    if (menu) {
+        // 切換顯示狀態
+        if (menu.style.display === 'none' || menu.style.display === '') {
+            menu.style.display = 'block';
+        } else {
+            menu.style.display = 'none';
+        }
+    }
+}
+
+// 點擊外部關閉 Solutions 下拉選單
+document.addEventListener('click', function(event) {
+    const solutionsDropdown = document.querySelector('.solutions-dropdown');
+    const solutionsMenu = document.getElementById('solutions-menu');
+    
+    if (solutionsMenu && solutionsDropdown && !solutionsDropdown.contains(event.target)) {
+        solutionsMenu.style.display = 'none';
+    }
+});
 
 // 頁面載入完成後初始化
 if (document.readyState === 'loading') {
