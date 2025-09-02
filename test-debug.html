@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Test - VaultCaddy</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+    </style>
+</head>
+<body>
+    <h1>VaultCaddy Debug Test</h1>
+    
+    <div id="test-basic" class="test">
+        <h3>1. 基本 HTML 加載</h3>
+        <p>✅ 基本 HTML 正常</p>
+    </div>
+    
+    <div id="test-translations" class="test">
+        <h3>2. translations.js 加載測試</h3>
+        <p id="translations-result">⏳ 測試中...</p>
+    </div>
+    
+    <div id="test-navbar" class="test">
+        <h3>3. navbar-component.js 加載測試</h3>
+        <p id="navbar-result">⏳ 測試中...</p>
+    </div>
+    
+    <div id="test-placeholder" class="test">
+        <h3>4. navbar placeholder 測試</h3>
+        <div id="navbar-placeholder"></div>
+        <p id="placeholder-result">⏳ 測試中...</p>
+    </div>
+    
+    <div id="test-localStorage" class="test">
+        <h3>5. localStorage 測試</h3>
+        <p id="localStorage-result">⏳ 測試中...</p>
+    </div>
+
+    <script src="translations.js"></script>
+    <script src="navbar-component.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Test 2: translations.js
+            try {
+                if (typeof translations !== 'undefined') {
+                    document.getElementById('translations-result').innerHTML = '✅ translations.js 加載成功';
+                    document.getElementById('test-translations').className = 'test success';
+                } else {
+                    throw new Error('translations undefined');
+                }
+            } catch (e) {
+                document.getElementById('translations-result').innerHTML = '❌ translations.js 加載失败: ' + e.message;
+                document.getElementById('test-translations').className = 'test error';
+            }
+            
+            // Test 3: navbar-component.js
+            setTimeout(() => {
+                try {
+                    if (window.VaultCaddyNavbar) {
+                        document.getElementById('navbar-result').innerHTML = '✅ navbar-component.js 加載成功';
+                        document.getElementById('test-navbar').className = 'test success';
+                    } else {
+                        throw new Error('VaultCaddyNavbar undefined');
+                    }
+                } catch (e) {
+                    document.getElementById('navbar-result').innerHTML = '❌ navbar-component.js 加載失败: ' + e.message;
+                    document.getElementById('test-navbar').className = 'test error';
+                }
+                
+                // Test 4: placeholder
+                setTimeout(() => {
+                    const placeholder = document.getElementById('navbar-placeholder');
+                    if (placeholder && placeholder.innerHTML.trim() !== '') {
+                        document.getElementById('placeholder-result').innerHTML = '✅ navbar 已渲染到 placeholder';
+                        document.getElementById('test-placeholder').className = 'test success';
+                    } else {
+                        document.getElementById('placeholder-result').innerHTML = '❌ navbar 未渲染到 placeholder';
+                        document.getElementById('test-placeholder').className = 'test error';
+                    }
+                }, 500);
+            }, 200);
+            
+            // Test 5: localStorage
+            try {
+                const testValue = 'test123';
+                localStorage.setItem('test', testValue);
+                const retrieved = localStorage.getItem('test');
+                localStorage.removeItem('test');
+                
+                if (retrieved === testValue) {
+                    const loginStatus = localStorage.getItem('userLoggedIn');
+                    document.getElementById('localStorage-result').innerHTML = 
+                        `✅ localStorage 正常工作<br>登入狀態: ${loginStatus || '未設置'}`;
+                    document.getElementById('test-localStorage').className = 'test success';
+                } else {
+                    throw new Error('localStorage read/write failed');
+                }
+            } catch (e) {
+                document.getElementById('localStorage-result').innerHTML = '❌ localStorage 問題: ' + e.message;
+                document.getElementById('test-localStorage').className = 'test error';
+            }
+        });
+    </script>
+</body>
+</html>
