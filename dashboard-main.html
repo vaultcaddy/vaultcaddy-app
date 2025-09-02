@@ -1062,6 +1062,9 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="translations.js"></script>
     <script src="navbar-component.js"></script>
+    <script src="document-processor.js"></script>
+    <script src="upload-handler.js"></script>
+    <script src="dashboard-stats.js"></script>
 </head>
 <body>
     <!-- 導航欄 - 由 navbar-component.js 動態載入 -->
@@ -1125,31 +1128,31 @@
                     <div class="sidebar-stat-item">
                         <div class="stat-icon-text">📄</div>
                         <div class="stat-text">
-                            <span class="stat-number">24</span>
-                            <span class="stat-label">本月處理文檔</span>
+                            <span class="stat-number" data-stat="total-processed">0</span>
+                            <span class="stat-label">處理文檔總數</span>
                         </div>
                     </div>
                     
                     <div class="sidebar-stat-item">
                         <div class="stat-icon-text">⏱️</div>
                         <div class="stat-text">
-                            <span class="stat-number">2.3小時</span>
-                            <span class="stat-label">節省時間</span>
+                            <span class="stat-number" data-stat="avg-processing-time">0ms</span>
+                            <span class="stat-label">平均處理時間</span>
                         </div>
                     </div>
                     
                     <div class="sidebar-stat-item">
                         <div class="stat-icon-text">✅</div>
                         <div class="stat-text">
-                            <span class="stat-number">98.5%</span>
-                            <span class="stat-label">處理準確率</span>
+                            <span class="stat-number" data-stat="success-rate">0%</span>
+                            <span class="stat-label">處理成功率</span>
                         </div>
                     </div>
                     
                     <div class="sidebar-stat-item">
                         <div class="stat-icon-text">💰</div>
                         <div class="stat-text">
-                            <span class="stat-number">7</span>
+                            <span class="stat-number" data-stat="current-credits">7</span>
                             <span class="stat-label">剩餘Credits</span>
                         </div>
                     </div>
@@ -1385,14 +1388,13 @@
                     </div>
                 </div>
                 
-                <div class="upload-area" id="upload-area">
+                <div class="upload-area" id="upload-area" style="border: 2px dashed #d1d5db; border-radius: 8px; padding: 2rem; text-align: center; background: #f9fafb; cursor: pointer; transition: all 0.3s ease;">
                     <div class="upload-content">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                        <h4>拖放文件到這裡</h4>
-                        <p>或 <button class="browse-files-btn" onclick="triggerFileInput()">瀏覽檔案</button></p>
-                        <input type="file" id="file-upload" accept=".pdf" multiple style="display: none;">
+                        <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: #9ca3af; margin-bottom: 1rem;"></i>
+                        <h4 style="margin: 0 0 0.5rem 0; color: #1f2937;">拖放文件到這裡</h4>
+                        <p style="margin: 0 0 1rem 0; color: #6b7280;">或點擊瀏覽檔案</p>
                         <div class="upload-note">
-                            <small>支援PDF格式，最大10MB</small>
+                            <small style="color: #9ca3af;">支援 PDF, JPG, PNG 格式，最大 10MB</small>
                         </div>
                     </div>
                 </div>
@@ -1736,75 +1738,52 @@
                 initializeDashboard();
             }
             
-            function initializeDashboard() {
-                console.log('🚀 開始初始化 Dashboard...');
-                
-                // 設置初始選擇狀態
-                updateSelectionInfo();
-                
-                // 為所有checkbox添加事件監聽器
-                const checkboxes = document.querySelectorAll('tbody input[type="checkbox"]');
-                checkboxes.forEach(checkbox => {
-                    checkbox.addEventListener('change', updateSelectionInfo);
-                });
-                
-                // 為全選checkbox添加事件監聽器
-                const selectAllCheckbox = document.querySelector('.select-all');
-                if (selectAllCheckbox) {
-                    selectAllCheckbox.addEventListener('change', toggleSelectAll);
-                }
-                
-                // 舊的導航欄功能已移至 navbar-component.js
-                
-                // 全選checkbox事件
-                const selectAll = document.querySelector('.select-all');
-                if (selectAll) {
-                    selectAll.addEventListener('change', toggleSelectAll);
-                }
-                
-                // 表格行checkbox事件
-                document.querySelectorAll('tbody input[type="checkbox"]').forEach(checkbox => {
-                    checkbox.addEventListener('change', updateSelectionInfo);
-                });
-                
-                // 搜索過濾事件
-                const filterInput = document.querySelector('.filter-input');
-                if (filterInput) {
-                    filterInput.addEventListener('input', filterDocuments);
-                }
-                
-                // 文件上傳事件
-                const fileInput = document.getElementById('file-upload');
-                if (fileInput) {
-                    fileInput.addEventListener('change', function(e) {
-                        selectedFiles = Array.from(e.target.files);
-                        updateUploadForm();
-                    });
-                }
-                
-                // 拖拽上傳事件
-                const uploadArea = document.getElementById('upload-area');
-                if (uploadArea) {
-                    uploadArea.addEventListener('dragover', function(e) {
-                        e.preventDefault();
-                        uploadArea.classList.add('dragover');
-                    });
-                    
-                    uploadArea.addEventListener('dragleave', function(e) {
-                        e.preventDefault();
-                        uploadArea.classList.remove('dragover');
-                    });
-                    
-                    uploadArea.addEventListener('drop', function(e) {
-                        e.preventDefault();
-                        uploadArea.classList.remove('dragover');
-                        selectedFiles = Array.from(e.target.files);
-                        updateUploadForm();
-                    });
-                }
-                
-                console.log('✅ Dashboard 初始化完成');
+                    function initializeDashboard() {
+            console.log('🚀 開始初始化 Dashboard...');
+            
+            // 初始化上傳處理器
+            window.uploadHandler = initializeUploadHandler('#upload-area', 'bank-statement');
+            
+            // 設置初始選擇狀態
+            updateSelectionInfo();
+            
+            // 為所有checkbox添加事件監聽器
+            const checkboxes = document.querySelectorAll('tbody input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', updateSelectionInfo);
+            });
+            
+            // 為全選checkbox添加事件監聽器
+            const selectAllCheckbox = document.querySelector('.select-all');
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', toggleSelectAll);
             }
+            
+            // 搜索過濾事件
+            const filterInput = document.querySelector('.filter-input');
+            if (filterInput) {
+                filterInput.addEventListener('input', filterDocuments);
+            }
+            
+            // 監聽統計更新事件
+            document.addEventListener('statsUpdated', function(event) {
+                console.log('📊 統計數據已更新');
+            });
+            
+            // 監聽Credits更新事件
+            document.addEventListener('creditsUpdated', function(event) {
+                console.log('💰 Credits已更新:', event.detail);
+            });
+            
+            // 初始化統計顯示
+            setTimeout(() => {
+                if (window.VaultCaddyStats) {
+                    window.VaultCaddyStats.updateDashboardDisplays();
+                }
+            }, 1000);
+            
+            console.log('✅ Dashboard 初始化完成');
+        }
             
             performLoginCheck();
         });
