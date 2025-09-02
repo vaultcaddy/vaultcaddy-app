@@ -18,8 +18,14 @@ class VaultCaddyNavbar {
      */
     async init() {
         await this.loadUserState();
-        this.render();
-        this.bindEvents();
+        
+        // 檢查 DOM 是否準備好
+        if (document.getElementById('navbar-placeholder')) {
+            this.render();
+            this.bindEvents();
+        } else {
+            console.log('⏳ navbar-placeholder 尚未準備好，等待 DOM...');
+        }
         
         // 監聽用戶狀態變化
         this.watchUserState();
@@ -76,14 +82,23 @@ class VaultCaddyNavbar {
      * 渲染導航欄
      */
     render() {
-        const navbarContainer = document.querySelector('.navbar .nav-container');
-        if (!navbarContainer) {
-            console.error('找不到導航欄容器');
+        const navbarPlaceholder = document.getElementById('navbar-placeholder');
+        if (!navbarPlaceholder) {
+            console.error('找不到導航欄占位符 #navbar-placeholder');
             return;
         }
         
+        // 創建完整的導航欄結構
+        const navbarHTML = `
+            <nav class="navbar">
+                <div class="nav-container">
+                    ${this.getNavbarHTML()}
+                </div>
+            </nav>
+        `;
+        
         // 更新導航欄內容
-        navbarContainer.innerHTML = this.getNavbarHTML();
+        navbarPlaceholder.innerHTML = navbarHTML;
         
         // 重新綁定事件
         this.bindEvents();
@@ -498,11 +513,19 @@ function navigateToSection(sectionId) {
     }
 }
 
-// 頁面載入完成後初始化
+// 頁面載入完成後初始化（實例創建時已自動初始化，這裡只是確保）
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-        window.VaultCaddyNavbar.init();
+        // 確保 navbar-placeholder 存在後再初始化
+        if (document.getElementById('navbar-placeholder')) {
+            console.log('🔄 DOMContentLoaded: 重新初始化導航欄');
+            window.VaultCaddyNavbar.render();
+        }
     });
 } else {
-    window.VaultCaddyNavbar.init();
+    // 如果文檔已載入，立即檢查並渲染
+    if (document.getElementById('navbar-placeholder')) {
+        console.log('🔄 Document Ready: 立即渲染導航欄');
+        window.VaultCaddyNavbar.render();
+    }
 }
