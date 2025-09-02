@@ -49,7 +49,7 @@ class VaultCaddyNavbar {
                         id: 'demo_user',
                         email: 'demo@vaultcaddy.com',
                         name: 'Demo User',
-                        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face&auto=format'
+                        avatar: 'https://ui-avatars.com/api/?name=User&background=3b82f6&color=ffffff&size=32'
                     };
                 }
             }
@@ -101,12 +101,12 @@ class VaultCaddyNavbar {
                             <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <defs>
                                     <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                        <stop offset="0%" stop-color="#2563eb"/>
-                                        <stop offset="50%" stop-color="#7c3aed"/>
-                                        <stop offset="100%" stop-color="#c026d3"/>
+                                        <stop offset="0%" stop-color="#3b82f6"/>
+                                        <stop offset="50%" stop-color="#8b5cf6"/>
+                                        <stop offset="100%" stop-color="#d946ef"/>
                                     </linearGradient>
                                 </defs>
-                                <path d="M5 8 L20 32 L35 8 Z" fill="url(#logoGradient)" stroke="none" stroke-width="0"/>
+                                <path d="M8 6 L20 28 L32 6 L28 6 L20 20 L12 6 Z" fill="url(#logoGradient)" stroke="none"/>
                             </svg>
                         </div>
                         <div class="logo-text" style="display: flex; flex-direction: column;">
@@ -178,7 +178,7 @@ class VaultCaddyNavbar {
         if (this.isLoggedIn && this.user) {
             return `
                 <div class="user-profile" id="user-profile" style="position: relative;">
-                    <img src="${this.user.avatar}" alt="User" class="user-avatar" onclick="window.VaultCaddyNavbar.toggleUserDropdown(event)" style="cursor: pointer;">
+                    <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(this.user.name || 'User')}&background=3b82f6&color=ffffff&size=32" alt="User" class="user-avatar" onclick="window.VaultCaddyNavbar.toggleUserDropdown(event)" style="cursor: pointer; border-radius: 50%; width: 32px; height: 32px;">
                     <div class="user-dropdown-menu" id="user-dropdown-menu" style="display: none; position: absolute; top: 100%; right: 0; background: white; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15); min-width: 220px; z-index: 1000; padding: 0.5rem 0; margin-top: 8px;">
                         <div class="user-info" style="padding: 1rem 1.5rem; background: #f9fafb; border-bottom: 1px solid #e5e7eb;">
                             <div style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem;">Credits: ${this.credits}</div>
@@ -197,20 +197,6 @@ class VaultCaddyNavbar {
                                 <span>Integrations</span>
                             </div>
                             <span style="font-size: 0.75rem; color: #9ca3af;">⌘I</span>
-                        </a>
-                        <a href="billing.html" class="user-menu-item" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.5rem; color: #374151; text-decoration: none; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
-                            <div style="display: flex; align-items: center;">
-                                <i class="fas fa-credit-card" style="width: 16px; margin-right: 0.75rem;"></i>
-                                <span>Billing</span>
-                            </div>
-                            <span style="font-size: 0.75rem; color: #9ca3af;">⌘B</span>
-                        </a>
-                        <a href="security.html" class="user-menu-item" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.5rem; color: #374151; text-decoration: none; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
-                            <div style="display: flex; align-items: center;">
-                                <i class="fas fa-cog" style="width: 16px; margin-right: 0.75rem;"></i>
-                                <span>Settings</span>
-                            </div>
-                            <span style="font-size: 0.75rem; color: #9ca3af;">⌘S</span>
                         </a>
                         <div style="margin: 0.5rem 0; border-top: 1px solid #e5e7eb;"></div>
                         <a href="#" class="user-menu-item logout" onclick="window.VaultCaddyNavbar.logout()" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.5rem; color: #dc2626; text-decoration: none; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#fef2f2'" onmouseout="this.style.backgroundColor='transparent'">
