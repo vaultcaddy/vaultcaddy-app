@@ -324,14 +324,31 @@
             <!-- 訂閱方案 -->
             <div class="plans-section">
                 <h2 class="section-title">Subscription plans</h2>
+                
+                <!-- 月費/年費切換 -->
+                <div class="pricing-toggle" style="display: flex; justify-content: center; margin-bottom: 3rem;">
+                    <div style="background: #f3f4f6; border-radius: 8px; padding: 4px; display: inline-flex;">
+                        <button class="toggle-btn active" data-plan="monthly" onclick="togglePricingPlan('monthly')" style="padding: 0.75rem 1.5rem; border: none; background: white; border-radius: 6px; font-weight: 500; cursor: pointer; transition: all 0.2s ease;">月費</button>
+                        <button class="toggle-btn" data-plan="yearly" onclick="togglePricingPlan('yearly')" style="padding: 0.75rem 1.5rem; border: none; background: transparent; border-radius: 6px; font-weight: 500; cursor: pointer; transition: all 0.2s ease;">年費 (節省20%)</button>
+                    </div>
+                </div>
+                
                 <div class="plans-grid">
                     <!-- Basic 方案 -->
                     <div class="plan-card">
                         <h3 class="plan-name">Basic</h3>
                         <p class="plan-description">Perfect for individuals and freelancers.</p>
-                        <div class="plan-price">$29<span>/month</span></div>
+                        <div class="plan-price">
+                            <span class="monthly-price">$29</span>
+                            <span class="yearly-price" style="display: none;">$24</span>
+                            <span class="monthly-period">/month</span>
+                            <span class="yearly-period" style="display: none;">/month</span>
+                        </div>
+                        <p class="plan-subtitle monthly-subtitle" style="margin: 0.5rem 0; color: #6b7280;">200 pages included</p>
+                        <p class="plan-subtitle yearly-subtitle" style="display: none; margin: 0.5rem 0; color: #6b7280;">2,400 pages included</p>
                         <ul class="plan-features">
-                            <li><i class="fas fa-check"></i> 200 page conversions per month</li>
+                            <li><i class="fas fa-check"></i> <span class="monthly-feature">200 page conversions per month</span><span class="yearly-feature" style="display: none;">2,400 page conversions per year</span></li>
+                            <li class="yearly-feature" style="display: none;"><i class="fas fa-check"></i> Save 20% with annual billing</li>
                             <li><i class="fas fa-check"></i> Convert all files with one click</li>
                             <li><i class="fas fa-check"></i> Excel & CSV export formats</li>
                             <li><i class="fas fa-check"></i> QuickBooks integration</li>
@@ -347,9 +364,17 @@
                     <div class="plan-card featured">
                         <h3 class="plan-name">Pro</h3>
                         <p class="plan-description">Small businesses and accounting firms.</p>
-                        <div class="plan-price">$49<span>/month</span></div>
+                        <div class="plan-price">
+                            <span class="monthly-price">$49</span>
+                            <span class="yearly-price" style="display: none;">$40</span>
+                            <span class="monthly-period">/month</span>
+                            <span class="yearly-period" style="display: none;">/month</span>
+                        </div>
+                        <p class="plan-subtitle monthly-subtitle" style="margin: 0.5rem 0; color: #6b7280;">500 pages included</p>
+                        <p class="plan-subtitle yearly-subtitle" style="display: none; margin: 0.5rem 0; color: #6b7280;">6,000 pages included</p>
                         <ul class="plan-features">
-                            <li><i class="fas fa-check"></i> 500 page conversions per month</li>
+                            <li><i class="fas fa-check"></i> <span class="monthly-feature">500 page conversions per month</span><span class="yearly-feature" style="display: none;">6,000 page conversions per year</span></li>
+                            <li class="yearly-feature" style="display: none;"><i class="fas fa-check"></i> Save 20% with annual billing</li>
                             <li><i class="fas fa-check"></i> Everything in Basic, plus:</li>
                             <li><i class="fas fa-check"></i> Batch processing up to 20 files</li>
                             <li><i class="fas fa-check"></i> Faster processing times</li>
@@ -365,9 +390,17 @@
                     <div class="plan-card">
                         <h3 class="plan-name">Business</h3>
                         <p class="plan-description">Growing businesses with high volume needs.</p>
-                        <div class="plan-price">$99<span>/month</span></div>
+                        <div class="plan-price">
+                            <span class="monthly-price">$99</span>
+                            <span class="yearly-price" style="display: none;">$82</span>
+                            <span class="monthly-period">/month</span>
+                            <span class="yearly-period" style="display: none;">/month</span>
+                        </div>
+                        <p class="plan-subtitle monthly-subtitle" style="margin: 0.5rem 0; color: #6b7280;">1,200 pages included</p>
+                        <p class="plan-subtitle yearly-subtitle" style="display: none; margin: 0.5rem 0; color: #6b7280;">14,400 pages included</p>
                         <ul class="plan-features">
-                            <li><i class="fas fa-check"></i> 1,200 page conversions per month</li>
+                            <li><i class="fas fa-check"></i> <span class="monthly-feature">1,200 page conversions per month</span><span class="yearly-feature" style="display: none;">14,400 page conversions per year</span></li>
+                            <li class="yearly-feature" style="display: none;"><i class="fas fa-check"></i> Save 20% with annual billing</li>
                             <li><i class="fas fa-check"></i> Everything in Pro, plus:</li>
                             <li><i class="fas fa-check"></i> Batch processing up to 20 files</li>
                             <li><i class="fas fa-check"></i> Team collaboration features</li>
@@ -413,6 +446,42 @@
         // 選擇方案
         function selectPlan(planType) {
             window.VaultCaddyNavbar.showNotification(`${planType.charAt(0).toUpperCase() + planType.slice(1)} plan selection coming soon!`, 'info');
+        }
+
+        // 切換月費/年費
+        function togglePricingPlan(planType) {
+            // 更新按鈕狀態
+            document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[data-plan="${planType}"]`).classList.add('active');
+            
+            // 更新按鈕樣式
+            document.querySelectorAll('.toggle-btn').forEach(btn => {
+                if (btn.classList.contains('active')) {
+                    btn.style.background = 'white';
+                    btn.style.color = '#1f2937';
+                } else {
+                    btn.style.background = 'transparent';
+                    btn.style.color = '#6b7280';
+                }
+            });
+            
+            if (planType === 'monthly') {
+                // 顯示月費，隱藏年費
+                document.querySelectorAll('.monthly-price, .monthly-period, .monthly-subtitle, .monthly-feature').forEach(el => {
+                    el.style.display = 'inline';
+                });
+                document.querySelectorAll('.yearly-price, .yearly-period, .yearly-subtitle, .yearly-feature').forEach(el => {
+                    el.style.display = 'none';
+                });
+            } else {
+                // 顯示年費，隱藏月費
+                document.querySelectorAll('.monthly-price, .monthly-period, .monthly-subtitle, .monthly-feature').forEach(el => {
+                    el.style.display = 'none';
+                });
+                document.querySelectorAll('.yearly-price, .yearly-period, .yearly-subtitle, .yearly-feature').forEach(el => {
+                    el.style.display = 'inline';
+                });
+            }
         }
     </script>
 </body>

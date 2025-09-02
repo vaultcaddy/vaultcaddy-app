@@ -137,8 +137,8 @@ class VaultCaddyNavbar {
      */
     getMainNavigation() {
         let navigation = `
-            <a href="#features" class="nav-link" data-translate="nav_features">功能</a>
-            <a href="#pricing" class="nav-link" data-translate="nav_pricing">價格</a>
+            <a href="index.html#features" class="nav-link" data-translate="nav_features" onclick="navigateToSection('features')">功能</a>
+            <a href="index.html#pricing" class="nav-link" data-translate="nav_pricing" onclick="navigateToSection('pricing')">價格</a>
         `;
         
         // 只有登入後才顯示 Solutions 和 Dashboard 連結
@@ -168,7 +168,7 @@ class VaultCaddyNavbar {
                         </a>
                     </div>
                 </div>
-                <a href="dashboard-main.html" class="nav-link" data-translate="nav_dashboard" onclick="window.location.href='dashboard-main.html'">Dashboard</a>
+                <a href="dashboard-main.html" class="nav-link" data-translate="nav_dashboard">Dashboard</a>
             `;
         }
         
@@ -466,6 +466,20 @@ document.addEventListener('click', function(event) {
         solutionsMenu.style.display = 'none';
     }
 });
+
+// 導航到特定區塊的函數
+function navigateToSection(sectionId) {
+    // 如果已經在 index.html，直接滑動
+    if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
+        const element = document.getElementById(sectionId);
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+        }
+    } else {
+        // 如果在其他頁面，跳轉到 index.html 並滑動
+        window.location.href = `index.html#${sectionId}`;
+    }
+}
 
 // 頁面載入完成後初始化
 if (document.readyState === 'loading') {
