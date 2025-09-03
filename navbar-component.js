@@ -134,7 +134,6 @@ class VaultCaddyNavbar {
             
             <div class="nav-menu" id="nav-menu">
                 ${this.getMainNavigation()}
-                ${this.getCreditsDisplay()}
                 ${this.getLanguageSelector()}
                 ${this.getUserSection()}
             </div>
@@ -190,20 +189,7 @@ class VaultCaddyNavbar {
         return navigation;
     }
     
-    /**
-     * 獲取 Credits 顯示
-     */
-    getCreditsDisplay() {
-        return `
-            <div class="credits-display">
-                <span data-translate="nav_credits">Credits:</span>
-                <span class="credits-count" id="credits-count">${this.credits}</span>
-                <div class="credits-icon">
-                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiIGZpbGw9IiNGRkQ3MDAiLz4KPHN2ZyB3aWR0aD0iMTQiIGhlaWdodD0iMTQiIHZpZXdCb3g9IjAgMCAxNCAxNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4PSI1IiB5PSI1Ij4KPHBhdGggZD0iTTcgMUw4LjA5IDQuMjZMMTIgNUw4LjA5IDUuNzRMNyA5TDUuOTEgNS43NEwyIDVMNS45MSA0LjI2TDcgMVoiIGZpbGw9IiNGRkZGRkYiLz4KPHN2Zz4KPHN2Zz4=" alt="Credits" />
-                </div>
-            </div>
-        `;
-    }
+
     
     /**
      * 獲取語言選擇器（暫時移除，沒有實際功能）
