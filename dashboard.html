@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - VaultCaddy</title>
+    <meta name="description" content="VaultCaddy Dashboard - AI-powered document processing platform">
+    <meta property="og:title" content="Dashboard - VaultCaddy">
+    <meta property="og:description" content="VaultCaddy - Professional document processing with AI technology">
+    <meta property="og:url" content="https://vaultcaddy.com/dashboard">
+    <meta property="og:type" content="website">
+    <link rel="canonical" href="https://vaultcaddy.com/dashboard">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="pages.css">
+    <link rel="stylesheet" href="document-manager.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- 核心JavaScript -->
+    <script src="translations.js"></script>
+    <script src="unified-auth.js"></script>
+    <script src="navbar-component.js"></script>
+    <script src="sidebar-component.js"></script>
+    <script src="content-manager.js"></script>
+    <script src="document-processor.js"></script>
+    <script src="upload-handler.js"></script>
+    <script src="dashboard-stats.js"></script>
+    <script src="document-manager.js"></script>
+    <script src="enhanced-functionality.js"></script>
+    <script src="google-cloud-config.js"></script>
+    
+    <style>
+        /* 單頁應用特定樣式 */
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 2rem;
+            color: #6b7280;
+        }
+        
+        .loading-state i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 2rem;
+            color: #ef4444;
+            text-align: center;
+        }
+        
+        .error-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .error-state button {
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        .error-state button:hover {
+            background: #2563eb;
+        }
+        
+        /* 確保內容區域平滑切換 */
+        .main-content {
+            transition: opacity 0.2s ease-in-out;
+        }
+        
+        .main-content.loading {
+            opacity: 0.7;
+        }
+        
+        /* 帳戶和計費頁面樣式 */
+        .page-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .page-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin: 0 0 0.5rem 0;
+        }
+        
+        .page-header p {
+            color: #6b7280;
+            margin: 0;
+        }
+        
+        .account-sections, .billing-sections {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        
+        .profile-section, .email-section, .current-plan, .usage-stats, .pricing-plans {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .section-header h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0;
+        }
+        
+        .update-btn, .add-btn {
+            padding: 0.5rem 1rem;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+        
+        .update-btn:hover, .add-btn:hover {
+            background: #2563eb;
+        }
+        
+        .profile-info {
+            display: grid;
+            gap: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
+        
+        .info-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .info-group label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #6b7280;
+        }
+        
+        .info-group span {
+            font-size: 1rem;
+            color: #1f2937;
+        }
+        
+        .plan-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .plan-badge {
+            background: #10b981;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .stats-grid {
+            display: grid;
+            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 6px;
+        }
+        
+        .stat-number {
+            display: block;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <!-- 導航欄 - 由 navbar-component.js 動態載入 -->
+    <div id="navbar-placeholder"></div>
+
+    <!-- Dashboard 容器 -->
+    <div class="dashboard-container">
+        <!-- 左側邊欄 -->
+        <aside class="sidebar">
+            <!-- 側邊欄內容由 sidebar-component.js 動態生成 -->
+        </aside>
+
+        <!-- 主內容區域 - 由 content-manager.js 動態管理 -->
+        <main class="main-content" id="main-content">
+            <!-- 內容由 ContentManager 動態載入 -->
+            <div class="loading-state">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Loading Dashboard...</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- 上傳模態框 -->
+    <div id="upload-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Upload Documents</h3>
+                <span class="close" onclick="closeUploadModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="upload-area" class="upload-area">
+                    <div class="upload-content">
+                        <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                        <p>Drag and drop files here or click to browse</p>
+                        <input type="file" id="file-input" multiple accept=".pdf,.jpg,.jpeg,.png" style="display: none;">
+                        <button class="browse-btn" onclick="document.getElementById('file-input').click()">Browse Files</button>
+                    </div>
+                </div>
+                <div id="upload-progress" class="upload-progress" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <div class="upload-status">Uploading...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Menu -->
+    <div id="action-menu" class="action-menu" style="display: none;">
+        <div class="action-menu-item" onclick="handleAction('approve')">
+            <i class="fas fa-check"></i>
+            <span>Approve</span>
+        </div>
+        <div class="action-menu-item" onclick="handleAction('reprocess')">
+            <i class="fas fa-redo"></i>
+            <span>Re-process</span>
+        </div>
+        <div class="action-menu-item" onclick="handleAction('download')">
+            <i class="fas fa-download"></i>
+            <span>Download</span>
+        </div>
+        <div class="action-menu-item delete" onclick="handleAction('delete')">
+            <i class="fas fa-trash"></i>
+            <span>Delete</span>
+        </div>
+    </div>
+
+    <!-- 更新資料模態框 -->
+    <div id="update-profile-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Update Profile</h3>
+                <span class="close" onclick="closeUpdateProfileModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="profile-form">
+                    <div class="form-group">
+                        <label for="profile-name">Name</label>
+                        <input type="text" id="profile-name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="profile-company">Company</label>
+                        <input type="text" id="profile-company" name="company">
+                    </div>
+                    <div class="form-group">
+                        <label for="profile-phone">Phone</label>
+                        <input type="tel" id="profile-phone" name="phone">
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" onclick="closeUpdateProfileModal()">Cancel</button>
+                        <button type="submit">Update Profile</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 登入狀態檢查
+        function checkLoginStatus() {
+            const vaultcaddyToken = localStorage.getItem('vaultcaddy_token');
+            const vaultcaddyUser = localStorage.getItem('vaultcaddy_user');
+            const userLoggedIn = localStorage.getItem('userLoggedIn');
+            
+            return (vaultcaddyToken && vaultcaddyUser) || userLoggedIn === 'true';
+        }
+
+        // 主初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 檢查登入狀態
+            if (!checkLoginStatus()) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // 初始化統一側邊欄
+            window.vaultcaddySidebar = new VaultCaddySidebar('bank-statement');
+            
+            // ContentManager 會自動初始化
+            
+            console.log('✅ 統一Dashboard 初始化完成');
+        });
+
+        // Action Menu Functions
+        function showActionMenu(event, documentId) {
+            event.stopPropagation();
+            const menu = document.getElementById('action-menu');
+            menu.style.display = 'block';
+            menu.style.left = event.pageX + 'px';
+            menu.style.top = event.pageY + 'px';
+            menu.dataset.documentId = documentId;
+        }
+
+        function handleAction(action) {
+            const menu = document.getElementById('action-menu');
+            const documentId = menu.dataset.documentId;
+            menu.style.display = 'none';
+            
+            switch(action) {
+                case 'approve':
+                    console.log(`Approving document: ${documentId}`);
+                    if (window.formHandler) {
+                        window.formHandler.showSuccessMessage(`Document ${documentId} approved!`);
+                    }
+                    break;
+                case 'reprocess':
+                    console.log(`Re-processing document: ${documentId}`);
+                    if (window.formHandler) {
+                        window.formHandler.showSuccessMessage(`Re-processing document ${documentId}...`);
+                    }
+                    break;
+                case 'download':
+                    console.log(`Downloading document: ${documentId}`);
+                    if (window.formHandler) {
+                        window.formHandler.showSuccessMessage(`Downloading document ${documentId}...`);
+                    }
+                    break;
+                case 'delete':
+                    if(confirm(`Are you sure you want to delete document ${documentId}?`)) {
+                        console.log(`Deleting document: ${documentId}`);
+                        if (window.formHandler) {
+                            window.formHandler.showSuccessMessage(`Document ${documentId} deleted!`);
+                        }
+                    }
+                    break;
+            }
+        }
+
+        // Close action menu when clicking outside
+        document.addEventListener('click', function() {
+            document.getElementById('action-menu').style.display = 'none';
+        });
+
+        // Upload Modal Functions
+        function openUploadModal(type) {
+            const modal = document.getElementById('upload-modal');
+            modal.style.display = 'block';
+            console.log(`Opening upload modal for ${type}`);
+        }
+
+        function closeUploadModal() {
+            document.getElementById('upload-modal').style.display = 'none';
+        }
+
+        // Profile Modal Functions
+        function openUpdateProfileModal() {
+            const modal = document.getElementById('update-profile-modal');
+            
+            // 載入當前資料
+            if (window.vaultcaddyStorage) {
+                const profile = window.vaultcaddyStorage.get('user_profile');
+                if (profile) {
+                    document.getElementById('profile-name').value = profile.name || '';
+                    document.getElementById('profile-company').value = profile.company || '';
+                    document.getElementById('profile-phone').value = profile.phone || '';
+                }
+            }
+            
+            modal.style.display = 'block';
+        }
+
+        function closeUpdateProfileModal() {
+            document.getElementById('update-profile-modal').style.display = 'none';
+        }
+
+        // Profile Form Submission
+        document.addEventListener('DOMContentLoaded', function() {
+            const profileForm = document.getElementById('profile-form');
+            if (profileForm) {
+                profileForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const formData = new FormData(e.target);
+                    const profileData = Object.fromEntries(formData);
+                    
+                    if (window.formHandler) {
+                        window.formHandler.updateProfile(profileData);
+                        closeUpdateProfileModal();
+                        
+                        // 更新頁面顯示
+                        if (window.contentManager && window.contentManager.currentPage === 'account') {
+                            window.contentManager.navigateToPage('account');
+                        }
+                    }
+                });
+            }
+        });
+
+        function addEmailAddress() {
+            const email = prompt('Enter new email address:');
+            if (email && window.formHandler) {
+                window.formHandler.addEmail(email);
+                
+                // 重新載入帳戶頁面
+                if (window.contentManager && window.contentManager.currentPage === 'account') {
+                    window.contentManager.navigateToPage('account');
+                }
+            }
+        }
+
+        function openDocumentDetail(documentId) {
+            window.open(`document-detail.html?id=${documentId}&type=${window.contentManager.currentPage}`, '_blank');
+        }
+
+        // 監聽頁面切換事件
+        window.addEventListener('pageChanged', function(e) {
+            console.log(`📄 頁面已切換到: ${e.detail.page}`);
+            
+            // 更新側邊欄活躍狀態
+            if (window.vaultcaddySidebar) {
+                window.vaultcaddySidebar.updateActivePage(e.detail.page);
+            }
+        });
+    </script>
+</body>
+</html>

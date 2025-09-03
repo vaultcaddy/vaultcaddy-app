@@ -164,25 +164,25 @@ class VaultCaddyNavbar {
                         <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
                     </a>
                     <div class="solutions-menu" id="solutions-menu" style="display: none; position: absolute; top: 100%; left: 0; background: white; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); min-width: 200px; z-index: 1000; margin-top: 8px;">
-                        <a href="dashboard-main.html" style="display: block; padding: 12px 16px; color: #374151; text-decoration: none; border-bottom: 1px solid #f3f4f6;" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='transparent'">
+                        <a href="dashboard.html#bank-statement" style="display: block; padding: 12px 16px; color: #374151; text-decoration: none; border-bottom: 1px solid #f3f4f6;" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='transparent'">
                             <i class="fas fa-university" style="margin-right: 8px; width: 16px;"></i>
                             銀行對帳單
                         </a>
-                        <a href="dashboard-invoice.html" style="display: block; padding: 12px 16px; color: #374151; text-decoration: none; border-bottom: 1px solid #f3f4f6;" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='transparent'">
+                        <a href="dashboard.html#invoice" style="display: block; padding: 12px 16px; color: #374151; text-decoration: none; border-bottom: 1px solid #f3f4f6;" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='transparent'">
                             <i class="fas fa-file-invoice" style="margin-right: 8px; width: 16px;"></i>
                             發票處理
                         </a>
-                        <a href="dashboard-receipt.html" style="display: block; padding: 12px 16px; color: #374151; text-decoration: none; border-bottom: 1px solid #f3f4f6;" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='transparent'">
+                        <a href="dashboard.html#receipt" style="display: block; padding: 12px 16px; color: #374151; text-decoration: none; border-bottom: 1px solid #f3f4f6;" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='transparent'">
                             <i class="fas fa-receipt" style="margin-right: 8px; width: 16px;"></i>
                             收據掃描
                         </a>
-                        <a href="dashboard-general.html" style="display: block; padding: 12px 16px; color: #374151; text-decoration: none;" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='transparent'">
+                        <a href="dashboard.html#general" style="display: block; padding: 12px 16px; color: #374151; text-decoration: none;" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='transparent'">
                             <i class="fas fa-file-alt" style="margin-right: 8px; width: 16px;"></i>
                             通用文檔
                         </a>
                     </div>
                 </div>
-                <a href="dashboard-main.html" class="nav-link" data-translate="nav_dashboard">Dashboard</a>
+                <a href="dashboard.html" class="nav-link" data-translate="nav_dashboard">Dashboard</a>
             `;
         }
         
@@ -318,7 +318,7 @@ class VaultCaddyNavbar {
             
             // 跳轉到 dashboard
             console.log('🔄 跳轉到 Dashboard...');
-            window.location.href = 'dashboard-main.html';
+            window.location.href = 'dashboard.html';
             
         } catch (error) {
             console.error('登入失敗:', error);

@@ -34,25 +34,25 @@ class VaultCaddySidebar {
             <nav class="sidebar-nav">
                 <ul>
                     <li class="nav-item ${this.activePage === 'bank-statement' ? 'active' : ''}">
-                        <a href="dashboard-main.html">
+                        <a href="dashboard.html#bank-statement">
                             <i class="fas fa-university"></i>
                             <span>Bank statements</span>
                         </a>
                     </li>
                     <li class="nav-item ${this.activePage === 'invoice' ? 'active' : ''}">
-                        <a href="dashboard-invoice.html">
+                        <a href="dashboard.html#invoice">
                             <i class="fas fa-file-invoice"></i>
                             <span>Invoices</span>
                         </a>
                     </li>
                     <li class="nav-item ${this.activePage === 'receipt' ? 'active' : ''}">
-                        <a href="dashboard-receipt.html">
+                        <a href="dashboard.html#receipt">
                             <i class="fas fa-receipt"></i>
                             <span>Receipts</span>
                         </a>
                     </li>
                     <li class="nav-item ${this.activePage === 'general' ? 'active' : ''}">
-                        <a href="dashboard-general.html">
+                        <a href="dashboard.html#general">
                             <i class="fas fa-file-alt"></i>
                             <span>General</span>
                         </a>
@@ -62,13 +62,13 @@ class VaultCaddySidebar {
                 <h3>Configurations</h3>
                 <ul>
                     <li class="nav-item ${this.activePage === 'account' ? 'active' : ''}">
-                        <a href="account.html">
+                        <a href="dashboard.html#account">
                             <i class="fas fa-user"></i>
                             <span>Account</span>
                         </a>
                     </li>
                     <li class="nav-item ${this.activePage === 'billing' ? 'active' : ''}">
-                        <a href="billing.html">
+                        <a href="dashboard.html#billing">
                             <i class="fas fa-credit-card"></i>
                             <span>Billing</span>
                         </a>
