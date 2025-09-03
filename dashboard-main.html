@@ -3,1062 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - VaultCaddy</title>
+    <title>Bank Statement Converter - VaultCaddy</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="dashboard.css">
-    <style>
-        /* Dashboard 白色主題覆蓋樣式 */
-        body {
-            background: #f8fafc !important;
-            color: #1f2937 !important;
-            padding-top: 80px !important;
-        }
-        
-        .dashboard-nav {
-            background: #ffffff !important;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
-        }
-        
-        /* Dashboard 容器布局 */
-        .dashboard-container {
-            display: flex !important;
-            min-height: calc(100vh - 80px) !important;
-            margin-top: 0 !important;
-        }
-        
-        /* 左側邊欄 */
-        .sidebar {
-            width: 280px !important;
-            background: #ffffff !important;
-            border-right: 1px solid #e5e7eb !important;
-            flex-shrink: 0 !important;
-            overflow-y: auto !important;
-        }
-        
-        .sidebar-header {
-            padding: 1.5rem !important;
-            border-bottom: 1px solid #e5e7eb !important;
-        }
-        
-        .sidebar-header h2 {
-            color: #1f2937 !important;
-            font-size: 1.25rem !important;
-            font-weight: 600 !important;
-            margin: 0 !important;
-        }
-        
-        .sidebar-nav {
-            padding: 1rem 0 !important;
-        }
-        
-        .sidebar-nav h3 {
-            color: #6b7280 !important;
-            font-size: 0.875rem !important;
-            font-weight: 600 !important;
-            text-transform: uppercase !important;
-            letter-spacing: 0.05em !important;
-            margin: 2rem 1.5rem 1rem 1.5rem !important;
-        }
-        
-        .sidebar-nav ul {
-            list-style: none !important;
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-        
-        .nav-item {
-            margin-bottom: 0.25rem !important;
-        }
-        
-        .nav-item a {
-            display: flex !important;
-            align-items: center !important;
-            padding: 0.75rem 1.5rem !important;
-            color: #6b7280 !important;
-            text-decoration: none !important;
-            transition: all 0.2s ease !important;
-            font-weight: 500 !important;
-        }
-        
-        .nav-item a:hover {
-            background: #f3f4f6 !important;
-            color: #1f2937 !important;
-        }
-        
-        .nav-item.active a {
-            background: #eff6ff !important;
-            color: #2563eb !important;
-            border-right: 3px solid #2563eb !important;
-        }
-        
-        .nav-item i {
-            width: 20px !important;
-            margin-right: 0.75rem !important;
-            font-size: 1rem !important;
-        }
-        
-        /* 主內容區域 */
-        .main-content {
-            flex: 1 !important;
-            padding: 2rem !important;
-            overflow-y: auto !important;
-            background: #f8fafc !important;
-        }
-        
-        /* 內容標題 */
-        .content-header {
-            display: flex !important;
-            justify-content: space-between !important;
-            align-items: flex-start !important;
-            margin-bottom: 2rem !important;
-        }
-        
-        .header-left h1 {
-            font-size: 2rem !important;
-            font-weight: 700 !important;
-            color: #1f2937 !important;
-            margin: 0 0 0.5rem 0 !important;
-        }
-        
-        .header-left p {
-            color: #6b7280 !important;
-            margin: 0 !important;
-        }
-        
-        .help-btn {
-            background: #6b7280 !important;
-            color: white !important;
-            border: none !important;
-            padding: 0.5rem 1rem !important;
-            border-radius: 6px !important;
-            font-weight: 500 !important;
-            cursor: pointer !important;
-            transition: all 0.3s ease !important;
-        }
-        
-        .help-btn:hover {
-            background: #4b5563 !important;
-        }
-        
-        /* 統計數據 - 水平布局 */
-        .stats-section {
-            margin-bottom: 2rem !important;
-        }
-        
-        .stats-horizontal {
-            display: grid !important;
-            grid-template-columns: repeat(4, 1fr) !important;
-            gap: 1rem !important;
-        }
-        
-        /* 控制區域 */
-        .controls-section {
-            margin-bottom: 2rem !important;
-        }
-        
-        .controls-bar {
-            display: flex !important;
-            justify-content: space-between !important;
-            align-items: center !important;
-            background: white !important;
-            padding: 1.5rem !important;
-            border-radius: 8px !important;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
-        }
-        
-        .search-filter .filter-input {
-            padding: 0.75rem 1rem !important;
-            border: 1px solid #d1d5db !important;
-            border-radius: 6px !important;
-            width: 300px !important;
-            font-size: 0.875rem !important;
-        }
-        
-        .search-filter .filter-input:focus {
-            outline: none !important;
-            border-color: #2563eb !important;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
-        }
-        
-        .actions {
-            display: flex !important;
-            gap: 1rem !important;
-        }
-        
-        .upload-btn {
-            background: #8b5cf6 !important;
-            color: white !important;
-            border: none !important;
-            padding: 0.75rem 1.5rem !important;
-            border-radius: 6px !important;
-            font-weight: 500 !important;
-            cursor: pointer !important;
-            transition: all 0.3s ease !important;
-            display: flex !important;
-            align-items: center !important;
-            gap: 0.5rem !important;
-        }
-        
-        .upload-btn:hover {
-            background: #7c3aed !important;
-        }
-        
-        .view-btn {
-            background: #e5e7eb !important;
-            color: #374151 !important;
-            border: none !important;
-            padding: 0.75rem 1.5rem !important;
-            border-radius: 6px !important;
-            font-weight: 500 !important;
-            cursor: pointer !important;
-            transition: all 0.3s ease !important;
-            display: flex !important;
-            align-items: center !important;
-            gap: 0.5rem !important;
-        }
-        
-        .view-btn:hover {
-            background: #d1d5db !important;
-        }
-        
-        /* 文檔表格 */
-        .documents-table {
-            background: white !important;
-            border-radius: 8px !important;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
-            overflow: hidden !important;
-        }
-        
-        .table-container {
-            overflow-x: auto !important;
-        }
-        
-        .documents-grid {
-            width: 100% !important;
-            border-collapse: collapse !important;
-        }
-        
-        .documents-grid th {
-            background: #f9fafb !important;
-            color: #374151 !important;
-            font-weight: 600 !important;
-            padding: 1rem !important;
-            text-align: left !important;
-            border-bottom: 1px solid #e5e7eb !important;
-            font-size: 0.875rem !important;
-        }
-        
-        .documents-grid td {
-            padding: 1rem !important;
-            border-bottom: 1px solid #f3f4f6 !important;
-            vertical-align: top !important;
-        }
-        
-        .documents-grid tr:hover {
-            background: #1f2937 !important;
-        }
-        
-        .documents-grid tr:hover td {
-            color: #ffffff !important;
-        }
-        
-        .documents-grid tr:hover .doc-name {
-            color: #ffffff !important;
-        }
-        
-        .documents-grid tr:hover .doc-details {
-            color: #d1d5db !important;
-        }
-        
-        .documents-grid tr:hover .balance-info div {
-            color: #d1d5db !important;
-        }
-        
-        .documents-grid tr.selected {
-            background: #1f2937 !important;
-            color: white !important;
-        }
-        
-        .documents-grid tr.selected td {
-            color: white !important;
-        }
-        
-        .documents-grid tr.selected .doc-name {
-            color: white !important;
-        }
-        
-        .documents-grid tr.selected .doc-details {
-            color: #d1d5db !important;
-        }
-        
-        .documents-grid tr.selected .status-text {
-            color: #d1d5db !important;
-        }
-        
-        .documents-grid tr.selected .balance-info div {
-            color: #d1d5db !important;
-        }
-        
-        /* 合併的狀態和評價列 */
-        .status-review-cell {
-            display: flex !important;
-            flex-direction: column !important;
-            gap: 0.5rem !important;
-        }
-        
-        /* 用戶頭像樣式 */
-        
-        .user-avatar {
-            width: 32px !important;
-            height: 32px !important;
-            border-radius: 50% !important;
-            border: 2px solid #e5e7eb !important;
-        }
-        
-        /* 側邊欄底部統計 */
-        .sidebar-footer {
-            position: absolute !important;
-            bottom: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            padding: 1.5rem !important;
-            border-top: 1px solid #e5e7eb !important;
-            background: #f9fafb !important;
-        }
-        
-        .sidebar {
-            position: relative !important;
-            padding-bottom: 200px !important; /* 為底部統計留出空間 */
-        }
-        
-        .sidebar-stats {
-            display: flex !important;
-            flex-direction: column !important;
-            gap: 1rem !important;
-        }
-        
-        .sidebar-stat-item {
-            display: flex !important;
-            align-items: center !important;
-            gap: 0.75rem !important;
-            padding: 0.5rem !important;
-            background: white !important;
-            border-radius: 6px !important;
-            border: 1px solid #e5e7eb !important;
-        }
-        
-        .stat-icon-text {
-            font-size: 1.2rem !important;
-            width: 24px !important;
-            text-align: center !important;
-        }
-        
-        .stat-text {
-            flex: 1 !important;
-        }
-        
-        .stat-text .stat-number {
-            display: block !important;
-            font-weight: 700 !important;
-            color: #1f2937 !important;
-            font-size: 1.1rem !important;
-        }
-        
-        .stat-text .stat-label {
-            display: block !important;
-            color: #6b7280 !important;
-            font-size: 0.75rem !important;
-            line-height: 1.2 !important;
-        }
-        
-
-        
-        /* 用戶下拉選單 */
-        .user-dropdown-menu {
-            display: none !important;
-            position: absolute !important;
-            top: 100% !important;
-            right: 0 !important;
-            background: white !important;
-            border: 1px solid #e5e7eb !important;
-            border-radius: 8px !important;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
-            min-width: 200px !important;
-            z-index: 1000 !important;
-            padding: 0.5rem 0 !important;
-        }
-        
-        .user-dropdown-menu.show {
-            display: block !important;
-        }
-        
-        .user-info {
-            padding: 1rem 1.5rem !important;
-            background: #f9fafb !important;
-        }
-        
-        .user-credits {
-            display: block !important;
-            font-weight: 600 !important;
-            color: #1f2937 !important;
-        }
-        
-        .user-email {
-            display: block !important;
-            font-size: 0.875rem !important;
-            color: #6b7280 !important;
-        }
-        
-        .user-menu-item {
-            display: flex !important;
-            align-items: center !important;
-            justify-content: space-between !important;
-            padding: 0.75rem 1.5rem !important;
-            color: #374151 !important;
-            text-decoration: none !important;
-            transition: background-color 0.2s ease !important;
-        }
-        
-        .user-menu-item:hover {
-            background: #f3f4f6 !important;
-        }
-        
-        .user-menu-item.logout {
-            color: #dc2626 !important;
-        }
-        
-        .user-menu-item i {
-            width: 16px !important;
-            margin-right: 0.75rem !important;
-        }
-        
-        .shortcut {
-            font-size: 0.75rem !important;
-            color: #9ca3af !important;
-        }
-        
-        .user-dropdown-menu hr {
-            margin: 0.5rem 0 !important;
-            border: none !important;
-            border-top: 1px solid #e5e7eb !important;
-        }
-        
-        /* 語言選擇器 */
-        .language-selector {
-            margin: 0 1rem !important;
-        }
-        
-        .language-select {
-            padding: 0.5rem 0.75rem !important;
-            border: 1px solid #d1d5db !important;
-            border-radius: 6px !important;
-            background: white !important;
-            color: #374151 !important;
-            font-size: 0.875rem !important;
-            cursor: pointer !important;
-        }
-        
-        .language-select:focus {
-            outline: none !important;
-            border-color: #2563eb !important;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
-        }
-        
-        /* 文檔單元格 */
-        .document-cell {
-            display: flex !important;
-            align-items: flex-start !important;
-            gap: 0.75rem !important;
-        }
-        
-        .document-info {
-            flex: 1 !important;
-        }
-        
-        .doc-name {
-            font-weight: 600 !important;
-            color: #1f2937 !important;
-            display: block !important;
-            margin-bottom: 0.25rem !important;
-        }
-        
-        .doc-details {
-            color: #6b7280 !important;
-            font-size: 0.75rem !important;
-            line-height: 1.4 !important;
-        }
-        
-        /* 進度條 */
-        .progress-bar {
-            width: 100px !important;
-            height: 8px !important;
-            background: #e5e7eb !important;
-            border-radius: 4px !important;
-            overflow: hidden !important;
-            margin-bottom: 0.5rem !important;
-        }
-        
-        .progress-fill {
-            height: 100% !important;
-            background: #8b5cf6 !important;
-            transition: width 0.3s ease !important;
-        }
-        
-        .progress-fill.processing {
-            background: #f59e0b !important;
-            animation: pulse 2s infinite !important;
-        }
-        
-        .progress-text {
-            font-weight: 600 !important;
-            color: #374151 !important;
-            font-size: 0.875rem !important;
-        }
-        
-        .status-text {
-            color: #6b7280 !important;
-            font-size: 0.75rem !important;
-        }
-        
-        /* 餘額信息 */
-        .balance-info {
-            font-size: 0.875rem !important;
-        }
-        
-        .balance-info div {
-            margin-bottom: 0.25rem !important;
-            color: #374151 !important;
-        }
-        
-        /* 狀態徽章 */
-        .status-badge, .review-badge {
-            display: inline-flex !important;
-            align-items: center !important;
-            padding: 0.25rem 0.75rem !important;
-            border-radius: 20px !important;
-            font-size: 0.75rem !important;
-            font-weight: 500 !important;
-            gap: 0.25rem !important;
-        }
-        
-        .status-badge.success {
-            background: #dcfce7 !important;
-            color: #166534 !important;
-        }
-        
-        .status-badge.processing {
-            background: #fef3c7 !important;
-            color: #92400e !important;
-        }
-        
-        .review-badge.review {
-            background: #dbeafe !important;
-            color: #1e40af !important;
-        }
-        
-        .review-badge.success {
-            background: #dcfce7 !important;
-            color: #166534 !important;
-        }
-        
-        .review-badge.pending {
-            background: #f3f4f6 !important;
-            color: #6b7280 !important;
-        }
-        
-        /* 表格底部 */
-        .table-footer {
-            display: flex !important;
-            justify-content: space-between !important;
-            align-items: center !important;
-            padding: 1rem 1.5rem !important;
-            background: #f9fafb !important;
-            border-top: 1px solid #e5e7eb !important;
-        }
-        
-        .table-info {
-            color: #6b7280 !important;
-            font-size: 0.875rem !important;
-        }
-        
-        .pagination {
-            display: flex !important;
-            align-items: center !important;
-            gap: 1rem !important;
-            font-size: 0.875rem !important;
-            color: #6b7280 !important;
-        }
-        
-        .rows-select {
-            padding: 0.25rem 0.5rem !important;
-            border: 1px solid #d1d5db !important;
-            border-radius: 4px !important;
-            background: white !important;
-        }
-        
-        .page-controls {
-            display: flex !important;
-            gap: 0.25rem !important;
-        }
-        
-        .page-btn {
-            padding: 0.5rem 0.75rem !important;
-            border: 1px solid #d1d5db !important;
-            background: white !important;
-            border-radius: 4px !important;
-            cursor: pointer !important;
-            transition: all 0.2s ease !important;
-        }
-        
-        .page-btn:hover:not(:disabled) {
-            background: #f3f4f6 !important;
-        }
-        
-        .page-btn:disabled {
-            opacity: 0.5 !important;
-            cursor: not-allowed !important;
-        }
-        
-        /* 動畫 */
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        
-        /* 響應式設計 */
-        @media (max-width: 1024px) {
-            .stats-horizontal {
-                grid-template-columns: repeat(2, 1fr) !important;
-            }
-            
-            .sidebar {
-                width: 240px !important;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .dashboard-container {
-                flex-direction: column !important;
-            }
-            
-            .sidebar {
-                width: 100% !important;
-                height: auto !important;
-            }
-            
-            .stats-horizontal {
-                grid-template-columns: 1fr !important;
-            }
-            
-            .controls-bar {
-                flex-direction: column !important;
-                gap: 1rem !important;
-            }
-            
-            .search-filter .filter-input {
-                width: 100% !important;
-            }
-        }
-        
-        .dashboard-main {
-            background: #f8fafc !important;
-        }
-        
-        .dashboard-header {
-            background: #ffffff !important;
-            border-bottom: 1px solid #e5e7eb !important;
-            margin-bottom: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-        
-        .dashboard-title {
-            color: #1f2937 !important;
-        }
-        
-        .dashboard-subtitle {
-            color: #6b7280 !important;
-        }
-        
-        .stats-grid {
-            gap: 1.5rem;
-        }
-        
-        .stat-card {
-            background: #ffffff !important;
-            border: 1px solid #e5e7eb !important;
-            border-radius: 12px !important;
-            padding: 1.5rem !important;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
-            transition: all 0.3s ease !important;
-        }
-        
-        .stat-card:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-            transform: translateY(-2px) !important;
-        }
-        
-        .stat-icon {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-            color: white !important;
-            width: 48px !important;
-            height: 48px !important;
-            border-radius: 12px !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            margin-bottom: 1rem !important;
-        }
-        
-        .stat-number {
-            color: #1f2937 !important;
-            font-size: 2rem !important;
-            font-weight: 700 !important;
-            margin-bottom: 0.5rem !important;
-        }
-        
-        .stat-label {
-            color: #6b7280 !important;
-            font-size: 0.875rem !important;
-        }
-        
-        .section-title {
-            color: #1f2937 !important;
-            font-size: 1.5rem !important;
-            font-weight: 600 !important;
-            margin-bottom: 1.5rem !important;
-        }
-        
-        .actions-grid {
-            gap: 1.5rem;
-        }
-        
-        .action-card {
-            background: #ffffff !important;
-            border: 1px solid #e5e7eb !important;
-            border-radius: 12px !important;
-            padding: 1.5rem !important;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
-            transition: all 0.3s ease !important;
-            text-align: center !important;
-        }
-        
-        .action-card:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-            transform: translateY(-2px) !important;
-            border-color: #2563eb !important;
-        }
-        
-        .action-icon {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-            color: white !important;
-            width: 64px !important;
-            height: 64px !important;
-            border-radius: 16px !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            margin: 0 auto 1rem auto !important;
-            font-size: 1.5rem !important;
-        }
-        
-        .action-title {
-            color: #1f2937 !important;
-            font-size: 1.125rem !important;
-            font-weight: 600 !important;
-            margin-bottom: 0.5rem !important;
-        }
-        
-        .action-description {
-            color: #6b7280 !important;
-            font-size: 0.875rem !important;
-            margin-bottom: 1.5rem !important;
-        }
-        
-        .action-btn {
-            background: #2563eb !important;
-            color: white !important;
-            border: none !important;
-            padding: 0.75rem 1.5rem !important;
-            border-radius: 8px !important;
-            font-weight: 500 !important;
-            cursor: pointer !important;
-            transition: all 0.3s ease !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            gap: 0.5rem !important;
-            width: 100% !important;
-        }
-        
-        .action-btn:hover {
-            background: #1d4ed8 !important;
-            transform: translateY(-1px) !important;
-        }
-        
-        .processing-table-container {
-            background: #ffffff !important;
-            border: 1px solid #e5e7eb !important;
-            border-radius: 12px !important;
-            overflow: hidden !important;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
-        }
-        
-        .processing-table {
-            width: 100% !important;
-            border-collapse: collapse !important;
-        }
-        
-        .processing-table th {
-            background: #f9fafb !important;
-            color: #374151 !important;
-            font-weight: 600 !important;
-            padding: 1rem !important;
-            text-align: left !important;
-            border-bottom: 1px solid #e5e7eb !important;
-        }
-        
-        .processing-table td {
-            padding: 1rem !important;
-            border-bottom: 1px solid #f3f4f6 !important;
-            color: #1f2937 !important;
-        }
-        
-        .processing-table tr:hover {
-            background: #f9fafb !important;
-        }
-        
-        .type-badge {
-            display: inline-block !important;
-            padding: 0.25rem 0.75rem !important;
-            border-radius: 20px !important;
-            font-size: 0.75rem !important;
-            font-weight: 500 !important;
-        }
-        
-        .type-badge.bank-statement {
-            background: #dbeafe !important;
-            color: #1e40af !important;
-        }
-        
-        .type-badge.invoice {
-            background: #dcfce7 !important;
-            color: #166534 !important;
-        }
-        
-        .type-badge.receipt {
-            background: #fef3c7 !important;
-            color: #92400e !important;
-        }
-        
-        .status-badge {
-            display: inline-block !important;
-            padding: 0.25rem 0.75rem !important;
-            border-radius: 20px !important;
-            font-size: 0.75rem !important;
-            font-weight: 500 !important;
-        }
-        
-        .status-badge.completed {
-            background: #dcfce7 !important;
-            color: #166534 !important;
-        }
-        
-        .status-badge.processing {
-            background: #fef3c7 !important;
-            color: #92400e !important;
-        }
-        
-        .btn-sm {
-            padding: 0.5rem 1rem !important;
-            border-radius: 6px !important;
-            font-size: 0.875rem !important;
-            font-weight: 500 !important;
-            border: none !important;
-            cursor: pointer !important;
-            transition: all 0.3s ease !important;
-            margin-right: 0.5rem !important;
-        }
-        
-        .btn-primary {
-            background: #2563eb !important;
-            color: white !important;
-        }
-        
-        .btn-primary:hover {
-            background: #1d4ed8 !important;
-        }
-        
-        .btn-secondary {
-            background: #6b7280 !important;
-            color: white !important;
-        }
-        
-        .btn-secondary:hover {
-            background: #4b5563 !important;
-        }
-        
-        .section-header {
-            display: flex !important;
-            justify-content: space-between !important;
-            align-items: center !important;
-            margin-bottom: 1.5rem !important;
-        }
-        
-        .view-all-btn {
-            color: #2563eb !important;
-            text-decoration: none !important;
-            font-weight: 500 !important;
-            font-size: 0.875rem !important;
-        }
-        
-        .view-all-btn:hover {
-            color: #1d4ed8 !important;
-            text-decoration: underline !important;
-        }
-        
-        .file-info {
-            display: flex !important;
-            align-items: center !important;
-            gap: 0.5rem !important;
-        }
-        
-        .file-icon {
-            color: #dc2626 !important;
-            font-size: 1.25rem !important;
-        }
-        
-        .action-buttons {
-            display: flex !important;
-            gap: 0.5rem !important;
-        }
-        
-        /* Modal 樣式 */
-        .modal {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-            background: rgba(0, 0, 0, 0.5) !important;
-            display: none !important;
-            align-items: center !important;
-            justify-content: center !important;
-            z-index: 1000 !important;
-        }
-        
-        .modal.active {
-            display: flex !important;
-        }
-        
-        .modal-content {
-            background: #ffffff !important;
-            border-radius: 12px !important;
-            max-width: 600px !important;
-            width: 90% !important;
-            max-height: 90% !important;
-            overflow-y: auto !important;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2) !important;
-        }
-        
-        .modal-header {
-            padding: 1.5rem !important;
-            border-bottom: 1px solid #e5e7eb !important;
-            display: flex !important;
-            justify-content: space-between !important;
-            align-items: center !important;
-        }
-        
-        .modal-title {
-            color: #1f2937 !important;
-            font-size: 1.25rem !important;
-            font-weight: 600 !important;
-        }
-        
-        .modal-close {
-            background: none !important;
-            border: none !important;
-            color: #6b7280 !important;
-            font-size: 1.5rem !important;
-            cursor: pointer !important;
-            padding: 0.5rem !important;
-            border-radius: 6px !important;
-            transition: all 0.3s ease !important;
-        }
-        
-        .modal-close:hover {
-            background: #f3f4f6 !important;
-            color: #1f2937 !important;
-        }
-        
-        .modal-body {
-            padding: 1.5rem !important;
-        }
-        
-        .modal-footer {
-            padding: 1.5rem !important;
-            border-top: 1px solid #e5e7eb !important;
-            display: flex !important;
-            justify-content: flex-end !important;
-            gap: 1rem !important;
-        }
-        
-        .btn {
-            padding: 0.75rem 1.5rem !important;
-            border-radius: 8px !important;
-            font-weight: 500 !important;
-            border: none !important;
-            cursor: pointer !important;
-            transition: all 0.3s ease !important;
-        }
-        
-        .btn-primary {
-            background: #2563eb !important;
-            color: white !important;
-        }
-        
-        .btn-secondary {
-            background: #e5e7eb !important;
-            color: #374151 !important;
-        }
-        
-        /* Help Banner */
-        .help-banner {
-            background: #fef3c7 !important;
-            border: 1px solid #f59e0b !important;
-            border-radius: 8px !important;
-            padding: 1rem !important;
-            margin: 2rem 0 !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: space-between !important;
-        }
-        
-        .help-content {
-            display: flex !important;
-            align-items: center !important;
-            gap: 1rem !important;
-            color: #92400e !important;
-        }
-        
-        .help-btn {
-            background: #f59e0b !important;
-            color: white !important;
-            border: none !important;
-            padding: 0.5rem 1rem !important;
-            border-radius: 6px !important;
-            font-weight: 500 !important;
-            cursor: pointer !important;
-        }
-        
-        .help-close {
-            background: none !important;
-            border: none !important;
-            color: #92400e !important;
-            cursor: pointer !important;
-            padding: 0.5rem !important;
-        }
-    </style>
+    <link rel="stylesheet" href="pages.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="translations.js"></script>
     <script src="unified-auth.js"></script>
@@ -1078,90 +26,7 @@
     <div class="dashboard-container">
         <!-- 左側邊欄 -->
         <aside class="sidebar">
-            <div class="sidebar-header">
-                <h2>Models</h2>
-            </div>
-            <nav class="sidebar-nav">
-                <ul>
-                    <li class="nav-item active">
-                        <a href="dashboard-main.html">
-                            <i class="fas fa-university"></i>
-                            <span>Bank statements</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="dashboard-invoice.html">
-                            <i class="fas fa-file-invoice"></i>
-                            <span>Invoices</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="dashboard-receipt.html">
-                            <i class="fas fa-receipt"></i>
-                            <span>Receipts</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="dashboard-general.html">
-                            <i class="fas fa-file-alt"></i>
-                            <span>General</span>
-                        </a>
-                    </li>
-                </ul>
-                
-                <h3>Configurations</h3>
-                <ul>
-                    <li class="nav-item">
-                        <a href="account.html">
-                            <i class="fas fa-user"></i>
-                            <span>Account</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="billing.html">
-                            <i class="fas fa-credit-card"></i>
-                            <span>Billing</span>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-            
-            <!-- 側邊欄底部文字區域 -->
-            <div class="sidebar-footer">
-                <div class="sidebar-stats">
-                    <div class="sidebar-stat-item">
-                        <div class="stat-icon-text">📄</div>
-                        <div class="stat-text">
-                            <span class="stat-number" data-stat="total-processed">0</span>
-                            <span class="stat-label">處理文檔總數</span>
-                        </div>
-                    </div>
-                    
-                    <div class="sidebar-stat-item">
-                        <div class="stat-icon-text">⏱️</div>
-                        <div class="stat-text">
-                            <span class="stat-number" data-stat="avg-processing-time">0ms</span>
-                            <span class="stat-label">平均處理時間</span>
-                        </div>
-                    </div>
-                    
-                    <div class="sidebar-stat-item">
-                        <div class="stat-icon-text">✅</div>
-                        <div class="stat-text">
-                            <span class="stat-number" data-stat="success-rate">0%</span>
-                            <span class="stat-label">處理成功率</span>
-                        </div>
-                    </div>
-                    
-                    <div class="sidebar-stat-item">
-                        <div class="stat-icon-text">💰</div>
-                        <div class="stat-text">
-                            <span class="stat-number" data-stat="current-credits">7</span>
-                            <span class="stat-label">剩餘Credits</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <!-- 側邊欄內容由 sidebar-component.js 動態生成 -->
         </aside>
 
         <!-- 主內容區域 -->
@@ -1176,8 +41,6 @@
                     <button class="help-btn" onclick="showHelp()">Need Help?</button>
                 </div>
             </header>
-
-
 
             <!-- 控制區域 -->
             <section class="controls-section">
@@ -1222,14 +85,14 @@
                                         <input type="checkbox">
                                         <i class="fas fa-file-pdf file-icon"></i>
                                         <div class="document-info">
-                                            <span class="doc-name">eStatementFile_2...</span>
+                                            <span class="doc-name" onclick="openDocumentDetail('stmt_001')">eStatementFile_2...</span>
                                             <small class="doc-details">📍 MR YEUNG CAVLIN<br>📊 760-452064-882 • MIPSSTM</small>
                                         </div>
                                     </div>
                                 </td>
                                 <td>
                                     <div class="period-info">
-                                        📅 02/01/2025 to 03/22/2025
+                                        📅 17 MAY 2024
                                         <br><small>13 transactions</small>
                                     </div>
                                 </td>
@@ -1239,7 +102,7 @@
                                             <div class="progress-fill" style="width: 31%"></div>
                                         </div>
                                         <span class="progress-text">4/13 31%</span>
-                                        <small class="status-text">🔄 In Progress</small>
+                                        <small class="status-text">🟡 In Progress</small>
                                     </div>
                                 </td>
                                 <td>
@@ -1251,27 +114,33 @@
                                 <td>
                                     <div class="status-review-cell">
                                         <span class="status-badge success">✅ Success</span>
-                                        <span class="review-badge review">🔍 Review</span>
+                                        <span class="review-badge pending">🔄 Review</span>
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="notes">—</span>
+                                    <div class="action-cell">
+                                        <span class="notes">Processing...</span>
+                                        <button class="action-menu-btn" onclick="showActionMenu(event, 'stmt_001')" title="更多操作">
+                                            <i class="fas fa-ellipsis-h"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
+                            
                             <tr onclick="toggleRowSelection(event)" style="cursor: pointer;">
                                 <td>
                                     <div class="document-cell">
                                         <input type="checkbox">
                                         <i class="fas fa-file-pdf file-icon"></i>
                                         <div class="document-info">
-                                            <span class="doc-name">發票_ABC公司_20240314.pdf</span>
-                                            <small class="doc-details">📍 ABC公司<br>📊 INV-2024-001</small>
+                                            <span class="doc-name" onclick="openDocumentDetail('stmt_002')">ABCA_Statement.pdf</span>
+                                            <small class="doc-details">📍 ABCA<br>📊 INV-2024-001</small>
                                         </div>
                                     </div>
                                 </td>
                                 <td>
                                     <div class="period-info">
-                                        📅 2024/03/14
+                                        📅 17 JUN 2024
                                         <br><small>5 items</small>
                                     </div>
                                 </td>
@@ -1293,37 +162,43 @@
                                 <td>
                                     <div class="status-review-cell">
                                         <span class="status-badge success">✅ Success</span>
-                                        <span class="review-badge success">✅ Approved</span>
+                                        <span class="review-badge approved">✓ Approved</span>
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="notes">完成</span>
+                                    <div class="action-cell">
+                                        <span class="notes">Completed</span>
+                                        <button class="action-menu-btn" onclick="showActionMenu(event, 'stmt_002')" title="更多操作">
+                                            <i class="fas fa-ellipsis-h"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
+                            
                             <tr onclick="toggleRowSelection(event)" style="cursor: pointer;">
                                 <td>
                                     <div class="document-cell">
                                         <input type="checkbox">
                                         <i class="fas fa-file-pdf file-icon"></i>
                                         <div class="document-info">
-                                            <span class="doc-name">餐廳收據_2024.pdf</span>
+                                            <span class="doc-name" onclick="openDocumentDetail('stmt_003')">Restaurant_ABC.pdf</span>
                                             <small class="doc-details">📍 Restaurant ABC<br>📊 RCP-2024-03</small>
                                         </div>
                                     </div>
                                 </td>
                                 <td>
                                     <div class="period-info">
-                                        📅 2024/03/13
+                                        📅 17 JUL 2024
                                         <br><small>Processing...</small>
                                     </div>
                                 </td>
                                 <td>
                                     <div class="reconciliation">
                                         <div class="progress-bar">
-                                            <div class="progress-fill processing" style="width: 45%"></div>
+                                            <div class="progress-fill" style="width: 45%"></div>
                                         </div>
                                         <span class="progress-text">Processing...</span>
-                                        <small class="status-text">🔄 In Progress</small>
+                                        <small class="status-text">🔵 In Progress</small>
                                     </div>
                                 </td>
                                 <td>
@@ -1339,457 +214,225 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="notes">處理中</span>
+                                    <div class="action-cell">
+                                        <span class="notes">In progress</span>
+                                        <button class="action-menu-btn" onclick="showActionMenu(event, 'stmt_003')" title="更多操作">
+                                            <i class="fas fa-ellipsis-h"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-                
-                <!-- 表格底部控制 -->
-                <div class="table-footer">
-                    <div class="table-info">
-                        0 of 1 row(s) selected.
-                    </div>
-                    <div class="pagination">
-                        <span>Rows per page</span>
-                        <select class="rows-select">
-                            <option>10</option>
-                            <option>25</option>
-                            <option>50</option>
-                        </select>
-                        <span class="page-info">Page 1 of 1</span>
-                        <div class="page-controls">
-                            <button class="page-btn" disabled>⟨⟨</button>
-                            <button class="page-btn" disabled>⟨</button>
-                            <button class="page-btn">⟩</button>
-                            <button class="page-btn">⟩⟩</button>
-                        </div>
-                    </div>
-                </div>
             </section>
+
+            <!-- 選擇信息 -->
+            <div class="selection-info">
+                0 of 3 row(s) selected.
+            </div>
         </main>
     </div>
 
     <!-- 上傳模態框 -->
-    <div class="modal" id="upload-modal">
-        <div class="modal-overlay"></div>
-        <div class="modal-content upload-modal-content">
+    <div id="upload-modal" class="modal">
+        <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title" id="modal-title">上傳文檔</h3>
-                <button class="modal-close" onclick="closeUploadModal()">
-                    <i class="fas fa-times"></i>
-                </button>
+                <h3>Upload Documents</h3>
+                <span class="close" onclick="closeUploadModal()">&times;</span>
             </div>
             <div class="modal-body">
-                <div class="document-type-display" id="document-type-display">
-                    <div class="type-icon" id="type-icon">
-                        <i class="fas fa-file-alt"></i>
-                    </div>
-                    <div class="type-info">
-                        <h4 id="type-title">文檔類型</h4>
-                        <p id="type-description">請選擇要處理的文檔類型</p>
-                    </div>
-                </div>
-                
-                <div class="upload-area" id="upload-area" style="border: 2px dashed #d1d5db; border-radius: 8px; padding: 2rem; text-align: center; background: #f9fafb; cursor: pointer; transition: all 0.3s ease;">
+                <div id="upload-area" class="upload-area">
                     <div class="upload-content">
-                        <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: #9ca3af; margin-bottom: 1rem;"></i>
-                        <h4 style="margin: 0 0 0.5rem 0; color: #1f2937;">拖放文件到這裡</h4>
-                        <p style="margin: 0 0 1rem 0; color: #6b7280;">或點擊瀏覽檔案</p>
-                        <div class="upload-note">
-                            <small style="color: #9ca3af;">支援 PDF, JPG, PNG 格式，最大 10MB</small>
-                        </div>
+                        <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                        <p>Drag and drop files here or click to browse</p>
+                        <input type="file" id="file-input" multiple accept=".pdf,.jpg,.jpeg,.png" style="display: none;">
+                        <button class="browse-btn" onclick="document.getElementById('file-input').click()">Browse Files</button>
                     </div>
                 </div>
-
-                <div class="credits-info">
-                    <div class="credits-calculation">
-                        <span>預估Credits使用：</span>
-                        <span class="credits-estimate" id="credits-estimate">0</span>
+                <div id="upload-progress" class="upload-progress" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
                     </div>
-                    <div class="credits-balance">
-                        <span>可用Credits：</span>
-                        <span class="credits-available" id="credits-available">7</span>
-                    </div>
+                    <div class="upload-status">Uploading...</div>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeUploadModal()">取消</button>
-                <button class="btn btn-primary" id="start-processing-btn" onclick="startProcessing()" disabled>
-                    開始處理
-                </button>
             </div>
         </div>
     </div>
 
-    <!-- 需要協助提示 -->
-    <div class="help-banner" id="help-banner">
-        <div class="help-content">
-            <i class="fas fa-info-circle"></i>
-            <div class="help-text">
-                <strong>提取不正確？</strong>
-                如果您對文檔結果不滿意，可以請求支援，我們會立即為您提供協助。
-            </div>
-            <button class="help-btn" onclick="requestHelp()">需要協助？</button>
+    <!-- Action Menu -->
+    <div id="action-menu" class="action-menu" style="display: none;">
+        <div class="action-menu-item" onclick="handleAction('approve')">
+            <i class="fas fa-check"></i>
+            <span>Approve</span>
         </div>
-        <button class="help-close" onclick="closeHelpBanner()">
-            <i class="fas fa-times"></i>
-        </button>
+        <div class="action-menu-item" onclick="handleAction('reprocess')">
+            <i class="fas fa-redo"></i>
+            <span>Re-process</span>
+        </div>
+        <div class="action-menu-item" onclick="handleAction('download')">
+            <i class="fas fa-download"></i>
+            <span>Download</span>
+        </div>
+        <div class="action-menu-item delete" onclick="handleAction('delete')">
+            <i class="fas fa-trash"></i>
+            <span>Delete</span>
+        </div>
     </div>
 
-    <script src="script.js"></script>
-    <script src="dashboard.js"></script>
     <script>
-        let currentDocumentType = '';
-        let selectedFiles = [];
-
-        function openUploadModal(documentType) {
-            currentDocumentType = documentType;
-            updateModalContent(documentType);
-            document.getElementById('upload-modal').classList.add('active');
-        }
-
-        function closeUploadModal() {
-            document.getElementById('upload-modal').classList.remove('active');
-            resetUploadForm();
-        }
-
-        function updateModalContent(type) {
-            const typeConfig = {
-                'bank-statement': {
-                    title: '處理銀行對帳單',
-                    icon: 'fas fa-university',
-                    description: '上傳PDF銀行對帳單，AI將自動提取交易記錄和餘額信息'
-                },
-                'invoice': {
-                    title: '處理發票',
-                    icon: 'fas fa-file-invoice',
-                    description: '上傳發票PDF，自動識別供應商、項目和金額'
-                },
-                'receipt': {
-                    title: '處理收據',
-                    icon: 'fas fa-receipt',
-                    description: '掃描收據並自動分類費用類型'
-                },
-                'general': {
-                    title: '處理通用文檔',
-                    icon: 'fas fa-file-alt',
-                    description: '處理各類財務相關文檔和表格'
-                }
-            };
-
-            const config = typeConfig[type];
-            document.getElementById('modal-title').textContent = config.title;
-            document.getElementById('type-icon').innerHTML = `<i class="${config.icon}"></i>`;
-            document.getElementById('type-title').textContent = config.title;
-            document.getElementById('type-description').textContent = config.description;
-        }
-
-        function triggerFileInput() {
-            document.getElementById('file-upload').click();
-        }
-
-        function viewResult(fileId) {
-            // 跳轉到結果頁面
-            window.location.href = `result.html?file=${fileId}`;
-        }
-
-        function requestHelp() {
-            alert('正在為您連接客服支援...');
-        }
-
-        function closeHelpBanner() {
-            document.getElementById('help-banner').style.display = 'none';
-        }
-
-        // 全局變量
-        let currentModel = 'bank-statement';
-        
-        function logout() {
-            localStorage.removeItem('userLoggedIn');
-            window.location.href = 'index.html';
-        }
-        
-
-        
-        // 用戶相關功能已移至 navbar-component.js
-        
-        // 檢查登入狀態函數 - 支持多種認證方式
+        // 登入狀態檢查
         function checkLoginStatus() {
-            // 方式1: 檢查新的認證系統
             const vaultcaddyToken = localStorage.getItem('vaultcaddy_token');
             const vaultcaddyUser = localStorage.getItem('vaultcaddy_user');
-            
-            if (vaultcaddyToken && vaultcaddyUser) {
-                console.log('✅ 發現新認證系統登入狀態');
-                return true;
-            }
-            
-            // 方式2: 檢查簡單認證系統
             const userLoggedIn = localStorage.getItem('userLoggedIn');
             
-            if (userLoggedIn === 'true') {
-                console.log('✅ 發現簡單認證系統登入狀態');
-                return true;
-            }
-            
-            // 方式3: 檢查統一認證管理器
-            if (window.UnifiedAuthManager) {
-                const authManager = window.UnifiedAuthManager;
-                if (authManager.isLoggedIn && authManager.isLoggedIn()) {
-                    console.log('✅ 統一認證管理器確認已登入');
-                    return true;
-                }
-            }
-            
-            console.log('❌ 所有認證方式都顯示未登入');
-            console.log('localStorage 內容:', {
-                userLoggedIn: localStorage.getItem('userLoggedIn'),
-                vaultcaddyToken: localStorage.getItem('vaultcaddy_token') ? '存在' : '不存在',
-                vaultcaddyUser: localStorage.getItem('vaultcaddy_user') ? '存在' : '不存在'
-            });
-            
-            return false;
+            return (vaultcaddyToken && vaultcaddyUser) || userLoggedIn === 'true';
         }
-        
-        // 切換模型
-        function switchModel(modelType) {
-            currentModel = modelType;
-            
-            // 更新側邊欄活躍狀態
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            event.target.closest('.nav-item').classList.add('active');
-            
-            // 更新標題
-            const titles = {
-                'bank-statement': 'Bank statement converter',
-                'invoice': 'Invoice processor',
-                'receipt': 'Receipt scanner', 
-                'general': 'General document processor'
-            };
-            
-            document.getElementById('current-model-title').textContent = titles[modelType];
-            
-            // 這裡可以添加更多模型特定的邏輯
-            console.log('Switched to model:', modelType);
-        }
-        
-        // 顯示集成設定
-        function showIntegrations() {
-            alert('Integration settings coming soon!');
-        }
-        
-        // 顯示幫助
-        function showHelp() {
-            alert('Help documentation coming soon!');
-        }
-        
-        // 打開上傳模態框
-        function openUploadModal() {
-            document.getElementById('upload-modal').classList.add('active');
-        }
-        
-        // 關閉上傳模態框
-        function closeUploadModal() {
-            document.getElementById('upload-modal').classList.remove('active');
-            resetUploadForm();
-        }
-        
-        // 重置上傳表單
-        function resetUploadForm() {
-            selectedFiles = [];
-            updateUploadForm();
-        }
-        
-        // 更新上傳表單
-        function updateUploadForm() {
-            // 這裡可以添加更新上傳表單的邏輯
-        }
-        
-        // 切換視圖
-        function toggleView() {
-            alert('View options coming soon!');
-        }
-        
-        // 觸發文件輸入
-        function triggerFileInput() {
-            document.getElementById('file-upload').click();
-        }
-        
-        // 查看結果
-        function viewResult(fileId) {
-            window.location.href = `result.html?file=${fileId}`;
-        }
-        
-        // 開始處理
-        function startProcessing() {
-            if (selectedFiles.length === 0) {
-                alert('Please select files to process.');
-                return;
-            }
-            
-            alert('Processing started! This feature will be implemented with real AI integration.');
-            closeUploadModal();
-        }
-        
-        // 全選/取消全選
-        function toggleSelectAll() {
-            const selectAll = document.querySelector('.select-all');
-            const checkboxes = document.querySelectorAll('tbody input[type="checkbox"]');
-            
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = selectAll.checked;
-            });
-            
-            updateSelectionInfo();
-        }
-        
-        // 更新選擇信息
-        function updateSelectionInfo() {
-            const checkboxes = document.querySelectorAll('tbody input[type="checkbox"]');
-            const checkedCount = document.querySelectorAll('tbody input[type="checkbox"]:checked').length;
-            const totalCount = checkboxes.length;
-            
-            document.querySelector('.table-info').textContent = 
-                `${checkedCount} of ${totalCount} row(s) selected.`;
-                
-            // 更新行的選中狀態
-            const rows = document.querySelectorAll('tbody tr');
-            rows.forEach((row, index) => {
-                const checkbox = row.querySelector('input[type="checkbox"]');
-                if (checkbox && checkbox.checked) {
-                    row.classList.add('selected');
-                } else {
-                    row.classList.remove('selected');
-                }
-            });
-        }
-        
-        // 表格行點擊選擇
-        function toggleRowSelection(event) {
-            if (event.target.type === 'checkbox') {
-                // 如果點擊的是checkbox，更新選擇狀態
-                updateSelectionInfo();
-                return;
-            }
-            
-            const row = event.currentTarget;
-            const checkbox = row.querySelector('input[type="checkbox"]');
-            
-            if (checkbox) {
-                checkbox.checked = !checkbox.checked;
-                updateSelectionInfo();
-            }
-        }
-        
-        // 過濾文檔
-        function filterDocuments() {
-            const filterText = document.querySelector('.filter-input').value.toLowerCase();
-            const rows = document.querySelectorAll('tbody tr');
-            
-            rows.forEach(row => {
-                const docName = row.querySelector('.doc-name').textContent.toLowerCase();
-                if (docName.includes(filterText)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        }
-        
-        // 點擊外部關閉下拉選單
-        document.addEventListener('click', function(event) {
-            const userProfile = document.getElementById('user-profile');
-            const userDropdown = document.getElementById('user-dropdown-menu');
-            
-            // 關閉用戶下拉選單
-            if (userDropdown && !userProfile.contains(event.target)) {
-                userDropdown.classList.remove('show');
-            }
-        });
 
         // 初始化
         document.addEventListener('DOMContentLoaded', function() {
-            // navbar-component.js 已經自動初始化了，無需手動調用
-            
-            // 檢查登入狀態 - 支持多種認證方式，包含延遲重試
-            function performLoginCheck() {
-                const isLoggedIn = checkLoginStatus();
-                console.log('🔐 Dashboard 登入狀態檢查:', isLoggedIn);
-                
-                if (!isLoggedIn) {
-                    console.log('❌ 未登入，延遲 500ms 後重試一次...');
-                    // 延遲重試一次，以防認證狀態還沒完全設置
-                    setTimeout(() => {
-                        const secondCheck = checkLoginStatus();
-                        console.log('🔐 Dashboard 第二次登入狀態檢查:', secondCheck);
-                        
-                        if (!secondCheck) {
-                            console.log('❌ 確認未登入，重定向到首頁');
-                            window.location.href = 'index.html';
-                        } else {
-                            console.log('✅ 延遲檢查發現已登入，初始化 Dashboard');
-                            initializeDashboard();
-                        }
-                    }, 500);
-                    return;
-                }
-                
-                console.log('✅ 已登入，初始化 Dashboard');
-                initializeDashboard();
+            // 檢查登入狀態
+            if (!checkLoginStatus()) {
+                window.location.href = 'index.html';
+                return;
             }
+
+            // 初始化統一側邊欄
+            window.bankSidebar = new VaultCaddySidebar('bank-statement');
             
-                    function initializeDashboard() {
-            console.log('🚀 開始初始化 Dashboard...');
+            // 初始化文檔管理器
+            window.bankDocumentManager = new DocumentManager('bank-statement');
             
             // 初始化上傳處理器
-            window.uploadHandler = initializeUploadHandler('#upload-area', 'bank-statement');
+            window.bankUploadHandler = initializeUploadHandler('#upload-area', 'bank-statement');
             
-            // 設置初始選擇狀態
+            console.log('✅ Bank Statement Dashboard 初始化完成');
+        });
+        
+        function showHelp() {
+            alert('Bank Statement Processing Help:\n\n1. 上傳銀行對帳單PDF\n2. AI自動提取交易數據\n3. 檢視和編輯結果\n4. 下載處理後的文件');
+        }
+
+        // Action Menu Functions
+        function showActionMenu(event, documentId) {
+            event.stopPropagation();
+            const menu = document.getElementById('action-menu');
+            menu.style.display = 'block';
+            menu.style.left = event.pageX + 'px';
+            menu.style.top = event.pageY + 'px';
+            menu.dataset.documentId = documentId;
+        }
+
+        function handleAction(action) {
+            const menu = document.getElementById('action-menu');
+            const documentId = menu.dataset.documentId;
+            menu.style.display = 'none';
+            
+            switch(action) {
+                case 'approve':
+                    console.log(`Approving document: ${documentId}`);
+                    alert(`Document ${documentId} approved!`);
+                    break;
+                case 'reprocess':
+                    console.log(`Re-processing document: ${documentId}`);
+                    alert(`Re-processing document ${documentId}...`);
+                    break;
+                case 'download':
+                    console.log(`Downloading document: ${documentId}`);
+                    alert(`Downloading document ${documentId}...`);
+                    break;
+                case 'delete':
+                    if(confirm(`Are you sure you want to delete document ${documentId}?`)) {
+                        console.log(`Deleting document: ${documentId}`);
+                        alert(`Document ${documentId} deleted!`);
+                    }
+                    break;
+            }
+        }
+
+        // Close action menu when clicking outside
+        document.addEventListener('click', function() {
+            document.getElementById('action-menu').style.display = 'none';
+        });
+
+        // Row selection functions
+        function toggleRowSelection(event) {
+            if (event.target.type === 'checkbox') return;
+            
+            const row = event.currentTarget;
+            const checkbox = row.querySelector('input[type="checkbox"]');
+            checkbox.checked = !checkbox.checked;
+            
+            if (checkbox.checked) {
+                row.classList.add('selected');
+            } else {
+                row.classList.remove('selected');
+            }
+            
             updateSelectionInfo();
+        }
+
+        function updateSelectionInfo() {
+            const checkboxes = document.querySelectorAll('.documents-grid tbody input[type="checkbox"]');
+            const selectedCount = document.querySelectorAll('.documents-grid tbody input[type="checkbox"]:checked').length;
+            const totalCount = checkboxes.length;
             
-            // 為所有checkbox添加事件監聽器
-            const checkboxes = document.querySelectorAll('tbody input[type="checkbox"]');
-            checkboxes.forEach(checkbox => {
-                checkbox.addEventListener('change', updateSelectionInfo);
-            });
-            
-            // 為全選checkbox添加事件監聽器
+            document.querySelector('.selection-info').textContent = `${selectedCount} of ${totalCount} row(s) selected.`;
+        }
+
+        // Upload Modal Functions
+        function openUploadModal() {
+            document.getElementById('upload-modal').style.display = 'block';
+        }
+
+        function closeUploadModal() {
+            document.getElementById('upload-modal').style.display = 'none';
+        }
+
+        function toggleView() {
+            alert('View toggle functionality will be implemented.');
+        }
+
+        function openDocumentDetail(documentId) {
+            window.open(`document-detail.html?id=${documentId}&type=bank-statement`, '_blank');
+        }
+
+        // Setup event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Select all checkbox
             const selectAllCheckbox = document.querySelector('.select-all');
             if (selectAllCheckbox) {
-                selectAllCheckbox.addEventListener('change', toggleSelectAll);
+                selectAllCheckbox.addEventListener('change', function() {
+                    const checkboxes = document.querySelectorAll('.documents-grid tbody input[type="checkbox"]');
+                    const rows = document.querySelectorAll('.documents-grid tbody tr');
+                    
+                    checkboxes.forEach((checkbox, index) => {
+                        checkbox.checked = this.checked;
+                        if (this.checked) {
+                            rows[index].classList.add('selected');
+                        } else {
+                            rows[index].classList.remove('selected');
+                        }
+                    });
+                    
+                    updateSelectionInfo();
+                });
             }
-            
-            // 搜索過濾事件
-            const filterInput = document.querySelector('.filter-input');
-            if (filterInput) {
-                filterInput.addEventListener('input', filterDocuments);
-            }
-            
-            // 監聽統計更新事件
-            document.addEventListener('statsUpdated', function(event) {
-                console.log('📊 統計數據已更新');
+
+            // Individual checkboxes
+            const individualCheckboxes = document.querySelectorAll('.documents-grid tbody input[type="checkbox"]');
+            individualCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const row = this.closest('tr');
+                    if (this.checked) {
+                        row.classList.add('selected');
+                    } else {
+                        row.classList.remove('selected');
+                    }
+                    updateSelectionInfo();
+                });
             });
-            
-            // 監聽Credits更新事件
-            document.addEventListener('creditsUpdated', function(event) {
-                console.log('💰 Credits已更新:', event.detail);
-            });
-            
-            // 初始化統計顯示
-            setTimeout(() => {
-                if (window.VaultCaddyStats) {
-                    window.VaultCaddyStats.updateDashboardDisplays();
-                }
-            }, 1000);
-            
-            console.log('✅ Dashboard 初始化完成');
-        }
-            
-            performLoginCheck();
         });
     </script>
 </body>
