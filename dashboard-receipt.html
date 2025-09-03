@@ -88,6 +88,8 @@
     <script src="document-processor.js"></script>
     <script src="upload-handler.js"></script>
     <script src="dashboard-stats.js"></script>
+    <script src="document-manager.js"></script>
+    <link rel="stylesheet" href="document-manager.css">
 </head>
 <body>
     <!-- 導航欄 - 由 navbar-component.js 動態載入 -->
@@ -146,76 +148,65 @@
             </nav>
         </aside>
 
-        <!-- 主要內容區域 -->
+        <!-- 主內容區域 -->
         <main class="main-content">
-            <div class="content-header">
-                <h1 style="font-size: 2rem; font-weight: 700; color: #1f2937; margin: 0 0 0.5rem 0;">Receipt Scanning</h1>
-                <p style="color: #6b7280; margin: 0;">Digitize and organize receipts with intelligent data extraction</p>
-            </div>
-
-            <div class="content-body">
-                <div class="feature-highlight">
-                    <h3 style="color: #065f46; margin: 0 0 1rem 0;">
-                        <i class="fas fa-receipt" style="margin-right: 0.5rem;"></i>
-                        Receipt Scanning Features
-                    </h3>
-                    <ul style="margin: 0; padding-left: 1.5rem; color: #374151;">
-                        <li>Extract merchant information and transaction details</li>
-                        <li>Automatic categorization and expense tracking</li>
-                        <li>Date, amount, and tax detection</li>
-                        <li>Export to expense management systems</li>
-                        <li>Mobile and digital receipt support</li>
-                    </ul>
+            <!-- 頂部標題和控制 -->
+            <header class="content-header">
+                <div class="header-left">
+                    <h1>Receipt Scanning</h1>
+                    <p>Manage and view your receipt documents</p>
                 </div>
-
-                <div class="upload-area" id="receipt-upload-area">
-                    <div style="margin-bottom: 1rem;">
-                        <i class="fas fa-camera" style="font-size: 3rem; color: #9ca3af;"></i>
-                    </div>
-                    <h3 style="color: #374151; margin: 0 0 0.5rem 0;">Upload Receipt Images</h3>
-                    <p style="color: #6b7280; margin: 0 0 1.5rem 0;">
-                        Drag and drop your receipt images here, or click to browse
-                    </p>
-                    <input type="file" id="receipt-file-input" accept=".jpg,.jpeg,.png,.pdf" multiple style="display: none;">
-                    <button class="btn-primary" onclick="document.getElementById('receipt-file-input').click()">
-                        <i class="fas fa-plus" style="margin-right: 0.5rem;"></i>
-                        Select Images
-                    </button>
+                <div class="header-right">
+                    <button class="help-btn" onclick="showHelp()">Need Help?</button>
                 </div>
+            </header>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
-                    <div style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1.5rem;">
-                        <h4 style="color: #1f2937; margin: 0 0 1rem 0;">Scanning Statistics</h4>
-                        <div style="color: #6b7280;">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                                <span>Receipts Processed:</span>
-                                <span style="font-weight: 600;">0</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                                <span>Total Amount:</span>
-                                <span style="font-weight: 600; color: #059669;">$0.00</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between;">
-                                <span>Credits Used:</span>
-                                <span style="font-weight: 600;">0</span>
-                            </div>
-                        </div>
+            <!-- 控制區域 -->
+            <section class="controls-section">
+                <div class="controls-bar">
+                    <div class="search-filter">
+                        <input type="text" placeholder="Filter document name..." class="filter-input">
                     </div>
-
-                    <div style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1.5rem;">
-                        <h4 style="color: #1f2937; margin: 0 0 1rem 0;">Quick Actions</h4>
-                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                            <button class="btn-primary" style="width: 100%;">
-                                <i class="fas fa-download" style="margin-right: 0.5rem;"></i>
-                                Export Data
-                            </button>
-                            <button class="btn-primary" style="width: 100%; background: #6b7280;">
-                                <i class="fas fa-chart-bar" style="margin-right: 0.5rem;"></i>
-                                View Reports
-                            </button>
-                        </div>
+                    <div class="actions">
+                        <button class="upload-btn">
+                            <i class="fas fa-upload"></i>
+                            Upload files
+                        </button>
+                        <button class="view-btn">
+                            <i class="fas fa-eye"></i>
+                            View
+                        </button>
                     </div>
                 </div>
+            </section>
+
+            <!-- 文檔表格 -->
+            <section class="documents-table">
+                <div class="table-container">
+                    <table class="documents-grid">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <input type="checkbox" class="select-all">
+                                    Document
+                                </th>
+                                <th>Merchant Info</th>
+                                <th>Amount</th>
+                                <th>Date Uploaded</th>
+                                <th>Status & Review</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- 由 document-manager.js 動態生成 -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 選擇信息 -->
+            <div class="selection-info">
+                0 of 0 row(s) selected.
             </div>
         </main>
     </div>
@@ -267,15 +258,25 @@
             });
         });
 
-        // 初始化收據上傳處理器
-        window.receiptUploadHandler = initializeUploadHandler('#receipt-upload-area', 'receipt');
-        
-        function handleFileUpload(files) {
-            console.log('上傳收據:', files);
-            // 使用新的上傳處理器
-            if (window.receiptUploadHandler) {
-                window.receiptUploadHandler.handleFiles(Array.from(files));
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 檢查登入狀態
+            if (!checkLoginStatus()) {
+                window.location.href = 'index.html';
+                return;
             }
+
+            // 初始化文檔管理器
+            window.receiptDocumentManager = new DocumentManager('receipt');
+            
+            // 初始化上傳處理器
+            window.receiptUploadHandler = initializeUploadHandler('#upload-area', 'receipt');
+            
+            console.log('✅ Receipt Dashboard 初始化完成');
+        });
+        
+        function showHelp() {
+            alert('Receipt Scanning Help:\n\n1. 上傳收據圖片\n2. AI自動提取數據\n3. 查看和編輯結果\n4. 下載處理後的文件');
         }
     </script>
 </body>

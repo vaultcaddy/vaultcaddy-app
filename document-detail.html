@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Details - VaultCaddy | AI 文檔處理平台</title>
+    <meta name="description" content="VaultCaddy 文檔詳細分析 - 查看AI處理結果和文檔詳細信息。">
+    <meta name="keywords" content="文檔詳細, AI分析, 交易記錄, VaultCaddy">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="document-manager.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="translations.js"></script>
+    <script src="unified-auth.js"></script>
+    <script src="navbar-component.js"></script>
+    <style>
+        body {
+            background: #0f172a !important;
+            color: white !important;
+            padding-top: 80px !important;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .detail-container {
+            display: flex;
+            height: calc(100vh - 80px);
+            overflow: hidden;
+        }
+
+        /* PDF查看器 */
+        .pdf-viewer {
+            flex: 0 0 400px;
+            background: #1e293b;
+            border-right: 1px solid #334155;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pdf-header {
+            padding: 1rem;
+            border-bottom: 1px solid #334155;
+            background: #0f172a;
+        }
+
+        .pdf-controls {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .pdf-control-btn {
+            background: #374151;
+            border: none;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .pdf-control-btn:hover {
+            background: #4b5563;
+        }
+
+        .pdf-content {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            justify-content: center;
+        }
+
+        .pdf-preview {
+            background: white;
+            border-radius: 8px;
+            max-width: 100%;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 結果面板 */
+        .results-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #1e293b;
+        }
+
+        .results-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #334155;
+            background: #0f172a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .results-tabs {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            color: white;
+            border-bottom-color: #3b82f6;
+        }
+
+        .tab-btn:hover {
+            color: white;
+        }
+
+        .results-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            background: #374151;
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background 0.2s;
+        }
+
+        .action-btn:hover {
+            background: #4b5563;
+        }
+
+        .action-btn.primary {
+            background: #3b82f6;
+        }
+
+        .action-btn.primary:hover {
+            background: #2563eb;
+        }
+
+        .results-content {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        /* 和解狀態 */
+        .reconciliation-status {
+            background: #1e293b;
+            margin: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #334155;
+        }
+
+        .status-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #334155;
+            background: #0f172a;
+        }
+
+        .status-progress {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .progress-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: conic-gradient(#3b82f6 23%, #374151 0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .progress-circle::before {
+            content: '';
+            width: 40px;
+            height: 40px;
+            background: #1e293b;
+            border-radius: 50%;
+            position: absolute;
+        }
+
+        .progress-text {
+            position: relative;
+            z-index: 1;
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+
+        /* 銀行對帳單詳細信息 */
+        .bank-details {
+            background: #1e293b;
+            margin: 0 1.5rem 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #334155;
+        }
+
+        .details-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #334155;
+            background: #0f172a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* 交易列表 */
+        .transactions-section {
+            background: #1e293b;
+            margin: 0 1.5rem 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #334155;
+        }
+
+        .transactions-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #334155;
+            background: #0f172a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .transaction-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .transaction-btn {
+            background: #374151;
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: background 0.2s;
+        }
+
+        .transaction-btn:hover {
+            background: #4b5563;
+        }
+
+        .transaction-btn.active {
+            background: #3b82f6;
+        }
+
+        .transactions-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .transaction-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            border-bottom: 1px solid #374151;
+            transition: background 0.2s;
+        }
+
+        .transaction-item:hover {
+            background: #374151;
+        }
+
+        .transaction-checkbox {
+            margin-right: 1rem;
+        }
+
+        .transaction-details {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .transaction-date {
+            font-weight: 500;
+        }
+
+        .transaction-description {
+            color: #d1d5db;
+        }
+
+        .transaction-amount {
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .transaction-balance {
+            text-align: right;
+            color: #94a3b8;
+        }
+
+        .transaction-action {
+            text-align: right;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .delete-btn:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .detail-container {
+                flex-direction: column;
+            }
+            
+            .pdf-viewer {
+                flex: 0 0 300px;
+            }
+            
+            .transaction-details {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 導航欄 - 由 navbar-component.js 動態載入 -->
+    <div id="navbar-placeholder"></div>
+
+    <!-- 文檔詳細容器 -->
+    <div class="detail-container">
+        <!-- PDF查看器 -->
+        <div class="pdf-viewer">
+            <div class="pdf-header">
+                <h3 style="margin: 0; color: white;">Document Preview</h3>
+                <p style="margin: 0.5rem 0 0 0; color: #94a3b8; font-size: 0.875rem;">1 of 3</p>
+                <div class="pdf-controls">
+                    <button class="pdf-control-btn" onclick="zoomOut()" title="縮小">
+                        <i class="fas fa-search-minus"></i>
+                    </button>
+                    <button class="pdf-control-btn" onclick="resetZoom()" title="重置">
+                        <i class="fas fa-expand-arrows-alt"></i>
+                    </button>
+                    <button class="pdf-control-btn" onclick="zoomIn()" title="放大">
+                        <i class="fas fa-search-plus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="pdf-content">
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2ZmZmZmZiIgc3Ryb2tlPSIjZGRkZGRkIiBzdHJva2Utd2lkdGg9IjEiLz4KICA8dGV4dCB4PSIxNTAiIHk9IjUwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiMzMzMzMzMiPkhhbmcgU2VuZyBCYW5rPC90ZXh0PgogIDx0ZXh0IHg9IjE1MCIgeT0iMTAwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTIiIGZpbGw9IiM2NjY2NjYiPlN0YXRlbWVudCBvZiBJbnRlZ3JhdGVkIEFjY291bnQ8L3RleHQ+CiAgPHRleHQgeD0iMjAiIHk9IjE1MCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEwIiBmaWxsPSIjMzMzMzMzIj5CYW5rOiAoMTEpIENBVCBQT05HIDxBLU5MPS90ZXh0PgogIDx0ZXh0IHg9IjIwIiB5PSIxNzAiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMCIgZmlsbD0iIzMzMzMzMyI+QS9DOiA3NjAtNDUyMDY0LTg4MjwvdGV4dD4KICA8dGV4dCB4PSIyMCIgeT0iMTkwIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTAiIGZpbGw9IiMzMzMzMzMiPk5hbWU6IE1SIFlFVU5HIENBVkxJTjwvdGV4dD4KICA8cmVjdCB4PSIyMCIgeT0iMjIwIiB3aWR0aD0iMjYwIiBoZWlnaHQ9IjE1MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZGRkZGRkIiBzdHJva2Utd2lkdGg9IjEiLz4KICA8dGV4dCB4PSIzMCIgeT0iMjQwIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iOCIgZmlsbD0iIzMzMzMzMyI+RGF0ZSAgICAgICAgRGVzY3JpcHRpb24gICAgICAgICAgICBBbW91bnQgICAgIEJhbGFuY2U8L3RleHQ+CiAgPHRleHQgeD0iMzAiIHk9IjI2MCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjgiIGZpbGw9IiMzMzMzMzMiPjAyLzIyLzI1ICAgQi9GIEJBTEFOQ0UgICAgICAgICAgIDAgICAgICAgMTQ5My45ODwvdGV4dD4KICA8dGV4dCB4PSIzMCIgeT0iMjgwIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iOCIgZmlsbD0iIzMzMzMzMyI+MDIvMjYvMjUgICBDUkVESVQgSU5URVJFU1QgICAgIDIuNjEgICAgMTQ5Ni41OTwvdGV4dD4KICA8dGV4dCB4PSIzMCIgeT0iMzAwIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iOCIgZmlsbD0iIzMzMzMzMyI+MDMvMDcvMjUgICBRVUlDSyBDSEVRVUUgREVQT1NJVCAuLi4gNzg2NDkgICA4MDE0NS41OTwvdGV4dD4KPC9zdmc+" alt="Bank Statement" class="pdf-preview" id="pdf-preview">
+            </div>
+        </div>
+
+        <!-- 結果面板 -->
+        <div class="results-panel">
+            <div class="results-header">
+                <div class="results-tabs">
+                    <button class="tab-btn active" onclick="switchTab('results')">Results</button>
+                    <button class="tab-btn" onclick="switchTab('export')">Export</button>
+                    <button class="tab-btn" onclick="switchTab('json')">JSON</button>
+                </div>
+                <div class="results-actions">
+                    <button class="action-btn" onclick="saveDocument()">
+                        <i class="fas fa-save"></i>
+                        Saved
+                    </button>
+                    <button class="action-btn primary" onclick="downloadDocument()">
+                        <i class="fas fa-download"></i>
+                        Download
+                    </button>
+                    <button class="action-btn" onclick="showMoreActions()">
+                        <i class="fas fa-ellipsis-h"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="results-content" id="results-content">
+                <!-- 和解狀態 -->
+                <div class="reconciliation-status">
+                    <div class="status-header">
+                        <h4 style="margin: 0; color: white;">Reconciliation Status</h4>
+                        <div class="status-progress">
+                            <div class="progress-circle">
+                                <span class="progress-text">23%</span>
+                            </div>
+                            <div>
+                                <div style="color: white; font-weight: 600;">3 of 13 transactions reconciled</div>
+                                <div style="color: #94a3b8; font-size: 0.875rem; margin-top: 0.25rem;">23% Complete</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 銀行對帳單詳細信息 -->
+                <div class="bank-details">
+                    <div class="details-header">
+                        <h4 style="margin: 0; color: white;">Bank Statement Details & Notes</h4>
+                        <button class="action-btn" onclick="toggleBankDetails()">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 交易列表 -->
+                <div class="transactions-section">
+                    <div class="transactions-header">
+                        <h4 style="margin: 0; color: white;">Transactions</h4>
+                        <div class="transaction-controls">
+                            <button class="transaction-btn" onclick="showUnreconciled()">Show Unreconciled</button>
+                            <button class="transaction-btn active" onclick="toggleAll()">Toggle All</button>
+                            <button class="transaction-btn" onclick="addItem()">Add Item</button>
+                        </div>
+                    </div>
+                    <div style="padding: 1rem; color: #94a3b8; font-size: 0.875rem;">
+                        Showing 1 to 13 of 13 transactions
+                    </div>
+                    <div class="transactions-list">
+                        <!-- 交易項目 -->
+                        <div class="transaction-item">
+                            <input type="checkbox" class="transaction-checkbox" checked>
+                            <div class="transaction-details">
+                                <div class="transaction-date">02/22/25</div>
+                                <div class="transaction-description">B/F BALANCE</div>
+                                <div class="transaction-amount">0</div>
+                                <div style="text-align: center;">+/-</div>
+                                <div class="transaction-balance">1493.98</div>
+                            </div>
+                            <div class="transaction-action">
+                                <button class="delete-btn" onclick="deleteTransaction(this)">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="transaction-item">
+                            <input type="checkbox" class="transaction-checkbox">
+                            <div class="transaction-details">
+                                <div class="transaction-date">02/26/25</div>
+                                <div class="transaction-description">CREDIT INTEREST</div>
+                                <div class="transaction-amount">2.61</div>
+                                <div style="text-align: center;">+/-</div>
+                                <div class="transaction-balance">1496.59</div>
+                            </div>
+                            <div class="transaction-action">
+                                <button class="delete-btn" onclick="deleteTransaction(this)">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="transaction-item">
+                            <input type="checkbox" class="transaction-checkbox">
+                            <div class="transaction-details">
+                                <div class="transaction-date">03/07/25</div>
+                                <div class="transaction-description">QUICK CHEQUE DEPOSIT(0...</div>
+                                <div class="transaction-amount">78649</div>
+                                <div style="text-align: center;">+/-</div>
+                                <div class="transaction-balance">80145.59</div>
+                            </div>
+                            <div class="transaction-action">
+                                <button class="delete-btn" onclick="deleteTransaction(this)">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="transaction-item">
+                            <input type="checkbox" class="transaction-checkbox">
+                            <div class="transaction-details">
+                                <div class="transaction-date">03/08/25</div>
+                                <div class="transaction-description">POON H** K****HD12530...</div>
+                                <div class="transaction-amount">840</div>
+                                <div style="text-align: center;">+/-</div>
+                                <div class="transaction-balance">79305.59</div>
+                            </div>
+                            <div class="transaction-action">
+                                <button class="delete-btn" onclick="deleteTransaction(this)">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="transaction-item">
+                            <input type="checkbox" class="transaction-checkbox">
+                            <div class="transaction-details">
+                                <div class="transaction-date">03/10/25</div>
+                                <div class="transaction-description">4006-1210-0627-0086N31...</div>
+                                <div class="transaction-amount">-21226</div>
+                                <div style="text-align: center;">+/-</div>
+                                <div class="transaction-balance">0</div>
+                            </div>
+                            <div class="transaction-action">
+                                <button class="delete-btn" onclick="deleteTransaction(this)">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="transaction-item">
+                            <input type="checkbox" class="transaction-checkbox">
+                            <div class="transaction-details">
+                                <div class="transaction-date">03/10/25</div>
+                                <div class="transaction-description">TUG COMPANY LIMITEDH...</div>
+                                <div class="transaction-amount">15000</div>
+                                <div style="text-align: center;">+/-</div>
+                                <div class="transaction-balance">43079</div>
+                            </div>
+                            <div class="transaction-action">
+                                <button class="delete-btn" onclick="deleteTransaction(this)">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="transaction-item">
+                            <input type="checkbox" class="transaction-checkbox">
+                            <div class="transaction-details">
+                                <div class="transaction-date">03/11/25</div>
+                                <div class="transaction-description">024996675981841NSTAL...</div>
+                                <div class="transaction-amount">-3966.</div>
+                                <div style="text-align: center;">+/-</div>
+                                <div class="transaction-balance">39112.8</div>
+                            </div>
+                            <div class="transaction-action">
+                                <button class="delete-btn" onclick="deleteTransaction(this)">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="transaction-item">
+                            <input type="checkbox" class="transaction-checkbox">
+                            <div class="transaction-details">
+                                <div class="transaction-date">03/14/25</div>
+                                <div class="transaction-description">MUSHROOM TRANSPORTA...</div>
+                                <div class="transaction-amount">-6500</div>
+                                <div style="text-align: center;">+/-</div>
+                                <div class="transaction-balance">0</div>
+                            </div>
+                            <div class="transaction-action">
+                                <button class="delete-btn" onclick="deleteTransaction(this)">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 檢查登入狀態
+        function checkLoginStatus() {
+            const vaultcaddyToken = localStorage.getItem('vaultcaddy_token');
+            const vaultcaddyUser = localStorage.getItem('vaultcaddy_user');
+            const userLoggedIn = localStorage.getItem('userLoggedIn');
+            
+            return (vaultcaddyToken && vaultcaddyUser) || userLoggedIn === 'true';
+        }
+
+        // 標籤切換
+        function switchTab(tabName) {
+            // 更新標籤狀態
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            console.log('切換到標籤:', tabName);
+        }
+
+        // PDF控制
+        function zoomIn() {
+            const preview = document.getElementById('pdf-preview');
+            const currentWidth = preview.style.width || '100%';
+            console.log('放大PDF');
+        }
+
+        function zoomOut() {
+            console.log('縮小PDF');
+        }
+
+        function resetZoom() {
+            console.log('重置縮放');
+        }
+
+        // 文檔操作
+        function saveDocument() {
+            console.log('保存文檔');
+        }
+
+        function downloadDocument() {
+            console.log('下載文檔');
+        }
+
+        function showMoreActions() {
+            console.log('顯示更多操作');
+        }
+
+        // 銀行詳細信息切換
+        function toggleBankDetails() {
+            console.log('切換銀行詳細信息');
+        }
+
+        // 交易操作
+        function showUnreconciled() {
+            console.log('顯示未和解交易');
+        }
+
+        function toggleAll() {
+            const checkboxes = document.querySelectorAll('.transaction-checkbox');
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            checkboxes.forEach(cb => cb.checked = !allChecked);
+        }
+
+        function addItem() {
+            console.log('添加交易項目');
+        }
+
+        function deleteTransaction(button) {
+            if (confirm('確定要刪除這筆交易嗎？')) {
+                button.closest('.transaction-item').remove();
+            }
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 檢查登入狀態
+            if (!checkLoginStatus()) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // 獲取文檔ID
+            const urlParams = new URLSearchParams(window.location.search);
+            const docId = urlParams.get('id');
+            
+            if (docId) {
+                console.log('載入文檔詳細信息:', docId);
+                // 這裡可以根據docId載入具體的文檔數據
+            }
+
+            console.log('✅ 文檔詳細頁面初始化完成');
+        });
+    </script>
+</body>
+</html>
