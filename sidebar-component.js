@@ -1,6 +1,7 @@
 /**
  * VaultCaddy 統一側邊欄組件
  * 用於所有Dashboard頁面的一致導航
+ * Google Cloud Vision API Client ID: 672279750239-u41ov9g2no1l2vh5j9h1679phggq0gko.apps.googleusercontent.com
  */
 
 class VaultCaddySidebar {
@@ -60,13 +61,13 @@ class VaultCaddySidebar {
                 
                 <h3>Configurations</h3>
                 <ul>
-                    <li class="nav-item">
+                    <li class="nav-item ${this.activePage === 'account' ? 'active' : ''}">
                         <a href="account.html">
                             <i class="fas fa-user"></i>
                             <span>Account</span>
                         </a>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item ${this.activePage === 'billing' ? 'active' : ''}">
                         <a href="billing.html">
                             <i class="fas fa-credit-card"></i>
                             <span>Billing</span>
