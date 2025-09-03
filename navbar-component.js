@@ -182,7 +182,7 @@ class VaultCaddyNavbar {
                         </a>
                     </div>
                 </div>
-                <a href="dashboard.html" class="nav-link" data-translate="nav_dashboard">Dashboard</a>
+
             `;
         }
         

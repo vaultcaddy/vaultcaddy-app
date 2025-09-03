@@ -20,6 +20,7 @@
     <script src="translations.js"></script>
     <script src="unified-auth.js"></script>
     <script src="navbar-component.js"></script>
+    <script src="navbar-content-manager.js"></script>
     <script src="sidebar-component.js"></script>
     <script src="content-manager.js"></script>
     <script src="document-processor.js"></script>
@@ -30,7 +31,125 @@
     <script src="google-cloud-config.js"></script>
     
     <style>
-        /* 單頁應用特定樣式 */
+        /* 白色主題覆蓋 */
+        body {
+            background: #ffffff !important;
+            color: #1f2937 !important;
+        }
+        
+        /* Dashboard容器白色主題 */
+        .dashboard-container {
+            background: #ffffff;
+            min-height: 100vh;
+        }
+        
+        /* 側邊欄白色主題 */
+        .sidebar {
+            background: #ffffff !important;
+            border-right: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        
+        .sidebar h2, .sidebar h3 {
+            color: #1f2937 !important;
+        }
+        
+        .sidebar .nav-item a {
+            color: #6b7280 !important;
+        }
+        
+        .sidebar .nav-item.active a,
+        .sidebar .nav-item a:hover {
+            background: #f3f4f6 !important;
+            color: #1f2937 !important;
+        }
+        
+        .sidebar-stats {
+            background: #ffffff;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .sidebar-stat-item {
+            color: #6b7280;
+        }
+        
+        .stat-number {
+            color: #1f2937 !important;
+        }
+        
+        /* 主內容區域白色主題 */
+        .main-content {
+            background: #ffffff !important;
+            color: #1f2937 !important;
+            transition: opacity 0.2s ease-in-out;
+            padding: 2rem;
+        }
+        
+        .main-content.loading {
+            opacity: 0.7;
+        }
+        
+        /* 內容標題 */
+        .content-header h1 {
+            color: #1f2937 !important;
+        }
+        
+        .content-header p {
+            color: #6b7280 !important;
+        }
+        
+        /* 表格白色主題 */
+        .documents-grid {
+            background: #ffffff !important;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .documents-grid thead th {
+            background: #f9fafb !important;
+            color: #374151 !important;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .documents-grid tbody tr {
+            background: #ffffff !important;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .documents-grid tbody tr:hover {
+            background: #f9fafb !important;
+        }
+        
+        .documents-grid tbody tr.selected {
+            background: #eff6ff !important;
+        }
+        
+        /* 控制區域白色主題 */
+        .controls-bar {
+            background: #ffffff;
+            padding: 1rem 0;
+            margin-bottom: 1.5rem;
+        }
+        
+        .filter-input {
+            background: #ffffff !important;
+            border: 1px solid #d1d5db !important;
+            color: #1f2937 !important;
+        }
+        
+        .upload-btn {
+            background: #3b82f6 !important;
+            color: #ffffff !important;
+        }
+        
+        .view-btn {
+            background: #f3f4f6 !important;
+            color: #374151 !important;
+            border: 1px solid #d1d5db !important;
+        }
+        
+        /* 載入和錯誤狀態 */
         .loading-state {
             display: flex;
             flex-direction: column;
@@ -38,6 +157,7 @@
             justify-content: center;
             padding: 4rem 2rem;
             color: #6b7280;
+            background: #ffffff;
         }
         
         .loading-state i {
@@ -59,6 +179,7 @@
             padding: 4rem 2rem;
             color: #ef4444;
             text-align: center;
+            background: #ffffff;
         }
         
         .error-state i {
@@ -78,15 +199,6 @@
         
         .error-state button:hover {
             background: #2563eb;
-        }
-        
-        /* 確保內容區域平滑切換 */
-        .main-content {
-            transition: opacity 0.2s ease-in-out;
-        }
-        
-        .main-content.loading {
-            opacity: 0.7;
         }
         
         /* 帳戶和計費頁面樣式 */

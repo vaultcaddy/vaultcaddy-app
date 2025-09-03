@@ -198,27 +198,27 @@ class ContentManager {
     // 獲取發票內容
     getInvoiceContent() {
         return `
-            <header class="content-header">
+            <header class="content-header" style="margin-bottom: 1.5rem;">
                 <div class="header-left">
-                    <h1>Invoice Processing</h1>
-                    <p>Manage and view your invoice documents</p>
+                    <h1 style="font-size: 1.75rem; font-weight: 700; color: #1f2937; margin: 0 0 0.5rem 0;">Invoice Processing</h1>
+                    <p style="color: #6b7280; margin: 0;">Manage and view your invoice documents</p>
                 </div>
                 <div class="header-right">
-                    <button class="help-btn" onclick="showHelp('invoice')">Need Help?</button>
+                    <button class="help-btn" onclick="showHelp('invoice')" style="background: #6b7280; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;">Need Help?</button>
                 </div>
             </header>
 
-            <section class="controls-section">
-                <div class="controls-bar">
-                    <div class="search-filter">
-                        <input type="text" placeholder="Filter document name..." class="filter-input">
+            <section class="controls-section" style="margin-bottom: 1.5rem;">
+                <div class="controls-bar" style="display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
+                    <div class="search-filter" style="flex: 1; max-width: 400px;">
+                        <input type="text" placeholder="Filter document name..." class="filter-input" style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; background: #ffffff;">
                     </div>
-                    <div class="actions">
-                        <button class="upload-btn" onclick="openUploadModal('invoice')">
+                    <div class="actions" style="display: flex; gap: 0.75rem;">
+                        <button class="upload-btn" onclick="openUploadModal('invoice')" style="background: #3b82f6; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
                             <i class="fas fa-upload"></i>
                             Upload files
                         </button>
-                        <button class="view-btn" onclick="toggleView()">
+                        <button class="view-btn" onclick="toggleView()" style="background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; padding: 0.75rem 1.5rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
                             <i class="fas fa-eye"></i>
                             View
                         </button>
@@ -226,27 +226,66 @@ class ContentManager {
                 </div>
             </section>
 
-            <section class="documents-table">
-                <div class="table-container">
-                    <table class="documents-grid">
+            <section class="documents-table" style="background: #ffffff; border-radius: 8px; border: 1px solid #e5e7eb; overflow: hidden;">
+                <div class="table-container" style="overflow-x: auto;">
+                    <table class="documents-grid" style="width: 100%; border-collapse: collapse;">
                         <thead>
-                            <tr>
-                                <th><input type="checkbox" class="select-all">Document</th>
-                                <th>Vendor Info</th>
-                                <th>Amount</th>
-                                <th>Date Uploaded</th>
-                                <th>Status & Review</th>
-                                <th>Notes</th>
+                            <tr style="background: #f9fafb;">
+                                <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;"><input type="checkbox" class="select-all" style="margin-right: 0.5rem;">Document</th>
+                                <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">Vendor Info</th>
+                                <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">Amount</th>
+                                <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">Date Uploaded</th>
+                                <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">Status & Review</th>
+                                <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">Notes</th>
                             </tr>
                         </thead>
-                        <tbody id="documents-tbody">
-                            <!-- 動態生成 -->
+                        <tbody>
+                            <tr style="border-bottom: 1px solid #f3f4f6;" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='#ffffff'">
+                                <td style="padding: 1rem; vertical-align: top;">
+                                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                        <input type="checkbox">
+                                        <i class="fas fa-file-invoice" style="color: #3b82f6; font-size: 1.25rem;"></i>
+                                        <div>
+                                            <div style="font-weight: 600; color: #1f2937; cursor: pointer;" onclick="openDocumentDetail('inv_001')">Invoice_2025_001.pdf</div>
+                                            <div style="font-size: 0.875rem; color: #6b7280;">📍 ABC Company Ltd<br>📊 INV-2025-001</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td style="padding: 1rem; vertical-align: top;">
+                                    <div style="color: #1f2937;">
+                                        🏢 ABC Company Ltd
+                                        <br><small style="color: #6b7280;">Due: 2025/09/15</small>
+                                    </div>
+                                </td>
+                                <td style="padding: 1rem; vertical-align: top;">
+                                    <div style="font-weight: 600; color: #1f2937;">$5,420.00</div>
+                                    <div style="font-size: 0.875rem; color: #6b7280;">Tax: $542.00</div>
+                                </td>
+                                <td style="padding: 1rem; vertical-align: top;">
+                                    <div style="color: #1f2937;">📅 2025/8/29</div>
+                                    <div style="font-size: 0.875rem; color: #6b7280;">Completed</div>
+                                </td>
+                                <td style="padding: 1rem; vertical-align: top;">
+                                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                        <span style="background: #10b981; color: white; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.75rem; text-align: center;">✅ Success</span>
+                                        <span style="background: #10b981; color: white; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.75rem; text-align: center;">✓ Approved</span>
+                                    </div>
+                                </td>
+                                <td style="padding: 1rem; vertical-align: top;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="color: #6b7280;">Payment processed</span>
+                                        <button onclick="showActionMenu(event, 'inv_001')" style="background: none; border: none; color: #6b7280; cursor: pointer; padding: 0.25rem;" title="更多操作">
+                                            <i class="fas fa-ellipsis-h"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
             </section>
 
-            <div class="selection-info">0 of 0 row(s) selected.</div>
+            <div class="selection-info" style="margin-top: 1rem; color: #6b7280; font-size: 0.875rem;">0 of 1 row(s) selected.</div>
         `;
     }
     
