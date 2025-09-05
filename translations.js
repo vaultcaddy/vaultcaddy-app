@@ -4,6 +4,7 @@ const translations = {
         // 導航
         'nav_features': 'Features',
         'nav_pricing': 'Pricing', 
+        'nav_dashboard': 'Dashboard',
         'nav_api': 'API',
         'nav_credits': 'Credits:',
         'nav_login': 'Log in →',
@@ -115,6 +116,7 @@ const translations = {
         // 導航
         'nav_features': '功能',
         'nav_pricing': '價格',
+        'nav_dashboard': '儀表板',
         'nav_api': 'API',
         'nav_credits': 'Credits:',
         'nav_login': '登入 →',

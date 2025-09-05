@@ -2,6 +2,17 @@
 
 document.addEventListener('DOMContentLoaded', function() {
     
+    // 初始化導航欄
+    if (window.VaultCaddyNavbar) {
+        console.log('✅ 導航欄已初始化');
+    } else {
+        console.warn('⚠️ 導航欄未初始化，嘗試重新初始化...');
+        // 確保導航組件存在並初始化
+        if (typeof VaultCaddyNavbar !== 'undefined') {
+            window.VaultCaddyNavbar = new VaultCaddyNavbar();
+        }
+    }
+    
     // 導航欄切換功能（移動設備）
     const navToggle = document.getElementById('nav-toggle');
     const navMenu = document.getElementById('nav-menu');

@@ -62,13 +62,13 @@ class VaultCaddySidebar {
                 <h3>Configurations</h3>
                 <ul>
                     <li class="nav-item ${this.activePage === 'account' ? 'active' : ''}">
-                        <a href="dashboard.html#account">
+                        <a href="account.html">
                             <i class="fas fa-user"></i>
                             <span>Account</span>
                         </a>
                     </li>
                     <li class="nav-item ${this.activePage === 'billing' ? 'active' : ''}">
-                        <a href="dashboard.html#billing">
+                        <a href="billing.html">
                             <i class="fas fa-credit-card"></i>
                             <span>Billing</span>
                         </a>
@@ -116,7 +116,32 @@ class VaultCaddySidebar {
     }
     
     bindEvents() {
-        // 導航項目點擊事件已經通過href處理
+        // 為側邊欄導航項目添加點擊事件
+        document.addEventListener('click', (e) => {
+            const navLink = e.target.closest('.sidebar .nav-item a');
+            if (navLink) {
+                e.preventDefault();
+                const href = navLink.getAttribute('href');
+                
+                // 如果當前在文檔詳細視圖，先回到列表視圖
+                const detailView = document.getElementById('document-detail-view');
+                const listView = document.getElementById('document-list-view');
+                
+                if (detailView && listView) {
+                    if (detailView.style.display !== 'none') {
+                        // 隱藏詳細視圖，顯示列表視圖
+                        detailView.style.display = 'none';
+                        listView.style.display = 'block';
+                    }
+                }
+                
+                // 導航到新的hash
+                window.location.href = href;
+                
+                console.log('側邊欄導航到:', href);
+            }
+        });
+        
         console.log('側邊欄事件已綁定');
     }
     
@@ -127,9 +152,24 @@ class VaultCaddySidebar {
         }
     }
     
-    updateActivePage(pageName) {
-        this.activePage = pageName;
-        this.render();
+    updateActivePage(activePage) {
+        this.activePage = activePage;
+        
+        // 更新側邊欄中的活躍狀態
+        const navItems = document.querySelectorAll('.sidebar .nav-item');
+        navItems.forEach(item => {
+            item.classList.remove('active');
+            
+            const link = item.querySelector('a');
+            if (link) {
+                const href = link.getAttribute('href');
+                if (href === `dashboard.html#${activePage}`) {
+                    item.classList.add('active');
+                }
+            }
+        });
+        
+        console.log('✅ 側邊欄活躍頁面已更新:', activePage);
     }
 }
 

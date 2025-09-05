@@ -155,36 +155,12 @@ class VaultCaddyNavbar {
             <a href="index.html#pricing" class="nav-link" data-translate="nav_pricing" onclick="navigateToSection('pricing')">價格</a>
         `;
         
-        // 只有登入後才顯示 Solutions 和 Dashboard 連結
-        if (this.isLoggedIn) {
-            navigation += `
-                <div class="solutions-dropdown" style="position: relative; display: inline-block;">
-                    <a href="#" class="nav-link" onclick="toggleSolutionsDropdown(event)" style="display: flex; align-items: center; gap: 0.5rem;">
-                        Solutions
-                        <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
-                    </a>
-                    <div class="solutions-menu" id="solutions-menu" style="display: none; position: absolute; top: 100%; left: 0; background: white; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); min-width: 200px; z-index: 1000; margin-top: 8px;">
-                        <a href="dashboard.html#bank-statement" style="display: block; padding: 12px 16px; color: #374151; text-decoration: none; border-bottom: 1px solid #f3f4f6;" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='transparent'">
-                            <i class="fas fa-university" style="margin-right: 8px; width: 16px;"></i>
-                            銀行對帳單
-                        </a>
-                        <a href="dashboard.html#invoice" style="display: block; padding: 12px 16px; color: #374151; text-decoration: none; border-bottom: 1px solid #f3f4f6;" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='transparent'">
-                            <i class="fas fa-file-invoice" style="margin-right: 8px; width: 16px;"></i>
-                            發票處理
-                        </a>
-                        <a href="dashboard.html#receipt" style="display: block; padding: 12px 16px; color: #374151; text-decoration: none; border-bottom: 1px solid #f3f4f6;" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='transparent'">
-                            <i class="fas fa-receipt" style="margin-right: 8px; width: 16px;"></i>
-                            收據掃描
-                        </a>
-                        <a href="dashboard.html#general" style="display: block; padding: 12px 16px; color: #374151; text-decoration: none;" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='transparent'">
-                            <i class="fas fa-file-alt" style="margin-right: 8px; width: 16px;"></i>
-                            通用文檔
-                        </a>
-                    </div>
-                </div>
-
-            `;
-        }
+        // Dashboard 按鈕 - 直接跳轉到dashboard頁面
+        navigation += `
+            <a href="http://localhost:8080/dashboard.html#bank-statement" class="nav-link" data-translate="nav_dashboard">
+                Dashboard
+            </a>
+        `;
         
         return navigation;
     }
@@ -274,13 +250,31 @@ class VaultCaddyNavbar {
     watchUserState() {
         // 監聽 storage 變化
         window.addEventListener('storage', (e) => {
-            if (e.key === 'vaultcaddy_user' || e.key === 'userLoggedIn' || e.key === 'userCredits') {
+            if (e.key === 'vaultcaddy_user' || e.key === 'userLoggedIn' || e.key === 'userCredits' || e.key === 'vaultcaddy_token') {
+                console.log('📦 localStorage變化檢測到:', e.key);
                 this.loadUserState().then(() => this.render());
             }
         });
         
         // 監聽自定義事件
         window.addEventListener('userStateChanged', () => {
+            console.log('🔄 userStateChanged事件檢測到');
+            this.loadUserState().then(() => this.render());
+        });
+        
+        // 監聽auth系統的登入/登出事件
+        window.addEventListener('vaultcaddy:auth:login', (e) => {
+            console.log('🔐 登入事件檢測到:', e.detail);
+            this.loadUserState().then(() => this.render());
+        });
+        
+        window.addEventListener('vaultcaddy:auth:logout', (e) => {
+            console.log('🚪 登出事件檢測到:', e.detail);
+            this.loadUserState().then(() => this.render());
+        });
+        
+        window.addEventListener('vaultcaddy:auth:creditsUpdated', (e) => {
+            console.log('💰 Credits更新事件檢測到:', e.detail);
             this.loadUserState().then(() => this.render());
         });
     }
@@ -459,31 +453,25 @@ class VaultCaddyNavbar {
 // 創建全局實例
 window.VaultCaddyNavbar = new VaultCaddyNavbar();
 
-// Solutions 下拉選單功能
-function toggleSolutionsDropdown(event) {
-    event.preventDefault();
-    event.stopPropagation();
+
+// 測試登入狀態的輔助函數
+function checkLoginStatus() {
+    const token = localStorage.getItem('vaultcaddy_token');
+    const userData = localStorage.getItem('vaultcaddy_user');
+    const userLoggedIn = localStorage.getItem('userLoggedIn');
+    const navbarStatus = window.VaultCaddyNavbar ? window.VaultCaddyNavbar.isLoggedIn : false;
     
-    const menu = document.getElementById('solutions-menu');
-    if (menu) {
-        // 切換顯示狀態
-        if (menu.style.display === 'none' || menu.style.display === '') {
-            menu.style.display = 'block';
-        } else {
-            menu.style.display = 'none';
-        }
-    }
+    console.log('🔍 當前登入狀態檢查:', {
+        vaultcaddyToken: !!token,
+        vaultcaddyUser: !!userData,
+        userLoggedIn: userLoggedIn,
+        navbarInstance: navbarStatus,
+        recommendation: (token && userData) || userLoggedIn === 'true' ? '應該已登入' : '應該未登入'
+    });
+    
+    return (token && userData) || userLoggedIn === 'true';
 }
 
-// 點擊外部關閉 Solutions 下拉選單
-document.addEventListener('click', function(event) {
-    const solutionsDropdown = document.querySelector('.solutions-dropdown');
-    const solutionsMenu = document.getElementById('solutions-menu');
-    
-    if (solutionsMenu && solutionsDropdown && !solutionsDropdown.contains(event.target)) {
-        solutionsMenu.style.display = 'none';
-    }
-});
 
 // 導航到特定區塊的函數
 function navigateToSection(sectionId) {

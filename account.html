@@ -35,49 +35,116 @@
         
         .account-container {
             display: flex;
-            min-height: calc(100vh - 80px);
-            margin-top: 80px;
+            min-height: calc(100vh - 60px);
+            padding-top: 60px;
         }
         
         .sidebar {
-            width: 256px;
+            width: 280px;
             background: #f8fafc;
             border-right: 1px solid #e5e7eb;
-            padding: 2rem 0;
+            position: fixed;
+            top: 60px;
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar-header {
+            padding: 1.5rem 1rem 1rem 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .sidebar-header h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0;
+        }
+        
+        .sidebar-section {
+            padding: 1rem 0;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .sidebar-section h3 {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin: 0 0 0.5rem 1rem;
+        }
+        
+        .sidebar-footer {
+            padding: 1rem;
+            border-top: 1px solid #e2e8f0;
+            background: #ffffff;
+            margin-top: auto;
+        }
+        
+        .sidebar-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .stat-label {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+        
+        .stat-value {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1f2937;
         }
         
         .sidebar-nav {
+            flex: 1;
+            padding: 1rem 0;
+        }
+        
+        .sidebar-nav ul {
             list-style: none;
             margin: 0;
             padding: 0;
         }
         
-        .sidebar-nav li {
+        .sidebar-nav .nav-item {
             margin: 0;
         }
         
-        .sidebar-nav a {
+        .sidebar-nav .nav-item a {
             display: flex;
             align-items: center;
-            padding: 0.75rem 1.5rem;
+            padding: 0.75rem 1rem;
             color: #6b7280;
             text-decoration: none;
-            transition: all 0.2s ease;
-            border-radius: 0;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
         }
         
-        .sidebar-nav a:hover {
-            background: #e5e7eb;
-            color: #1f2937;
+        .sidebar-nav .nav-item.active a {
+            background: #eff6ff;
+            color: #2563eb;
+            border-left-color: #2563eb;
         }
         
-        .sidebar-nav a.active {
-            background: #e5e7eb;
-            color: #1f2937;
-            border-right: 3px solid #3b82f6;
+        .sidebar-nav .nav-item a:hover {
+            background: #f1f5f9;
+            color: #374151;
         }
         
-        .sidebar-nav i {
+        .sidebar-nav .nav-item a i {
             width: 20px;
             margin-right: 0.75rem;
             font-size: 1rem;
@@ -85,8 +152,11 @@
         
         .main-content {
             flex: 1;
+            margin-left: 280px;
             padding: 2rem 3rem;
             overflow-y: auto;
+            min-height: calc(100vh - 60px);
+            background: #ffffff;
         }
         
         .page-header {
@@ -290,16 +360,93 @@
     <div class="account-container">
         <!-- 左側邊欄 -->
         <aside class="sidebar">
-            <!-- 側邊欄內容由 sidebar-component.js 動態生成 -->
+            <!-- 統一的左側導航 -->
+            <div class="sidebar-header">
+                <h2>Models</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="nav-item">
+                        <a href="dashboard.html#bank-statement">
+                            <i class="fas fa-university"></i>
+                            <span>Bank statements</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="dashboard.html#invoice">
+                            <i class="fas fa-file-invoice"></i>
+                            <span>Invoices</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="dashboard.html#receipt">
+                            <i class="fas fa-receipt"></i>
+                            <span>Receipts</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="dashboard.html#general">
+                            <i class="fas fa-file-alt"></i>
+                            <span>General</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-section">
+                <h3>CONFIGURATIONS</h3>
+                <ul class="sidebar-nav">
+                    <li class="nav-item active">
+                        <a href="account.html">
+                            <i class="fas fa-user"></i>
+                            <span>Account</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="billing.html">
+                            <i class="fas fa-credit-card"></i>
+                            <span>Billing</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="sidebar-footer">
+                <div class="sidebar-stats">
+                    <div class="stat-item">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">
+                            <i class="fas fa-file-alt" style="color: #6b7280; font-size: 1rem; width: 16px; text-align: center;"></i>
+                            <span class="stat-label">處理文檔總數</span>
+                        </div>
+                        <span class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">
+                            <i class="fas fa-clock" style="color: #6b7280; font-size: 1rem; width: 16px; text-align: center;"></i>
+                            <span class="stat-label">平均處理時間</span>
+                        </div>
+                        <span class="stat-value">0ms</span>
+                    </div>
+                    <div class="stat-item">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">
+                            <i class="fas fa-check-circle" style="color: #10b981; font-size: 1rem; width: 16px; text-align: center;"></i>
+                            <span class="stat-label">處理成功率</span>
+                        </div>
+                        <span class="stat-value">0%</span>
+                    </div>
+                    <div class="stat-item">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">
+                            <i class="fas fa-coins" style="color: #f59e0b; font-size: 1rem; width: 16px; text-align: center;"></i>
+                            <span class="stat-label">剩餘Credits</span>
+                        </div>
+                        <span class="stat-value">7</span>
+                    </div>
+                </div>
+            </div>
         </aside>
 
         <!-- 主要內容區域 -->
         <main class="main-content">
-            <!-- 頁面標題 -->
-            <header class="page-header">
-                <h1 class="page-title">Account</h1>
-                <p class="page-subtitle">Manage your account settings</p>
-            </header>
 
             <!-- 帳戶資訊區塊 -->
             <div class="content-section">
