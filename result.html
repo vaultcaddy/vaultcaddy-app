@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>處理結果 - VaultCaddy | AI 文檔處理平台</title>
+    <meta name="description" content="VaultCaddy 文檔處理結果 - 查看您的 PDF 文檔轉換和處理結果。">
+    <meta name="keywords" content="處理結果, 文檔轉換, PDF 處理, VaultCaddy">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="translations.js"></script>
+    <script src="unified-auth.js"></script>
+    <script src="navbar-component.js"></script>
+    <style>
+        .result-container {
+            display: flex;
+            height: 100vh;
+            background: #0f172a;
+            color: white;
+        }
+
+        .pdf-viewer {
+            flex: 0 0 400px;
+            background: #1e293b;
+            border-right: 1px solid #334155;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pdf-header {
+            padding: 1rem;
+            border-bottom: 1px solid #334155;
+            background: #0f172a;
+        }
+
+        .pdf-navigation {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .nav-btn {
+            background: #374151;
+            border: none;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+        }
+
+        .nav-btn:hover {
+            background: #4b5563;
+        }
+
+        .page-info {
+            color: #9ca3af;
+            font-size: 0.875rem;
+        }
+
+        .pdf-content {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        .pdf-page {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .bank-statement {
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+            line-height: 1.2;
+            color: #000;
+        }
+
+        .bank-header {
+            text-align: center;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #000;
+            padding-bottom: 0.5rem;
+        }
+
+        .bank-logo {
+            width: 40px;
+            height: 40px;
+            background: #dc2626;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .account-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1rem 0;
+            font-size: 0.7rem;
+        }
+
+        .transaction-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.65rem;
+        }
+
+        .transaction-table th,
+        .transaction-table td {
+            border: 1px solid #000;
+            padding: 0.25rem;
+            text-align: left;
+        }
+
+        .transaction-table th {
+            background: #f3f4f6;
+            font-weight: bold;
+        }
+
+        .amount-positive {
+            color: #059669;
+        }
+
+        .amount-negative {
+            color: #dc2626;
+        }
+
+        .results-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #0f172a;
+        }
+
+        .results-header {
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            align-items: center;
+            justify-content: between;
+            background: #1e293b;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+
+        .back-btn:hover {
+            color: white;
+        }
+
+        .file-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: white;
+            margin-left: auto;
+        }
+
+        .results-tabs {
+            display: flex;
+            background: #1e293b;
+            border-bottom: 1px solid #334155;
+        }
+
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            background: none;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            font-size: 0.875rem;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab-btn.active {
+            color: white;
+            border-bottom-color: #3b82f6;
+        }
+
+        .tab-btn:hover {
+            color: white;
+        }
+
+        .results-content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .status-section {
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid #334155;
+        }
+
+        .reconciliation-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-text {
+            color: #64748b;
+        }
+
+        .status-percentage {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+
+        .transactions-section {
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 1.5rem;
+            border: 1px solid #334155;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .transaction-controls {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .control-btn {
+            background: #374151;
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .control-btn:hover {
+            background: #4b5563;
+        }
+
+        .control-btn.primary {
+            background: #3b82f6;
+        }
+
+        .control-btn.primary:hover {
+            background: #2563eb;
+        }
+
+        .transactions-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .transactions-table th {
+            background: #374151;
+            color: #d1d5db;
+            padding: 0.75rem 1rem;
+            text-align: left;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-bottom: 1px solid #4b5563;
+        }
+
+        .transactions-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #374151;
+            color: #d1d5db;
+            font-size: 0.875rem;
+        }
+
+        .transactions-table tr:hover {
+            background: #374151;
+        }
+
+        .transaction-checkbox {
+            width: 16px;
+            height: 16px;
+            accent-color: #3b82f6;
+        }
+
+        .transaction-amount {
+            font-family: 'Monaco', monospace;
+            font-weight: 600;
+        }
+
+        .amount-debit {
+            color: #ef4444;
+        }
+
+        .amount-credit {
+            color: #10b981;
+        }
+
+        .balance-column {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            background: none;
+            border: 1px solid #4b5563;
+            color: #d1d5db;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+
+        .action-btn:hover {
+            background: #374151;
+            border-color: #6b7280;
+        }
+
+        .saved-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #10b981;
+            font-size: 0.875rem;
+        }
+
+        .download-section {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .download-btn {
+            background: #3b82f6;
+            border: none;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .download-btn:hover {
+            background: #2563eb;
+        }
+
+        .transaction-summary {
+            color: #64748b;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .result-container {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .pdf-viewer {
+                flex: none;
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 導航欄 - 由 navbar-component.js 動態載入 -->
+    <div id="navbar-placeholder"></div>
+
+    <!-- 結果頁面內容 -->
+    <div class="result-container">
+        <!-- PDF預覽區域 -->
+        <div class="pdf-viewer">
+            <div class="pdf-header">
+                <div class="pdf-navigation">
+                    <button class="nav-btn" onclick="previousPage()">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <span class="page-info">1 of 3</span>
+                    <button class="nav-btn" onclick="nextPage()">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <div style="margin-left: auto; display: flex; gap: 0.5rem;">
+                        <button class="nav-btn" onclick="zoomOut()">
+                            <i class="fas fa-search-minus"></i>
+                        </button>
+                        <button class="nav-btn" onclick="resetZoom()">
+                            <i class="fas fa-expand-arrows-alt"></i>
+                        </button>
+                        <button class="nav-btn" onclick="zoomIn()">
+                            <i class="fas fa-search-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="pdf-content">
+                <div class="pdf-page">
+                    <div class="bank-statement">
+                        <div class="bank-header">
+                            <div class="bank-logo">恆</div>
+                            <h3>恆生銀行</h3>
+                            <h4>HANG SENG BANK</h4>
+                            <p>綜合戶口結單 STATEMENT OF INTEGRATED ACCOUNT</p>
+                        </div>
+                        
+                        <div class="account-info">
+                            <div>
+                                <strong>分行:</strong> 101 EAST POINT CITY (301)<br>
+                                <strong>帳戶號碼:</strong> 785-044254-838<br>
+                                客戶: MR YEUNG CAVLIN<br>
+                                地址: RM 2505 25/F MING TDA HSE<br>
+                                MING TAK EST<br>
+                                TSEUNG KWAN O NT
+                            </div>
+                            <div style="text-align: right;">
+                                <strong>Account Number:</strong> 785-044254-838<br>
+                                <strong>Statement Date:</strong> 29 Mar 2025<br>
+                                結單日期: 2025年3月29日
+                            </div>
+                        </div>
+
+                        <table class="transaction-table">
+                            <thead>
+                                <tr>
+                                    <th>交易日期</th>
+                                    <th>描述</th>
+                                    <th>借方</th>
+                                    <th>貸方</th>
+                                    <th>結餘</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>22/02/25</td>
+                                    <td>期初結餘 PREVIOUS BALANCE</td>
+                                    <td>-</td>
+                                    <td>-</td>
+                                    <td>3,188.44</td>
+                                </tr>
+                                <tr>
+                                    <td>26/02/25</td>
+                                    <td>利息收入 CREDIT INTEREST</td>
+                                    <td>-</td>
+                                    <td class="amount-positive">2.61</td>
+                                    <td>3,191.05</td>
+                                </tr>
+                                <tr>
+                                    <td>07/03/25</td>
+                                    <td>快速支票存款 QUICK CHEQUE DEPOSIT</td>
+                                    <td>-</td>
+                                    <td class="amount-positive">78,649.00</td>
+                                    <td>81,840.05</td>
+                                </tr>
+                                <tr>
+                                    <td>08/03/25</td>
+                                    <td>POON H++K****+HD1253082573</td>
+                                    <td class="amount-negative">840.00</td>
+                                    <td>-</td>
+                                    <td>81,000.05</td>
+                                </tr>
+                                <tr>
+                                    <td>10/03/25</td>
+                                    <td>4006-1210-0627-0086N31098558</td>
+                                    <td class="amount-negative">21,226.50</td>
+                                    <td>-</td>
+                                    <td>59,773.55</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div style="text-align: center; margin-top: 1rem; font-size: 0.7rem;">
+                            <p><strong>期末結餘:</strong> HK$ 59,773.55</p>
+                            <p>如有查詢，請致電客戶服務熱線 2998 8888</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 結果面板 -->
+        <div class="results-panel">
+            <div class="results-header">
+                <div>
+                    <button class="back-btn" onclick="goBackToDashboard()">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>回到控制台</span>
+                    </button>
+                    <div class="saved-indicator">
+                        <i class="fas fa-cloud-check"></i>
+                        <span>已保存</span>
+                    </div>
+                </div>
+                <div class="file-title">eStatementFile_20250829143359.pdf</div>
+            </div>
+
+            <div class="results-tabs">
+                <button class="tab-btn active" onclick="switchTab('results')">Results</button>
+                <button class="tab-btn" onclick="switchTab('export')">Export</button>
+                <button class="tab-btn" onclick="switchTab('json')">JSON</button>
+            </div>
+
+            <div class="results-content">
+                <!-- 對帳狀態 -->
+                <div class="status-section">
+                    <h3 style="color: white; margin-bottom: 1rem;">Reconciliation Status</h3>
+                    <div class="reconciliation-status">
+                        <span class="status-text">0 of 13 transactions reconciled</span>
+                        <span class="status-percentage">0% Complete</span>
+                    </div>
+                </div>
+
+                <!-- 銀行對帳單詳情 -->
+                <div class="status-section">
+                    <h3 style="color: white; margin-bottom: 1rem;">Bank Statement Details & Notes</h3>
+                    <div style="color: #64748b; font-size: 0.875rem;">
+                        <p><strong>帳戶:</strong> 785-044254-838</p>
+                        <p><strong>結單期間:</strong> 2025年2月22日 - 2025年3月29日</p>
+                        <p><strong>期初結餘:</strong> HK$ 3,188.44</p>
+                        <p><strong>期末結餘:</strong> HK$ 59,773.55</p>
+                        <p><strong>處理準確度:</strong> 98.5%</p>
+                    </div>
+                </div>
+
+                <!-- 交易記錄 -->
+                <div class="transactions-section">
+                    <div class="section-header">
+                        <h3 class="section-title">Transactions</h3>
+                        <div class="transaction-controls">
+                            <button class="control-btn">Show Unreconciled</button>
+                            <button class="control-btn">Toggle All</button>
+                            <button class="control-btn primary">Add Item</button>
+                        </div>
+                    </div>
+
+                    <div class="transaction-summary">
+                        Showing 1 to 13 of 13 transactions
+                    </div>
+
+                    <div class="download-section">
+                        <button class="download-btn" onclick="downloadCSV()">
+                            <i class="fas fa-download"></i>
+                            下載 CSV
+                        </button>
+                        <button class="download-btn" onclick="downloadExcel()">
+                            <i class="fas fa-download"></i>
+                            下載 Excel
+                        </button>
+                        <button class="download-btn" onclick="downloadJSON()">
+                            <i class="fas fa-download"></i>
+                            下載 JSON
+                        </button>
+                        <button class="download-btn" onclick="downloadQBO()">
+                            <i class="fas fa-download"></i>
+                            下載 QBO
+                        </button>
+                    </div>
+
+                    <table class="transactions-table">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" class="transaction-checkbox"></th>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Amount</th>
+                                <th>Balance</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="checkbox" class="transaction-checkbox"></td>
+                                <td>02/22/2025</td>
+                                <td>B/F BALANCE</td>
+                                <td class="transaction-amount">0</td>
+                                <td class="balance-column">1493.98</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="action-btn"><i class="fas fa-trash"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" class="transaction-checkbox"></td>
+                                <td>02/26/2025</td>
+                                <td>CREDIT INTEREST</td>
+                                <td class="transaction-amount amount-credit">2.61</td>
+                                <td class="balance-column">1496.59</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="action-btn"><i class="fas fa-trash"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" class="transaction-checkbox"></td>
+                                <td>03/07/2025</td>
+                                <td>QUICK CHEQUE DEPOSIT(07MAR25)</td>
+                                <td class="transaction-amount amount-credit">78649</td>
+                                <td class="balance-column">80145.59</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="action-btn"><i class="fas fa-trash"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" class="transaction-checkbox"></td>
+                                <td>03/08/2025</td>
+                                <td>POON H++K****+HD1253082573</td>
+                                <td class="transaction-amount amount-debit">840</td>
+                                <td class="balance-column">79305.59</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="action-btn"><i class="fas fa-trash"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" class="transaction-checkbox"></td>
+                                <td>03/10/2025</td>
+                                <td>4006-1210-0627-0086N31098558</td>
+                                <td class="transaction-amount amount-debit">-21226.5</td>
+                                <td class="balance-column">0</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="action-btn"><i class="fas fa-trash"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 需要協助橫幅 -->
+    <div class="help-banner" style="position: fixed; top: 70px; left: 0; right: 0; background: #1e40af; padding: 0.75rem 2rem; z-index: 1000;">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 1rem; color: white;">
+            <i class="fas fa-info-circle"></i>
+            <div>
+                <strong>提取不正確？</strong>
+                如果您對文檔結果不滿意，可以請求支援，我們會立即為您提供協助。
+            </div>
+            <button class="help-btn" style="background: white; color: #1e40af; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 500;" onclick="requestHelp()">
+                需要協助？
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function goBackToDashboard() {
+            window.location.href = 'dashboard-main.html';
+        }
+
+        function switchTab(tab) {
+            // 更新tab狀態
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // 這裡可以添加tab內容切換邏輯
+            console.log('Switched to tab:', tab);
+        }
+
+        function downloadCSV() {
+            // 模擬CSV下載
+            const csvContent = "Date,Description,Amount,Balance\n02/22/2025,B/F BALANCE,0,1493.98\n02/26/2025,CREDIT INTEREST,2.61,1496.59\n03/07/2025,QUICK CHEQUE DEPOSIT,78649,80145.59\n03/08/2025,POON H++K****+HD1253082573,-840,79305.59\n03/10/2025,4006-1210-0627-0086N31098558,-21226.5,0";
+            
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'bank_statement_transactions.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function downloadExcel() {
+            alert('Excel下載功能開發中...');
+        }
+
+        function downloadJSON() {
+            const jsonData = {
+                "statement": {
+                    "account": "785-044254-838",
+                    "period": "2025-02-22 to 2025-03-29",
+                    "opening_balance": 3188.44,
+                    "closing_balance": 59773.55,
+                    "transactions": [
+                        {"date": "2025-02-22", "description": "B/F BALANCE", "amount": 0, "balance": 1493.98},
+                        {"date": "2025-02-26", "description": "CREDIT INTEREST", "amount": 2.61, "balance": 1496.59},
+                        {"date": "2025-03-07", "description": "QUICK CHEQUE DEPOSIT", "amount": 78649, "balance": 80145.59},
+                        {"date": "2025-03-08", "description": "POON H++K****+HD1253082573", "amount": -840, "balance": 79305.59},
+                        {"date": "2025-03-10", "description": "4006-1210-0627-0086N31098558", "amount": -21226.5, "balance": 0}
+                    ]
+                }
+            };
+            
+            const blob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'bank_statement.json';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function downloadQBO() {
+            alert('QuickBooks QBO下載功能開發中...');
+        }
+
+        function requestHelp() {
+            alert('正在為您連接客服支援...\n\n我們會在24小時內回復您的請求。');
+        }
+
+        function previousPage() {
+            console.log('Previous page');
+        }
+
+        function nextPage() {
+            console.log('Next page');
+        }
+
+        function zoomIn() {
+            console.log('Zoom in');
+        }
+
+        function zoomOut() {
+            console.log('Zoom out');
+        }
+
+        function resetZoom() {
+            console.log('Reset zoom');
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 檢查登入狀態
+            if (localStorage.getItem('userLoggedIn') !== 'true') {
+                window.location.href = 'index.html';
+            }
+        });
+    </script>
+</body>
+</html>
+

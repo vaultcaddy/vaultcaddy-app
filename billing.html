@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-translate="billing_credits">計費與積分 - VaultCaddy</title>
+    <meta name="description" content="View and manage your VaultCaddy subscription and billing information">
+    <meta property="og:title" content="Billing & Credits - VaultCaddy">
+    <meta property="og:description" content="VaultCaddy - Professional document processing with AI technology">
+    <meta property="og:url" content="https://vaultcaddy.com/billing">
+    <meta property="og:type" content="website">
+    <link rel="canonical" href="https://vaultcaddy.com/billing">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="pages.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="config.js"></script>
+    <script src="google-auth.js"></script>
+    <script src="translations.js"></script>
+    <script src="unified-auth.js"></script>
+    <script src="navbar-component.js"></script>
+    <script src="sidebar-component.js"></script>
+    <style>
+        body {
+            background: #ffffff;
+            color: #1f2937;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        
+        .navbar {
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .account-container {
+            display: flex;
+            min-height: calc(100vh - 60px);
+            padding-top: 60px;
+        }
+        
+        .sidebar {
+            width: 280px;
+            background: #f8fafc;
+            border-right: 1px solid #e5e7eb;
+            position: fixed;
+            top: 60px;
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar-header {
+            padding: 1.5rem 1rem 1rem 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .sidebar-header h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0;
+        }
+        
+        .sidebar-section {
+            padding: 1rem 0;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .sidebar-section h3 {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin: 0 0 0.5rem 1rem;
+        }
+        
+        .sidebar-footer {
+            padding: 1rem;
+            border-top: 1px solid #e2e8f0;
+            background: #ffffff;
+            margin-top: auto;
+        }
+        
+        .sidebar-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .stat-label {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+        
+        .stat-value {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .sidebar-nav {
+            flex: 1;
+            padding: 1rem 0;
+        }
+        
+        .sidebar-nav ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .sidebar-nav .nav-item {
+            margin: 0;
+        }
+        
+        .sidebar-nav .nav-item a {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            color: #6b7280;
+            text-decoration: none;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+        
+        .sidebar-nav .nav-item.active a {
+            background: #eff6ff;
+            color: #2563eb;
+            border-left-color: #2563eb;
+        }
+        
+        .sidebar-nav .nav-item a:hover {
+            background: #f1f5f9;
+            color: #374151;
+        }
+        
+        .sidebar-nav .nav-item a i {
+            width: 20px;
+            margin-right: 0.75rem;
+            font-size: 1rem;
+        }
+        
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 2rem 3rem;
+            overflow-y: auto;
+            min-height: calc(100vh - 60px);
+            background: #ffffff;
+        }
+        
+        .page-header {
+            margin-bottom: 2rem;
+        }
+        
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0 0 0.5rem 0;
+            color: #1f2937;
+        }
+        
+        .page-subtitle {
+            color: #6b7280;
+            margin: 0;
+            font-size: 1rem;
+        }
+        
+        .billing-overview {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .billing-card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0 0 0.5rem 0;
+            color: #1f2937;
+        }
+        
+        .card-subtitle {
+            color: #6b7280;
+            margin: 0 0 2rem 0;
+            font-size: 0.875rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .btn-primary {
+            background: #7c3aed;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #6d28d9;
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: #6b7280;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .btn-secondary:hover {
+            background: #f3f4f6;
+            color: #1f2937;
+        }
+        
+        .plans-section {
+            margin-bottom: 3rem;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0 0 2rem 0;
+            color: #1f2937;
+        }
+        
+        .plans-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+        
+        .plan-card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 2rem;
+            position: relative;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .plan-card.featured {
+            border-color: #7c3aed;
+            background: linear-gradient(135deg, #ffffff 0%, #f3f0ff 100%);
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(124, 58, 237, 0.15);
+        }
+        
+        .plan-card {
+            transition: all 0.3s ease;
+        }
+        
+        .plan-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .plan-card.featured:hover {
+            transform: scale(1.05) translateY(-5px);
+            box-shadow: 0 15px 35px rgba(124, 58, 237, 0.25);
+        }
+        
+        .plan-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0 0 0.5rem 0;
+            color: #1f2937;
+        }
+        
+        .plan-description {
+            color: #6b7280;
+            margin: 0 0 2rem 0;
+            font-size: 0.875rem;
+        }
+        
+        .plan-price {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin: 0 0 1.5rem 0;
+        }
+        
+        .plan-price span {
+            font-size: 1rem;
+            font-weight: 400;
+            color: #6b7280;
+        }
+        
+        .plan-features {
+            list-style: none;
+            margin: 0 0 2rem 0;
+            padding: 0;
+        }
+        
+        .plan-features li {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+        
+        .plan-features li i {
+            color: #10b981;
+            margin-right: 0.75rem;
+            width: 16px;
+        }
+        
+        .current-plan-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: #10b981;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
+        }
+        
+        .pricing-toggle {
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        .plan-card {
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        .plan-card:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+        
+        .plan-card:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .plan-card:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .credit-option {
+            transition: all 0.2s ease;
+        }
+        
+        .credit-option:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.15);
+            border-color: #7c3aed !important;
+        }
+        
+        .credit-option.popular {
+            animation: pulse-border 2s infinite;
+        }
+        
+        @keyframes pulse-border {
+            0% {
+                box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 8px rgba(124, 58, 237, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(124, 58, 237, 0);
+            }
+        }
+        
+        .cta-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(124, 58, 237, 0.4);
+        }
+
+        .cta-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .cta-btn:hover::before {
+            left: 100%;
+        }
+        
+        @media (max-width: 1024px) {
+            .plans-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .billing-overview {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 導航欄 - 由 navbar-component.js 動態載入 -->
+    <div id="navbar-placeholder"></div>
+
+    <!-- 帳戶管理容器 -->
+    <div class="account-container">
+        <!-- 左側邊欄 -->
+        <aside class="sidebar">
+            <!-- 統一的左側導航 -->
+            <div class="sidebar-header">
+                <h2>Models</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="nav-item">
+                        <a href="dashboard.html#bank-statement">
+                            <i class="fas fa-university"></i>
+                            <span>Bank statements</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="dashboard.html#invoice">
+                            <i class="fas fa-file-invoice"></i>
+                            <span>Invoices</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="dashboard.html#receipt">
+                            <i class="fas fa-receipt"></i>
+                            <span>Receipts</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="dashboard.html#general">
+                            <i class="fas fa-file-alt"></i>
+                            <span>General</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-section">
+                <h3>CONFIGURATIONS</h3>
+                <ul class="sidebar-nav">
+                    <li class="nav-item">
+                        <a href="account.html">
+                            <i class="fas fa-user"></i>
+                            <span>Account</span>
+                        </a>
+                    </li>
+                    <li class="nav-item active">
+                        <a href="billing.html">
+                            <i class="fas fa-credit-card"></i>
+                            <span>Billing</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="sidebar-footer">
+                <div class="sidebar-stats">
+                    <div class="stat-item">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">
+                            <i class="fas fa-file-alt" style="color: #6b7280; font-size: 1rem; width: 16px; text-align: center;"></i>
+                            <span class="stat-label">處理文檔總數</span>
+                        </div>
+                        <span class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">
+                            <i class="fas fa-clock" style="color: #6b7280; font-size: 1rem; width: 16px; text-align: center;"></i>
+                            <span class="stat-label">平均處理時間</span>
+                        </div>
+                        <span class="stat-value">0ms</span>
+                    </div>
+                    <div class="stat-item">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">
+                            <i class="fas fa-check-circle" style="color: #10b981; font-size: 1rem; width: 16px; text-align: center;"></i>
+                            <span class="stat-label">處理成功率</span>
+                        </div>
+                        <span class="stat-value">0%</span>
+                    </div>
+                    <div class="stat-item">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">
+                            <i class="fas fa-coins" style="color: #f59e0b; font-size: 1rem; width: 16px; text-align: center;"></i>
+                            <span class="stat-label">剩餘Credits</span>
+                        </div>
+                        <span class="stat-value">7</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 主要內容區域 -->
+        <main class="main-content">
+            <!-- 頁面標題 -->
+            <header class="page-header">
+                <h1 class="page-title" data-translate="billing_credits">計費與積分</h1>
+                <p class="page-subtitle" data-translate="manage_billing_subscription">管理您的計費、訂閱和積分</p>
+            </header>
+
+            <!-- 添加 Credits (全寬) -->
+            <div class="billing-card" style="width: 100%; margin-bottom: 2rem;">
+                <h3 class="card-title" data-translate="add_credits">購買 Credits</h3>
+                <p class="card-subtitle" data-translate="add_credits_description">每處理 1 頁文檔消耗 1 個 Credit。選擇您需要的 Credits 數量：</p>
+                <div class="credits-options" style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1rem; margin: 1.5rem 0;">
+                    <div class="credit-option" style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; text-align: center; cursor: pointer; transition: all 0.2s;" onclick="purchaseCredits(50, 15)">
+                        <div style="font-size: 1.25rem; font-weight: 600; color: #1f2937;">50 Credits</div>
+                        <div style="color: #7c3aed; font-weight: 500;">$15 USD</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">$0.30 per credit</div>
+                    </div>
+                    <div class="credit-option" style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; text-align: center; cursor: pointer; transition: all 0.2s;" onclick="purchaseCredits(100, 29)">
+                        <div style="font-size: 1.25rem; font-weight: 600; color: #1f2937;">100 Credits</div>
+                        <div style="color: #7c3aed; font-weight: 500;">$29 USD</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">$0.29 per credit</div>
+                    </div>
+                    <div class="credit-option" style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; text-align: center; cursor: pointer; transition: all 0.2s;" onclick="purchaseCredits(200, 56)">
+                        <div style="font-size: 1.25rem; font-weight: 600; color: #1f2937;">200 Credits</div>
+                        <div style="color: #7c3aed; font-weight: 500;">$56 USD</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">$0.28 per credit</div>
+                    </div>
+                    <div class="credit-option popular" style="border: 2px solid #7c3aed; border-radius: 8px; padding: 1rem; text-align: center; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #ffffff 0%, #f3f0ff 100%); position: relative;" onclick="purchaseCredits(500, 138)">
+                        <div style="position: absolute; top: -8px; right: 8px; background: #7c3aed; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">最優惠</div>
+                        <div style="font-size: 1.25rem; font-weight: 600; color: #1f2937;">500 Credits</div>
+                        <div style="color: #7c3aed; font-weight: 500;">$138 USD</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">$0.28 per credit</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 訂閱方案 -->
+            <div class="plans-section">
+                <h2 class="section-title" data-translate="subscription_plans">訂閱方案</h2>
+                
+                <!-- 月費/年費切換 -->
+                <div class="pricing-toggle" style="display: flex; justify-content: center; margin-bottom: 3rem;">
+                    <div style="display: inline-flex; border-radius: 8px; overflow: hidden;">
+                        <button class="toggle-btn active" data-plan="monthly" onclick="togglePricingPlan('monthly')" style="padding: 0.75rem 1.5rem; border: 1px solid #e5e7eb; background: white; color: #1f2937; font-weight: 500; cursor: pointer; transition: all 0.2s ease; border-right: none;" data-translate="monthly">Monthly bill</button>
+                        <button class="toggle-btn" data-plan="yearly" onclick="togglePricingPlan('yearly')" style="padding: 0.75rem 1.5rem; border: 1px solid #e5e7eb; background: #f9fafb; color: #6b7280; font-weight: 500; cursor: pointer; transition: all 0.2s ease;" data-translate="yearly">Yearly bill<br><span style="font-size: 0.75rem;">(SAVE 20%)</span></button>
+                    </div>
+                </div>
+                
+                <div class="plans-grid">
+                    <!-- Basic 方案 -->
+                    <div class="plan-card">
+                        <h3 class="plan-name" data-translate="basic">基礎</h3>
+                        <p class="plan-description" data-translate="perfect_for_individuals">完美適合個人和自由工作者。</p>
+                        <div class="plan-price">
+                            <span class="monthly-price">$19</span>
+                            <span class="yearly-price" style="display: none;">$15</span>
+                            <span class="monthly-period">/month</span>
+                            <span class="yearly-period" style="display: none;">/month</span>
+                        </div>
+                        <p class="plan-subtitle monthly-subtitle" style="margin: 0.5rem 0; color: #6b7280;" data-translate="pages_included_text">200 Credits 包含</p>
+                        <p class="plan-subtitle yearly-subtitle" style="display: none; margin: 0.5rem 0; color: #6b7280;" data-translate="pages_included_text">2,400 Credits 包含</p>
+                        <div class="savings-badge monthly-savings" style="display: none;">
+                            <span style="background: #10b981; color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">節省 $120/年</span>
+                        </div>
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i> <span class="monthly-feature" data-translate="page_conversions_per_month">200 Credits 每月</span><span class="yearly-feature" style="display: none;" data-translate="page_conversions_per_month">2,400 Credits 每年</span></li>
+                            <li class="yearly-feature" style="display: none;"><i class="fas fa-check"></i> <strong>節省 20% 年費優惠</strong></li>
+                            <li><i class="fas fa-check"></i> <span data-translate="convert_all_files_one_click">一鍵轉換所有文件</span></li>
+                            <li><i class="fas fa-check"></i> <span data-translate="excel_csv_export">Excel 和 CSV 匯出格式</span></li>
+                            <li><i class="fas fa-check"></i> <span data-translate="quickbooks_integration">QuickBooks 整合</span></li>
+                            <li><i class="fas fa-check"></i> <span data-translate="ai_powered_ocr">Google Vision AI 處理</span></li>
+                            <li><i class="fas fa-check"></i> <span><strong>8 種語言支援</strong>（中/英/日/韓/德/法/西）</span></li>
+                            <li><i class="fas fa-check"></i> <span>自動交易分類 AI</span></li>
+                            <li><i class="fas fa-check"></i> <span>30 </span><span data-translate="day_data_retention">天數據保留</span></li>
+                            <li><i class="fas fa-check"></i> <span data-translate="email_support">電子郵件支援</span></li>
+                            <li><i class="fas fa-check"></i> <span data-translate="secure_file_upload">安全文件上傳</span></li>
+                        </ul>
+                        <button class="cta-btn" onclick="subscribeToPlan('basic')" data-translate="get_started">開始使用</button>
+                    </div>
+
+                    <!-- Pro 方案 (推薦) -->
+                    <div class="plan-card featured">
+                        <h3 class="plan-name" data-translate="pro">專業</h3>
+                        <p class="plan-description" data-translate="small_businesses_accounting">小型企業和會計事務所。</p>
+                        <div class="plan-price">
+                            <span class="monthly-price">$39</span>
+                            <span class="yearly-price" style="display: none;">$31</span>
+                            <span class="monthly-period">/month</span>
+                            <span class="yearly-period" style="display: none;">/month</span>
+                        </div>
+                        <p class="plan-subtitle monthly-subtitle" style="margin: 0.5rem 0; color: #6b7280;" data-translate="pages_included_text">500 Credits 包含</p>
+                        <p class="plan-subtitle yearly-subtitle" style="display: none; margin: 0.5rem 0; color: #6b7280;" data-translate="pages_included_text">6,000 Credits 包含</p>
+                        <div class="savings-badge yearly-savings" style="display: none;">
+                            <span style="background: #7c3aed; color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">最受歡迎 🔥</span>
+                        </div>
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i> <span class="monthly-feature" data-translate="page_conversions_per_month">500 Credits 每月</span><span class="yearly-feature" style="display: none;" data-translate="page_conversions_per_month">6,000 Credits 每年</span></li>
+                            <li class="yearly-feature" style="display: none;"><i class="fas fa-check"></i> <strong>節省 20% 年費優惠</strong></li>
+                            <li><i class="fas fa-check"></i> <span data-translate="everything_in_basic_plus">包含基礎版所有功能，還有：</span></li>
+                            <li><i class="fas fa-check"></i> <span data-translate="batch_processing_files">批次處理最多20個文件</span></li>
+                            <li><i class="fas fa-check"></i> <span><strong>Google Document AI</strong> 專業解析</span></li>
+                            <li><i class="fas fa-check"></i> <span>即時多語言翻譯處理</span></li>
+                            <li><i class="fas fa-check"></i> <span>智能異常交易偵測</span></li>
+                            <li><i class="fas fa-check"></i> <span data-translate="multiple_export_formats">多種匯出格式</span></li>
+                            <li><i class="fas fa-check"></i> <span>商家實體自動識別</span></li>
+                            <li><i class="fas fa-check"></i> <span data-translate="api_access_coming_soon">API 存取（即將推出）</span></li>
+                            <li><i class="fas fa-check"></i> <span data-translate="priority_email_support">優先電子郵件支援</span></li>
+                        </ul>
+                        <button class="cta-btn" onclick="subscribeToPlan('pro')" data-translate="get_started">開始使用</button>
+                    </div>
+
+                    <!-- Business 方案 -->
+                    <div class="plan-card">
+                        <h3 class="plan-name" data-translate="business">商業</h3>
+                        <p class="plan-description" data-translate="growing_businesses_high_volume">成長中的企業，有大量需求。</p>
+                        <div class="plan-price">
+                            <span class="monthly-price">$79</span>
+                            <span class="yearly-price" style="display: none;">$63</span>
+                            <span class="monthly-period">/month</span>
+                            <span class="yearly-period" style="display: none;">/month</span>
+                        </div>
+                        <p class="plan-subtitle monthly-subtitle" style="margin: 0.5rem 0; color: #6b7280;" data-translate="pages_included_text">1,200 Credits 包含</p>
+                        <p class="plan-subtitle yearly-subtitle" style="display: none; margin: 0.5rem 0; color: #6b7280;" data-translate="pages_included_text">14,400 Credits 包含</p>
+                        <div class="savings-badge yearly-savings" style="display: none;">
+                            <span style="background: #f59e0b; color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">節省 $384/年</span>
+                        </div>
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i> <span class="monthly-feature" data-translate="page_conversions_per_month">1,200 Credits 每月</span><span class="yearly-feature" style="display: none;" data-translate="page_conversions_per_month">14,400 Credits 每年</span></li>
+                            <li class="yearly-feature" style="display: none;"><i class="fas fa-check"></i> <strong>節省 20% 年費優惠</strong></li>
+                            <li><i class="fas fa-check"></i> <span data-translate="everything_in_pro_plus">包含專業版所有功能，還有：</span></li>
+                            <li><i class="fas fa-check"></i> <span data-translate="batch_processing_files">批次處理無限制文件</span></li>
+                            <li><i class="fas fa-check"></i> <span><strong>AutoML 個人化 AI 模型</strong></span></li>
+                            <li><i class="fas fa-check"></i> <span>行業特化解析模型</span></li>
+                            <li><i class="fas fa-check"></i> <span>支出行為智能分析</span></li>
+                            <li><i class="fas fa-check"></i> <span data-translate="team_collaboration_features">團隊協作功能</span></li>
+                            <li><i class="fas fa-check"></i> <span data-translate="advanced_analytics_dashboard">進階分析儀表板</span></li>
+                            <li><i class="fas fa-check"></i> <span data-translate="white_label_options">白標選項</span></li>
+                            <li><i class="fas fa-check"></i> <span>365 </span><span data-translate="day_data_retention">天數據保留</span></li>
+                            <li><i class="fas fa-check"></i> <span data-translate="dedicated_account_manager">專屬客戶經理</span></li>
+                            <li><i class="fas fa-check"></i> <span data-translate="phone_video_support">電話和視訊支援</span></li>
+                        </ul>
+                        <button class="cta-btn" onclick="subscribeToPlan('business')" data-translate="get_started">開始使用</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // 檢查登入狀態
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!window.UnifiedAuthManager.isLoggedIn()) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // 初始化統一側邊欄
+            window.billingSidebar = new VaultCaddySidebar('billing');
+
+            // 初始化頁面
+            initBillingPage();
+            
+            // 處理 Stripe 支付回調
+            handlePaymentSuccess();
+            
+            // 檢查 Credits 是否過期
+            checkCreditsExpiry();
+            
+            // 監聽語言變更事件
+            window.addEventListener('languageChanged', function(e) {
+                console.log('Billing: 語言已變更為', e.detail.language);
+                // 重新應用翻譯
+                if (window.languageManager) {
+                    window.languageManager.loadLanguage(e.detail.language);
+                }
+            });
+        });
+
+        function initBillingPage() {
+            console.log('Billing page initialized');
+        }
+
+        // 管理方案
+        function managePlan() {
+            window.VaultCaddyNavbar.showNotification('Plan management coming soon!', 'info');
+        }
+
+        // 購買 Credits
+        function purchaseCredits(credits, price) {
+            console.log(`Purchasing ${credits} credits for $${price}`);
+            
+            // 顯示確認對話框
+            if (confirm(`確認購買 ${credits} Credits，價格 $${price} USD？`)) {
+                initializeStripePayment(credits, price);
+            }
+        }
+
+        // 初始化 Stripe 支付
+        function initializeStripePayment(credits, price) {
+            // 這裡將來會整合 Stripe Checkout
+            window.VaultCaddyNavbar.showNotification(`正在初始化 ${credits} Credits 購買流程...`, 'info');
+            
+            // 模擬支付成功
+            setTimeout(() => {
+                simulatePaymentSuccess(credits);
+            }, 2000);
+        }
+
+        // 模擬支付成功並更新 Credits
+        function simulatePaymentSuccess(credits) {
+            // 更新本地 Credits 數量（實際上應該從伺服器獲取）
+            const currentCredits = parseInt(document.querySelector('.stat-value').textContent) || 0;
+            const newCredits = currentCredits + credits;
+            
+            // 更新 UI 顯示
+            document.querySelector('.stat-value').textContent = newCredits;
+            
+            window.VaultCaddyNavbar.showNotification(`成功購買 ${credits} Credits！當前餘額：${newCredits} Credits`, 'success');
+        }
+
+        // 統一的訂閱方案函數
+        function subscribeToPlan(planType) {
+            console.log(`開始 ${planType} 方案訂閱流程`);
+            
+            // 檢查是否為月費或年費
+            const yearlyBtn = document.querySelector('[data-plan="yearly"]');
+            const isYearly = yearlyBtn && yearlyBtn.classList.contains('active');
+            
+            // Stripe Payment Links 映射
+            const stripeLinks = {
+                'basic': {
+                    monthly: 'https://buy.stripe.com/bJe7sM9LKctka9obwCf7i01',
+                    yearly: 'https://buy.stripe.com/5kQ3cw0ba64WbdseIOf7i02'
+                },
+                'pro': {
+                    monthly: 'https://buy.stripe.com/aFa3cwga8alc1CSeIOf7i03',
+                    yearly: 'https://buy.stripe.com/3cI14o1fe2SK0yO306f7i04'
+                },
+                'business': {
+                    monthly: 'https://buy.stripe.com/8x200k7DC8d45T87gmf7i05',
+                    yearly: 'https://buy.stripe.com/14A5kEaPOfFw6XccAGf7i06'
+                }
+            };
+            
+            // Credits 映射 - 根據方案和時間週期
+            const creditsMap = {
+                'basic': {
+                    monthly: { credits: 200, duration: '1個月' },
+                    yearly: { credits: 2400, duration: '12個月' }
+                },
+                'pro': {
+                    monthly: { credits: 500, duration: '1個月' },
+                    yearly: { credits: 6000, duration: '12個月' }
+                },
+                'business': {
+                    monthly: { credits: 1200, duration: '1個月' },
+                    yearly: { credits: 14400, duration: '12個月' }
+                }
+            };
+            
+            const period = isYearly ? 'yearly' : 'monthly';
+            const paymentLink = stripeLinks[planType]?.[period];
+            const creditsInfo = creditsMap[planType]?.[period];
+            
+            if (!paymentLink) {
+                alert(`找不到 ${planType} 方案的 ${period} 支付連結`);
+                return;
+            }
+            
+            console.log('=== 訂閱詳細信息 ===');
+            console.log('方案類型:', planType);
+            console.log('計費週期:', isYearly ? '年費' : '月費');
+            console.log('Credits:', creditsInfo.credits);
+            console.log('有效期:', creditsInfo.duration);
+            console.log('支付連結:', paymentLink);
+            
+            // 顯示確認訊息
+            const confirmMessage = `確認訂閱 ${planType.toUpperCase()} 方案 (${isYearly ? '年費' : '月費'})？
+
+您將獲得：
+• ${creditsInfo.credits} Credits
+• 有效期：${creditsInfo.duration}
+• ${creditsInfo.duration}後自動刪除未使用的 Credits
+
+點擊確認後將前往安全支付頁面。`;
+            
+            if (confirm(confirmMessage)) {
+                // 顯示處理訊息
+                if (window.VaultCaddyNavbar) {
+                    window.VaultCaddyNavbar.showNotification('正在重定向到安全支付頁面...', 'info');
+                }
+                
+                // 設置訂閱元數據到本地存儲
+                localStorage.setItem('pendingSubscription', JSON.stringify({
+                    planType: planType,
+                    period: period,
+                    credits: creditsInfo.credits,
+                    duration: creditsInfo.duration,
+                    timestamp: new Date().toISOString()
+                }));
+                
+                // 重定向到 Stripe Payment Link
+                setTimeout(() => {
+                    window.open(paymentLink, '_self');
+                }, 1000);
+            }
+        }
+        
+        // 處理支付成功回調
+        function handlePaymentSuccess() {
+            // 檢查是否有待處理的訂閱
+            const pendingSubscription = localStorage.getItem('pendingSubscription');
+            if (pendingSubscription) {
+                try {
+                    const subscription = JSON.parse(pendingSubscription);
+                    console.log('檢測到待處理的訂閱:', subscription);
+                    
+                    // 授予 Credits
+                    grantSubscriptionCredits(subscription);
+                    
+                    // 顯示成功訊息
+                    if (window.VaultCaddyNavbar) {
+                        window.VaultCaddyNavbar.showNotification(
+                            `成功訂閱 ${subscription.planType.toUpperCase()} 方案！已獲得 ${subscription.credits} Credits`, 
+                            'success'
+                        );
+                    }
+                    
+                    // 清理待處理的訂閱數據
+                    localStorage.removeItem('pendingSubscription');
+                    
+                    // 更新用戶訂閱狀態
+                    localStorage.setItem('userPlan', subscription.planType);
+                    localStorage.setItem('userPlanPeriod', subscription.period);
+                    
+                } catch (error) {
+                    console.error('處理訂閱回調失敗:', error);
+                }
+            }
+        }
+        
+        // 授予訂閱 Credits
+        function grantSubscriptionCredits(subscription) {
+            const currentCredits = parseInt(localStorage.getItem('userCredits') || '0');
+            const newCredits = currentCredits + subscription.credits;
+            
+            // 設置 Credits 到期時間
+            const expiryDate = new Date();
+            if (subscription.period === 'yearly') {
+                expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+            } else {
+                expiryDate.setMonth(expiryDate.getMonth() + 1);
+            }
+            
+            // 更新本地存儲
+            localStorage.setItem('userCredits', newCredits.toString());
+            localStorage.setItem('creditsExpiry', expiryDate.toISOString());
+            localStorage.setItem('subscriptionCredits', subscription.credits.toString());
+            
+            console.log(`已授予 ${subscription.credits} Credits，新餘額: ${newCredits}`);
+            console.log(`Credits 到期時間: ${expiryDate.toLocaleDateString()}`);
+            
+            // 更新 UI 顯示
+            const creditsElements = document.querySelectorAll('.stat-value');
+            if (creditsElements.length > 0) {
+                const creditsElement = creditsElements[creditsElements.length - 1];
+                creditsElement.textContent = newCredits;
+            }
+        }
+        
+        // 檢查 Credits 是否過期
+        function checkCreditsExpiry() {
+            const creditsExpiry = localStorage.getItem('creditsExpiry');
+            const subscriptionCredits = parseInt(localStorage.getItem('subscriptionCredits') || '0');
+            
+            if (creditsExpiry && subscriptionCredits > 0) {
+                const expiryDate = new Date(creditsExpiry);
+                const now = new Date();
+                
+                console.log('Credits 檢查：');
+                console.log('到期時間:', expiryDate.toLocaleDateString());
+                console.log('當前時間:', now.toLocaleDateString());
+                console.log('訂閱 Credits:', subscriptionCredits);
+                
+                if (now > expiryDate) {
+                    // Credits 已過期，移除訂閱 Credits
+                    console.log('Credits 已過期，正在移除...');
+                    
+                    const currentCredits = parseInt(localStorage.getItem('userCredits') || '0');
+                    const newCredits = Math.max(0, currentCredits - subscriptionCredits);
+                    
+                    // 更新本地存儲
+                    localStorage.setItem('userCredits', newCredits.toString());
+                    localStorage.removeItem('creditsExpiry');
+                    localStorage.removeItem('subscriptionCredits');
+                    localStorage.removeItem('userPlan');
+                    localStorage.removeItem('userPlanPeriod');
+                    
+                    // 更新 UI 顯示
+                    const creditsElements = document.querySelectorAll('.stat-value');
+                    if (creditsElements.length > 0) {
+                        const creditsElement = creditsElements[creditsElements.length - 1];
+                        creditsElement.textContent = newCredits;
+                    }
+                    
+                    // 顯示過期通知
+                    if (window.VaultCaddyNavbar) {
+                        window.VaultCaddyNavbar.showNotification(
+                            `您的訂閱 Credits 已過期並被移除。剩餘 ${newCredits} Credits`, 
+                            'warning'
+                        );
+                    }
+                    
+                    console.log(`已移除 ${subscriptionCredits} 過期 Credits，新餘額: ${newCredits}`);
+                } else {
+                    // Credits 尚未過期，顯示剩餘時間
+                    const timeLeft = Math.ceil((expiryDate - now) / (1000 * 60 * 60 * 24));
+                    console.log(`訂閱 Credits 還有 ${timeLeft} 天到期`);
+                }
+            }
+        }
+        
+        // 獲取 Credits 狀態信息
+        function getCreditsStatus() {
+            const userCredits = parseInt(localStorage.getItem('userCredits') || '0');
+            const subscriptionCredits = parseInt(localStorage.getItem('subscriptionCredits') || '0');
+            const creditsExpiry = localStorage.getItem('creditsExpiry');
+            const userPlan = localStorage.getItem('userPlan');
+            
+            let status = {
+                totalCredits: userCredits,
+                subscriptionCredits: subscriptionCredits,
+                purchasedCredits: userCredits - subscriptionCredits,
+                plan: userPlan || 'none',
+                hasSubscription: subscriptionCredits > 0 && creditsExpiry,
+                daysLeft: 0
+            };
+            
+            if (creditsExpiry) {
+                const expiryDate = new Date(creditsExpiry);
+                const now = new Date();
+                status.daysLeft = Math.max(0, Math.ceil((expiryDate - now) / (1000 * 60 * 60 * 24)));
+            }
+            
+            return status;
+        }
+
+        // 切換月費/年費
+        function togglePricingPlan(planType) {
+            // 更新按鈕狀態
+            document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[data-plan="${planType}"]`).classList.add('active');
+            
+            // 更新按鈕樣式
+            document.querySelectorAll('.toggle-btn').forEach(btn => {
+                if (btn.classList.contains('active')) {
+                    btn.style.background = 'white';
+                    btn.style.color = '#1f2937';
+                } else {
+                    btn.style.background = '#f9fafb';
+                    btn.style.color = '#6b7280';
+                }
+            });
+            
+            if (planType === 'monthly') {
+                // 顯示月費，隱藏年費
+                document.querySelectorAll('.monthly-price, .monthly-period, .monthly-subtitle, .monthly-feature, .monthly-savings').forEach(el => {
+                    el.style.display = 'inline';
+                });
+                document.querySelectorAll('.yearly-price, .yearly-period, .yearly-subtitle, .yearly-feature, .yearly-savings').forEach(el => {
+                    el.style.display = 'none';
+                });
+            } else {
+                // 顯示年費，隱藏月費
+                document.querySelectorAll('.monthly-price, .monthly-period, .monthly-subtitle, .monthly-feature, .monthly-savings').forEach(el => {
+                    el.style.display = 'none';
+                });
+                document.querySelectorAll('.yearly-price, .yearly-period, .yearly-subtitle, .yearly-feature, .yearly-savings').forEach(el => {
+                    el.style.display = 'inline';
+                });
+            }
+        }
+    </script>
+</body>
+</html>

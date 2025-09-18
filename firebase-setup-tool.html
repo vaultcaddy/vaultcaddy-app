@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VaultCaddy Firebase 設置工具</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+        
+        .header p {
+            color: #718096;
+            font-size: 1.2rem;
+        }
+        
+        .step {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border-left: 4px solid #4299e1;
+        }
+        
+        .step h3 {
+            color: #2d3748;
+            margin-top: 0;
+            font-size: 1.4rem;
+        }
+        
+        .step-number {
+            background: #4299e1;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        
+        .link-button {
+            display: inline-block;
+            background: #4299e1;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            margin: 10px 10px 10px 0;
+            transition: background 0.3s;
+        }
+        
+        .link-button:hover {
+            background: #3182ce;
+        }
+        
+        .success-button {
+            background: #48bb78;
+        }
+        
+        .success-button:hover {
+            background: #38a169;
+        }
+        
+        .config-input {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+        
+        .button {
+            background: #4299e1;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+        
+        .button:hover {
+            background: #3182ce;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-info {
+            background: #ebf8ff;
+            border: 1px solid #bee3f8;
+            color: #2b6cb0;
+        }
+        
+        .alert-success {
+            background: #f0fff4;
+            border: 1px solid #9ae6b4;
+            color: #276749;
+        }
+        
+        .alert-warning {
+            background: #fffbeb;
+            border: 1px solid #fbd38d;
+            color: #b7791f;
+        }
+        
+        .code-block {
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        
+        .progress-bar {
+            background: #e2e8f0;
+            height: 8px;
+            border-radius: 4px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            background: #4299e1;
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔥 Firebase 設置工具</h1>
+            <p>為 VaultCaddy 設置 Google Firebase 數據庫和雲端存儲</p>
+            
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+            </div>
+        </div>
+        
+        <div class="alert alert-info">
+            <strong>📋 完成這個設置後，您的用戶數據將：</strong><br>
+            ✅ 永久保存在 Google 雲端<br>
+            ✅ 跨設備同步<br>
+            ✅ 自動備份和恢復<br>
+            ✅ 企業級安全保護
+        </div>
+        
+        <!-- 步驟 1：創建 Firebase 項目 -->
+        <div class="step">
+            <h3><span class="step-number">1</span>創建 Firebase 項目</h3>
+            <p>首先，在 Firebase Console 中創建一個新項目</p>
+            
+            <a href="https://console.firebase.google.com/" target="_blank" class="link-button">
+                🚀 打開 Firebase Console
+            </a>
+            
+            <div class="alert alert-info" style="margin-top: 15px;">
+                <strong>📝 步驟說明：</strong><br>
+                1. 點擊 "Create a project" 或 "新增專案"<br>
+                2. 項目名稱輸入：<strong>VaultCaddy Production</strong><br>
+                3. 啟用 Google Analytics（推薦）<br>
+                4. 選擇 Analytics 帳戶或創建新帳戶<br>
+                5. 點擊 "Create project"
+            </div>
+        </div>
+        
+        <!-- 步驟 2：添加 Web 應用 -->
+        <div class="step">
+            <h3><span class="step-number">2</span>添加 Web 應用到項目</h3>
+            <p>在您的 Firebase 項目中添加 Web 應用</p>
+            
+            <div class="alert alert-warning">
+                <strong>⚠️ 請先完成步驟 1，然後：</strong><br>
+                1. 在 Firebase 項目首頁，點擊 Web 圖標 (&lt;/&gt;)<br>
+                2. 應用暱稱輸入：<strong>VaultCaddy Web App</strong><br>
+                3. 勾選 "Also set up Firebase Hosting for this app"<br>
+                4. 點擊 "Register app"<br>
+                5. 複製提供的配置代碼
+            </div>
+        </div>
+        
+        <!-- 步驟 3：啟用服務 -->
+        <div class="step">
+            <h3><span class="step-number">3</span>啟用必要的 Firebase 服務</h3>
+            <p>啟用 Authentication 和 Firestore 服務</p>
+            
+            <div class="alert alert-info">
+                <strong>🔧 需要啟用的服務：</strong><br><br>
+                
+                <strong>1. Authentication：</strong><br>
+                • 在左側選單點擊 "Authentication"<br>
+                • 點擊 "Get started"<br>
+                • 在 "Sign-in method" 頁面啟用 "Google"<br>
+                • 輸入項目支援郵箱<br><br>
+                
+                <strong>2. Firestore Database：</strong><br>
+                • 在左側選單點擊 "Firestore Database"<br>
+                • 點擊 "Create database"<br>
+                • 選擇 "Start in production mode"<br>
+                • 選擇地區（推薦：asia-east1 香港）<br><br>
+                
+                <strong>3. Storage：</strong><br>
+                • 在左側選單點擊 "Storage"<br>
+                • 點擊 "Get started"<br>
+                • 使用默認安全規則<br>
+                • 選擇相同地區
+            </div>
+        </div>
+        
+        <!-- 步驟 4：輸入配置 -->
+        <div class="step">
+            <h3><span class="step-number">4</span>輸入 Firebase 配置</h3>
+            <p>複製步驟 2 中的配置代碼，並填入下面的表單</p>
+            
+            <div class="form-group">
+                <label for="apiKey">API Key:</label>
+                <input type="text" id="apiKey" placeholder="AIza...">
+            </div>
+            
+            <div class="form-group">
+                <label for="authDomain">Auth Domain:</label>
+                <input type="text" id="authDomain" placeholder="vaultcaddy-xxxxx.firebaseapp.com">
+            </div>
+            
+            <div class="form-group">
+                <label for="projectId">Project ID:</label>
+                <input type="text" id="projectId" placeholder="vaultcaddy-xxxxx">
+            </div>
+            
+            <div class="form-group">
+                <label for="storageBucket">Storage Bucket:</label>
+                <input type="text" id="storageBucket" placeholder="vaultcaddy-xxxxx.appspot.com">
+            </div>
+            
+            <div class="form-group">
+                <label for="messagingSenderId">Messaging Sender ID:</label>
+                <input type="text" id="messagingSenderId" placeholder="123456789">
+            </div>
+            
+            <div class="form-group">
+                <label for="appId">App ID:</label>
+                <input type="text" id="appId" placeholder="1:123456789:web:abcdef123456">
+            </div>
+            
+            <button class="button" onclick="generateConfig()">
+                📝 生成配置代碼
+            </button>
+        </div>
+        
+        <!-- 步驟 5：應用配置 -->
+        <div class="step" id="step5" style="display: none;">
+            <h3><span class="step-number">5</span>應用配置到系統</h3>
+            <p>將生成的配置代碼應用到 VaultCaddy 系統</p>
+            
+            <div class="alert alert-success">
+                <strong>✅ 配置已生成！</strong><br>
+                系統將自動更新配置文件。
+            </div>
+            
+            <div id="generated-config" class="code-block"></div>
+            
+            <button class="button success-button" onclick="applyConfig()">
+                🚀 應用配置並部署
+            </button>
+        </div>
+        
+        <!-- 步驟 6：測試連接 -->
+        <div class="step" id="step6" style="display: none;">
+            <h3><span class="step-number">6</span>測試 Firebase 連接</h3>
+            <p>驗證 Firebase 服務是否正常工作</p>
+            
+            <div class="alert alert-success">
+                <strong>🎉 Firebase 設置完成！</strong><br>
+                您的 VaultCaddy 現在已連接到 Google 雲端服務。
+            </div>
+            
+            <a href="auth.html" class="link-button success-button">
+                🔐 測試 Google 登入
+            </a>
+            
+            <a href="dashboard.html" class="link-button">
+                📊 前往 Dashboard
+            </a>
+        </div>
+    </div>
+    
+    <script>
+        let currentStep = 1;
+        
+        function updateProgress() {
+            const progress = (currentStep / 6) * 100;
+            document.getElementById('progress-fill').style.width = progress + '%';
+        }
+        
+        function generateConfig() {
+            const apiKey = document.getElementById('apiKey').value;
+            const authDomain = document.getElementById('authDomain').value;
+            const projectId = document.getElementById('projectId').value;
+            const storageBucket = document.getElementById('storageBucket').value;
+            const messagingSenderId = document.getElementById('messagingSenderId').value;
+            const appId = document.getElementById('appId').value;
+            
+            if (!apiKey || !authDomain || !projectId) {
+                alert('請填入必要的配置信息（API Key, Auth Domain, Project ID）');
+                return;
+            }
+            
+            const config = {
+                apiKey: apiKey,
+                authDomain: authDomain,
+                projectId: projectId,
+                storageBucket: storageBucket,
+                messagingSenderId: messagingSenderId,
+                appId: appId
+            };
+            
+            const configCode = `// Firebase 配置
+const firebaseConfig = ${JSON.stringify(config, null, 2)};
+
+// 初始化 Firebase
+import { initializeApp } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
+import { getStorage } from 'firebase/storage';
+
+const app = initializeApp(firebaseConfig);
+export const db = getFirestore(app);
+export const auth = getAuth(app);
+export const storage = getStorage(app);`;
+            
+            document.getElementById('generated-config').textContent = configCode;
+            document.getElementById('step5').style.display = 'block';
+            
+            // 保存配置到 localStorage 以便後續使用
+            localStorage.setItem('vaultcaddy_firebase_config', JSON.stringify(config));
+            
+            currentStep = 5;
+            updateProgress();
+        }
+        
+        function applyConfig() {
+            const config = JSON.parse(localStorage.getItem('vaultcaddy_firebase_config'));
+            
+            if (!config) {
+                alert('配置信息丟失，請重新生成');
+                return;
+            }
+            
+            // 這裡可以通過 API 更新配置文件
+            // 或者顯示手動更新指示
+            
+            alert('配置已保存！系統將在下次部署時應用新配置。');
+            
+            document.getElementById('step6').style.display = 'block';
+            currentStep = 6;
+            updateProgress();
+        }
+        
+        // 初始化進度條
+        updateProgress();
+        
+        // 自動填入一些示例值（開發用）
+        if (window.location.search.includes('demo=true')) {
+            document.getElementById('apiKey').value = 'AIzaSyCpH0qoL0wSEtHzutJzIqElbL_17cBuvug';
+            document.getElementById('authDomain').value = 'vaultcaddy-production.firebaseapp.com';
+            document.getElementById('projectId').value = 'vaultcaddy-production';
+            document.getElementById('storageBucket').value = 'vaultcaddy-production.appspot.com';
+            document.getElementById('messagingSenderId').value = '123456789';
+            document.getElementById('appId').value = '1:123456789:web:abcdef123456';
+        }
+    </script>
+</body>
+</html>

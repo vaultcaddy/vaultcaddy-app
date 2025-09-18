@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-translate="account_settings">帳戶設定 - VaultCaddy</title>
+    <meta name="description" content="Manage your VaultCaddy account settings and profile information">
+    <meta property="og:title" content="Account Settings - VaultCaddy">
+    <meta property="og:description" content="VaultCaddy - Professional document processing with AI technology">
+    <meta property="og:url" content="https://vaultcaddy.com/account">
+    <meta property="og:type" content="website">
+    <link rel="canonical" href="https://vaultcaddy.com/account">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="pages.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="translations.js"></script>
+    <script src="unified-auth.js"></script>
+    <script src="navbar-component.js"></script>
+    <script src="sidebar-component.js"></script>
+    <style>
+        body {
+            background: #ffffff;
+            color: #1f2937;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        
+        .navbar {
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .account-container {
+            display: flex;
+            min-height: calc(100vh - 60px);
+            padding-top: 60px;
+        }
+        
+        .sidebar {
+            width: 280px;
+            background: #f8fafc;
+            border-right: 1px solid #e5e7eb;
+            position: fixed;
+            top: 60px;
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar-header {
+            padding: 1.5rem 1rem 1rem 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .sidebar-header h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0;
+        }
+        
+        .sidebar-section {
+            padding: 1rem 0;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .sidebar-section h3 {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin: 0 0 0.5rem 1rem;
+        }
+        
+        .sidebar-footer {
+            padding: 1rem;
+            border-top: 1px solid #e2e8f0;
+            background: #ffffff;
+            margin-top: auto;
+        }
+        
+        .sidebar-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .stat-label {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+        
+        .stat-value {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .sidebar-nav {
+            flex: 1;
+            padding: 1rem 0;
+        }
+        
+        .sidebar-nav ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .sidebar-nav .nav-item {
+            margin: 0;
+        }
+        
+        .sidebar-nav .nav-item a {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            color: #6b7280;
+            text-decoration: none;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+        
+        .sidebar-nav .nav-item.active a {
+            background: #eff6ff;
+            color: #2563eb;
+            border-left-color: #2563eb;
+        }
+        
+        .sidebar-nav .nav-item a:hover {
+            background: #f1f5f9;
+            color: #374151;
+        }
+        
+        .sidebar-nav .nav-item a i {
+            width: 20px;
+            margin-right: 0.75rem;
+            font-size: 1rem;
+        }
+        
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 2rem 3rem;
+            overflow-y: auto;
+            min-height: calc(100vh - 60px);
+            background: #ffffff;
+        }
+        
+        .page-header {
+            margin-bottom: 2rem;
+        }
+        
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0 0 0.5rem 0;
+            color: #1f2937;
+        }
+        
+        .page-subtitle {
+            color: #6b7280;
+            margin: 0;
+            font-size: 1rem;
+        }
+        
+        .content-section {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .section-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0 0 0.5rem 0;
+            color: #1f2937;
+        }
+        
+        .section-subtitle {
+            color: #6b7280;
+            margin: 0;
+            font-size: 0.875rem;
+        }
+        
+        .section-content {
+            padding: 2rem;
+        }
+        
+        .profile-section {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 3px solid #334155;
+        }
+        
+        .profile-info h3 {
+            margin: 0 0 0.5rem 0;
+            color: #1f2937;
+            font-size: 1.25rem;
+        }
+        
+        .profile-info p {
+            margin: 0;
+            color: #6b7280;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+            font-weight: 500;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            color: #1f2937;
+            font-size: 0.875rem;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: #6b7280;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .btn-secondary:hover {
+            background: #f3f4f6;
+            color: #1f2937;
+        }
+        
+        .connected-account {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        
+        .account-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .account-provider {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+        }
+        
+        .google-icon {
+            background: #dc4e41;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.75rem;
+        }
+        
+        .three-dots-menu {
+            color: #6b7280;
+            cursor: pointer;
+            padding: 0.25rem;
+        }
+        
+        .three-dots-menu:hover {
+            color: #1f2937;
+        }
+        
+        .add-button {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #3b82f6;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+            padding: 0.5rem 0;
+        }
+        
+        .add-button:hover {
+            color: #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <!-- 導航欄 -->
+    <!-- 導航欄 - 由 navbar-component.js 動態載入 -->
+    <div id="navbar-placeholder"></div>
+
+    <!-- 帳戶管理容器 -->
+    <div class="account-container">
+        <!-- 左側邊欄 -->
+        <aside class="sidebar">
+            <!-- 統一的左側導航 -->
+            <div class="sidebar-header">
+                <h2>Models</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="nav-item">
+                        <a href="dashboard.html#bank-statement">
+                            <i class="fas fa-university"></i>
+                            <span>Bank statements</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="dashboard.html#invoice">
+                            <i class="fas fa-file-invoice"></i>
+                            <span>Invoices</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="dashboard.html#receipt">
+                            <i class="fas fa-receipt"></i>
+                            <span>Receipts</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="dashboard.html#general">
+                            <i class="fas fa-file-alt"></i>
+                            <span>General</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-section">
+                <h3>CONFIGURATIONS</h3>
+                <ul class="sidebar-nav">
+                    <li class="nav-item active">
+                        <a href="account.html">
+                            <i class="fas fa-user"></i>
+                            <span>Account</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="billing.html">
+                            <i class="fas fa-credit-card"></i>
+                            <span>Billing</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="sidebar-footer">
+                <div class="sidebar-stats">
+                    <div class="stat-item">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">
+                            <i class="fas fa-file-alt" style="color: #6b7280; font-size: 1rem; width: 16px; text-align: center;"></i>
+                            <span class="stat-label">處理文檔總數</span>
+                        </div>
+                        <span class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">
+                            <i class="fas fa-clock" style="color: #6b7280; font-size: 1rem; width: 16px; text-align: center;"></i>
+                            <span class="stat-label">平均處理時間</span>
+                        </div>
+                        <span class="stat-value">0ms</span>
+                    </div>
+                    <div class="stat-item">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">
+                            <i class="fas fa-check-circle" style="color: #10b981; font-size: 1rem; width: 16px; text-align: center;"></i>
+                            <span class="stat-label">處理成功率</span>
+                        </div>
+                        <span class="stat-value">0%</span>
+                    </div>
+                    <div class="stat-item">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">
+                            <i class="fas fa-coins" style="color: #f59e0b; font-size: 1rem; width: 16px; text-align: center;"></i>
+                            <span class="stat-label">剩餘Credits</span>
+                        </div>
+                        <span class="stat-value">7</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 主要內容區域 -->
+        <main class="main-content">
+
+            <!-- 帳戶資訊區塊 -->
+            <div class="content-section">
+                <div class="section-header">
+                    <h2 class="section-title" data-translate="account">帳戶</h2>
+                    <p class="section-subtitle" data-translate="manage_account_info">管理您的帳戶資訊。</p>
+                </div>
+                <div class="section-content">
+                    <!-- 個人資料區塊 -->
+                    <div style="display: flex; gap: 3rem;">
+                        <!-- 左側：帳戶管理 -->
+                        <div style="flex: 1;">
+                            <div style="margin-bottom: 2rem;">
+                                <a href="#" class="btn btn-secondary" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                                    <i class="fas fa-user"></i>
+                                    <span data-translate="profile">個人檔案</span>
+                                </a>
+                                <a href="security.html" class="btn btn-secondary" style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="fas fa-shield-alt"></i>
+                                    <span data-translate="security">安全性</span>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- 右側：個人資料詳情 -->
+                        <div style="flex: 2;">
+                            <h3 style="color: #1f2937; margin-bottom: 1.5rem;" data-translate="profile_details">個人檔案詳情</h3>
+                            
+                            <!-- 個人資料 -->
+                            <div class="profile-section">
+                                <img src="https://ui-avatars.com/api/?name=%E6%89%AD%E6%89%AD1&background=3b82f6&color=ffffff&size=80" alt="Profile" class="profile-avatar">
+                                <div class="profile-info">
+                                    <h3>扭扭1</h3>
+                                    <button class="btn btn-primary" onclick="openUpdateProfileModal()" data-translate="update_profile">更新個人檔案</button>
+                                </div>
+                            </div>
+
+                            <!-- 電子郵件地址 -->
+                            <div class="form-group">
+                                <label class="form-label" data-translate="email_addresses">電子郵件地址</label>
+                                <div class="connected-account">
+                                    <div class="account-info">
+                                        <span style="color: #1f2937;">osclin2011@gmail.com</span>
+                                        <span style="color: #6b7280; font-size: 0.875rem;" data-translate="primary">主要</span>
+                                    </div>
+                                    <div class="three-dots-menu" onclick="toggleEmailMenu(this)" style="position: relative;">
+                                        <i class="fas fa-ellipsis-h"></i>
+                                        <div class="dropdown-menu" style="display: none; position: absolute; top: 100%; right: 0; background: white; border: 1px solid #e5e7eb; border-radius: 6px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); min-width: 120px; z-index: 1000; margin-top: 5px;">
+                                            <button onclick="showRemoveEmailModal('osclin2011@gmail.com')" style="width: 100%; padding: 8px 12px; text-align: left; border: none; background: none; color: #dc2626; cursor: pointer; border-radius: 6px;">
+                                                <i class="fas fa-trash" style="margin-right: 8px;"></i>Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="add-button">
+                                    <i class="fas fa-plus"></i>
+                                    <span data-translate="add_email_address">新增電子郵件地址</span>
+                                </button>
+                            </div>
+
+                            <!-- 連接的帳戶 -->
+                            <div class="form-group">
+                                <label class="form-label" data-translate="connected_accounts">已連接帳戶</label>
+                                <div class="connected-account">
+                                    <div class="account-info">
+                                        <div class="account-provider google-icon">G</div>
+                                                                        <div>
+                                    <div style="color: #1f2937; font-weight: 500;">Google</div>
+                                    <div style="color: #6b7280; font-size: 0.875rem;">osclin2011@gmail.com</div>
+                                </div>
+                                    </div>
+                                    <div class="three-dots-menu">
+                                        <i class="fas fa-ellipsis-h"></i>
+                                    </div>
+                                </div>
+                                <button class="add-button">
+                                    <i class="fas fa-plus"></i>
+                                    <span data-translate="connect_account">連接帳戶</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Update Profile Modal -->
+    <div id="updateProfileModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 2000;">
+        <div class="modal-content" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 2rem; border-radius: 12px; width: 90%; max-width: 500px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 style="margin: 0; color: #1f2937;" data-translate="update_profile">更新個人檔案</h3>
+                <button onclick="closeUpdateProfileModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6b7280;">×</button>
+            </div>
+            
+            <div style="text-align: center; margin-bottom: 1.5rem;">
+                <img src="https://ui-avatars.com/api/?name=%E6%89%AD%E6%89%AD1&background=3b82f6&color=ffffff&size=80" alt="Profile" style="width: 80px; height: 80px; border-radius: 50%; margin-bottom: 1rem;">
+                <div>
+                    <button style="background: none; border: none; color: #3b82f6; cursor: pointer; margin-right: 1rem;">Upload</button>
+                    <button style="background: none; border: none; color: #dc2626; cursor: pointer;">Remove</button>
+                </div>
+                <p style="margin: 0.5rem 0 0 0; color: #6b7280; font-size: 0.875rem;">Recommended size 1:1, up to 10MB.</p>
+            </div>
+            
+            <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+                <div style="flex: 1;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: #1f2937; font-weight: 500;">First name</label>
+                    <input type="text" value="扭扭" style="width: 100%; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 6px; background: #374151; color: white;">
+                </div>
+                <div style="flex: 1;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: #1f2937; font-weight: 500;">Last name</label>
+                    <input type="text" value="1" style="width: 100%; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 6px; background: #374151; color: white;">
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <button onclick="closeUpdateProfileModal()" style="padding: 0.75rem 1.5rem; background: #f3f4f6; color: #374151; border: none; border-radius: 6px; cursor: pointer;" data-translate="cancel">取消</button>
+                <button onclick="saveProfile()" style="padding: 0.75rem 1.5rem; background: #374151; color: white; border: none; border-radius: 6px; cursor: pointer;" data-translate="save">儲存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Remove Email Modal -->
+    <div id="removeEmailModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 2000;">
+        <div class="modal-content" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #374151; color: white; padding: 2rem; border-radius: 12px; width: 90%; max-width: 400px;">
+            <h3 style="margin: 0 0 1rem 0;">Remove email address</h3>
+            <p id="removeEmailMessage" style="margin: 0 0 1.5rem 0; color: #d1d5db;"></p>
+            <div id="warningMessage" style="display: none; background: #dc2626; border: 1px solid #ef4444; border-radius: 6px; padding: 1rem; margin-bottom: 1.5rem;">
+                <div style="display: flex; align-items: start; gap: 0.75rem;">
+                    <i class="fas fa-exclamation-triangle" style="color: #fbbf24; margin-top: 2px;"></i>
+                    <div>
+                        <p style="margin: 0; font-weight: 500; color: #fbbf24;">This email address is linked to one or more Connected Accounts. Remove the Connected Account before deleting this email address.</p>
+                    </div>
+                </div>
+            </div>
+            <p style="margin: 0 0 1.5rem 0; color: #d1d5db;">You will no longer be able to sign in using this email address.</p>
+            
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <button onclick="closeRemoveEmailModal()" style="padding: 0.75rem 1.5rem; background: transparent; color: #d1d5db; border: 1px solid #4b5563; border-radius: 6px; cursor: pointer;">Cancel</button>
+                <button id="removeEmailButton" onclick="confirmRemoveEmail()" style="padding: 0.75rem 1.5rem; background: #dc2626; color: white; border: none; border-radius: 6px; cursor: pointer;">Remove</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 檢查登入狀態
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!window.UnifiedAuthManager.isLoggedIn()) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // 初始化統一側邊欄
+            window.accountSidebar = new VaultCaddySidebar('account');
+
+            // 初始化頁面
+            initAccountPage();
+            
+            // 監聽語言變更事件
+            window.addEventListener('languageChanged', function(e) {
+                console.log('Account: 語言已變更為', e.detail.language);
+                // 重新應用翻譯
+                if (window.languageManager) {
+                    window.languageManager.loadLanguage(e.detail.language);
+                }
+            });
+        });
+
+        function initAccountPage() {
+            // 載入用戶資料
+            const user = window.UnifiedAuthManager.getUser();
+            if (user) {
+                // 更新用戶資料顯示
+                document.querySelector('.profile-info h3').textContent = user.name || '扭扭1';
+                document.querySelector('.profile-avatar').src = user.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face&auto=format';
+                
+                // 更新電子郵件
+                const emailElements = document.querySelectorAll('.connected-account .account-info span');
+                if (emailElements.length > 0) {
+                    emailElements[0].textContent = user.email || 'osclin2011@gmail.com';
+                }
+            }
+
+            console.log('Account page initialized');
+        }
+
+        // 更新個人資料
+        function updateProfile() {
+            window.VaultCaddyNavbar.showNotification('Profile update coming soon!', 'info');
+        }
+
+        // 添加電子郵件
+        function addEmail() {
+            window.VaultCaddyNavbar.showNotification('Add email coming soon!', 'info');
+        }
+
+        // 連接帳戶
+        function connectAccount() {
+            window.VaultCaddyNavbar.showNotification('Connect account coming soon!', 'info');
+        }
+
+        // Update Profile Modal Functions
+        function openUpdateProfileModal() {
+            document.getElementById('updateProfileModal').style.display = 'block';
+        }
+
+        function closeUpdateProfileModal() {
+            document.getElementById('updateProfileModal').style.display = 'none';
+        }
+
+        function saveProfile() {
+            // 這裡可以添加保存邏輯
+            alert('Profile updated successfully!');
+            closeUpdateProfileModal();
+        }
+
+        // Email Management Functions
+        function toggleEmailMenu(element) {
+            const dropdown = element.querySelector('.dropdown-menu');
+            const isVisible = dropdown.style.display === 'block';
+            
+            // 關閉所有其他下拉選單
+            document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                menu.style.display = 'none';
+            });
+            
+            // 切換當前下拉選單
+            dropdown.style.display = isVisible ? 'none' : 'block';
+        }
+
+        let emailToRemove = '';
+        
+        function showRemoveEmailModal(email) {
+            emailToRemove = email;
+            document.getElementById('removeEmailMessage').textContent = `${email} will be removed from this account.`;
+            
+            // 檢查是否是唯一的電子郵件或與連接帳戶關聯
+            const isLinkedToConnectedAccount = email === 'osclin2011@gmail.com'; // 假設這個郵件與 Google 帳戶連接
+            const warningMessage = document.getElementById('warningMessage');
+            const removeButton = document.getElementById('removeEmailButton');
+            
+            if (isLinkedToConnectedAccount) {
+                warningMessage.style.display = 'block';
+                removeButton.disabled = true;
+                removeButton.style.opacity = '0.5';
+                removeButton.style.cursor = 'not-allowed';
+            } else {
+                warningMessage.style.display = 'none';
+                removeButton.disabled = false;
+                removeButton.style.opacity = '1';
+                removeButton.style.cursor = 'pointer';
+            }
+            
+            document.getElementById('removeEmailModal').style.display = 'block';
+            
+            // 關閉下拉選單
+            document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                menu.style.display = 'none';
+            });
+        }
+
+        function closeRemoveEmailModal() {
+            document.getElementById('removeEmailModal').style.display = 'none';
+            emailToRemove = '';
+        }
+
+        function confirmRemoveEmail() {
+            if (document.getElementById('removeEmailButton').disabled) {
+                return;
+            }
+            
+            // 模擬刪除郵件
+            alert(`Email ${emailToRemove} has been removed successfully!`);
+            closeRemoveEmailModal();
+        }
+
+        // 點擊外部關閉下拉選單
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.three-dots-menu')) {
+                document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                    menu.style.display = 'none';
+                });
+            }
+        });
+
+        // 點擊模組外部關閉模組
+        window.addEventListener('click', function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

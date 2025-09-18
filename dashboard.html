@@ -1,0 +1,1651 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-translate="page_title_dashboard">儀表板 - VaultCaddy</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="pages.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <script src="config.js"></script>
+    <script src="google-auth.js"></script>
+    <script src="translations.js"></script>
+    <script src="unified-auth.js"></script>
+    <script src="navbar-component.js"></script>
+    <script src="sidebar-component.js"></script>
+    
+    <style>
+        /* 白色主題樣式 */
+        body {
+            background: #ffffff !important;
+            color: #1f2937 !important;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+            background: #ffffff;
+            padding-top: 60px; /* 為導航欄留出空間 */
+        }
+        
+        .sidebar {
+            width: 280px;
+            background: #f8fafc;
+            border-right: 1px solid #e2e8f0;
+            flex-shrink: 0;
+            position: fixed;
+            top: 60px;
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar-header {
+            padding: 1.5rem 1rem 1rem 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .sidebar-header h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0;
+        }
+        
+        .sidebar-nav {
+            flex: 1;
+            padding: 1rem 0;
+        }
+        
+        .sidebar-nav ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .sidebar-nav .nav-item {
+            margin: 0;
+        }
+        
+        .sidebar-nav .nav-item a {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            color: #6b7280;
+            text-decoration: none;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+        
+        .sidebar-nav .nav-item.active a {
+            background: #eff6ff;
+            color: #2563eb;
+            border-left-color: #2563eb;
+        }
+        
+        .sidebar-nav .nav-item a:hover {
+            background: #f1f5f9;
+            color: #374151;
+        }
+        
+        .sidebar-nav .nav-item a i {
+            width: 20px;
+            margin-right: 0.75rem;
+            font-size: 1rem;
+        }
+        
+        .sidebar-section {
+            padding: 1rem 0;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .sidebar-section h3 {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin: 0 0 0.5rem 1rem;
+        }
+        
+        .sidebar-footer {
+            padding: 1rem;
+            border-top: 1px solid #e2e8f0;
+            background: #ffffff;
+        }
+        
+        .sidebar-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+        }
+        
+        .stat-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .stat-left {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex: 1;
+        }
+        
+        .stat-label {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+        
+        .stat-value {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .main-content {
+            flex: 1;
+            background: #ffffff;
+            margin-left: 280px;
+            overflow-y: auto;
+            min-height: calc(100vh - 60px);
+        }
+        
+        .page-header {
+            padding: 2rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #ffffff;
+        }
+        
+        .page-header h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0;
+        }
+        
+        .page-header p {
+            color: #6b7280;
+            margin: 0.5rem 0 0 0;
+        }
+        
+        .help-btn {
+            background: #6366f1;
+            color: #ffffff;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .help-btn:hover {
+            background: #4f46e5;
+        }
+        
+        .controls-bar {
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e2e8f0;
+            background: #ffffff;
+        }
+        
+        .filter-input {
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            color: #1f2937;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            width: 300px;
+            font-size: 14px;
+        }
+        
+        .filter-input::placeholder {
+            color: #9ca3af;
+        }
+        
+        .filter-input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        .actions {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .upload-btn {
+            background: #6366f1;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        
+        .upload-btn:hover {
+            background: #4f46e5;
+        }
+        
+        .view-btn {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        
+        .view-btn:hover {
+            background: #e5e7eb;
+        }
+        
+        .documents-table-container {
+            padding: 0 2rem;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .documents-table {
+            width: 100%;
+            min-width: 1200px; /* 確保表格最小寬度，觸發水平滾動 */
+            border-collapse: collapse;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .documents-table thead th {
+            background: #f8fafc;
+            color: #374151;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 1px solid #e2e8f0;
+            white-space: nowrap; /* 防止標題文字換行 */
+            font-size: 14px;
+        }
+        
+        .documents-table tbody tr {
+            border-bottom: 1px solid #f3f4f6;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .documents-table tbody tr:hover {
+            background: #f9fafb;
+        }
+        
+        .documents-table tbody tr:last-child {
+            border-bottom: none;
+        }
+        
+        .documents-table tbody td {
+            padding: 1rem;
+            color: #374151;
+            vertical-align: middle;
+            white-space: nowrap; /* 防止單元格內容換行 */
+            font-size: 14px;
+        }
+        
+        .document-cell {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .file-icon {
+            color: #ef4444;
+            font-size: 1.5rem;
+        }
+        
+        .doc-name {
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .doc-details {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+        
+        .period-info {
+            color: #6b7280;
+        }
+        
+        .reconciliation {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .reconciliation-text {
+            font-weight: 600;
+        }
+        
+        .progress-bar {
+            width: 100px;
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #10b981;
+            transition: width 0.3s;
+        }
+        
+        .progress-percentage {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+        
+        .reconciliation-status {
+            font-size: 0.75rem;
+            color: #fbbf24;
+        }
+        
+        .balance-info {
+            font-size: 0.875rem;
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .status-badge.success {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+        
+        .review-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .review-badge.review {
+            background: rgba(249, 115, 22, 0.2);
+            color: #f97316;
+        }
+        
+        .action-btn {
+            background: none;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        
+        .action-btn:hover {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        
+        .pagination-info {
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #6b7280;
+            border-top: 1px solid #e2e8f0;
+            background: #ffffff;
+            font-size: 14px;
+        }
+        
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .rows-per-page {
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            color: #374151;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .rows-per-page:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+        
+        .pagination-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .page-btn {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            color: #374151;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .page-btn:hover:not(:disabled) {
+            background: #e5e7eb;
+        }
+        
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* 可編輯輸入框樣式 */
+        .editable-input {
+            border: 1px solid transparent;
+            background: transparent;
+            padding: 0.5rem;
+            font-size: 14px;
+            color: #374151;
+            width: 100%;
+            box-sizing: border-box;
+            transition: all 0.2s;
+        }
+        
+        .editable-input:hover {
+            border-color: #d1d5db;
+            background: #f9fafb;
+        }
+        
+        .editable-input:focus {
+            outline: none;
+            border-color: #6366f1;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        .editable-input[readonly] {
+            background: #f3f4f6;
+            color: #6b7280;
+            cursor: not-allowed;
+        }
+        
+        .editable-input[readonly]:hover {
+            border-color: transparent;
+            background: #f3f4f6;
+        }
+        
+        .date-input {
+            min-width: 140px;
+        }
+        
+        .description-input {
+            min-width: 200px;
+        }
+        
+        .amount-input,
+        .balance-input {
+            min-width: 100px;
+            text-align: right;
+        }
+        
+        .delete-transaction-btn {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        
+        .delete-transaction-btn:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+        
+        /* 文檔詳細視圖樣式 */
+        .back-navigation {
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #334155;
+        }
+        
+        .back-btn {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+        }
+        
+        .back-btn:hover {
+            color: #e2e8f0;
+        }
+        
+        .document-detail-container {
+            display: flex;
+            min-height: calc(100vh - 200px);
+            height: auto;
+        }
+        
+        .pdf-preview-container {
+            width: 40%;
+            border-right: 1px solid #334155;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .pdf-controls {
+            padding: 1rem;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .pdf-control-btn {
+            background: #475569;
+            border: none;
+            color: #e2e8f0;
+            padding: 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .page-info {
+            color: #94a3b8;
+        }
+        
+        .pdf-viewer {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #1e293b;
+        }
+        
+        .pdf-placeholder {
+            text-align: center;
+            color: #64748b;
+        }
+        
+        .pdf-placeholder i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        
+        .data-extraction-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            max-height: calc(100vh - 200px);
+        }
+        
+        .extraction-header {
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .extraction-header h2 {
+            font-size: 1.5rem;
+            color: #e2e8f0;
+            margin: 0;
+        }
+        
+        .extraction-tabs {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .tab-btn {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+        
+        .tab-btn.active {
+            color: #8b5cf6;
+            border-bottom-color: #8b5cf6;
+        }
+        
+        .document-actions {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .save-btn, .download-btn, .more-actions-btn {
+            background: #475569;
+            border: none;
+            color: #e2e8f0;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .reconciliation-status {
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #334155;
+        }
+        
+        .reconciliation-status h3 {
+            color: #e2e8f0;
+            margin: 0 0 0.5rem 0;
+        }
+        
+        .completion-status {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+        
+        .bank-statement-details {
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #334155;
+        }
+        
+        .bank-statement-details h3 {
+            color: #e2e8f0;
+            margin: 0;
+        }
+        
+        .transactions-section {
+            flex: 1;
+            padding: 1rem 2rem;
+        }
+        
+        .transactions-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .transactions-header h3 {
+            color: #e2e8f0;
+            margin: 0;
+        }
+        
+        .transaction-controls {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .control-btn {
+            background: #475569;
+            border: none;
+            color: #e2e8f0;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        .add-btn {
+            background: #8b5cf6;
+        }
+        
+        .transaction-info {
+            margin-bottom: 1rem;
+            color: #94a3b8;
+        }
+        
+        .transactions-table-container {
+            border: 1px solid #334155;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .transactions-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #1e293b;
+        }
+        
+        .transactions-table thead th {
+            background: #334155;
+            color: #e2e8f0;
+            padding: 0.75rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .transactions-table tbody tr {
+            border-bottom: 1px solid #334155;
+        }
+        
+        .transactions-table tbody tr:last-child {
+            border-bottom: none;
+        }
+        
+        .transactions-table tbody td {
+            padding: 0.75rem;
+            color: #e2e8f0;
+        }
+        
+        .transaction-checkbox {
+            margin: 0;
+        }
+        
+        .delete-transaction-btn {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            padding: 0.25rem;
+        }
+        
+        .delete-transaction-btn:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+        
+        .view-container {
+            height: 100%;
+        }
+        
+        /* 可編輯表格樣式 */
+        .editable-input {
+            width: 100%;
+            border: 1px solid transparent;
+            background: transparent;
+            padding: 0.5rem;
+            font-size: 14px;
+            color: #374151;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .editable-input:focus {
+            outline: none;
+            border-color: #6366f1;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        .editable-input:hover {
+            background: #f9fafb;
+            border-color: #d1d5db;
+        }
+        
+        .date-input {
+            min-width: 140px;
+        }
+        
+        .description-input {
+            min-width: 200px;
+        }
+        
+        .amount-input, .balance-input {
+            min-width: 100px;
+            text-align: right;
+        }
+        
+        .transaction-row:hover .editable-input {
+            border-color: #d1d5db;
+        }
+        
+        .delete-transaction-btn {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .delete-transaction-btn:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+        }
+    </style>
+</head>
+<body>
+    <!-- 導航欄 -->
+    <div id="navbar-placeholder"></div>
+
+    <!-- Dashboard 容器 -->
+    <div class="dashboard-container">
+        <!-- 左側邊欄 -->
+        <aside class="sidebar">
+            <!-- 統一的左側導航 -->
+            <div class="sidebar-header">
+                <h2 data-translate="models">模型</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="nav-item active">
+                        <a href="dashboard.html#bank-statement">
+                            <i class="fas fa-university"></i>
+                            <span data-translate="sidebar_bank_statements">銀行對帳單</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="dashboard.html#invoice">
+                            <i class="fas fa-file-invoice"></i>
+                            <span data-translate="sidebar_invoices">發票</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="dashboard.html#receipt">
+                            <i class="fas fa-receipt"></i>
+                            <span data-translate="sidebar_receipts">收據</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="dashboard.html#general">
+                            <i class="fas fa-file-alt"></i>
+                            <span data-translate="sidebar_general">一般文檔</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-section">
+                <h3 data-translate="configurations">配置</h3>
+                <ul class="sidebar-nav">
+                    <li class="nav-item">
+                        <a href="account.html">
+                            <i class="fas fa-user"></i>
+                            <span data-translate="account">帳戶</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="billing.html">
+                            <i class="fas fa-credit-card"></i>
+                            <span data-translate="billing">計費</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="sidebar-footer">
+                <div class="sidebar-stats">
+                    <div class="stat-item">
+                        <div class="stat-left">
+                            <i class="fas fa-file-alt" style="color: #6b7280; font-size: 1rem; width: 16px; text-align: center;"></i>
+                            <span class="stat-label">處理文檔總數</span>
+                        </div>
+                        <span class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-left">
+                            <i class="fas fa-clock" style="color: #6b7280; font-size: 1rem; width: 16px; text-align: center;"></i>
+                            <span class="stat-label" data-translate="average_processing_time">平均處理時間</span>
+                        </div>
+                        <span class="stat-value">0ms</span>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-left">
+                            <i class="fas fa-check-circle" style="color: #10b981; font-size: 1rem; width: 16px; text-align: center;"></i>
+                            <span class="stat-label" data-translate="processing_success_rate">處理成功率</span>
+                        </div>
+                        <span class="stat-value">0%</span>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-left">
+                            <i class="fas fa-coins" style="color: #f59e0b; font-size: 1rem; width: 16px; text-align: center;"></i>
+                            <span class="stat-label" data-translate="remaining_credits">剩餘積分</span>
+                        </div>
+                        <span class="stat-value">7</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 主內容區域 -->
+        <main class="main-content" id="main-content">
+            <!-- 文檔列表視圖 -->
+            <div id="document-list-view" class="view-container">
+                <!-- 頁面標題 -->
+                <header class="page-header">
+                    <div class="header-left">
+                        <h1 id="page-title">Bank statement converter</h1>
+                        <p id="page-subtitle">Manage and view your documents</p>
+                    </div>
+                    <div class="header-right">
+                        <button class="help-btn" onclick="showHelp()">Need Help?</button>
+                    </div>
+                </header>
+
+                <!-- 控制欄 -->
+                <div class="controls-bar">
+                    <div class="search-filter">
+                        <input type="text" data-translate-placeholder="filter_document_name" placeholder="篩選文檔名稱..." class="filter-input" id="filter-input">
+                    </div>
+                    <div class="actions">
+                        <button class="upload-btn" onclick="openUploadModal()">
+                            <i class="fas fa-upload"></i>
+                            <span data-translate="upload_files">上傳文件</span>
+                        </button>
+                        <button class="view-btn" onclick="toggleView()">
+                            <i class="fas fa-list"></i>
+                            <span data-translate="view">檢視</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 文檔表格 -->
+                <div class="documents-table-container">
+                    <table class="documents-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;">
+                                    <input type="checkbox" class="select-all">
+                                </th>
+                                <th data-translate="document">文檔</th>
+                                <th data-translate="statement_period">對帳單期間</th>
+                                <th data-translate="reconciliation">對帳</th>
+                                <th data-translate="balance_info">餘額信息</th>
+                                <th data-translate="status">狀態</th>
+                                <th>Review Status</th>
+                                <th>Notes</th>
+                                <th>Date Uploaded</th>
+                                <th data-translate="actions">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="documents-tbody">
+                            <!-- 示例數據 -->
+                            <tr class="document-row" onclick="openDocumentDetail('eStatementFile_20250829143359')">
+                                <td>
+                                    <input type="checkbox" onclick="event.stopPropagation()">
+                                </td>
+                                <td>
+                                    <div class="document-cell">
+                                        <i class="fas fa-file-pdf file-icon"></i>
+                                        <div class="document-info">
+                                            <div class="doc-name">eStatementFile_20250829143359.pdf</div>
+                                            <div class="doc-details">
+                                                <i class="fas fa-user"></i> MR YEUNG CAVLIN<br>
+                                                <i class="fas fa-credit-card"></i> 766-452064-882 • MIPSSTM
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="period-info">
+                                        <i class="fas fa-calendar-alt"></i> 02/01/2025 to 03/22/2025
+                                        <br><small>13 <span data-translate="transactions">筆交易</span></small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="reconciliation">
+                                        <div class="reconciliation-text">0/13</div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 0%"></div>
+                                        </div>
+                                        <div class="progress-percentage">0%</div>
+                                        <small class="reconciliation-status">
+                                            <i class="fas fa-exclamation-circle"></i> <span data-translate="in_progress">進行中</span>
+                                        </small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="balance-info">
+                                        <div>Start: <strong>$121,080.49</strong></div>
+                                        <div>End: <strong>$30,188.66</strong></div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="status-badge success">
+                                        <i class="fas fa-check-circle"></i> Success
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="review-badge review">
+                                        <i class="fas fa-eye"></i> Review
+                                    </span>
+                                </td>
+                                <td>—</td>
+                                <td>2025/8/29</td>
+                                <td>
+                                    <button class="action-btn" onclick="event.stopPropagation(); showActionMenu(event, 'eStatementFile_20250829143359')" title="More actions">
+                                        <i class="fas fa-ellipsis-h"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 分頁信息 -->
+                <div class="pagination-info">
+                    <span>0 <span data-translate="of">共</span> 1 <span data-translate="row_s_selected">行已選擇</span>.</span>
+                    <div class="pagination-controls">
+                        <span data-translate="rows_per_page">每頁行數</span>
+                        <select class="rows-per-page">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                        </select>
+                        <span><span data-translate="page_of">第</span> 1 <span data-translate="of">共</span> 1</span>
+                        <div class="pagination-buttons">
+                            <button class="page-btn" disabled><i class="fas fa-angle-double-left"></i></button>
+                            <button class="page-btn" disabled><i class="fas fa-angle-left"></i></button>
+                            <button class="page-btn" disabled><i class="fas fa-angle-right"></i></button>
+                            <button class="page-btn" disabled><i class="fas fa-angle-double-right"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 文檔詳細視圖 -->
+            <div id="document-detail-view" class="view-container" style="display: none;">
+                <!-- 返回按鈕 -->
+                <div class="back-navigation">
+                    <button class="back-btn" onclick="backToDocumentList()">
+                        <i class="fas fa-arrow-left"></i> <span data-translate="back_to_dashboard">返回儀表板</span>
+                    </button>
+                </div>
+
+                <!-- 文檔詳細內容 -->
+                <div class="document-detail-container">
+                    <!-- 左側：PDF 預覽 -->
+                    <div class="pdf-preview-container">
+                        <div class="pdf-controls">
+                            <button class="pdf-control-btn"><i class="fas fa-chevron-left"></i></button>
+                            <span class="page-info">1 of 3</span>
+                            <button class="pdf-control-btn"><i class="fas fa-chevron-right"></i></button>
+                            <button class="pdf-control-btn"><i class="fas fa-search-plus"></i></button>
+                            <button class="pdf-control-btn"><i class="fas fa-undo"></i></button>
+                            <button class="pdf-control-btn"><i class="fas fa-search-minus"></i></button>
+                        </div>
+                        <div class="pdf-viewer">
+                            <div class="pdf-placeholder">
+                                <i class="fas fa-file-pdf"></i>
+                                <p>PDF Preview</p>
+                                <small>Document: eStatementFile_20250829143359.pdf</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 右側：數據提取和處理 -->
+                    <div class="data-extraction-container">
+                        <!-- 頂部標題 -->
+                        <div class="extraction-header">
+                            <h2 id="document-title">eStatementFile_20250829143359.pdf</h2>
+                            <div class="extraction-tabs">
+                                <button class="tab-btn active" data-tab="results">Results</button>
+                                <button class="tab-btn" data-tab="export">Export</button>
+                                <button class="tab-btn" data-tab="json">JSON</button>
+                            </div>
+                            <div class="document-actions">
+                                <button class="save-btn">
+                                    <i class="fas fa-save"></i> Saved
+                                </button>
+                                <button class="download-btn">
+                                    <i class="fas fa-download"></i> Download
+                                </button>
+                                <button class="more-actions-btn">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 對帳狀態 -->
+                        <div class="reconciliation-status">
+                            <h3 data-translate="reconciliation_status">對帳狀態</h3>
+                            <p>0 <span data-translate="of">共</span> 13 <span data-translate="transactions_reconciled">筆交易已對帳</span></p>
+                            <div class="completion-status">0% <span data-translate="complete">完成</span></div>
+                        </div>
+
+                        <!-- 銀行對帳單詳細信息 -->
+                        <div class="bank-statement-details">
+                            <h3 data-translate="bank_statement_details">銀行對帳單詳細信息與備註</h3>
+                            <!-- 可收起的詳細信息區域 -->
+                        </div>
+
+                        <!-- 交易列表 -->
+                        <div class="transactions-section">
+                            <div class="transactions-header">
+                                <h3 data-translate="transactions_title">交易記錄</h3>
+                                <div class="transaction-controls">
+                                    <button class="control-btn">Show Unreconciled</button>
+                                    <button class="control-btn">Toggle All</button>
+                                    <button class="control-btn add-btn">Add Item</button>
+                                </div>
+                            </div>
+
+                            <div class="transaction-info">
+                                <p><span data-translate="showing_transactions">顯示第</span> 1 <span data-translate="to">至</span> 13 <span data-translate="of">共</span> 13 <span data-translate="transactions">筆交易</span></p>
+                            </div>
+
+                            <!-- 交易表格 -->
+                            <div class="transactions-table-container">
+                                <table class="transactions-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 40px;"><i class="fas fa-check"></i></th>
+                                            <th>Date</th>
+                                            <th>Description</th>
+                                            <th>Amount</th>
+                                            <th>Balance</th>
+                                            <th style="width: 40px;"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="transactions-tbody">
+                                        <!-- eStatementFile_20250829143359 可編輯交易數據 -->
+                                        <tr class="transaction-row">
+                                            <td>
+                                                <input type="checkbox" class="transaction-checkbox">
+                                            </td>
+                                            <td>
+                                                <input type="date" class="editable-input date-input" value="2025-02-22">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="editable-input description-input" value="B/F BALANCE" placeholder="Description">
+                                            </td>
+                                            <td>
+                                                <input type="number" class="editable-input amount-input" value="0" step="0.01">
+                                            </td>
+                                            <td>
+                                                <input type="number" class="editable-input balance-input" value="1493.98" step="0.01" readonly>
+                                            </td>
+                                            <td>
+                                                <button class="delete-transaction-btn" onclick="deleteTransaction(this)">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr class="transaction-row">
+                                            <td>
+                                                <input type="checkbox" class="transaction-checkbox">
+                                            </td>
+                                            <td>
+                                                <input type="date" class="editable-input date-input" value="2025-02-26">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="editable-input description-input" value="CREDIT INTEREST" placeholder="Description">
+                                            </td>
+                                            <td>
+                                                <input type="number" class="editable-input amount-input" value="2.61" step="0.01">
+                                            </td>
+                                            <td>
+                                                <input type="number" class="editable-input balance-input" value="1496.59" step="0.01" readonly>
+                                            </td>
+                                            <td>
+                                                <button class="delete-transaction-btn" onclick="deleteTransaction(this)">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr class="transaction-row">
+                                            <td>
+                                                <input type="checkbox" class="transaction-checkbox">
+                                            </td>
+                                            <td>
+                                                <input type="date" class="editable-input date-input" value="2025-03-07">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="editable-input description-input" value="QUICK CHEQUE DEPOSIT(07MAY25)" placeholder="Description">
+                                            </td>
+                                            <td>
+                                                <input type="number" class="editable-input amount-input" value="78649" step="0.01">
+                                            </td>
+                                            <td>
+                                                <input type="number" class="editable-input balance-input" value="80145.59" step="0.01" readonly>
+                                            </td>
+                                            <td>
+                                                <button class="delete-transaction-btn" onclick="deleteTransaction(this)">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr class="transaction-row">
+                                            <td>
+                                                <input type="checkbox" class="transaction-checkbox">
+                                            </td>
+                                            <td>
+                                                <input type="date" class="editable-input date-input" value="2025-03-08">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="editable-input description-input" value="POON H** K****HD125308257" placeholder="Description">
+                                            </td>
+                                            <td>
+                                                <input type="number" class="editable-input amount-input" value="840" step="0.01">
+                                            </td>
+                                            <td>
+                                                <input type="number" class="editable-input balance-input" value="79305.59" step="0.01" readonly>
+                                            </td>
+                                            <td>
+                                                <button class="delete-transaction-btn" onclick="deleteTransaction(this)">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr class="transaction-row">
+                                            <td>
+                                                <input type="checkbox" class="transaction-checkbox">
+                                            </td>
+                                            <td>
+                                                <input type="date" class="editable-input date-input" value="2025-03-10">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="editable-input description-input" value="4006-1210-0627-0086N310985" placeholder="Description">
+                                            </td>
+                                            <td>
+                                                <input type="number" class="editable-input amount-input" value="-21226.59" step="0.01">
+                                            </td>
+                                            <td>
+                                                <input type="number" class="editable-input balance-input" value="0" step="0.01" readonly>
+                                            </td>
+                                            <td>
+                                                <button class="delete-transaction-btn" onclick="deleteTransaction(this)">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr class="transaction-row">
+                                            <td>
+                                                <input type="checkbox" class="transaction-checkbox">
+                                            </td>
+                                            <td>
+                                                <input type="date" class="editable-input date-input" value="2025-03-10">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="editable-input description-input" value="TUG COMPANY LIMITEDHD1253" placeholder="Description">
+                                            </td>
+                                            <td>
+                                                <input type="number" class="editable-input amount-input" value="15000" step="0.01">
+                                            </td>
+                                            <td>
+                                                <input type="number" class="editable-input balance-input" value="43079" step="0.01" readonly>
+                                            </td>
+                                            <td>
+                                                <button class="delete-transaction-btn" onclick="deleteTransaction(this)">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr class="transaction-row">
+                                            <td>
+                                                <input type="checkbox" class="transaction-checkbox">
+                                            </td>
+                                            <td>
+                                                <input type="date" class="editable-input date-input" value="2025-03-11">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="editable-input description-input" value="024996667598184INSTALMENT" placeholder="Description">
+                                            </td>
+                                            <td>
+                                                <input type="number" class="editable-input amount-input" value="-3966.2" step="0.01">
+                                            </td>
+                                            <td>
+                                                <input type="number" class="editable-input balance-input" value="3912.8" step="0.01" readonly>
+                                            </td>
+                                            <td>
+                                                <button class="delete-transaction-btn" onclick="deleteTransaction(this)">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr class="transaction-row">
+                                            <td>
+                                                <input type="checkbox" class="transaction-checkbox">
+                                            </td>
+                                            <td>
+                                                <input type="date" class="editable-input date-input" value="2025-03-14">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="editable-input description-input" value="MUSHROOM TRANSPORTHD1253" placeholder="Description">
+                                            </td>
+                                            <td>
+                                                <input type="number" class="editable-input amount-input" value="-6500" step="0.01">
+                                            </td>
+                                            <td>
+                                                <input type="number" class="editable-input balance-input" value="0" step="0.01" readonly>
+                                            </td>
+                                            <td>
+                                                <button class="delete-transaction-btn" onclick="deleteTransaction(this)">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr class="transaction-row">
+                                            <td>
+                                                <input type="checkbox" class="transaction-checkbox">
+                                            </td>
+                                            <td>
+                                                <input type="date" class="editable-input date-input" value="2025-03-14">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="editable-input description-input" value="FROM GO DO SOMETHINGN314" placeholder="Description">
+                                            </td>
+                                            <td>
+                                                <input type="number" class="editable-input amount-input" value="3900" step="0.01">
+                                            </td>
+                                            <td>
+                                                <input type="number" class="editable-input balance-input" value="36512.8" step="0.01" readonly>
+                                            </td>
+                                            <td>
+                                                <button class="delete-transaction-btn" onclick="deleteTransaction(this)">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr class="transaction-row">
+                                            <td>
+                                                <input type="checkbox" class="transaction-checkbox">
+                                            </td>
+                                            <td>
+                                                <input type="date" class="editable-input date-input" value="2025-03-15">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="editable-input description-input" value="SHUDO INTERNATIONALHD125" placeholder="Description">
+                                            </td>
+                                            <td>
+                                                <input type="number" class="editable-input amount-input" value="-1620" step="0.01">
+                                            </td>
+                                            <td>
+                                                <input type="number" class="editable-input balance-input" value="34892.8" step="0.01" readonly>
+                                            </td>
+                                            <td>
+                                                <button class="delete-transaction-btn" onclick="deleteTransaction(this)">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr class="transaction-row">
+                                            <td>
+                                                <input type="checkbox" class="transaction-checkbox">
+                                            </td>
+                                            <td>
+                                                <input type="date" class="editable-input date-input" value="2025-03-21">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="editable-input description-input" value="SUN HING GINSENG & AH" placeholder="Description">
+                                            </td>
+                                            <td>
+                                                <input type="number" class="editable-input amount-input" value="-3375" step="0.01">
+                                            </td>
+                                            <td>
+                                                <input type="number" class="editable-input balance-input" value="0" step="0.01" readonly>
+                                            </td>
+                                            <td>
+                                                <button class="delete-transaction-btn" onclick="deleteTransaction(this)">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // 登入狀態檢查
+        function checkLoginStatus() {
+            const vaultcaddyToken = localStorage.getItem('vaultcaddy_token');
+            const vaultcaddyUser = localStorage.getItem('vaultcaddy_user');
+            const userLoggedIn = localStorage.getItem('userLoggedIn');
+            
+            return (vaultcaddyToken && vaultcaddyUser) || userLoggedIn === 'true';
+        }
+
+        // 文檔類型配置
+        const documentTypes = {
+            'bank-statement': {
+                titleKey: 'bank_statement_processor',
+                subtitleKey: 'manage_view_documents',
+                title: '銀行對帳單處理器',
+                subtitle: '管理和查看您的文檔',
+                icon: 'fas fa-university'
+            },
+            'invoice': {
+                titleKey: 'invoice_processor', 
+                subtitleKey: 'manage_view_documents',
+                title: '發票處理器',
+                subtitle: '管理和查看您的文檔',
+                icon: 'fas fa-file-invoice'
+            },
+            'receipt': {
+                titleKey: 'receipt_processor',
+                subtitleKey: 'manage_view_documents',
+                title: '收據處理器',
+                subtitle: '管理和查看您的文檔',
+                icon: 'fas fa-receipt'
+            },
+            'general': {
+                titleKey: 'general_processor',
+                subtitleKey: 'manage_view_documents',
+                title: '一般文檔處理器',
+                subtitle: '管理和查看您的文檔',
+                icon: 'fas fa-file-alt'
+            },
+            'account': {
+                titleKey: 'account_settings',
+                subtitleKey: 'manage_account_info',
+                title: '帳戶設定',
+                subtitle: '管理您的帳戶資訊',
+                icon: 'fas fa-user'
+            },
+            'billing': {
+                titleKey: 'billing_credits',
+                subtitleKey: 'manage_billing_subscription',
+                title: '計費與積分',
+                subtitle: '管理您的計費、訂閱和積分',
+                icon: 'fas fa-credit-card'
+            }
+        };
+
+        // 頁面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 檢查登入狀態
+            if (!checkLoginStatus()) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // 初始化統一側邊欄
+            window.unifiedSidebar = new VaultCaddySidebar();
+            
+            // 處理 hash 路由
+            handleHashRouting();
+            
+            // 監聽 hash 變化
+            window.addEventListener('hashchange', handleHashRouting);
+            
+            // 監聽語言變更事件
+            window.addEventListener('languageChanged', function(e) {
+                console.log('Dashboard: 語言已變更為', e.detail.language);
+                // 語言變更時重新應用當前文檔類型的翻譯
+                const hash = window.location.hash.substring(1);
+                const docType = hash || 'bank-statement';
+                if (documentTypes[docType]) {
+                    updatePageForDocumentType(docType);
+                }
+                // 注意：側邊欄的語言更新由 VaultCaddySidebar 的 setupLanguageListener 處理
+            });
+            
+            console.log('✅ Unified Dashboard 初始化完成');
+        });
+
+        // 處理 hash 路由
+        function handleHashRouting() {
+            const hash = window.location.hash.substring(1); // 移除 #
+            const docType = hash || 'bank-statement'; // 默認為銀行對帳單
+            
+            if (documentTypes[docType]) {
+                updatePageForDocumentType(docType);
+            }
+        }
+
+        // 更新頁面為指定文檔類型
+        function updatePageForDocumentType(docType) {
+            const config = documentTypes[docType];
+            
+            // 確保顯示文檔列表視圖，隱藏詳細視圖
+            const listView = document.getElementById('document-list-view');
+            const detailView = document.getElementById('document-detail-view');
+            
+            if (listView && detailView) {
+                listView.style.display = 'block';
+                detailView.style.display = 'none';
+            }
+            
+            // 更新頁面標題 - 支持多語言
+            const titleElement = document.getElementById('page-title');
+            const subtitleElement = document.getElementById('page-subtitle');
+            
+            if (titleElement) {
+                titleElement.textContent = config.title;
+                titleElement.setAttribute('data-translate', config.titleKey);
+            }
+            if (subtitleElement) {
+                subtitleElement.textContent = config.subtitle;
+                subtitleElement.setAttribute('data-translate', config.subtitleKey);
+            }
+            
+            // 更新瀏覽器標題
+            document.title = `${config.title} - VaultCaddy`;
+            
+            // 更新側邊欄活躍狀態
+            if (window.unifiedSidebar) {
+                window.unifiedSidebar.updateActivePage(docType);
+            }
+            
+            // 如果語言管理器存在，重新應用翻譯
+            if (window.languageManager) {
+                window.languageManager.loadLanguage(window.languageManager.currentLanguage);
+            }
+            
+            console.log('✅ 更新頁面類型:', docType, config.title);
+        }
+
+        // 打開文檔詳細視圖
+        function openDocumentDetail(documentId) {
+            document.getElementById('document-list-view').style.display = 'none';
+            document.getElementById('document-detail-view').style.display = 'block';
+            
+            // 更新文檔標題
+            document.getElementById('document-title').textContent = documentId + '.pdf';
+        }
+
+        // 返回文檔列表
+        function backToDocumentList() {
+            document.getElementById('document-detail-view').style.display = 'none';
+            document.getElementById('document-list-view').style.display = 'block';
+        }
+
+        // 其他功能函數
+        function showHelp() {
+            alert('Document processing help will be shown here.');
+        }
+
+        function openUploadModal() {
+            alert('Upload modal will be implemented.');
+        }
+
+        function toggleView() {
+            alert('View toggle functionality will be implemented.');
+        }
+
+        function showActionMenu(event, documentId) {
+            alert(`Action menu for ${documentId} will be shown here.`);
+        }
+
+        // 刪除交易行
+        function deleteTransaction(button) {
+            if (confirm('確定要刪除這筆交易嗎？')) {
+                const row = button.closest('tr');
+                row.remove();
+                
+                // 重新計算餘額
+                recalculateBalances();
+            }
+        }
+        
+        // 重新計算所有餘額
+        function recalculateBalances() {
+            const rows = document.querySelectorAll('#transactions-tbody tr');
+            let runningBalance = 0;
+            
+            rows.forEach((row, index) => {
+                const amountInput = row.querySelector('.amount-input');
+                const balanceInput = row.querySelector('.balance-input');
+                
+                if (amountInput && balanceInput) {
+                    const amount = parseFloat(amountInput.value) || 0;
+                    runningBalance += amount;
+                    balanceInput.value = runningBalance.toFixed(2);
+                }
+            });
+        }
+        
+        // 監聽金額變化並自動重新計算餘額
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('amount-input')) {
+                recalculateBalances();
+            }
+        });
+        
+        // 標籤切換
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('tab-btn')) {
+                // 移除所有活躍狀態
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                // 添加活躍狀態到點擊的標籤
+                e.target.classList.add('active');
+            }
+        });
+    </script>
+</body>
+</html>
