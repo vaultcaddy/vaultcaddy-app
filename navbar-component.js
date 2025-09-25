@@ -55,7 +55,7 @@ class VaultCaddyNavbar {
                         id: 'demo_user',
                         email: 'demo@vaultcaddy.com',
                         name: 'Demo User',
-                        avatar: 'https://ui-avatars.com/api/?name=User&background=3b82f6&color=ffffff&size=32'
+                        avatar: 'https://static.vecteezy.com/system/resources/previews/019/879/186/non_2x/user-icon-on-transparent-background-free-png.png'
                     };
                 }
             }
@@ -160,9 +160,7 @@ class VaultCaddyNavbar {
         
         // Dashboard 按鈕 - 使用正確的文件路徑
         navigation += `
-            <a href="dashboard.html#bank-statement" class="nav-link" data-translate="nav_dashboard">
-                Dashboard
-            </a>
+            <a href="dashboard.html#bank-statement" class="nav-link" data-translate="nav_dashboard">儀表板</a>
         `;
         
         return navigation;
@@ -263,7 +261,7 @@ class VaultCaddyNavbar {
         if (currentUser) {
             const userPhotoURL = googleUser ? 
                 googleUser.photoURL : 
-                `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name || currentUser.displayName || 'User')}&background=3b82f6&color=ffffff&size=32`;
+                'https://static.vecteezy.com/system/resources/previews/019/879/186/non_2x/user-icon-on-transparent-background-free-png.png';
             
             const userName = googleUser ? googleUser.displayName : (currentUser.name || 'User');
             const userEmail = googleUser ? googleUser.email : (currentUser.email || '');
@@ -609,6 +607,9 @@ class VaultCaddyNavbar {
         // 關閉下拉選單
         this.closeLanguageDropdown();
         
+        // 重新渲染導航欄以更新語言顯示
+        this.render();
+        
         // 更新頁面語言 - 使用統一的語言管理器
         if (window.languageManager) {
             window.languageManager.currentLanguage = langCode;
@@ -618,11 +619,43 @@ class VaultCaddyNavbar {
             this.updatePageTranslations(langCode);
         }
         
-        // 重新渲染導航欄以更新語言顯示
-        this.render();
+        // 強制更新導航欄中的翻譯元素
+        setTimeout(() => {
+            this.updateNavbarTranslations(langCode);
+        }, 100);
         
         // 顯示通知
         this.showNotification(`語言已切換為 ${this.getLanguageName(langCode)}`);
+    }
+    
+    /**
+     * 更新導航欄中的翻譯元素
+     */
+    updateNavbarTranslations(langCode) {
+        // 確保 translations 對象存在
+        if (typeof translations === 'undefined') {
+            console.warn('translations 對象不存在');
+            return;
+        }
+        
+        const translation = translations[langCode] || translations['en'];
+        
+        // 更新導航欄內的翻譯元素
+        const navbar = document.querySelector('.navbar');
+        if (navbar) {
+            navbar.querySelectorAll('[data-translate]').forEach(element => {
+                const key = element.getAttribute('data-translate');
+                if (translation[key]) {
+                    if (translation[key].includes('<')) {
+                        element.innerHTML = translation[key];
+                    } else {
+                        element.textContent = translation[key];
+                    }
+                }
+            });
+        }
+        
+        console.log('✅ 導航欄翻譯已更新:', langCode);
     }
     
     /**

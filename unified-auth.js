@@ -65,7 +65,7 @@ class UnifiedAuthManager {
                         id: 'demo_user',
                         email: 'demo@vaultcaddy.com',
                         name: 'Demo User',
-                        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face&auto=format',
+                        avatar: 'https://static.vecteezy.com/system/resources/previews/019/879/186/non_2x/user-icon-on-transparent-background-free-png.png',
                         role: 'user'
                     },
                     credits: parseInt(simpleCredits || '7'),
@@ -212,7 +212,7 @@ class UnifiedAuthManager {
                         id: 'demo_user',
                         email: credentials.email,
                         name: credentials.email.split('@')[0],
-                        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face&auto=format',
+                        avatar: 'https://static.vecteezy.com/system/resources/previews/019/879/186/non_2x/user-icon-on-transparent-background-free-png.png',
                         credits: 7,
                         role: 'user'
                     };

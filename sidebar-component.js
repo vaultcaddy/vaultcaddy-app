@@ -92,7 +92,7 @@ class VaultCaddySidebar {
                         <div class="stat-icon-text">💰</div>
                         <div class="stat-text">
                             <span class="stat-number" data-stat="current-credits">7</span>
-                            <span class="stat-label" data-translate="remaining_credits">剩餘Credits</span>
+                            <span class="stat-label" data-translate="remaining_credits">剩餘積分</span>
                         </div>
                     </div>
                 </div>
