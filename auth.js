@@ -27,7 +27,10 @@ class VaultCaddyAuth {
         if (savedUser && savedToken) {
             try {
                 this.currentUser = JSON.parse(savedUser);
-                this.validateToken(savedToken);
+                // 異步驗證 token，不阻塞初始化
+                this.validateToken(savedToken).catch(error => {
+                    console.error('Token validation failed during init:', error);
+                });
             } catch (error) {
                 console.error('Failed to parse saved user data:', error);
                 this.logout();
@@ -262,14 +265,19 @@ class VaultCaddyAuth {
             });
             
             if (!response.success) {
+                console.warn('Token validation failed, triggering logout');
                 this.logout();
                 return false;
             }
             
+            console.log('✅ Token validation successful');
             return true;
         } catch (error) {
-            console.error('Token validation failed:', error);
-            this.logout();
+            console.error('Token validation error:', error);
+            // 只在嚴重錯誤時才登出，網絡錯誤等暫時性問題不應登出用戶
+            if (error.message && !error.message.includes('network') && !error.message.includes('timeout')) {
+                this.logout();
+            }
             return false;
         }
     }
