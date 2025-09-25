@@ -593,11 +593,27 @@
 
     <script>
         // 檢查登入狀態
+        function checkAuth() {
+            // 檢查多種登入狀態
+            const token = localStorage.getItem('vaultcaddy_token');
+            const user = localStorage.getItem('vaultcaddy_user');
+            const simpleLogin = localStorage.getItem('userLoggedIn');
+            const unifiedAuth = window.UnifiedAuthManager && window.UnifiedAuthManager.isLoggedIn();
+            
+            return (token && user) || simpleLogin === 'true' || unifiedAuth;
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
-            if (!window.UnifiedAuthManager.isLoggedIn()) {
-                window.location.href = 'index.html';
+            console.log('Account 頁面載入中...');
+            
+            if (!checkAuth()) {
+                console.log('未登入，重定向到登入頁面');
+                alert('請先登入以訪問帳戶設定');
+                window.location.href = 'auth.html';
                 return;
             }
+            
+            console.log('✅ 身份驗證通過，初始化帳戶頁面');
 
             // 初始化統一側邊欄
             window.accountSidebar = new VaultCaddySidebar('account');
