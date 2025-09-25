@@ -274,23 +274,6 @@ class VaultCaddyAuth {
         }
     }
 
-    /**
-     * 獲取重定向URL
-     */
-    getRedirectUrl() {
-        const pendingDocumentType = localStorage.getItem('pendingDocumentType');
-        if (pendingDocumentType) {
-            localStorage.removeItem('pendingDocumentType');
-            const dashboardRoutes = {
-                'bank-statement': 'dashboard-bank.html',
-                'invoice': 'dashboard-invoice.html',
-                'receipt': 'dashboard-receipt.html',
-                'general': 'dashboard-general.html'
-            };
-            return dashboardRoutes[pendingDocumentType] || 'dashboard-bank.html';
-        }
-        return 'dashboard-bank.html';
-    }
 
     /**
      * 觸發認證事件

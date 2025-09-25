@@ -40,12 +40,16 @@ document.addEventListener('DOMContentLoaded', function() {
         // 點擊瀏覽按鈕
         browseBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            fileInput.click();
+            if (checkAuthBeforeUpload()) {
+                fileInput.click();
+            }
         });
 
         // 點擊上傳區域
         uploadArea.addEventListener('click', function() {
-            fileInput.click();
+            if (checkAuthBeforeUpload()) {
+                fileInput.click();
+            }
         });
 
         // 文件拖放功能
@@ -498,15 +502,8 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
         }
         
-        // 已登入，跳轉到對應的dashboard頁面
-        const dashboardRoutes = {
-            'bank-statement': 'dashboard-bank.html',
-            'invoice': 'dashboard-invoice.html', 
-            'receipt': 'dashboard-receipt.html',
-            'general': 'dashboard-general.html'
-        };
-        
-        window.location.href = dashboardRoutes[selectedModel] || 'dashboard-bank.html';
+        // 已登入，跳轉到統一的儀表板頁面
+        window.location.href = `dashboard.html#${selectedModel}`;
         return true;
     }
 
@@ -849,29 +846,29 @@ function checkBrowserSupport() {
 // 初始化瀏覽器支持檢查
 checkBrowserSupport();
 
-// 登入功能
-function handleLogin() {
-    console.log('🔐 執行模擬登入 (script.js)...');
+/**
+ * 檢查用戶登入狀態，未登入則引導到登入頁面
+ */
+function checkAuthBeforeUpload() {
+    const token = localStorage.getItem('vaultcaddy_token');
+    const userData = localStorage.getItem('vaultcaddy_user');
+    const isLoggedIn = localStorage.getItem('userLoggedIn') === 'true';
     
-    // 簡單的模擬登入 - 實際應用中應該有真實的認證流程
-    localStorage.setItem('userLoggedIn', 'true');
-    localStorage.setItem('userCredits', '7'); // 設置初始Credits
+    // 檢查是否已登入
+    if (!token && !userData && !isLoggedIn) {
+        console.log('🔐 用戶未登入，引導到登入頁面...');
+        
+        // 保存當前頁面，登入後返回
+        localStorage.setItem('vaultcaddy_redirect_after_login', window.location.href);
+        
+        // 顯示提示並跳轉
+        alert('請先登入以使用文檔處理功能');
+        window.location.href = 'auth.html';
+        
+        return false;
+    }
     
-    // 設置用戶數據（兼容新認證系統）
-    const userData = {
-        id: 'demo_user',
-        email: 'demo@vaultcaddy.com',
-        name: 'Demo User',
-        credits: 7,
-        avatar: 'https://ui-avatars.com/api/?name=Demo+User&background=3b82f6&color=ffffff&size=32'
-    };
-    
-    localStorage.setItem('vaultcaddy_user', JSON.stringify(userData));
-    localStorage.setItem('vaultcaddy_token', 'demo_token_' + Date.now());
-    localStorage.setItem('vaultcaddy_login_time', Date.now().toString());
-    
-    console.log('✅ 登入狀態已設置 (script.js)');
-    console.log('🔄 跳轉到 Dashboard...');
-    
-    window.location.href = 'dashboard-main.html';
+    return true;
 }
+
+// 舊的登入功能已移除，現在使用 navbar-component.js 中的統一登入處理
