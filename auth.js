@@ -65,14 +65,13 @@ class VaultCaddyAuth {
                     password: userData.password
                 });
                 
-                // 註冊成功後跳轉到首頁
-                if (loginResult.success) {
-                    setTimeout(() => {
-                        window.location.href = 'index.html';
-                    }, 1500);
-                }
-                
-                return loginResult;
+                // 註冊成功，返回帶有正確跳轉URL的結果
+                return {
+                    success: true,
+                    user: loginResult.user,
+                    redirectUrl: this.getRedirectUrl(),
+                    message: '註冊成功！正在為您自動登入...'
+                };
             } else {
                 throw new Error(response.message || '註冊失敗');
             }
@@ -422,6 +421,23 @@ class VaultCaddyAuth {
             console.error('Failed to update profile:', error);
             throw error;
         }
+    }
+
+    /**
+     * 獲取登入後的跳轉 URL
+     */
+    getRedirectUrl() {
+        // 優先使用保存的重定向 URL
+        const savedRedirectUrl = localStorage.getItem('vaultcaddy_redirect_after_login');
+        if (savedRedirectUrl) {
+            // 清除保存的重定向 URL
+            localStorage.removeItem('vaultcaddy_redirect_after_login');
+            console.log('🔄 使用保存的重定向 URL:', savedRedirectUrl);
+            return savedRedirectUrl;
+        }
+        
+        // 默認跳轉到儀表板
+        return 'dashboard.html#bank-statement';
     }
 }
 
