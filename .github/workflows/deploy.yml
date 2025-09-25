@@ -1,0 +1,65 @@
+name: Deploy VaultCaddy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies (if needed)
+      run: |
+        if [ -f package.json ]; then
+          npm ci
+        fi
+        
+    - name: Build project
+      run: |
+        echo "Building VaultCaddy..."
+        # 檢查配置文件是否存在
+        if [ ! -f config.js ]; then
+          echo "⚠️ config.js 不存在，使用模板"
+          cp config.js.template config.js 2>/dev/null || echo "// 自動生成的配置" > config.js
+        fi
+        
+        # 驗證關鍵文件
+        echo "✅ 檢查關鍵文件..."
+        test -f index.html || (echo "❌ index.html 缺失" && exit 1)
+        test -f auth.html || (echo "❌ auth.html 缺失" && exit 1)
+        test -f dashboard.html || (echo "❌ dashboard.html 缺失" && exit 1)
+        
+        echo "✅ 所有文件檢查通過"
+        
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      if: github.ref == 'refs/heads/main'
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./
+        exclude_assets: |
+          .github
+          .gitignore
+          README.md
+          *.md
+          test-*.html
+          mcp-chrome
+        cname: vaultcaddy.com
+        
+    - name: Notify deployment
+      if: success()
+      run: |
+        echo "🚀 VaultCaddy 已成功部署到 https://vaultcaddy.com"
+        echo "📅 部署時間: $(date)"
+        echo "📦 Git SHA: ${{ github.sha }}"
