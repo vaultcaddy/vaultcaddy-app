@@ -14,8 +14,8 @@ class GoogleAuthManager {
         this.config = {
             // 您需要在 Google Cloud Console 中獲取這個 Client ID
             googleClientId: window.location.hostname === 'vaultcaddy.com' ? 
-                'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com' : // 生產環境
-                'YOUR_DEV_GOOGLE_CLIENT_ID.apps.googleusercontent.com', // 開發環境
+                '672279750239-u41ov9g2no1l2vh5j9h1679phggq0gko.apps.googleusercontent.com' : // 生產環境
+                '672279750239-u41ov9g2no1l2vh5j9h1679phggq0gko.apps.googleusercontent.com', // 開發環境（使用同一個）
             
             // Firebase 配置（可選，用於數據持久化）
             firebaseConfig: {
