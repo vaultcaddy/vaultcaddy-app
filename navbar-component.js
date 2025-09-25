@@ -307,7 +307,7 @@ class VaultCaddyNavbar {
                 <div class="auth-buttons" style="display: flex; align-items: center; gap: 1rem;">
                     <div id="google-signin-button" class="google-signin-container"></div>
                     <button class="nav-link login-btn traditional" data-translate="nav_login" onclick="window.VaultCaddyNavbar.handleLogin()">
-                        傳統登入 →
+                        登入 →
                     </button>
                 </div>
             `;
@@ -399,43 +399,24 @@ class VaultCaddyNavbar {
     }
     
     /**
-     * 處理登入
+     * 處理登入 - 引導用戶到登入頁面
      */
     async handleLogin() {
         try {
-            // 使用簡單模擬登入（開發階段）
-            console.log('🔐 執行模擬登入...');
+            console.log('🔐 引導用戶到登入頁面...');
             
-            // 設置登入狀態
-            localStorage.setItem('userLoggedIn', 'true');
-            localStorage.setItem('userCredits', '7');
+            // 保存當前頁面 URL，登入後可以回到原頁面
+            const currentUrl = window.location.href;
+            if (!currentUrl.includes('auth.html')) {
+                localStorage.setItem('vaultcaddy_redirect_after_login', currentUrl);
+            }
             
-            // 設置用戶數據（兼容新認證系統）
-            const userData = {
-                id: 'demo_user',
-                email: 'demo@vaultcaddy.com',
-                name: 'Demo User',
-                credits: 7,
-                avatar: 'https://ui-avatars.com/api/?name=Demo+User&background=3b82f6&color=ffffff&size=32'
-            };
-            
-            localStorage.setItem('vaultcaddy_user', JSON.stringify(userData));
-            localStorage.setItem('vaultcaddy_token', 'demo_token_' + Date.now());
-            localStorage.setItem('vaultcaddy_login_time', Date.now().toString());
-            
-            console.log('✅ 登入狀態已設置');
-            
-            // 重新載入 navbar 以更新登入狀態
-            await this.loadUserState();
-            this.render();
-            
-            // 跳轉到 dashboard
-            console.log('🔄 跳轉到 Dashboard...');
-            window.location.href = 'dashboard.html';
+            // 跳轉到登入頁面
+            window.location.href = 'auth.html';
             
         } catch (error) {
-            console.error('登入失敗:', error);
-            alert('登入失敗，請重試');
+            console.error('跳轉到登入頁面失敗:', error);
+            alert('無法跳轉到登入頁面，請稍後再試。');
         }
     }
     
