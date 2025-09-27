@@ -18,6 +18,7 @@
     <script src="google-auth.js"></script>
     <script src="translations.js"></script>
     <script src="unified-auth.js"></script>
+    <script src="global-auth-sync.js"></script>
     <script src="navbar-component.js"></script>
     <script src="sidebar-component.js"></script>
     <style>
@@ -708,41 +709,18 @@
     <script>
         // 檢查登入狀態  
         function checkAuth() {
-            console.log('🔍 檢查身份驗證狀態...');
+            console.log('🔍 Billing 檢查身份驗證狀態...');
             
-            // 檢查多種登入狀態
-            const token = localStorage.getItem('vaultcaddy_token');
-            const user = localStorage.getItem('vaultcaddy_user');
-            const simpleLogin = localStorage.getItem('userLoggedIn');
-            const vaultcaddyCredits = localStorage.getItem('vaultcaddy_credits');
-            const userCredits = localStorage.getItem('userCredits');
-            const vaultcaddyAuth = window.VaultCaddyAuth && window.VaultCaddyAuth.isAuthenticated();
-            const unifiedAuth = window.UnifiedAuthManager && window.UnifiedAuthManager.isLoggedIn();
-            const googleAuth = window.GoogleAuthManager && window.GoogleAuthManager.currentUser;
+            // 使用全域身份驗證同步系統
+            if (window.GlobalAuthSync) {
+                const globalState = window.GlobalAuthSync.getCurrentAuthState();
+                console.log('🌐 Billing 全域身份驗證狀態:', globalState);
+                return globalState.isAuthenticated;
+            }
             
-            console.log('📊 身份驗證檢查結果:', {
-                token: !!token,
-                user: !!user,
-                simpleLogin: simpleLogin,
-                vaultcaddyCredits: vaultcaddyCredits,
-                userCredits: userCredits,
-                vaultcaddyAuth: vaultcaddyAuth,
-                unifiedAuth: unifiedAuth,
-                googleAuth: !!googleAuth
-            });
-            
-            const isAuthenticated = !!(
-                (token && user) ||
-                simpleLogin === 'true' ||
-                vaultcaddyCredits ||
-                userCredits ||
-                vaultcaddyAuth ||
-                unifiedAuth ||
-                googleAuth
-            );
-            console.log('✅ 最終身份驗證結果:', isAuthenticated);
-            
-            return isAuthenticated;
+            // 兜底邏輯
+            console.log('⚠️ 全域同步系統未載入，使用本地檢查');
+            return window.checkGlobalAuthState ? window.checkGlobalAuthState() : true;
         }
         
         function showAuthNotificationInBilling() {
@@ -772,13 +750,36 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Billing 頁面載入中...');
             
-            const authResult = checkAuth();
-            if (!authResult) {
-                console.log('⚠️ Billing 頁面未檢測到明確登入狀態，但允許用戶繼續訪問');
-                // 不要阻止用戶訪問，而是顯示一個溫和的提示
-                showAuthNotificationInBilling();
+            // 等待全域同步系統載入
+            const initializeWithGlobalSync = () => {
+                if (window.GlobalAuthSync) {
+                    console.log('🌐 Billing 使用全域身份驗證同步系統');
+                    
+                    // 監聽全域身份驗證狀態變化
+                    window.onGlobalAuthChange((authState) => {
+                        console.log('🔄 Billing 收到全域身份驗證狀態變化:', authState);
+                        if (authState.isAuthenticated) {
+                            document.getElementById('billing-auth-notification')?.remove();
+                        } else {
+                            showAuthNotificationInBilling();
+                        }
+                    });
+                }
+                
+                const authResult = checkAuth();
+                if (!authResult) {
+                    console.log('⚠️ Billing 頁面未檢測到明確登入狀態，但允許用戶繼續訪問');
+                    showAuthNotificationInBilling();
+                } else {
+                    console.log('✅ 身份驗證通過，初始化 Billing 頁面');
+                }
+            };
+            
+            // 如果全域同步系統已載入，立即初始化；否則等待
+            if (window.GlobalAuthSync) {
+                initializeWithGlobalSync();
             } else {
-                console.log('✅ 身份驗證通過，初始化 Billing 頁面');
+                setTimeout(initializeWithGlobalSync, 100);
             }
             
             console.log('✅ 身份驗證通過，初始化計費頁面');

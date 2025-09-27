@@ -16,6 +16,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="translations.js"></script>
     <script src="unified-auth.js"></script>
+    <script src="global-auth-sync.js"></script>
     <script src="navbar-component.js"></script>
     <script src="sidebar-component.js"></script>
     <style>
@@ -594,45 +595,26 @@
     <script>
         // 檢查登入狀態
         function checkAuth() {
-            console.log('🔍 檢查身份驗證狀態...');
+            console.log('🔍 Account 檢查身份驗證狀態...');
             
-            // 檢查多種登入狀態
-            const token = localStorage.getItem('vaultcaddy_token');
-            const user = localStorage.getItem('vaultcaddy_user');
-            const simpleLogin = localStorage.getItem('userLoggedIn');
-            const vaultcaddyCredits = localStorage.getItem('vaultcaddy_credits');
-            const userCredits = localStorage.getItem('userCredits');
-            const vaultcaddyAuth = window.VaultCaddyAuth && window.VaultCaddyAuth.isAuthenticated();
-            const unifiedAuth = window.UnifiedAuthManager && window.UnifiedAuthManager.isLoggedIn();
-            const googleAuth = window.GoogleAuthManager && window.GoogleAuthManager.currentUser;
+            // 使用全域身份驗證同步系統
+            if (window.GlobalAuthSync) {
+                const globalState = window.GlobalAuthSync.getCurrentAuthState();
+                console.log('🌐 Account 全域身份驗證狀態:', globalState);
+                return globalState.isAuthenticated;
+            }
             
-            console.log('📊 身份驗證檢查結果:', {
-                token: !!token,
-                user: !!user,
-                simpleLogin: simpleLogin,
-                vaultcaddyCredits: vaultcaddyCredits,
-                userCredits: userCredits,
-                vaultcaddyAuth: vaultcaddyAuth,
-                unifiedAuth: unifiedAuth,
-                googleAuth: !!googleAuth
-            });
-            
-            const isAuthenticated = !!(
-                (token && user) ||
-                simpleLogin === 'true' ||
-                vaultcaddyCredits ||
-                userCredits ||
-                vaultcaddyAuth ||
-                unifiedAuth ||
-                googleAuth
-            );
-            console.log('✅ 最終身份驗證結果:', isAuthenticated);
-            
-            return isAuthenticated;
+            // 兜底邏輯
+            console.log('⚠️ 全域同步系統未載入，使用本地檢查');
+            return window.checkGlobalAuthState ? window.checkGlobalAuthState() : true;
         }
         
         function showAuthNotificationInPage() {
             console.log('💡 在 Account 頁面顯示身份驗證提示');
+            
+            // 檢查是否已經存在提示
+            const existing = document.getElementById('account-auth-notification');
+            if (existing) return;
             
             const notification = document.createElement('div');
             notification.id = 'account-auth-notification';
@@ -642,29 +624,76 @@
                         <i class="fas fa-info-circle"></i> 
                         如需完整帳戶功能，請 <a href="auth.html" style="color: #1d4ed8; text-decoration: underline;">重新登入</a> 或 
                         <button onclick="window.location.reload()" style="background: #3b82f6; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 4px; margin-left: 0.5rem;">重新載入頁面</button>
-                        <button onclick="document.getElementById('account-auth-notification').remove()" style="background: transparent; border: none; color: #1e40af; margin-left: 1rem;">✕</button>
+                        <button onclick="document.getElementById('account-auth-notification').remove(); adjustAccountPageMargin(false);" style="background: transparent; border: none; color: #1e40af; margin-left: 1rem;">✕</button>
                     </p>
                 </div>
             `;
             document.body.insertBefore(notification, document.body.firstChild);
             
             // 調整頁面內容向下偏移
+            adjustAccountPageMargin(true);
+        }
+        
+        function hideAuthNotificationInPage() {
+            const existing = document.getElementById('account-auth-notification');
+            if (existing) {
+                existing.remove();
+                adjustAccountPageMargin(false);
+                console.log('✅ Account 登入提示已移除');
+            }
+        }
+        
+        function adjustAccountPageMargin(hasPrompt) {
             const mainContent = document.querySelector('.account-container');
             if (mainContent) {
-                mainContent.style.marginTop = '60px';
+                mainContent.style.marginTop = hasPrompt ? '60px' : '0px';
+            }
+        }
+        
+        // 更新 Account 身份驗證狀態
+        function updateAccountAuthState(authState) {
+            console.log('🔄 更新 Account 身份驗證狀態:', authState);
+            
+            if (authState.isAuthenticated) {
+                // 用戶已登入，移除登入提示
+                hideAuthNotificationInPage();
+                console.log('✅ Account 認證狀態: 已登入');
+            } else {
+                // 用戶未登入，顯示登入提示
+                showAuthNotificationInPage();
+                console.log('⚠️ Account 認證狀態: 未登入');
             }
         }
 
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Account 頁面載入中...');
             
-            const authResult = checkAuth();
-            if (!authResult) {
-                console.log('⚠️ Account 頁面未檢測到明確登入狀態，但允許用戶繼續訪問');
-                // 不要阻止用戶訪問，而是顯示一個溫和的提示
-                showAuthNotificationInPage();
+            // 等待全域同步系統載入
+            const initializeWithGlobalSync = () => {
+                if (window.GlobalAuthSync) {
+                    console.log('🌐 Account 使用全域身份驗證同步系統');
+                    
+                    // 監聽全域身份驗證狀態變化
+                    window.onGlobalAuthChange((authState) => {
+                        console.log('🔄 Account 收到全域身份驗證狀態變化:', authState);
+                        updateAccountAuthState(authState);
+                    });
+                }
+                
+                const authResult = checkAuth();
+                if (!authResult) {
+                    console.log('⚠️ Account 頁面未檢測到明確登入狀態，但允許用戶繼續訪問');
+                    showAuthNotificationInPage();
+                } else {
+                    console.log('✅ 身份驗證通過，初始化帳戶頁面');
+                }
+            };
+            
+            // 如果全域同步系統已載入，立即初始化；否則等待
+            if (window.GlobalAuthSync) {
+                initializeWithGlobalSync();
             } else {
-                console.log('✅ 身份驗證通過，初始化帳戶頁面');
+                setTimeout(initializeWithGlobalSync, 100);
             }
 
             // 初始化統一側邊欄
