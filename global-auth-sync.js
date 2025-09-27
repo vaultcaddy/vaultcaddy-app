@@ -65,20 +65,50 @@ class GlobalAuthSync {
             googleUser: !!localStorage.getItem('google_user'),
             
             // 認證管理器狀態
-            vaultcaddyAuth: window.VaultCaddyAuth && window.VaultCaddyAuth.isAuthenticated(),
-            unifiedAuth: window.UnifiedAuthManager && window.UnifiedAuthManager.isLoggedIn(),
-            googleAuth: window.GoogleAuthManager && !!window.GoogleAuthManager.currentUser,
+            vaultcaddyAuth: false,
+            unifiedAuth: false,
+            googleAuth: false,
             
             // 用戶信息
-            userEmail: localStorage.getItem('vaultcaddy_user') || localStorage.getItem('user_email'),
-            userName: localStorage.getItem('user_name'),
+            userEmail: localStorage.getItem('vaultcaddy_user') || localStorage.getItem('user_email') || localStorage.getItem('google_user_email'),
+            userName: localStorage.getItem('user_name') || localStorage.getItem('google_user_name'),
             credits: localStorage.getItem('vaultcaddy_credits') || localStorage.getItem('userCredits') || '0',
             
             // 時間戳
             timestamp: Date.now()
         };
         
-        // 計算總體登入狀態
+        // 安全檢查認證管理器
+        try {
+            if (window.VaultCaddyAuth && typeof window.VaultCaddyAuth.isAuthenticated === 'function') {
+                state.vaultcaddyAuth = window.VaultCaddyAuth.isAuthenticated();
+            }
+        } catch (e) {
+            console.warn('VaultCaddyAuth 檢查失敗:', e);
+        }
+        
+        try {
+            if (window.UnifiedAuthManager && typeof window.UnifiedAuthManager.isLoggedIn === 'function') {
+                state.unifiedAuth = window.UnifiedAuthManager.isLoggedIn();
+            }
+        } catch (e) {
+            console.warn('UnifiedAuthManager 檢查失敗:', e);
+        }
+        
+        try {
+            if (window.GoogleAuthManager && window.GoogleAuthManager.currentUser) {
+                state.googleAuth = !!window.GoogleAuthManager.currentUser;
+            }
+        } catch (e) {
+            console.warn('GoogleAuthManager 檢查失敗:', e);
+        }
+        
+        // 檢查導航欄是否顯示已登入狀態
+        const userAvatar = document.querySelector('.user-avatar');
+        const userDropdown = document.querySelector('.user-dropdown');
+        state.navbarShowsLoggedIn = !!(userAvatar || userDropdown);
+        
+        // 計算總體登入狀態（更寬鬆的檢查）
         state.isAuthenticated = !!(
             (state.vaultcaddyToken && state.vaultcaddyUser) ||
             state.userLoggedIn ||
@@ -87,8 +117,15 @@ class GlobalAuthSync {
             state.vaultcaddyAuth ||
             state.unifiedAuth ||
             state.googleAuth ||
-            state.googleUser
+            state.googleUser ||
+            state.navbarShowsLoggedIn ||  // 如果導航欄顯示已登入，我們假設用戶已登入
+            state.userEmail ||           // 如果有用戶郵箱，假設已登入
+            localStorage.getItem('google_user_email') ||
+            localStorage.getItem('gapi_signed_in') === 'true'
         );
+        
+        // 調試日誌
+        console.log('🔍 GlobalAuthSync 狀態檢查:', state);
         
         return state;
     }

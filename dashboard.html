@@ -1689,22 +1689,47 @@
             
             console.log(`📁 找到 ${fileInput.files.length} 個文件:`, Array.from(fileInput.files).map(f => f.name));
             
-            // 模擬文件處理
-            const files = fileInput.files;
-            closeUploadModal();
+            // 轉換為數組並記錄詳細信息
+            const files = Array.from(fileInput.files);
+            console.log('📄 文件詳情:', files.map(f => ({
+                name: f.name,
+                size: f.size,
+                type: f.type,
+                lastModified: f.lastModified
+            })));
             
-            // 顯示處理狀態
+            closeUploadModal();
             showProcessingStatus(files);
             
             // 模擬處理完成後添加到表格
             setTimeout(() => {
-                console.log('✅ 文件處理完成，添加到表格');
-                addProcessedFilesToTable(files);
-                hideProcessingStatus();
+                console.log('✅ 開始添加文件到表格...');
                 
-                // 顯示成功通知
-                showSuccessNotification(files.length);
-            }, 3000);
+                try {
+                    addProcessedFilesToTable(files);
+                    console.log('✅ 文件處理完成');
+                    
+                    // 檢查表格狀態
+                    const tbody = document.getElementById('documents-tbody');
+                    if (tbody && tbody.children.length > 0) {
+                        console.log(`✅ 表格現在包含 ${tbody.children.length} 個文件行`);
+                    } else {
+                        console.error('❌ 表格仍然為空，檢查 addProcessedFilesToTable 函數');
+                    }
+                    
+                    // 更新統計
+                    updateDocumentStats();
+                    
+                    // 顯示成功通知
+                    showSuccessNotification(files.length);
+                    
+                } catch (error) {
+                    console.error('❌ 處理文件時出錯:', error);
+                    alert('處理文件時出現錯誤，請重試');
+                }
+                
+                hideProcessingStatus();
+            }, 2000); // 減少等待時間到 2 秒
         }
         
         function showSuccessNotification(fileCount) {
@@ -1854,6 +1879,19 @@
             const statsElement = document.querySelector('[data-stat="processed-docs"]');
             if (statsElement) {
                 statsElement.textContent = processedCount;
+            }
+            
+            // 更新側邊欄統計
+            console.log(`📊 更新文檔統計: ${processedCount} 個已處理文檔`);
+        }
+        
+        function updateSidebarStats(newFileCount) {
+            // 更新側邊欄的處理文檔數量
+            const processedElement = document.querySelector('.stat-value');
+            if (processedElement && processedElement.textContent.includes('Processed Documents')) {
+                const currentCount = parseInt(processedElement.textContent) || 0;
+                processedElement.textContent = currentCount + newFileCount;
+                console.log(`📊 側邊欄統計已更新: +${newFileCount} 個文檔`);
             }
         }
         
