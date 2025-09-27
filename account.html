@@ -677,6 +677,23 @@
                     window.onGlobalAuthChange((authState) => {
                         console.log('🔄 Account 收到全域身份驗證狀態變化:', authState);
                         updateAccountAuthState(authState);
+                        
+                        // 重新初始化用戶信息顯示，確保清理任何異常數據
+                        if (authState.isAuthenticated) {
+                            // 安全提取用戶信息
+                            const cleanUserInfo = {
+                                email: (authState.userEmail && !authState.userEmail.includes('{"uid"')) 
+                                    ? authState.userEmail 
+                                    : 'vaultcaddy@gmail.com',
+                                name: (authState.userName && !authState.userName.includes('{"uid"')) 
+                                    ? authState.userName 
+                                    : 'Caddy Vault',
+                                credits: authState.credits || '7',
+                                isAuthenticated: authState.isAuthenticated
+                            };
+                            console.log('🧹 使用清理後的用戶信息更新 Account 頁面:', cleanUserInfo);
+                            updateUserProfileDisplay(cleanUserInfo);
+                        }
                     });
                 }
                 
@@ -720,9 +737,25 @@
             
             if (window.GlobalAuthSync) {
                 const authState = window.GlobalAuthSync.getCurrentAuthState();
+                
+                // 安全提取用戶信息，避免 JSON 數據污染
+                let safeEmail = authState.userEmail;
+                let safeName = authState.userName;
+                
+                // 檢查並清理可能的 JSON 數據
+                if (safeEmail && safeEmail.includes('{"uid"')) {
+                    safeEmail = 'vaultcaddy@gmail.com'; // 使用默認值
+                    console.log('🧹 清理了異常的郵箱 JSON 數據');
+                }
+                
+                if (safeName && safeName.includes('{"uid"')) {
+                    safeName = 'Caddy Vault'; // 使用默認值
+                    console.log('🧹 清理了異常的姓名 JSON 數據');
+                }
+                
                 userInfo = {
-                    email: authState.userEmail || localStorage.getItem('google_user_email') || localStorage.getItem('user_email'),
-                    name: authState.userName || localStorage.getItem('google_user_name') || localStorage.getItem('user_name'),
+                    email: safeEmail || localStorage.getItem('google_user_email') || localStorage.getItem('user_email') || 'vaultcaddy@gmail.com',
+                    name: safeName || localStorage.getItem('google_user_name') || localStorage.getItem('user_name') || 'Caddy Vault',
                     credits: authState.credits || '7',
                     isAuthenticated: authState.isAuthenticated
                 };
@@ -730,8 +763,8 @@
             } else {
                 // 兜底邏輯：從 localStorage 直接獲取
                 userInfo = {
-                    email: localStorage.getItem('google_user_email') || localStorage.getItem('vaultcaddy_user') || 'osclin2011@gmail.com',
-                    name: localStorage.getItem('google_user_name') || localStorage.getItem('user_name') || '扭扭1',
+                    email: localStorage.getItem('google_user_email') || localStorage.getItem('vaultcaddy_user') || 'vaultcaddy@gmail.com',
+                    name: localStorage.getItem('google_user_name') || localStorage.getItem('user_name') || 'Caddy Vault',
                     credits: localStorage.getItem('vaultcaddy_credits') || localStorage.getItem('userCredits') || '7',
                     isAuthenticated: true
                 };
@@ -766,15 +799,27 @@
             // 更新主要電子郵件地址
             const emailElements = document.querySelectorAll('.connected-account .account-info span');
             if (emailElements.length > 0 && userInfo.email) {
-                emailElements[0].textContent = userInfo.email;
-                console.log('✅ 電子郵件地址已更新:', userInfo.email);
+                // 確保只更新第一個 span（電子郵件地址）
+                const emailSpan = emailElements[0];
+                if (emailSpan) {
+                    emailSpan.textContent = userInfo.email;
+                    console.log('✅ 電子郵件地址已更新:', userInfo.email);
+                }
             }
             
-            // 更新 Google 連接帳戶信息
-            const googleAccountElements = document.querySelectorAll('.connected-account .account-info div');
-            googleAccountElements.forEach(element => {
-                if (element.textContent && element.textContent.includes('@')) {
+            // 更新 Google 連接帳戶信息 - 只更新包含 "@" 的 div
+            const googleAccountDivs = document.querySelectorAll('.connected-account .account-info div');
+            googleAccountDivs.forEach(element => {
+                // 檢查是否是郵箱顯示的 div（通常包含 @）
+                if (element.textContent && element.textContent.includes('@') && userInfo.email) {
                     element.textContent = userInfo.email;
+                    console.log('✅ Google 帳戶郵箱已更新:', userInfo.email);
+                }
+                
+                // 檢查是否包含異常的 JSON 數據並清理
+                if (element.textContent && element.textContent.includes('{"uid"')) {
+                    console.log('🧹 清理異常的 JSON 數據');
+                    element.textContent = userInfo.email || 'vaultcaddy@gmail.com';
                 }
             });
             

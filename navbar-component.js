@@ -762,6 +762,9 @@ if (document.readyState === 'loading') {
         if (document.getElementById('navbar-placeholder')) {
             console.log('🔄 DOMContentLoaded: 重新初始化導航欄');
             window.VaultCaddyNavbar.render();
+            
+            // 監聽全域身份驗證狀態變化
+            initNavbarGlobalAuthListener();
         }
     });
 } else {
@@ -769,5 +772,48 @@ if (document.readyState === 'loading') {
     if (document.getElementById('navbar-placeholder')) {
         console.log('🔄 Document Ready: 立即渲染導航欄');
         window.VaultCaddyNavbar.render();
+        
+        // 監聽全域身份驗證狀態變化
+        initNavbarGlobalAuthListener();
     }
+}
+
+// 初始化導航欄的全域身份驗證監聽器
+function initNavbarGlobalAuthListener() {
+    console.log('🔗 初始化導航欄全域身份驗證監聽器');
+    
+    // 監聽全域身份驗證狀態變化
+    if (window.onGlobalAuthChange) {
+        window.onGlobalAuthChange((authState) => {
+            console.log('🔄 導航欄收到全域身份驗證狀態變化:', authState);
+            
+            // 重新載入用戶狀態並渲染導航欄
+            if (window.VaultCaddyNavbar) {
+                window.VaultCaddyNavbar.loadUserState();
+                window.VaultCaddyNavbar.render();
+                console.log('✅ 導航欄已根據新的身份驗證狀態重新渲染');
+            }
+        });
+    } else {
+        // 如果 GlobalAuthSync 尚未載入，延遲重試
+        setTimeout(() => {
+            if (window.onGlobalAuthChange) {
+                console.log('🔗 延遲初始化導航欄監聽器成功');
+                initNavbarGlobalAuthListener();
+            } else {
+                console.log('⚠️ GlobalAuthSync 系統未載入，導航欄將使用本地狀態');
+            }
+        }, 500);
+    }
+    
+    // 額外監聽自定義事件
+    window.addEventListener('vaultcaddy:global:authStateChanged', (event) => {
+        console.log('📡 導航欄收到自定義身份驗證事件:', event.detail);
+        
+        if (window.VaultCaddyNavbar) {
+            window.VaultCaddyNavbar.loadUserState();
+            window.VaultCaddyNavbar.render();
+            console.log('✅ 導航欄已根據自定義事件重新渲染');
+        }
+    });
 }
