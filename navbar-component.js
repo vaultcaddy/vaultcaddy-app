@@ -36,32 +36,79 @@ class VaultCaddyNavbar {
      */
     async loadUserState() {
         try {
-            // 檢查是否有真實的認證 token
-            const token = localStorage.getItem('vaultcaddy_token');
-            const userData = localStorage.getItem('vaultcaddy_user');
+            console.log('🔄 導航欄載入用戶狀態...');
             
-            if (token && userData) {
-                // 真實認證系統
-                this.user = JSON.parse(userData);
-                this.credits = this.user.credits || 0;
-                this.isLoggedIn = true;
-            } else {
-                // 回退到簡單模擬（開發階段）
-                this.isLoggedIn = localStorage.getItem('userLoggedIn') === 'true';
-                this.credits = parseInt(localStorage.getItem('userCredits') || '10');
+            // 優先使用 GlobalAuthSync
+            if (window.GlobalAuthSync) {
+                const authState = window.GlobalAuthSync.getCurrentAuthState();
+                console.log('🌐 導航欄從 GlobalAuthSync 獲取狀態:', authState);
+                
+                this.isLoggedIn = authState.isAuthenticated;
+                this.isAuthenticated = authState.isAuthenticated; // 添加這個屬性以便診斷
                 
                 if (this.isLoggedIn) {
+                    // 安全提取用戶信息
+                    let safeEmail = authState.userEmail;
+                    let safeName = authState.userName;
+                    
+                    // 清理可能的 JSON 數據
+                    if (safeEmail && safeEmail.includes('{"uid"')) {
+                        safeEmail = 'vaultcaddy@gmail.com';
+                        console.log('🧹 導航欄清理了異常的郵箱 JSON 數據');
+                    }
+                    if (safeName && safeName.includes('{"uid"')) {
+                        safeName = 'Caddy Vault';
+                        console.log('🧹 導航欄清理了異常的姓名 JSON 數據');
+                    }
+                    
                     this.user = {
-                        id: 'demo_user',
-                        email: 'demo@vaultcaddy.com',
-                        name: 'Demo User',
+                        id: 'auth_user',
+                        email: safeEmail || 'vaultcaddy@gmail.com',
+                        name: safeName || 'Caddy Vault',
                         avatar: 'https://static.vecteezy.com/system/resources/previews/019/879/186/non_2x/user-icon-on-transparent-background-free-png.png'
                     };
+                    this.credits = authState.credits || '7';
+                } else {
+                    this.resetUserState();
+                }
+            } else {
+                // 兜底：檢查是否有真實的認證 token
+                const token = localStorage.getItem('vaultcaddy_token');
+                const userData = localStorage.getItem('vaultcaddy_user');
+                
+                if (token && userData) {
+                    // 真實認證系統
+                    this.user = JSON.parse(userData);
+                    this.credits = this.user.credits || 0;
+                    this.isLoggedIn = true;
+                    this.isAuthenticated = true;
+                } else {
+                    // 回退到簡單模擬（開發階段）
+                    this.isLoggedIn = localStorage.getItem('userLoggedIn') === 'true';
+                    this.isAuthenticated = this.isLoggedIn;
+                    this.credits = parseInt(localStorage.getItem('userCredits') || '10');
+                    
+                    if (this.isLoggedIn) {
+                        this.user = {
+                            id: 'demo_user',
+                            email: 'demo@vaultcaddy.com',
+                            name: 'Demo User',
+                            avatar: 'https://static.vecteezy.com/system/resources/previews/019/879/186/non_2x/user-icon-on-transparent-background-free-png.png'
+                        };
+                    }
                 }
             }
             
             // 載入語言設置
             this.language = localStorage.getItem('preferred_language') || 'zh-tw';
+            
+            console.log('📊 導航欄用戶狀態已載入:', {
+                isLoggedIn: this.isLoggedIn,
+                isAuthenticated: this.isAuthenticated,
+                credits: this.credits,
+                user: this.user?.email || 'N/A',
+                source: window.GlobalAuthSync ? 'GlobalAuthSync' : 'localStorage'
+            });
             
         } catch (error) {
             console.error('載入用戶狀態失敗:', error);
@@ -76,6 +123,7 @@ class VaultCaddyNavbar {
         this.user = null;
         this.credits = 10; // 預設 credits
         this.isLoggedIn = false;
+        this.isAuthenticated = false;
     }
     
     /**
