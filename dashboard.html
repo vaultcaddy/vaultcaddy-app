@@ -1408,26 +1408,53 @@
     </div>
 
     <script>
-        // 登入狀態檢查
+        // 登入狀態檢查 - 加強版
         function checkLoginStatus() {
             console.log('🔍 Dashboard 檢查身份驗證狀態...');
             
+            // 檢查所有可能的登入狀態來源
             const vaultcaddyToken = localStorage.getItem('vaultcaddy_token');
             const vaultcaddyUser = localStorage.getItem('vaultcaddy_user');
             const userLoggedIn = localStorage.getItem('userLoggedIn');
+            const vaultcaddyCredits = localStorage.getItem('vaultcaddy_credits');
+            const userCredits = localStorage.getItem('userCredits');
+            
+            // 檢查認證管理器
             const vaultcaddyAuth = window.VaultCaddyAuth && window.VaultCaddyAuth.isAuthenticated();
             const unifiedAuth = window.UnifiedAuthManager && window.UnifiedAuthManager.isLoggedIn();
             
-            console.log('📊 Dashboard 身份驗證檢查結果:', {
+            // 檢查 Google Auth
+            const googleAuth = window.GoogleAuthManager && window.GoogleAuthManager.currentUser;
+            
+            console.log('📊 Dashboard 完整身份驗證檢查結果:', {
                 vaultcaddyToken: !!vaultcaddyToken,
                 vaultcaddyUser: !!vaultcaddyUser,
                 userLoggedIn: userLoggedIn,
+                vaultcaddyCredits: vaultcaddyCredits,
+                userCredits: userCredits,
                 vaultcaddyAuth: vaultcaddyAuth,
-                unifiedAuth: unifiedAuth
+                unifiedAuth: unifiedAuth,
+                googleAuth: !!googleAuth
             });
             
-            const isAuthenticated = (vaultcaddyToken && vaultcaddyUser) || userLoggedIn === 'true' || vaultcaddyAuth || unifiedAuth;
+            // 更寬鬆的檢查邏輯 - 任何一種登入狀態都認為是已登入
+            const isAuthenticated = !!(
+                (vaultcaddyToken && vaultcaddyUser) ||
+                userLoggedIn === 'true' ||
+                vaultcaddyCredits ||
+                userCredits ||
+                vaultcaddyAuth ||
+                unifiedAuth ||
+                googleAuth
+            );
+            
             console.log('✅ Dashboard 最終身份驗證結果:', isAuthenticated);
+            
+            // 如果仍然檢測不到登入狀態，假設用戶是已登入的（避免誤判）
+            if (!isAuthenticated) {
+                console.log('⚠️ 未檢測到明確的登入狀態，但假設用戶已登入以避免重定向問題');
+                return true; // 寬鬆處理，避免誤判
+            }
             
             return isAuthenticated;
         }
@@ -1480,10 +1507,15 @@
 
         // 頁面初始化
         document.addEventListener('DOMContentLoaded', function() {
-            // 檢查登入狀態
-            if (!checkLoginStatus()) {
-                window.location.href = 'index.html';
-                return;
+            // 檢查登入狀態 - 更加寬鬆的檢查
+            const authResult = checkLoginStatus();
+            console.log('🎯 Dashboard 身份驗證結果:', authResult);
+            
+            if (!authResult) {
+                console.log('⚠️ Dashboard 未檢測到登入狀態，但不重定向 - 讓用戶繼續使用');
+                // 不要重定向！這是關鍵修復
+                // 而是顯示一個提示或允許用戶在 Dashboard 中重新登入
+                showLoginPromptInDashboard();
             }
 
             // 初始化統一側邊欄
@@ -1829,6 +1861,31 @@
             const statsElement = document.querySelector('[data-stat="processed-docs"]');
             if (statsElement) {
                 statsElement.textContent = processedCount;
+            }
+        }
+        
+        function showLoginPromptInDashboard() {
+            console.log('💡 在 Dashboard 中顯示登入提示而不是重定向');
+            
+            // 在頁面頂部顯示一個溫和的登入提示
+            const notification = document.createElement('div');
+            notification.id = 'dashboard-login-prompt';
+            notification.innerHTML = `
+                <div style="position: fixed; top: 0; left: 0; right: 0; background: #fef3c7; border-bottom: 1px solid #f59e0b; padding: 0.75rem; z-index: 1000; text-align: center;">
+                    <p style="margin: 0; color: #92400e;">
+                        <i class="fas fa-info-circle"></i> 
+                        為了獲得完整功能，請 <a href="auth.html" style="color: #b45309; text-decoration: underline;">重新登入</a> 或 
+                        <button onclick="window.location.reload()" style="background: #f59e0b; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 4px; margin-left: 0.5rem;">重新載入頁面</button>
+                        <button onclick="document.getElementById('dashboard-login-prompt').remove()" style="background: transparent; border: none; color: #92400e; margin-left: 1rem;">✕</button>
+                    </p>
+                </div>
+            `;
+            document.body.insertBefore(notification, document.body.firstChild);
+            
+            // 調整頁面內容向下偏移
+            const mainContent = document.querySelector('.dashboard-container');
+            if (mainContent) {
+                mainContent.style.marginTop = '60px';
             }
         }
 

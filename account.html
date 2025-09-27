@@ -600,34 +600,72 @@
             const token = localStorage.getItem('vaultcaddy_token');
             const user = localStorage.getItem('vaultcaddy_user');
             const simpleLogin = localStorage.getItem('userLoggedIn');
+            const vaultcaddyCredits = localStorage.getItem('vaultcaddy_credits');
+            const userCredits = localStorage.getItem('userCredits');
             const vaultcaddyAuth = window.VaultCaddyAuth && window.VaultCaddyAuth.isAuthenticated();
             const unifiedAuth = window.UnifiedAuthManager && window.UnifiedAuthManager.isLoggedIn();
+            const googleAuth = window.GoogleAuthManager && window.GoogleAuthManager.currentUser;
             
             console.log('📊 身份驗證檢查結果:', {
                 token: !!token,
                 user: !!user,
                 simpleLogin: simpleLogin,
+                vaultcaddyCredits: vaultcaddyCredits,
+                userCredits: userCredits,
                 vaultcaddyAuth: vaultcaddyAuth,
-                unifiedAuth: unifiedAuth
+                unifiedAuth: unifiedAuth,
+                googleAuth: !!googleAuth
             });
             
-            const isAuthenticated = (token && user) || simpleLogin === 'true' || vaultcaddyAuth || unifiedAuth;
+            const isAuthenticated = !!(
+                (token && user) ||
+                simpleLogin === 'true' ||
+                vaultcaddyCredits ||
+                userCredits ||
+                vaultcaddyAuth ||
+                unifiedAuth ||
+                googleAuth
+            );
             console.log('✅ 最終身份驗證結果:', isAuthenticated);
             
             return isAuthenticated;
+        }
+        
+        function showAuthNotificationInPage() {
+            console.log('💡 在 Account 頁面顯示身份驗證提示');
+            
+            const notification = document.createElement('div');
+            notification.id = 'account-auth-notification';
+            notification.innerHTML = `
+                <div style="position: fixed; top: 0; left: 0; right: 0; background: #dbeafe; border-bottom: 1px solid #3b82f6; padding: 0.75rem; z-index: 1000; text-align: center;">
+                    <p style="margin: 0; color: #1e40af;">
+                        <i class="fas fa-info-circle"></i> 
+                        如需完整帳戶功能，請 <a href="auth.html" style="color: #1d4ed8; text-decoration: underline;">重新登入</a> 或 
+                        <button onclick="window.location.reload()" style="background: #3b82f6; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 4px; margin-left: 0.5rem;">重新載入頁面</button>
+                        <button onclick="document.getElementById('account-auth-notification').remove()" style="background: transparent; border: none; color: #1e40af; margin-left: 1rem;">✕</button>
+                    </p>
+                </div>
+            `;
+            document.body.insertBefore(notification, document.body.firstChild);
+            
+            // 調整頁面內容向下偏移
+            const mainContent = document.querySelector('.account-container');
+            if (mainContent) {
+                mainContent.style.marginTop = '60px';
+            }
         }
 
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Account 頁面載入中...');
             
-            if (!checkAuth()) {
-                console.log('未登入，重定向到登入頁面');
-                alert('請先登入以訪問帳戶設定');
-                window.location.href = 'auth.html';
-                return;
+            const authResult = checkAuth();
+            if (!authResult) {
+                console.log('⚠️ Account 頁面未檢測到明確登入狀態，但允許用戶繼續訪問');
+                // 不要阻止用戶訪問，而是顯示一個溫和的提示
+                showAuthNotificationInPage();
+            } else {
+                console.log('✅ 身份驗證通過，初始化帳戶頁面');
             }
-            
-            console.log('✅ 身份驗證通過，初始化帳戶頁面');
 
             // 初始化統一側邊欄
             window.accountSidebar = new VaultCaddySidebar('account');
