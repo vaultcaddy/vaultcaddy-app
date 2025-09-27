@@ -713,36 +713,209 @@
         });
 
         function initAccountPage() {
-            // 載入用戶資料
-            const user = window.UnifiedAuthManager.getUser();
-            if (user) {
-                // 更新用戶資料顯示
-                document.querySelector('.profile-info h3').textContent = user.name || '扭扭1';
-                document.querySelector('.profile-avatar').src = user.avatar || 'https://static.vecteezy.com/system/resources/previews/019/879/186/non_2x/user-icon-on-transparent-background-free-png.png';
-                
-                // 更新電子郵件
-                const emailElements = document.querySelectorAll('.connected-account .account-info span');
-                if (emailElements.length > 0) {
-                    emailElements[0].textContent = user.email || 'osclin2011@gmail.com';
-                }
+            console.log('🎯 初始化 Account 頁面...');
+            
+            // 從全域同步系統獲取用戶資料
+            let userInfo = null;
+            
+            if (window.GlobalAuthSync) {
+                const authState = window.GlobalAuthSync.getCurrentAuthState();
+                userInfo = {
+                    email: authState.userEmail || localStorage.getItem('google_user_email') || localStorage.getItem('user_email'),
+                    name: authState.userName || localStorage.getItem('google_user_name') || localStorage.getItem('user_name'),
+                    credits: authState.credits || '7',
+                    isAuthenticated: authState.isAuthenticated
+                };
+                console.log('📊 從全域同步系統獲取用戶信息:', userInfo);
+            } else {
+                // 兜底邏輯：從 localStorage 直接獲取
+                userInfo = {
+                    email: localStorage.getItem('google_user_email') || localStorage.getItem('vaultcaddy_user') || 'osclin2011@gmail.com',
+                    name: localStorage.getItem('google_user_name') || localStorage.getItem('user_name') || '扭扭1',
+                    credits: localStorage.getItem('vaultcaddy_credits') || localStorage.getItem('userCredits') || '7',
+                    isAuthenticated: true
+                };
+                console.log('📊 從 localStorage 獲取用戶信息:', userInfo);
             }
-
-            console.log('Account page initialized');
+            
+            // 更新用戶資料顯示
+            updateUserProfileDisplay(userInfo);
+            
+            // 更新側邊欄統計
+            updateAccountSidebarStats(userInfo);
+            
+            console.log('✅ Account 頁面初始化完成');
+        }
+        
+        function updateUserProfileDisplay(userInfo) {
+            console.log('🔄 更新用戶資料顯示:', userInfo);
+            
+            // 更新個人資料名稱
+            const profileNameElement = document.querySelector('.profile-info h3');
+            if (profileNameElement && userInfo.name) {
+                profileNameElement.textContent = userInfo.name;
+                console.log('✅ 用戶名稱已更新:', userInfo.name);
+            }
+            
+            // 更新頭像 (使用統一的頭像)
+            const avatarElements = document.querySelectorAll('.profile-avatar');
+            avatarElements.forEach(avatar => {
+                avatar.src = 'https://static.vecteezy.com/system/resources/previews/019/879/186/non_2x/user-icon-on-transparent-background-free-png.png';
+            });
+            
+            // 更新主要電子郵件地址
+            const emailElements = document.querySelectorAll('.connected-account .account-info span');
+            if (emailElements.length > 0 && userInfo.email) {
+                emailElements[0].textContent = userInfo.email;
+                console.log('✅ 電子郵件地址已更新:', userInfo.email);
+            }
+            
+            // 更新 Google 連接帳戶信息
+            const googleAccountElements = document.querySelectorAll('.connected-account .account-info div');
+            googleAccountElements.forEach(element => {
+                if (element.textContent && element.textContent.includes('@')) {
+                    element.textContent = userInfo.email;
+                }
+            });
+            
+            // 更新模態框中的信息
+            const modalEmailInputs = document.querySelectorAll('#updateProfileModal input[type="email"]');
+            modalEmailInputs.forEach(input => {
+                if (userInfo.email) input.value = userInfo.email;
+            });
+            
+            const modalNameInputs = document.querySelectorAll('#updateProfileModal input[type="text"]');
+            modalNameInputs.forEach(input => {
+                if (userInfo.name) input.value = userInfo.name;
+            });
+        }
+        
+        function updateAccountSidebarStats(userInfo) {
+            console.log('📊 更新 Account 側邊欄統計:', userInfo);
+            
+            // 更新 Credits 數量
+            const creditsElements = document.querySelectorAll('.stat-value');
+            creditsElements.forEach((element, index) => {
+                // 假設最後一個 stat-value 是 Credits
+                if (index === creditsElements.length - 1 && userInfo.credits) {
+                    element.textContent = userInfo.credits;
+                }
+            });
+            
+            // 如果有處理過的文檔，更新統計
+            const processedDocs = localStorage.getItem('processed_documents_count') || '0';
+            if (creditsElements.length > 0) {
+                creditsElements[0].textContent = processedDocs;
+            }
         }
 
         // 更新個人資料
         function updateProfile() {
-            window.VaultCaddyNavbar.showNotification('Profile update coming soon!', 'info');
+            console.log('🔄 更新個人資料...');
+            openUpdateProfileModal();
         }
 
         // 添加電子郵件
         function addEmail() {
-            window.VaultCaddyNavbar.showNotification('Add email coming soon!', 'info');
+            console.log('📧 添加電子郵件地址...');
+            const newEmail = prompt('請輸入新的電子郵件地址:');
+            if (newEmail && isValidEmail(newEmail)) {
+                // 創建新的電子郵件項目
+                addEmailToList(newEmail);
+                showNotification('電子郵件地址已添加', 'success');
+            } else if (newEmail) {
+                showNotification('請輸入有效的電子郵件地址', 'error');
+            }
         }
 
         // 連接帳戶
         function connectAccount() {
-            window.VaultCaddyNavbar.showNotification('Connect account coming soon!', 'info');
+            console.log('🔗 連接帳戶...');
+            if (window.GoogleAuthManager) {
+                showNotification('Google 帳戶連接功能正在開發中', 'info');
+            } else {
+                showNotification('正在載入 Google 認證服務...', 'info');
+            }
+        }
+        
+        // 驗證電子郵件格式
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+        
+        // 添加電子郵件到列表
+        function addEmailToList(email) {
+            const emailContainer = document.querySelector('.form-group');
+            const addButton = emailContainer.querySelector('.add-button');
+            
+            // 創建新的電子郵件項目
+            const newEmailDiv = document.createElement('div');
+            newEmailDiv.className = 'connected-account';
+            newEmailDiv.innerHTML = `
+                <div class="account-info">
+                    <span style="color: #1f2937;">${email}</span>
+                    <span style="color: #6b7280; font-size: 0.875rem;" data-translate="secondary">次要</span>
+                </div>
+                <div class="three-dots-menu" onclick="toggleEmailMenu(this)" style="position: relative;">
+                    <i class="fas fa-ellipsis-h"></i>
+                    <div class="dropdown-menu" style="display: none; position: absolute; top: 100%; right: 0; background: white; border: 1px solid #e5e7eb; border-radius: 6px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); min-width: 120px; z-index: 1000; margin-top: 5px;">
+                        <button onclick="showRemoveEmailModal('${email}')" style="width: 100%; padding: 8px 12px; text-align: left; border: none; background: none; color: #dc2626; cursor: pointer; border-radius: 6px;">
+                            <i class="fas fa-trash" style="margin-right: 8px;"></i>Remove
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // 插入到添加按鈕前面
+            emailContainer.insertBefore(newEmailDiv, addButton);
+            
+            console.log('✅ 電子郵件已添加到列表:', email);
+        }
+        
+        // 通知系統
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 1rem;
+                border-radius: 8px;
+                color: white;
+                z-index: 1000;
+                max-width: 300px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            `;
+            
+            switch (type) {
+                case 'success':
+                    notification.style.background = '#10b981';
+                    break;
+                case 'error':
+                    notification.style.background = '#ef4444';
+                    break;
+                case 'info':
+                default:
+                    notification.style.background = '#3b82f6';
+                    break;
+            }
+            
+            notification.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'exclamation-triangle' : 'info-circle'}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // 3秒後自動移除
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 3000);
         }
 
         // Update Profile Modal Functions
@@ -755,9 +928,48 @@
         }
 
         function saveProfile() {
-            // 這裡可以添加保存邏輯
-            alert('Profile updated successfully!');
+            console.log('💾 保存個人資料...');
+            
+            // 獲取表單數據
+            const nameInput = document.querySelector('#updateProfileModal input[placeholder="Name"]');
+            const emailInput = document.querySelector('#updateProfileModal input[placeholder="Email"]');
+            
+            const newName = nameInput ? nameInput.value.trim() : '';
+            const newEmail = emailInput ? emailInput.value.trim() : '';
+            
+            // 驗證數據
+            if (!newName) {
+                showNotification('請輸入姓名', 'error');
+                return;
+            }
+            
+            if (!newEmail || !isValidEmail(newEmail)) {
+                showNotification('請輸入有效的電子郵件地址', 'error');
+                return;
+            }
+            
+            // 保存到 localStorage
+            localStorage.setItem('user_name', newName);
+            localStorage.setItem('user_email', newEmail);
+            localStorage.setItem('google_user_name', newName);
+            localStorage.setItem('google_user_email', newEmail);
+            
+            // 更新頁面顯示
+            updateUserProfileDisplay({
+                name: newName,
+                email: newEmail,
+                credits: localStorage.getItem('vaultcaddy_credits') || '7'
+            });
+            
+            // 觸發全域狀態更新
+            if (window.GlobalAuthSync) {
+                window.GlobalAuthSync.forceRefresh();
+            }
+            
+            showNotification('個人資料更新成功！', 'success');
             closeUpdateProfileModal();
+            
+            console.log('✅ 個人資料已保存:', { name: newName, email: newEmail });
         }
 
         // Email Management Functions
