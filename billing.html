@@ -708,13 +708,27 @@
     <script>
         // 檢查登入狀態  
         function checkAuth() {
+            console.log('🔍 檢查身份驗證狀態...');
+            
             // 檢查多種登入狀態
             const token = localStorage.getItem('vaultcaddy_token');
             const user = localStorage.getItem('vaultcaddy_user');
             const simpleLogin = localStorage.getItem('userLoggedIn');
+            const vaultcaddyAuth = window.VaultCaddyAuth && window.VaultCaddyAuth.isAuthenticated();
             const unifiedAuth = window.UnifiedAuthManager && window.UnifiedAuthManager.isLoggedIn();
             
-            return (token && user) || simpleLogin === 'true' || unifiedAuth;
+            console.log('📊 身份驗證檢查結果:', {
+                token: !!token,
+                user: !!user,
+                simpleLogin: simpleLogin,
+                vaultcaddyAuth: vaultcaddyAuth,
+                unifiedAuth: unifiedAuth
+            });
+            
+            const isAuthenticated = (token && user) || simpleLogin === 'true' || vaultcaddyAuth || unifiedAuth;
+            console.log('✅ 最終身份驗證結果:', isAuthenticated);
+            
+            return isAuthenticated;
         }
 
         document.addEventListener('DOMContentLoaded', function() {
