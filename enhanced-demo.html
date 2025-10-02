@@ -458,9 +458,24 @@
                 // 等待處理器載入
                 await new Promise(resolve => setTimeout(resolve, 1000));
                 
+                // 調試信息
+                log(`🔍 檢查可用的處理器:`);
+                log(`- window.GoogleAIProcessor: ${typeof window.GoogleAIProcessor}`);
+                log(`- window.googleAIProcessor: ${typeof window.googleAIProcessor}`);
+                log(`- window.UnifiedDocumentProcessor: ${typeof window.UnifiedDocumentProcessor}`);
+                log(`- window.IntelligentOCRProcessor: ${typeof window.IntelligentOCRProcessor}`);
+                
                 if (window.UnifiedDocumentProcessor) {
                     processor = window.UnifiedDocumentProcessor;
                     log('✅ 統一處理器已載入');
+                    
+                    // 檢查處理器的子組件
+                    if (processor.processors) {
+                        log(`🔍 處理器子組件狀態:`);
+                        Object.keys(processor.processors).forEach(key => {
+                            log(`- ${key}: ${processor.processors[key] ? '✅' : '❌'}`);
+                        });
+                    }
                 } else {
                     log('❌ 統一處理器載入失敗');
                 }
@@ -470,6 +485,7 @@
                 
             } catch (error) {
                 log(`❌ 初始化失敗: ${error.message}`);
+                console.error('初始化錯誤:', error);
             }
         });
         
