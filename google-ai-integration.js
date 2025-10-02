@@ -529,7 +529,10 @@ class GoogleAIProcessor {
     }
 }
 
+// 將類別暴露到全域範圍
+window.GoogleAIProcessor = GoogleAIProcessor;
+
 // 創建全域實例
-window.GoogleAIProcessor = new GoogleAIProcessor();
+window.googleAIProcessor = new GoogleAIProcessor();
 
 console.log('🤖 Google AI處理器已載入');

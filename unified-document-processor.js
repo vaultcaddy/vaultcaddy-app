@@ -72,11 +72,11 @@ class UnifiedDocumentProcessor {
                 console.log('📊 數據處理器已連接');
             }
             
-            // 保留原有處理器（兼容性）
-            if (window.GoogleAIProcessor) {
-                this.processors.ai = window.GoogleAIProcessor;
-                console.log('🤖 AI處理器已連接');
-            }
+                // 保留原有處理器（兼容性）
+                if (window.googleAIProcessor) {
+                    this.processors.ai = window.googleAIProcessor;
+                    console.log('🤖 AI處理器已連接');
+                }
             
             if (window.ledgerBoxProcessor) {
                 this.processors.ui = window.ledgerBoxProcessor;

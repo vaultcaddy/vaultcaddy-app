@@ -27,8 +27,8 @@ class IntelligentOCRProcessor {
         
         try {
             // 初始化Google AI處理器
-            if (window.GoogleAIProcessor) {
-                this.googleAI = new window.GoogleAIProcessor();
+            if (window.googleAIProcessor) {
+                this.googleAI = window.googleAIProcessor;
                 console.log('✅ Google AI處理器已載入');
             } else {
                 console.warn('⚠️ Google AI處理器未找到');
