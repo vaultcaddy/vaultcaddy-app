@@ -96,14 +96,66 @@ class GoogleAIProcessor {
      */
     async fileToBase64(file) {
         return new Promise((resolve, reject) => {
+            // 驗證文件
+            if (!file) {
+                reject(new Error('文件不存在'));
+                return;
+            }
+            
+            if (file.size === 0) {
+                reject(new Error('文件為空'));
+                return;
+            }
+            
             const reader = new FileReader();
+            
+            // 設置超時
+            const timeout = setTimeout(() => {
+                reject(new Error('文件讀取超時'));
+            }, 30000);
+            
             reader.onload = () => {
-                // 移除data:mime/type;base64,前綴
-                const base64 = reader.result.split(',')[1];
-                resolve(base64);
+                clearTimeout(timeout);
+                try {
+                    if (!reader.result) {
+                        reject(new Error('文件讀取結果為空'));
+                        return;
+                    }
+                    
+                    // 移除data:mime/type;base64,前綴
+                    const result = reader.result.toString();
+                    const commaIndex = result.indexOf(',');
+                    
+                    if (commaIndex === -1) {
+                        reject(new Error('無效的base64格式'));
+                        return;
+                    }
+                    
+                    const base64 = result.substring(commaIndex + 1);
+                    
+                    if (!base64) {
+                        reject(new Error('base64數據為空'));
+                        return;
+                    }
+                    
+                    resolve(base64);
+                } catch (error) {
+                    clearTimeout(timeout);
+                    reject(new Error(`base64轉換失敗: ${error.message}`));
+                }
             };
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
+            
+            reader.onerror = (error) => {
+                clearTimeout(timeout);
+                reject(new Error(`文件讀取失敗: ${error.message || '未知錯誤'}`));
+            };
+            
+            try {
+                reader.readAsDataURL(file);
+            } catch (error) {
+                clearTimeout(timeout);
+                reject(new Error(`開始讀取文件失敗: ${error.message}`));
+            }
         });
     }
     

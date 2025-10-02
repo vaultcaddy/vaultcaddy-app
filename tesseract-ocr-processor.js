@@ -55,23 +55,50 @@ class TesseractOCRProcessor {
     async processDocument(file, documentType) {
         const startTime = Date.now();
         
-        await this.initialize();
-        
-        console.log(`📄 Tesseract.js 處理文檔: ${file.name} (${documentType})`);
-        
         try {
+            await this.initialize();
+            
+            console.log(`📄 Tesseract.js 處理文檔: ${file.name} (${documentType})`);
+            console.log(`📊 文件信息: 大小=${(file.size/1024/1024).toFixed(2)}MB, 類型=${file.type}`);
+            
+            // 驗證文件
+            if (!file || file.size === 0) {
+                throw new Error('文件無效或為空');
+            }
+            
+            if (!file.type.startsWith('image/')) {
+                throw new Error(`不支援的文件類型: ${file.type}`);
+            }
+            
             // 預處理圖像以提高OCR準確度
-            const processedImage = await this.preprocessImage(file);
+            console.log('🔄 開始圖像預處理...');
+            let processedImage;
+            try {
+                processedImage = await this.preprocessImage(file);
+                console.log('✅ 圖像預處理完成');
+            } catch (preprocessError) {
+                console.error('❌ 圖像預處理失敗:', preprocessError);
+                // 如果預處理失敗，嘗試直接使用原文件
+                console.log('🔄 回退到原始文件...');
+                processedImage = file;
+            }
             
             // 執行OCR識別
+            console.log('🔄 開始OCR識別...');
             const { data } = await this.worker.recognize(processedImage, {
                 rectangle: null, // 處理整個圖像
             });
             
-            console.log(`OCR識別完成，置信度: ${data.confidence}%`);
+            console.log(`✅ OCR識別完成，置信度: ${data.confidence}%`);
+            
+            if (!data.text || data.text.trim().length === 0) {
+                throw new Error('OCR未識別到任何文字內容');
+            }
             
             // 後處理和數據提取
+            console.log('🔄 開始數據提取...');
             const extractedData = await this.extractStructuredData(data, documentType);
+            console.log('✅ 數據提取完成');
             
             return {
                 success: true,
@@ -89,7 +116,7 @@ class TesseractOCRProcessor {
             
         } catch (error) {
             console.error('❌ Tesseract.js 處理失敗:', error);
-            throw error;
+            throw new Error(`Tesseract.js處理失敗: ${error.message}`);
         }
     }
     
@@ -98,36 +125,66 @@ class TesseractOCRProcessor {
      */
     async preprocessImage(file) {
         return new Promise((resolve, reject) => {
+            // 驗證文件類型
+            if (!file || !file.type || !file.type.startsWith('image/')) {
+                reject(new Error('無效的圖像文件'));
+                return;
+            }
+            
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             const img = new Image();
             
+            // 設置超時
+            const timeout = setTimeout(() => {
+                reject(new Error('圖像載入超時'));
+            }, 10000);
+            
             img.onload = () => {
+                clearTimeout(timeout);
                 try {
                     // 設置畫布尺寸
                     canvas.width = img.width;
                     canvas.height = img.height;
                     
-                    // 應用圖像增強濾鏡
-                    ctx.filter = 'grayscale(100%) contrast(150%) brightness(110%)';
+                    // 清除濾鏡，先繪製原始圖像
+                    ctx.filter = 'none';
                     ctx.drawImage(img, 0, 0);
                     
-                    // 可選：進一步的圖像處理
-                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                    const processedImageData = this.enhanceImageData(imageData);
-                    ctx.putImageData(processedImageData, 0, 0);
+                    // 應用圖像增強
+                    try {
+                        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                        const processedImageData = this.enhanceImageData(imageData);
+                        ctx.putImageData(processedImageData, 0, 0);
+                    } catch (enhanceError) {
+                        console.warn('圖像增強失敗，使用原始圖像:', enhanceError);
+                        // 如果增強失敗，使用原始圖像
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        ctx.drawImage(img, 0, 0);
+                    }
                     
+                    // 清理URL對象
+                    URL.revokeObjectURL(img.src);
                     resolve(canvas);
                 } catch (error) {
-                    reject(error);
+                    clearTimeout(timeout);
+                    URL.revokeObjectURL(img.src);
+                    reject(new Error(`圖像處理失敗: ${error.message}`));
                 }
             };
             
-            img.onerror = () => {
-                reject(new Error('圖像載入失敗'));
+            img.onerror = (error) => {
+                clearTimeout(timeout);
+                URL.revokeObjectURL(img.src);
+                reject(new Error(`圖像載入失敗: ${error.message || '未知錯誤'}`));
             };
             
-            img.src = URL.createObjectURL(file);
+            try {
+                img.src = URL.createObjectURL(file);
+            } catch (error) {
+                clearTimeout(timeout);
+                reject(new Error(`創建圖像URL失敗: ${error.message}`));
+            }
         });
     }
     
