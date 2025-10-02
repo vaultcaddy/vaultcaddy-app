@@ -16,6 +16,24 @@
     <script src="global-auth-sync.js"></script>
     <script src="navbar-component.js"></script>
     <script src="sidebar-component.js"></script>
+    <!-- 載入統一處理器系統 -->
+    <script src="google-ai-integration.js"></script>
+    <script src="ledgerbox-integration.js"></script>
+    
+    <!-- 載入新的OCR和數據處理器 -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <script src="tesseract-ocr-processor.js"></script>
+    <script src="data-processor.js"></script>
+    <script src="intelligent-ocr-processor.js"></script>
+    
+    <!-- 載入統一處理器 -->
+    <script src="unified-document-processor.js"></script>
+    
+    <!-- 停用的處理器（保留以防需要） -->
+    <!-- <script src="ai-document-processor.js"></script> -->
+    <!-- <script src="ai-services.js"></script> -->
+    <!-- <script src="enhanced-file-processor.js"></script> -->
+    <link rel="stylesheet" href="ledgerbox-styles.css">
     
     <style>
         /* 白色主題樣式 */
@@ -776,7 +794,7 @@
         }
         
         .transactions-table-container {
-            border: 1px solid #334155;
+            border: 1px solid #e5e7eb;
             border-radius: 8px;
             overflow: hidden;
         }
@@ -784,19 +802,20 @@
         .transactions-table {
             width: 100%;
             border-collapse: collapse;
-            background: #1e293b;
+            background: #ffffff;
         }
         
         .transactions-table thead th {
-            background: #334155;
-            color: #e2e8f0;
+            background: #f8fafc;
+            color: #374151;
             padding: 0.75rem;
             text-align: left;
             font-weight: 600;
+            border-bottom: 1px solid #e5e7eb;
         }
         
         .transactions-table tbody tr {
-            border-bottom: 1px solid #334155;
+            border-bottom: 1px solid #e5e7eb;
         }
         
         .transactions-table tbody tr:last-child {
@@ -805,7 +824,7 @@
         
         .transactions-table tbody td {
             padding: 0.75rem;
-            color: #e2e8f0;
+            color: #374151;
         }
         
         .transaction-checkbox {
@@ -1079,12 +1098,12 @@
                             <button class="pdf-control-btn"><i class="fas fa-search-minus"></i></button>
                         </div>
                         <div class="pdf-viewer">
-                            <div class="pdf-placeholder">
+                            <div class="pdf-placeholder" id="pdf-placeholder">
                                 <i class="fas fa-file-pdf"></i>
                                 <h3>PDF Preview</h3>
-                                <p>Document: eStatementFile_20250829143359.pdf</p>
+                                <p id="document-title">Document Loading...</p>
                                 <small style="display: block; margin-top: 1rem; color: #9ca3af;">
-                                    第一頁預覽將顯示在這裡，讓用戶快速識別文件內容
+                                    文件預覽將顯示在這裡，讓用戶快速識別文件內容
                                 </small>
                             </div>
                         </div>
@@ -1094,7 +1113,7 @@
                     <div class="data-extraction-container">
                         <!-- 頂部標題 -->
                         <div class="extraction-header">
-                            <h2 id="document-title">eStatementFile_20250829143359.pdf</h2>
+                            <h2 id="document-title-header">Document Loading...</h2>
                             <div class="extraction-tabs">
                                 <button class="tab-btn active" data-tab="results">Results</button>
                                 <button class="tab-btn" data-tab="export">Export</button>
@@ -1155,249 +1174,7 @@
                                         </tr>
                                     </thead>
                                     <tbody id="transactions-tbody">
-                                        <!-- eStatementFile_20250829143359 可編輯交易數據 -->
-                                        <tr class="transaction-row">
-                                            <td>
-                                                <input type="checkbox" class="transaction-checkbox">
-                                            </td>
-                                            <td>
-                                                <input type="date" class="editable-input date-input" value="2025-02-22">
-                                            </td>
-                                            <td>
-                                                <input type="text" class="editable-input description-input" value="B/F BALANCE" placeholder="Description">
-                                            </td>
-                                            <td>
-                                                <input type="number" class="editable-input amount-input" value="0" step="0.01">
-                                            </td>
-                                            <td>
-                                                <input type="number" class="editable-input balance-input" value="1493.98" step="0.01" readonly>
-                                            </td>
-                                            <td>
-                                                <button class="delete-transaction-btn" onclick="deleteTransaction(this)">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        <tr class="transaction-row">
-                                            <td>
-                                                <input type="checkbox" class="transaction-checkbox">
-                                            </td>
-                                            <td>
-                                                <input type="date" class="editable-input date-input" value="2025-02-26">
-                                            </td>
-                                            <td>
-                                                <input type="text" class="editable-input description-input" value="CREDIT INTEREST" placeholder="Description">
-                                            </td>
-                                            <td>
-                                                <input type="number" class="editable-input amount-input" value="2.61" step="0.01">
-                                            </td>
-                                            <td>
-                                                <input type="number" class="editable-input balance-input" value="1496.59" step="0.01" readonly>
-                                            </td>
-                                            <td>
-                                                <button class="delete-transaction-btn" onclick="deleteTransaction(this)">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        <tr class="transaction-row">
-                                            <td>
-                                                <input type="checkbox" class="transaction-checkbox">
-                                            </td>
-                                            <td>
-                                                <input type="date" class="editable-input date-input" value="2025-03-07">
-                                            </td>
-                                            <td>
-                                                <input type="text" class="editable-input description-input" value="QUICK CHEQUE DEPOSIT(07MAY25)" placeholder="Description">
-                                            </td>
-                                            <td>
-                                                <input type="number" class="editable-input amount-input" value="78649" step="0.01">
-                                            </td>
-                                            <td>
-                                                <input type="number" class="editable-input balance-input" value="80145.59" step="0.01" readonly>
-                                            </td>
-                                            <td>
-                                                <button class="delete-transaction-btn" onclick="deleteTransaction(this)">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        <tr class="transaction-row">
-                                            <td>
-                                                <input type="checkbox" class="transaction-checkbox">
-                                            </td>
-                                            <td>
-                                                <input type="date" class="editable-input date-input" value="2025-03-08">
-                                            </td>
-                                            <td>
-                                                <input type="text" class="editable-input description-input" value="POON H** K****HD125308257" placeholder="Description">
-                                            </td>
-                                            <td>
-                                                <input type="number" class="editable-input amount-input" value="840" step="0.01">
-                                            </td>
-                                            <td>
-                                                <input type="number" class="editable-input balance-input" value="79305.59" step="0.01" readonly>
-                                            </td>
-                                            <td>
-                                                <button class="delete-transaction-btn" onclick="deleteTransaction(this)">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        <tr class="transaction-row">
-                                            <td>
-                                                <input type="checkbox" class="transaction-checkbox">
-                                            </td>
-                                            <td>
-                                                <input type="date" class="editable-input date-input" value="2025-03-10">
-                                            </td>
-                                            <td>
-                                                <input type="text" class="editable-input description-input" value="4006-1210-0627-0086N310985" placeholder="Description">
-                                            </td>
-                                            <td>
-                                                <input type="number" class="editable-input amount-input" value="-21226.59" step="0.01">
-                                            </td>
-                                            <td>
-                                                <input type="number" class="editable-input balance-input" value="0" step="0.01" readonly>
-                                            </td>
-                                            <td>
-                                                <button class="delete-transaction-btn" onclick="deleteTransaction(this)">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        <tr class="transaction-row">
-                                            <td>
-                                                <input type="checkbox" class="transaction-checkbox">
-                                            </td>
-                                            <td>
-                                                <input type="date" class="editable-input date-input" value="2025-03-10">
-                                            </td>
-                                            <td>
-                                                <input type="text" class="editable-input description-input" value="TUG COMPANY LIMITEDHD1253" placeholder="Description">
-                                            </td>
-                                            <td>
-                                                <input type="number" class="editable-input amount-input" value="15000" step="0.01">
-                                            </td>
-                                            <td>
-                                                <input type="number" class="editable-input balance-input" value="43079" step="0.01" readonly>
-                                            </td>
-                                            <td>
-                                                <button class="delete-transaction-btn" onclick="deleteTransaction(this)">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        <tr class="transaction-row">
-                                            <td>
-                                                <input type="checkbox" class="transaction-checkbox">
-                                            </td>
-                                            <td>
-                                                <input type="date" class="editable-input date-input" value="2025-03-11">
-                                            </td>
-                                            <td>
-                                                <input type="text" class="editable-input description-input" value="024996667598184INSTALMENT" placeholder="Description">
-                                            </td>
-                                            <td>
-                                                <input type="number" class="editable-input amount-input" value="-3966.2" step="0.01">
-                                            </td>
-                                            <td>
-                                                <input type="number" class="editable-input balance-input" value="3912.8" step="0.01" readonly>
-                                            </td>
-                                            <td>
-                                                <button class="delete-transaction-btn" onclick="deleteTransaction(this)">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        <tr class="transaction-row">
-                                            <td>
-                                                <input type="checkbox" class="transaction-checkbox">
-                                            </td>
-                                            <td>
-                                                <input type="date" class="editable-input date-input" value="2025-03-14">
-                                            </td>
-                                            <td>
-                                                <input type="text" class="editable-input description-input" value="MUSHROOM TRANSPORTHD1253" placeholder="Description">
-                                            </td>
-                                            <td>
-                                                <input type="number" class="editable-input amount-input" value="-6500" step="0.01">
-                                            </td>
-                                            <td>
-                                                <input type="number" class="editable-input balance-input" value="0" step="0.01" readonly>
-                                            </td>
-                                            <td>
-                                                <button class="delete-transaction-btn" onclick="deleteTransaction(this)">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        <tr class="transaction-row">
-                                            <td>
-                                                <input type="checkbox" class="transaction-checkbox">
-                                            </td>
-                                            <td>
-                                                <input type="date" class="editable-input date-input" value="2025-03-14">
-                                            </td>
-                                            <td>
-                                                <input type="text" class="editable-input description-input" value="FROM GO DO SOMETHINGN314" placeholder="Description">
-                                            </td>
-                                            <td>
-                                                <input type="number" class="editable-input amount-input" value="3900" step="0.01">
-                                            </td>
-                                            <td>
-                                                <input type="number" class="editable-input balance-input" value="36512.8" step="0.01" readonly>
-                                            </td>
-                                            <td>
-                                                <button class="delete-transaction-btn" onclick="deleteTransaction(this)">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        <tr class="transaction-row">
-                                            <td>
-                                                <input type="checkbox" class="transaction-checkbox">
-                                            </td>
-                                            <td>
-                                                <input type="date" class="editable-input date-input" value="2025-03-15">
-                                            </td>
-                                            <td>
-                                                <input type="text" class="editable-input description-input" value="SHUDO INTERNATIONALHD125" placeholder="Description">
-                                            </td>
-                                            <td>
-                                                <input type="number" class="editable-input amount-input" value="-1620" step="0.01">
-                                            </td>
-                                            <td>
-                                                <input type="number" class="editable-input balance-input" value="34892.8" step="0.01" readonly>
-                                            </td>
-                                            <td>
-                                                <button class="delete-transaction-btn" onclick="deleteTransaction(this)">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        <tr class="transaction-row">
-                                            <td>
-                                                <input type="checkbox" class="transaction-checkbox">
-                                            </td>
-                                            <td>
-                                                <input type="date" class="editable-input date-input" value="2025-03-21">
-                                            </td>
-                                            <td>
-                                                <input type="text" class="editable-input description-input" value="SUN HING GINSENG & AH" placeholder="Description">
-                                            </td>
-                                            <td>
-                                                <input type="number" class="editable-input amount-input" value="-3375" step="0.01">
-                                            </td>
-                                            <td>
-                                                <input type="number" class="editable-input balance-input" value="0" step="0.01" readonly>
-                                            </td>
-                                            <td>
-                                                <button class="delete-transaction-btn" onclick="deleteTransaction(this)">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
+                                        <!-- 動態填充的交易數據將顯示在這裡 -->
                                     </tbody>
                                 </table>
                             </div>
@@ -1579,6 +1356,9 @@
                 window.unifiedSidebar.updateActivePage(docType);
             }
             
+            // 載入該文檔類型的文件
+            loadFilesForDocumentType(docType);
+            
             // 如果語言管理器存在，重新應用翻譯
             if (window.languageManager) {
                 window.languageManager.loadLanguage(window.languageManager.currentLanguage);
@@ -1586,20 +1366,209 @@
             
             console.log('✅ 更新頁面類型:', docType, config.title);
         }
+        
+        // 載入指定文檔類型的文件
+        function loadFilesForDocumentType(docType) {
+            const tbody = document.getElementById('documents-tbody');
+            if (!tbody) return;
+            
+            // 清空當前表格
+            tbody.innerHTML = '';
+            
+            // 優先從統一存儲載入，然後是舊格式
+            let storedFiles = [];
+            
+            // 1. 嘗試從統一存儲載入
+            if (window.UnifiedDocumentProcessor && window.UnifiedDocumentProcessor.processors.storage) {
+                console.log(`📂 從統一存儲載入 ${docType} 文件`);
+                storedFiles = window.UnifiedDocumentProcessor.getAllProcessedDocuments(docType);
+                
+                // 轉換統一格式為顯示格式
+                storedFiles = storedFiles.map(doc => ({
+                    id: doc.id,
+                    name: doc.fileName,
+                    size: doc.fileSize || 0,
+                    documentType: doc.documentType,
+                    uploadDate: new Date(doc.processedAt).toLocaleDateString('zh-TW'),
+                    status: 'completed',
+                    processedData: doc
+                }));
+            }
+            
+            // 2. 如果統一存儲沒有數據，嘗試舊格式
+            if (storedFiles.length === 0) {
+                console.log(`📂 從舊存儲載入 ${docType} 文件`);
+                const storageKey = `vaultcaddy_files_${docType}`;
+                storedFiles = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            }
+            
+            console.log(`📁 載入 ${docType} 文件:`, storedFiles.length, '個文件');
+            
+            if (storedFiles.length === 0) {
+                // 顯示"No results"空狀態
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="10" style="text-align: center; padding: 3rem; color: #6b7280; background: #1e293b;">
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+                                <div style="color: #94a3b8; font-size: 1.125rem; font-weight: 500;">
+                                    No results.
+                                </div>
+                                <div style="color: #64748b; font-size: 0.875rem;">
+                                    尚未上傳任何 ${documentTypes[docType]?.title || docType} 文件
+                                </div>
+                                <div style="color: #64748b; font-size: 0.875rem;">
+                                    點擊上方的「上傳文件」按鈕開始使用
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            // 顯示存儲的文件
+            storedFiles.forEach((fileInfo, index) => {
+                const row = document.createElement('tr');
+                row.className = 'document-row';
+                row.onclick = () => openDocumentDetail(fileInfo.id);
+                
+                row.innerHTML = `
+                    <td>
+                        <input type="checkbox" onclick="event.stopPropagation()">
+                    </td>
+                    <td>
+                        <div class="document-cell">
+                            <i class="fas fa-file-pdf file-icon"></i>
+                            <div class="document-info">
+                                <div class="doc-name">${fileInfo.name}</div>
+                                <div class="doc-details">
+                                    <i class="fas fa-user"></i> ${fileInfo.documentType}<br>
+                                    <i class="fas fa-file"></i> ${(fileInfo.size / 1024 / 1024).toFixed(2)} MB
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="period-info">
+                            <i class="fas fa-check"></i> 已處理
+                            <br><small>上傳於 ${fileInfo.uploadDate}</small>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="reconciliation">
+                            <div class="reconciliation-text">-/-</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 100%"></div>
+                            </div>
+                            <div class="progress-percentage">100%</div>
+                            <small class="reconciliation-status">
+                                <i class="fas fa-check"></i> <span data-translate="completed">已完成</span>
+                            </small>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="balance-info">
+                            <div>已處理</div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="status-badge success">
+                            <i class="fas fa-check"></i> Completed
+                        </span>
+                    </td>
+                    <td>
+                        <span class="review-badge review">
+                            <i class="fas fa-eye"></i> Ready
+                        </span>
+                    </td>
+                    <td>—</td>
+                    <td>${fileInfo.uploadDate}</td>
+                    <td>
+                        <button class="action-btn" onclick="event.stopPropagation(); showActionMenu(event, '${fileInfo.id}')" title="More actions">
+                            <i class="fas fa-ellipsis-h"></i>
+                        </button>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+            
+            console.log(`✅ 已載入 ${storedFiles.length} 個 ${docType} 文件到表格`);
+        }
 
         // 打開文檔詳細視圖
         function openDocumentDetail(documentId) {
             document.getElementById('document-list-view').style.display = 'none';
             document.getElementById('document-detail-view').style.display = 'block';
             
-            // 更新文檔標題
-            document.getElementById('document-title').textContent = documentId + '.pdf';
+            // 優先使用LedgerBox處理器的數據
+            if (window.ledgerBoxProcessor) {
+                window.ledgerBoxProcessor.openDocumentDetail(documentId);
+                return;
+            }
+            
+            // 兜底：從localStorage獲取文件信息
+            const fileInfo = getFileInfoById(documentId);
+            
+            if (fileInfo) {
+                // 更新文檔標題為實際文件名
+                document.getElementById('document-title').textContent = fileInfo.name;
+                
+                // 更新PDF預覽區域
+                updatePDFPreview(fileInfo);
+                
+                console.log('📄 打開文檔詳細視圖:', fileInfo.name, fileInfo.documentType);
+            } else {
+                // 兜底：使用文檔ID
+                document.getElementById('document-title').textContent = documentId + '.pdf';
+                console.warn('⚠️ 找不到文檔信息:', documentId);
+            }
+        }
+        
+        // 根據文檔ID獲取文件信息
+        function getFileInfoById(documentId) {
+            // 檢查所有文檔類型的存儲
+            const docTypes = ['bank-statement', 'invoice', 'receipt', 'general'];
+            
+            for (const docType of docTypes) {
+                const storageKey = `vaultcaddy_files_${docType}`;
+                const storedFiles = JSON.parse(localStorage.getItem(storageKey) || '[]');
+                
+                const fileInfo = storedFiles.find(file => file.id === documentId);
+                if (fileInfo) {
+                    return fileInfo;
+                }
+            }
+            
+            return null;
+        }
+        
+        // 更新PDF預覽區域
+        function updatePDFPreview(fileInfo) {
+            const pdfPlaceholder = document.querySelector('.pdf-placeholder');
+            if (pdfPlaceholder) {
+                pdfPlaceholder.innerHTML = `
+                    <i class="fas fa-file-pdf"></i>
+                    <h3>PDF Preview</h3>
+                    <p>Document: ${fileInfo.name}</p>
+                    <p style="color: #6b7280; font-size: 0.875rem;">Type: ${fileInfo.documentType}</p>
+                    <p style="color: #6b7280; font-size: 0.875rem;">Size: ${(fileInfo.size / 1024 / 1024).toFixed(2)} MB</p>
+                    <small style="display: block; margin-top: 1rem; color: #9ca3af;">
+                        實際文件預覽功能正在開發中，目前顯示文件信息
+                    </small>
+                `;
+            }
         }
 
         // 返回文檔列表
         function backToDocumentList() {
             document.getElementById('document-detail-view').style.display = 'none';
             document.getElementById('document-list-view').style.display = 'block';
+            
+            // 清除當前文檔
+            if (window.ledgerBoxProcessor) {
+                window.ledgerBoxProcessor.currentDocument = null;
+            }
         }
 
         // 其他功能函數
@@ -1608,10 +1577,12 @@
         }
 
         function openUploadModal() {
-            const modal = document.getElementById('upload-modal');
-            if (modal) {
-                modal.style.display = 'flex';
-                document.body.style.overflow = 'hidden';
+            // 統一使用LedgerBox風格的上傳模態框
+            if (window.ledgerBoxProcessor) {
+                window.ledgerBoxProcessor.openLedgerBoxModal();
+            } else {
+                console.error('❌ LedgerBox處理器未載入');
+                alert('系統初始化中，請稍後再試');
             }
         }
         
@@ -1677,7 +1648,7 @@
             preview.className = 'file-drop-area has-files';
         }
         
-        function processSelectedFiles() {
+        async function processSelectedFiles() {
             console.log('🚀 開始處理選中的文件...');
             
             const fileInput = document.getElementById('modal-file-input');
@@ -1698,38 +1669,97 @@
                 lastModified: f.lastModified
             })));
             
+            // 獲取當前文檔類型
+            const hash = window.location.hash.substring(1);
+            const currentDocType = hash || 'bank-statement';
+            
             closeUploadModal();
             showProcessingStatus(files);
             
-            // 模擬處理完成後添加到表格
-            setTimeout(() => {
-                console.log('✅ 開始添加文件到表格...');
-                
-                try {
-                    addProcessedFilesToTable(files);
-                    console.log('✅ 文件處理完成');
+            try {
+                // 使用統一處理器處理文件
+                if (window.UnifiedDocumentProcessor) {
+                    console.log('🎯 使用統一處理器處理文件...');
                     
-                    // 檢查表格狀態
-                    const tbody = document.getElementById('documents-tbody');
-                    if (tbody && tbody.children.length > 0) {
-                        console.log(`✅ 表格現在包含 ${tbody.children.length} 個文件行`);
-                    } else {
-                        console.error('❌ 表格仍然為空，檢查 addProcessedFilesToTable 函數');
+                    const processingResults = await window.UnifiedDocumentProcessor.processUploadedFiles(files, currentDocType);
+                    
+                    console.log('✅ 統一處理器處理完成:', processingResults);
+                    
+                    // 檢查是否有處理失敗的文件
+                    const failedFiles = processingResults.filter(r => r.status === 'error');
+                    if (failedFiles.length > 0) {
+                        console.error('❌ 部分文件處理失敗:', failedFiles);
+                        alert(`${failedFiles.length} 個文件處理失敗：${failedFiles.map(f => f.error).join(', ')}`);
                     }
                     
-                    // 更新統計
-                    updateDocumentStats();
+                    // 只添加成功處理的文件到表格
+                    const successfulFiles = files.filter((_, index) => 
+                        processingResults[index] && processingResults[index].status === 'success'
+                    );
                     
-                    // 顯示成功通知
-                    showSuccessNotification(files.length);
-                    
-                } catch (error) {
-                    console.error('❌ 處理文件時出錯:', error);
-                    alert('處理文件時出現錯誤，請重試');
+                    if (successfulFiles.length > 0) {
+                        addProcessedFilesToTable(successfulFiles);
+                        
+                        // 保存處理結果到統一存儲
+                        saveUnifiedProcessingResults(processingResults, currentDocType);
+                        
+                        showSuccessNotification(successfulFiles.length);
+                    }
+                } else {
+                    // 兜底：使用原有的模擬處理
+                    console.log('⚠️ 統一處理器未載入，使用模擬處理');
+                    setTimeout(() => {
+                        addProcessedFilesToTable(files);
+                        showSuccessNotification(files.length);
+                        hideProcessingStatus();
+                    }, 2000);
+                    return;
                 }
                 
+                // 更新統計
+                updateDocumentStats();
+                
+            } catch (error) {
+                console.error('❌ 處理文件時出錯:', error);
+                alert(`處理文件時出現錯誤：${error.message}`);
+            } finally {
                 hideProcessingStatus();
-            }, 2000); // 減少等待時間到 2 秒
+            }
+        }
+        
+        // 保存處理結果到localStorage（舊版本，保留兼容性）
+        function saveProcessingResults(results, documentType) {
+            const storageKey = `vaultcaddy_processing_results_${documentType}`;
+            const existingResults = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            
+            // 添加新的處理結果
+            results.forEach(result => {
+                if (result.status === 'success') {
+                    existingResults.push(result);
+                }
+            });
+            
+            localStorage.setItem(storageKey, JSON.stringify(existingResults));
+            console.log(`💾 已保存 ${results.length} 個處理結果到 ${storageKey}`);
+        }
+        
+        // 保存統一處理器結果
+        function saveUnifiedProcessingResults(results, documentType) {
+            console.log(`💾 統一處理器結果已自動保存到統一存儲系統`);
+            
+            // 統一處理器會自動保存，這裡只需要觸發UI更新
+            results.forEach(result => {
+                if (result.status === 'success') {
+                    // 觸發UI更新事件
+                    window.dispatchEvent(new CustomEvent('vaultcaddy:document:added', {
+                        detail: { 
+                            documentType: documentType,
+                            fileName: result.fileName,
+                            data: result.data
+                        }
+                    }));
+                }
+            });
         }
         
         function showSuccessNotification(fileCount) {
@@ -1775,9 +1805,14 @@
                 return;
             }
             
+            // 獲取當前文檔類型
+            const hash = window.location.hash.substring(1);
+            const currentDocType = hash || 'bank-statement';
+            
             console.log('📊 當前表格狀態:', {
                 childrenCount: tbody.children.length,
-                innerHTML: tbody.innerHTML.substring(0, 100) + '...'
+                innerHTML: tbody.innerHTML.substring(0, 100) + '...',
+                documentType: currentDocType
             });
             
             // 如果表格是空的，先清除佔位符
@@ -1786,16 +1821,33 @@
                 tbody.innerHTML = '';
             }
             
+            // 從localStorage獲取當前文檔類型的文件列表
+            const storageKey = `vaultcaddy_files_${currentDocType}`;
+            let existingFiles = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
-                const fileId = 'file_' + Date.now() + '_' + i;
+                const fileId = `${currentDocType}_${Date.now()}_${i}`;
                 const currentDate = new Date().toLocaleDateString('zh-TW');
                 
                 console.log(`📄 處理文件 ${i + 1}/${files.length}:`, {
                     name: file.name,
                     size: file.size,
-                    fileId: fileId
+                    fileId: fileId,
+                    documentType: currentDocType
                 });
+                
+                // 保存文件信息到localStorage（按文檔類型分離）
+                const fileInfo = {
+                    id: fileId,
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    documentType: currentDocType,
+                    uploadDate: currentDate,
+                    status: 'processing'
+                };
+                existingFiles.push(fileInfo);
                 
                 const row = document.createElement('tr');
                 row.className = 'document-row';
@@ -1811,7 +1863,7 @@
                             <div class="document-info">
                                 <div class="doc-name">${file.name}</div>
                                 <div class="doc-details">
-                                    <i class="fas fa-user"></i> 新上傳文檔<br>
+                                    <i class="fas fa-user"></i> 新上傳文檔 (${currentDocType})<br>
                                     <i class="fas fa-file"></i> ${(file.size / 1024 / 1024).toFixed(2)} MB
                                 </div>
                             </div>
@@ -1860,13 +1912,18 @@
                 `;
                 
                 tbody.appendChild(row);
-                console.log(`✅ 文件 ${file.name} 已添加到表格`);
+                console.log(`✅ 文件 ${file.name} 已添加到表格 (${currentDocType})`);
             }
             
-            console.log(`🎉 所有 ${files.length} 個文件已成功添加到表格`);
+            // 保存更新後的文件列表到localStorage
+            localStorage.setItem(storageKey, JSON.stringify(existingFiles));
+            
+            console.log(`🎉 所有 ${files.length} 個文件已成功添加到表格 (${currentDocType})`);
             console.log('📊 表格最終狀態:', {
                 totalRows: tbody.children.length,
-                tableHTML: tbody.innerHTML.length + ' characters'
+                tableHTML: tbody.innerHTML.length + ' characters',
+                storageKey: storageKey,
+                totalStoredFiles: existingFiles.length
             });
             
             // 更新統計
@@ -2025,56 +2082,7 @@
         });
     </script>
 
-    <!-- 上傳文件模態框 -->
-    <div id="upload-modal" class="upload-modal" style="display: none;">
-        <div class="modal-backdrop" onclick="closeUploadModal()"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>上傳文件</h3>
-                <button class="modal-close-btn" onclick="closeUploadModal()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <div class="modal-body">
-                <div class="file-drop-area" id="file-preview-area" onclick="handleModalFileSelect()">
-                    <p>拖放文件到這裡或點擊選擇文件</p>
-                </div>
-                
-                <input type="file" id="modal-file-input" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" multiple style="display: none;" onchange="handleFileInputChange(event)">
-                
-                <div class="upload-options">
-                    <div class="file-types">
-                        <p><strong>支持的文件類型:</strong></p>
-                        <ul>
-                            <li>PDF 文檔 (.pdf)</li>
-                            <li>Word 文檔 (.doc, .docx)</li>
-                            <li>圖片文件 (.jpg, .png)</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="processing-options">
-                        <label>
-                            <input type="checkbox" checked> 自動檢測文檔類型
-                        </label>
-                        <label>
-                            <input type="checkbox" checked> 提取交易數據
-                        </label>
-                        <label>
-                            <input type="checkbox"> 生成摘要報告
-                        </label>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeUploadModal()">取消</button>
-                <button class="btn btn-primary" onclick="processSelectedFiles()">
-                    <i class="fas fa-upload"></i> 開始處理
-                </button>
-            </div>
-        </div>
-    </div>
+    <!-- 原始上傳模態框已移除，統一使用LedgerBox風格模態框 -->
 
     <style>
         /* 上傳模態框樣式 */

@@ -826,8 +826,8 @@ class AzureFormRecognizerService {
     }
 }
 
-// 全局AI處理器實例
-window.aiProcessor = new AIDocumentProcessor();
+// 重命名以避免衝突
+window.AIServicesProcessor = new AIDocumentProcessor();
 
 // 導出供其他模塊使用
 if (typeof module !== 'undefined' && module.exports) {

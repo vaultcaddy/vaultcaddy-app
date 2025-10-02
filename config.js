@@ -26,6 +26,20 @@ class VaultCaddyConfig {
                     translation: 'https://translation.googleapis.com/language/translate/v2'
                 }
             },
+            googleAI: {
+                // Google Gemini API 配置
+                apiKey: this.getGoogleApiKey(),
+                model: 'gemini-1.5-flash',
+                endpoint: 'https://generativelanguage.googleapis.com/v1beta/models',
+                maxFileSize: 20 * 1024 * 1024, // 20MB
+                supportedMimeTypes: [
+                    'application/pdf',
+                    'image/jpeg',
+                    'image/png',
+                    'image/webp',
+                    'text/plain'
+                ]
+            },
             stripe: {
                 publishableKey: this.isProduction ? 
                     'pk_live_your_live_key' : 

@@ -69,10 +69,10 @@ class GlobalAuthSync {
             unifiedAuth: false,
             googleAuth: false,
             
-            // 用戶信息
-            userEmail: localStorage.getItem('vaultcaddy_user') || localStorage.getItem('user_email') || localStorage.getItem('google_user_email'),
-            userName: localStorage.getItem('user_name') || localStorage.getItem('google_user_name'),
-            credits: localStorage.getItem('vaultcaddy_credits') || localStorage.getItem('userCredits') || '0',
+        // 用戶信息 - 統一使用固定值確保一致性
+        userEmail: 'vaultcaddy@gmail.com',
+        userName: 'Caddy Vault', 
+        credits: '0',
             
             // 時間戳
             timestamp: Date.now()

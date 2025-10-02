@@ -82,10 +82,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // 處理選擇的文件
-    function handleFiles(files) {
+    async function handleFiles(files) {
         if (files.length > 0) {
             const uploadContent = document.querySelector('.upload-content');
             let fileNames = Array.from(files).map(file => file.name).join(', ');
+            
+            // 獲取當前選擇的文檔類型
+            const selectedModel = document.querySelector('.model-card.active');
+            const documentType = selectedModel ? selectedModel.getAttribute('data-model') : 'bank-statement';
             
             // 創建處理中的UI
             uploadContent.innerHTML = `
@@ -95,25 +99,51 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div style="background: rgba(255,255,255,0.2); height: 4px; border-radius: 2px;">
                         <div class="progress-bar" style="background: #10b981; height: 100%; width: 0%; border-radius: 2px; transition: width 0.3s ease;"></div>
                     </div>
-                    <p style="margin-top: 0.5rem; font-size: 0.9rem;">正在處理...</p>
+                    <p class="progress-text" style="margin-top: 0.5rem; font-size: 0.9rem;">正在處理...</p>
                 </div>
                 <button class="browse-btn" style="margin-top: 1rem;" onclick="resetUpload()">重新選擇</button>
             `;
 
-            // 模擬進度條
-            const progressBar = document.querySelector('.progress-bar');
-            let progress = 0;
-            const interval = setInterval(() => {
-                progress += Math.random() * 15;
-                if (progress >= 100) {
-                    progress = 100;
-                    clearInterval(interval);
-                    setTimeout(() => {
-                        showCompletionMessage();
-                    }, 500);
+            try {
+                // 使用增強的文件處理器
+                if (window.VaultCaddyProcessor) {
+                    // 監聽進度更新
+                    const progressBar = document.querySelector('.progress-bar');
+                    const progressText = document.querySelector('.progress-text');
+                    
+                    const handleProgress = (event) => {
+                        const { progress, processed, total } = event.detail;
+                        if (progressBar) {
+                            progressBar.style.width = progress + '%';
+                        }
+                        if (progressText) {
+                            progressText.textContent = `處理中... ${processed}/${total} (${progress}%)`;
+                        }
+                    };
+                    
+                    window.addEventListener('batchProgress', handleProgress);
+                    
+                    // 開始處理
+                    const result = await window.VaultCaddyProcessor.batchProcess(
+                        Array.from(files), 
+                        documentType,
+                        { maxConcurrent: 2 }
+                    );
+                    
+                    // 清理事件監聽器
+                    window.removeEventListener('batchProgress', handleProgress);
+                    
+                    // 顯示結果
+                    showProcessingResults(result);
+                    
+                } else {
+                    throw new Error('文件處理器未初始化');
                 }
-                progressBar.style.width = progress + '%';
-            }, 200);
+                
+            } catch (error) {
+                console.error('文件處理失敗:', error);
+                showErrorMessage(error.message);
+            }
         }
     }
 
@@ -141,15 +171,120 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     };
 
-    // 顯示完成消息
-    function showCompletionMessage() {
+    // 顯示處理結果
+    function showProcessingResults(result) {
+        const uploadContent = document.querySelector('.upload-content');
+        const successCount = result.successfulFiles;
+        const totalCount = result.totalFiles;
+        const successRate = Math.round((successCount / totalCount) * 100);
+        
+        uploadContent.innerHTML = `
+            <div style="text-align: center;">
+                <i class="fas fa-check-circle" style="color: #10b981; font-size: 3rem;"></i>
+                <h4 style="margin: 1rem 0; color: #10b981;">處理完成！</h4>
+                
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 1.5rem 0; text-align: center;">
+                    <div style="background: rgba(16, 185, 129, 0.1); padding: 1rem; border-radius: 8px;">
+                        <div style="font-size: 1.5rem; font-weight: bold; color: #10b981;">${successCount}</div>
+                        <div style="font-size: 0.875rem; color: #065f46;">成功處理</div>
+                    </div>
+                    <div style="background: rgba(239, 68, 68, 0.1); padding: 1rem; border-radius: 8px;">
+                        <div style="font-size: 1.5rem; font-weight: bold; color: #ef4444;">${totalCount - successCount}</div>
+                        <div style="font-size: 0.875rem; color: #991b1b;">處理失敗</div>
+                    </div>
+                    <div style="background: rgba(59, 130, 246, 0.1); padding: 1rem; border-radius: 8px;">
+                        <div style="font-size: 1.5rem; font-weight: bold; color: #3b82f6;">${successRate}%</div>
+                        <div style="font-size: 0.875rem; color: #1e40af;">成功率</div>
+                    </div>
+                </div>
+                
+                ${successCount > 0 ? `
+                    <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; margin: 1.5rem 0;">
+                        <button onclick="downloadResults('csv', '${result.documentType}')" style="padding: 0.5rem 1rem; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                            <i class="fas fa-download" style="margin-right: 0.5rem;"></i>下載 CSV
+                        </button>
+                        <button onclick="downloadResults('json', '${result.documentType}')" style="padding: 0.5rem 1rem; background: #6b7280; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                            <i class="fas fa-download" style="margin-right: 0.5rem;"></i>下載 JSON
+                        </button>
+                        ${result.documentType === 'bank-statement' ? `
+                            <button onclick="downloadResults('quickbooks', '${result.documentType}')" style="padding: 0.5rem 1rem; background: #0077c5; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                <i class="fas fa-download" style="margin-right: 0.5rem;"></i>QuickBooks
+                            </button>
+                        ` : ''}
+                    </div>
+                ` : ''}
+                
+                <button class="browse-btn" style="margin-top: 1rem;" onclick="resetUpload()">處理更多文件</button>
+            </div>
+        `;
+        
+        // 保存結果供下載使用
+        window.lastProcessingResult = result;
+    }
+    
+    // 顯示錯誤消息
+    function showErrorMessage(message) {
         const uploadContent = document.querySelector('.upload-content');
         uploadContent.innerHTML = `
-            <i class="fas fa-check-circle" style="color: #10b981; font-size: 3rem;"></i>
-            <h4 style="margin: 1rem 0; color: #10b981;">處理完成！</h4>
-            <p>您的文件已成功轉換並下載到您的電腦。</p>
-            <button class="browse-btn" style="margin-top: 1rem;" onclick="resetUpload()">處理更多文件</button>
+            <div style="text-align: center;">
+                <i class="fas fa-exclamation-triangle" style="color: #ef4444; font-size: 3rem;"></i>
+                <h4 style="margin: 1rem 0; color: #ef4444;">處理失敗</h4>
+                <p style="color: #6b7280; margin-bottom: 1.5rem;">${message}</p>
+                <button class="browse-btn" onclick="resetUpload()">重新嘗試</button>
+            </div>
         `;
+    }
+    
+    // 下載結果
+    window.downloadResults = function(format, documentType) {
+        if (!window.lastProcessingResult) {
+            alert('沒有可下載的結果');
+            return;
+        }
+        
+        try {
+            let content, fileName, mimeType;
+            const timestamp = new Date().toISOString().split('T')[0];
+            
+            switch (format) {
+                case 'csv':
+                    content = window.VaultCaddyProcessor.exportToCSV(window.lastProcessingResult.results, documentType);
+                    fileName = `vaultcaddy_${documentType}_${timestamp}.csv`;
+                    mimeType = 'text/csv';
+                    break;
+                    
+                case 'json':
+                    content = window.VaultCaddyProcessor.exportToJSON(window.lastProcessingResult.results);
+                    fileName = `vaultcaddy_${documentType}_${timestamp}.json`;
+                    mimeType = 'application/json';
+                    break;
+                    
+                case 'quickbooks':
+                    content = window.VaultCaddyProcessor.exportToQuickBooks(window.lastProcessingResult.results, documentType);
+                    fileName = `vaultcaddy_${documentType}_${timestamp}.qbo`;
+                    mimeType = 'application/vnd.intu.qbo';
+                    break;
+                    
+                default:
+                    throw new Error('不支援的格式');
+            }
+            
+            window.VaultCaddyProcessor.downloadFile(content, fileName, mimeType);
+            
+        } catch (error) {
+            console.error('下載失敗:', error);
+            alert(`下載失敗: ${error.message}`);
+        }
+    };
+    
+    // 顯示完成消息（保留向後兼容）
+    function showCompletionMessage() {
+        showProcessingResults({
+            totalFiles: 1,
+            successfulFiles: 1,
+            documentType: 'bank-statement',
+            results: []
+        });
     }
 
     // 價格切換功能
