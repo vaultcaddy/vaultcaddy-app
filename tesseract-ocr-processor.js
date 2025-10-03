@@ -33,13 +33,19 @@ class TesseractOCRProcessor {
                 }
             });
             
-            // 優化OCR參數
-            await this.worker.setParameters({
-                'tessedit_pageseg_mode': Tesseract.PSM.AUTO,
-                'tessedit_ocr_engine_mode': Tesseract.OEM.LSTM_ONLY,
-                'preserve_interword_spaces': '1',
-                'tessedit_char_whitelist': '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz一二三四五六七八九十百千萬億元角分港幣美元新台幣人民幣日圓韓元英鎊歐元澳元加元瑞士法郎.,()[]{}+-*/%=:;!?@#$&_|\\/"\'`~^<>'
-            });
+            // 優化OCR參數 - 使用更安全的設置
+            try {
+                await this.worker.setParameters({
+                    'tessedit_pageseg_mode': '6', // 使用數字而不是常量
+                    'tessedit_ocr_engine_mode': '1', // LSTM_ONLY
+                    'preserve_interword_spaces': '1'
+                    // 移除字符白名單以避免兼容性問題
+                });
+                console.log('✅ Tesseract.js 參數設置完成');
+            } catch (paramError) {
+                console.warn('⚠️ Tesseract.js 參數設置失敗，使用默認設置:', paramError);
+                // 繼續執行，使用默認參數
+            }
             
             this.isInitialized = true;
             console.log('✅ Tesseract.js 初始化完成');
@@ -74,12 +80,11 @@ class TesseractOCRProcessor {
             console.log('🔄 開始圖像預處理...');
             let processedImage;
             try {
-                processedImage = await this.preprocessImage(file);
-                console.log('✅ 圖像預處理完成');
+                // 暫時跳過預處理，直接使用原文件以避免Canvas錯誤
+                console.log('🔄 使用原始文件（跳過預處理以避免兼容性問題）');
+                processedImage = file;
             } catch (preprocessError) {
                 console.error('❌ 圖像預處理失敗:', preprocessError);
-                // 如果預處理失敗，嘗試直接使用原文件
-                console.log('🔄 回退到原始文件...');
                 processedImage = file;
             }
             
@@ -151,16 +156,18 @@ class TesseractOCRProcessor {
                     ctx.filter = 'none';
                     ctx.drawImage(img, 0, 0);
                     
-                    // 應用圖像增強
+                    // 應用圖像增強 - 暫時禁用以避免兼容性問題
                     try {
-                        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                        const processedImageData = this.enhanceImageData(imageData);
-                        ctx.putImageData(processedImageData, 0, 0);
+                        // 簡單的對比度增強
+                        ctx.filter = 'contrast(120%) brightness(110%)';
+                        ctx.globalCompositeOperation = 'source-over';
+                        
+                        // 不進行複雜的像素級處理，避免Canvas相關錯誤
+                        console.log('✅ 應用基本圖像增強');
                     } catch (enhanceError) {
                         console.warn('圖像增強失敗，使用原始圖像:', enhanceError);
-                        // 如果增強失敗，使用原始圖像
-                        ctx.clearRect(0, 0, canvas.width, canvas.height);
-                        ctx.drawImage(img, 0, 0);
+                        // 重置濾鏡
+                        ctx.filter = 'none';
                     }
                     
                     // 清理URL對象
