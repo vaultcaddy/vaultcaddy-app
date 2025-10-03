@@ -72,10 +72,13 @@ class UnifiedDocumentProcessor {
                 console.log('📊 數據處理器已連接');
             }
             
-                // 保留原有處理器（兼容性）
-                if (window.googleAIProcessor) {
+                // 優先使用Google智能處理器
+                if (window.googleSmartProcessor) {
+                    this.processors.ai = window.googleSmartProcessor;
+                    console.log('🧠 Google智能處理器已連接');
+                } else if (window.googleAIProcessor) {
                     this.processors.ai = window.googleAIProcessor;
-                    console.log('🤖 AI處理器已連接');
+                    console.log('🤖 AI處理器已連接（備用）');
                 }
             
             if (window.ledgerBoxProcessor) {
@@ -292,12 +295,32 @@ class UnifiedDocumentProcessor {
      * 數據標準化 - 統一所有文檔類型的數據格式
      */
     standardizeData(aiResult, documentType, fileId) {
+        // 處理不同處理器的返回格式
+        let extractedData = null;
+        let processorInfo = '';
+        
+        if (aiResult.data) {
+            // Google智能處理器格式 (Document AI, Vision AI等)
+            extractedData = aiResult.data;
+            processorInfo = aiResult.processor || aiResult.engine || 'google-ai';
+        } else if (aiResult.extractedFields) {
+            // 舊版Gemini處理器格式
+            extractedData = aiResult.extractedFields;
+            processorInfo = 'gemini-ai';
+        } else {
+            // 直接數據格式
+            extractedData = aiResult;
+            processorInfo = 'unknown';
+        }
+        
         const baseData = {
             id: fileId,
             documentType: documentType,
-            fileName: aiResult.fileName || 'unknown',
+            fileName: aiResult.fileName || extractedData.fileName || 'unknown',
             processedAt: new Date().toISOString(),
-            aiProcessed: aiResult.aiProcessed || false,
+            aiProcessed: true,
+            processor: processorInfo,
+            processingTime: aiResult.processingTime || aiResult.totalTime || 0,
             version: this.version
         };
         
@@ -306,53 +329,53 @@ class UnifiedDocumentProcessor {
             case 'receipt':
                 return {
                     ...baseData,
-                    receiptNumber: aiResult.extractedFields?.receiptNumber || `RCP-${Date.now()}`,
-                    date: aiResult.extractedFields?.date || new Date().toISOString().split('T')[0],
-                    merchant: aiResult.extractedFields?.merchant || 'Unknown Merchant',
-                    totalAmount: aiResult.extractedFields?.totalAmount || 0,
-                    taxAmount: aiResult.extractedFields?.taxAmount || 0,
-                    currency: aiResult.extractedFields?.currency || 'HKD',
-                    paymentMethod: aiResult.extractedFields?.paymentMethod || 'Unknown',
-                    items: aiResult.extractedFields?.items || []
+                    receiptNumber: extractedData?.receiptNumber || extractedData?.invoice_number || `RCP-${Date.now()}`,
+                    date: extractedData?.date || extractedData?.invoice_date || new Date().toISOString().split('T')[0],
+                    merchant: extractedData?.merchant || extractedData?.supplier || 'Unknown Merchant',
+                    totalAmount: extractedData?.totalAmount || extractedData?.total || 0,
+                    taxAmount: extractedData?.taxAmount || extractedData?.tax || 0,
+                    currency: extractedData?.currency || 'HKD',
+                    paymentMethod: extractedData?.paymentMethod || 'Unknown',
+                    items: extractedData?.items || extractedData?.line_items || []
                 };
                 
             case 'invoice':
                 return {
                     ...baseData,
-                    invoiceNumber: aiResult.extractedFields?.invoiceNumber || `INV-${Date.now()}`,
-                    issueDate: aiResult.extractedFields?.issueDate || new Date().toISOString().split('T')[0],
-                    dueDate: aiResult.extractedFields?.dueDate || null,
-                    vendor: aiResult.extractedFields?.vendor || 'Unknown Vendor',
-                    customer: aiResult.extractedFields?.customer || 'Unknown Customer',
-                    totalAmount: aiResult.extractedFields?.totalAmount || 0,
-                    taxAmount: aiResult.extractedFields?.taxAmount || 0,
-                    currency: aiResult.extractedFields?.currency || 'HKD',
-                    lineItems: aiResult.extractedFields?.lineItems || []
+                    invoiceNumber: extractedData?.invoiceNumber || extractedData?.invoice_number || `INV-${Date.now()}`,
+                    issueDate: extractedData?.issueDate || extractedData?.date || new Date().toISOString().split('T')[0],
+                    dueDate: extractedData?.dueDate || extractedData?.due_date || null,
+                    vendor: extractedData?.vendor || extractedData?.supplier || 'Unknown Vendor',
+                    customer: extractedData?.customer || 'Unknown Customer',
+                    totalAmount: extractedData?.totalAmount || extractedData?.total || 0,
+                    taxAmount: extractedData?.taxAmount || extractedData?.tax || 0,
+                    currency: extractedData?.currency || 'HKD',
+                    lineItems: extractedData?.lineItems || extractedData?.items || []
                 };
                 
             case 'bank-statement':
                 return {
                     ...baseData,
-                    accountInfo: aiResult.extractedFields?.accountInfo || {
+                    accountInfo: extractedData?.accountInfo || {
                         accountHolder: 'Unknown',
-                        accountNumber: 'Unknown',
+                        accountNumber: extractedData?.account_number || 'Unknown',
                         bankCode: 'Unknown',
                         branch: 'Unknown'
                     },
-                    statementPeriod: aiResult.extractedFields?.statementPeriod || {
-                        startDate: 'Unknown',
-                        endDate: 'Unknown'
+                    statementPeriod: extractedData?.statementPeriod || {
+                        startDate: extractedData?.statement_date || 'Unknown',
+                        endDate: extractedData?.statement_date || 'Unknown'
                     },
-                    financialPosition: aiResult.extractedFields?.financialPosition || {
+                    financialPosition: extractedData?.financialPosition || {
                         deposits: 0,
                         personalLoans: 0,
                         creditCards: 0,
                         netPosition: 0
                     },
-                    transactions: aiResult.extractedFields?.transactions || [],
-                    reconciliation: aiResult.extractedFields?.reconciliation || {
+                    transactions: extractedData?.transactions || [],
+                    reconciliation: extractedData?.reconciliation || {
                         reconciledTransactions: 0,
-                        totalTransactions: 0,
+                        totalTransactions: extractedData?.transactions?.length || 0,
                         completionPercentage: 0
                     }
                 };
@@ -360,10 +383,10 @@ class UnifiedDocumentProcessor {
             default: // general
                 return {
                     ...baseData,
-                    title: aiResult.extractedFields?.title || baseData.fileName,
-                    content: aiResult.extractedFields?.content || 'Document processed successfully',
-                    keyInformation: aiResult.extractedFields?.keyInformation || [],
-                    entities: aiResult.extractedFields?.entities || {}
+                    title: extractedData?.title || baseData.fileName,
+                    content: extractedData?.content || extractedData?.text || 'Document processed successfully',
+                    keyInformation: extractedData?.keyInformation || extractedData?.extracted_fields || [],
+                    entities: extractedData?.entities || extractedData?.annotations || {}
                 };
         }
     }
