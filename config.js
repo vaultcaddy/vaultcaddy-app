@@ -26,6 +26,18 @@ class VaultCaddyConfig {
                     translation: 'https://translation.googleapis.com/language/translate/v2'
                 }
             },
+            documentAI: {
+                // Google Document AI 配置 (更穩定，無地理限制)
+                apiKey: this.getGoogleApiKey(),
+                projectId: 'vaultcaddy-production',
+                location: 'us', // 或 'eu'
+                endpoint: 'https://documentai.googleapis.com/v1',
+                processors: {
+                    general: 'projects/vaultcaddy-production/locations/us/processors/general',
+                    invoice: 'projects/vaultcaddy-production/locations/us/processors/invoice',
+                    receipt: 'projects/vaultcaddy-production/locations/us/processors/receipt'
+                }
+            },
             googleAI: {
                 // Google Gemini API 配置
                 apiKey: this.getGoogleApiKey(),

@@ -423,6 +423,9 @@
     <!-- 載入必要的腳本 -->
     <script src="config.js"></script>
     <script src="google-ai-integration.js"></script>
+    <script src="google-document-ai.js"></script>
+    <script src="google-vision-ai.js"></script>
+    <script src="google-smart-processor.js"></script>
     <script src="google-cloud-storage.js"></script>
     
     <script>
@@ -612,24 +615,46 @@
         
         async function processWithGoogleAI(file) {
             try {
-                if (!window.googleAIProcessor) {
-                    throw new Error('Google AI 處理器未載入');
+                // 優先使用智能處理器
+                if (window.googleSmartProcessor) {
+                    log('🧠 使用Google智能處理器...', 'info');
+                    
+                    // 確定文檔類型
+                    const documentType = determineDocumentType(file);
+                    log(`📋 文檔類型: ${documentType}`, 'info');
+                    
+                    // 顯示處理器狀態
+                    const status = window.googleSmartProcessor.getProcessorStatus();
+                    log(`📊 處理器狀態: ${JSON.stringify(status, null, 2)}`, 'info');
+                    
+                    const result = await window.googleSmartProcessor.processDocumentOptimized(file, documentType);
+                    
+                    if (!result.success) {
+                        throw new Error(result.error || 'AI 處理失敗');
+                    }
+                    
+                    log(`✅ ${result.processor} 處理成功，耗時: ${result.totalTime}ms`, 'success');
+                    return result;
+                    
+                } else if (window.googleAIProcessor) {
+                    // 備用：使用原始Gemini處理器
+                    log('🤖 使用Gemini AI處理器...', 'info');
+                    
+                    const documentType = determineDocumentType(file);
+                    log(`📋 文檔類型: ${documentType}`, 'info');
+                    
+                    const result = await window.googleAIProcessor.processDocument(file, documentType);
+                    
+                    if (!result.success) {
+                        throw new Error(result.error || 'AI 處理失敗');
+                    }
+                    
+                    log(`✅ Gemini AI 分析完成`, 'success');
+                    return result;
+                    
+                } else {
+                    throw new Error('沒有可用的Google AI處理器');
                 }
-                
-                log('🔄 正在分析文檔內容和結構...', 'info');
-                
-                // 確定文檔類型
-                const documentType = determineDocumentType(file);
-                log(`📋 文檔類型: ${documentType}`, 'info');
-                
-                const result = await window.googleAIProcessor.processDocument(file, documentType);
-                
-                if (!result.success) {
-                    throw new Error(result.error || 'AI 處理失敗');
-                }
-                
-                log(`✅ AI 分析完成，置信度: ${(result.confidence * 100).toFixed(1)}%`, 'success');
-                return result;
                 
             } catch (error) {
                 log(`❌ Google AI 處理失敗: ${error.message}`, 'error');
