@@ -40,6 +40,16 @@ class VaultCaddyConfig {
                     'text/plain'
                 ]
             },
+            googleCloud: {
+                // Google Cloud Storage 配置
+                apiKey: this.getGoogleCloudApiKey(),
+                projectId: 'vaultcaddy-production',
+                bucketName: 'vaultcaddy-documents',
+                endpoints: {
+                    storage: 'https://storage.googleapis.com/storage/v1',
+                    upload: 'https://storage.googleapis.com/upload/storage/v1'
+                }
+            },
             stripe: {
                 publishableKey: this.isProduction ? 
                     'pk_live_your_live_key' : 
@@ -105,6 +115,27 @@ class VaultCaddyConfig {
         }
         
         return null;
+    }
+    
+    /**
+     * 獲取 Google Cloud API Key
+     */
+    getGoogleCloudApiKey() {
+        if (this.isProduction) {
+            // 生產環境使用相同的API Key（Google Cloud和AI共用）
+            return this.getSecureApiKey();
+        } else {
+            // 開發環境從localStorage獲取
+            const devKey = localStorage.getItem('google_cloud_api_key') || 
+                          localStorage.getItem('google_api_key');
+            
+            if (!devKey) {
+                console.warn('⚠️ 開發環境缺少 Google Cloud API Key');
+                console.info('💡 請在瀏覽器控制台中設置：localStorage.setItem("google_cloud_api_key", "your-api-key")');
+            }
+            
+            return devKey;
+        }
     }
     
     /**

@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VaultCaddy AI 文檔處理演示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .content {
+            padding: 2rem;
+        }
+        
+        .upload-area {
+            border: 3px dashed #e5e7eb;
+            border-radius: 12px;
+            padding: 3rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .upload-area:hover {
+            border-color: #4f46e5;
+            background-color: #f8fafc;
+        }
+        
+        .upload-area.dragover {
+            border-color: #4f46e5;
+            background-color: #eef2ff;
+        }
+        
+        .upload-icon {
+            font-size: 3rem;
+            color: #9ca3af;
+            margin-bottom: 1rem;
+        }
+        
+        .upload-text {
+            font-size: 1.2rem;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+        
+        .upload-hint {
+            color: #6b7280;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .progress-container {
+            margin: 2rem 0;
+            display: none;
+        }
+        
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+        }
+        
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            position: relative;
+        }
+        
+        .step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 60%;
+            right: -40%;
+            height: 2px;
+            background: #e5e7eb;
+            z-index: 1;
+        }
+        
+        .step.active:not(:last-child)::after {
+            background: #4f46e5;
+        }
+        
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e5e7eb;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .step.active .step-number {
+            background: #4f46e5;
+            color: white;
+        }
+        
+        .step.completed .step-number {
+            background: #10b981;
+            color: white;
+        }
+        
+        .step-label {
+            font-size: 0.9rem;
+            color: #6b7280;
+            text-align: center;
+        }
+        
+        .step.active .step-label {
+            color: #4f46e5;
+            font-weight: 600;
+        }
+        
+        .log-container {
+            background: #1f2937;
+            color: #f3f4f6;
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 2rem;
+        }
+        
+        .log-entry {
+            margin-bottom: 0.5rem;
+            padding: 0.25rem 0;
+        }
+        
+        .log-entry.success { color: #10b981; }
+        .log-entry.error { color: #ef4444; }
+        .log-entry.warning { color: #f59e0b; }
+        .log-entry.info { color: #3b82f6; }
+        
+        .results-container {
+            display: none;
+            margin-top: 2rem;
+        }
+        
+        .result-card {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .result-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 1rem;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .data-table th {
+            background: #f3f4f6;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .btn {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+        }
+        
+        .btn:hover {
+            background: #4338ca;
+        }
+        
+        .btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 VaultCaddy AI 文檔處理</h1>
+            <p>使用Google Gemini AI智能提取文檔數據</p>
+        </div>
+        
+        <div class="content">
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📄</div>
+                <div class="upload-text">拖放文件到此處或點擊上傳</div>
+                <div class="upload-hint">支援 PDF、JPG、PNG 格式 (最大 20MB)</div>
+                <input type="file" id="fileInput" class="file-input" accept=".pdf,.jpg,.jpeg,.png" multiple>
+            </div>
+            
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-steps">
+                    <div class="step" id="step1">
+                        <div class="step-number">1</div>
+                        <div class="step-label">文件上傳</div>
+                    </div>
+                    <div class="step" id="step2">
+                        <div class="step-number">2</div>
+                        <div class="step-label">AI分析</div>
+                    </div>
+                    <div class="step" id="step3">
+                        <div class="step-number">3</div>
+                        <div class="step-label">數據提取</div>
+                    </div>
+                    <div class="step" id="step4">
+                        <div class="step-number">4</div>
+                        <div class="step-label">雲端存儲</div>
+                    </div>
+                </div>
+                
+                <div class="log-container" id="logContainer">
+                    <div class="log-entry info">等待文件上傳...</div>
+                </div>
+            </div>
+            
+            <div class="results-container" id="resultsContainer">
+                <div class="result-card">
+                    <div class="result-title">📊 提取的數據</div>
+                    <div id="extractedData"></div>
+                </div>
+                
+                <div class="result-card">
+                    <div class="result-title">☁️ 雲端存儲狀態</div>
+                    <div id="cloudStatus"></div>
+                </div>
+                
+                <button class="btn" id="downloadBtn" style="display: none;">
+                    📥 下載處理結果
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 載入必要的腳本 -->
+    <script src="config.js"></script>
+    <script src="google-ai-integration.js"></script>
+    
+    <script>
+        let currentFile = null;
+        let processingResults = null;
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', async () => {
+            log('🚀 VaultCaddy AI 文檔處理器初始化中...', 'info');
+            
+            try {
+                // 等待處理器載入
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                if (window.googleAIProcessor) {
+                    log('✅ Google AI 處理器已載入', 'success');
+                } else {
+                    log('❌ Google AI 處理器載入失敗', 'error');
+                    return;
+                }
+                
+                setupEventListeners();
+                log('✅ 初始化完成，準備處理文檔', 'success');
+                
+            } catch (error) {
+                log(`❌ 初始化失敗: ${error.message}`, 'error');
+            }
+        });
+        
+        function setupEventListeners() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+            
+            // 點擊上傳
+            uploadArea.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            // 文件選擇
+            fileInput.addEventListener('change', handleFileSelect);
+            
+            // 拖拽上傳
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+            
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                const files = Array.from(e.dataTransfer.files);
+                if (files.length > 0) {
+                    handleFiles(files);
+                }
+            });
+        }
+        
+        function handleFileSelect(event) {
+            const files = Array.from(event.target.files);
+            if (files.length > 0) {
+                handleFiles(files);
+            }
+        }
+        
+        async function handleFiles(files) {
+            if (files.length === 0) return;
+            
+            currentFile = files[0];
+            log(`📁 選擇文件: ${currentFile.name} (${(currentFile.size/1024/1024).toFixed(2)} MB)`, 'info');
+            
+            // 顯示進度容器
+            document.getElementById('progressContainer').style.display = 'block';
+            
+            try {
+                // 步驟1: 文件上傳
+                updateStep(1, 'active');
+                log('📤 開始處理文件...', 'info');
+                await new Promise(resolve => setTimeout(resolve, 500));
+                updateStep(1, 'completed');
+                
+                // 步驟2: AI分析
+                updateStep(2, 'active');
+                log('🤖 使用Google Gemini AI分析文檔...', 'info');
+                
+                const analysisResult = await processWithGoogleAI(currentFile);
+                updateStep(2, 'completed');
+                
+                // 步驟3: 數據提取
+                updateStep(3, 'active');
+                log('📊 提取結構化數據...', 'info');
+                
+                const extractedData = parseAIResponse(analysisResult);
+                updateStep(3, 'completed');
+                
+                // 步驟4: 雲端存儲 (模擬)
+                updateStep(4, 'active');
+                log('☁️ 保存到Google Cloud...', 'info');
+                
+                const cloudResult = await saveToCloud(extractedData);
+                updateStep(4, 'completed');
+                
+                // 顯示結果
+                displayResults(extractedData, cloudResult);
+                log('✅ 處理完成！', 'success');
+                
+            } catch (error) {
+                log(`❌ 處理失敗: ${error.message}`, 'error');
+                console.error('處理錯誤:', error);
+            }
+        }
+        
+        async function processWithGoogleAI(file) {
+            try {
+                if (!window.googleAIProcessor) {
+                    throw new Error('Google AI 處理器未載入');
+                }
+                
+                log('🔄 正在分析文檔內容...', 'info');
+                const result = await window.googleAIProcessor.processDocument(file, 'receipt');
+                
+                if (!result.success) {
+                    throw new Error(result.error || '處理失敗');
+                }
+                
+                log(`✅ AI分析完成，置信度: ${result.confidence || 'N/A'}`, 'success');
+                return result;
+                
+            } catch (error) {
+                log(`❌ Google AI 處理失敗: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+        
+        function parseAIResponse(aiResult) {
+            try {
+                // 解析AI返回的結構化數據
+                const data = aiResult.extractedData || {};
+                
+                log('📋 解析提取的數據...', 'info');
+                
+                // 標準化數據格式
+                const standardizedData = {
+                    documentType: data.documentType || 'receipt',
+                    date: data.date || new Date().toISOString().split('T')[0],
+                    merchant: data.merchant || data.vendor || '未知商家',
+                    amount: data.amount || data.total || '0.00',
+                    currency: data.currency || 'HKD',
+                    items: data.items || [],
+                    rawText: aiResult.text || '',
+                    confidence: aiResult.confidence || 0,
+                    processingTime: aiResult.processingTime || 0
+                };
+                
+                log(`📊 數據解析完成: ${Object.keys(standardizedData).length} 個字段`, 'success');
+                return standardizedData;
+                
+            } catch (error) {
+                log(`❌ 數據解析失敗: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+        
+        async function saveToCloud(data) {
+            try {
+                log('☁️ 模擬保存到Google Cloud Storage...', 'info');
+                
+                // 模擬雲端存儲
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                const cloudData = {
+                    id: `doc_${Date.now()}`,
+                    timestamp: new Date().toISOString(),
+                    data: data,
+                    status: 'saved',
+                    cloudPath: `gs://vaultcaddy-storage/documents/${Date.now()}.json`
+                };
+                
+                // 保存到localStorage作為演示
+                const existingData = JSON.parse(localStorage.getItem('vaultcaddy_cloud_data') || '[]');
+                existingData.push(cloudData);
+                localStorage.setItem('vaultcaddy_cloud_data', JSON.stringify(existingData));
+                
+                log(`✅ 數據已保存到雲端: ${cloudData.id}`, 'success');
+                return cloudData;
+                
+            } catch (error) {
+                log(`❌ 雲端保存失敗: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+        
+        function displayResults(extractedData, cloudResult) {
+            const resultsContainer = document.getElementById('resultsContainer');
+            const extractedDataDiv = document.getElementById('extractedData');
+            const cloudStatusDiv = document.getElementById('cloudStatus');
+            
+            // 顯示提取的數據
+            extractedDataDiv.innerHTML = `
+                <table class="data-table">
+                    <tr><th>字段</th><th>值</th></tr>
+                    <tr><td>文檔類型</td><td>${extractedData.documentType}</td></tr>
+                    <tr><td>日期</td><td>${extractedData.date}</td></tr>
+                    <tr><td>商家</td><td>${extractedData.merchant}</td></tr>
+                    <tr><td>金額</td><td>${extractedData.amount} ${extractedData.currency}</td></tr>
+                    <tr><td>置信度</td><td>${(extractedData.confidence * 100).toFixed(1)}%</td></tr>
+                    <tr><td>處理時間</td><td>${extractedData.processingTime}ms</td></tr>
+                </table>
+            `;
+            
+            // 顯示雲端狀態
+            cloudStatusDiv.innerHTML = `
+                <p><strong>文檔ID:</strong> ${cloudResult.id}</p>
+                <p><strong>保存時間:</strong> ${new Date(cloudResult.timestamp).toLocaleString()}</p>
+                <p><strong>雲端路徑:</strong> ${cloudResult.cloudPath}</p>
+                <p><strong>狀態:</strong> <span style="color: #10b981;">✅ 已保存</span></p>
+            `;
+            
+            resultsContainer.style.display = 'block';
+            document.getElementById('downloadBtn').style.display = 'inline-block';
+            
+            // 保存結果供下載
+            processingResults = {
+                extracted: extractedData,
+                cloud: cloudResult
+            };
+        }
+        
+        function updateStep(stepNumber, status) {
+            const step = document.getElementById(`step${stepNumber}`);
+            step.className = `step ${status}`;
+        }
+        
+        function log(message, type = 'info') {
+            const logContainer = document.getElementById('logContainer');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+        
+        // 下載功能
+        document.addEventListener('click', (e) => {
+            if (e.target.id === 'downloadBtn' && processingResults) {
+                const dataStr = JSON.stringify(processingResults, null, 2);
+                const dataBlob = new Blob([dataStr], {type: 'application/json'});
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `vaultcaddy_result_${Date.now()}.json`;
+                link.click();
+                URL.revokeObjectURL(url);
+            }
+        });
+    </script>
+</body>
+</html>
