@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VaultCaddy 增強版演示</title>
+    <title>VaultCaddy AI 文檔處理</title>
     <style>
         * {
             margin: 0;
@@ -19,7 +19,7 @@
         }
         
         .container {
-            max-width: 1200px;
+            max-width: 1000px;
             margin: 0 auto;
             background: white;
             border-radius: 20px;
@@ -40,7 +40,7 @@
         }
         
         .header p {
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             opacity: 0.9;
         }
         
@@ -48,109 +48,77 @@
             padding: 2rem;
         }
         
-        .feature-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin-bottom: 3rem;
-        }
-        
-        .feature-card {
-            background: #f8fafc;
+        .upload-area {
+            border: 3px dashed #e5e7eb;
             border-radius: 12px;
-            padding: 1.5rem;
-            border: 2px solid #e2e8f0;
-            transition: all 0.3s ease;
-        }
-        
-        .feature-card:hover {
-            border-color: #4f46e5;
-            transform: translateY(-2px);
-        }
-        
-        .feature-card h3 {
-            color: #1e293b;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .feature-card .icon {
-            font-size: 1.5rem;
-        }
-        
-        .upload-section {
-            background: #f1f5f9;
-            border-radius: 16px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-        }
-        
-        .upload-zone {
-            border: 3px dashed #cbd5e1;
-            border-radius: 12px;
-            padding: 3rem;
+            padding: 4rem 2rem;
             text-align: center;
+            margin-bottom: 2rem;
             transition: all 0.3s ease;
             cursor: pointer;
+            background: #fafafa;
         }
         
-        .upload-zone:hover {
+        .upload-area:hover {
             border-color: #4f46e5;
-            background: #f8fafc;
+            background-color: #f8fafc;
         }
         
-        .upload-zone.dragover {
+        .upload-area.dragover {
             border-color: #4f46e5;
-            background: #eef2ff;
+            background-color: #eef2ff;
+            transform: scale(1.02);
         }
         
         .upload-icon {
-            font-size: 3rem;
-            color: #64748b;
+            font-size: 4rem;
+            color: #9ca3af;
             margin-bottom: 1rem;
         }
         
         .upload-text {
-            font-size: 1.2rem;
-            color: #475569;
-            margin-bottom: 1rem;
+            font-size: 1.3rem;
+            color: #374151;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
         }
         
         .upload-hint {
-            color: #64748b;
-            font-size: 0.9rem;
-        }
-        
-        .browse-btn {
-            background: #4f46e5;
-            color: white;
-            border: none;
-            padding: 0.75rem 2rem;
-            border-radius: 8px;
+            color: #6b7280;
             font-size: 1rem;
-            cursor: pointer;
-            margin-top: 1rem;
-            transition: background 0.3s ease;
         }
         
-        .browse-btn:hover {
-            background: #4338ca;
-        }
-        
-        .processing-section {
+        .file-input {
             display: none;
-            background: #fef3c7;
-            border-radius: 12px;
-            padding: 2rem;
-            margin-bottom: 2rem;
         }
         
-        .processing-steps {
+        .progress-container {
+            margin: 2rem 0;
+            display: none;
+        }
+        
+        .progress-steps {
             display: flex;
             justify-content: space-between;
             margin-bottom: 2rem;
+            position: relative;
+        }
+        
+        .progress-line {
+            position: absolute;
+            top: 25px;
+            left: 12.5%;
+            right: 12.5%;
+            height: 3px;
+            background: #e5e7eb;
+            z-index: 1;
+        }
+        
+        .progress-line-active {
+            height: 3px;
+            background: #4f46e5;
+            transition: width 0.5s ease;
+            width: 0%;
         }
         
         .step {
@@ -159,627 +127,718 @@
             align-items: center;
             flex: 1;
             position: relative;
+            z-index: 2;
         }
         
-        .step:not(:last-child)::after {
-            content: '';
-            position: absolute;
-            top: 20px;
-            right: -50%;
-            width: 100%;
-            height: 2px;
-            background: #e5e7eb;
-        }
-        
-        .step.active::after {
-            background: #4f46e5;
-        }
-        
-        .step-circle {
-            width: 40px;
-            height: 40px;
+        .step-number {
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             background: #e5e7eb;
+            color: #6b7280;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 0.5rem;
             font-weight: bold;
-            color: #6b7280;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
         }
         
-        .step.active .step-circle {
+        .step.active .step-number {
             background: #4f46e5;
             color: white;
+            transform: scale(1.1);
         }
         
-        .step.completed .step-circle {
+        .step.completed .step-number {
             background: #10b981;
             color: white;
         }
         
-        .results-section {
-            display: none;
-            background: #f0fdf4;
-            border-radius: 12px;
-            padding: 2rem;
-        }
-        
-        .results-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-        }
-        
-        .result-card {
-            background: white;
-            border-radius: 8px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .result-card h4 {
-            color: #1e293b;
-            margin-bottom: 1rem;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-        }
-        
-        .stat-item {
+        .step-label {
+            font-size: 1rem;
+            color: #6b7280;
             text-align: center;
-            padding: 1rem;
-            background: #f8fafc;
-            border-radius: 6px;
+            font-weight: 500;
         }
         
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: bold;
+        .step.active .step-label {
             color: #4f46e5;
+            font-weight: 600;
         }
         
-        .stat-label {
-            font-size: 0.8rem;
-            color: #64748b;
-            margin-top: 0.25rem;
+        .step.completed .step-label {
+            color: #10b981;
+            font-weight: 600;
         }
         
-        .export-buttons {
+        .log-container {
+            background: #1f2937;
+            color: #f3f4f6;
+            border-radius: 12px;
+            padding: 1.5rem;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+            max-height: 350px;
+            overflow-y: auto;
+            margin-bottom: 2rem;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .log-entry {
+            margin-bottom: 0.5rem;
+            padding: 0.25rem 0;
             display: flex;
-            gap: 1rem;
+            align-items: center;
+        }
+        
+        .log-entry::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 0.75rem;
+            flex-shrink: 0;
+        }
+        
+        .log-entry.success::before { background: #10b981; }
+        .log-entry.error::before { background: #ef4444; }
+        .log-entry.warning::before { background: #f59e0b; }
+        .log-entry.info::before { background: #3b82f6; }
+        
+        .log-entry.success { color: #6ee7b7; }
+        .log-entry.error { color: #fca5a5; }
+        .log-entry.warning { color: #fcd34d; }
+        .log-entry.info { color: #93c5fd; }
+        
+        .results-container {
+            display: none;
             margin-top: 2rem;
         }
         
-        .export-btn {
-            background: #059669;
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9rem;
+        .result-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
         
-        .export-btn:hover {
-            background: #047857;
-        }
-        
-        .log-section {
-            background: #1e293b;
-            color: #e2e8f0;
-            border-radius: 8px;
-            padding: 1rem;
-            font-family: 'Courier New', monospace;
-            font-size: 0.8rem;
-            max-height: 200px;
-            overflow-y: auto;
-            margin-top: 1rem;
-        }
-        
-        .engine-selector {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1rem;
-            flex-wrap: wrap;
-        }
-        
-        .engine-option {
+        .result-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 1.5rem;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 1rem;
+        }
+        
+        .result-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: #4f46e5;
+            margin-right: 0.75rem;
+            border-radius: 2px;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
             background: white;
-            border: 2px solid #e2e8f0;
             border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .data-table th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #475569;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .data-table td {
+            color: #334155;
+        }
+        
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 10px;
             cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
             transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(79, 70, 229, 0.25);
         }
         
-        .engine-option:hover {
-            border-color: #4f46e5;
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(79, 70, 229, 0.35);
         }
         
-        .engine-option.selected {
-            border-color: #4f46e5;
-            background: #eef2ff;
+        .btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .status-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .status-processing {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+        
+        .status-error {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #4f46e5;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🚀 VaultCaddy 增強版</h1>
-            <p>智能OCR + 數據分析 + 多格式導出</p>
+            <h1>🤖 VaultCaddy AI</h1>
+            <p>智能文檔處理 · 雲端存儲 · 數據提取</p>
         </div>
         
         <div class="content">
-            <!-- 功能介紹 -->
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <h3><span class="icon">🧠</span>智能OCR選擇</h3>
-                    <p>自動選擇最適合的OCR引擎（Google AI 或 Tesseract.js），根據文檔類型、文件大小和處理需求智能切換。</p>
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📄</div>
+                <div class="upload-text">拖放文件到此處或點擊上傳</div>
+                <div class="upload-hint">支援 PDF、JPG、PNG 格式 (最大 20MB)</div>
+                <input type="file" id="fileInput" class="file-input" accept=".pdf,.jpg,.jpeg,.png" multiple>
+            </div>
+            
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-steps">
+                    <div class="progress-line">
+                        <div class="progress-line-active" id="progressLineActive"></div>
+                    </div>
+                    <div class="step" id="step1">
+                        <div class="step-number">1</div>
+                        <div class="step-label">文件上傳</div>
+                    </div>
+                    <div class="step" id="step2">
+                        <div class="step-number">2</div>
+                        <div class="step-label">AI 分析</div>
+                    </div>
+                    <div class="step" id="step3">
+                        <div class="step-number">3</div>
+                        <div class="step-label">數據提取</div>
+                    </div>
+                    <div class="step" id="step4">
+                        <div class="step-number">4</div>
+                        <div class="step-label">雲端存儲</div>
+                    </div>
                 </div>
                 
-                <div class="feature-card">
-                    <h3><span class="icon">📊</span>高級數據分析</h3>
-                    <p>類似pandas的數據處理功能，提供統計分析、趨勢識別和智能洞察，幫助您更好地理解財務數據。</p>
-                </div>
-                
-                <div class="feature-card">
-                    <h3><span class="icon">🔒</span>隱私保護模式</h3>
-                    <p>支援完全離線處理，使用Tesseract.js在本地處理敏感文檔，無需上傳到雲端服務。</p>
-                </div>
-                
-                <div class="feature-card">
-                    <h3><span class="icon">📈</span>多格式導出</h3>
-                    <p>支援CSV、Excel、JSON等多種格式導出，並提供詳細的數據分析報告和可視化圖表。</p>
+                <div class="log-container" id="logContainer">
+                    <div class="log-entry info">🚀 VaultCaddy AI 已準備就緒，等待文件上傳...</div>
                 </div>
             </div>
             
-            <!-- OCR引擎選擇 -->
-            <div class="upload-section">
-                <h3 style="margin-bottom: 1rem;">選擇處理模式</h3>
-                <div class="engine-selector">
-                    <div class="engine-option selected" data-mode="balanced">
-                        <input type="radio" name="ocrMode" value="balanced" checked>
-                        <span>🎯 智能平衡</span>
-                    </div>
-                    <div class="engine-option" data-mode="accuracy">
-                        <input type="radio" name="ocrMode" value="accuracy">
-                        <span>🎯 準確度優先</span>
-                    </div>
-                    <div class="engine-option" data-mode="speed">
-                        <input type="radio" name="ocrMode" value="speed">
-                        <span>⚡ 速度優先</span>
-                    </div>
-                    <div class="engine-option" data-mode="privacy">
-                        <input type="radio" name="ocrMode" value="privacy">
-                        <span>🔒 隱私模式</span>
-                    </div>
-                    <div class="engine-option" data-mode="budget">
-                        <input type="radio" name="ocrMode" value="budget">
-                        <span>💰 預算模式</span>
-                    </div>
+            <div class="results-container" id="resultsContainer">
+                <div class="result-card">
+                    <div class="result-title">📊 提取的數據</div>
+                    <div id="extractedData"></div>
                 </div>
                 
-                <!-- 文件上傳區 -->
-                <div class="upload-zone" id="uploadZone">
-                    <div class="upload-icon">📄</div>
-                    <div class="upload-text">拖放文件到此處或點擊上傳</div>
-                    <div class="upload-hint">支援 PDF、JPG、PNG 格式 (最大 20MB)</div>
-                    <button class="browse-btn" onclick="document.getElementById('fileInput').click()">
-                        瀏覽文件
+                <div class="result-card">
+                    <div class="result-title">☁️ 雲端存儲狀態</div>
+                    <div id="cloudStatus"></div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 2rem;">
+                    <button class="btn" id="downloadBtn" style="display: none;">
+                        📥 下載處理結果
                     </button>
-                    <input type="file" id="fileInput" multiple accept=".pdf,.jpg,.jpeg,.png" style="display: none;">
-                </div>
-            </div>
-            
-            <!-- 處理進度 -->
-            <div class="processing-section" id="processingSection">
-                <h3 style="margin-bottom: 1rem;">處理進度</h3>
-                <div class="processing-steps">
-                    <div class="step" data-step="upload">
-                        <div class="step-circle">1</div>
-                        <span>文件上傳</span>
-                    </div>
-                    <div class="step" data-step="ocr">
-                        <div class="step-circle">2</div>
-                        <span>OCR識別</span>
-                    </div>
-                    <div class="step" data-step="analysis">
-                        <div class="step-circle">3</div>
-                        <span>數據分析</span>
-                    </div>
-                    <div class="step" data-step="complete">
-                        <div class="step-circle">4</div>
-                        <span>處理完成</span>
-                    </div>
-                </div>
-                
-                <div class="log-section" id="logSection">
-                    <div>等待文件上傳...</div>
-                </div>
-            </div>
-            
-            <!-- 處理結果 -->
-            <div class="results-section" id="resultsSection">
-                <h3 style="margin-bottom: 1rem;">處理結果</h3>
-                <div class="results-grid">
-                    <div class="result-card">
-                        <h4>📊 處理統計</h4>
-                        <div class="stats-grid" id="statsGrid">
-                            <!-- 動態填充 -->
-                        </div>
-                    </div>
-                    
-                    <div class="result-card">
-                        <h4>🎯 質量評分</h4>
-                        <div id="qualityInfo">
-                            <!-- 動態填充 -->
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="export-buttons">
-                    <button class="export-btn" onclick="exportData('csv')">📄 導出 CSV</button>
-                    <button class="export-btn" onclick="exportData('excel')">📊 導出 Excel</button>
-                    <button class="export-btn" onclick="exportData('json')">🔧 導出 JSON</button>
-                    <button class="export-btn" onclick="viewInsights()">💡 查看洞察</button>
+                    <button class="btn" id="processAnotherBtn" style="display: none; margin-left: 1rem;">
+                        🔄 處理另一個文件
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 載入必要的庫 -->
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    
-    <!-- 載入處理器 -->
+    <!-- 載入必要的腳本 -->
     <script src="config.js"></script>
     <script src="google-ai-integration.js"></script>
-    <script src="tesseract-ocr-processor.js"></script>
-    <script src="data-processor.js"></script>
-    <script src="intelligent-ocr-processor.js"></script>
-    <script src="unified-document-processor.js"></script>
+    <script src="google-cloud-storage.js"></script>
     
     <script>
-        let currentResult = null;
-        let processor = null;
+        let currentFile = null;
+        let processingResults = null;
+        let isProcessing = false;
         
         // 初始化
         document.addEventListener('DOMContentLoaded', async () => {
-            log('🚀 VaultCaddy 增強版初始化中...');
+            log('🚀 VaultCaddy AI 初始化中...', 'info');
             
             try {
                 // 等待處理器載入
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                await new Promise(resolve => setTimeout(resolve, 1500));
                 
-                // 調試信息
-                log(`🔍 檢查可用的處理器:`);
-                log(`- window.GoogleAIProcessor: ${typeof window.GoogleAIProcessor}`);
-                log(`- window.googleAIProcessor: ${typeof window.googleAIProcessor}`);
-                log(`- window.UnifiedDocumentProcessor: ${typeof window.UnifiedDocumentProcessor}`);
-                log(`- window.IntelligentOCRProcessor: ${typeof window.IntelligentOCRProcessor}`);
-                
-                if (window.UnifiedDocumentProcessor) {
-                    processor = window.UnifiedDocumentProcessor;
-                    log('✅ 統一處理器已載入');
-                    
-                    // 檢查處理器的子組件
-                    if (processor.processors) {
-                        log(`🔍 處理器子組件狀態:`);
-                        Object.keys(processor.processors).forEach(key => {
-                            log(`- ${key}: ${processor.processors[key] ? '✅' : '❌'}`);
-                        });
-                    }
+                // 檢查Google AI處理器
+                if (window.googleAIProcessor) {
+                    log('✅ Google AI 處理器已載入', 'success');
                 } else {
-                    log('❌ 統一處理器載入失敗');
+                    log('❌ Google AI 處理器載入失敗', 'error');
+                    return;
+                }
+                
+                // 檢查Google Cloud Storage
+                if (window.googleCloudStorage) {
+                    log('✅ Google Cloud Storage 已載入', 'success');
+                } else {
+                    log('⚠️ Google Cloud Storage 未載入，將使用本地存儲', 'warning');
                 }
                 
                 setupEventListeners();
-                log('✅ 初始化完成');
+                log('✅ 系統初始化完成，準備處理文檔', 'success');
                 
             } catch (error) {
-                log(`❌ 初始化失敗: ${error.message}`);
+                log(`❌ 初始化失敗: ${error.message}`, 'error');
                 console.error('初始化錯誤:', error);
             }
         });
         
-        // 設置事件監聽
         function setupEventListeners() {
-            const uploadZone = document.getElementById('uploadZone');
+            const uploadArea = document.getElementById('uploadArea');
             const fileInput = document.getElementById('fileInput');
             
-            // 拖放事件
-            uploadZone.addEventListener('dragover', (e) => {
+            // 點擊上傳
+            uploadArea.addEventListener('click', () => {
+                if (!isProcessing) {
+                    fileInput.click();
+                }
+            });
+            
+            // 文件選擇
+            fileInput.addEventListener('change', handleFileSelect);
+            
+            // 拖拽上傳
+            uploadArea.addEventListener('dragover', (e) => {
                 e.preventDefault();
-                uploadZone.classList.add('dragover');
+                if (!isProcessing) {
+                    uploadArea.classList.add('dragover');
+                }
             });
             
-            uploadZone.addEventListener('dragleave', () => {
-                uploadZone.classList.remove('dragover');
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
             });
             
-            uploadZone.addEventListener('drop', (e) => {
+            uploadArea.addEventListener('drop', (e) => {
                 e.preventDefault();
-                uploadZone.classList.remove('dragover');
-                handleFiles(e.dataTransfer.files);
+                uploadArea.classList.remove('dragover');
+                if (!isProcessing) {
+                    const files = Array.from(e.dataTransfer.files);
+                    if (files.length > 0) {
+                        handleFiles(files);
+                    }
+                }
             });
             
-            // 文件選擇事件
-            fileInput.addEventListener('change', (e) => {
-                handleFiles(e.target.files);
-            });
-            
-            // 引擎選擇事件
-            document.querySelectorAll('.engine-option').forEach(option => {
-                option.addEventListener('click', () => {
-                    document.querySelectorAll('.engine-option').forEach(opt => opt.classList.remove('selected'));
-                    option.classList.add('selected');
-                    option.querySelector('input').checked = true;
-                });
-            });
+            // 按鈕事件
+            document.getElementById('downloadBtn').addEventListener('click', downloadResults);
+            document.getElementById('processAnotherBtn').addEventListener('click', resetForNewFile);
         }
         
-        // 處理文件
+        function handleFileSelect(event) {
+            const files = Array.from(event.target.files);
+            if (files.length > 0) {
+                handleFiles(files);
+            }
+        }
+        
         async function handleFiles(files) {
-            if (files.length === 0) return;
+            if (files.length === 0 || isProcessing) return;
             
-            const file = files[0];
-            log(`📁 選擇文件: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
+            currentFile = files[0];
+            isProcessing = true;
             
-            // 顯示處理區域
-            document.getElementById('processingSection').style.display = 'block';
-            document.getElementById('resultsSection').style.display = 'none';
-            
-            // 獲取處理選項
-            const mode = document.querySelector('input[name="ocrMode"]:checked').value;
-            const options = getProcessingOptions(mode);
-            
-            log(`🎯 處理模式: ${mode}`);
-            log(`⚙️ 處理選項: ${JSON.stringify(options)}`);
-            
-            try {
-                // 步驟1: 上傳
-                updateStep('upload', 'active');
-                await new Promise(resolve => setTimeout(resolve, 500));
-                updateStep('upload', 'completed');
-                
-                // 步驟2: OCR處理
-                updateStep('ocr', 'active');
-                log('🔄 開始OCR處理...');
-                
-                const result = await processor.processFile(file, 'receipt', options);
-                
-                updateStep('ocr', 'completed');
-                
-                // 步驟3: 數據分析
-                updateStep('analysis', 'active');
-                log('📊 進行數據分析...');
-                
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                updateStep('analysis', 'completed');
-                
-                // 步驟4: 完成
-                updateStep('complete', 'active');
-                log('✅ 處理完成!');
-                
-                currentResult = result;
-                displayResults(result);
-                
-                setTimeout(() => {
-                    updateStep('complete', 'completed');
-                    document.getElementById('resultsSection').style.display = 'block';
-                }, 500);
-                
-            } catch (error) {
-                log(`❌ 處理失敗: ${error.message}`);
-                console.error('處理錯誤:', error);
-            }
-        }
-        
-        // 獲取處理選項
-        function getProcessingOptions(mode) {
-            const options = {};
-            
-            switch (mode) {
-                case 'accuracy':
-                    options.qualityPriority = 'accuracy';
-                    break;
-                case 'speed':
-                    options.qualityPriority = 'speed';
-                    break;
-                case 'privacy':
-                    options.privacyMode = true;
-                    options.forceOffline = true;
-                    break;
-                case 'budget':
-                    options.budgetMode = true;
-                    break;
-                case 'balanced':
-                default:
-                    options.qualityPriority = 'balanced';
-                    break;
-            }
-            
-            return options;
-        }
-        
-        // 更新處理步驟
-        function updateStep(stepName, status) {
-            const step = document.querySelector(`[data-step="${stepName}"]`);
-            if (step) {
-                step.className = `step ${status}`;
-            }
-        }
-        
-        // 顯示結果
-        function displayResults(result) {
-            // 顯示統計信息
-            const statsGrid = document.getElementById('statsGrid');
-            statsGrid.innerHTML = `
-                <div class="stat-item">
-                    <div class="stat-value">${result.processingTime}ms</div>
-                    <div class="stat-label">處理時間</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">${result.ocrEngine}</div>
-                    <div class="stat-label">OCR引擎</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">${result.ocrConfidence || 0}%</div>
-                    <div class="stat-label">識別置信度</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">${result.qualityScore || 0}/100</div>
-                    <div class="stat-label">質量評分</div>
-                </div>
-            `;
-            
-            // 顯示質量信息
-            const qualityInfo = document.getElementById('qualityInfo');
-            const qualityScore = result.qualityScore || 0;
-            let qualityText = '未知';
-            let qualityColor = '#6b7280';
-            
-            if (qualityScore >= 80) {
-                qualityText = '優秀';
-                qualityColor = '#10b981';
-            } else if (qualityScore >= 60) {
-                qualityText = '良好';
-                qualityColor = '#f59e0b';
-            } else if (qualityScore >= 40) {
-                qualityText = '一般';
-                qualityColor = '#ef4444';
-            } else {
-                qualityText = '需要改進';
-                qualityColor = '#dc2626';
-            }
-            
-            qualityInfo.innerHTML = `
-                <div style="text-align: center;">
-                    <div style="font-size: 2rem; color: ${qualityColor}; margin-bottom: 0.5rem;">
-                        ${qualityScore}/100
-                    </div>
-                    <div style="color: ${qualityColor}; font-weight: bold;">
-                        ${qualityText}
-                    </div>
-                </div>
-            `;
-            
-            log(`📊 結果統計: 處理時間 ${result.processingTime}ms, 引擎 ${result.ocrEngine}, 質量 ${qualityScore}/100`);
-        }
-        
-        // 導出數據
-        function exportData(format) {
-            if (!currentResult) {
-                alert('沒有可導出的數據');
+            // 驗證文件
+            if (!validateFile(currentFile)) {
+                isProcessing = false;
                 return;
             }
             
-            log(`📤 導出 ${format.toUpperCase()} 格式`);
+            log(`📁 選擇文件: ${currentFile.name} (${(currentFile.size/1024/1024).toFixed(2)} MB)`, 'info');
+            
+            // 顯示進度容器
+            document.getElementById('progressContainer').style.display = 'block';
+            document.getElementById('progressContainer').classList.add('fade-in');
             
             try {
-                let content, filename, mimeType;
+                // 步驟1: 文件上傳
+                await processStep(1, '📤 準備處理文件...', async () => {
+                    await new Promise(resolve => setTimeout(resolve, 800));
+                });
                 
-                switch (format) {
-                    case 'csv':
-                        if (currentResult.processedItems) {
-                            content = convertToCSV(currentResult.processedItems);
-                            filename = 'vaultcaddy_receipt_data.csv';
-                            mimeType = 'text/csv';
-                        } else {
-                            throw new Error('沒有可導出的CSV數據');
-                        }
-                        break;
-                        
-                    case 'json':
-                        content = JSON.stringify(currentResult, null, 2);
-                        filename = 'vaultcaddy_result.json';
-                        mimeType = 'application/json';
-                        break;
-                        
-                    case 'excel':
-                        if (typeof XLSX !== 'undefined' && currentResult.processedItems) {
-                            const ws = XLSX.utils.json_to_sheet(currentResult.processedItems);
-                            const wb = XLSX.utils.book_new();
-                            XLSX.utils.book_append_sheet(wb, ws, "數據");
-                            XLSX.writeFile(wb, 'vaultcaddy_data.xlsx');
-                            log('✅ Excel文件已下載');
-                            return;
-                        } else {
-                            throw new Error('Excel導出不可用');
-                        }
-                        
-                    default:
-                        throw new Error(`不支援的格式: ${format}`);
+                // 步驟2: AI分析
+                await processStep(2, '🤖 使用 Google Gemini AI 分析文檔...', async () => {
+                    const analysisResult = await processWithGoogleAI(currentFile);
+                    return analysisResult;
+                });
+                
+                // 步驟3: 數據提取
+                const extractedData = await processStep(3, '📊 提取結構化數據...', async () => {
+                    const data = parseAIResponse(processingResults.aiResult);
+                    return data;
+                });
+                
+                // 步驟4: 雲端存儲
+                const cloudResult = await processStep(4, '☁️ 保存到 Google Cloud...', async () => {
+                    const result = await saveToCloud(extractedData);
+                    return result;
+                });
+                
+                // 顯示結果
+                displayResults(extractedData, cloudResult);
+                log('🎉 處理完成！所有數據已成功提取並保存到雲端', 'success');
+                
+            } catch (error) {
+                log(`❌ 處理失敗: ${error.message}`, 'error');
+                console.error('處理錯誤:', error);
+            } finally {
+                isProcessing = false;
+            }
+        }
+        
+        function validateFile(file) {
+            // 檢查文件大小
+            const maxSize = 20 * 1024 * 1024; // 20MB
+            if (file.size > maxSize) {
+                log(`❌ 文件過大: ${(file.size/1024/1024).toFixed(2)}MB (最大 20MB)`, 'error');
+                return false;
+            }
+            
+            // 檢查文件類型
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+            if (!allowedTypes.includes(file.type)) {
+                log(`❌ 不支援的文件類型: ${file.type}`, 'error');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        async function processStep(stepNumber, message, processor) {
+            updateStep(stepNumber, 'active');
+            updateProgressLine((stepNumber - 1) * 25);
+            log(message, 'info');
+            
+            try {
+                const result = await processor();
+                updateStep(stepNumber, 'completed');
+                updateProgressLine(stepNumber * 25);
+                
+                if (result) {
+                    processingResults = processingResults || {};
+                    processingResults[`step${stepNumber}`] = result;
+                    
+                    if (stepNumber === 2) processingResults.aiResult = result;
+                    if (stepNumber === 3) processingResults.extractedData = result;
+                    if (stepNumber === 4) processingResults.cloudResult = result;
                 }
                 
-                // 下載文件
-                const blob = new Blob([content], { type: mimeType });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                
-                log(`✅ ${format.toUpperCase()} 文件已下載`);
+                return result;
                 
             } catch (error) {
-                log(`❌ 導出失敗: ${error.message}`);
-                alert(`導出失敗: ${error.message}`);
+                log(`❌ 步驟 ${stepNumber} 失敗: ${error.message}`, 'error');
+                throw error;
             }
         }
         
-        // 轉換為CSV
-        function convertToCSV(data) {
-            if (!data || data.length === 0) return '';
-            
-            const headers = Object.keys(data[0]);
-            const csvContent = [
-                headers.join(','),
-                ...data.map(row => headers.map(header => `"${row[header] || ''}"`).join(','))
-            ].join('\n');
-            
-            return csvContent;
+        async function processWithGoogleAI(file) {
+            try {
+                if (!window.googleAIProcessor) {
+                    throw new Error('Google AI 處理器未載入');
+                }
+                
+                log('🔄 正在分析文檔內容和結構...', 'info');
+                
+                // 確定文檔類型
+                const documentType = determineDocumentType(file);
+                log(`📋 文檔類型: ${documentType}`, 'info');
+                
+                const result = await window.googleAIProcessor.processDocument(file, documentType);
+                
+                if (!result.success) {
+                    throw new Error(result.error || 'AI 處理失敗');
+                }
+                
+                log(`✅ AI 分析完成，置信度: ${(result.confidence * 100).toFixed(1)}%`, 'success');
+                return result;
+                
+            } catch (error) {
+                log(`❌ Google AI 處理失敗: ${error.message}`, 'error');
+                throw error;
+            }
         }
         
-        // 查看洞察
-        function viewInsights() {
-            if (!currentResult || !currentResult.insights) {
-                alert('沒有可用的洞察信息');
-                return;
+        function determineDocumentType(file) {
+            const fileName = file.name.toLowerCase();
+            
+            if (fileName.includes('receipt') || fileName.includes('收據')) {
+                return 'receipt';
+            } else if (fileName.includes('invoice') || fileName.includes('發票')) {
+                return 'invoice';
+            } else if (fileName.includes('statement') || fileName.includes('對帳單')) {
+                return 'bank_statement';
+            } else {
+                return 'general';
+            }
+        }
+        
+        function parseAIResponse(aiResult) {
+            try {
+                log('📋 解析 AI 提取的數據...', 'info');
+                
+                const data = aiResult.extractedData || {};
+                
+                // 標準化數據格式
+                const standardizedData = {
+                    documentType: data.documentType || 'unknown',
+                    date: data.date || new Date().toISOString().split('T')[0],
+                    merchant: data.merchant || data.vendor || data.company || '未知',
+                    amount: data.amount || data.total || '0.00',
+                    currency: data.currency || 'HKD',
+                    description: data.description || data.purpose || '',
+                    items: data.items || [],
+                    rawText: aiResult.text || '',
+                    confidence: aiResult.confidence || 0,
+                    processingTime: aiResult.processingTime || 0,
+                    extractedAt: new Date().toISOString()
+                };
+                
+                log(`📊 數據解析完成: ${Object.keys(standardizedData).length} 個字段`, 'success');
+                return standardizedData;
+                
+            } catch (error) {
+                log(`❌ 數據解析失敗: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+        
+        async function saveToCloud(data) {
+            try {
+                log('☁️ 準備保存到 Google Cloud Storage...', 'info');
+                
+                const metadata = {
+                    fileName: currentFile.name,
+                    fileSize: currentFile.size,
+                    fileType: currentFile.type,
+                    engine: 'google-ai',
+                    uploadedAt: new Date().toISOString()
+                };
+                
+                let cloudResult;
+                
+                if (window.googleCloudStorage) {
+                    cloudResult = await window.googleCloudStorage.saveDocument(data, metadata);
+                } else {
+                    // 回退到本地存儲
+                    cloudResult = await saveToLocalStorage(data, metadata);
+                }
+                
+                log(`✅ 數據已保存: ${cloudResult.documentId}`, 'success');
+                return cloudResult;
+                
+            } catch (error) {
+                log(`❌ 雲端保存失敗: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+        
+        async function saveToLocalStorage(data, metadata) {
+            const documentId = `doc_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+            
+            const cloudDocument = {
+                id: documentId,
+                timestamp: new Date().toISOString(),
+                metadata: metadata,
+                data: data
+            };
+            
+            const storageKey = 'vaultcaddy_documents';
+            const existingDocs = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            existingDocs.push(cloudDocument);
+            
+            if (existingDocs.length > 50) {
+                existingDocs.splice(0, existingDocs.length - 50);
             }
             
-            const insights = currentResult.insights;
-            let message = '💡 數據洞察:\n\n';
+            localStorage.setItem(storageKey, JSON.stringify(existingDocs));
             
-            insights.forEach((insight, index) => {
-                const icon = insight.type === 'positive' ? '✅' : 
-                           insight.type === 'warning' ? '⚠️' : 'ℹ️';
-                message += `${icon} ${insight.title}\n${insight.message}\n\n`;
-            });
-            
-            alert(message);
+            return {
+                success: true,
+                documentId: documentId,
+                cloudPath: `localStorage://${storageKey}/${documentId}`,
+                timestamp: cloudDocument.timestamp,
+                size: JSON.stringify(cloudDocument).length,
+                mode: 'local'
+            };
         }
         
-        // 日誌函數
-        function log(message) {
-            const logSection = document.getElementById('logSection');
+        function displayResults(extractedData, cloudResult) {
+            const resultsContainer = document.getElementById('resultsContainer');
+            const extractedDataDiv = document.getElementById('extractedData');
+            const cloudStatusDiv = document.getElementById('cloudStatus');
+            
+            // 顯示提取的數據
+            extractedDataDiv.innerHTML = `
+                <table class="data-table">
+                    <tr><th>字段</th><th>值</th></tr>
+                    <tr><td>文檔類型</td><td>${extractedData.documentType}</td></tr>
+                    <tr><td>日期</td><td>${extractedData.date}</td></tr>
+                    <tr><td>商家/機構</td><td>${extractedData.merchant}</td></tr>
+                    <tr><td>金額</td><td>${extractedData.amount} ${extractedData.currency}</td></tr>
+                    <tr><td>描述</td><td>${extractedData.description || '無'}</td></tr>
+                    <tr><td>AI 置信度</td><td>${(extractedData.confidence * 100).toFixed(1)}%</td></tr>
+                    <tr><td>處理時間</td><td>${extractedData.processingTime}ms</td></tr>
+                </table>
+            `;
+            
+            // 顯示雲端狀態
+            const statusBadge = cloudResult.mode === 'real' ? 
+                '<span class="status-badge status-success">雲端存儲</span>' :
+                '<span class="status-badge status-processing">本地存儲</span>';
+            
+            cloudStatusDiv.innerHTML = `
+                <p><strong>文檔 ID:</strong> ${cloudResult.documentId}</p>
+                <p><strong>保存時間:</strong> ${new Date(cloudResult.timestamp).toLocaleString()}</p>
+                <p><strong>存儲路徑:</strong> ${cloudResult.cloudPath}</p>
+                <p><strong>文件大小:</strong> ${(cloudResult.size / 1024).toFixed(2)} KB</p>
+                <p><strong>狀態:</strong> ${statusBadge}</p>
+            `;
+            
+            resultsContainer.style.display = 'block';
+            resultsContainer.classList.add('fade-in');
+            
+            document.getElementById('downloadBtn').style.display = 'inline-block';
+            document.getElementById('processAnotherBtn').style.display = 'inline-block';
+        }
+        
+        function updateStep(stepNumber, status) {
+            const step = document.getElementById(`step${stepNumber}`);
+            step.className = `step ${status}`;
+        }
+        
+        function updateProgressLine(percentage) {
+            const progressLine = document.getElementById('progressLineActive');
+            progressLine.style.width = `${percentage}%`;
+        }
+        
+        function log(message, type = 'info') {
+            const logContainer = document.getElementById('logContainer');
             const timestamp = new Date().toLocaleTimeString();
             const logEntry = document.createElement('div');
-            logEntry.textContent = `[${timestamp}] ${message}`;
-            logSection.appendChild(logEntry);
-            logSection.scrollTop = logSection.scrollHeight;
+            logEntry.className = `log-entry ${type}`;
+            logEntry.innerHTML = `<span>[${timestamp}] ${message}</span>`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+        
+        function downloadResults() {
+            if (!processingResults) return;
             
-            console.log(message);
+            const dataStr = JSON.stringify(processingResults, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `vaultcaddy_${currentFile.name}_${Date.now()}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+            
+            log('📥 處理結果已下載', 'success');
+        }
+        
+        function resetForNewFile() {
+            // 重置狀態
+            currentFile = null;
+            processingResults = null;
+            isProcessing = false;
+            
+            // 隱藏結果和進度
+            document.getElementById('progressContainer').style.display = 'none';
+            document.getElementById('resultsContainer').style.display = 'none';
+            
+            // 重置步驟
+            for (let i = 1; i <= 4; i++) {
+                updateStep(i, '');
+            }
+            updateProgressLine(0);
+            
+            // 清空日誌
+            document.getElementById('logContainer').innerHTML = 
+                '<div class="log-entry info">🚀 VaultCaddy AI 已準備就緒，等待文件上傳...</div>';
+            
+            // 重置文件輸入
+            document.getElementById('fileInput').value = '';
+            
+            log('🔄 系統已重置，可以處理新文件', 'info');
         }
     </script>
 </body>
