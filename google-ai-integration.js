@@ -299,29 +299,59 @@ class GoogleAIProcessor {
         
         console.log('📡 調用Google AI API...');
         
-        const response = await fetch(`${this.apiEndpoint}?key=${this.apiKey}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(requestBody)
-        });
+        // 嘗試多個端點
+        const endpoints = [
+            this.apiEndpoint,
+            ...(window.VaultCaddyConfig?.apiConfig?.googleAI?.fallbackEndpoints || [])
+        ];
         
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(`Google AI API錯誤: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
+        let lastError = null;
+        
+        for (let i = 0; i < endpoints.length; i++) {
+            const endpoint = endpoints[i];
+            console.log(`🔄 嘗試端點 ${i + 1}/${endpoints.length}: ${endpoint}`);
+            
+            try {
+                const response = await fetch(`${endpoint}/${this.model}:generateContent?key=${this.apiKey}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+                
+                if (response.ok) {
+                    console.log(`✅ 端點 ${endpoint} 成功響應`);
+                    const data = await response.json();
+                    
+                    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+                        throw new Error('Google AI API返回無效響應');
+                    }
+                    
+                    const textContent = data.candidates[0].content.parts[0].text;
+                    console.log('📄 AI響應:', textContent.substring(0, 200) + '...');
+                    
+                    return textContent;
+                } else {
+                    const errorData = await response.json();
+                    const errorMsg = `${response.status} - ${errorData.error?.message || 'Unknown error'}`;
+                    console.warn(`⚠️ 端點 ${endpoint} 失敗: ${errorMsg}`);
+                    lastError = new Error(`Google AI API錯誤: ${errorMsg}`);
+                    
+                    // 如果是地理限制錯誤，繼續嘗試下一個端點
+                    if (errorData.error?.message?.includes('location is not supported')) {
+                        continue;
+                    }
+                    // 其他錯誤也繼續嘗試
+                }
+            } catch (error) {
+                console.warn(`⚠️ 端點 ${endpoint} 網絡錯誤:`, error.message);
+                lastError = error;
+            }
         }
         
-        const data = await response.json();
-        
-        if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-            throw new Error('Google AI API返回無效響應');
-        }
-        
-        const textContent = data.candidates[0].content.parts[0].text;
-        console.log('📄 AI響應:', textContent.substring(0, 200) + '...');
-        
-        return textContent;
+        // 所有端點都失敗
+        throw lastError || new Error('所有API端點都無法訪問');
     }
     
     /**

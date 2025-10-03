@@ -30,7 +30,12 @@ class VaultCaddyConfig {
                 // Google Gemini API 配置
                 apiKey: this.getGoogleApiKey(),
                 model: 'gemini-1.5-flash',
-                endpoint: 'https://generativelanguage.googleapis.com/v1beta/models',
+                endpoint: 'https://asia-southeast1-generativelanguage.googleapis.com/v1beta/models',
+                fallbackEndpoints: [
+                    'https://us-central1-generativelanguage.googleapis.com/v1beta/models',
+                    'https://europe-west1-generativelanguage.googleapis.com/v1beta/models',
+                    'https://generativelanguage.googleapis.com/v1beta/models'
+                ],
                 maxFileSize: 20 * 1024 * 1024, // 20MB
                 supportedMimeTypes: [
                     'application/pdf',
