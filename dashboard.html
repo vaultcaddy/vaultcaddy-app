@@ -337,10 +337,108 @@
             background: #e5e7eb;
         }
         
-        .documents-table-container {
-            padding: 0 2rem;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
+        .folder-view-container {
+            padding: 2rem;
+            background: #ffffff;
+        }
+        
+        .folder-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+            max-width: 1200px;
+        }
+        
+        .folder-item {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            min-height: 180px;
+            justify-content: center;
+        }
+        
+        .folder-item:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        .folder-icon {
+            width: 64px;
+            height: 64px;
+            background: #f3f4f6;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+        
+        .folder-icon i {
+            font-size: 2rem;
+            color: #6b7280;
+        }
+        
+        .folder-icon::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 8px;
+            width: 20px;
+            height: 8px;
+            background: #f3f4f6;
+            border-radius: 4px 4px 0 0;
+        }
+        
+        .folder-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+        
+        .folder-files-count {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+        }
+        
+        .folder-updated {
+            font-size: 0.75rem;
+            color: #9ca3af;
+        }
+        
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 3rem;
+            color: #6b7280;
+        }
+        
+        .empty-state-icon {
+            font-size: 4rem;
+            color: #d1d5db;
+            margin-bottom: 1rem;
+        }
+        
+        .empty-state h3 {
+            font-size: 1.25rem;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+        
+        .empty-state p {
+            font-size: 0.875rem;
+            color: #6b7280;
         }
         
         .documents-table {
@@ -1069,49 +1167,10 @@
                     </div>
                 </div>
 
-                <!-- 文檔表格 -->
-                <div class="documents-table-container">
-                    <table class="documents-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 40px;">
-                                    <input type="checkbox" class="select-all">
-                                </th>
-                                <th data-translate="document">文檔</th>
-                                <th data-translate="statement_period">對帳單期間</th>
-                                <th data-translate="reconciliation">對帳</th>
-                                <th data-translate="balance_info">餘額信息</th>
-                                <th data-translate="status">狀態</th>
-                                <th>Review Status</th>
-                                <th>Notes</th>
-                                <th>Date Uploaded</th>
-                                <th data-translate="actions">操作</th>
-                            </tr>
-                        </thead>
-                        <tbody id="documents-tbody">
-                            <!-- 用戶文檔將動態載入到這裡 -->
-                            <!-- 新用戶將看到空的表格，已處理文檔的用戶將看到其處理的文件 -->
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- 分頁信息 -->
-                <div class="pagination-info">
-                    <span>0 <span data-translate="of">共</span> 1 <span data-translate="row_s_selected">行已選擇</span>.</span>
-                    <div class="pagination-controls">
-                        <span data-translate="rows_per_page">每頁行數</span>
-                        <select class="rows-per-page">
-                            <option value="10">10</option>
-                            <option value="25">25</option>
-                            <option value="50">50</option>
-                        </select>
-                        <span><span data-translate="page_of">第</span> 1 <span data-translate="of">共</span> 1</span>
-                        <div class="pagination-buttons">
-                            <button class="page-btn" disabled><i class="fas fa-angle-double-left"></i></button>
-                            <button class="page-btn" disabled><i class="fas fa-angle-left"></i></button>
-                            <button class="page-btn" disabled><i class="fas fa-angle-right"></i></button>
-                            <button class="page-btn" disabled><i class="fas fa-angle-double-right"></i></button>
-                        </div>
+                <!-- 文件夾視圖 -->
+                <div class="folder-view-container">
+                    <div class="folder-grid" id="folder-grid">
+                        <!-- 文件夾將動態載入到這裡 -->
                     </div>
                 </div>
             </div>
@@ -1486,13 +1545,13 @@
             console.log('✅ 更新頁面類型:', docType, config.title);
         }
         
-        // 載入指定文檔類型的文件
+        // 載入指定文檔類型的文件夾
         function loadFilesForDocumentType(docType) {
-            const tbody = document.getElementById('documents-tbody');
-            if (!tbody) return;
+            const folderGrid = document.getElementById('folder-grid');
+            if (!folderGrid) return;
             
-            // 清空當前表格
-            tbody.innerHTML = '';
+            // 清空當前文件夾網格
+            folderGrid.innerHTML = '';
             
             // 優先從統一存儲載入，然後是舊格式
             let storedFiles = [];
@@ -1523,96 +1582,118 @@
             
             console.log(`📁 載入 ${docType} 文件:`, storedFiles.length, '個文件');
             
+            // 如果沒有文件，顯示默認的空文件夾
             if (storedFiles.length === 0) {
-                // 顯示"No results"空狀態
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="10" style="text-align: center; padding: 3rem; color: #6b7280; background: #ffffff;">
-                            <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
-                                <div style="color: #374151; font-size: 1.125rem; font-weight: 500;">
-                                    No results.
-                                </div>
-                                <div style="color: #6b7280; font-size: 0.875rem;">
-                                    尚未上傳任何 ${documentTypes[docType]?.title || docType} 文件
-                                </div>
-                                <div style="color: #6b7280; font-size: 0.875rem;">
-                                    點擊上方的「上傳文件」按鈕開始使用
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                `;
+                createEmptyFolder(folderGrid, docType);
                 return;
             }
             
-            // 顯示存儲的文件
-            storedFiles.forEach((fileInfo, index) => {
-                const row = document.createElement('tr');
-                row.className = 'document-row';
-                row.onclick = () => openDocumentDetail(fileInfo.id);
-                
-                row.innerHTML = `
-                    <td>
-                        <input type="checkbox" onclick="event.stopPropagation()">
-                    </td>
-                    <td>
-                        <div class="document-cell">
-                            <i class="fas fa-file-pdf file-icon"></i>
-                            <div class="document-info">
-                                <div class="doc-name">${fileInfo.name}</div>
-                                <div class="doc-details">
-                                    <i class="fas fa-user"></i> ${fileInfo.documentType}<br>
-                                    <i class="fas fa-file"></i> ${(fileInfo.size / 1024 / 1024).toFixed(2)} MB
-                                </div>
-                            </div>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="period-info">
-                            <i class="fas fa-check"></i> 已處理
-                            <br><small>上傳於 ${fileInfo.uploadDate}</small>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="reconciliation">
-                            <div class="reconciliation-text">-/-</div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 100%"></div>
-                            </div>
-                            <div class="progress-percentage">100%</div>
-                            <small class="reconciliation-status">
-                                <i class="fas fa-check"></i> <span data-translate="completed">已完成</span>
-                            </small>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="balance-info">
-                            <div>已處理</div>
-                        </div>
-                    </td>
-                    <td>
-                        <span class="status-badge success">
-                            <i class="fas fa-check"></i> Completed
-                        </span>
-                    </td>
-                    <td>
-                        <span class="review-badge review">
-                            <i class="fas fa-eye"></i> Ready
-                        </span>
-                    </td>
-                    <td>—</td>
-                    <td>${fileInfo.uploadDate}</td>
-                    <td>
-                        <button class="action-btn" onclick="event.stopPropagation(); showActionMenu(event, '${fileInfo.id}')" title="More actions">
-                            <i class="fas fa-ellipsis-h"></i>
-                        </button>
-                    </td>
-                `;
-                
-                tbody.appendChild(row);
+            // 按文檔類型分組創建文件夾
+            const folders = groupFilesIntoFolders(storedFiles, docType);
+            
+            // 顯示文件夾
+            folders.forEach(folder => {
+                createFolderItem(folderGrid, folder);
             });
             
-            console.log(`✅ 已載入 ${storedFiles.length} 個 ${docType} 文件到表格`);
+            console.log(`✅ 已載入 ${folders.length} 個文件夾`);
+        }
+        
+        // 創建空文件夾
+        function createEmptyFolder(container, docType) {
+            const folderItem = document.createElement('div');
+            folderItem.className = 'folder-item';
+            folderItem.innerHTML = `
+                <div class="folder-icon">
+                    <i class="fas fa-folder"></i>
+                </div>
+                <div class="folder-name">${documentTypes[docType]?.title || docType}</div>
+                <div class="folder-files-count">0 files</div>
+                <div class="folder-updated">剛剛創建</div>
+            `;
+            folderItem.onclick = () => {
+                console.log('📁 點擊空文件夾:', docType);
+                // 可以實現打開文件夾或上傳文件的邏輯
+            };
+            container.appendChild(folderItem);
+        }
+        
+        // 將文件分組到文件夾中
+        function groupFilesIntoFolders(files, docType) {
+            const folders = [];
+            
+            // 按月份分組
+            const groupedByMonth = {};
+            files.forEach(file => {
+                const date = new Date(file.uploadDate);
+                const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                
+                if (!groupedByMonth[monthKey]) {
+                    groupedByMonth[monthKey] = [];
+                }
+                groupedByMonth[monthKey].push(file);
+            });
+            
+            // 創建文件夾
+            Object.keys(groupedByMonth).forEach(monthKey => {
+                const filesInMonth = groupedByMonth[monthKey];
+                const date = new Date(monthKey + '-01');
+                
+                folders.push({
+                    id: `folder_${monthKey}`,
+                    name: `${date.getFullYear()}年${date.getMonth() + 1}月`,
+                    filesCount: filesInMonth.length,
+                    files: filesInMonth,
+                    updated: filesInMonth[0].uploadDate,
+                    type: docType
+                });
+            });
+            
+            // 如果沒有文件，創建一個空文件夾
+            if (folders.length === 0) {
+                folders.push({
+                    id: `folder_empty_${docType}`,
+                    name: documentTypes[docType]?.title || docType,
+                    filesCount: 0,
+                    files: [],
+                    updated: '剛剛創建',
+                    type: docType
+                });
+            }
+            
+            return folders;
+        }
+        
+        // 創建文件夾項目
+        function createFolderItem(container, folder) {
+            const folderItem = document.createElement('div');
+            folderItem.className = 'folder-item';
+            folderItem.innerHTML = `
+                <div class="folder-icon">
+                    <i class="fas fa-folder${folder.filesCount > 0 ? '-open' : ''}"></i>
+                </div>
+                <div class="folder-name">${folder.name}</div>
+                <div class="folder-files-count">${folder.filesCount} files</div>
+                <div class="folder-updated">${folder.updated}</div>
+            `;
+            folderItem.onclick = () => {
+                console.log('📁 點擊文件夾:', folder.name, folder.filesCount, '個文件');
+                openFolder(folder);
+            };
+            container.appendChild(folderItem);
+        }
+        
+        // 打開文件夾
+        function openFolder(folder) {
+            console.log('📂 打開文件夾:', folder);
+            if (folder.filesCount === 0) {
+                alert('文件夾為空，請先上傳文件');
+                return;
+            }
+            
+            // 這裡可以實現打開文件夾的邏輯
+            // 例如顯示文件夾內容或跳轉到文件列表
+            alert(`打開文件夾: ${folder.name} (${folder.filesCount} 個文件)`);
         }
 
         // 打開文檔詳細視圖
@@ -1916,29 +1997,16 @@
         }
         
         function addProcessedFilesToTable(files) {
-            console.log('📋 添加文件到表格，文件數量:', files.length);
-            
-            const tbody = document.getElementById('documents-tbody');
-            if (!tbody) {
-                console.error('❌ 找不到表格 tbody 元素');
-                return;
-            }
+            console.log('📋 添加文件到文件夾視圖，文件數量:', files.length);
             
             // 獲取當前文檔類型
             const hash = window.location.hash.substring(1);
             const currentDocType = hash || 'bank-statement';
             
-            console.log('📊 當前表格狀態:', {
-                childrenCount: tbody.children.length,
-                innerHTML: tbody.innerHTML.substring(0, 100) + '...',
-                documentType: currentDocType
+            console.log('📊 當前文件夾狀態:', {
+                documentType: currentDocType,
+                filesToAdd: files.length
             });
-            
-            // 如果表格是空的，先清除佔位符
-            if (tbody.children.length === 0 || tbody.innerHTML.includes('用戶文檔將動態載入到這裡')) {
-                console.log('🧹 清除表格佔位符');
-                tbody.innerHTML = '';
-            }
             
             // 從localStorage獲取當前文檔類型的文件列表
             const storageKey = `vaultcaddy_files_${currentDocType}`;
@@ -1968,82 +2036,20 @@
                 };
                 existingFiles.push(fileInfo);
                 
-                const row = document.createElement('tr');
-                row.className = 'document-row';
-                row.onclick = () => openDocumentDetail(fileId);
-                
-                row.innerHTML = `
-                    <td>
-                        <input type="checkbox" onclick="event.stopPropagation()">
-                    </td>
-                    <td>
-                        <div class="document-cell">
-                            <i class="fas fa-file-pdf file-icon"></i>
-                            <div class="document-info">
-                                <div class="doc-name">${file.name}</div>
-                                <div class="doc-details">
-                                    <i class="fas fa-user"></i> 新上傳文檔 (${currentDocType})<br>
-                                    <i class="fas fa-file"></i> ${(file.size / 1024 / 1024).toFixed(2)} MB
-                                </div>
-                            </div>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="period-info">
-                            <i class="fas fa-clock"></i> 處理中...
-                            <br><small>分析文檔內容中</small>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="reconciliation">
-                            <div class="reconciliation-text">-/-</div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 0%"></div>
-                            </div>
-                            <div class="progress-percentage">0%</div>
-                            <small class="reconciliation-status">
-                                <i class="fas fa-clock"></i> <span data-translate="processing">處理中</span>
-                            </small>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="balance-info">
-                            <div>處理中...</div>
-                        </div>
-                    </td>
-                    <td>
-                        <span class="status-badge processing">
-                            <i class="fas fa-clock"></i> Processing
-                        </span>
-                    </td>
-                    <td>
-                        <span class="review-badge pending">
-                            <i class="fas fa-clock"></i> Pending
-                        </span>
-                    </td>
-                    <td>—</td>
-                    <td>${currentDate}</td>
-                    <td>
-                        <button class="action-btn" onclick="event.stopPropagation(); showActionMenu(event, '${fileId}')" title="More actions">
-                            <i class="fas fa-ellipsis-h"></i>
-                        </button>
-                    </td>
-                `;
-                
-                tbody.appendChild(row);
-                console.log(`✅ 文件 ${file.name} 已添加到表格 (${currentDocType})`);
+                console.log(`✅ 文件 ${file.name} 已添加到存儲 (${currentDocType})`);
             }
             
             // 保存更新後的文件列表到localStorage
             localStorage.setItem(storageKey, JSON.stringify(existingFiles));
             
-            console.log(`🎉 所有 ${files.length} 個文件已成功添加到表格 (${currentDocType})`);
-            console.log('📊 表格最終狀態:', {
-                totalRows: tbody.children.length,
-                tableHTML: tbody.innerHTML.length + ' characters',
+            console.log(`🎉 所有 ${files.length} 個文件已成功添加到存儲 (${currentDocType})`);
+            console.log('📊 存儲最終狀態:', {
                 storageKey: storageKey,
                 totalStoredFiles: existingFiles.length
             });
+            
+            // 重新載入文件夾視圖
+            loadFilesForDocumentType(currentDocType);
             
             // 更新統計
             updateDocumentStats();
@@ -2051,14 +2057,15 @@
         
         function updateDocumentStats() {
             // 更新文檔處理統計
-            const processedCount = document.querySelectorAll('#documents-tbody tr').length;
+            const folderItems = document.querySelectorAll('.folder-item');
+            const processedCount = folderItems.length;
             const statsElement = document.querySelector('[data-stat="processed-docs"]');
             if (statsElement) {
                 statsElement.textContent = processedCount;
             }
             
             // 更新側邊欄統計
-            console.log(`📊 更新文檔統計: ${processedCount} 個已處理文檔`);
+            console.log(`📊 更新文檔統計: ${processedCount} 個文件夾`);
         }
         
         function updateSidebarStats(newFileCount) {
