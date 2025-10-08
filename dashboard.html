@@ -196,30 +196,74 @@
             background: #ffffff;
         }
         
-        .page-header h1 {
-            font-size: 2rem;
+        .team-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .team-icon {
+            width: 48px;
+            height: 48px;
+            background: #fbbf24;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+        
+        .team-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .team-details h1 {
+            font-size: 1.5rem;
             font-weight: 600;
             color: #1f2937;
             margin: 0;
         }
         
-        .page-header p {
-            color: #6b7280;
-            margin: 0.5rem 0 0 0;
+        .subscription-badge {
+            background: #3b82f6;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            width: fit-content;
         }
         
-        .help-btn {
-            background: #6366f1;
-            color: #ffffff;
+        .subscription-badge::after {
+            content: '▼';
+            font-size: 0.6rem;
+            opacity: 0.8;
+        }
+        
+        .project-btn {
+            background: #3b82f6;
+            color: white;
             border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
             transition: background-color 0.2s;
         }
         
-        .help-btn:hover {
-            background: #4f46e5;
+        .project-btn:hover {
+            background: #2563eb;
         }
         
         .controls-bar {
@@ -929,18 +973,6 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="dashboard.html#invoice">
-                            <i class="fas fa-file-invoice"></i>
-                            <span data-translate="sidebar_invoices">發票</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="dashboard.html#receipt">
-                            <i class="fas fa-receipt"></i>
-                            <span data-translate="sidebar_receipts">收據</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
                         <a href="dashboard.html#general">
                             <i class="fas fa-file-alt"></i>
                             <span data-translate="sidebar_general">一般文檔</span>
@@ -952,12 +984,6 @@
             <div class="sidebar-section">
                 <h3 data-translate="configurations">配置</h3>
                 <ul class="sidebar-nav">
-                    <li class="nav-item">
-                        <a href="account.html">
-                            <i class="fas fa-user"></i>
-                            <span data-translate="account">帳戶</span>
-                        </a>
-                    </li>
                     <li class="nav-item">
                         <a href="billing.html">
                             <i class="fas fa-credit-card"></i>
@@ -1008,11 +1034,21 @@
                 <!-- 頁面標題 -->
                 <header class="page-header">
                     <div class="header-left">
-                        <h1 id="page-title">Bank statement converter</h1>
-                        <p id="page-subtitle">Manage and view your documents</p>
+                        <div class="team-info">
+                            <div class="team-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="team-details">
+                                <h1 id="team-name">1扭扭批's team</h1>
+                                <span class="subscription-badge" id="subscription-badge">Professional</span>
+                            </div>
+                        </div>
                     </div>
                     <div class="header-right">
-                        <button class="help-btn" onclick="showHelp()">Need Help?</button>
+                        <button class="project-btn" onclick="createNewProject()">
+                            <i class="fas fa-plus"></i>
+                            <span>+ Project</span>
+                        </button>
                     </div>
                 </header>
 
@@ -1215,20 +1251,6 @@
                 subtitle: '管理和查看您的文檔',
                 icon: 'fas fa-university'
             },
-            'invoice': {
-                titleKey: 'invoice_processor', 
-                subtitleKey: 'manage_view_documents',
-                title: '發票處理器',
-                subtitle: '管理和查看您的文檔',
-                icon: 'fas fa-file-invoice'
-            },
-            'receipt': {
-                titleKey: 'receipt_processor',
-                subtitleKey: 'manage_view_documents',
-                title: '收據處理器',
-                subtitle: '管理和查看您的文檔',
-                icon: 'fas fa-receipt'
-            },
             'general': {
                 titleKey: 'general_processor',
                 subtitleKey: 'manage_view_documents',
@@ -1249,6 +1271,30 @@
                 title: '計費與積分',
                 subtitle: '管理您的計費、訂閱和積分',
                 icon: 'fas fa-credit-card'
+            }
+        };
+
+        // 訂閱方案配置
+        const subscriptionPlans = {
+            'free': {
+                name: 'Free',
+                color: '#6b7280',
+                features: ['基礎文檔處理', '每月10個文檔']
+            },
+            'basic': {
+                name: 'Basic',
+                color: '#10b981',
+                features: ['進階文檔處理', '每月100個文檔']
+            },
+            'professional': {
+                name: 'Professional',
+                color: '#3b82f6',
+                features: ['AI智能處理', '無限文檔', '優先支援']
+            },
+            'business': {
+                name: 'Business',
+                color: '#8b5cf6',
+                features: ['企業級功能', '團隊協作', 'API存取']
             }
         };
 
@@ -1295,6 +1341,9 @@
             // 初始化統一側邊欄
             window.unifiedSidebar = new VaultCaddySidebar();
             
+            // 初始化用戶團隊信息
+            initializeUserTeamInfo();
+            
             // 處理 hash 路由
             handleHashRouting();
             
@@ -1315,6 +1364,72 @@
             
             console.log('✅ Unified Dashboard 初始化完成');
         });
+
+        // 初始化用戶團隊信息
+        function initializeUserTeamInfo() {
+            console.log('👥 初始化用戶團隊信息...');
+            
+            // 獲取用戶名稱
+            let userName = '1扭扭批'; // 默認名稱
+            
+            if (window.GlobalAuthSync) {
+                const authState = window.GlobalAuthSync.getCurrentAuthState();
+                if (authState.userName && !authState.userName.includes('{"uid"')) {
+                    userName = authState.userName;
+                }
+            } else {
+                // 從localStorage獲取
+                const storedName = localStorage.getItem('google_user_name') || localStorage.getItem('user_name');
+                if (storedName && !storedName.includes('{"uid"')) {
+                    userName = storedName;
+                }
+            }
+            
+            // 生成團隊名稱
+            const teamName = `${userName}'s team`;
+            
+            // 更新團隊名稱顯示
+            const teamNameElement = document.getElementById('team-name');
+            if (teamNameElement) {
+                teamNameElement.textContent = teamName;
+                console.log('✅ 團隊名稱已更新:', teamName);
+            }
+            
+            // 獲取並設置訂閱方案
+            let subscriptionPlan = 'professional'; // 默認為專業版
+            
+            if (window.GlobalAuthSync) {
+                const authState = window.GlobalAuthSync.getCurrentAuthState();
+                subscriptionPlan = authState.subscriptionPlan || 'professional';
+            } else {
+                subscriptionPlan = localStorage.getItem('vaultcaddy_subscription') || 'professional';
+            }
+            
+            // 更新訂閱方案顯示
+            updateSubscriptionBadge(subscriptionPlan);
+            
+            console.log('✅ 用戶團隊信息初始化完成:', { teamName, subscriptionPlan });
+        }
+        
+        // 更新訂閱方案標籤
+        function updateSubscriptionBadge(planKey) {
+            const badgeElement = document.getElementById('subscription-badge');
+            if (!badgeElement) return;
+            
+            const plan = subscriptionPlans[planKey];
+            if (plan) {
+                badgeElement.textContent = plan.name;
+                badgeElement.style.background = plan.color;
+                console.log('✅ 訂閱方案已更新:', plan.name);
+            }
+        }
+        
+        // 創建新項目
+        function createNewProject() {
+            console.log('📁 創建新項目...');
+            // 這裡可以實現創建新項目的邏輯
+            alert('創建新項目功能正在開發中...');
+        }
 
         // 處理 hash 路由
         function handleHashRouting() {
@@ -1412,15 +1527,15 @@
                 // 顯示"No results"空狀態
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="10" style="text-align: center; padding: 3rem; color: #6b7280; background: #1e293b;">
+                        <td colspan="10" style="text-align: center; padding: 3rem; color: #6b7280; background: #ffffff;">
                             <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
-                                <div style="color: #94a3b8; font-size: 1.125rem; font-weight: 500;">
+                                <div style="color: #374151; font-size: 1.125rem; font-weight: 500;">
                                     No results.
                                 </div>
-                                <div style="color: #64748b; font-size: 0.875rem;">
+                                <div style="color: #6b7280; font-size: 0.875rem;">
                                     尚未上傳任何 ${documentTypes[docType]?.title || docType} 文件
                                 </div>
-                                <div style="color: #64748b; font-size: 0.875rem;">
+                                <div style="color: #6b7280; font-size: 0.875rem;">
                                     點擊上方的「上傳文件」按鈕開始使用
                                 </div>
                             </div>
@@ -1532,7 +1647,7 @@
         // 根據文檔ID獲取文件信息
         function getFileInfoById(documentId) {
             // 檢查所有文檔類型的存儲
-            const docTypes = ['bank-statement', 'invoice', 'receipt', 'general'];
+            const docTypes = ['bank-statement', 'general'];
             
             for (const docType of docTypes) {
                 const storageKey = `vaultcaddy_files_${docType}`;
