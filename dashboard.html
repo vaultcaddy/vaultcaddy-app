@@ -10,7 +10,6 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
     <script src="config.js"></script>
-    <script src="google-auth.js"></script>
     <script src="translations.js"></script>
     <script src="unified-auth.js"></script>
     <script src="global-auth-sync.js"></script>
@@ -24,19 +23,11 @@
     <script src="google-cloud-storage.js"></script>
     <script src="ledgerbox-integration.js"></script>
     
-    <!-- 載入新的OCR和數據處理器 -->
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-    <script src="tesseract-ocr-processor.js"></script>
+    <!-- 載入數據處理器 -->
     <script src="data-processor.js"></script>
-    <script src="intelligent-ocr-processor.js"></script>
     
     <!-- 載入統一處理器 -->
     <script src="unified-document-processor.js"></script>
-    
-    <!-- 停用的處理器（保留以防需要） -->
-    <!-- <script src="ai-document-processor.js"></script> -->
-    <!-- <script src="ai-services.js"></script> -->
-    <!-- <script src="enhanced-file-processor.js"></script> -->
     <link rel="stylesheet" href="ledgerbox-styles.css">
     
     <style>
@@ -186,6 +177,8 @@
             margin-left: 280px;
             overflow-y: auto;
             min-height: calc(100vh - 60px);
+            display: block !important;
+            visibility: visible !important;
         }
         
         .page-header {
@@ -994,6 +987,8 @@
         
         .view-container {
             height: 100%;
+            display: block !important;
+            visibility: visible !important;
         }
         
         /* 可編輯表格樣式 */
@@ -1186,7 +1181,7 @@
         <!-- 主內容區域 -->
         <main class="main-content" id="main-content">
             <!-- 文檔列表視圖 -->
-            <div id="document-list-view" class="view-container">
+            <div id="document-list-view" class="view-container" style="display: block;">
                 <!-- 頁面標題 -->
                 <header class="page-header">
                     <div class="header-left">
@@ -1251,7 +1246,7 @@
                     </table>
                     
                     <!-- 空狀態 -->
-                    <div class="empty-state" id="empty-state" style="display: none;">
+                    <div class="empty-state" id="empty-state" style="display: block;">
                         <div class="empty-content">
                             <i class="fas fa-file-alt"></i>
                             <h3>No results.</h3>
@@ -1505,6 +1500,9 @@
             
             // 處理 hash 路由
             handleHashRouting();
+            
+            // 確保頁面內容可見
+            ensurePageContentVisible();
             
             // 監聽 hash 變化
             window.addEventListener('hashchange', handleHashRouting);
@@ -2703,12 +2701,35 @@
             }
         }
         
-        // 獲取當前文檔類型
-        function getCurrentDocumentType() {
-            const hash = window.location.hash;
-            if (hash === '#bank-statement') {
-                return 'bank-statement';
+        // 調試函數：確保頁面內容可見
+        function ensurePageContentVisible() {
+            console.log('🔍 檢查頁面內容可見性...');
+            
+            const mainContent = document.getElementById('main-content');
+            const listView = document.getElementById('document-list-view');
+            const documentsTable = document.getElementById('documents-table');
+            const emptyState = document.getElementById('empty-state');
+            
+            console.log('主內容區域:', mainContent ? '存在' : '不存在');
+            console.log('列表視圖:', listView ? '存在' : '不存在');
+            console.log('文檔表格:', documentsTable ? '存在' : '不存在');
+            console.log('空狀態:', emptyState ? '存在' : '不存在');
+            
+            if (mainContent) {
+                mainContent.style.display = 'block';
+                mainContent.style.visibility = 'visible';
             }
-            // 默認返回銀行對帳單
-            return 'bank-statement';
+            
+            if (listView) {
+                listView.style.display = 'block';
+                listView.style.visibility = 'visible';
+            }
+            
+            // 確保至少顯示空狀態
+            if (emptyState) {
+                emptyState.style.display = 'block';
+                emptyState.style.visibility = 'visible';
+            }
+            
+            console.log('✅ 頁面內容可見性檢查完成');
         }
