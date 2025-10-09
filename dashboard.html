@@ -337,9 +337,11 @@
             background: #e5e7eb;
         }
         
-        .folder-view-container {
+        .documents-table-container {
             padding: 2rem;
             background: #ffffff;
+            flex: 1;
+            overflow-x: auto;
         }
         
         .folder-grid {
@@ -1167,10 +1169,73 @@
                     </div>
                 </div>
 
-                <!-- 文件夾視圖 -->
-                <div class="folder-view-container">
-                    <div class="folder-grid" id="folder-grid">
-                        <!-- 文件夾將動態載入到這裡 -->
+                <!-- 文檔表格視圖 -->
+                <div class="documents-table-container">
+                    <table class="documents-table" id="documents-table">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <input type="checkbox" id="select-all" onchange="toggleSelectAll()">
+                                    <i class="fas fa-sort"></i>
+                                </th>
+                                <th data-translate="document">Document <i class="fas fa-sort"></i></th>
+                                <th data-translate="statement_period">Statement Period <i class="fas fa-sort"></i></th>
+                                <th data-translate="reconciliation">Reconciliation <i class="fas fa-sort"></i></th>
+                                <th data-translate="balance_info">Balance Info <i class="fas fa-sort"></i></th>
+                                <th data-translate="status">Status <i class="fas fa-sort"></i></th>
+                                <th data-translate="review_status">Review Status <i class="fas fa-sort"></i></th>
+                                <th data-translate="notes">Notes <i class="fas fa-sort"></i></th>
+                                <th data-translate="date_uploaded">Date Uploaded <i class="fas fa-sort"></i></th>
+                                <th data-translate="actions">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="documents-tbody">
+                            <!-- 文檔將動態載入到這裡 -->
+                        </tbody>
+                    </table>
+                    
+                    <!-- 空狀態 -->
+                    <div class="empty-state" id="empty-state" style="display: none;">
+                        <div class="empty-content">
+                            <i class="fas fa-file-alt"></i>
+                            <h3>No results.</h3>
+                            <p>上傳您的第一個文檔開始使用</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 分頁控制 -->
+                <div class="pagination">
+                    <div class="pagination-info">
+                        <span id="selection-info">0 of 0 row(s) selected.</span>
+                    </div>
+                    <div class="pagination-controls">
+                        <div class="rows-per-page">
+                            <span>Rows per page</span>
+                            <select id="rows-per-page" onchange="changeRowsPerPage()">
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
+                        <div class="page-info">
+                            <span id="page-info">Page 1 of 0</span>
+                        </div>
+                        <div class="page-buttons">
+                            <button class="page-btn" onclick="goToFirstPage()" disabled>
+                                <i class="fas fa-angle-double-left"></i>
+                            </button>
+                            <button class="page-btn" onclick="goToPreviousPage()" disabled>
+                                <i class="fas fa-angle-left"></i>
+                            </button>
+                            <button class="page-btn" onclick="goToNextPage()" disabled>
+                                <i class="fas fa-angle-right"></i>
+                            </button>
+                            <button class="page-btn" onclick="goToLastPage()" disabled>
+                                <i class="fas fa-angle-double-right"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1547,11 +1612,17 @@
         
         // 載入指定文檔類型的文件夾
         function loadFilesForDocumentType(docType) {
-            const folderGrid = document.getElementById('folder-grid');
-            if (!folderGrid) return;
+            const documentsTable = document.getElementById('documents-table');
+            const documentsTbody = document.getElementById('documents-tbody');
+            const emptyState = document.getElementById('empty-state');
             
-            // 清空當前文件夾網格
-            folderGrid.innerHTML = '';
+            if (!documentsTable || !documentsTbody) {
+                console.error('找不到文檔表格容器');
+                return;
+            }
+            
+            // 清空現有內容
+            documentsTbody.innerHTML = '';
             
             // 優先從統一存儲載入，然後是舊格式
             let storedFiles = [];
@@ -1582,21 +1653,26 @@
             
             console.log(`📁 載入 ${docType} 文件:`, storedFiles.length, '個文件');
             
-            // 如果沒有文件，顯示默認的空文件夾
+            // 如果沒有文件，顯示空狀態
             if (storedFiles.length === 0) {
-                createEmptyFolder(folderGrid, docType);
+                documentsTable.style.display = 'none';
+                emptyState.style.display = 'block';
+                updatePaginationInfo(0);
                 return;
             }
             
-            // 按文檔類型分組創建文件夾
-            const folders = groupFilesIntoFolders(storedFiles, docType);
+            // 顯示表格，隱藏空狀態
+            documentsTable.style.display = 'table';
+            emptyState.style.display = 'none';
             
-            // 顯示文件夾
-            folders.forEach(folder => {
-                createFolderItem(folderGrid, folder);
+            // 創建表格行
+            storedFiles.forEach(file => {
+                createDocumentRow(documentsTbody, file);
             });
             
-            console.log(`✅ 已載入 ${folders.length} 個文件夾`);
+            // 更新統計信息和分頁
+            updateDocumentStats();
+            updatePaginationInfo(storedFiles.length);
         }
         
         // 創建空文件夾
@@ -2057,15 +2133,15 @@
         
         function updateDocumentStats() {
             // 更新文檔處理統計
-            const folderItems = document.querySelectorAll('.folder-item');
-            const processedCount = folderItems.length;
+            const documentRows = document.querySelectorAll('.document-row');
+            const processedCount = documentRows.length;
             const statsElement = document.querySelector('[data-stat="processed-docs"]');
             if (statsElement) {
                 statsElement.textContent = processedCount;
             }
             
             // 更新側邊欄統計
-            console.log(`📊 更新文檔統計: ${processedCount} 個文件夾`);
+            console.log(`📊 更新文檔統計: ${processedCount} 個文檔`);
         }
         
         function updateSidebarStats(newFileCount) {
@@ -2433,6 +2509,170 @@
                 grid-template-columns: 1fr;
             }
         }
-    </style>
-</body>
-</html>
+        
+        // 創建文檔表格行
+        function createDocumentRow(tbody, file) {
+            const row = document.createElement('tr');
+            row.className = 'document-row';
+            row.setAttribute('data-file-id', file.id);
+            
+            const uploadDate = new Date(file.uploadTime || file.uploadDate).toLocaleDateString('zh-TW');
+            const fileSize = formatFileSize(file.size);
+            
+            row.innerHTML = `
+                <td>
+                    <input type="checkbox" class="file-checkbox" onchange="updateSelection()">
+                </td>
+                <td>
+                    <div class="document-info">
+                        <i class="fas fa-file-pdf" style="color: #ef4444; margin-right: 0.5rem;"></i>
+                        <div>
+                            <strong>${file.name}</strong>
+                            <small style="display: block; color: #6b7280;">${fileSize}</small>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div class="period-info">
+                        <strong>2024年1月</strong>
+                        <small>2024-01-01 至 2024-01-31</small>
+                    </div>
+                </td>
+                <td>
+                    <div class="reconciliation">
+                        <span class="reconciliation-fraction">0/13</span>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div class="balance-info">
+                        <div>期初: $10,000</div>
+                        <div>期末: $8,500</div>
+                        <strong>差額: -$1,500</strong>
+                    </div>
+                </td>
+                <td>
+                    <span class="status-indicator in-progress">處理中</span>
+                </td>
+                <td>
+                    <span class="status-badge review">待審核</span>
+                </td>
+                <td>
+                    <span style="color: #6b7280;">無備註</span>
+                </td>
+                <td>
+                    <span style="color: #6b7280;">${uploadDate}</span>
+                </td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="action-btn" onclick="viewDocument('${file.id}')" title="查看">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="action-btn" onclick="downloadDocument('${file.id}')" title="下載">
+                            <i class="fas fa-download"></i>
+                        </button>
+                        <button class="action-btn" onclick="deleteDocument('${file.id}')" title="刪除">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+            
+            tbody.appendChild(row);
+        }
+        
+        // 更新分頁信息
+        function updatePaginationInfo(totalRows) {
+            const selectionInfo = document.getElementById('selection-info');
+            const pageInfo = document.getElementById('page-info');
+            
+            if (selectionInfo) {
+                selectionInfo.textContent = `0 of ${totalRows} row(s) selected.`;
+            }
+            
+            if (pageInfo) {
+                const totalPages = Math.ceil(totalRows / 10);
+                pageInfo.textContent = `Page 1 of ${totalPages}`;
+            }
+        }
+        
+        // 分頁控制函數
+        function toggleSelectAll() {
+            const selectAllCheckbox = document.getElementById('select-all');
+            const fileCheckboxes = document.querySelectorAll('.file-checkbox');
+            
+            fileCheckboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+            
+            updateSelection();
+        }
+        
+        function updateSelection() {
+            const fileCheckboxes = document.querySelectorAll('.file-checkbox');
+            const checkedBoxes = document.querySelectorAll('.file-checkbox:checked');
+            const selectionInfo = document.getElementById('selection-info');
+            
+            if (selectionInfo) {
+                selectionInfo.textContent = `${checkedBoxes.length} of ${fileCheckboxes.length} row(s) selected.`;
+            }
+        }
+        
+        function changeRowsPerPage() {
+            const rowsPerPage = document.getElementById('rows-per-page').value;
+            console.log('更改每頁行數:', rowsPerPage);
+            // 重新載入當前文檔類型
+            const currentDocType = getCurrentDocumentType();
+            loadFilesForDocumentType(currentDocType);
+        }
+        
+        function goToFirstPage() {
+            console.log('前往第一頁');
+        }
+        
+        function goToPreviousPage() {
+            console.log('前往上一頁');
+        }
+        
+        function goToNextPage() {
+            console.log('前往下一頁');
+        }
+        
+        function goToLastPage() {
+            console.log('前往最後一頁');
+        }
+        
+        // 文檔操作函數
+        function viewDocument(fileId) {
+            console.log('查看文檔:', fileId);
+            // 切換到文檔詳細視圖
+            showDocumentDetail(fileId);
+        }
+        
+        function downloadDocument(fileId) {
+            console.log('下載文檔:', fileId);
+            // 實現下載功能
+        }
+        
+        function deleteDocument(fileId) {
+            console.log('刪除文檔:', fileId);
+            if (confirm('確定要刪除這個文檔嗎？')) {
+                // 實現刪除功能
+                const row = document.querySelector(`[data-file-id="${fileId}"]`);
+                if (row) {
+                    row.remove();
+                    updateDocumentStats();
+                }
+            }
+        }
+        
+        // 格式化文件大小
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
