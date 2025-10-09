@@ -1137,6 +1137,18 @@
             margin-right: 0.75rem;
             width: 16px;
         }
+        
+        /* 側邊欄項目hover效果 */
+        .project-item:hover,
+        .config-item:hover {
+            background: #f3f4f6 !important;
+        }
+        
+        .project-item.active,
+        .config-item.active {
+            background: #eff6ff !important;
+            color: #3b82f6 !important;
+        }
 <body>
     <!-- 導航欄 -->
     <div id="navbar-placeholder">
@@ -1171,9 +1183,9 @@
             <div class="sidebar-section" style="margin-bottom: 2rem;">
                 <div class="project-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
                     <span class="project-title" style="font-size: 0.875rem; font-weight: 600; color: #374151;">project</span>
-                    <button class="add-project-btn" style="background: none; border: none; color: #6b7280; cursor: pointer; padding: 0.25rem; border-radius: 4px;">+</button>
+                    <button class="add-project-btn" onclick="createNewProject()" style="background: none; border: none; color: #6b7280; cursor: pointer; padding: 0.25rem; border-radius: 4px;">+</button>
                 </div>
-                <div class="project-item" style="display: flex; align-items: center; padding: 0.5rem 0; color: #6b7280; cursor: pointer;">
+                <div class="project-item" id="team-project-item" onclick="navigateToTeamProject()" style="display: flex; align-items: center; padding: 0.5rem; color: #6b7280; cursor: pointer; border-radius: 6px; transition: background 0.2s;">
                     <i class="fas fa-folder" style="margin-right: 0.75rem; width: 16px;"></i>
                     <span>Team project</span>
                 </div>
@@ -1182,11 +1194,11 @@
             <!-- 配置區塊 -->
             <div class="sidebar-section">
                 <h3 style="font-size: 0.75rem; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 0.5rem 0;">配置</h3>
-                <div class="config-item" style="display: flex; align-items: center; padding: 0.5rem 0; color: #6b7280; cursor: pointer;">
+                <div class="config-item" onclick="window.location.href='account.html'" style="display: flex; align-items: center; padding: 0.5rem; color: #6b7280; cursor: pointer; border-radius: 6px; transition: background 0.2s;">
                     <i class="fas fa-user" style="margin-right: 0.75rem; width: 16px;"></i>
                     <span>帳戶</span>
                 </div>
-                <div class="config-item" style="display: flex; align-items: center; padding: 0.5rem 0; color: #6b7280; cursor: pointer;">
+                <div class="config-item" onclick="window.location.href='billing.html'" style="display: flex; align-items: center; padding: 0.5rem; color: #6b7280; cursor: pointer; border-radius: 6px; transition: background 0.2s;">
                     <i class="fas fa-credit-card" style="margin-right: 0.75rem; width: 16px;"></i>
                     <span>計費</span>
                 </div>
@@ -1308,6 +1320,129 @@
 
         <!-- 主內容區域 -->
         <main class="main-content" id="main-content" style="flex: 1; background: #ffffff; margin-left: 280px; overflow-y: auto; min-height: calc(100vh - 60px); display: block !important; visibility: visible !important;">
+            <!-- Team Project 視圖 -->
+            <div id="team-project-view" class="view-container" style="display: none; padding: 2rem 3rem;">
+                <!-- 頁面標題 -->
+                <header style="margin-bottom: 2rem;">
+                    <h1 style="font-size: 2rem; font-weight: 700; color: #1f2937; margin: 0 0 0.5rem 0;">Invoice converter</h1>
+                    <p style="color: #6b7280; font-size: 1rem; margin: 0;">Manage and view your documents</p>
+                </header>
+
+                <!-- 控制欄 -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <div style="flex: 1; max-width: 300px;">
+                        <input type="text" placeholder="Filter document name..." style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #d1d5db; border-radius: 6px; background: #ffffff; color: #1f2937; font-size: 0.875rem;">
+                    </div>
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <button onclick="openUploadModal()" style="background: #8b5cf6; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
+                            <span>Upload files</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                        <button style="background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; padding: 0.75rem 1rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <i class="fas fa-sliders-h"></i>
+                            <span>View</span>
+                        </button>
+                        <button style="background: transparent; border: none; color: #6b7280; padding: 0.5rem; cursor: pointer; font-size: 1.25rem;">
+                            <i class="fas fa-question-circle"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 文檔表格 -->
+                <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead style="background: #f8fafc;">
+                            <tr>
+                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
+                                    <input type="checkbox" style="margin-right: 0.5rem;">
+                                    <span>Document</span>
+                                    <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i>
+                                </th>
+                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
+                                    <span>Statement Period</span>
+                                    <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i>
+                                </th>
+                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
+                                    <span>Reconciliation</span>
+                                    <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i>
+                                </th>
+                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
+                                    <span>Balance Info</span>
+                                    <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i>
+                                </th>
+                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
+                                    <span>Status</span>
+                                    <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i>
+                                </th>
+                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
+                                    <span>Review Status</span>
+                                    <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i>
+                                </th>
+                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
+                                    <span>Notes</span>
+                                    <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i>
+                                </th>
+                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
+                                    <span>Date Uploaded</span>
+                                    <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i>
+                                </th>
+                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
+                                    <span>Actions</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="team-project-tbody">
+                            <!-- 空狀態 -->
+                            <tr>
+                                <td colspan="9" style="text-align: center; padding: 4rem 2rem;">
+                                    <div style="color: #6b7280;">
+                                        <i class="fas fa-file-alt" style="font-size: 3rem; margin-bottom: 1rem; color: #d1d5db;"></i>
+                                        <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem; color: #374151;">No results.</h3>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 分頁控制 -->
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; margin-top: 1rem;">
+                    <div>
+                        <span style="color: #6b7280; font-size: 0.875rem;">0 of 0 row(s) selected.</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="color: #6b7280; font-size: 0.875rem;">Rows per page</span>
+                            <select style="background: #ffffff; border: 1px solid #d1d5db; color: #1f2937; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.875rem;">
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
+                        <div>
+                            <span style="color: #374151; font-size: 0.875rem;">Page 1 of 0</span>
+                        </div>
+                        <div style="display: flex; gap: 0.25rem;">
+                            <button disabled style="background: transparent; border: 1px solid #d1d5db; color: #9ca3af; padding: 0.5rem; border-radius: 4px; cursor: not-allowed;">
+                                <i class="fas fa-angle-double-left"></i>
+                            </button>
+                            <button disabled style="background: transparent; border: 1px solid #d1d5db; color: #9ca3af; padding: 0.5rem; border-radius: 4px; cursor: not-allowed;">
+                                <i class="fas fa-angle-left"></i>
+                            </button>
+                            <button disabled style="background: transparent; border: 1px solid #d1d5db; color: #9ca3af; padding: 0.5rem; border-radius: 4px; cursor: not-allowed;">
+                                <i class="fas fa-angle-right"></i>
+                            </button>
+                            <button disabled style="background: transparent; border: 1px solid #d1d5db; color: #9ca3af; padding: 0.5rem; border-radius: 4px; cursor: not-allowed;">
+                                <i class="fas fa-angle-double-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 銀行對帳單視圖 -->
+            <div id="bank-statement-view" class="view-container" style="display: block;">
             <!-- 頁面標題 -->
             <header class="page-header" style="padding: 2rem; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
                 <div class="header-left">
@@ -2883,6 +3018,83 @@
             console.log('✅ 頁面內容可見性檢查完成');
         }
 
+        // 導航到Team Project視圖
+        function navigateToTeamProject() {
+            console.log('🔄 切換到Team Project視圖');
+            
+            // 隱藏所有視圖
+            const allViews = document.querySelectorAll('.view-container');
+            allViews.forEach(view => {
+                view.style.display = 'none';
+            });
+            
+            // 顯示Team Project視圖
+            const teamProjectView = document.getElementById('team-project-view');
+            if (teamProjectView) {
+                teamProjectView.style.display = 'block';
+            }
+            
+            // 更新側邊欄活躍狀態
+            updateSidebarActiveState('team-project');
+            
+            // 更新導航欄標題
+            updateNavbarTitle('Team Project');
+            
+            console.log('✅ 已切換到Team Project視圖');
+        }
+        
+        // 導航到銀行對帳單視圖
+        function navigateToBankStatement() {
+            console.log('🔄 切換到銀行對帳單視圖');
+            
+            // 隱藏所有視圖
+            const allViews = document.querySelectorAll('.view-container');
+            allViews.forEach(view => {
+                view.style.display = 'none';
+            });
+            
+            // 顯示銀行對帳單視圖
+            const bankStatementView = document.getElementById('bank-statement-view');
+            if (bankStatementView) {
+                bankStatementView.style.display = 'block';
+            }
+            
+            // 更新側邊欄活躍狀態
+            updateSidebarActiveState('bank-statement');
+            
+            // 更新導航欄標題
+            updateNavbarTitle('儀表板');
+            
+            console.log('✅ 已切換到銀行對帳單視圖');
+        }
+        
+        // 更新側邊欄活躍狀態
+        function updateSidebarActiveState(activeView) {
+            // 移除所有活躍狀態
+            const allItems = document.querySelectorAll('.project-item, .config-item');
+            allItems.forEach(item => {
+                item.style.background = 'transparent';
+                item.style.color = '#6b7280';
+            });
+            
+            // 設置當前活躍項目
+            if (activeView === 'team-project') {
+                const teamProjectItem = document.getElementById('team-project-item');
+                if (teamProjectItem) {
+                    teamProjectItem.style.background = '#eff6ff';
+                    teamProjectItem.style.color = '#3b82f6';
+                }
+            }
+        }
+        
+        // 更新導航欄標題
+        function updateNavbarTitle(title) {
+            const navbarTitle = document.querySelector('.navbar-right span');
+            if (navbarTitle) {
+                navbarTitle.textContent = title;
+            }
+        }
+        
         // 簡單的fallback函數
         function createNewProject() {
             alert('創建新項目功能');
