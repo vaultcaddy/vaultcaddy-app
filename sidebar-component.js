@@ -24,6 +24,12 @@ class VaultCaddySidebar {
             console.log('🔄 側邊欄: 檢測到新項目創建，重新渲染');
             this.render();
         });
+        
+        // 監聽項目刪除事件
+        window.addEventListener('projectDeleted', () => {
+            console.log('🔄 側邊欄: 檢測到項目刪除，重新渲染');
+            this.render();
+        });
     }
     
     render() {
@@ -43,13 +49,25 @@ class VaultCaddySidebar {
         // 獲取項目列表
         const projects = JSON.parse(localStorage.getItem('vaultcaddy_projects') || '[]');
         
+        // 獲取當前項目 ID（從 URL 參數）
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentProjectId = urlParams.get('project');
+        
+        // 檢查當前頁面
+        const currentPage = window.location.pathname.split('/').pop();
+        const isAccountPage = this.activePage === 'account' || currentPage === 'account.html';
+        const isBillingPage = this.activePage === 'billing' || currentPage === 'billing.html';
+        
         // 生成項目列表 HTML
-        const projectsHTML = projects.map(project => `
-            <div onclick="window.location.href='firstproject.html?project=${project.id}'" style="display: flex; align-items: center; padding: 0.5rem; color: #6b7280; cursor: pointer; border-radius: 4px; transition: background 0.2s; margin-bottom: 0.25rem;">
+        const projectsHTML = projects.map(project => {
+            const isActive = currentProjectId === project.id;
+            return `
+            <div onclick="window.location.href='firstproject.html?project=${project.id}'" style="display: flex; align-items: center; padding: 0.5rem; color: ${isActive ? '#2563eb' : '#6b7280'}; cursor: pointer; border-radius: 4px; transition: background 0.2s; margin-bottom: 0.25rem; ${isActive ? 'background: #eff6ff; border-left: 3px solid #2563eb; margin-left: -1.5rem; padding-left: calc(0.5rem + 1.5rem - 3px);' : ''}">
                 <i class="fas fa-folder" style="margin-right: 0.5rem; font-size: 1rem;"></i>
                 <span style="font-size: 0.875rem;">${project.name}</span>
             </div>
-        `).join('');
+        `;
+        }).join('');
         
         return `
             <!-- 搜索欄 -->
@@ -73,12 +91,12 @@ class VaultCaddySidebar {
             <!-- 配置區塊 (底部) -->
             <div style="border-top: 1px solid #e5e7eb; padding-top: 1rem;">
                 <h3 style="font-size: 0.75rem; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 0.75rem 0;">配置</h3>
-                <div onclick="window.location.href='account.html'" style="display: flex; align-items: center; padding: 0.5rem; color: #6b7280; cursor: pointer; border-radius: 4px; transition: background 0.2s; margin-bottom: 0.25rem;">
-                    <i class="fas fa-user" style="margin-right: 0.5rem; font-size: 1rem; width: 20px;"></i>
+                <div onclick="window.location.href='account.html'" style="display: flex; align-items: center; padding: 0.5rem; color: ${isAccountPage ? '#2563eb' : '#6b7280'}; cursor: pointer; border-radius: 4px; transition: background 0.2s; margin-bottom: 0.25rem; ${isAccountPage ? 'background: #eff6ff; border-left: 3px solid #2563eb; margin-left: -1.5rem; padding-left: calc(0.5rem + 1.5rem - 3px);' : ''}">
+                    <i class="fas fa-user" style="margin-right: 0.5rem; font-size: 1rem; width: 20px; color: ${isAccountPage ? '#2563eb' : '#6b7280'};"></i>
                     <span style="font-size: 0.875rem;">帳戶</span>
                 </div>
-                <div onclick="window.location.href='billing.html'" style="display: flex; align-items: center; padding: 0.5rem; color: ${this.activePage === 'billing' ? '#2563eb' : '#6b7280'}; cursor: pointer; border-radius: 4px; transition: background 0.2s; ${this.activePage === 'billing' ? 'background: #eff6ff; border-left: 3px solid #2563eb; margin-left: -1.5rem; padding-left: calc(0.5rem + 1.5rem);' : ''}">
-                    <i class="fas fa-credit-card" style="margin-right: 0.5rem; font-size: 1rem; width: 20px; color: ${this.activePage === 'billing' ? '#2563eb' : '#6b7280'};"></i>
+                <div onclick="window.location.href='billing.html'" style="display: flex; align-items: center; padding: 0.5rem; color: ${isBillingPage ? '#2563eb' : '#6b7280'}; cursor: pointer; border-radius: 4px; transition: background 0.2s; ${isBillingPage ? 'background: #eff6ff; border-left: 3px solid #2563eb; margin-left: -1.5rem; padding-left: calc(0.5rem + 1.5rem - 3px);' : ''}">
+                    <i class="fas fa-credit-card" style="margin-right: 0.5rem; font-size: 1rem; width: 20px; color: ${isBillingPage ? '#2563eb' : '#6b7280'};"></i>
                     <span style="font-size: 0.875rem;">計費</span>
                 </div>
             </div>

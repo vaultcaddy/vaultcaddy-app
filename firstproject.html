@@ -12,9 +12,9 @@
     <script src="config.js"></script>
     <script src="translations.js"></script>
     <script src="unified-auth.js"></script>
-    <script src="global-auth-sync.js?v=2.3"></script>
-    <script src="navbar-component.js?v=2.3"></script>
-    <script src="sidebar-component.js?v=2.3"></script>
+    <script src="global-auth-sync.js?v=2.5"></script>
+    <script src="navbar-component.js?v=2.5"></script>
+    <script src="sidebar-component.js?v=2.5"></script>
     <!-- 載入統一處理器系統 -->
     <script src="google-ai-integration.js"></script>
     <script src="google-document-ai.js"></script>
@@ -1192,18 +1192,18 @@
                     <div class="header-left">
                         <div class="team-info">
                             <div class="team-icon">
-                                <i class="fas fa-users"></i>
+                                <i class="fas fa-folder"></i>
                             </div>
                             <div class="team-details">
-                                <h1 id="team-name">1扭扭批's team</h1>
+                                <h1 id="project-title">Project</h1>
                                 <span class="subscription-badge" id="subscription-badge">Professional</span>
                             </div>
                         </div>
                     </div>
                     <div class="header-right">
-                        <button class="project-btn" onclick="createNewProject()">
-                            <i class="fas fa-plus"></i>
-                            <span>+ Project</span>
+                        <button class="project-btn" onclick="confirmDeleteProject()" style="background: #ef4444;">
+                            <i class="fas fa-trash"></i>
+                            <span>Delete</span>
                         </button>
                     </div>
                 </header>
@@ -1299,9 +1299,15 @@
             <!-- Team Project 視圖 -->
             <div id="team-project-view" class="view-container" style="display: block !important; visibility: visible !important; padding: 2rem 3rem; background: #ffffff;">
                 <!-- 頁面標題 -->
-                <header style="margin-bottom: 2rem;">
-                    <h1 style="font-size: 2rem; font-weight: 700; color: #1f2937; margin: 0 0 0.5rem 0;">Invoice converter</h1>
-                    <p style="color: #6b7280; font-size: 1rem; margin: 0;">Manage and view your documents</p>
+                <header style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <h1 id="team-project-title" style="font-size: 2rem; font-weight: 700; color: #1f2937; margin: 0 0 0.5rem 0;">Project</h1>
+                        <p style="color: #6b7280; font-size: 1rem; margin: 0;">Manage and view your documents</p>
+                    </div>
+                    <button onclick="confirmDeleteProject()" style="background: #ef4444; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
+                        <i class="fas fa-trash"></i>
+                        <span>Delete</span>
+                    </button>
                 </header>
 
                 <!-- 控制欄 -->
@@ -1633,8 +1639,82 @@
             console.log('✅ 頁面立即初始化完成');
         })();
 
+        // 獲取當前項目 ID
+        function getCurrentProjectId() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('project');
+        }
+
+        // 獲取當前項目信息
+        function getCurrentProject() {
+            const projectId = getCurrentProjectId();
+            if (!projectId) return null;
+            
+            const projects = JSON.parse(localStorage.getItem('vaultcaddy_projects') || '[]');
+            return projects.find(p => p.id === projectId);
+        }
+
+        // 更新頁面標題為項目名稱
+        function updateProjectTitle() {
+            const project = getCurrentProject();
+            if (project) {
+                // 更新 document-list-view 中的標題
+                const projectTitle = document.getElementById('project-title');
+                if (projectTitle) {
+                    projectTitle.textContent = project.name;
+                }
+                
+                // 更新 team-project-view 中的標題
+                const teamProjectTitle = document.getElementById('team-project-title');
+                if (teamProjectTitle) {
+                    teamProjectTitle.textContent = project.name;
+                }
+                
+                console.log('✅ 項目標題已更新:', project.name);
+            }
+        }
+
+        // 確認刪除項目
+        function confirmDeleteProject() {
+            const project = getCurrentProject();
+            if (!project) {
+                alert('無法找到當前項目');
+                return;
+            }
+            
+            const confirmed = confirm(`是否刪除項目「${project.name}」？\n\n此操作無法撤銷。`);
+            if (confirmed) {
+                deleteProject(project.id);
+            }
+        }
+
+        // 刪除項目
+        function deleteProject(projectId) {
+            // 從 localStorage 獲取項目列表
+            const projects = JSON.parse(localStorage.getItem('vaultcaddy_projects') || '[]');
+            
+            // 過濾掉要刪除的項目
+            const updatedProjects = projects.filter(p => p.id !== projectId);
+            
+            // 保存更新後的列表
+            localStorage.setItem('vaultcaddy_projects', JSON.stringify(updatedProjects));
+            
+            // 觸發項目刪除事件，讓側邊欄更新
+            window.dispatchEvent(new CustomEvent('projectDeleted', { 
+                detail: { projectId } 
+            }));
+            
+            console.log('✅ 項目已刪除:', projectId);
+            
+            // 返回到 dashboard
+            window.location.href = 'dashboard.html';
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🎯 Dashboard 頁面載入中...');
+            
+            // 更新項目標題
+            updateProjectTitle();
             
             // 等待全域同步系統載入
             const initializeWithGlobalSync = () => {
