@@ -15,6 +15,15 @@ class VaultCaddySidebar {
         this.bindEvents();
         this.loadStats();
         this.setupLanguageListener();
+        this.setupProjectListener();
+    }
+    
+    setupProjectListener() {
+        // 監聽項目創建事件
+        window.addEventListener('projectCreated', () => {
+            console.log('🔄 側邊欄: 檢測到新項目創建，重新渲染');
+            this.render();
+        });
     }
     
     render() {
@@ -31,6 +40,17 @@ class VaultCaddySidebar {
     }
     
     getSidebarHTML() {
+        // 獲取項目列表
+        const projects = JSON.parse(localStorage.getItem('vaultcaddy_projects') || '[]');
+        
+        // 生成項目列表 HTML
+        const projectsHTML = projects.map(project => `
+            <div onclick="window.location.href='firstproject.html?project=${project.id}'" style="display: flex; align-items: center; padding: 0.5rem; color: #6b7280; cursor: pointer; border-radius: 4px; transition: background 0.2s; margin-bottom: 0.25rem;">
+                <i class="fas fa-folder" style="margin-right: 0.5rem; font-size: 1rem;"></i>
+                <span style="font-size: 0.875rem;">${project.name}</span>
+            </div>
+        `).join('');
+        
         return `
             <!-- 搜索欄 -->
             <div style="margin-bottom: 1.5rem;">
@@ -41,12 +61,13 @@ class VaultCaddySidebar {
             <div style="margin-bottom: auto;">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
                     <span style="font-size: 0.875rem; font-weight: 500; color: #6b7280;">project</span>
-                    <button onclick="createNewProject()" style="background: none; border: none; color: #6b7280; cursor: pointer; font-size: 1.25rem; padding: 0; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;">+</button>
+                    <button onclick="openCreateProjectModal()" style="background: none; border: none; color: #6b7280; cursor: pointer; font-size: 1.25rem; padding: 0; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;">+</button>
                 </div>
-                <div onclick="handleTeamProjectClick()" style="display: flex; align-items: center; padding: 0.5rem; color: #6b7280; cursor: pointer; border-radius: 4px; transition: background 0.2s;">
+                <div onclick="handleTeamProjectClick()" style="display: flex; align-items: center; padding: 0.5rem; color: #6b7280; cursor: pointer; border-radius: 4px; transition: background 0.2s; margin-bottom: 0.25rem;">
                     <i class="fas fa-folder" style="margin-right: 0.5rem; font-size: 1rem;"></i>
                     <span style="font-size: 0.875rem;">Team project</span>
                 </div>
+                ${projectsHTML}
             </div>
             
             <!-- 配置區塊 (底部) -->
