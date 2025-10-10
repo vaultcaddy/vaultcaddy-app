@@ -24,77 +24,41 @@ class VaultCaddySidebar {
             return;
         }
         
+        // 設置側邊欄為 flexbox 布局
+        sidebarContainer.style.cssText = 'width: 280px; background: #ffffff; border-right: 1px solid #e5e7eb; padding: 1.5rem; display: flex; flex-direction: column; visibility: visible;';
+        
         sidebarContainer.innerHTML = this.getSidebarHTML();
     }
     
     getSidebarHTML() {
         return `
-            <div class="sidebar-header">
-                <h2 data-translate="models">模型</h2>
+            <!-- 搜索欄 -->
+            <div style="margin-bottom: 1.5rem;">
+                <input type="text" placeholder="篩選文檔名稱..." style="width: 100%; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 0.875rem; color: #6b7280;">
             </div>
-            <nav class="sidebar-nav">
-                <ul>
-                    <li class="nav-item ${this.activePage === 'bank-statement' ? 'active' : ''}">
-                        <a href="dashboard.html#bank-statement">
-                            <i class="fas fa-university"></i>
-                            <span data-translate="sidebar_bank_statements">銀行對帳單</span>
-                        </a>
-                    </li>
-                    <li class="nav-item ${this.activePage === 'invoice' ? 'active' : ''}">
-                        <a href="dashboard.html#invoice">
-                            <i class="fas fa-file-invoice"></i>
-                            <span data-translate="sidebar_invoices">發票</span>
-                        </a>
-                    </li>
-                    <li class="nav-item ${this.activePage === 'receipt' ? 'active' : ''}">
-                        <a href="dashboard.html#receipt">
-                            <i class="fas fa-receipt"></i>
-                            <span data-translate="sidebar_receipts">收據</span>
-                        </a>
-                    </li>
-                    <li class="nav-item ${this.activePage === 'general' ? 'active' : ''}">
-                        <a href="dashboard.html#general">
-                            <i class="fas fa-file-alt"></i>
-                            <span data-translate="sidebar_general">一般文檔</span>
-                        </a>
-                    </li>
-                </ul>
-                
-                <h3 data-translate="configurations">配置</h3>
-                <ul>
-                    <li class="nav-item ${this.activePage === 'account' ? 'active' : ''}">
-                        <a href="account.html">
-                            <i class="fas fa-user"></i>
-                            <span data-translate="account">帳戶</span>
-                        </a>
-                    </li>
-                    <li class="nav-item ${this.activePage === 'billing' ? 'active' : ''}">
-                        <a href="billing.html">
-                            <i class="fas fa-credit-card"></i>
-                            <span data-translate="billing">計費</span>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
             
-            <!-- 側邊欄底部統計區域 -->
-            <div class="sidebar-footer">
-                <div class="sidebar-stats">
-                    <div class="sidebar-stat-item">
-                        <div class="stat-icon-text">📄</div>
-                        <div class="stat-text">
-                            <span class="stat-number" data-stat="total-processed">0</span>
-                            <span class="stat-label" data-translate="processed_documents_count">處理文檔總數</span>
-                        </div>
-                    </div>
-                    
-                    <div class="sidebar-stat-item">
-                        <div class="stat-icon-text">💰</div>
-                        <div class="stat-text">
-                            <span class="stat-number" data-stat="current-credits">7</span>
-                            <span class="stat-label" data-translate="remaining_credits">剩餘積分</span>
-                        </div>
-                    </div>
+            <!-- Project 區塊 -->
+            <div style="margin-bottom: auto;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+                    <span style="font-size: 0.875rem; font-weight: 500; color: #6b7280;">project</span>
+                    <button onclick="createNewProject()" style="background: none; border: none; color: #6b7280; cursor: pointer; font-size: 1.25rem; padding: 0; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;">+</button>
+                </div>
+                <div onclick="navigateToTeamProject ? navigateToTeamProject() : window.location.href='dashboard.html'" style="display: flex; align-items: center; padding: 0.5rem; color: #6b7280; cursor: pointer; border-radius: 4px; transition: background 0.2s;">
+                    <i class="fas fa-folder" style="margin-right: 0.5rem; font-size: 1rem;"></i>
+                    <span style="font-size: 0.875rem;">Team project</span>
+                </div>
+            </div>
+            
+            <!-- 配置區塊 (底部) -->
+            <div style="border-top: 1px solid #e5e7eb; padding-top: 1rem;">
+                <h3 style="font-size: 0.75rem; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 0.75rem 0;">配置</h3>
+                <div onclick="window.location.href='account.html'" style="display: flex; align-items: center; padding: 0.5rem; color: #6b7280; cursor: pointer; border-radius: 4px; transition: background 0.2s; margin-bottom: 0.25rem;">
+                    <i class="fas fa-user" style="margin-right: 0.5rem; font-size: 1rem; width: 20px;"></i>
+                    <span style="font-size: 0.875rem;">帳戶</span>
+                </div>
+                <div onclick="window.location.href='billing.html'" style="display: flex; align-items: center; padding: 0.5rem; color: ${this.activePage === 'billing' ? '#2563eb' : '#6b7280'}; cursor: pointer; border-radius: 4px; transition: background 0.2s; ${this.activePage === 'billing' ? 'background: #eff6ff; border-left: 3px solid #2563eb; margin-left: -1.5rem; padding-left: calc(0.5rem + 1.5rem);' : ''}">
+                    <i class="fas fa-credit-card" style="margin-right: 0.5rem; font-size: 1rem; width: 20px; color: ${this.activePage === 'billing' ? '#2563eb' : '#6b7280'};"></i>
+                    <span style="font-size: 0.875rem;">計費</span>
                 </div>
             </div>
         `;
