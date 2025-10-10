@@ -206,9 +206,9 @@ class VaultCaddyNavbar {
             <a href="index.html#pricing" class="nav-link" data-translate="nav_pricing" onclick="navigateToSection('pricing')">價格</a>
         `;
         
-        // Dashboard 按鈕 - 使用正確的文件路徑
+        // Dashboard 按鈕 - 前往Team Project視圖
         navigation += `
-            <a href="dashboard.html#bank-statement" class="nav-link" data-translate="nav_dashboard">儀表板</a>
+            <a href="dashboard.html" class="nav-link" data-translate="nav_dashboard">儀表板</a>
         `;
         
         return navigation;
