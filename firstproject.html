@@ -1,0 +1,2996 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-translate="page_title_dashboard">儀表板 - VaultCaddy</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="pages.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <script src="config.js"></script>
+    <script src="translations.js"></script>
+    <script src="unified-auth.js"></script>
+    <script src="global-auth-sync.js?v=2.3"></script>
+    <script src="navbar-component.js?v=2.3"></script>
+    <script src="sidebar-component.js?v=2.3"></script>
+    <!-- 載入統一處理器系統 -->
+    <script src="google-ai-integration.js"></script>
+    <script src="google-document-ai.js"></script>
+    <script src="google-vision-ai.js"></script>
+    <script src="google-smart-processor.js"></script>
+    <script src="google-cloud-storage.js"></script>
+    <script src="ledgerbox-integration.js"></script>
+    
+    <!-- 載入數據處理器 -->
+    <script src="data-processor.js"></script>
+    
+    <!-- 載入統一處理器 -->
+    <script src="unified-document-processor.js"></script>
+    <link rel="stylesheet" href="ledgerbox-styles.css">
+    
+    <style>
+        /* 白色主題樣式 */
+        body {
+            background: #ffffff !important;
+            color: #1f2937 !important;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+            background: #ffffff;
+            padding-top: 60px; /* 為導航欄留出空間 */
+        }
+        
+        .sidebar {
+            width: 280px;
+            background: #ffffff;
+            border-right: 1px solid #e5e7eb;
+            flex-shrink: 0;
+            position: fixed;
+            top: 60px;
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+        }
+        
+        .sidebar-header {
+            padding: 1.5rem 1rem 1rem 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .sidebar-header h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0;
+        }
+        
+        .sidebar-nav {
+            flex: 1;
+            padding: 1rem 0;
+        }
+        
+        .sidebar-nav ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .sidebar-nav .nav-item {
+            margin: 0;
+        }
+        
+        .sidebar-nav .nav-item a {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            color: #6b7280;
+            text-decoration: none;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+        
+        .sidebar-nav .nav-item.active a {
+            background: #eff6ff;
+            color: #2563eb;
+            border-left-color: #2563eb;
+        }
+        
+        .sidebar-nav .nav-item a:hover {
+            background: #f1f5f9;
+            color: #374151;
+        }
+        
+        .sidebar-nav .nav-item a i {
+            width: 20px;
+            margin-right: 0.75rem;
+            font-size: 1rem;
+        }
+        
+        .sidebar-section {
+            padding: 1rem 0;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .sidebar-section h3 {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin: 0 0 0.5rem 1rem;
+        }
+        
+        .sidebar-footer {
+            padding: 1rem;
+            border-top: 1px solid #e2e8f0;
+            background: #ffffff;
+        }
+        
+        .sidebar-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+        }
+        
+        .stat-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .stat-left {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex: 1;
+        }
+        
+        .stat-label {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+        
+        .stat-value {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .main-content {
+            flex: 1;
+            background: #ffffff;
+            margin-left: 280px;
+            overflow-y: auto;
+            min-height: calc(100vh - 60px);
+            display: block !important;
+            visibility: visible !important;
+        }
+        
+        .page-header {
+            padding: 2rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #ffffff;
+        }
+        
+        .team-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .team-icon {
+            width: 48px;
+            height: 48px;
+            background: #fbbf24;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+        
+        .team-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .team-details h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0;
+        }
+        
+        .subscription-badge {
+            background: #3b82f6;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            width: fit-content;
+        }
+        
+        .subscription-badge::after {
+            content: '▼';
+            font-size: 0.6rem;
+            opacity: 0.8;
+        }
+        
+        .project-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        
+        .project-btn:hover {
+            background: #2563eb;
+        }
+        
+        .controls-bar {
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e2e8f0;
+            background: #ffffff;
+        }
+        
+        .filter-input {
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            color: #1f2937;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            width: 300px;
+            font-size: 14px;
+        }
+        
+        .filter-input::placeholder {
+            color: #9ca3af;
+        }
+        
+        .filter-input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        .actions {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .upload-btn {
+            background: #6366f1;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        
+        .upload-btn:hover {
+            background: #4f46e5;
+        }
+        
+        .view-btn {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        
+        .view-btn:hover {
+            background: #e5e7eb;
+        }
+        
+        .documents-table-container {
+            padding: 2rem;
+            background: #ffffff;
+            flex: 1;
+            overflow-x: auto;
+        }
+        
+        .folder-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+            max-width: 1200px;
+        }
+        
+        .folder-item {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            min-height: 180px;
+            justify-content: center;
+        }
+        
+        .folder-item:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        .folder-icon {
+            width: 64px;
+            height: 64px;
+            background: #f3f4f6;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+        
+        .folder-icon i {
+            font-size: 2rem;
+            color: #6b7280;
+        }
+        
+        .folder-icon::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 8px;
+            width: 20px;
+            height: 8px;
+            background: #f3f4f6;
+            border-radius: 4px 4px 0 0;
+        }
+        
+        .folder-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+        
+        .folder-files-count {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+        }
+        
+        .folder-updated {
+            font-size: 0.75rem;
+            color: #9ca3af;
+        }
+        
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 3rem;
+            color: #6b7280;
+        }
+        
+        .empty-state-icon {
+            font-size: 4rem;
+            color: #d1d5db;
+            margin-bottom: 1rem;
+        }
+        
+        .empty-state h3 {
+            font-size: 1.25rem;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+        
+        .empty-state p {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+        
+        .documents-table {
+            width: 100%;
+            min-width: 1200px; /* 確保表格最小寬度，觸發水平滾動 */
+            border-collapse: collapse;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .documents-table thead th {
+            background: #f8fafc;
+            color: #374151;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 1px solid #e2e8f0;
+            white-space: nowrap; /* 防止標題文字換行 */
+            font-size: 14px;
+        }
+        
+        .documents-table tbody tr {
+            border-bottom: 1px solid #f3f4f6;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .documents-table tbody tr:hover {
+            background: #f9fafb;
+        }
+        
+        .documents-table tbody tr:last-child {
+            border-bottom: none;
+        }
+        
+        .documents-table tbody td {
+            padding: 1rem;
+            color: #374151;
+            vertical-align: middle;
+            white-space: nowrap; /* 防止單元格內容換行 */
+            font-size: 14px;
+        }
+        
+        .document-cell {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .file-icon {
+            color: #ef4444;
+            font-size: 1.5rem;
+        }
+        
+        .doc-name {
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .doc-details {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+        
+        .period-info {
+            color: #6b7280;
+        }
+        
+        .reconciliation {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .reconciliation-text {
+            font-weight: 600;
+        }
+        
+        .progress-bar {
+            width: 100px;
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #10b981;
+            transition: width 0.3s;
+        }
+        
+        .progress-percentage {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+        
+        .reconciliation-status {
+            font-size: 0.75rem;
+            color: #fbbf24;
+        }
+        
+        .balance-info {
+            font-size: 0.875rem;
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .status-badge.success {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+        
+        .review-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .review-badge.review {
+            background: rgba(249, 115, 22, 0.2);
+            color: #f97316;
+        }
+        
+        .action-btn {
+            background: none;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        
+        .action-btn:hover {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        
+        .pagination-info {
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #6b7280;
+            border-top: 1px solid #e2e8f0;
+            background: #ffffff;
+            font-size: 14px;
+        }
+        
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .rows-per-page {
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            color: #374151;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .rows-per-page:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+        
+        .pagination-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .page-btn {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            color: #374151;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .page-btn:hover:not(:disabled) {
+            background: #e5e7eb;
+        }
+        
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* 可編輯輸入框樣式 */
+        .editable-input {
+            border: 1px solid transparent;
+            background: transparent;
+            padding: 0.5rem;
+            font-size: 14px;
+            color: #374151;
+            width: 100%;
+            box-sizing: border-box;
+            transition: all 0.2s;
+        }
+        
+        .editable-input:hover {
+            border-color: #d1d5db;
+            background: #f9fafb;
+        }
+        
+        .editable-input:focus {
+            outline: none;
+            border-color: #6366f1;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        .editable-input[readonly] {
+            background: #f3f4f6;
+            color: #6b7280;
+            cursor: not-allowed;
+        }
+        
+        .editable-input[readonly]:hover {
+            border-color: transparent;
+            background: #f3f4f6;
+        }
+        
+        .date-input {
+            min-width: 140px;
+        }
+        
+        .description-input {
+            min-width: 200px;
+        }
+        
+        .amount-input,
+        .balance-input {
+            min-width: 100px;
+            text-align: right;
+        }
+        
+        .delete-transaction-btn {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        
+        .delete-transaction-btn:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+        
+        /* 文檔詳細視圖樣式 */
+        .back-navigation {
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #334155;
+        }
+        
+        .back-btn {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+        }
+        
+        .back-btn:hover {
+            color: #e2e8f0;
+        }
+        
+        .document-detail-container {
+            display: flex;
+            min-height: calc(100vh - 200px);
+            height: auto;
+        }
+        
+        .pdf-preview-container {
+            width: 40%;
+            border-right: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            background: #ffffff;
+        }
+        
+        .pdf-controls {
+            padding: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: #f8fafc;
+        }
+        
+        .pdf-control-btn {
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            color: #475569;
+            padding: 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .pdf-control-btn:hover {
+            background: #e2e8f0;
+            border-color: #cbd5e1;
+        }
+        
+        .page-info {
+            color: #64748b;
+            font-weight: 500;
+        }
+        
+        .pdf-viewer {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8fafc;
+            padding: 2rem;
+        }
+        
+        .pdf-placeholder {
+            text-align: center;
+            color: #64748b;
+            padding: 2rem;
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            background: #ffffff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .pdf-placeholder i {
+            font-size: 3rem;
+            color: #3b82f6;
+            margin-bottom: 1rem;
+        }
+        
+        .pdf-placeholder h3 {
+            color: #1f2937;
+            margin: 0 0 0.5rem 0;
+        }
+        
+        .pdf-placeholder p {
+            color: #6b7280;
+            margin: 0;
+        }
+        
+        .pdf-placeholder i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        
+        .data-extraction-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            max-height: calc(100vh - 200px);
+        }
+        
+        .extraction-header {
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .extraction-header h2 {
+            font-size: 1.5rem;
+            color: #e2e8f0;
+            margin: 0;
+        }
+        
+        .extraction-tabs {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .tab-btn {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+        
+        .tab-btn.active {
+            color: #8b5cf6;
+            border-bottom-color: #8b5cf6;
+        }
+        
+        .document-actions {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .save-btn, .download-btn, .more-actions-btn {
+            background: #475569;
+            border: none;
+            color: #e2e8f0;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .reconciliation-status {
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #334155;
+        }
+        
+        .reconciliation-status h3 {
+            color: #e2e8f0;
+            margin: 0 0 0.5rem 0;
+        }
+        
+        .completion-status {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+        
+        .bank-statement-details {
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #334155;
+        }
+        
+        .bank-statement-details h3 {
+            color: #e2e8f0;
+            margin: 0;
+        }
+        
+        .transactions-section {
+            flex: 1;
+            padding: 1rem 2rem;
+        }
+        
+        .transactions-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .transactions-header h3 {
+            color: #e2e8f0;
+            margin: 0;
+        }
+        
+        .transaction-controls {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .control-btn {
+            background: #475569;
+            border: none;
+            color: #e2e8f0;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        .add-btn {
+            background: #8b5cf6;
+        }
+        
+        .transaction-info {
+            margin-bottom: 1rem;
+            color: #94a3b8;
+        }
+        
+        .transactions-table-container {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .transactions-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #ffffff;
+        }
+        
+        .transactions-table thead th {
+            background: #f8fafc;
+            color: #374151;
+            padding: 0.75rem;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .transactions-table tbody tr {
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .transactions-table tbody tr:last-child {
+            border-bottom: none;
+        }
+        
+        .transactions-table tbody td {
+            padding: 0.75rem;
+            color: #374151;
+        }
+        
+        .transaction-checkbox {
+            margin: 0;
+        }
+        
+        .delete-transaction-btn {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            padding: 0.25rem;
+        }
+        
+        .delete-transaction-btn:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+        
+        .view-container {
+            height: 100%;
+            display: block !important;
+            visibility: visible !important;
+        }
+        
+        /* 可編輯表格樣式 */
+        .editable-input {
+            width: 100%;
+            border: 1px solid transparent;
+            background: transparent;
+            padding: 0.5rem;
+            font-size: 14px;
+            color: #374151;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .editable-input:focus {
+            outline: none;
+            border-color: #6366f1;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        .editable-input:hover {
+            background: #f9fafb;
+            border-color: #d1d5db;
+        }
+        
+        .date-input {
+            min-width: 140px;
+        }
+        
+        .description-input {
+            min-width: 200px;
+        }
+        
+        .amount-input, .balance-input {
+            min-width: 100px;
+            text-align: right;
+        }
+        
+        .transaction-row:hover .editable-input {
+            border-color: #d1d5db;
+        }
+        
+        .delete-transaction-btn {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .delete-transaction-btn:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+        }
+        
+        /* 側邊欄搜索欄 */
+        .sidebar-search {
+            margin-bottom: 1.5rem;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: #ffffff;
+            color: #1f2937;
+            font-size: 0.875rem;
+        }
+        
+        .search-input::placeholder {
+            color: #9ca3af;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        /* 項目區塊 */
+        .project-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }
+        
+        .project-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .add-project-btn {
+            background: none;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .add-project-btn:hover {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        
+        .project-item {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 0;
+            color: #6b7280;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        
+        .project-item:hover {
+            color: #374151;
+        }
+        
+        .project-item i {
+            margin-right: 0.75rem;
+            width: 16px;
+        }
+        
+        /* 配置區塊 */
+        .config-item {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 0;
+            color: #6b7280;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        
+        .config-item:hover {
+            color: #374151;
+        }
+        
+        .config-item i {
+            margin-right: 0.75rem;
+            width: 16px;
+        }
+        
+        /* 側邊欄項目hover效果 */
+        .nav-item:hover {
+            background: #f1f5f9 !important;
+        }
+        
+        .nav-item.active {
+            background: #eff6ff !important;
+            color: #2563eb !important;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        // 立即執行的頁面可見性腳本
+        (function() {
+            document.documentElement.style.cssText = 'display: block !important; visibility: visible !important;';
+            document.body.style.cssText = 'display: block !important; visibility: visible !important; background: #ffffff;';
+        })();
+    </script>
+
+    <!-- 導航欄 -->
+    <div id="navbar-placeholder">
+        <!-- Fallback 導航欄 -->
+        <nav class="fallback-navbar" style="position: fixed; top: 0; left: 0; right: 0; height: 60px; background: #ffffff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; z-index: 1000;">
+            <div class="navbar-left" style="display: flex; align-items: center;">
+                <div class="logo" style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.2rem; font-weight: bold;">VC</div>
+                    <div>
+                        <div style="font-size: 1.25rem; font-weight: 700; color: #1f2937;">VaultCaddy</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">AI DOCUMENT PROCESSING</div>
+                    </div>
+                </div>
+            </div>
+            <div class="navbar-right" style="display: flex; align-items: center; gap: 1rem;">
+                <span id="navbar-page-title" style="color: #6b7280;">Team Project</span>
+                <div style="width: 32px; height: 32px; background: #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">C</div>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Dashboard 容器 -->
+    <div class="dashboard-container" style="display: flex !important; min-height: calc(100vh - 60px); background: #ffffff; padding-top: 60px; visibility: visible !important;">
+        <!-- 左側邊欄 (由 sidebar-component.js 動態生成) -->
+        <aside class="sidebar"></aside>
+
+        <!-- 主內容區域 -->
+        <main class="main-content" id="main-content" style="flex: 1; background: #ffffff; overflow-y: auto; min-height: calc(100vh - 60px); display: block !important; visibility: visible !important;">
+            <!-- 文檔列表視圖 -->
+            <div id="document-list-view" class="view-container" style="display: none;">
+                <!-- 頁面標題 -->
+                <header class="page-header">
+                    <div class="header-left">
+                        <div class="team-info">
+                            <div class="team-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="team-details">
+                                <h1 id="team-name">1扭扭批's team</h1>
+                                <span class="subscription-badge" id="subscription-badge">Professional</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="header-right">
+                        <button class="project-btn" onclick="createNewProject()">
+                            <i class="fas fa-plus"></i>
+                            <span>+ Project</span>
+                        </button>
+                    </div>
+                </header>
+
+                <!-- 控制欄 -->
+                <div class="controls-bar">
+                    <div class="search-filter">
+                        <input type="text" data-translate-placeholder="filter_document_name" placeholder="篩選文檔名稱..." class="filter-input" id="filter-input">
+                    </div>
+                    <div class="actions">
+                        <button class="upload-btn" onclick="openUploadModal()">
+                            <i class="fas fa-upload"></i>
+                            <span data-translate="upload_files">上傳文件</span>
+                        </button>
+                        <button class="view-btn" onclick="toggleView()">
+                            <i class="fas fa-list"></i>
+                            <span data-translate="view">檢視</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 文檔表格視圖 -->
+                <div class="documents-table-container">
+                    <table class="documents-table" id="documents-table">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <input type="checkbox" id="select-all" onchange="toggleSelectAll()">
+                                    <i class="fas fa-sort"></i>
+                                </th>
+                                <th data-translate="document">Document <i class="fas fa-sort"></i></th>
+                                <th data-translate="statement_period">Statement Period <i class="fas fa-sort"></i></th>
+                                <th data-translate="reconciliation">Reconciliation <i class="fas fa-sort"></i></th>
+                                <th data-translate="balance_info">Balance Info <i class="fas fa-sort"></i></th>
+                                <th data-translate="status">Status <i class="fas fa-sort"></i></th>
+                                <th data-translate="review_status">Review Status <i class="fas fa-sort"></i></th>
+                                <th data-translate="notes">Notes <i class="fas fa-sort"></i></th>
+                                <th data-translate="date_uploaded">Date Uploaded <i class="fas fa-sort"></i></th>
+                                <th data-translate="actions">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="documents-tbody">
+                            <!-- 文檔將動態載入到這裡 -->
+                        </tbody>
+                    </table>
+                    
+                    <!-- 空狀態 -->
+                    <div class="empty-state" id="empty-state" style="display: block;">
+                        <div class="empty-content">
+                            <i class="fas fa-file-alt"></i>
+                            <h3>No results.</h3>
+                            <p>上傳您的第一個文檔開始使用</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 分頁控制 -->
+                <div class="pagination">
+                    <div class="pagination-info">
+                        <span id="selection-info">0 of 0 row(s) selected.</span>
+                    </div>
+                    <div class="pagination-controls">
+                        <div class="rows-per-page">
+                            <span>Rows per page</span>
+                            <select id="rows-per-page" onchange="changeRowsPerPage()">
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
+                        <div class="page-info">
+                            <span id="page-info">Page 1 of 0</span>
+                        </div>
+                        <div class="page-buttons">
+                            <button class="page-btn" onclick="goToFirstPage()" disabled>
+                                <i class="fas fa-angle-double-left"></i>
+                            </button>
+                            <button class="page-btn" onclick="goToPreviousPage()" disabled>
+                                <i class="fas fa-angle-left"></i>
+                            </button>
+                            <button class="page-btn" onclick="goToNextPage()" disabled>
+                                <i class="fas fa-angle-right"></i>
+                            </button>
+                            <button class="page-btn" onclick="goToLastPage()" disabled>
+                                <i class="fas fa-angle-double-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Team Project 視圖 -->
+            <div id="team-project-view" class="view-container" style="display: block !important; visibility: visible !important; padding: 2rem 3rem; background: #ffffff;">
+                <!-- 頁面標題 -->
+                <header style="margin-bottom: 2rem;">
+                    <h1 style="font-size: 2rem; font-weight: 700; color: #1f2937; margin: 0 0 0.5rem 0;">Invoice converter</h1>
+                    <p style="color: #6b7280; font-size: 1rem; margin: 0;">Manage and view your documents</p>
+                </header>
+
+                <!-- 控制欄 -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <div style="flex: 1; max-width: 300px;">
+                        <input type="text" placeholder="Filter document name..." style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #d1d5db; border-radius: 6px; background: #ffffff; color: #1f2937; font-size: 0.875rem;">
+                    </div>
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <button onclick="openUploadModal()" style="background: #8b5cf6; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
+                            <span>Upload files</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                        <button style="background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; padding: 0.75rem 1rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <i class="fas fa-sliders-h"></i>
+                            <span>View</span>
+                        </button>
+                        <button style="background: transparent; border: none; color: #6b7280; padding: 0.5rem; cursor: pointer; font-size: 1.25rem;">
+                            <i class="fas fa-question-circle"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 文檔表格 -->
+                <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead style="background: #f8fafc;">
+                            <tr>
+                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
+                                    <input type="checkbox" style="margin-right: 0.5rem;">
+                                    <span>Document</span>
+                                    <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i>
+                                </th>
+                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
+                                    <span>Statement Period</span>
+                                    <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i>
+                                </th>
+                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
+                                    <span>Reconciliation</span>
+                                    <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i>
+                                </th>
+                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
+                                    <span>Balance Info</span>
+                                    <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i>
+                                </th>
+                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
+                                    <span>Status</span>
+                                    <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i>
+                                </th>
+                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
+                                    <span>Review Status</span>
+                                    <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i>
+                                </th>
+                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
+                                    <span>Notes</span>
+                                    <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i>
+                                </th>
+                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
+                                    <span>Date Uploaded</span>
+                                    <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i>
+                                </th>
+                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
+                                    <span>Actions</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="team-project-tbody">
+                            <!-- 空狀態 -->
+                            <tr>
+                                <td colspan="9" style="text-align: center; padding: 4rem 2rem;">
+                                    <div style="color: #6b7280;">
+                                        <i class="fas fa-file-alt" style="font-size: 3rem; margin-bottom: 1rem; color: #d1d5db;"></i>
+                                        <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem; color: #374151;">No results.</h3>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 分頁控制 -->
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; margin-top: 1rem;">
+                    <div>
+                        <span style="color: #6b7280; font-size: 0.875rem;">0 of 0 row(s) selected.</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="color: #6b7280; font-size: 0.875rem;">Rows per page</span>
+                            <select style="background: #ffffff; border: 1px solid #d1d5db; color: #1f2937; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.875rem;">
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
+                        <div>
+                            <span style="color: #374151; font-size: 0.875rem;">Page 1 of 0</span>
+                        </div>
+                        <div style="display: flex; gap: 0.25rem;">
+                            <button disabled style="background: transparent; border: 1px solid #d1d5db; color: #9ca3af; padding: 0.5rem; border-radius: 4px; cursor: not-allowed;">
+                                <i class="fas fa-angle-double-left"></i>
+                            </button>
+                            <button disabled style="background: transparent; border: 1px solid #d1d5db; color: #9ca3af; padding: 0.5rem; border-radius: 4px; cursor: not-allowed;">
+                                <i class="fas fa-angle-left"></i>
+                            </button>
+                            <button disabled style="background: transparent; border: 1px solid #d1d5db; color: #9ca3af; padding: 0.5rem; border-radius: 4px; cursor: not-allowed;">
+                                <i class="fas fa-angle-right"></i>
+                            </button>
+                            <button disabled style="background: transparent; border: 1px solid #d1d5db; color: #9ca3af; padding: 0.5rem; border-radius: 4px; cursor: not-allowed;">
+                                <i class="fas fa-angle-double-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 銀行對帳單視圖 -->
+            <div id="bank-statement-view" class="view-container" style="display: none;">
+                <!-- 頁面標題 -->
+                <header class="page-header" style="padding: 2rem; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
+                    <div class="header-left">
+                        <div class="team-info" style="display: flex; align-items: center; gap: 1rem;">
+                            <div class="team-icon" style="width: 48px; height: 48px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem;">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="team-details">
+                                <h1 id="team-name" style="font-size: 1.5rem; font-weight: 700; color: #1f2937; margin: 0;">1扭扭批's team</h1>
+                                <span class="subscription-badge" id="subscription-badge" style="background: #3b82f6; color: white; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">Professional</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="header-right">
+                        <button class="project-btn" onclick="createNewProject()" style="background: #3b82f6; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
+                            <i class="fas fa-plus"></i>
+                            <span>+ Project</span>
+                        </button>
+                    </div>
+                </header>
+
+                <!-- 控制欄 -->
+                <div class="controls-bar" style="padding: 1rem 2rem; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
+                    <div class="search-filter">
+                        <input type="text" placeholder="篩選文檔名稱..." class="filter-input" id="filter-input" style="background: #ffffff; border: 1px solid #d1d5db; color: #1f2937; padding: 0.5rem 1rem; border-radius: 6px; width: 300px;">
+                    </div>
+                    <div class="actions" style="display: flex; gap: 1rem; align-items: center;">
+                        <button class="upload-btn" onclick="openUploadModal()" style="background: #3b82f6; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
+                            <i class="fas fa-upload"></i>
+                            <span>上傳文件</span>
+                        </button>
+                        <button class="view-btn" onclick="toggleView()" style="background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; padding: 0.75rem 1rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <i class="fas fa-list"></i>
+                            <span>檢視</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 文檔表格視圖 -->
+                <div class="documents-table-container" style="padding: 2rem; background: #ffffff; flex: 1; overflow-x: auto;">
+                <table class="documents-table" id="documents-table" style="width: 100%; border-collapse: collapse; background: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb;">
+                    <thead style="background: #f8fafc;">
+                        <tr>
+                            <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">
+                                <input type="checkbox" id="select-all" onchange="toggleSelectAll()">
+                                <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i>
+                            </th>
+                            <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">Document <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i></th>
+                            <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">Statement Period <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i></th>
+                            <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">Reconciliation <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i></th>
+                            <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">Balance Info <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i></th>
+                            <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">Status <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i></th>
+                            <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">Review Status <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i></th>
+                            <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">Notes <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i></th>
+                            <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">Date Uploaded <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i></th>
+                            <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="documents-tbody">
+                        <!-- 文檔將動態載入到這裡 -->
+                    </tbody>
+                </table>
+                
+                <!-- 空狀態 -->
+                <div class="empty-state" id="empty-state" style="display: block; text-align: center; padding: 4rem 2rem; color: #6b7280; background: #ffffff;">
+                    <div class="empty-content">
+                        <i class="fas fa-file-alt" style="font-size: 3rem; margin-bottom: 1rem; color: #d1d5db;"></i>
+                        <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem; color: #374151;">No results.</h3>
+                        <p style="color: #6b7280; font-size: 0.9rem;">上傳您的第一個文檔開始使用</p>
+                    </div>
+                </div>
+                
+                <!-- 分頁控制 -->
+                <div class="pagination" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; border-top: 1px solid #e5e7eb; background: #ffffff;">
+                    <div class="pagination-info">
+                        <span id="selection-info" style="color: #6b7280;">0 of 0 row(s) selected.</span>
+                    </div>
+                    <div class="pagination-controls" style="display: flex; align-items: center; gap: 1rem;">
+                        <div class="rows-per-page" style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="color: #6b7280;">Rows per page</span>
+                            <select id="rows-per-page" onchange="changeRowsPerPage()" style="background: #ffffff; border: 1px solid #d1d5db; color: #1f2937; padding: 0.25rem 0.5rem; border-radius: 4px;">
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
+                        <div class="page-info">
+                            <span id="page-info" style="color: #374151;">Page 1 of 0</span>
+                        </div>
+                        <div class="page-buttons" style="display: flex; gap: 0.25rem;">
+                            <button class="page-btn" onclick="goToFirstPage()" disabled style="background: transparent; border: 1px solid #d1d5db; color: #9ca3af; padding: 0.5rem; border-radius: 4px; cursor: pointer;">
+                                <i class="fas fa-angle-double-left"></i>
+                            </button>
+                            <button class="page-btn" onclick="goToPreviousPage()" disabled style="background: transparent; border: 1px solid #d1d5db; color: #9ca3af; padding: 0.5rem; border-radius: 4px; cursor: pointer;">
+                                <i class="fas fa-angle-left"></i>
+                            </button>
+                            <button class="page-btn" onclick="goToNextPage()" disabled style="background: transparent; border: 1px solid #d1d5db; color: #9ca3af; padding: 0.5rem; border-radius: 4px; cursor: pointer;">
+                                <i class="fas fa-angle-right"></i>
+                            </button>
+                            <button class="page-btn" onclick="goToLastPage()" disabled style="background: transparent; border: 1px solid #d1d5db; color: #9ca3af; padding: 0.5rem; border-radius: 4px; cursor: pointer;">
+                                <i class="fas fa-angle-double-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 上傳文件模態框 -->
+    <div id="upload-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>上傳文件</h2>
+                <button class="close-btn" onclick="closeUploadModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="file-drop-area">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <h3>拖放文件到此處或點擊選擇</h3>
+                    <p>支援 PDF, PNG, JPG 格式</p>
+                    <input type="file" id="file-input" multiple accept=".pdf,.png,.jpg,.jpeg" style="display: none;">
+                    <button class="upload-file-btn" onclick="document.getElementById('file-input').click()">選擇文件</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 登入狀態檢查 - 使用全域同步系統
+        function checkLoginStatus() {
+            console.log('🔍 Dashboard 檢查身份驗證狀態...');
+            
+            // 使用全域身份驗證同步系統
+            if (window.GlobalAuthSync) {
+                const globalState = window.GlobalAuthSync.getCurrentAuthState();
+                console.log('🌐 Dashboard 全域身份驗證狀態:', globalState);
+                return globalState.isAuthenticated;
+            }
+            
+            // 兜底邏輯：如果全域系統未載入，使用本地檢查
+            console.log('⚠️ 全域同步系統未載入，使用本地檢查');
+            return window.checkGlobalAuthState ? window.checkGlobalAuthState() : true;
+        }
+
+        // 文檔類型配置
+        const documentTypes = {
+            'bank-statement': {
+                titleKey: 'bank_statement_processor',
+                subtitleKey: 'manage_view_documents',
+                title: '銀行對帳單處理器',
+                subtitle: '管理和查看您的文檔',
+                icon: 'fas fa-university'
+            }
+        };
+
+        // 訂閱方案配置
+        const subscriptionPlans = {
+            'free': {
+                name: 'Free',
+                color: '#6b7280',
+                features: ['基礎文檔處理', '每月10個文檔']
+            },
+            'basic': {
+                name: 'Basic',
+                color: '#10b981',
+                features: ['進階文檔處理', '每月100個文檔']
+            },
+            'professional': {
+                name: 'Professional',
+                color: '#3b82f6',
+                features: ['AI智能處理', '無限文檔', '優先支援']
+            },
+            'business': {
+                name: 'Business',
+                color: '#8b5cf6',
+                features: ['企業級功能', '團隊協作', 'API存取']
+            }
+        };
+
+        // 頁面初始化
+        // 立即執行：確保頁面可見
+        (function() {
+            console.log('🚀 立即初始化頁面...');
+            
+            // 確保body可見
+            document.body.style.display = 'block';
+            document.body.style.visibility = 'visible';
+            
+            // 確保dashboard容器可見
+            const dashboardContainer = document.querySelector('.dashboard-container');
+            if (dashboardContainer) {
+                dashboardContainer.style.display = 'flex';
+                dashboardContainer.style.visibility = 'visible';
+            }
+            
+            // 確保側邊欄可見
+            const sidebar = document.querySelector('.sidebar');
+            if (sidebar) {
+                sidebar.style.display = 'block';
+                sidebar.style.visibility = 'visible';
+            }
+            
+            // 確保主內容可見
+            const mainContent = document.getElementById('main-content');
+            if (mainContent) {
+                mainContent.style.display = 'block';
+                mainContent.style.visibility = 'visible';
+            }
+            
+            console.log('✅ 頁面立即初始化完成');
+        })();
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎯 Dashboard 頁面載入中...');
+            
+            // 等待全域同步系統載入
+            const initializeWithGlobalSync = () => {
+                if (window.GlobalAuthSync) {
+                    console.log('🌐 使用全域身份驗證同步系統');
+                    
+                    // 監聽全域身份驗證狀態變化
+                    window.onGlobalAuthChange((authState) => {
+                        console.log('🔄 Dashboard 收到全域身份驗證狀態變化:', authState);
+                        updateDashboardAuthState(authState);
+                    });
+                    
+                    // 初始檢查
+                    const authResult = checkLoginStatus();
+                    console.log('🎯 Dashboard 初始身份驗證結果:', authResult);
+                    
+                    if (!authResult) {
+                        console.log('⚠️ Dashboard 未檢測到登入狀態，顯示提示');
+                        showLoginPromptInDashboard();
+                    }
+                } else {
+                    console.log('⚠️ 全域同步系統未載入，使用兜底邏輯');
+                    // 兜底邏輯
+                    const authResult = checkLoginStatus();
+                    if (!authResult) {
+                        showLoginPromptInDashboard();
+                    }
+                }
+            };
+            
+            // 如果全域同步系統已載入，立即初始化；否則等待
+            if (window.GlobalAuthSync) {
+                initializeWithGlobalSync();
+            } else {
+                setTimeout(initializeWithGlobalSync, 100);
+            }
+
+            // 初始化統一側邊欄
+            window.unifiedSidebar = new VaultCaddySidebar();
+            
+            // 初始化用戶團隊信息
+            initializeUserTeamInfo();
+            
+            // 處理 hash 路由
+            handleHashRouting();
+            
+            // 確保頁面內容可見
+            ensurePageContentVisible();
+            
+            // 監聽 hash 變化
+            window.addEventListener('hashchange', handleHashRouting);
+            
+            // 監聽語言變更事件
+            window.addEventListener('languageChanged', function(e) {
+                console.log('Dashboard: 語言已變更為', e.detail.language);
+                // 語言變更時重新應用當前文檔類型的翻譯
+                const hash = window.location.hash.substring(1);
+                const docType = hash || 'bank-statement';
+                if (documentTypes[docType]) {
+                    updatePageForDocumentType(docType);
+                }
+                // 注意：側邊欄的語言更新由 VaultCaddySidebar 的 setupLanguageListener 處理
+            });
+            
+            console.log('✅ Unified Dashboard 初始化完成');
+        });
+
+        // 初始化用戶團隊信息
+        function initializeUserTeamInfo() {
+            console.log('👥 初始化用戶團隊信息...');
+            
+            // 獲取用戶名稱
+            let userName = '1扭扭批'; // 默認名稱
+            
+            if (window.GlobalAuthSync) {
+                const authState = window.GlobalAuthSync.getCurrentAuthState();
+                if (authState.userName && !authState.userName.includes('{"uid"')) {
+                    userName = authState.userName;
+                }
+            } else {
+                // 從localStorage獲取
+                const storedName = localStorage.getItem('google_user_name') || localStorage.getItem('user_name');
+                if (storedName && !storedName.includes('{"uid"')) {
+                    userName = storedName;
+                }
+            }
+            
+            // 生成團隊名稱
+            const teamName = `${userName}'s team`;
+            
+            // 更新團隊名稱顯示
+            const teamNameElement = document.getElementById('team-name');
+            if (teamNameElement) {
+                teamNameElement.textContent = teamName;
+                console.log('✅ 團隊名稱已更新:', teamName);
+            }
+            
+            // 獲取並設置訂閱方案
+            let subscriptionPlan = 'professional'; // 默認為專業版
+            
+            if (window.GlobalAuthSync) {
+                const authState = window.GlobalAuthSync.getCurrentAuthState();
+                subscriptionPlan = authState.subscriptionPlan || 'professional';
+            } else {
+                subscriptionPlan = localStorage.getItem('vaultcaddy_subscription') || 'professional';
+            }
+            
+            // 更新訂閱方案顯示
+            updateSubscriptionBadge(subscriptionPlan);
+            
+            console.log('✅ 用戶團隊信息初始化完成:', { teamName, subscriptionPlan });
+        }
+        
+        // 更新訂閱方案標籤
+        function updateSubscriptionBadge(planKey) {
+            const badgeElement = document.getElementById('subscription-badge');
+            if (!badgeElement) return;
+            
+            const plan = subscriptionPlans[planKey];
+            if (plan) {
+                badgeElement.textContent = plan.name;
+                badgeElement.style.background = plan.color;
+                console.log('✅ 訂閱方案已更新:', plan.name);
+            }
+        }
+        
+        // 創建新項目
+        function createNewProject() {
+            console.log('📁 創建新項目...');
+            // 這裡可以實現創建新項目的邏輯
+            alert('創建新項目功能正在開發中...');
+        }
+
+        // 處理 hash 路由
+        function handleHashRouting() {
+            const hash = window.location.hash.substring(1); // 移除 #
+            const docType = hash || 'bank-statement'; // 默認為銀行對帳單
+            
+            if (documentTypes[docType]) {
+                updatePageForDocumentType(docType);
+            }
+        }
+
+        // 更新頁面為指定文檔類型
+        function updatePageForDocumentType(docType) {
+            const config = documentTypes[docType];
+            
+            // 確保顯示文檔列表視圖，隱藏詳細視圖
+            const listView = document.getElementById('document-list-view');
+            const detailView = document.getElementById('document-detail-view');
+            
+            if (listView && detailView) {
+                listView.style.display = 'block';
+                detailView.style.display = 'none';
+            }
+            
+            // 更新頁面標題 - 支持多語言
+            const titleElement = document.getElementById('page-title');
+            const subtitleElement = document.getElementById('page-subtitle');
+            
+            if (titleElement) {
+                titleElement.textContent = config.title;
+                titleElement.setAttribute('data-translate', config.titleKey);
+            }
+            if (subtitleElement) {
+                subtitleElement.textContent = config.subtitle;
+                subtitleElement.setAttribute('data-translate', config.subtitleKey);
+            }
+            
+            // 更新瀏覽器標題
+            document.title = `${config.title} - VaultCaddy`;
+            
+            // 更新側邊欄活躍狀態
+            if (window.unifiedSidebar) {
+                window.unifiedSidebar.updateActivePage(docType);
+            }
+            
+            // 載入該文檔類型的文件
+            loadFilesForDocumentType(docType);
+            
+            // 如果語言管理器存在，重新應用翻譯
+            if (window.languageManager) {
+                window.languageManager.loadLanguage(window.languageManager.currentLanguage);
+            }
+            
+            console.log('✅ 更新頁面類型:', docType, config.title);
+        }
+        
+        // 載入指定文檔類型的文件夾
+        function loadFilesForDocumentType(docType) {
+            const documentsTable = document.getElementById('documents-table');
+            const documentsTbody = document.getElementById('documents-tbody');
+            const emptyState = document.getElementById('empty-state');
+            
+            if (!documentsTable || !documentsTbody) {
+                console.error('找不到文檔表格容器');
+                return;
+            }
+            
+            // 清空現有內容
+            documentsTbody.innerHTML = '';
+            
+            // 優先從統一存儲載入，然後是舊格式
+            let storedFiles = [];
+            
+            // 1. 嘗試從統一存儲載入
+            if (window.UnifiedDocumentProcessor && window.UnifiedDocumentProcessor.processors.storage) {
+                console.log(`📂 從統一存儲載入 ${docType} 文件`);
+                storedFiles = window.UnifiedDocumentProcessor.getAllProcessedDocuments(docType);
+                
+                // 轉換統一格式為顯示格式
+                storedFiles = storedFiles.map(doc => ({
+                    id: doc.id,
+                    name: doc.fileName,
+                    size: doc.fileSize || 0,
+                    documentType: doc.documentType,
+                    uploadDate: new Date(doc.processedAt).toLocaleDateString('zh-TW'),
+                    status: 'completed',
+                    processedData: doc
+                }));
+            }
+            
+            // 2. 如果統一存儲沒有數據，嘗試舊格式
+            if (storedFiles.length === 0) {
+                console.log(`📂 從舊存儲載入 ${docType} 文件`);
+                const storageKey = `vaultcaddy_files_${docType}`;
+                storedFiles = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            }
+            
+            console.log(`📁 載入 ${docType} 文件:`, storedFiles.length, '個文件');
+            
+            // 如果沒有文件，顯示空狀態
+            if (storedFiles.length === 0) {
+                documentsTable.style.display = 'none';
+                emptyState.style.display = 'block';
+                updatePaginationInfo(0);
+                return;
+            }
+            
+            // 顯示表格，隱藏空狀態
+            documentsTable.style.display = 'table';
+            emptyState.style.display = 'none';
+            
+            // 創建表格行
+            storedFiles.forEach(file => {
+                createDocumentRow(documentsTbody, file);
+            });
+            
+            // 更新統計信息和分頁
+            updateDocumentStats();
+            updatePaginationInfo(storedFiles.length);
+        }
+        
+        // 創建空文件夾
+        function createEmptyFolder(container, docType) {
+            const folderItem = document.createElement('div');
+            folderItem.className = 'folder-item';
+            folderItem.innerHTML = `
+                <div class="folder-icon">
+                    <i class="fas fa-folder"></i>
+                </div>
+                <div class="folder-name">${documentTypes[docType]?.title || docType}</div>
+                <div class="folder-files-count">0 files</div>
+                <div class="folder-updated">剛剛創建</div>
+            `;
+            folderItem.onclick = () => {
+                console.log('📁 點擊空文件夾:', docType);
+                // 可以實現打開文件夾或上傳文件的邏輯
+            };
+            container.appendChild(folderItem);
+        }
+        
+        // 將文件分組到文件夾中
+        function groupFilesIntoFolders(files, docType) {
+            const folders = [];
+            
+            // 按月份分組
+            const groupedByMonth = {};
+            files.forEach(file => {
+                const date = new Date(file.uploadDate);
+                const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                
+                if (!groupedByMonth[monthKey]) {
+                    groupedByMonth[monthKey] = [];
+                }
+                groupedByMonth[monthKey].push(file);
+            });
+            
+            // 創建文件夾
+            Object.keys(groupedByMonth).forEach(monthKey => {
+                const filesInMonth = groupedByMonth[monthKey];
+                const date = new Date(monthKey + '-01');
+                
+                folders.push({
+                    id: `folder_${monthKey}`,
+                    name: `${date.getFullYear()}年${date.getMonth() + 1}月`,
+                    filesCount: filesInMonth.length,
+                    files: filesInMonth,
+                    updated: filesInMonth[0].uploadDate,
+                    type: docType
+                });
+            });
+            
+            // 如果沒有文件，創建一個空文件夾
+            if (folders.length === 0) {
+                folders.push({
+                    id: `folder_empty_${docType}`,
+                    name: documentTypes[docType]?.title || docType,
+                    filesCount: 0,
+                    files: [],
+                    updated: '剛剛創建',
+                    type: docType
+                });
+            }
+            
+            return folders;
+        }
+        
+        // 創建文件夾項目
+        function createFolderItem(container, folder) {
+            const folderItem = document.createElement('div');
+            folderItem.className = 'folder-item';
+            folderItem.innerHTML = `
+                <div class="folder-icon">
+                    <i class="fas fa-folder${folder.filesCount > 0 ? '-open' : ''}"></i>
+                </div>
+                <div class="folder-name">${folder.name}</div>
+                <div class="folder-files-count">${folder.filesCount} files</div>
+                <div class="folder-updated">${folder.updated}</div>
+            `;
+            folderItem.onclick = () => {
+                console.log('📁 點擊文件夾:', folder.name, folder.filesCount, '個文件');
+                openFolder(folder);
+            };
+            container.appendChild(folderItem);
+        }
+        
+        // 打開文件夾
+        function openFolder(folder) {
+            console.log('📂 打開文件夾:', folder);
+            if (folder.filesCount === 0) {
+                alert('文件夾為空，請先上傳文件');
+                return;
+            }
+            
+            // 這裡可以實現打開文件夾的邏輯
+            // 例如顯示文件夾內容或跳轉到文件列表
+            alert(`打開文件夾: ${folder.name} (${folder.filesCount} 個文件)`);
+        }
+
+        // 打開文檔詳細視圖
+        function openDocumentDetail(documentId) {
+            document.getElementById('document-list-view').style.display = 'none';
+            document.getElementById('document-detail-view').style.display = 'block';
+            
+            // 優先使用LedgerBox處理器的數據
+            if (window.ledgerBoxProcessor) {
+                window.ledgerBoxProcessor.openDocumentDetail(documentId);
+                return;
+            }
+            
+            // 兜底：從localStorage獲取文件信息
+            const fileInfo = getFileInfoById(documentId);
+            
+            if (fileInfo) {
+                // 更新文檔標題為實際文件名
+                document.getElementById('document-title').textContent = fileInfo.name;
+                
+                // 更新PDF預覽區域
+                updatePDFPreview(fileInfo);
+                
+                console.log('📄 打開文檔詳細視圖:', fileInfo.name, fileInfo.documentType);
+            } else {
+                // 兜底：使用文檔ID
+                document.getElementById('document-title').textContent = documentId + '.pdf';
+                console.warn('⚠️ 找不到文檔信息:', documentId);
+            }
+        }
+        
+        // 根據文檔ID獲取文件信息
+        function getFileInfoById(documentId) {
+            // 檢查所有文檔類型的存儲
+            const docTypes = ['bank-statement', 'general'];
+            
+            for (const docType of docTypes) {
+                const storageKey = `vaultcaddy_files_${docType}`;
+                const storedFiles = JSON.parse(localStorage.getItem(storageKey) || '[]');
+                
+                const fileInfo = storedFiles.find(file => file.id === documentId);
+                if (fileInfo) {
+                    return fileInfo;
+                }
+            }
+            
+            return null;
+        }
+        
+        // 更新PDF預覽區域
+        function updatePDFPreview(fileInfo) {
+            const pdfPlaceholder = document.querySelector('.pdf-placeholder');
+            if (pdfPlaceholder) {
+                pdfPlaceholder.innerHTML = `
+                    <i class="fas fa-file-pdf"></i>
+                    <h3>PDF Preview</h3>
+                    <p>Document: ${fileInfo.name}</p>
+                    <p style="color: #6b7280; font-size: 0.875rem;">Type: ${fileInfo.documentType}</p>
+                    <p style="color: #6b7280; font-size: 0.875rem;">Size: ${(fileInfo.size / 1024 / 1024).toFixed(2)} MB</p>
+                    <small style="display: block; margin-top: 1rem; color: #9ca3af;">
+                        實際文件預覽功能正在開發中，目前顯示文件信息
+                    </small>
+                `;
+            }
+        }
+
+        // 返回文檔列表
+        function backToDocumentList() {
+            document.getElementById('document-detail-view').style.display = 'none';
+            document.getElementById('document-list-view').style.display = 'block';
+            
+            // 清除當前文檔
+            if (window.ledgerBoxProcessor) {
+                window.ledgerBoxProcessor.currentDocument = null;
+            }
+        }
+
+        // 其他功能函數
+        function showHelp() {
+            alert('Document processing help will be shown here.');
+        }
+
+        function openUploadModal() {
+            // 統一使用LedgerBox風格的上傳模態框
+            if (window.ledgerBoxProcessor) {
+                window.ledgerBoxProcessor.openLedgerBoxModal();
+            } else {
+                console.error('❌ LedgerBox處理器未載入');
+                alert('系統初始化中，請稍後再試');
+            }
+        }
+        
+        function closeUploadModal() {
+            const modal = document.getElementById('upload-modal');
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+                // 清理文件輸入
+                const fileInput = document.getElementById('modal-file-input');
+                if (fileInput) {
+                    fileInput.value = '';
+                }
+                clearFilePreview();
+            }
+        }
+        
+        function clearFilePreview() {
+            const preview = document.getElementById('file-preview-area');
+            if (preview) {
+                preview.innerHTML = '<p>拖放文件到這裡或點擊選擇文件</p>';
+                preview.className = 'file-drop-area';
+            }
+        }
+        
+        function handleModalFileSelect() {
+            const fileInput = document.getElementById('modal-file-input');
+            if (fileInput) {
+                fileInput.click();
+            }
+        }
+        
+        function handleFileInputChange(event) {
+            const files = event.target.files;
+            if (files && files.length > 0) {
+                displayFilePreview(files);
+            }
+        }
+        
+        function displayFilePreview(files) {
+            const preview = document.getElementById('file-preview-area');
+            if (!preview) return;
+            
+            let html = '<div class="file-list"><h4>選中的文件:</h4>';
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const fileSize = (file.size / 1024 / 1024).toFixed(2);
+                html += `
+                    <div class="file-item">
+                        <i class="fas fa-file-pdf"></i>
+                        <div class="file-info">
+                            <div class="file-name">${file.name}</div>
+                            <div class="file-size">${fileSize} MB</div>
+                        </div>
+                        <button onclick="removeFile(${i})" class="remove-file-btn">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+            }
+            html += '</div>';
+            preview.innerHTML = html;
+            preview.className = 'file-drop-area has-files';
+        }
+        
+        async function processSelectedFiles() {
+            console.log('🚀 開始處理選中的文件...');
+            
+            const fileInput = document.getElementById('modal-file-input');
+            if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+                console.error('❌ 沒有選中的文件');
+                alert('請先選擇要上傳的文件');
+                return;
+            }
+            
+            console.log(`📁 找到 ${fileInput.files.length} 個文件:`, Array.from(fileInput.files).map(f => f.name));
+            
+            // 轉換為數組並記錄詳細信息
+            const files = Array.from(fileInput.files);
+            console.log('📄 文件詳情:', files.map(f => ({
+                name: f.name,
+                size: f.size,
+                type: f.type,
+                lastModified: f.lastModified
+            })));
+            
+            // 獲取當前文檔類型
+            const hash = window.location.hash.substring(1);
+            const currentDocType = hash || 'bank-statement';
+            
+            closeUploadModal();
+            showProcessingStatus(files);
+            
+            try {
+                // 使用統一處理器處理文件
+                if (window.UnifiedDocumentProcessor) {
+                    console.log('🎯 使用統一處理器處理文件...');
+                    
+                    const processingResults = await window.UnifiedDocumentProcessor.processUploadedFiles(files, currentDocType);
+                    
+                    console.log('✅ 統一處理器處理完成:', processingResults);
+                    
+                    // 檢查是否有處理失敗的文件
+                    const failedFiles = processingResults.filter(r => r.status === 'error');
+                    if (failedFiles.length > 0) {
+                        console.error('❌ 部分文件處理失敗:', failedFiles);
+                        alert(`${failedFiles.length} 個文件處理失敗：${failedFiles.map(f => f.error).join(', ')}`);
+                    }
+                    
+                    // 只添加成功處理的文件到表格
+                    const successfulFiles = files.filter((_, index) => 
+                        processingResults[index] && processingResults[index].status === 'success'
+                    );
+                    
+                    if (successfulFiles.length > 0) {
+                        addProcessedFilesToTable(successfulFiles);
+                        
+                        // 保存處理結果到統一存儲
+                        saveUnifiedProcessingResults(processingResults, currentDocType);
+                        
+                        showSuccessNotification(successfulFiles.length);
+                    }
+                } else {
+                    // 兜底：使用原有的模擬處理
+                    console.log('⚠️ 統一處理器未載入，使用模擬處理');
+                    setTimeout(() => {
+                        addProcessedFilesToTable(files);
+                        showSuccessNotification(files.length);
+                        hideProcessingStatus();
+                    }, 2000);
+                    return;
+                }
+                
+                // 更新統計
+                updateDocumentStats();
+                
+            } catch (error) {
+                console.error('❌ 處理文件時出錯:', error);
+                alert(`處理文件時出現錯誤：${error.message}`);
+            } finally {
+                hideProcessingStatus();
+            }
+        }
+        
+        // 保存處理結果到localStorage（舊版本，保留兼容性）
+        function saveProcessingResults(results, documentType) {
+            const storageKey = `vaultcaddy_processing_results_${documentType}`;
+            const existingResults = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            
+            // 添加新的處理結果
+            results.forEach(result => {
+                if (result.status === 'success') {
+                    existingResults.push(result);
+                }
+            });
+            
+            localStorage.setItem(storageKey, JSON.stringify(existingResults));
+            console.log(`💾 已保存 ${results.length} 個處理結果到 ${storageKey}`);
+        }
+        
+        // 保存統一處理器結果
+        function saveUnifiedProcessingResults(results, documentType) {
+            console.log(`💾 統一處理器結果已自動保存到統一存儲系統`);
+            
+            // 統一處理器會自動保存，這裡只需要觸發UI更新
+            results.forEach(result => {
+                if (result.status === 'success') {
+                    // 觸發UI更新事件
+                    window.dispatchEvent(new CustomEvent('vaultcaddy:document:added', {
+                        detail: { 
+                            documentType: documentType,
+                            fileName: result.fileName,
+                            data: result.data
+                        }
+                    }));
+                }
+            });
+        }
+        
+        function showSuccessNotification(fileCount) {
+            const notification = document.createElement('div');
+            notification.innerHTML = `
+                <div style="position: fixed; top: 20px; right: 20px; background: #10b981; color: white; padding: 1rem; border-radius: 8px; z-index: 1000; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    <i class="fas fa-check-circle"></i> 成功處理 ${fileCount} 個文件！
+                </div>
+            `;
+            document.body.appendChild(notification);
+            
+            // 3秒後自動移除通知
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+        
+        function showProcessingStatus(files) {
+            // 可以顯示一個處理中的通知
+            const notification = document.createElement('div');
+            notification.id = 'processing-notification';
+            notification.innerHTML = `
+                <div style="position: fixed; top: 20px; right: 20px; background: #3b82f6; color: white; padding: 1rem; border-radius: 8px; z-index: 1000;">
+                    <i class="fas fa-spinner fa-spin"></i> 正在處理 ${files.length} 個文件...
+                </div>
+            `;
+            document.body.appendChild(notification);
+        }
+        
+        function hideProcessingStatus() {
+            const notification = document.getElementById('processing-notification');
+            if (notification) {
+                notification.remove();
+            }
+        }
+        
+        function addProcessedFilesToTable(files) {
+            console.log('📋 添加文件到文件夾視圖，文件數量:', files.length);
+            
+            // 獲取當前文檔類型
+            const hash = window.location.hash.substring(1);
+            const currentDocType = hash || 'bank-statement';
+            
+            console.log('📊 當前文件夾狀態:', {
+                documentType: currentDocType,
+                filesToAdd: files.length
+            });
+            
+            // 從localStorage獲取當前文檔類型的文件列表
+            const storageKey = `vaultcaddy_files_${currentDocType}`;
+            let existingFiles = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const fileId = `${currentDocType}_${Date.now()}_${i}`;
+                const currentDate = new Date().toLocaleDateString('zh-TW');
+                
+                console.log(`📄 處理文件 ${i + 1}/${files.length}:`, {
+                    name: file.name,
+                    size: file.size,
+                    fileId: fileId,
+                    documentType: currentDocType
+                });
+                
+                // 保存文件信息到localStorage（按文檔類型分離）
+                const fileInfo = {
+                    id: fileId,
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    documentType: currentDocType,
+                    uploadDate: currentDate,
+                    status: 'processing'
+                };
+                existingFiles.push(fileInfo);
+                
+                console.log(`✅ 文件 ${file.name} 已添加到存儲 (${currentDocType})`);
+            }
+            
+            // 保存更新後的文件列表到localStorage
+            localStorage.setItem(storageKey, JSON.stringify(existingFiles));
+            
+            console.log(`🎉 所有 ${files.length} 個文件已成功添加到存儲 (${currentDocType})`);
+            console.log('📊 存儲最終狀態:', {
+                storageKey: storageKey,
+                totalStoredFiles: existingFiles.length
+            });
+            
+            // 重新載入文件夾視圖
+            loadFilesForDocumentType(currentDocType);
+            
+            // 更新統計
+            updateDocumentStats();
+        }
+        
+        function updateDocumentStats() {
+            // 更新文檔處理統計
+            const documentRows = document.querySelectorAll('.document-row');
+            const processedCount = documentRows.length;
+            const statsElement = document.querySelector('[data-stat="processed-docs"]');
+            if (statsElement) {
+                statsElement.textContent = processedCount;
+            }
+            
+            // 更新側邊欄統計
+            console.log(`📊 更新文檔統計: ${processedCount} 個文檔`);
+        }
+        
+        function updateSidebarStats(newFileCount) {
+            // 更新側邊欄的處理文檔數量
+            const processedElement = document.querySelector('.stat-value');
+            if (processedElement && processedElement.textContent.includes('Processed Documents')) {
+                const currentCount = parseInt(processedElement.textContent) || 0;
+                processedElement.textContent = currentCount + newFileCount;
+                console.log(`📊 側邊欄統計已更新: +${newFileCount} 個文檔`);
+            }
+        }
+        
+        function showLoginPromptInDashboard() {
+            console.log('💡 在 Dashboard 中顯示登入提示而不是重定向');
+            
+            // 檢查是否已經存在提示
+            const existing = document.getElementById('dashboard-login-prompt');
+            if (existing) return;
+            
+            // 在頁面頂部顯示一個溫和的登入提示
+            const notification = document.createElement('div');
+            notification.id = 'dashboard-login-prompt';
+            notification.innerHTML = `
+                <div style="position: fixed; top: 0; left: 0; right: 0; background: #fef3c7; border-bottom: 1px solid #f59e0b; padding: 0.75rem; z-index: 1000; text-align: center;">
+                    <p style="margin: 0; color: #92400e;">
+                        <i class="fas fa-info-circle"></i> 
+                        為了獲得完整功能，請 <a href="auth.html" style="color: #b45309; text-decoration: underline;">重新登入</a> 或 
+                        <button onclick="window.location.reload()" style="background: #f59e0b; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 4px; margin-left: 0.5rem;">重新載入頁面</button>
+                        <button onclick="document.getElementById('dashboard-login-prompt').remove(); adjustPageMargin(false);" style="background: transparent; border: none; color: #92400e; margin-left: 1rem;">✕</button>
+                    </p>
+                </div>
+            `;
+            document.body.insertBefore(notification, document.body.firstChild);
+            
+            // 調整頁面內容向下偏移
+            adjustPageMargin(true);
+        }
+        
+        function hideLoginPromptInDashboard() {
+            const existing = document.getElementById('dashboard-login-prompt');
+            if (existing) {
+                existing.remove();
+                adjustPageMargin(false);
+                console.log('✅ Dashboard 登入提示已移除');
+            }
+        }
+        
+        function adjustPageMargin(hasPrompt) {
+            const mainContent = document.querySelector('.dashboard-container');
+            if (mainContent) {
+                mainContent.style.marginTop = hasPrompt ? '60px' : '0px';
+            }
+        }
+        
+        // 更新 Dashboard 身份驗證狀態
+        function updateDashboardAuthState(authState) {
+            console.log('🔄 更新 Dashboard 身份驗證狀態:', authState);
+            
+            if (authState.isAuthenticated) {
+                // 用戶已登入，移除登入提示
+                hideLoginPromptInDashboard();
+                
+                // 更新用戶信息顯示
+                updateUserInfoDisplay(authState);
+                
+                console.log('✅ Dashboard 認證狀態: 已登入');
+            } else {
+                // 用戶未登入，顯示登入提示
+                showLoginPromptInDashboard();
+                console.log('⚠️ Dashboard 認證狀態: 未登入');
+            }
+        }
+        
+        function updateUserInfoDisplay(authState) {
+            // 更新頁面中的用戶信息（如果需要）
+            if (authState.userEmail || authState.credits) {
+                console.log('📊 更新用戶信息顯示:', {
+                    email: authState.userEmail,
+                    credits: authState.credits
+                });
+                
+                // 觸發導航欄更新
+                if (window.VaultCaddyNavbar && window.VaultCaddyNavbar.loadUserState) {
+                    window.VaultCaddyNavbar.loadUserState();
+                }
+            }
+        }
+
+        function toggleView() {
+            alert('View toggle functionality will be implemented.');
+        }
+
+        function showActionMenu(event, documentId) {
+            alert(`Action menu for ${documentId} will be shown here.`);
+        }
+
+        // 刪除交易行
+        function deleteTransaction(button) {
+            if (confirm('確定要刪除這筆交易嗎？')) {
+                const row = button.closest('tr');
+                row.remove();
+                
+                // 重新計算餘額
+                recalculateBalances();
+            }
+        }
+        
+        // 重新計算所有餘額
+        function recalculateBalances() {
+            const rows = document.querySelectorAll('#transactions-tbody tr');
+            let runningBalance = 0;
+            
+            rows.forEach((row, index) => {
+                const amountInput = row.querySelector('.amount-input');
+                const balanceInput = row.querySelector('.balance-input');
+                
+                if (amountInput && balanceInput) {
+                    const amount = parseFloat(amountInput.value) || 0;
+                    runningBalance += amount;
+                    balanceInput.value = runningBalance.toFixed(2);
+                }
+            });
+        }
+        
+        // 監聽金額變化並自動重新計算餘額
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('amount-input')) {
+                recalculateBalances();
+            }
+        });
+        
+        // 標籤切換
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('tab-btn')) {
+                // 移除所有活躍狀態
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                // 添加活躍狀態到點擊的標籤
+                e.target.classList.add('active');
+            }
+        });
+    </script>
+
+    <!-- 原始上傳模態框已移除，統一使用LedgerBox風格模態框 -->
+
+    <style>
+        /* 上傳模態框樣式 */
+        .upload-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal-backdrop {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .modal-content {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            z-index: 1001;
+        }
+        
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            color: #1f2937;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        
+        .modal-close-btn {
+            background: none;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        
+        .modal-close-btn:hover {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        
+        .modal-body {
+            padding: 1.5rem;
+        }
+        
+        .file-drop-area {
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 1.5rem;
+            background: #f9fafb;
+        }
+        
+        .file-drop-area:hover {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+        
+        .file-drop-area.has-files {
+            border-style: solid;
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+        
+        .file-list h4 {
+            margin: 0 0 1rem 0;
+            color: #1f2937;
+            text-align: left;
+        }
+        
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .file-item i {
+            color: #ef4444;
+            font-size: 1.25rem;
+            margin-right: 0.75rem;
+        }
+        
+        .file-info {
+            flex: 1;
+        }
+        
+        .file-name {
+            font-weight: 500;
+            color: #1f2937;
+        }
+        
+        .file-size {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+        
+        .remove-file-btn {
+            background: none;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .remove-file-btn:hover {
+            background: #fef2f2;
+            color: #ef4444;
+        }
+        
+        .upload-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+        
+        .file-types ul {
+            margin: 0.5rem 0 0 0;
+            padding-left: 1.5rem;
+            color: #6b7280;
+        }
+        
+        .processing-options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .processing-options label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #374151;
+            cursor: pointer;
+        }
+        
+        .modal-footer {
+            padding: 1.5rem;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: #ffffff;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        /* 狀態徽章樣式 */
+        .status-badge.processing {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .review-badge.pending {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        @media (max-width: 768px) {
+            .upload-options {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        // 創建文檔表格行
+        function createDocumentRow(tbody, file) {
+            const row = document.createElement('tr');
+            row.className = 'document-row';
+            row.setAttribute('data-file-id', file.id);
+            
+            const uploadDate = new Date(file.uploadTime || file.uploadDate).toLocaleDateString('zh-TW');
+            const fileSize = formatFileSize(file.size);
+            
+            row.innerHTML = `
+                <td>
+                    <input type="checkbox" class="file-checkbox" onchange="updateSelection()">
+                </td>
+                <td>
+                    <div class="document-info">
+                        <i class="fas fa-file-pdf" style="color: #ef4444; margin-right: 0.5rem;"></i>
+                        <div>
+                            <strong>${file.name}</strong>
+                            <small style="display: block; color: #6b7280;">${fileSize}</small>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div class="period-info">
+                        <strong>2024年1月</strong>
+                        <small>2024-01-01 至 2024-01-31</small>
+                    </div>
+                </td>
+                <td>
+                    <div class="reconciliation">
+                        <span class="reconciliation-fraction">0/13</span>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div class="balance-info">
+                        <div>期初: $10,000</div>
+                        <div>期末: $8,500</div>
+                        <strong>差額: -$1,500</strong>
+                    </div>
+                </td>
+                <td>
+                    <span class="status-indicator in-progress">處理中</span>
+                </td>
+                <td>
+                    <span class="status-badge review">待審核</span>
+                </td>
+                <td>
+                    <span style="color: #6b7280;">無備註</span>
+                </td>
+                <td>
+                    <span style="color: #6b7280;">${uploadDate}</span>
+                </td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="action-btn" onclick="viewDocument('${file.id}')" title="查看">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="action-btn" onclick="downloadDocument('${file.id}')" title="下載">
+                            <i class="fas fa-download"></i>
+                        </button>
+                        <button class="action-btn" onclick="deleteDocument('${file.id}')" title="刪除">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+            
+            tbody.appendChild(row);
+        }
+        
+        // 更新分頁信息
+        function updatePaginationInfo(totalRows) {
+            const selectionInfo = document.getElementById('selection-info');
+            const pageInfo = document.getElementById('page-info');
+            
+            if (selectionInfo) {
+                selectionInfo.textContent = `0 of ${totalRows} row(s) selected.`;
+            }
+            
+            if (pageInfo) {
+                const totalPages = Math.ceil(totalRows / 10);
+                pageInfo.textContent = `Page 1 of ${totalPages}`;
+            }
+        }
+        
+        // 分頁控制函數
+        function toggleSelectAll() {
+            const selectAllCheckbox = document.getElementById('select-all');
+            const fileCheckboxes = document.querySelectorAll('.file-checkbox');
+            
+            fileCheckboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+            
+            updateSelection();
+        }
+        
+        function updateSelection() {
+            const fileCheckboxes = document.querySelectorAll('.file-checkbox');
+            const checkedBoxes = document.querySelectorAll('.file-checkbox:checked');
+            const selectionInfo = document.getElementById('selection-info');
+            
+            if (selectionInfo) {
+                selectionInfo.textContent = `${checkedBoxes.length} of ${fileCheckboxes.length} row(s) selected.`;
+            }
+        }
+        
+        function changeRowsPerPage() {
+            const rowsPerPage = document.getElementById('rows-per-page').value;
+            console.log('更改每頁行數:', rowsPerPage);
+            // 重新載入當前文檔類型
+            const currentDocType = getCurrentDocumentType();
+            loadFilesForDocumentType(currentDocType);
+        }
+        
+        function goToFirstPage() {
+            console.log('前往第一頁');
+        }
+        
+        function goToPreviousPage() {
+            console.log('前往上一頁');
+        }
+        
+        function goToNextPage() {
+            console.log('前往下一頁');
+        }
+        
+        function goToLastPage() {
+            console.log('前往最後一頁');
+        }
+        
+        // 文檔操作函數
+        function viewDocument(fileId) {
+            console.log('查看文檔:', fileId);
+            // 切換到文檔詳細視圖
+            showDocumentDetail(fileId);
+        }
+        
+        function downloadDocument(fileId) {
+            console.log('下載文檔:', fileId);
+            // 實現下載功能
+        }
+        
+        function deleteDocument(fileId) {
+            console.log('刪除文檔:', fileId);
+            if (confirm('確定要刪除這個文檔嗎？')) {
+                // 實現刪除功能
+                const row = document.querySelector(`[data-file-id="${fileId}"]`);
+                if (row) {
+                    row.remove();
+                    updateDocumentStats();
+                }
+            }
+        }
+        
+        // 調試函數：確保頁面內容可見
+        function ensurePageContentVisible() {
+            console.log('🔍 檢查頁面內容可見性...');
+            
+            const mainContent = document.getElementById('main-content');
+            const listView = document.getElementById('document-list-view');
+            const documentsTable = document.getElementById('documents-table');
+            const emptyState = document.getElementById('empty-state');
+            
+            console.log('主內容區域:', mainContent ? '存在' : '不存在');
+            console.log('列表視圖:', listView ? '存在' : '不存在');
+            console.log('文檔表格:', documentsTable ? '存在' : '不存在');
+            console.log('空狀態:', emptyState ? '存在' : '不存在');
+            
+            if (mainContent) {
+                mainContent.style.display = 'block';
+                mainContent.style.visibility = 'visible';
+            }
+            
+            if (listView) {
+                listView.style.display = 'block';
+                listView.style.visibility = 'visible';
+            }
+            
+            // 確保至少顯示空狀態
+            if (emptyState) {
+                emptyState.style.display = 'block';
+                emptyState.style.visibility = 'visible';
+            }
+            
+            console.log('✅ 頁面內容可見性檢查完成');
+        }
+
+        // 導航到Team Project視圖
+        function navigateToTeamProject() {
+            console.log('🔄 切換到Team Project視圖');
+            
+            // 隱藏所有視圖
+            const allViews = document.querySelectorAll('.view-container');
+            allViews.forEach(view => {
+                view.style.display = 'none';
+            });
+            
+            // 顯示Team Project視圖
+            const teamProjectView = document.getElementById('team-project-view');
+            if (teamProjectView) {
+                teamProjectView.style.display = 'block';
+            }
+            
+            // 更新側邊欄活躍狀態
+            updateSidebarActiveState('team-project');
+            
+            // 更新導航欄標題
+            updateNavbarTitle('Team Project');
+            
+            console.log('✅ 已切換到Team Project視圖');
+        }
+        
+        // 導航到銀行對帳單視圖
+        function navigateToBankStatement() {
+            console.log('🔄 切換到銀行對帳單視圖');
+            
+            // 隱藏所有視圖
+            const allViews = document.querySelectorAll('.view-container');
+            allViews.forEach(view => {
+                view.style.display = 'none';
+            });
+            
+            // 顯示銀行對帳單視圖
+            const bankStatementView = document.getElementById('bank-statement-view');
+            if (bankStatementView) {
+                bankStatementView.style.display = 'block';
+            }
+            
+            // 更新側邊欄活躍狀態
+            updateSidebarActiveState('bank-statement');
+            
+            // 更新導航欄標題
+            updateNavbarTitle('儀表板');
+            
+            console.log('✅ 已切換到銀行對帳單視圖');
+        }
+        
+        // 更新側邊欄活躍狀態
+        function updateSidebarActiveState(activeView) {
+            // 移除所有活躍狀態
+            const allItems = document.querySelectorAll('.project-item, .config-item');
+            allItems.forEach(item => {
+                item.style.background = 'transparent';
+                item.style.color = '#6b7280';
+            });
+            
+            // 設置當前活躍項目
+            if (activeView === 'team-project') {
+                const teamProjectItem = document.getElementById('team-project-item');
+                if (teamProjectItem) {
+                    teamProjectItem.style.background = '#eff6ff';
+                    teamProjectItem.style.color = '#3b82f6';
+                }
+            }
+        }
+        
+        // 更新導航欄標題
+        function updateNavbarTitle(title) {
+            const navbarTitle = document.getElementById('navbar-page-title');
+            if (navbarTitle) {
+                navbarTitle.textContent = title;
+            }
+        }
+        
+    </script>
+</body>
+</html>
