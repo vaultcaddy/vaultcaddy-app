@@ -172,19 +172,3 @@ class VaultCaddySidebar {
 
 // 導出類
 window.VaultCaddySidebar = VaultCaddySidebar;
-
-// 全局 Team Project 點擊處理函數
-window.handleTeamProjectClick = function() {
-    console.log('🔄 Team Project 被點擊');
-    
-    // 如果當前頁面有 navigateToTeamProject 函數（在 dashboard.html 中）
-    if (typeof navigateToTeamProject === 'function') {
-        console.log('✅ 調用本地 navigateToTeamProject');
-        navigateToTeamProject();
-    } 
-    // 否則導航到 dashboard.html
-    else {
-        console.log('🔄 導航到 dashboard.html');
-        window.location.href = 'dashboard.html';
-    }
-};
