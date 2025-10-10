@@ -43,7 +43,7 @@ class VaultCaddySidebar {
                     <span style="font-size: 0.875rem; font-weight: 500; color: #6b7280;">project</span>
                     <button onclick="createNewProject()" style="background: none; border: none; color: #6b7280; cursor: pointer; font-size: 1.25rem; padding: 0; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;">+</button>
                 </div>
-                <div onclick="navigateToTeamProject ? navigateToTeamProject() : window.location.href='dashboard.html'" style="display: flex; align-items: center; padding: 0.5rem; color: #6b7280; cursor: pointer; border-radius: 4px; transition: background 0.2s;">
+                <div onclick="handleTeamProjectClick()" style="display: flex; align-items: center; padding: 0.5rem; color: #6b7280; cursor: pointer; border-radius: 4px; transition: background 0.2s;">
                     <i class="fas fa-folder" style="margin-right: 0.5rem; font-size: 1rem;"></i>
                     <span style="font-size: 0.875rem;">Team project</span>
                 </div>
@@ -137,3 +137,19 @@ class VaultCaddySidebar {
 
 // 導出類
 window.VaultCaddySidebar = VaultCaddySidebar;
+
+// 全局 Team Project 點擊處理函數
+window.handleTeamProjectClick = function() {
+    console.log('🔄 Team Project 被點擊');
+    
+    // 如果當前頁面有 navigateToTeamProject 函數（在 dashboard.html 中）
+    if (typeof navigateToTeamProject === 'function') {
+        console.log('✅ 調用本地 navigateToTeamProject');
+        navigateToTeamProject();
+    } 
+    // 否則導航到 dashboard.html
+    else {
+        console.log('🔄 導航到 dashboard.html');
+        window.location.href = 'dashboard.html';
+    }
+};
