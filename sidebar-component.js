@@ -81,10 +81,6 @@ class VaultCaddySidebar {
                     <span style="font-size: 0.875rem; font-weight: 500; color: #6b7280;">project</span>
                     <button onclick="openCreateProjectModal()" style="background: none; border: none; color: #6b7280; cursor: pointer; font-size: 1.25rem; padding: 0; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;">+</button>
                 </div>
-                <div onclick="handleTeamProjectClick()" style="display: flex; align-items: center; padding: 0.5rem; color: #6b7280; cursor: pointer; border-radius: 4px; transition: background 0.2s; margin-bottom: 0.25rem;">
-                    <i class="fas fa-folder" style="margin-right: 0.5rem; font-size: 1rem;"></i>
-                    <span style="font-size: 0.875rem;">Team project</span>
-                </div>
                 ${projectsHTML}
             </div>
             
