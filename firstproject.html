@@ -12,9 +12,9 @@
     <script src="config.js"></script>
     <script src="translations.js"></script>
     <script src="unified-auth.js"></script>
-    <script src="global-auth-sync.js?v=2.6"></script>
-    <script src="navbar-component.js?v=2.6"></script>
-    <script src="sidebar-component.js?v=2.6"></script>
+    <script src="global-auth-sync.js?v=2.7"></script>
+    <script src="navbar-component.js?v=2.7"></script>
+    <script src="sidebar-component.js?v=2.7"></script>
     <!-- 載入統一處理器系統 -->
     <script src="google-ai-integration.js"></script>
     <script src="google-document-ai.js"></script>
@@ -2146,12 +2146,362 @@
         }
 
         function openUploadModal() {
-            // 統一使用LedgerBox風格的上傳模態框
-            if (window.ledgerBoxProcessor) {
-                window.ledgerBoxProcessor.openLedgerBoxModal();
+            // 打開新的 AI 上傳模態框
+            const modal = document.getElementById('aiUploadModal');
+            if (modal) {
+                modal.style.display = 'flex';
+                initializeAIUpload();
+            }
+        }
+        
+        function closeAIUploadModal() {
+            const modal = document.getElementById('aiUploadModal');
+            if (modal) {
+                modal.style.display = 'none';
+                resetAIUpload();
+            }
+        }
+        
+        // AI 上傳處理器
+        let aiCurrentFile = null;
+        let aiIsProcessing = false;
+        let aiProcessingResults = {};
+        
+        function initializeAIUpload() {
+            const uploadArea = document.getElementById('aiUploadArea');
+            const fileInput = document.getElementById('aiFileInput');
+            
+            // 點擊上傳區域觸發文件選擇
+            uploadArea.onclick = () => fileInput.click();
+            
+            // 文件選擇事件
+            fileInput.onchange = (e) => {
+                const files = Array.from(e.target.files);
+                if (files.length > 0) {
+                    handleAIFileUpload(files[0]);
+                }
+            };
+            
+            // 拖放事件
+            uploadArea.ondragover = (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            };
+            
+            uploadArea.ondragleave = () => {
+                uploadArea.classList.remove('dragover');
+            };
+            
+            uploadArea.ondrop = (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                const files = Array.from(e.dataTransfer.files);
+                if (files.length > 0) {
+                    handleAIFileUpload(files[0]);
+                }
+            };
+        }
+        
+        async function handleAIFileUpload(file) {
+            if (aiIsProcessing) return;
+            
+            // 驗證文件
+            if (!validateAIFile(file)) {
+                return;
+            }
+            
+            aiCurrentFile = file;
+            aiIsProcessing = true;
+            
+            // 隱藏上傳區域，顯示進度
+            document.getElementById('aiUploadArea').style.display = 'none';
+            document.getElementById('aiProgressContainer').style.display = 'block';
+            document.getElementById('aiLogContainer').style.display = 'block';
+            
+            logAI(`📁 選擇文件: ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)`, 'info');
+            
+            try {
+                // 步驟1: 文件上傳
+                await processAIStep(1, '📤 準備處理文件...', async () => {
+                    await new Promise(resolve => setTimeout(resolve, 800));
+                });
+                
+                // 步驟2: AI分析
+                await processAIStep(2, '🤖 使用 Google AI 分析文檔...', async () => {
+                    const result = await processWithGoogleAI(file);
+                    aiProcessingResults.aiResult = result;
+                    return result;
+                });
+                
+                // 步驟3: 數據提取
+                await processAIStep(3, '📊 提取結構化數據...', async () => {
+                    const data = parseAIResponse(aiProcessingResults.aiResult);
+                    aiProcessingResults.extractedData = data;
+                    return data;
+                });
+                
+                // 步驟4: 雲端存儲
+                await processAIStep(4, '☁️ 準備保存...', async () => {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    return { success: true };
+                });
+                
+                // 顯示結果
+                displayAIResults(aiProcessingResults.extractedData);
+                logAI('🎉 處理完成！', 'success');
+                
+            } catch (error) {
+                logAI(`❌ 處理失敗: ${error.message}`, 'error');
+                console.error('AI 處理錯誤:', error);
+            } finally {
+                aiIsProcessing = false;
+            }
+        }
+        
+        function validateAIFile(file) {
+            const maxSize = 20 * 1024 * 1024; // 20MB
+            if (file.size > maxSize) {
+                logAI(`❌ 文件過大: ${(file.size/1024/1024).toFixed(2)}MB (最大 20MB)`, 'error');
+                alert('文件過大，最大支援 20MB');
+                return false;
+            }
+            
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+            if (!allowedTypes.includes(file.type)) {
+                logAI(`❌ 不支援的文件類型: ${file.type}`, 'error');
+                alert('不支援的文件類型，請上傳 PDF、JPG 或 PNG 文件');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        async function processAIStep(stepNumber, message, processor) {
+            updateAIStep(stepNumber, 'active');
+            updateAIProgress((stepNumber - 1) * 25);
+            logAI(message, 'info');
+            
+            try {
+                const result = await processor();
+                updateAIStep(stepNumber, 'completed');
+                updateAIProgress(stepNumber * 25);
+                return result;
+            } catch (error) {
+                logAI(`❌ 步驟 ${stepNumber} 失敗: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+        
+        function updateAIStep(stepNumber, status) {
+            const step = document.querySelector(`.ai-step[data-step="${stepNumber}"]`);
+            if (step) {
+                step.classList.remove('active', 'completed');
+                if (status) {
+                    step.classList.add(status);
+                }
+            }
+        }
+        
+        function updateAIProgress(percentage) {
+            const progressFill = document.getElementById('aiProgressFill');
+            if (progressFill) {
+                progressFill.style.width = `${percentage}%`;
+            }
+        }
+        
+        function logAI(message, type = 'info') {
+            const logContent = document.getElementById('aiLogContent');
+            if (logContent) {
+                const entry = document.createElement('div');
+                entry.className = `ai-log-entry ${type}`;
+                entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+                logContent.appendChild(entry);
+                logContent.scrollTop = logContent.scrollHeight;
+            }
+            console.log(message);
+        }
+        
+        async function processWithGoogleAI(file) {
+            try {
+                logAI('🧠 使用 Google AI 處理器...', 'info');
+                
+                // 檢查 Google Smart Processor
+                if (window.googleSmartProcessor) {
+                    const documentType = determineDocumentType(file);
+                    logAI(`📋 文檔類型: ${documentType}`, 'info');
+                    
+                    const result = await window.googleSmartProcessor.processDocumentOptimized(file, documentType);
+                    
+                    if (!result.success) {
+                        throw new Error(result.error || 'AI 處理失敗');
+                    }
+                    
+                    logAI(`✅ ${result.processor} 處理成功`, 'success');
+                    return result;
+                    
+                } else if (window.googleAIProcessor) {
+                    const documentType = determineDocumentType(file);
+                    const result = await window.googleAIProcessor.processDocument(file, documentType);
+                    
+                    if (!result.success) {
+                        throw new Error(result.error || 'AI 處理失敗');
+                    }
+                    
+                    logAI(`✅ Gemini AI 分析完成`, 'success');
+                    return result;
+                    
+                } else {
+                    throw new Error('沒有可用的 Google AI 處理器');
+                }
+                
+            } catch (error) {
+                logAI(`❌ Google AI 處理失敗: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+        
+        function determineDocumentType(file) {
+            const fileName = file.name.toLowerCase();
+            
+            if (fileName.includes('receipt') || fileName.includes('收據')) {
+                return 'receipt';
+            } else if (fileName.includes('invoice') || fileName.includes('發票')) {
+                return 'invoice';
+            } else if (fileName.includes('statement') || fileName.includes('對帳單')) {
+                return 'bank_statement';
             } else {
-                console.error('❌ LedgerBox處理器未載入');
-                alert('系統初始化中，請稍後再試');
+                return 'general';
+            }
+        }
+        
+        function parseAIResponse(aiResult) {
+            try {
+                logAI('📋 解析 AI 提取的數據...', 'info');
+                
+                const data = aiResult.extractedData || {};
+                
+                const standardizedData = {
+                    documentType: data.documentType || 'unknown',
+                    date: data.date || new Date().toISOString().split('T')[0],
+                    merchant: data.merchant || data.vendor || data.company || '未知',
+                    amount: data.amount || data.total || '0.00',
+                    currency: data.currency || 'HKD',
+                    description: data.description || data.purpose || '',
+                    items: data.items || [],
+                    rawText: aiResult.text || '',
+                    confidence: aiResult.confidence || 0,
+                    fileName: aiCurrentFile.name,
+                    fileSize: aiCurrentFile.size,
+                    extractedAt: new Date().toISOString()
+                };
+                
+                logAI(`📊 數據解析完成: ${Object.keys(standardizedData).length} 個字段`, 'success');
+                return standardizedData;
+                
+            } catch (error) {
+                logAI(`❌ 數據解析失敗: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+        
+        function displayAIResults(data) {
+            const resultsContainer = document.getElementById('aiResultsContainer');
+            const resultsContent = document.getElementById('aiResultsContent');
+            
+            if (!resultsContainer || !resultsContent) return;
+            
+            resultsContent.innerHTML = `
+                <div class="ai-result-item">
+                    <span class="ai-result-label">文檔類型</span>
+                    <span class="ai-result-value">${data.documentType}</span>
+                </div>
+                <div class="ai-result-item">
+                    <span class="ai-result-label">日期</span>
+                    <span class="ai-result-value">${data.date}</span>
+                </div>
+                <div class="ai-result-item">
+                    <span class="ai-result-label">商戶/公司</span>
+                    <span class="ai-result-value">${data.merchant}</span>
+                </div>
+                <div class="ai-result-item">
+                    <span class="ai-result-label">金額</span>
+                    <span class="ai-result-value">${data.currency} ${data.amount}</span>
+                </div>
+                <div class="ai-result-item">
+                    <span class="ai-result-label">描述</span>
+                    <span class="ai-result-value">${data.description || '無'}</span>
+                </div>
+                <div class="ai-result-item">
+                    <span class="ai-result-label">文件名稱</span>
+                    <span class="ai-result-value">${data.fileName}</span>
+                </div>
+            `;
+            
+            resultsContainer.style.display = 'block';
+        }
+        
+        function saveAIResults() {
+            if (!aiProcessingResults.extractedData) {
+                alert('沒有可保存的數據');
+                return;
+            }
+            
+            try {
+                // 獲取當前項目 ID
+                const projectId = getCurrentProjectId();
+                if (!projectId) {
+                    alert('無法確定當前項目');
+                    return;
+                }
+                
+                // 保存到 localStorage
+                const storageKey = `vaultcaddy_project_${projectId}_documents`;
+                const existingDocs = JSON.parse(localStorage.getItem(storageKey) || '[]');
+                
+                const newDocument = {
+                    id: Date.now().toString(),
+                    ...aiProcessingResults.extractedData,
+                    projectId: projectId,
+                    createdAt: new Date().toISOString()
+                };
+                
+                existingDocs.push(newDocument);
+                localStorage.setItem(storageKey, JSON.stringify(existingDocs));
+                
+                logAI('✅ 數據已保存到項目', 'success');
+                alert('文檔已成功保存到項目！');
+                
+                // 關閉模態框並刷新頁面
+                closeAIUploadModal();
+                location.reload();
+                
+            } catch (error) {
+                logAI(`❌ 保存失敗: ${error.message}`, 'error');
+                alert('保存失敗，請重試');
+            }
+        }
+        
+        function resetAIUpload() {
+            // 重置所有狀態
+            aiCurrentFile = null;
+            aiIsProcessing = false;
+            aiProcessingResults = {};
+            
+            // 重置 UI
+            document.getElementById('aiUploadArea').style.display = 'block';
+            document.getElementById('aiProgressContainer').style.display = 'none';
+            document.getElementById('aiLogContainer').style.display = 'none';
+            document.getElementById('aiResultsContainer').style.display = 'none';
+            
+            // 清空內容
+            document.getElementById('aiLogContent').innerHTML = '';
+            document.getElementById('aiResultsContent').innerHTML = '';
+            document.getElementById('aiFileInput').value = '';
+            
+            // 重置進度
+            updateAIProgress(0);
+            for (let i = 1; i <= 4; i++) {
+                updateAIStep(i, '');
             }
         }
         
@@ -3072,5 +3422,401 @@
         }
         
     </script>
+
+    <!-- AI 上傳模態框 -->
+    <div id="aiUploadModal" class="ai-upload-modal" style="display: none;">
+        <div class="ai-upload-overlay" onclick="closeAIUploadModal()"></div>
+        <div class="ai-upload-container">
+            <!-- 模態框標題 -->
+            <div class="ai-upload-header">
+                <h2><i class="fas fa-robot"></i> AI 文檔處理</h2>
+                <button class="ai-close-btn" onclick="closeAIUploadModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- 上傳區域 -->
+            <div class="ai-upload-content">
+                <div id="aiUploadArea" class="ai-upload-area">
+                    <div class="ai-upload-icon">📄</div>
+                    <div class="ai-upload-text">拖放文件到此處或點擊上傳</div>
+                    <div class="ai-upload-hint">支援 PDF、JPG、PNG 格式 (最大 20MB)</div>
+                    <input type="file" id="aiFileInput" class="ai-file-input" accept=".pdf,.jpg,.jpeg,.png">
+                </div>
+
+                <!-- 處理進度 -->
+                <div id="aiProgressContainer" class="ai-progress-container" style="display: none;">
+                    <div class="ai-progress-steps">
+                        <div class="ai-step" data-step="1">
+                            <div class="ai-step-icon">📤</div>
+                            <div class="ai-step-text">文件上傳</div>
+                        </div>
+                        <div class="ai-step" data-step="2">
+                            <div class="ai-step-icon">🤖</div>
+                            <div class="ai-step-text">AI 分析</div>
+                        </div>
+                        <div class="ai-step" data-step="3">
+                            <div class="ai-step-icon">📊</div>
+                            <div class="ai-step-text">數據提取</div>
+                        </div>
+                        <div class="ai-step" data-step="4">
+                            <div class="ai-step-icon">☁️</div>
+                            <div class="ai-step-text">雲端存儲</div>
+                        </div>
+                    </div>
+                    <div class="ai-progress-bar">
+                        <div class="ai-progress-fill" id="aiProgressFill"></div>
+                    </div>
+                </div>
+
+                <!-- 處理日誌 -->
+                <div id="aiLogContainer" class="ai-log-container" style="display: none;">
+                    <div class="ai-log-header">處理日誌</div>
+                    <div id="aiLogContent" class="ai-log-content"></div>
+                </div>
+
+                <!-- 提取結果 -->
+                <div id="aiResultsContainer" class="ai-results-container" style="display: none;">
+                    <div class="ai-results-header">📊 提取的數據</div>
+                    <div id="aiResultsContent" class="ai-results-content"></div>
+                    <div class="ai-results-actions">
+                        <button class="ai-btn ai-btn-primary" onclick="saveAIResults()">
+                            <i class="fas fa-save"></i> 保存到項目
+                        </button>
+                        <button class="ai-btn ai-btn-secondary" onclick="resetAIUpload()">
+                            <i class="fas fa-redo"></i> 處理另一個文件
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* AI 上傳模態框樣式 */
+        .ai-upload-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ai-upload-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+
+        .ai-upload-container {
+            position: relative;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .ai-upload-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #e5e7eb;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+        }
+
+        .ai-upload-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .ai-close-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .ai-close-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .ai-upload-content {
+            padding: 2rem;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .ai-upload-area {
+            border: 3px dashed #d1d5db;
+            border-radius: 12px;
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+
+        .ai-upload-area:hover {
+            border-color: #4f46e5;
+            background: #f8fafc;
+        }
+
+        .ai-upload-area.dragover {
+            border-color: #4f46e5;
+            background: #eef2ff;
+            transform: scale(1.02);
+        }
+
+        .ai-upload-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .ai-upload-text {
+            font-size: 1.2rem;
+            color: #374151;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .ai-upload-hint {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .ai-file-input {
+            display: none;
+        }
+
+        .ai-progress-container {
+            margin-top: 2rem;
+        }
+
+        .ai-progress-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .ai-step {
+            flex: 1;
+            text-align: center;
+            opacity: 0.4;
+            transition: all 0.3s ease;
+        }
+
+        .ai-step.active {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .ai-step.completed {
+            opacity: 1;
+        }
+
+        .ai-step.completed .ai-step-icon::after {
+            content: '✓';
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #10b981;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ai-step-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            position: relative;
+            display: inline-block;
+        }
+
+        .ai-step-text {
+            font-size: 0.875rem;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .ai-progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .ai-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
+            transition: width 0.5s ease;
+            width: 0%;
+        }
+
+        .ai-log-container {
+            margin-top: 1.5rem;
+            background: #1f2937;
+            border-radius: 8px;
+            padding: 1rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .ai-log-header {
+            color: #9ca3af;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .ai-log-content {
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.75rem;
+            color: #d1d5db;
+            line-height: 1.6;
+        }
+
+        .ai-log-entry {
+            margin-bottom: 0.25rem;
+        }
+
+        .ai-log-entry.info {
+            color: #60a5fa;
+        }
+
+        .ai-log-entry.success {
+            color: #34d399;
+        }
+
+        .ai-log-entry.error {
+            color: #f87171;
+        }
+
+        .ai-results-container {
+            margin-top: 1.5rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .ai-results-header {
+            background: #f9fafb;
+            padding: 1rem;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .ai-results-content {
+            padding: 1.5rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .ai-result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .ai-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .ai-result-label {
+            font-weight: 500;
+            color: #6b7280;
+        }
+
+        .ai-result-value {
+            color: #1f2937;
+            font-weight: 600;
+        }
+
+        .ai-results-actions {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            background: #f9fafb;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .ai-btn {
+            flex: 1;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .ai-btn-primary {
+            background: #4f46e5;
+            color: white;
+        }
+
+        .ai-btn-primary:hover {
+            background: #4338ca;
+        }
+
+        .ai-btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .ai-btn-secondary:hover {
+            background: #e5e7eb;
+        }
+    </style>
+
 </body>
 </html>
