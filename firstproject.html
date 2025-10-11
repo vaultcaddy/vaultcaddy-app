@@ -12,9 +12,9 @@
     <script src="config.js"></script>
     <script src="translations.js"></script>
     <script src="unified-auth.js"></script>
-    <script src="global-auth-sync.js?v=2.7"></script>
-    <script src="navbar-component.js?v=2.7"></script>
-    <script src="sidebar-component.js?v=2.7"></script>
+    <script src="global-auth-sync.js?v=2.8"></script>
+    <script src="navbar-component.js?v=2.8"></script>
+    <script src="sidebar-component.js?v=2.8"></script>
     <!-- 載入統一處理器系統 -->
     <script src="google-ai-integration.js"></script>
     <script src="google-document-ai.js"></script>
@@ -1196,7 +1196,7 @@
                             </div>
                             <div class="team-details">
                                 <h1 id="project-title">Project</h1>
-                                <span class="subscription-badge" id="subscription-badge">Professional</span>
+                                <span class="subscription-badge" id="subscription-badge">Free</span>
                             </div>
                         </div>
                     </div>
@@ -1434,7 +1434,7 @@
                             </div>
                             <div class="team-details">
                                 <h1 id="team-name" style="font-size: 1.5rem; font-weight: 700; color: #1f2937; margin: 0;">1扭扭批's team</h1>
-                                <span class="subscription-badge" id="subscription-badge" style="background: #3b82f6; color: white; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">Professional</span>
+                                <span class="subscription-badge" id="subscription-badge" style="background: #6b7280; color: white; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">Free</span>
                             </div>
                         </div>
                     </div>
@@ -1813,13 +1813,13 @@
             }
             
             // 獲取並設置訂閱方案
-            let subscriptionPlan = 'professional'; // 默認為專業版
+            let subscriptionPlan = 'free'; // 默認為免費版
             
             if (window.GlobalAuthSync) {
                 const authState = window.GlobalAuthSync.getCurrentAuthState();
-                subscriptionPlan = authState.subscriptionPlan || 'professional';
+                subscriptionPlan = authState.subscriptionPlan || 'free';
             } else {
-                subscriptionPlan = localStorage.getItem('vaultcaddy_subscription') || 'professional';
+                subscriptionPlan = localStorage.getItem('vaultcaddy_subscription') || 'free';
             }
             
             // 更新訂閱方案顯示
@@ -2146,13 +2146,21 @@
         }
 
         function openUploadModal() {
+            console.log('🔵 openUploadModal 被調用');
             // 打開新的 AI 上傳模態框
             const modal = document.getElementById('aiUploadModal');
+            console.log('🔵 找到模態框:', modal);
             if (modal) {
                 modal.style.display = 'flex';
                 initializeAIUpload();
+            } else {
+                console.error('❌ 找不到 aiUploadModal');
+                alert('上傳功能初始化中，請稍後再試');
             }
         }
+        
+        // 確保函數全局可用
+        window.openUploadModal = openUploadModal;
         
         function closeAIUploadModal() {
             const modal = document.getElementById('aiUploadModal');
@@ -2161,6 +2169,7 @@
                 resetAIUpload();
             }
         }
+        window.closeAIUploadModal = closeAIUploadModal;
         
         // AI 上傳處理器
         let aiCurrentFile = null;
@@ -2480,6 +2489,7 @@
                 alert('保存失敗，請重試');
             }
         }
+        window.saveAIResults = saveAIResults;
         
         function resetAIUpload() {
             // 重置所有狀態
@@ -2504,6 +2514,7 @@
                 updateAIStep(i, '');
             }
         }
+        window.resetAIUpload = resetAIUpload;
         
         function closeUploadModal() {
             const modal = document.getElementById('upload-modal');
