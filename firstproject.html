@@ -12,9 +12,9 @@
     <script src="config.js"></script>
     <script src="translations.js"></script>
     <script src="unified-auth.js"></script>
-    <script src="global-auth-sync.js?v=3.3"></script>
-    <script src="navbar-component.js?v=3.3"></script>
-    <script src="sidebar-component.js?v=3.3"></script>
+    <script src="global-auth-sync.js?v=3.4"></script>
+    <script src="navbar-component.js?v=3.4"></script>
+    <script src="sidebar-component.js?v=3.4"></script>
     <!-- 載入統一處理器系統 -->
     <script src="google-ai-integration.js"></script>
     <script src="google-document-ai.js"></script>
@@ -2488,21 +2488,54 @@
                 const data = aiResult.extractedData || {};
                 
                 const standardizedData = {
-                    documentType: data.documentType || 'unknown',
+                    // 基本信息
+                    documentType: data.documentType || 'Bank Statement',
+                    fileName: aiCurrentFile.name,
+                    fileSize: aiCurrentFile.size,
+                    extractedAt: new Date().toISOString(),
+                    
+                    // 銀行賬戶信息
+                    accountHolder: data.accountHolder || data.accountName || data.name || '',
+                    accountNumber: data.accountNumber || data.account || '',
+                    bankName: data.bankName || data.bank || '',
+                    
+                    // 對賬單期間
+                    startDate: data.startDate || data.statementStartDate || data.periodStart || '',
+                    endDate: data.endDate || data.statementEndDate || data.periodEnd || '',
+                    
+                    // 餘額信息
+                    startBalance: parseFloat(data.startBalance || data.openingBalance || data.beginningBalance || 0),
+                    endBalance: parseFloat(data.endBalance || data.closingBalance || data.endingBalance || 0),
+                    
+                    // 交易信息
+                    transactions: data.transactions || [],
+                    transactionCount: (data.transactions || []).length || data.transactionCount || 0,
+                    reconciledTransactions: data.reconciledTransactions || 0,
+                    
+                    // 狀態
+                    status: 'Success',
+                    reviewStatus: 'Review',
+                    notes: data.notes || '',
+                    
+                    // 其他通用字段（向後兼容）
                     date: data.date || new Date().toISOString().split('T')[0],
-                    merchant: data.merchant || data.vendor || data.company || '未知',
-                    amount: data.amount || data.total || '0.00',
-                    currency: data.currency || 'HKD',
+                    merchant: data.merchant || data.vendor || data.company || '',
+                    amount: data.amount || data.total || '',
+                    currency: data.currency || 'USD',
                     description: data.description || data.purpose || '',
                     items: data.items || [],
                     rawText: aiResult.text || '',
-                    confidence: aiResult.confidence || 0,
-                    fileName: aiCurrentFile.name,
-                    fileSize: aiCurrentFile.size,
-                    extractedAt: new Date().toISOString()
+                    confidence: aiResult.confidence || 0
                 };
                 
                 logAI(`📊 數據解析完成: ${Object.keys(standardizedData).length} 個字段`, 'success');
+                logAI(`📋 賬戶持有人: ${standardizedData.accountHolder}`, 'info');
+                logAI(`📋 賬號: ${standardizedData.accountNumber}`, 'info');
+                logAI(`📋 期間: ${standardizedData.startDate} 至 ${standardizedData.endDate}`, 'info');
+                logAI(`📋 交易數量: ${standardizedData.transactionCount}`, 'info');
+                logAI(`💰 起始餘額: $${standardizedData.startBalance.toFixed(2)}`, 'info');
+                logAI(`💰 結束餘額: $${standardizedData.endBalance.toFixed(2)}`, 'info');
+                
                 return standardizedData;
                 
             } catch (error) {
@@ -2517,33 +2550,74 @@
             
             if (!resultsContainer || !resultsContent) return;
             
-            resultsContent.innerHTML = `
-                <div class="ai-result-item">
-                    <span class="ai-result-label">文檔類型</span>
-                    <span class="ai-result-value">${data.documentType}</span>
+            // 根據文檔類型顯示不同的字段
+            const isBankStatement = data.documentType === 'Bank Statement' || data.accountNumber;
+            
+            let resultHTML = `
+                <div class="ai-result-item" style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #f3f4f6;">
+                    <span class="ai-result-label" style="font-weight: 500; color: #6b7280;">📄 文檔類型</span>
+                    <span class="ai-result-value" style="color: #1f2937; font-weight: 600;">${data.documentType}</span>
                 </div>
-                <div class="ai-result-item">
-                    <span class="ai-result-label">日期</span>
-                    <span class="ai-result-value">${data.date}</span>
-                </div>
-                <div class="ai-result-item">
-                    <span class="ai-result-label">商戶/公司</span>
-                    <span class="ai-result-value">${data.merchant}</span>
-                </div>
-                <div class="ai-result-item">
-                    <span class="ai-result-label">金額</span>
-                    <span class="ai-result-value">${data.currency} ${data.amount}</span>
-                </div>
-                <div class="ai-result-item">
-                    <span class="ai-result-label">描述</span>
-                    <span class="ai-result-value">${data.description || '無'}</span>
-                </div>
-                <div class="ai-result-item">
-                    <span class="ai-result-label">文件名稱</span>
-                    <span class="ai-result-value">${data.fileName}</span>
+                <div class="ai-result-item" style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #f3f4f6;">
+                    <span class="ai-result-label" style="font-weight: 500; color: #6b7280;">📁 文件名稱</span>
+                    <span class="ai-result-value" style="color: #1f2937; font-weight: 600;">${data.fileName}</span>
                 </div>
             `;
             
+            if (isBankStatement) {
+                resultHTML += `
+                    <div class="ai-result-item" style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #f3f4f6;">
+                        <span class="ai-result-label" style="font-weight: 500; color: #6b7280;">👤 賬戶持有人</span>
+                        <span class="ai-result-value" style="color: #1f2937; font-weight: 600;">${data.accountHolder || '—'}</span>
+                    </div>
+                    <div class="ai-result-item" style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #f3f4f6;">
+                        <span class="ai-result-label" style="font-weight: 500; color: #6b7280;">🏦 賬號</span>
+                        <span class="ai-result-value" style="color: #1f2937; font-weight: 600;">${data.accountNumber || '—'}</span>
+                    </div>
+                    <div class="ai-result-item" style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #f3f4f6;">
+                        <span class="ai-result-label" style="font-weight: 500; color: #6b7280;">🏛️ 銀行名稱</span>
+                        <span class="ai-result-value" style="color: #1f2937; font-weight: 600;">${data.bankName || '—'}</span>
+                    </div>
+                    <div class="ai-result-item" style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #f3f4f6;">
+                        <span class="ai-result-label" style="font-weight: 500; color: #6b7280;">📅 對賬單期間</span>
+                        <span class="ai-result-value" style="color: #1f2937; font-weight: 600;">${data.startDate || '—'} 至 ${data.endDate || '—'}</span>
+                    </div>
+                    <div class="ai-result-item" style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #f3f4f6;">
+                        <span class="ai-result-label" style="font-weight: 500; color: #6b7280;">💰 起始餘額</span>
+                        <span class="ai-result-value" style="color: #10b981; font-weight: 600;">$${data.startBalance?.toFixed(2) || '0.00'}</span>
+                    </div>
+                    <div class="ai-result-item" style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #f3f4f6;">
+                        <span class="ai-result-label" style="font-weight: 500; color: #6b7280;">💰 結束餘額</span>
+                        <span class="ai-result-value" style="color: #10b981; font-weight: 600;">$${data.endBalance?.toFixed(2) || '0.00'}</span>
+                    </div>
+                    <div class="ai-result-item" style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #f3f4f6;">
+                        <span class="ai-result-label" style="font-weight: 500; color: #6b7280;">📊 交易數量</span>
+                        <span class="ai-result-value" style="color: #1f2937; font-weight: 600;">${data.transactionCount || 0} 筆</span>
+                    </div>
+                `;
+            } else {
+                // 顯示通用字段
+                resultHTML += `
+                    <div class="ai-result-item" style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #f3f4f6;">
+                        <span class="ai-result-label" style="font-weight: 500; color: #6b7280;">📅 日期</span>
+                        <span class="ai-result-value" style="color: #1f2937; font-weight: 600;">${data.date}</span>
+                    </div>
+                    <div class="ai-result-item" style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #f3f4f6;">
+                        <span class="ai-result-label" style="font-weight: 500; color: #6b7280;">🏢 商戶/公司</span>
+                        <span class="ai-result-value" style="color: #1f2937; font-weight: 600;">${data.merchant || '—'}</span>
+                    </div>
+                    <div class="ai-result-item" style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #f3f4f6;">
+                        <span class="ai-result-label" style="font-weight: 500; color: #6b7280;">💰 金額</span>
+                        <span class="ai-result-value" style="color: #10b981; font-weight: 600;">${data.currency} ${data.amount}</span>
+                    </div>
+                    <div class="ai-result-item" style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #f3f4f6;">
+                        <span class="ai-result-label" style="font-weight: 500; color: #6b7280;">📝 描述</span>
+                        <span class="ai-result-value" style="color: #1f2937; font-weight: 600;">${data.description || '無'}</span>
+                    </div>
+                `;
+            }
+            
+            resultsContent.innerHTML = resultHTML;
             resultsContainer.style.display = 'block';
         }
         
@@ -3275,66 +3349,111 @@
             const row = document.createElement('tr');
             row.className = 'document-row';
             row.setAttribute('data-file-id', file.id);
+            row.style.cssText = 'background: #ffffff; border-bottom: 1px solid #e5e7eb;';
             
-            const uploadDate = new Date(file.uploadTime || file.uploadDate).toLocaleDateString('zh-TW');
+            const uploadDate = new Date(file.uploadTime || file.uploadDate || file.processedData?.createdAt).toLocaleDateString('zh-TW');
             const fileSize = formatFileSize(file.size);
             
+            // 從 processedData 中提取真實數據
+            const data = file.processedData || {};
+            
+            // Statement Period
+            const startDate = data.startDate || data.statementStartDate || '—';
+            const endDate = data.endDate || data.statementEndDate || '—';
+            const periodText = (startDate !== '—' && endDate !== '—') 
+                ? `${startDate} to ${endDate}` 
+                : '—';
+            const transactionCount = data.transactions?.length || data.transactionCount || 0;
+            const transactionsText = transactionCount > 0 
+                ? `${transactionCount} transactions` 
+                : '—';
+            
+            // Reconciliation
+            const reconciledCount = data.reconciledTransactions || 0;
+            const totalTransactions = transactionCount;
+            const reconciledPercent = totalTransactions > 0 
+                ? Math.round((reconciledCount / totalTransactions) * 100) 
+                : 0;
+            
+            // Balance Info
+            const startBalance = data.startBalance || data.openingBalance || data.beginningBalance || 0;
+            const endBalance = data.endBalance || data.closingBalance || data.endingBalance || 0;
+            const formattedStartBalance = typeof startBalance === 'number' 
+                ? `$${startBalance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` 
+                : startBalance;
+            const formattedEndBalance = typeof endBalance === 'number' 
+                ? `$${endBalance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` 
+                : endBalance;
+            
+            // Status
+            const status = data.status || 'In Progress';
+            const statusColor = status === 'Success' || status === 'Completed' ? '#10b981' : '#f59e0b';
+            const statusIcon = status === 'Success' || status === 'Completed' ? '✓' : '●';
+            
+            // Review Status
+            const reviewStatus = data.reviewStatus || 'Review';
+            const reviewColor = reviewStatus === 'Approved' ? '#10b981' : '#f59e0b';
+            
             row.innerHTML = `
-                <td>
+                <td style="padding: 1rem; border-bottom: 1px solid #e5e7eb;">
                     <input type="checkbox" class="file-checkbox" onchange="updateSelection()">
                 </td>
-                <td>
-                    <div class="document-info">
-                        <i class="fas fa-file-pdf" style="color: #ef4444; margin-right: 0.5rem;"></i>
+                <td style="padding: 1rem; border-bottom: 1px solid #e5e7eb;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-file-pdf" style="color: #ef4444;"></i>
                         <div>
-                            <strong>${file.name}</strong>
-                            <small style="display: block; color: #6b7280;">${fileSize}</small>
+                            <div style="font-weight: 500; color: #1f2937;">${file.name}</div>
+                            <div style="font-size: 0.875rem; color: #6b7280;">${data.accountHolder || data.accountName || ''}</div>
+                            <div style="font-size: 0.75rem; color: #9ca3af;">${data.accountNumber || ''}</div>
                         </div>
                     </div>
                 </td>
-                <td>
-                    <div class="period-info">
-                        <strong>2024年1月</strong>
-                        <small>2024-01-01 至 2024-01-31</small>
+                <td style="padding: 1rem; border-bottom: 1px solid #e5e7eb;">
+                    <div>
+                        <div style="font-weight: 500; color: #1f2937;">📅 ${periodText}</div>
+                        <div style="font-size: 0.875rem; color: #6b7280;">${transactionsText}</div>
                     </div>
                 </td>
-                <td>
-                    <div class="reconciliation">
-                        <span class="reconciliation-fraction">0/13</span>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: 0%"></div>
+                <td style="padding: 1rem; border-bottom: 1px solid #e5e7eb;">
+                    <div>
+                        <div style="font-weight: 500; color: #1f2937;">${reconciledCount}/${totalTransactions}</div>
+                        <div style="margin-top: 0.25rem; background: #e5e7eb; height: 6px; border-radius: 3px; overflow: hidden;">
+                            <div style="background: #3b82f6; height: 100%; width: ${reconciledPercent}%; transition: width 0.3s ease;"></div>
                         </div>
                     </div>
                 </td>
-                <td>
-                    <div class="balance-info">
-                        <div>期初: $10,000</div>
-                        <div>期末: $8,500</div>
-                        <strong>差額: -$1,500</strong>
+                <td style="padding: 1rem; border-bottom: 1px solid #e5e7eb;">
+                    <div>
+                        <div style="font-size: 0.875rem; color: #6b7280;">Start: ${formattedStartBalance}</div>
+                        <div style="font-size: 0.875rem; color: #6b7280;">End: ${formattedEndBalance}</div>
                     </div>
                 </td>
-                <td>
-                    <span class="status-indicator in-progress">處理中</span>
+                <td style="padding: 1rem; border-bottom: 1px solid #e5e7eb;">
+                    <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; background: ${statusColor}15; color: ${statusColor};">
+                        ${statusIcon} ${status}
+                    </span>
                 </td>
-                <td>
-                    <span class="status-badge review">待審核</span>
+                <td style="padding: 1rem; border-bottom: 1px solid #e5e7eb;">
+                    <span style="display: inline-flex; align-items: center; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; background: ${reviewColor}15; color: ${reviewColor};">
+                        ● ${reviewStatus}
+                    </span>
                 </td>
-                <td>
-                    <span style="color: #6b7280;">無備註</span>
+                <td style="padding: 1rem; border-bottom: 1px solid #e5e7eb;">
+                    <span style="color: #6b7280; font-size: 0.875rem;">${data.notes || '—'}</span>
                 </td>
-                <td>
-                    <span style="color: #6b7280;">${uploadDate}</span>
+                <td style="padding: 1rem; border-bottom: 1px solid #e5e7eb;">
+                    <span style="color: #6b7280; font-size: 0.875rem;">${uploadDate}</span>
                 </td>
-                <td>
-                    <div class="action-buttons">
-                        <button class="action-btn" onclick="viewDocument('${file.id}')" title="查看">
+                <td style="padding: 1rem; border-bottom: 1px solid #e5e7eb;">
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button onclick="viewDocument('${file.id}')" style="padding: 0.5rem; background: transparent; border: none; color: #6b7280; cursor: pointer; border-radius: 4px; transition: all 0.2s;" onmouseover="this.style.background='#f3f4f6'; this.style.color='#1f2937'" onmouseout="this.style.background='transparent'; this.style.color='#6b7280'" title="查看">
                             <i class="fas fa-eye"></i>
                         </button>
-                        <button class="action-btn" onclick="downloadDocument('${file.id}')" title="下載">
-                            <i class="fas fa-download"></i>
-                        </button>
-                        <button class="action-btn" onclick="deleteDocument('${file.id}')" title="刪除">
+                        <button onclick="deleteDocument('${file.id}')" style="padding: 0.5rem; background: transparent; border: none; color: #6b7280; cursor: pointer; border-radius: 4px; transition: all 0.2s;" onmouseover="this.style.background='#fef2f2'; this.style.color='#ef4444'" onmouseout="this.style.background='transparent'; this.style.color='#6b7280'" title="刪除">
                             <i class="fas fa-trash"></i>
+                        </button>
+                        <button onclick="openActionMenu('${file.id}', event)" style="padding: 0.5rem; background: transparent; border: none; color: #6b7280; cursor: pointer; border-radius: 4px; transition: all 0.2s;" onmouseover="this.style.background='#f3f4f6'; this.style.color='#1f2937'" onmouseout="this.style.background='transparent'; this.style.color='#6b7280'" title="更多">
+                            <i class="fas fa-ellipsis-v"></i>
                         </button>
                     </div>
                 </td>
