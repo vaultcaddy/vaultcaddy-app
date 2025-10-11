@@ -12,9 +12,9 @@
     <script src="config.js"></script>
     <script src="translations.js"></script>
     <script src="unified-auth.js"></script>
-    <script src="global-auth-sync.js?v=3.0"></script>
-    <script src="navbar-component.js?v=3.0"></script>
-    <script src="sidebar-component.js?v=3.0"></script>
+    <script src="global-auth-sync.js?v=3.1"></script>
+    <script src="navbar-component.js?v=3.1"></script>
+    <script src="sidebar-component.js?v=3.1"></script>
     <!-- 載入統一處理器系統 -->
     <script src="google-ai-integration.js"></script>
     <script src="google-document-ai.js"></script>
@@ -1712,6 +1712,24 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🎯 Dashboard 頁面載入中...');
+            
+            // 檢查模態框是否存在
+            const modalCheck = document.getElementById('aiUploadModal');
+            console.log('🔍 DOMContentLoaded 時模態框檢查:', modalCheck ? '✅ 存在' : '❌ 不存在');
+            if (modalCheck) {
+                console.log('📋 模態框詳情:', {
+                    id: modalCheck.id,
+                    display: modalCheck.style.display,
+                    位置: modalCheck.getBoundingClientRect()
+                });
+            } else {
+                console.error('❌ 嚴重錯誤：模態框在 DOMContentLoaded 後仍不存在');
+                console.error('📊 DOM 統計:', {
+                    總元素數: document.getElementsByTagName('*').length,
+                    body存在: !!document.body,
+                    所有div數量: document.getElementsByTagName('div').length
+                });
+            }
             
             // 更新項目標題
             updateProjectTitle();
@@ -3876,6 +3894,45 @@
             background: #e5e7eb;
         }
     </style>
+
+    <script>
+        // 在窗口完全載入後檢查模態框
+        window.addEventListener('load', function() {
+            console.log('🎯 Window Load 事件觸發 - 頁面完全載入');
+            const modalCheck = document.getElementById('aiUploadModal');
+            console.log('🔍 Window Load 時模態框檢查:', modalCheck ? '✅ 存在' : '❌ 不存在');
+            
+            if (!modalCheck) {
+                console.error('❌❌❌ 嚴重問題：窗口完全載入後模態框仍不存在！');
+                console.error('📊 DOM 完整統計:', {
+                    總元素數: document.getElementsByTagName('*').length,
+                    所有div數量: document.getElementsByTagName('div').length,
+                    body子元素數: document.body.children.length
+                });
+                console.error('🔍 嘗試查找所有 id 包含 Upload 的元素:');
+                const allElements = document.querySelectorAll('[id*="pload"], [id*="Upload"]');
+                console.error('找到的元素:', allElements.length);
+                allElements.forEach(el => console.error('  - ID:', el.id, 'Tag:', el.tagName));
+                
+                // 列出 body 的最後 10 個子元素
+                console.error('📋 Body 的最後 10 個子元素:');
+                const bodyChildren = Array.from(document.body.children);
+                bodyChildren.slice(-10).forEach((el, i) => {
+                    console.error(`  ${i}: <${el.tagName}> id="${el.id}" class="${el.className}"`);
+                });
+            } else {
+                console.log('✅✅✅ 模態框在 Window Load 後確認存在！');
+                console.log('📋 模態框完整信息:', {
+                    id: modalCheck.id,
+                    tagName: modalCheck.tagName,
+                    className: modalCheck.className,
+                    display: window.getComputedStyle(modalCheck).display,
+                    visibility: window.getComputedStyle(modalCheck).visibility,
+                    zIndex: window.getComputedStyle(modalCheck).zIndex
+                });
+            }
+        });
+    </script>
 
 </body>
 </html>
