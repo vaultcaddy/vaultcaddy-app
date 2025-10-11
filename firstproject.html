@@ -12,9 +12,9 @@
     <script src="config.js"></script>
     <script src="translations.js"></script>
     <script src="unified-auth.js"></script>
-    <script src="global-auth-sync.js?v=2.9"></script>
-    <script src="navbar-component.js?v=2.9"></script>
-    <script src="sidebar-component.js?v=2.9"></script>
+    <script src="global-auth-sync.js?v=3.0"></script>
+    <script src="navbar-component.js?v=3.0"></script>
+    <script src="sidebar-component.js?v=3.0"></script>
     <!-- 載入統一處理器系統 -->
     <script src="google-ai-integration.js"></script>
     <script src="google-document-ai.js"></script>
@@ -2177,17 +2177,25 @@
                 console.error('❌ Body 內容:', document.body ? '存在' : '不存在');
                 console.error('❌ 所有元素數量:', document.getElementsByTagName('*').length);
                 
-                // 嘗試延遲重試
-                setTimeout(() => {
+                // 嘗試多次延遲重試
+                let retryCount = 0;
+                const maxRetries = 5;
+                const retryInterval = setInterval(() => {
+                    retryCount++;
+                    console.log(`🔄 重試第 ${retryCount} 次...`);
+                    
                     const retryModal = document.getElementById('aiUploadModal');
                     if (retryModal) {
                         console.log('✅ 重試成功，找到模態框');
+                        clearInterval(retryInterval);
                         retryModal.style.display = 'flex';
                         setTimeout(() => initializeAIUpload(), 100);
-                    } else {
+                    } else if (retryCount >= maxRetries) {
+                        console.error(`❌ 重試 ${maxRetries} 次後仍然失敗`);
+                        clearInterval(retryInterval);
                         alert('上傳功能初始化失敗，請重新整理頁面後再試');
                     }
-                }, 500);
+                }, 300);
             }
         }
         
