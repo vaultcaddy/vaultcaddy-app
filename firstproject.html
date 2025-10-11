@@ -12,9 +12,9 @@
     <script src="config.js"></script>
     <script src="translations.js"></script>
     <script src="unified-auth.js"></script>
-    <script src="global-auth-sync.js?v=3.1"></script>
-    <script src="navbar-component.js?v=3.1"></script>
-    <script src="sidebar-component.js?v=3.1"></script>
+    <script src="global-auth-sync.js?v=3.2"></script>
+    <script src="navbar-component.js?v=3.2"></script>
+    <script src="sidebar-component.js?v=3.2"></script>
     <!-- 載入統一處理器系統 -->
     <script src="google-ai-integration.js"></script>
     <script src="google-document-ai.js"></script>
@@ -1150,11 +1150,85 @@
     </style>
 </head>
 <body>
+    <!-- AI 上傳模態框 - 放在 body 最前面確保立即載入 -->
+    <div id="aiUploadModal" class="ai-upload-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 10000; align-items: center; justify-content: center;">
+        <div class="ai-upload-overlay" onclick="closeAIUploadModal()" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px);"></div>
+        <div class="ai-upload-container" style="position: relative; background: white; border-radius: 16px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2); width: 90%; max-width: 800px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column;">
+            <!-- 模態框標題 -->
+            <div class="ai-upload-header" style="display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 2rem; border-bottom: 1px solid #e5e7eb; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: white;">
+                <h2 style="margin: 0; font-size: 1.5rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;"><i class="fas fa-robot"></i> AI 文檔處理</h2>
+                <button class="ai-close-btn" onclick="closeAIUploadModal()" style="background: rgba(255, 255, 255, 0.2); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- 上傳區域 -->
+            <div class="ai-upload-content" style="padding: 2rem; overflow-y: auto; flex: 1;">
+                <div id="aiUploadArea" class="ai-upload-area" style="border: 3px dashed #d1d5db; border-radius: 12px; padding: 3rem 2rem; text-align: center; cursor: pointer; transition: all 0.3s ease; background: #fafafa;">
+                    <div class="ai-upload-icon" style="font-size: 4rem; margin-bottom: 1rem;">📄</div>
+                    <div class="ai-upload-text" style="font-size: 1.2rem; color: #374151; margin-bottom: 0.5rem; font-weight: 600;">拖放文件到此處或點擊上傳</div>
+                    <div class="ai-upload-hint" style="color: #6b7280; font-size: 0.9rem;">支援 PDF、JPG、PNG 格式 (最大 20MB)</div>
+                    <input type="file" id="aiFileInput" class="ai-file-input" accept=".pdf,.jpg,.jpeg,.png" style="display: none;">
+                </div>
+
+                <!-- 處理進度 -->
+                <div id="aiProgressContainer" class="ai-progress-container" style="display: none; margin-top: 2rem;">
+                    <div class="ai-progress-steps" style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
+                        <div class="ai-step" data-step="1" style="flex: 1; text-align: center; opacity: 0.4; transition: all 0.3s ease;">
+                            <div class="ai-step-icon" style="font-size: 2.5rem; margin-bottom: 0.5rem; position: relative; display: inline-block;">📤</div>
+                            <div class="ai-step-text" style="font-size: 0.875rem; color: #6b7280; font-weight: 500;">文件上傳</div>
+                        </div>
+                        <div class="ai-step" data-step="2" style="flex: 1; text-align: center; opacity: 0.4; transition: all 0.3s ease;">
+                            <div class="ai-step-icon" style="font-size: 2.5rem; margin-bottom: 0.5rem; position: relative; display: inline-block;">🤖</div>
+                            <div class="ai-step-text" style="font-size: 0.875rem; color: #6b7280; font-weight: 500;">AI 分析</div>
+                        </div>
+                        <div class="ai-step" data-step="3" style="flex: 1; text-align: center; opacity: 0.4; transition: all 0.3s ease;">
+                            <div class="ai-step-icon" style="font-size: 2.5rem; margin-bottom: 0.5rem; position: relative; display: inline-block;">📊</div>
+                            <div class="ai-step-text" style="font-size: 0.875rem; color: #6b7280; font-weight: 500;">數據提取</div>
+                        </div>
+                        <div class="ai-step" data-step="4" style="flex: 1; text-align: center; opacity: 0.4; transition: all 0.3s ease;">
+                            <div class="ai-step-icon" style="font-size: 2.5rem; margin-bottom: 0.5rem; position: relative; display: inline-block;">☁️</div>
+                            <div class="ai-step-text" style="font-size: 0.875rem; color: #6b7280; font-weight: 500;">雲端存儲</div>
+                        </div>
+                    </div>
+                    <div class="ai-progress-bar" style="width: 100%; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;">
+                        <div class="ai-progress-fill" id="aiProgressFill" style="height: 100%; background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%); transition: width 0.5s ease; width: 0%;"></div>
+                    </div>
+                </div>
+
+                <!-- 處理日誌 -->
+                <div id="aiLogContainer" class="ai-log-container" style="display: none; margin-top: 1.5rem; background: #1f2937; border-radius: 8px; padding: 1rem; max-height: 200px; overflow-y: auto;">
+                    <div class="ai-log-header" style="color: #9ca3af; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">處理日誌</div>
+                    <div id="aiLogContent" class="ai-log-content" style="font-family: 'Monaco', 'Courier New', monospace; font-size: 0.75rem; color: #d1d5db; line-height: 1.6;"></div>
+                </div>
+
+                <!-- 提取結果 -->
+                <div id="aiResultsContainer" class="ai-results-container" style="display: none; margin-top: 1.5rem; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+                    <div class="ai-results-header" style="background: #f9fafb; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">📊 提取的數據</div>
+                    <div id="aiResultsContent" class="ai-results-content" style="padding: 1.5rem; max-height: 300px; overflow-y: auto;"></div>
+                    <div class="ai-results-actions" style="display: flex; gap: 1rem; padding: 1rem; background: #f9fafb; border-top: 1px solid #e5e7eb;">
+                        <button class="ai-btn ai-btn-primary" onclick="saveAIResults()" style="flex: 1; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s; background: #4f46e5; color: white;">
+                            <i class="fas fa-save"></i> 保存到項目
+                        </button>
+                        <button class="ai-btn ai-btn-secondary" onclick="resetAIUpload()" style="flex: 1; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s; background: #f3f4f6; color: #374151;">
+                            <i class="fas fa-redo"></i> 處理另一個文件
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // 立即執行的頁面可見性腳本
         (function() {
             document.documentElement.style.cssText = 'display: block !important; visibility: visible !important;';
             document.body.style.cssText = 'display: block !important; visibility: visible !important; background: #ffffff;';
+            
+            // 立即確認模態框存在
+            console.log('🚀 Body 開始載入，立即檢查模態框');
+            const immediateCheck = document.getElementById('aiUploadModal');
+            console.log('⚡ 立即檢查結果:', immediateCheck ? '✅ 模態框已在 DOM 中' : '❌ 模態框不存在');
         })();
     </script>
 
@@ -3499,401 +3573,6 @@
         }
         
     </script>
-
-    <!-- AI 上傳模態框 -->
-    <div id="aiUploadModal" class="ai-upload-modal" style="display: none;">
-        <div class="ai-upload-overlay" onclick="closeAIUploadModal()"></div>
-        <div class="ai-upload-container">
-            <!-- 模態框標題 -->
-            <div class="ai-upload-header">
-                <h2><i class="fas fa-robot"></i> AI 文檔處理</h2>
-                <button class="ai-close-btn" onclick="closeAIUploadModal()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-
-            <!-- 上傳區域 -->
-            <div class="ai-upload-content">
-                <div id="aiUploadArea" class="ai-upload-area">
-                    <div class="ai-upload-icon">📄</div>
-                    <div class="ai-upload-text">拖放文件到此處或點擊上傳</div>
-                    <div class="ai-upload-hint">支援 PDF、JPG、PNG 格式 (最大 20MB)</div>
-                    <input type="file" id="aiFileInput" class="ai-file-input" accept=".pdf,.jpg,.jpeg,.png">
-                </div>
-
-                <!-- 處理進度 -->
-                <div id="aiProgressContainer" class="ai-progress-container" style="display: none;">
-                    <div class="ai-progress-steps">
-                        <div class="ai-step" data-step="1">
-                            <div class="ai-step-icon">📤</div>
-                            <div class="ai-step-text">文件上傳</div>
-                        </div>
-                        <div class="ai-step" data-step="2">
-                            <div class="ai-step-icon">🤖</div>
-                            <div class="ai-step-text">AI 分析</div>
-                        </div>
-                        <div class="ai-step" data-step="3">
-                            <div class="ai-step-icon">📊</div>
-                            <div class="ai-step-text">數據提取</div>
-                        </div>
-                        <div class="ai-step" data-step="4">
-                            <div class="ai-step-icon">☁️</div>
-                            <div class="ai-step-text">雲端存儲</div>
-                        </div>
-                    </div>
-                    <div class="ai-progress-bar">
-                        <div class="ai-progress-fill" id="aiProgressFill"></div>
-                    </div>
-                </div>
-
-                <!-- 處理日誌 -->
-                <div id="aiLogContainer" class="ai-log-container" style="display: none;">
-                    <div class="ai-log-header">處理日誌</div>
-                    <div id="aiLogContent" class="ai-log-content"></div>
-                </div>
-
-                <!-- 提取結果 -->
-                <div id="aiResultsContainer" class="ai-results-container" style="display: none;">
-                    <div class="ai-results-header">📊 提取的數據</div>
-                    <div id="aiResultsContent" class="ai-results-content"></div>
-                    <div class="ai-results-actions">
-                        <button class="ai-btn ai-btn-primary" onclick="saveAIResults()">
-                            <i class="fas fa-save"></i> 保存到項目
-                        </button>
-                        <button class="ai-btn ai-btn-secondary" onclick="resetAIUpload()">
-                            <i class="fas fa-redo"></i> 處理另一個文件
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <style>
-        /* AI 上傳模態框樣式 */
-        .ai-upload-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            z-index: 10000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .ai-upload-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
-        }
-
-        .ai-upload-container {
-            position: relative;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-            width: 90%;
-            max-width: 800px;
-            max-height: 90vh;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            animation: slideUp 0.3s ease-out;
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .ai-upload-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1.5rem 2rem;
-            border-bottom: 1px solid #e5e7eb;
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-            color: white;
-        }
-
-        .ai-upload-header h2 {
-            margin: 0;
-            font-size: 1.5rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .ai-close-btn {
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            color: white;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.2s;
-        }
-
-        .ai-close-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        .ai-upload-content {
-            padding: 2rem;
-            overflow-y: auto;
-            flex: 1;
-        }
-
-        .ai-upload-area {
-            border: 3px dashed #d1d5db;
-            border-radius: 12px;
-            padding: 3rem 2rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background: #fafafa;
-        }
-
-        .ai-upload-area:hover {
-            border-color: #4f46e5;
-            background: #f8fafc;
-        }
-
-        .ai-upload-area.dragover {
-            border-color: #4f46e5;
-            background: #eef2ff;
-            transform: scale(1.02);
-        }
-
-        .ai-upload-icon {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-        }
-
-        .ai-upload-text {
-            font-size: 1.2rem;
-            color: #374151;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-        }
-
-        .ai-upload-hint {
-            color: #6b7280;
-            font-size: 0.9rem;
-        }
-
-        .ai-file-input {
-            display: none;
-        }
-
-        .ai-progress-container {
-            margin-top: 2rem;
-        }
-
-        .ai-progress-steps {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 1.5rem;
-        }
-
-        .ai-step {
-            flex: 1;
-            text-align: center;
-            opacity: 0.4;
-            transition: all 0.3s ease;
-        }
-
-        .ai-step.active {
-            opacity: 1;
-            transform: scale(1.1);
-        }
-
-        .ai-step.completed {
-            opacity: 1;
-        }
-
-        .ai-step.completed .ai-step-icon::after {
-            content: '✓';
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: #10b981;
-            color: white;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .ai-step-icon {
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-            position: relative;
-            display: inline-block;
-        }
-
-        .ai-step-text {
-            font-size: 0.875rem;
-            color: #6b7280;
-            font-weight: 500;
-        }
-
-        .ai-progress-bar {
-            width: 100%;
-            height: 8px;
-            background: #e5e7eb;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .ai-progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
-            transition: width 0.5s ease;
-            width: 0%;
-        }
-
-        .ai-log-container {
-            margin-top: 1.5rem;
-            background: #1f2937;
-            border-radius: 8px;
-            padding: 1rem;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .ai-log-header {
-            color: #9ca3af;
-            font-size: 0.875rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
-
-        .ai-log-content {
-            font-family: 'Monaco', 'Courier New', monospace;
-            font-size: 0.75rem;
-            color: #d1d5db;
-            line-height: 1.6;
-        }
-
-        .ai-log-entry {
-            margin-bottom: 0.25rem;
-        }
-
-        .ai-log-entry.info {
-            color: #60a5fa;
-        }
-
-        .ai-log-entry.success {
-            color: #34d399;
-        }
-
-        .ai-log-entry.error {
-            color: #f87171;
-        }
-
-        .ai-results-container {
-            margin-top: 1.5rem;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .ai-results-header {
-            background: #f9fafb;
-            padding: 1rem;
-            font-weight: 600;
-            color: #374151;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .ai-results-content {
-            padding: 1.5rem;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .ai-result-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 0.75rem 0;
-            border-bottom: 1px solid #f3f4f6;
-        }
-
-        .ai-result-item:last-child {
-            border-bottom: none;
-        }
-
-        .ai-result-label {
-            font-weight: 500;
-            color: #6b7280;
-        }
-
-        .ai-result-value {
-            color: #1f2937;
-            font-weight: 600;
-        }
-
-        .ai-results-actions {
-            display: flex;
-            gap: 1rem;
-            padding: 1rem;
-            background: #f9fafb;
-            border-top: 1px solid #e5e7eb;
-        }
-
-        .ai-btn {
-            flex: 1;
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 8px;
-            font-weight: 500;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            transition: all 0.2s;
-        }
-
-        .ai-btn-primary {
-            background: #4f46e5;
-            color: white;
-        }
-
-        .ai-btn-primary:hover {
-            background: #4338ca;
-        }
-
-        .ai-btn-secondary {
-            background: #f3f4f6;
-            color: #374151;
-        }
-
-        .ai-btn-secondary:hover {
-            background: #e5e7eb;
-        }
-    </style>
 
     <script>
         // 在窗口完全載入後檢查模態框
