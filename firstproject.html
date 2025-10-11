@@ -12,9 +12,9 @@
     <script src="config.js"></script>
     <script src="translations.js"></script>
     <script src="unified-auth.js"></script>
-    <script src="global-auth-sync.js?v=2.8"></script>
-    <script src="navbar-component.js?v=2.8"></script>
-    <script src="sidebar-component.js?v=2.8"></script>
+    <script src="global-auth-sync.js?v=2.9"></script>
+    <script src="navbar-component.js?v=2.9"></script>
+    <script src="sidebar-component.js?v=2.9"></script>
     <!-- 載入統一處理器系統 -->
     <script src="google-ai-integration.js"></script>
     <script src="google-document-ai.js"></script>
@@ -1917,34 +1917,37 @@
             // 清空現有內容
             documentsTbody.innerHTML = '';
             
-            // 優先從統一存儲載入，然後是舊格式
+            // 獲取當前項目 ID
+            const projectId = getCurrentProjectId();
+            if (!projectId) {
+                console.warn('⚠️ 無法獲取項目 ID，無法載入文件');
+                documentsTable.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            // 從當前項目的存儲載入文件
             let storedFiles = [];
+            const projectStorageKey = `vaultcaddy_project_${projectId}_documents`;
             
-            // 1. 嘗試從統一存儲載入
-            if (window.UnifiedDocumentProcessor && window.UnifiedDocumentProcessor.processors.storage) {
-                console.log(`📂 從統一存儲載入 ${docType} 文件`);
-                storedFiles = window.UnifiedDocumentProcessor.getAllProcessedDocuments(docType);
-                
-                // 轉換統一格式為顯示格式
-                storedFiles = storedFiles.map(doc => ({
-                    id: doc.id,
-                    name: doc.fileName,
-                    size: doc.fileSize || 0,
-                    documentType: doc.documentType,
-                    uploadDate: new Date(doc.processedAt).toLocaleDateString('zh-TW'),
-                    status: 'completed',
-                    processedData: doc
-                }));
-            }
+            console.log(`📂 從項目 ${projectId} 載入文件`);
+            const projectDocuments = JSON.parse(localStorage.getItem(projectStorageKey) || '[]');
             
-            // 2. 如果統一存儲沒有數據，嘗試舊格式
-            if (storedFiles.length === 0) {
-                console.log(`📂 從舊存儲載入 ${docType} 文件`);
-                const storageKey = `vaultcaddy_files_${docType}`;
-                storedFiles = JSON.parse(localStorage.getItem(storageKey) || '[]');
-            }
+            // 轉換為顯示格式
+            storedFiles = projectDocuments.map(doc => ({
+                id: doc.id,
+                name: doc.fileName || doc.name || '未命名文件',
+                size: doc.fileSize || 0,
+                documentType: doc.documentType || docType,
+                uploadDate: doc.createdAt ? new Date(doc.createdAt).toLocaleDateString('zh-TW') : new Date().toLocaleDateString('zh-TW'),
+                status: 'completed',
+                amount: doc.amount || '',
+                merchant: doc.merchant || '',
+                date: doc.date || '',
+                processedData: doc
+            }));
             
-            console.log(`📁 載入 ${docType} 文件:`, storedFiles.length, '個文件');
+            console.log(`📁 項目 ${projectId} 載入文件:`, storedFiles.length, '個文件');
             
             // 如果沒有文件，顯示空狀態
             if (storedFiles.length === 0) {
@@ -2147,15 +2150,44 @@
 
         function openUploadModal() {
             console.log('🔵 openUploadModal 被調用');
+            console.log('🔵 DOM 狀態:', document.readyState);
+            
+            // 確保 DOM 已完全載入
+            if (document.readyState === 'loading') {
+                console.log('⏳ DOM 尚未載入完成，等待...');
+                document.addEventListener('DOMContentLoaded', openUploadModal);
+                return;
+            }
+            
             // 打開新的 AI 上傳模態框
             const modal = document.getElementById('aiUploadModal');
             console.log('🔵 找到模態框:', modal);
+            console.log('🔵 模態框元素存在:', !!modal);
+            
             if (modal) {
+                console.log('✅ 開啟上傳模態框');
                 modal.style.display = 'flex';
-                initializeAIUpload();
+                
+                // 使用 setTimeout 確保 DOM 已渲染
+                setTimeout(() => {
+                    initializeAIUpload();
+                }, 100);
             } else {
                 console.error('❌ 找不到 aiUploadModal');
-                alert('上傳功能初始化中，請稍後再試');
+                console.error('❌ Body 內容:', document.body ? '存在' : '不存在');
+                console.error('❌ 所有元素數量:', document.getElementsByTagName('*').length);
+                
+                // 嘗試延遲重試
+                setTimeout(() => {
+                    const retryModal = document.getElementById('aiUploadModal');
+                    if (retryModal) {
+                        console.log('✅ 重試成功，找到模態框');
+                        retryModal.style.display = 'flex';
+                        setTimeout(() => initializeAIUpload(), 100);
+                    } else {
+                        alert('上傳功能初始化失敗，請重新整理頁面後再試');
+                    }
+                }, 500);
             }
         }
         
@@ -2458,6 +2490,8 @@
             try {
                 // 獲取當前項目 ID
                 const projectId = getCurrentProjectId();
+                console.log('💾 準備保存文件到項目:', projectId);
+                
                 if (!projectId) {
                     alert('無法確定當前項目');
                     return;
@@ -2466,6 +2500,8 @@
                 // 保存到 localStorage
                 const storageKey = `vaultcaddy_project_${projectId}_documents`;
                 const existingDocs = JSON.parse(localStorage.getItem(storageKey) || '[]');
+                
+                console.log('📂 現有文檔數量:', existingDocs.length);
                 
                 const newDocument = {
                     id: Date.now().toString(),
@@ -2477,8 +2513,12 @@
                 existingDocs.push(newDocument);
                 localStorage.setItem(storageKey, JSON.stringify(existingDocs));
                 
-                logAI('✅ 數據已保存到項目', 'success');
-                alert('文檔已成功保存到項目！');
+                console.log('✅ 文檔已保存，新文檔數量:', existingDocs.length);
+                console.log('💾 存儲鍵:', storageKey);
+                console.log('📄 文檔詳情:', newDocument);
+                
+                logAI('✅ 數據已保存到項目 ' + projectId, 'success');
+                alert(`文檔已成功保存到項目 ${projectId}！`);
                 
                 // 關閉模態框並刷新頁面
                 closeAIUploadModal();
