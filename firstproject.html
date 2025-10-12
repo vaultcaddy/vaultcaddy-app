@@ -2650,48 +2650,99 @@
         
         // 後台 AI 數據提取（不阻塞 UI）
         async function startBackgroundAIProcessing(file, documentId, projectId) {
+            console.log('');
+            console.log('================================================================================');
             console.log('🤖 開始後台 AI 處理');
-            console.log('   文件:', file.name);
+            console.log('   文件名:', file.name);
+            console.log('   文件類型:', file.type);
+            console.log('   文件大小:', file.size, 'bytes');
             console.log('   文檔 ID:', documentId);
             console.log('   項目 ID:', projectId);
+            console.log('================================================================================');
+            console.log('');
             
             try {
                 // 更新進度到 10%
+                console.log('📊 步驟 0: 更新進度到 10%...');
                 updateDocumentProgress(documentId, projectId, 10);
                 
                 // 步驟 1: 將文件轉換為 Base64
-                console.log('📄 步驟 1: 轉換文件為 Base64...');
+                console.log('');
+                console.log('📄 === 步驟 1: 轉換文件為 Base64 ===');
                 const base64Data = await fileToBase64(file);
-                console.log('✅ Base64 轉換完成，長度:', base64Data.length);
+                console.log('✅ Base64 轉換完成');
+                console.log('   Base64 長度:', base64Data.length, '字符');
+                console.log('   Base64 預覽:', base64Data.substring(0, 100) + '...');
                 updateDocumentProgress(documentId, projectId, 30);
                 
                 // 步驟 2: 調用 Google Gemini Vision API
-                console.log('🔍 步驟 2: 調用 Gemini Vision API...');
+                console.log('');
+                console.log('🔍 === 步驟 2: 調用 Gemini Vision API ===');
+                console.log('   API: Google Gemini 1.5 Flash');
+                console.log('   開始 API 調用...');
                 const extractedData = await extractDataWithGemini(base64Data, file.type);
-                console.log('✅ 數據提取完成:', extractedData);
+                console.log('✅ API 調用成功');
+                console.log('   提取的原始數據:', JSON.stringify(extractedData, null, 2));
                 updateDocumentProgress(documentId, projectId, 70);
                 
                 // 步驟 3: 解析並保存數據
-                console.log('💾 步驟 3: 保存提取的數據...');
+                console.log('');
+                console.log('💾 === 步驟 3: 解析並保存數據 ===');
                 const parsedData = parseBankStatementData(extractedData);
-                console.log('✅ 數據解析完成:', parsedData);
+                console.log('✅ 數據解析完成');
+                console.log('   銀行名稱:', parsedData.bankName);
+                console.log('   帳戶持有人:', parsedData.accountHolder);
+                console.log('   帳戶號碼:', parsedData.accountNumber);
+                console.log('   對帳期間:', parsedData.statementStartDate, 'to', parsedData.statementEndDate);
+                console.log('   期初餘額:', parsedData.openingBalance);
+                console.log('   期末餘額:', parsedData.closingBalance);
+                console.log('   交易數量:', parsedData.transactionCount);
+                console.log('   交易詳情:', parsedData.transactions);
                 
                 // 更新 localStorage 中的文檔
+                console.log('');
+                console.log('💾 === 步驟 4: 保存到 localStorage ===');
                 updateDocumentWithExtractedData(documentId, projectId, parsedData);
                 updateDocumentProgress(documentId, projectId, 100);
+                console.log('✅ 數據已保存到 localStorage');
                 
+                // 驗證保存
+                const storageKey = `vaultcaddy_project_${projectId}_documents`;
+                const savedDocs = JSON.parse(localStorage.getItem(storageKey) || '[]');
+                const savedDoc = savedDocs.find(doc => doc.id === documentId);
+                console.log('');
+                console.log('🔍 === 驗證保存的數據 ===');
+                console.log('   存儲鍵:', storageKey);
+                console.log('   保存的文檔:', savedDoc);
+                console.log('   交易數量 (processedData):', savedDoc?.processedData?.transactions?.length);
+                console.log('   交易數量 (頂層):', savedDoc?.transactions?.length);
+                
+                console.log('');
                 console.log('🎉 AI 數據提取完成！');
+                console.log('================================================================================');
+                console.log('');
                 
                 // 延遲 1 秒後刷新頁面，讓用戶看到 100% 進度
                 setTimeout(() => {
                     console.log('🔄 刷新頁面以顯示提取的數據...');
                     location.reload();
-                }, 1000);
+                }, 1500);
                 
             } catch (error) {
-                console.error('❌ 後台 AI 處理失敗:', error);
+                console.error('');
+                console.error('================================================================================');
+                console.error('❌ 後台 AI 處理失敗');
+                console.error('   錯誤類型:', error.name);
+                console.error('   錯誤消息:', error.message);
+                console.error('   錯誤堆棧:', error.stack);
+                console.error('================================================================================');
+                console.error('');
+                
                 // 更新文檔狀態為錯誤
                 updateDocumentStatus(documentId, projectId, 'Error', error.message);
+                
+                // 顯示錯誤消息給用戶
+                alert(`AI 處理失敗: ${error.message}\n\n請查看控制台了解詳情。`);
             }
         }
         
