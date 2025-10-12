@@ -3733,7 +3733,11 @@
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                         <i class="fas fa-file-pdf" style="color: #ef4444;"></i>
                         <div>
-                            <div style="font-weight: 500; color: #1f2937;">${file.name || file.fileName || data.fileName || '未命名文件'}</div>
+                            <div style="font-weight: 500; color: #1f2937;">
+                                <a href="javascript:void(0)" onclick="viewDocument('${file.id}')" style="color: #1f2937; text-decoration: none; cursor: pointer;">
+                                    ${file.name || file.fileName || data.fileName || '未命名文件'}
+                                </a>
+                            </div>
                             <div style="font-size: 0.875rem; color: #6b7280;">${data.accountHolder || data.accountName || (isProcessing ? '處理中...' : '')}</div>
                             <div style="font-size: 0.75rem; color: #9ca3af;">${data.accountNumber || ''}</div>
                         </div>
@@ -3852,8 +3856,9 @@
         // 文檔操作函數
         function viewDocument(fileId) {
             console.log('查看文檔:', fileId);
-            // 切換到文檔詳細視圖
-            showDocumentDetail(fileId);
+            // 跳轉到文檔詳情頁面
+            const projectId = getCurrentProjectId();
+            window.location.href = `document-detail.html?id=${fileId}&project=${projectId}`;
         }
         
         function downloadDocument(fileId) {

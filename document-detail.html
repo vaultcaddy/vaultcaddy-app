@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文檔詳情 - VaultCaddy</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="config.js"></script>
+    <script src="translations.js"></script>
+    <script src="unified-auth.js"></script>
+    <script src="global-auth-sync.js?v=3.9"></script>
+    <script src="navbar-component.js?v=3.9"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+        
+        /* 頂部導航 */
+        .top-nav {
+            background: #1e293b;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+        
+        .back-btn:hover {
+            color: #e2e8f0;
+        }
+        
+        .document-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+        
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: none;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .saved-indicator {
+            color: #10b981;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        /* 主容器 */
+        .main-container {
+            display: grid;
+            grid-template-columns: 550px 1fr;
+            height: calc(100vh - 73px);
+        }
+        
+        /* 左側 PDF 預覽區 */
+        .pdf-preview-panel {
+            background: #1e293b;
+            border-right: 1px solid #334155;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .pdf-controls {
+            padding: 1rem;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+        
+        .page-nav-btn {
+            background: #334155;
+            color: #e2e8f0;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        
+        .page-nav-btn:hover:not(:disabled) {
+            background: #475569;
+        }
+        
+        .page-nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        
+        .page-indicator {
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+        
+        .pdf-zoom-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .pdf-viewer {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .pdf-page {
+            background: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            max-width: 100%;
+        }
+        
+        .pdf-page img {
+            width: 100%;
+            display: block;
+            border-radius: 4px;
+        }
+        
+        /* 右側數據面板 */
+        .data-panel {
+            background: #0f172a;
+            overflow-y: auto;
+            padding: 2rem;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #334155;
+        }
+        
+        .tab {
+            padding: 0.75rem 1rem;
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+        
+        .tab.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+        }
+        
+        .tab:hover {
+            color: #e2e8f0;
+        }
+        
+        /* 核對狀態卡片 */
+        .reconciliation-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .reconciliation-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+        
+        .reconciliation-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+        
+        .progress-badge {
+            background: #1e40af;
+            color: #93c5fd;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .reconciliation-subtitle {
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+        
+        /* 銀行對帳單詳情 */
+        .bank-details-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            cursor: pointer;
+        }
+        
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+        
+        .expand-icon {
+            color: #94a3b8;
+            transition: transform 0.2s;
+        }
+        
+        .card-header:hover .expand-icon {
+            color: #e2e8f0;
+        }
+        
+        /* 交易表格 */
+        .transactions-section {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+        
+        .transactions-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+        
+        .transactions-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+        
+        .transaction-controls {
+            display: flex;
+            gap: 0.75rem;
+        }
+        
+        .control-btn {
+            padding: 0.5rem 1rem;
+            background: #334155;
+            color: #e2e8f0;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .control-btn:hover {
+            background: #475569;
+        }
+        
+        .control-btn.add {
+            background: #7c3aed;
+        }
+        
+        .control-btn.add:hover {
+            background: #6d28d9;
+        }
+        
+        .transactions-info {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        
+        .transactions-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .transactions-table thead {
+            background: #0f172a;
+        }
+        
+        .transactions-table th {
+            padding: 0.75rem;
+            text-align: left;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #94a3b8;
+            border-bottom: 1px solid #334155;
+        }
+        
+        .transactions-table tbody tr {
+            border-bottom: 1px solid #334155;
+            transition: background 0.2s;
+        }
+        
+        .transactions-table tbody tr:hover {
+            background: #0f172a;
+        }
+        
+        .transactions-table td {
+            padding: 0.75rem;
+            font-size: 0.9rem;
+            color: #e2e8f0;
+        }
+        
+        .checkbox-cell {
+            width: 40px;
+        }
+        
+        .checkbox-cell input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+        
+        .amount-cell {
+            font-family: 'Courier New', monospace;
+            font-weight: 500;
+        }
+        
+        .amount-positive {
+            color: #10b981;
+        }
+        
+        .amount-negative {
+            color: #ef4444;
+        }
+        
+        .action-cell {
+            width: 100px;
+        }
+        
+        .action-btns {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .icon-btn {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 0.25rem;
+            transition: color 0.2s;
+        }
+        
+        .icon-btn:hover {
+            color: #e2e8f0;
+        }
+        
+        .icon-btn.delete:hover {
+            color: #ef4444;
+        }
+        
+        /* 載入動畫 */
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            color: #94a3b8;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #334155;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- 頂部導航 -->
+    <div class="top-nav">
+        <a href="#" class="back-btn" onclick="goBackToDashboard()">
+            <i class="fas fa-arrow-left"></i>
+            Back to dashboard
+        </a>
+        <h1 class="document-title" id="documentTitle">載入中...</h1>
+        <div class="top-actions">
+            <span class="saved-indicator">
+                <i class="fas fa-cloud-check"></i>
+                Saved
+            </span>
+            <button class="btn btn-primary">
+                <i class="fas fa-download"></i>
+                Download
+            </button>
+            <button class="icon-btn">
+                <i class="fas fa-ellipsis-v"></i>
+            </button>
+        </div>
+    </div>
+    
+    <!-- 主容器 -->
+    <div class="main-container">
+        <!-- 左側 PDF 預覽 -->
+        <div class="pdf-preview-panel">
+            <div class="pdf-controls">
+                <button class="page-nav-btn" id="prevPageBtn" onclick="previousPage()">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <span class="page-indicator">
+                    <span id="currentPage">1</span> of <span id="totalPages">1</span>
+                </span>
+                <button class="page-nav-btn" id="nextPageBtn" onclick="nextPage()">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+                
+                <div class="pdf-zoom-controls">
+                    <button class="page-nav-btn" onclick="zoomOut()">
+                        <i class="fas fa-search-minus"></i>
+                    </button>
+                    <button class="page-nav-btn" onclick="resetZoom()">
+                        <i class="fas fa-undo"></i>
+                    </button>
+                    <button class="page-nav-btn" onclick="zoomIn()">
+                        <i class="fas fa-search-plus"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="pdf-viewer" id="pdfViewer">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <div>載入文檔中...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 右側數據面板 -->
+        <div class="data-panel">
+            <div class="tabs">
+                <button class="tab active">Results</button>
+                <button class="tab">Export</button>
+                <button class="tab">JSON</button>
+            </div>
+            
+            <!-- 核對狀態 -->
+            <div class="reconciliation-card">
+                <div class="reconciliation-header">
+                    <h3 class="reconciliation-title">Reconciliation Status</h3>
+                    <span class="progress-badge" id="progressBadge">0% Complete</span>
+                </div>
+                <p class="reconciliation-subtitle" id="reconciliationStatus">
+                    0 of 0 transactions reconciled
+                </p>
+            </div>
+            
+            <!-- 銀行對帳單詳情 -->
+            <div class="bank-details-card">
+                <div class="card-header">
+                    <h3 class="card-title">Bank Statement Details & Notes</h3>
+                    <i class="fas fa-chevron-down expand-icon"></i>
+                </div>
+            </div>
+            
+            <!-- 交易記錄 -->
+            <div class="transactions-section">
+                <div class="transactions-header">
+                    <h3 class="transactions-title">Transactions</h3>
+                    <div class="transaction-controls">
+                        <button class="control-btn">Show Unreconciled</button>
+                        <button class="control-btn">Toggle All</button>
+                        <button class="control-btn add">Add Item</button>
+                    </div>
+                </div>
+                
+                <div class="transactions-info" id="transactionsInfo">
+                    Showing 0 to 0 of 0 transactions
+                </div>
+                
+                <table class="transactions-table">
+                    <thead>
+                        <tr>
+                            <th class="checkbox-cell">
+                                <input type="checkbox" onchange="toggleAllTransactions(this)">
+                            </th>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                            <th>Balance</th>
+                            <th class="action-cell">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionsBody">
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 2rem; color: #94a3b8;">
+                                載入交易記錄中...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentDocument = null;
+        let currentPageNumber = 1;
+        let totalPagesCount = 1;
+        let zoomLevel = 100;
+        
+        // 從 URL 獲取文檔 ID
+        function getDocumentIdFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('id');
+        }
+        
+        // 獲取項目 ID
+        function getProjectIdFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('project');
+        }
+        
+        // 返回儀表板
+        function goBackToDashboard() {
+            const projectId = getProjectIdFromURL();
+            if (projectId) {
+                window.location.href = `firstproject.html?project=${projectId}`;
+            } else {
+                window.location.href = 'dashboard.html';
+            }
+        }
+        
+        // 載入文檔數據
+        async function loadDocument() {
+            const documentId = getDocumentIdFromURL();
+            const projectId = getProjectIdFromURL();
+            
+            console.log('載入文檔:', { documentId, projectId });
+            
+            if (!documentId || !projectId) {
+                alert('缺少必要參數');
+                goBackToDashboard();
+                return;
+            }
+            
+            // 從 localStorage 獲取文檔
+            const storageKey = `vaultcaddy_project_${projectId}_documents`;
+            const documents = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            const document = documents.find(doc => doc.id === documentId);
+            
+            if (!document) {
+                alert('找不到文檔');
+                goBackToDashboard();
+                return;
+            }
+            
+            currentDocument = document;
+            console.log('文檔數據:', document);
+            
+            // 更新頁面標題
+            document.getElementById('documentTitle').textContent = document.name || document.fileName;
+            
+            // 顯示 PDF 預覽（暫時使用佔位符）
+            displayPDFPreview();
+            
+            // 顯示交易數據（暫時使用示例數據）
+            displayTransactions();
+        }
+        
+        // 顯示 PDF 預覽
+        function displayPDFPreview() {
+            const pdfViewer = document.getElementById('pdfViewer');
+            
+            // TODO: 實際實現需要使用 PDF.js 或類似庫
+            // 現在先顯示佔位符
+            pdfViewer.innerHTML = `
+                <div class="pdf-page">
+                    <img src="https://via.placeholder.com/500x700/1e293b/94a3b8?text=PDF+Page+1" alt="Page 1">
+                </div>
+            `;
+            
+            totalPagesCount = 1;
+            currentPageNumber = 1;
+            updatePageControls();
+        }
+        
+        // 顯示交易記錄
+        function displayTransactions() {
+            // 示例數據（之後會從 AI 提取）
+            const sampleTransactions = [
+                { date: '02/22/2025', description: 'B/F BALANCE', amount: 0, balance: 1493.98 },
+                { date: '02/26/2025', description: 'CREDIT INTEREST', amount: 2.61, balance: 1496.59 },
+                { date: '03/07/2025', description: 'QUICK CHEQUE DEPOSIT(07MAR25)', amount: 78649, balance: 80145.59 }
+            ];
+            
+            const tbody = document.getElementById('transactionsBody');
+            const transactionsInfo = document.getElementById('transactionsInfo');
+            const reconciliationStatus = document.getElementById('reconciliationStatus');
+            const progressBadge = document.getElementById('progressBadge');
+            
+            // 更新統計信息
+            const totalTransactions = sampleTransactions.length;
+            const reconciledCount = 0;
+            const percentage = 0;
+            
+            transactionsInfo.textContent = `Showing 1 to ${totalTransactions} of ${totalTransactions} transactions`;
+            reconciliationStatus.textContent = `${reconciledCount} of ${totalTransactions} transactions reconciled`;
+            progressBadge.textContent = `${percentage}% Complete`;
+            
+            // 生成表格行
+            tbody.innerHTML = sampleTransactions.map((tx, index) => `
+                <tr>
+                    <td class="checkbox-cell">
+                        <input type="checkbox">
+                    </td>
+                    <td>${tx.date}</td>
+                    <td>${tx.description}</td>
+                    <td class="amount-cell ${tx.amount >= 0 ? 'amount-positive' : 'amount-negative'}">
+                        ${tx.amount >= 0 ? '+' : ''}${tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td class="amount-cell">${tx.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                    <td class="action-cell">
+                        <div class="action-btns">
+                            <button class="icon-btn" title="編輯">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="icon-btn delete" title="刪除">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        // 頁面控制
+        function updatePageControls() {
+            document.getElementById('currentPage').textContent = currentPageNumber;
+            document.getElementById('totalPages').textContent = totalPagesCount;
+            document.getElementById('prevPageBtn').disabled = currentPageNumber === 1;
+            document.getElementById('nextPageBtn').disabled = currentPageNumber === totalPagesCount;
+        }
+        
+        function previousPage() {
+            if (currentPageNumber > 1) {
+                currentPageNumber--;
+                displayPDFPreview();
+            }
+        }
+        
+        function nextPage() {
+            if (currentPageNumber < totalPagesCount) {
+                currentPageNumber++;
+                displayPDFPreview();
+            }
+        }
+        
+        function zoomIn() {
+            zoomLevel = Math.min(zoomLevel + 25, 200);
+            console.log('Zoom:', zoomLevel + '%');
+        }
+        
+        function zoomOut() {
+            zoomLevel = Math.max(zoomLevel - 25, 50);
+            console.log('Zoom:', zoomLevel + '%');
+        }
+        
+        function resetZoom() {
+            zoomLevel = 100;
+            console.log('Zoom:', zoomLevel + '%');
+        }
+        
+        function toggleAllTransactions(checkbox) {
+            const checkboxes = document.querySelectorAll('.transactions-table tbody input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = checkbox.checked);
+        }
+        
+        // 頁面載入時執行
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('文檔詳情頁面載入');
+            loadDocument();
+        });
+    </script>
+</body>
+</html>
+
