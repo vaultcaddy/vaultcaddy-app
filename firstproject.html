@@ -12,9 +12,9 @@
     <script src="config.js"></script>
     <script src="translations.js"></script>
     <script src="unified-auth.js"></script>
-    <script src="global-auth-sync.js?v=3.7"></script>
-    <script src="navbar-component.js?v=3.7"></script>
-    <script src="sidebar-component.js?v=3.7"></script>
+    <script src="global-auth-sync.js?v=3.8"></script>
+    <script src="navbar-component.js?v=3.8"></script>
+    <script src="sidebar-component.js?v=3.8"></script>
     <!-- 載入統一處理器系統 -->
     <script src="google-ai-integration.js"></script>
     <script src="google-document-ai.js"></script>
@@ -2400,42 +2400,43 @@
             aiCurrentFile = file;
             aiIsProcessing = true;
             
-            // 顯示簡單的載入提示（不顯示詳細步驟）
-            const modal = document.getElementById('aiUploadModal');
-            const uploadArea = document.getElementById('aiUploadArea');
-            
-            // 創建簡單的載入指示器
-            uploadArea.innerHTML = `
-                <div style="text-align: center; padding: 2rem;">
-                    <div style="font-size: 3rem; margin-bottom: 1rem;">⏳</div>
-                    <div style="font-size: 1.2rem; color: #374151; font-weight: 600; margin-bottom: 0.5rem;">處理中...</div>
-                    <div style="color: #6b7280;">正在使用 AI 分析文檔</div>
-                </div>
-            `;
-            
             try {
-                // 背景處理：AI分析和數據提取
-                const result = await processWithGoogleAI(file);
-                aiProcessingResults.aiResult = result;
+                // 1. 立即關閉模態框
+                closeAIUploadModal();
                 
-                const data = parseAIResponse(result);
-                aiProcessingResults.extractedData = data;
+                // 2. 立即創建一個"處理中"的文件行
+                const projectId = getCurrentProjectId();
+                if (!projectId) {
+                    throw new Error('無法確定當前項目');
+                }
                 
-                // 自動保存到項目（不需要用戶點擊保存按鈕）
-                await autoSaveToProject();
+                // 創建初始文件記錄（處理中狀態）
+                const processingDocument = {
+                    id: Date.now().toString(),
+                    fileName: file.name,
+                    fileSize: file.size,
+                    projectId: projectId,
+                    createdAt: new Date().toISOString(),
+                    status: 'Processing',
+                    processingProgress: 0,
+                    isProcessing: true
+                };
+                
+                // 保存初始記錄
+                const storageKey = `vaultcaddy_project_${projectId}_documents`;
+                const existingDocs = JSON.parse(localStorage.getItem(storageKey) || '[]');
+                existingDocs.push(processingDocument);
+                localStorage.setItem(storageKey, JSON.stringify(existingDocs));
+                
+                // 3. 刷新頁面以顯示"處理中"的文件
+                location.reload();
+                
+                // 4. 背景處理：AI分析和數據提取（在頁面重新載入後）
+                // 這部分會在頁面重新載入後由 backgroundProcessFile 函數處理
                 
             } catch (error) {
-                console.error('AI 處理錯誤:', error);
-                alert('文件處理失敗，請重試');
-                
-                // 重置上傳區域
-                uploadArea.innerHTML = `
-                    <div class="ai-upload-icon" style="font-size: 4rem; margin-bottom: 1rem;">📄</div>
-                    <div class="ai-upload-text" style="font-size: 1.2rem; color: #374151; margin-bottom: 0.5rem; font-weight: 600;">拖放文件到此處或點擊上傳</div>
-                    <div class="ai-upload-hint" style="color: #6b7280; font-size: 0.9rem;">支援 PDF、JPG、PNG 格式 (最大 20MB)</div>
-                    <input type="file" id="aiFileInput" class="ai-file-input" accept=".pdf,.jpg,.jpeg,.png" style="display: none;">
-                `;
-                
+                console.error('文件上傳錯誤:', error);
+                alert('文件上傳失敗，請重試');
                 aiIsProcessing = false;
             }
         }
@@ -3471,47 +3472,73 @@
             row.setAttribute('data-file-id', file.id);
             row.style.cssText = 'background: #ffffff; border-bottom: 1px solid #e5e7eb;';
             
-            const uploadDate = new Date(file.uploadTime || file.uploadDate || file.processedData?.createdAt).toLocaleDateString('zh-TW');
-            const fileSize = formatFileSize(file.size);
+            const uploadDate = new Date(file.uploadTime || file.uploadDate || file.processedData?.createdAt || file.createdAt).toLocaleDateString('zh-TW');
+            const fileSize = formatFileSize(file.size || file.fileSize);
             
             // 從 processedData 中提取真實數據
-            const data = file.processedData || {};
+            const data = file.processedData || file;
+            
+            // 檢查是否正在處理中
+            const isProcessing = file.isProcessing || file.status === 'Processing';
+            const processingProgress = file.processingProgress || 0;
             
             // Statement Period
             const startDate = data.startDate || data.statementStartDate || '—';
             const endDate = data.endDate || data.statementEndDate || '—';
             const periodText = (startDate !== '—' && endDate !== '—') 
                 ? `${startDate} to ${endDate}` 
-                : '—';
+                : isProcessing ? '處理中...' : '—';
             const transactionCount = data.transactions?.length || data.transactionCount || 0;
             const transactionsText = transactionCount > 0 
                 ? `${transactionCount} transactions` 
-                : '—';
+                : isProcessing ? '' : '—';
             
-            // Reconciliation
-            const reconciledCount = data.reconciledTransactions || 0;
-            const totalTransactions = transactionCount;
-            const reconciledPercent = totalTransactions > 0 
-                ? Math.round((reconciledCount / totalTransactions) * 100) 
-                : 0;
+            // Reconciliation - 如果正在處理，只顯示進度百分比
+            let reconciliationHTML;
+            if (isProcessing) {
+                reconciliationHTML = `
+                    <div>
+                        <div style="font-weight: 500; color: #f59e0b; display: flex; align-items: center; gap: 0.5rem;">
+                            <span>${processingProgress}%</span>
+                        </div>
+                        <div style="margin-top: 0.25rem; background: #e5e7eb; height: 6px; border-radius: 3px; overflow: hidden;">
+                            <div style="background: #f59e0b; height: 100%; width: ${processingProgress}%; transition: width 0.3s ease;"></div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                const reconciledCount = data.reconciledTransactions || 0;
+                const totalTransactions = transactionCount;
+                const reconciledPercent = totalTransactions > 0 
+                    ? Math.round((reconciledCount / totalTransactions) * 100) 
+                    : 0;
+                reconciliationHTML = `
+                    <div>
+                        <div style="font-weight: 500; color: #1f2937;">${reconciledCount}/${totalTransactions}</div>
+                        <div style="margin-top: 0.25rem; background: #e5e7eb; height: 6px; border-radius: 3px; overflow: hidden;">
+                            <div style="background: #3b82f6; height: 100%; width: ${reconciledPercent}%; transition: width 0.3s ease;"></div>
+                        </div>
+                    </div>
+                `;
+            }
             
             // Balance Info
             const startBalance = data.startBalance || data.openingBalance || data.beginningBalance || 0;
             const endBalance = data.endBalance || data.closingBalance || data.endingBalance || 0;
             const formattedStartBalance = typeof startBalance === 'number' 
                 ? `$${startBalance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` 
-                : startBalance;
+                : isProcessing ? '—' : startBalance;
             const formattedEndBalance = typeof endBalance === 'number' 
                 ? `$${endBalance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` 
-                : endBalance;
+                : isProcessing ? '—' : endBalance;
             
             // Status
-            const status = data.status || 'In Progress';
+            const status = isProcessing ? 'In Progress' : (data.status || 'Success');
             const statusColor = status === 'Success' || status === 'Completed' ? '#10b981' : '#f59e0b';
             const statusIcon = status === 'Success' || status === 'Completed' ? '✓' : '●';
             
             // Review Status
-            const reviewStatus = data.reviewStatus || 'Review';
+            const reviewStatus = isProcessing ? 'Processing' : (data.reviewStatus || 'Review');
             const reviewColor = reviewStatus === 'Approved' ? '#10b981' : '#f59e0b';
             
             row.innerHTML = `
@@ -3522,7 +3549,7 @@
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                         <i class="fas fa-file-pdf" style="color: #ef4444;"></i>
                         <div>
-                            <div style="font-weight: 500; color: #1f2937;">${file.name}</div>
+                            <div style="font-weight: 500; color: #1f2937;">${file.name || data.fileName}</div>
                             <div style="font-size: 0.875rem; color: #6b7280;">${data.accountHolder || data.accountName || ''}</div>
                             <div style="font-size: 0.75rem; color: #9ca3af;">${data.accountNumber || ''}</div>
                         </div>
@@ -3535,12 +3562,7 @@
                     </div>
                 </td>
                 <td style="padding: 1rem; border-bottom: 1px solid #e5e7eb;">
-                    <div>
-                        <div style="font-weight: 500; color: #1f2937;">${reconciledCount}/${totalTransactions}</div>
-                        <div style="margin-top: 0.25rem; background: #e5e7eb; height: 6px; border-radius: 3px; overflow: hidden;">
-                            <div style="background: #3b82f6; height: 100%; width: ${reconciledPercent}%; transition: width 0.3s ease;"></div>
-                        </div>
-                    </div>
+                    ${reconciliationHTML}
                 </td>
                 <td style="padding: 1rem; border-bottom: 1px solid #e5e7eb;">
                     <div>
