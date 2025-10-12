@@ -2521,9 +2521,29 @@
                     totalDocs: existingDocs.length
                 });
                 
-                // 3. 刷新頁面以顯示"處理中"的文件
-                console.log('🔄 準備刷新頁面以顯示新文件...');
-                location.reload();
+                // 3. 直接在當前頁面添加文件行（不刷新頁面）
+                console.log('📝 直接在頁面中創建文件行...');
+                const documentsTbody = document.getElementById('documents-tbody');
+                const emptyState = document.getElementById('empty-state');
+                
+                if (documentsTbody) {
+                    // 隱藏空狀態
+                    if (emptyState) {
+                        emptyState.style.display = 'none';
+                    }
+                    
+                    // 創建新的表格行
+                    createDocumentRow(documentsTbody, processingDocument);
+                    console.log('✅ 文件行已添加到表格');
+                    
+                    // 更新分頁信息
+                    updatePaginationInfo(existingDocs.length);
+                } else {
+                    console.error('❌ 找不到 documents-tbody 元素');
+                }
+                
+                // 重置處理標誌
+                aiIsProcessing = false;
                 
                 // 4. 背景處理：AI分析和數據提取（在頁面重新載入後）
                 // 這部分會在頁面重新載入後由 backgroundProcessFile 函數處理
