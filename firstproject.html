@@ -2444,7 +2444,13 @@
         }
         
         async function handleAIFileUpload(file) {
-            console.log('🔵 handleAIFileUpload 被調用，文件:', file.name);
+            console.log('');
+            console.log('========================================');
+            console.log('🔵 handleAIFileUpload 被調用');
+            console.log('📄 文件名:', file.name);
+            console.log('📏 文件大小:', file.size, 'bytes');
+            console.log('📋 文件類型:', file.type);
+            console.log('========================================');
             
             if (aiIsProcessing) {
                 console.log('⚠️ 正在處理中，忽略新上傳');
@@ -2463,39 +2469,51 @@
             aiIsProcessing = true;
             
             try {
-                console.log('📂 開始處理文件上傳流程...');
+                console.log('');
+                console.log('📂 === 開始第一部分：創建文件行 ===');
                 
                 // 1. 立即關閉模態框
-                console.log('1️⃣ 關閉模態框');
+                console.log('1️⃣ 關閉上傳模態框...');
                 closeAIUploadModal();
+                console.log('   ✅ 模態框已關閉');
                 
-                // 2. 立即創建一個"處理中"的文件行
-                console.log('2️⃣ 獲取項目 ID...');
+                // 2. 獲取項目 ID
+                console.log('');
+                console.log('2️⃣ 獲取當前項目 ID...');
                 const projectId = getCurrentProjectId();
                 console.log('   項目 ID:', projectId);
                 
                 if (!projectId) {
-                    console.error('❌ 無法獲取項目 ID');
+                    console.error('   ❌ 無法獲取項目 ID');
                     throw new Error('無法確定當前項目');
                 }
+                console.log('   ✅ 項目 ID 獲取成功');
                 
-                console.log('3️⃣ 創建處理中的文件記錄...');
+                // 3. 創建文件記錄（只包含基本信息，不涉及 AI）
+                console.log('');
+                console.log('3️⃣ 創建文件記錄...');
                 
-                // 創建初始文件記錄（處理中狀態）- 包含所有必要字段
+                const currentDate = new Date();
+                const documentId = Date.now().toString();
+                
+                console.log('   創建文件 ID:', documentId);
+                console.log('   當前時間:', currentDate.toISOString());
+                
+                // 創建文件記錄（第一部分：只包含基本信息）
                 const processingDocument = {
-                    id: Date.now().toString(),
-                    name: file.name,  // 添加 name 字段
+                    id: documentId,
+                    name: file.name,
                     fileName: file.name,
                     size: file.size,
                     fileSize: file.size,
-                    uploadTime: new Date().toISOString(),
-                    uploadDate: new Date().toISOString(),
+                    uploadTime: currentDate.toISOString(),
+                    uploadDate: currentDate.toISOString(),
                     projectId: projectId,
-                    createdAt: new Date().toISOString(),
+                    createdAt: currentDate.toISOString(),
                     status: 'Processing',
                     processingProgress: 0,
                     isProcessing: true,
-                    // 添加空的數據字段，避免 undefined 錯誤
+                    // 預設數據（避免 undefined 錯誤）
                     processedData: {
                         fileName: file.name,
                         accountHolder: '處理中...',
@@ -2508,39 +2526,62 @@
                     }
                 };
                 
-                // 保存初始記錄
+                console.log('   ✅ 文件記錄創建完成');
+                console.log('   文件記錄:', JSON.stringify(processingDocument, null, 2));
+                
+                // 4. 保存到 localStorage
+                console.log('');
+                console.log('4️⃣ 保存到 localStorage...');
                 const storageKey = `vaultcaddy_project_${projectId}_documents`;
-                const existingDocs = JSON.parse(localStorage.getItem(storageKey) || '[]');
+                console.log('   存儲鍵:', storageKey);
+                
+                let existingDocs = [];
+                try {
+                    const stored = localStorage.getItem(storageKey);
+                    existingDocs = stored ? JSON.parse(stored) : [];
+                    console.log('   現有文檔數量:', existingDocs.length);
+                } catch (e) {
+                    console.error('   ⚠️ 讀取現有文檔失敗:', e);
+                    existingDocs = [];
+                }
+                
                 existingDocs.push(processingDocument);
                 localStorage.setItem(storageKey, JSON.stringify(existingDocs));
+                console.log('   ✅ 保存成功，現在有', existingDocs.length, '個文檔');
                 
-                console.log('✅ 文件已保存到 localStorage:', {
-                    storageKey,
-                    fileName: file.name,
-                    documentId: processingDocument.id,
-                    totalDocs: existingDocs.length
-                });
-                
-                // 3. 直接在當前頁面添加文件行（不刷新頁面）
-                console.log('📝 直接在頁面中創建文件行...');
+                // 5. 在頁面中顯示文件行
+                console.log('');
+                console.log('5️⃣ 在頁面中創建文件行...');
                 const documentsTbody = document.getElementById('documents-tbody');
                 const emptyState = document.getElementById('empty-state');
                 
-                if (documentsTbody) {
-                    // 隱藏空狀態
-                    if (emptyState) {
-                        emptyState.style.display = 'none';
-                    }
-                    
-                    // 創建新的表格行
-                    createDocumentRow(documentsTbody, processingDocument);
-                    console.log('✅ 文件行已添加到表格');
-                    
-                    // 更新分頁信息
-                    updatePaginationInfo(existingDocs.length);
-                } else {
-                    console.error('❌ 找不到 documents-tbody 元素');
+                console.log('   documents-tbody 元素:', documentsTbody ? '✅ 找到' : '❌ 未找到');
+                console.log('   empty-state 元素:', emptyState ? '✅ 找到' : '❌ 未找到');
+                
+                if (!documentsTbody) {
+                    throw new Error('找不到 documents-tbody 元素');
                 }
+                
+                // 隱藏空狀態
+                if (emptyState) {
+                    emptyState.style.display = 'none';
+                    console.log('   ✅ 空狀態已隱藏');
+                }
+                
+                // 創建新的表格行
+                console.log('   正在調用 createDocumentRow...');
+                createDocumentRow(documentsTbody, processingDocument);
+                console.log('   ✅ 文件行已添加到表格');
+                
+                // 更新分頁信息
+                console.log('   更新分頁信息...');
+                updatePaginationInfo(existingDocs.length);
+                console.log('   ✅ 分頁信息已更新');
+                
+                // 完成
+                console.log('');
+                console.log('✅✅✅ 第一部分完成！文件已成功顯示 ✅✅✅');
+                console.log('========================================');
                 
                 // 重置處理標誌
                 aiIsProcessing = false;
@@ -2549,8 +2590,13 @@
                 // 這部分會在頁面重新載入後由 backgroundProcessFile 函數處理
                 
             } catch (error) {
-                console.error('文件上傳錯誤:', error);
-                alert('文件上傳失敗，請重試');
+                console.error('❌ 文件上傳錯誤:', error);
+                console.error('❌ 錯誤堆棧:', error.stack);
+                console.error('❌ 錯誤詳情:', {
+                    message: error.message,
+                    name: error.name
+                });
+                alert('文件上傳失敗，請重試\n\n錯誤詳情: ' + error.message);
                 aiIsProcessing = false;
             }
         }
