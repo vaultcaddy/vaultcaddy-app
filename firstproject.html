@@ -2442,16 +2442,31 @@
                     throw new Error('無法確定當前項目');
                 }
                 
-                // 創建初始文件記錄（處理中狀態）
+                // 創建初始文件記錄（處理中狀態）- 包含所有必要字段
                 const processingDocument = {
                     id: Date.now().toString(),
+                    name: file.name,  // 添加 name 字段
                     fileName: file.name,
+                    size: file.size,
                     fileSize: file.size,
+                    uploadTime: new Date().toISOString(),
+                    uploadDate: new Date().toISOString(),
                     projectId: projectId,
                     createdAt: new Date().toISOString(),
                     status: 'Processing',
                     processingProgress: 0,
-                    isProcessing: true
+                    isProcessing: true,
+                    // 添加空的數據字段，避免 undefined 錯誤
+                    processedData: {
+                        fileName: file.name,
+                        accountHolder: '處理中...',
+                        accountNumber: '',
+                        startDate: '—',
+                        endDate: '—',
+                        transactions: [],
+                        startBalance: 0,
+                        endBalance: 0
+                    }
                 };
                 
                 // 保存初始記錄
@@ -2460,7 +2475,15 @@
                 existingDocs.push(processingDocument);
                 localStorage.setItem(storageKey, JSON.stringify(existingDocs));
                 
+                console.log('✅ 文件已保存到 localStorage:', {
+                    storageKey,
+                    fileName: file.name,
+                    documentId: processingDocument.id,
+                    totalDocs: existingDocs.length
+                });
+                
                 // 3. 刷新頁面以顯示"處理中"的文件
+                console.log('🔄 準備刷新頁面以顯示新文件...');
                 location.reload();
                 
                 // 4. 背景處理：AI分析和數據提取（在頁面重新載入後）
@@ -3504,11 +3527,24 @@
             row.setAttribute('data-file-id', file.id);
             row.style.cssText = 'background: #ffffff; border-bottom: 1px solid #e5e7eb;';
             
-            const uploadDate = new Date(file.uploadTime || file.uploadDate || file.processedData?.createdAt || file.createdAt).toLocaleDateString('zh-TW');
-            const fileSize = formatFileSize(file.size || file.fileSize);
+            // 安全地獲取日期，避免 Invalid Date
+            let uploadDate = '—';
+            try {
+                const dateValue = file.uploadTime || file.uploadDate || file.createdAt;
+                if (dateValue) {
+                    const date = new Date(dateValue);
+                    if (!isNaN(date.getTime())) {
+                        uploadDate = date.toLocaleDateString('zh-TW');
+                    }
+                }
+            } catch (e) {
+                console.error('日期解析錯誤:', e);
+            }
             
-            // 從 processedData 中提取真實數據
-            const data = file.processedData || file;
+            const fileSize = formatFileSize(file.size || file.fileSize || 0);
+            
+            // 從 processedData 中提取真實數據，確保不會是 undefined
+            const data = file.processedData || {};
             
             // 檢查是否正在處理中
             const isProcessing = file.isProcessing || file.status === 'Processing';
@@ -3581,8 +3617,8 @@
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                         <i class="fas fa-file-pdf" style="color: #ef4444;"></i>
                         <div>
-                            <div style="font-weight: 500; color: #1f2937;">${file.name || data.fileName}</div>
-                            <div style="font-size: 0.875rem; color: #6b7280;">${data.accountHolder || data.accountName || ''}</div>
+                            <div style="font-weight: 500; color: #1f2937;">${file.name || file.fileName || data.fileName || '未命名文件'}</div>
+                            <div style="font-size: 0.875rem; color: #6b7280;">${data.accountHolder || data.accountName || (isProcessing ? '處理中...' : '')}</div>
                             <div style="font-size: 0.75rem; color: #9ca3af;">${data.accountNumber || ''}</div>
                         </div>
                     </div>
