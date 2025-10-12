@@ -12,9 +12,9 @@
     <script src="config.js"></script>
     <script src="translations.js"></script>
     <script src="unified-auth.js"></script>
-    <script src="global-auth-sync.js?v=3.8"></script>
-    <script src="navbar-component.js?v=3.8"></script>
-    <script src="sidebar-component.js?v=3.8"></script>
+    <script src="global-auth-sync.js?v=3.9"></script>
+    <script src="navbar-component.js?v=3.9"></script>
+    <script src="sidebar-component.js?v=3.9"></script>
     <!-- 載入統一處理器系統 -->
     <script src="google-ai-integration.js"></script>
     <script src="google-document-ai.js"></script>
@@ -2070,27 +2070,32 @@
             console.log(`📂 從項目 ${projectId} 載入文件`);
             const projectDocuments = JSON.parse(localStorage.getItem(projectStorageKey) || '[]');
             
-            // 轉換為顯示格式
+            // 轉換為顯示格式（保留所有原始數據）
             storedFiles = projectDocuments.map(doc => ({
                 id: doc.id,
                 name: doc.fileName || doc.name || '未命名文件',
-                size: doc.fileSize || 0,
+                size: doc.fileSize || doc.size || 0,
                 documentType: doc.documentType || docType,
-                uploadDate: doc.createdAt ? new Date(doc.createdAt).toLocaleDateString('zh-TW') : new Date().toLocaleDateString('zh-TW'),
-                status: 'completed',
-                amount: doc.amount || '',
-                merchant: doc.merchant || '',
-                date: doc.date || '',
-                processedData: doc
+                uploadDate: doc.createdAt,
+                createdAt: doc.createdAt,
+                isProcessing: doc.isProcessing || false,
+                processingProgress: doc.processingProgress || 0,
+                status: doc.status || 'completed',
+                // 保留所有原始數據作為 processedData
+                processedData: doc,
+                // 同時也在頂層暴露關鍵字段以便訪問
+                ...doc
             }));
             
             console.log(`📁 項目 ${projectId} 載入文件:`, storedFiles.length, '個文件');
+            console.log('📄 文件詳情:', storedFiles);
             
             // 表格始終顯示
             documentsTable.style.display = 'table';
             
             // 如果沒有文件，顯示空狀態
             if (storedFiles.length === 0) {
+                console.log('⚠️ 沒有文件，顯示空狀態');
                 if (emptyState) emptyState.style.display = 'block';
                 updatePaginationInfo(0);
                 return;
@@ -2099,10 +2104,20 @@
             // 隱藏空狀態
             if (emptyState) emptyState.style.display = 'none';
             
+            console.log('✅ 開始創建表格行...');
             // 創建表格行
-            storedFiles.forEach(file => {
+            storedFiles.forEach((file, index) => {
+                console.log(`📝 創建第 ${index + 1} 行:`, {
+                    name: file.name,
+                    fileName: file.fileName,
+                    accountHolder: file.accountHolder,
+                    accountNumber: file.accountNumber,
+                    isProcessing: file.isProcessing,
+                    status: file.status
+                });
                 createDocumentRow(documentsTbody, file);
             });
+            console.log('✅ 表格行創建完成');
             
             // 更新統計信息和分頁
             updateDocumentStats();
