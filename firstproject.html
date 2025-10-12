@@ -2118,15 +2118,21 @@
             console.log('✅ 開始創建表格行...');
             // 創建表格行
             storedFiles.forEach((file, index) => {
-                console.log(`📝 創建第 ${index + 1} 行:`, {
-                    name: file.name,
-                    fileName: file.fileName,
-                    accountHolder: file.accountHolder,
-                    accountNumber: file.accountNumber,
-                    isProcessing: file.isProcessing,
-                    status: file.status
-                });
-                createDocumentRow(documentsTbody, file);
+                try {
+                    console.log(`📝 創建第 ${index + 1} 行:`, {
+                        name: file.name,
+                        fileName: file.fileName,
+                        accountHolder: file.accountHolder,
+                        accountNumber: file.accountNumber,
+                        isProcessing: file.isProcessing,
+                        status: file.status
+                    });
+                    createDocumentRow(documentsTbody, file);
+                    console.log(`✅ 第 ${index + 1} 行創建成功`);
+                } catch (error) {
+                    console.error(`❌ 創建第 ${index + 1} 行時出錯:`, error);
+                    console.error(`❌ 文件數據:`, file);
+                }
             });
             console.log('✅ 表格行創建完成');
             
