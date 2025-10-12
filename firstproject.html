@@ -2422,25 +2422,42 @@
         }
         
         async function handleAIFileUpload(file) {
-            if (aiIsProcessing) return;
+            console.log('🔵 handleAIFileUpload 被調用，文件:', file.name);
             
-            // 驗證文件
-            if (!validateAIFile(file)) {
+            if (aiIsProcessing) {
+                console.log('⚠️ 正在處理中，忽略新上傳');
                 return;
             }
+            
+            // 驗證文件
+            console.log('🔍 驗證文件...');
+            if (!validateAIFile(file)) {
+                console.log('❌ 文件驗證失敗');
+                return;
+            }
+            console.log('✅ 文件驗證通過');
             
             aiCurrentFile = file;
             aiIsProcessing = true;
             
             try {
+                console.log('📂 開始處理文件上傳流程...');
+                
                 // 1. 立即關閉模態框
+                console.log('1️⃣ 關閉模態框');
                 closeAIUploadModal();
                 
                 // 2. 立即創建一個"處理中"的文件行
+                console.log('2️⃣ 獲取項目 ID...');
                 const projectId = getCurrentProjectId();
+                console.log('   項目 ID:', projectId);
+                
                 if (!projectId) {
+                    console.error('❌ 無法獲取項目 ID');
                     throw new Error('無法確定當前項目');
                 }
+                
+                console.log('3️⃣ 創建處理中的文件記錄...');
                 
                 // 創建初始文件記錄（處理中狀態）- 包含所有必要字段
                 const processingDocument = {
