@@ -2319,8 +2319,12 @@
         }
 
         function openUploadModal() {
-            console.log('🔵 openUploadModal 被調用');
+            console.log('');
+            console.log('========================================');
+            console.log('🔵 openUploadModal 被調用！');
+            console.log('🔵 時間戳:', new Date().toLocaleTimeString());
             console.log('🔵 DOM 狀態:', document.readyState);
+            console.log('========================================');
             
             // 確保 DOM 已完全載入
             if (document.readyState === 'loading') {
@@ -2387,19 +2391,37 @@
         let aiProcessingResults = {};
         
         function initializeAIUpload() {
+            console.log('🎬 initializeAIUpload 被調用');
+            
             const uploadArea = document.getElementById('aiUploadArea');
             const fileInput = document.getElementById('aiFileInput');
             
+            console.log('   uploadArea 元素:', uploadArea ? '✅ 找到' : '❌ 未找到');
+            console.log('   fileInput 元素:', fileInput ? '✅ 找到' : '❌ 未找到');
+            
+            if (!uploadArea || !fileInput) {
+                console.error('❌ 關鍵元素缺失，無法初始化上傳');
+                return;
+            }
+            
             // 點擊上傳區域觸發文件選擇
-            uploadArea.onclick = () => fileInput.click();
+            uploadArea.onclick = () => {
+                console.log('🖱️ 上傳區域被點擊');
+                fileInput.click();
+            };
             
             // 文件選擇事件
             fileInput.onchange = (e) => {
+                console.log('📁 文件被選擇');
                 const files = Array.from(e.target.files);
+                console.log('   選擇的文件數量:', files.length);
                 if (files.length > 0) {
+                    console.log('   文件名:', files[0].name);
                     handleAIFileUpload(files[0]);
                 }
             };
+            
+            console.log('✅ AI 上傳初始化完成');
             
             // 拖放事件
             uploadArea.ondragover = (e) => {
