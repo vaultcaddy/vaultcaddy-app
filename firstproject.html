@@ -2578,16 +2578,18 @@
                 updatePaginationInfo(existingDocs.length);
                 console.log('   ✅ 分頁信息已更新');
                 
-                // 完成
+                // 完成第一部分
                 console.log('');
                 console.log('✅✅✅ 第一部分完成！文件已成功顯示 ✅✅✅');
                 console.log('========================================');
                 
-                // 重置處理標誌
-                aiIsProcessing = false;
+                // 6. 開始第二部分：後台 AI 數據提取
+                console.log('');
+                console.log('🤖 === 開始第二部分：AI 數據提取 ===');
+                startBackgroundAIProcessing(file, documentId, projectId);
                 
-                // 4. 背景處理：AI分析和數據提取（在頁面重新載入後）
-                // 這部分會在頁面重新載入後由 backgroundProcessFile 函數處理
+                // 重置處理標誌（第一部分完成）
+                aiIsProcessing = false;
                 
             } catch (error) {
                 console.error('❌ 文件上傳錯誤:', error);
@@ -2643,6 +2645,245 @@
             } catch (error) {
                 console.error('保存失敗:', error);
                 throw error;
+            }
+        }
+        
+        // 後台 AI 數據提取（不阻塞 UI）
+        async function startBackgroundAIProcessing(file, documentId, projectId) {
+            console.log('🤖 開始後台 AI 處理');
+            console.log('   文件:', file.name);
+            console.log('   文檔 ID:', documentId);
+            console.log('   項目 ID:', projectId);
+            
+            try {
+                // 更新進度到 10%
+                updateDocumentProgress(documentId, projectId, 10);
+                
+                // 步驟 1: 將文件轉換為 Base64
+                console.log('📄 步驟 1: 轉換文件為 Base64...');
+                const base64Data = await fileToBase64(file);
+                console.log('✅ Base64 轉換完成，長度:', base64Data.length);
+                updateDocumentProgress(documentId, projectId, 30);
+                
+                // 步驟 2: 調用 Google Gemini Vision API
+                console.log('🔍 步驟 2: 調用 Gemini Vision API...');
+                const extractedData = await extractDataWithGemini(base64Data, file.type);
+                console.log('✅ 數據提取完成:', extractedData);
+                updateDocumentProgress(documentId, projectId, 70);
+                
+                // 步驟 3: 解析並保存數據
+                console.log('💾 步驟 3: 保存提取的數據...');
+                const parsedData = parseBankStatementData(extractedData);
+                console.log('✅ 數據解析完成:', parsedData);
+                
+                // 更新 localStorage 中的文檔
+                updateDocumentWithExtractedData(documentId, projectId, parsedData);
+                updateDocumentProgress(documentId, projectId, 100);
+                
+                console.log('🎉 AI 數據提取完成！');
+                
+                // 延遲 1 秒後刷新頁面，讓用戶看到 100% 進度
+                setTimeout(() => {
+                    console.log('🔄 刷新頁面以顯示提取的數據...');
+                    location.reload();
+                }, 1000);
+                
+            } catch (error) {
+                console.error('❌ 後台 AI 處理失敗:', error);
+                // 更新文檔狀態為錯誤
+                updateDocumentStatus(documentId, projectId, 'Error', error.message);
+            }
+        }
+        
+        // 將文件轉換為 Base64
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    // 移除 data:image/png;base64, 前綴
+                    const base64 = reader.result.split(',')[1];
+                    resolve(base64);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        // 使用 Google Gemini Vision API 提取數據
+        async function extractDataWithGemini(base64Data, mimeType) {
+            const GEMINI_API_KEY = 'AIzaSyDXRgu7kHiiMm0qhXcHWLFywpYZM1xX7pU'; // VaultCaddy API Key
+            const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+            
+            const prompt = `你是一個專業的銀行對帳單數據提取助手。請仔細分析這份銀行對帳單圖片，並提取以下信息：
+
+1. **基本信息**：
+   - 銀行名稱 (bankName)
+   - 帳戶持有人姓名 (accountHolder)
+   - 帳戶號碼 (accountNumber)
+
+2. **對帳期間**：
+   - 開始日期 (statementStartDate) - 格式: YYYY-MM-DD
+   - 結束日期 (statementEndDate) - 格式: YYYY-MM-DD
+
+3. **餘額信息**：
+   - 期初餘額 (openingBalance) - 數字
+   - 期末餘額 (closingBalance) - 數字
+
+4. **所有交易記錄** (transactions)：
+   對於每一筆交易，提取：
+   - 日期 (date) - 格式: YYYY-MM-DD
+   - 描述 (description)
+   - 借方金額 (debit) - 如果是支出，填寫金額；否則為 0
+   - 貸方金額 (credit) - 如果是收入，填寫金額；否則為 0
+   - 餘額 (balance) - 該筆交易後的帳戶餘額
+
+請以 JSON 格式返回數據，格式如下：
+{
+  "bankName": "銀行名稱",
+  "accountHolder": "帳戶持有人",
+  "accountNumber": "帳戶號碼",
+  "statementStartDate": "2025-01-01",
+  "statementEndDate": "2025-01-31",
+  "openingBalance": 1000.00,
+  "closingBalance": 1500.00,
+  "transactions": [
+    {
+      "date": "2025-01-05",
+      "description": "工資轉入",
+      "debit": 0,
+      "credit": 5000.00,
+      "balance": 6000.00
+    }
+  ]
+}
+
+重要提示：
+- 確保所有金額都是數字格式（不包含貨幣符號）
+- 日期必須是 YYYY-MM-DD 格式
+- 如果某個字段找不到，請填寫空字符串或 0
+- 只返回 JSON，不要包含任何其他文字`;
+
+            const requestBody = {
+                contents: [{
+                    parts: [
+                        { text: prompt },
+                        {
+                            inline_data: {
+                                mime_type: mimeType,
+                                data: base64Data
+                            }
+                        }
+                    ]
+                }],
+                generationConfig: {
+                    temperature: 0.1,
+                    maxOutputTokens: 8192
+                }
+            };
+            
+            console.log('📤 發送請求到 Gemini API...');
+            
+            const response = await fetch(`${API_URL}?key=${GEMINI_API_KEY}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
+            });
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('API 錯誤響應:', errorText);
+                throw new Error(`Gemini API 錯誤: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            console.log('📥 Gemini API 響應:', result);
+            
+            // 提取文本內容
+            const textContent = result.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (!textContent) {
+                throw new Error('無法從 API 響應中提取文本');
+            }
+            
+            console.log('📄 提取的文本:', textContent);
+            
+            // 解析 JSON（移除可能的 markdown 代碼塊標記）
+            const jsonText = textContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+            return JSON.parse(jsonText);
+        }
+        
+        // 解析銀行對帳單數據
+        function parseBankStatementData(apiResponse) {
+            return {
+                fileName: aiCurrentFile?.name || '未命名文件',
+                bankName: apiResponse.bankName || '',
+                accountHolder: apiResponse.accountHolder || '',
+                accountNumber: apiResponse.accountNumber || '',
+                statementStartDate: apiResponse.statementStartDate || '',
+                statementEndDate: apiResponse.statementEndDate || '',
+                openingBalance: parseFloat(apiResponse.openingBalance) || 0,
+                closingBalance: parseFloat(apiResponse.closingBalance) || 0,
+                transactions: (apiResponse.transactions || []).map(tx => ({
+                    date: tx.date || '',
+                    description: tx.description || '',
+                    debit: parseFloat(tx.debit) || 0,
+                    credit: parseFloat(tx.credit) || 0,
+                    amount: (parseFloat(tx.credit) || 0) - (parseFloat(tx.debit) || 0), // 淨額
+                    balance: parseFloat(tx.balance) || 0
+                })),
+                transactionCount: (apiResponse.transactions || []).length,
+                reconciledTransactions: 0, // 初始為 0
+                status: 'Success'
+            };
+        }
+        
+        // 更新文檔處理進度
+        function updateDocumentProgress(documentId, projectId, progress) {
+            const storageKey = `vaultcaddy_project_${projectId}_documents`;
+            const documents = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            
+            const docIndex = documents.findIndex(doc => doc.id === documentId);
+            if (docIndex !== -1) {
+                documents[docIndex].processingProgress = progress;
+                localStorage.setItem(storageKey, JSON.stringify(documents));
+                console.log(`📊 更新進度: ${progress}%`);
+            }
+        }
+        
+        // 更新文檔狀態
+        function updateDocumentStatus(documentId, projectId, status, errorMessage = '') {
+            const storageKey = `vaultcaddy_project_${projectId}_documents`;
+            const documents = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            
+            const docIndex = documents.findIndex(doc => doc.id === documentId);
+            if (docIndex !== -1) {
+                documents[docIndex].status = status;
+                documents[docIndex].isProcessing = false;
+                if (errorMessage) {
+                    documents[docIndex].errorMessage = errorMessage;
+                }
+                localStorage.setItem(storageKey, JSON.stringify(documents));
+                console.log(`📝 更新狀態: ${status}`);
+            }
+        }
+        
+        // 更新文檔的提取數據
+        function updateDocumentWithExtractedData(documentId, projectId, extractedData) {
+            const storageKey = `vaultcaddy_project_${projectId}_documents`;
+            const documents = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            
+            const docIndex = documents.findIndex(doc => doc.id === documentId);
+            if (docIndex !== -1) {
+                documents[docIndex].isProcessing = false;
+                documents[docIndex].status = 'Success';
+                documents[docIndex].processedData = extractedData;
+                
+                // 同時將提取的數據複製到頂層，方便訪問
+                Object.assign(documents[docIndex], extractedData);
+                
+                localStorage.setItem(storageKey, JSON.stringify(documents));
+                console.log('💾 提取的數據已保存');
             }
         }
         
