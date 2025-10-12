@@ -12,9 +12,9 @@
     <script src="config.js"></script>
     <script src="translations.js"></script>
     <script src="unified-auth.js"></script>
-    <script src="global-auth-sync.js?v=3.6"></script>
-    <script src="navbar-component.js?v=3.6"></script>
-    <script src="sidebar-component.js?v=3.6"></script>
+    <script src="global-auth-sync.js?v=3.7"></script>
+    <script src="navbar-component.js?v=3.7"></script>
+    <script src="sidebar-component.js?v=3.7"></script>
     <!-- 載入統一處理器系統 -->
     <script src="google-ai-integration.js"></script>
     <script src="google-document-ai.js"></script>
@@ -2400,48 +2400,88 @@
             aiCurrentFile = file;
             aiIsProcessing = true;
             
-            // 隱藏上傳區域，顯示進度
-            document.getElementById('aiUploadArea').style.display = 'none';
-            document.getElementById('aiProgressContainer').style.display = 'block';
-            document.getElementById('aiLogContainer').style.display = 'block';
+            // 顯示簡單的載入提示（不顯示詳細步驟）
+            const modal = document.getElementById('aiUploadModal');
+            const uploadArea = document.getElementById('aiUploadArea');
             
-            logAI(`📁 選擇文件: ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)`, 'info');
+            // 創建簡單的載入指示器
+            uploadArea.innerHTML = `
+                <div style="text-align: center; padding: 2rem;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">⏳</div>
+                    <div style="font-size: 1.2rem; color: #374151; font-weight: 600; margin-bottom: 0.5rem;">處理中...</div>
+                    <div style="color: #6b7280;">正在使用 AI 分析文檔</div>
+                </div>
+            `;
             
             try {
-                // 步驟1: 文件上傳
-                await processAIStep(1, '📤 準備處理文件...', async () => {
-                    await new Promise(resolve => setTimeout(resolve, 800));
-                });
+                // 背景處理：AI分析和數據提取
+                const result = await processWithGoogleAI(file);
+                aiProcessingResults.aiResult = result;
                 
-                // 步驟2: AI分析
-                await processAIStep(2, '🤖 使用 Google AI 分析文檔...', async () => {
-                    const result = await processWithGoogleAI(file);
-                    aiProcessingResults.aiResult = result;
-                    return result;
-                });
+                const data = parseAIResponse(result);
+                aiProcessingResults.extractedData = data;
                 
-                // 步驟3: 數據提取
-                await processAIStep(3, '📊 提取結構化數據...', async () => {
-                    const data = parseAIResponse(aiProcessingResults.aiResult);
-                    aiProcessingResults.extractedData = data;
-                    return data;
-                });
-                
-                // 步驟4: 雲端存儲
-                await processAIStep(4, '☁️ 準備保存...', async () => {
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                    return { success: true };
-                });
-                
-                // 顯示結果
-                displayAIResults(aiProcessingResults.extractedData);
-                logAI('🎉 處理完成！', 'success');
+                // 自動保存到項目（不需要用戶點擊保存按鈕）
+                await autoSaveToProject();
                 
             } catch (error) {
-                logAI(`❌ 處理失敗: ${error.message}`, 'error');
                 console.error('AI 處理錯誤:', error);
-            } finally {
+                alert('文件處理失敗，請重試');
+                
+                // 重置上傳區域
+                uploadArea.innerHTML = `
+                    <div class="ai-upload-icon" style="font-size: 4rem; margin-bottom: 1rem;">📄</div>
+                    <div class="ai-upload-text" style="font-size: 1.2rem; color: #374151; margin-bottom: 0.5rem; font-weight: 600;">拖放文件到此處或點擊上傳</div>
+                    <div class="ai-upload-hint" style="color: #6b7280; font-size: 0.9rem;">支援 PDF、JPG、PNG 格式 (最大 20MB)</div>
+                    <input type="file" id="aiFileInput" class="ai-file-input" accept=".pdf,.jpg,.jpeg,.png" style="display: none;">
+                `;
+                
                 aiIsProcessing = false;
+            }
+        }
+        
+        // 自動保存到項目的函數
+        async function autoSaveToProject() {
+            if (!aiProcessingResults.extractedData) {
+                throw new Error('沒有可保存的數據');
+            }
+            
+            try {
+                // 獲取當前項目 ID
+                const projectId = getCurrentProjectId();
+                console.log('💾 自動保存文件到項目:', projectId);
+                
+                if (!projectId) {
+                    throw new Error('無法確定當前項目');
+                }
+                
+                // 保存到 localStorage
+                const storageKey = `vaultcaddy_project_${projectId}_documents`;
+                const existingDocs = JSON.parse(localStorage.getItem(storageKey) || '[]');
+                
+                console.log('📂 現有文檔數量:', existingDocs.length);
+                
+                const newDocument = {
+                    id: Date.now().toString(),
+                    ...aiProcessingResults.extractedData,
+                    projectId: projectId,
+                    createdAt: new Date().toISOString()
+                };
+                
+                existingDocs.push(newDocument);
+                localStorage.setItem(storageKey, JSON.stringify(existingDocs));
+                
+                console.log('✅ 文檔已自動保存，新文檔數量:', existingDocs.length);
+                console.log('💾 存儲鍵:', storageKey);
+                console.log('📄 文檔詳情:', newDocument);
+                
+                // 關閉模態框並刷新頁面
+                closeAIUploadModal();
+                location.reload();
+                
+            } catch (error) {
+                console.error('保存失敗:', error);
+                throw error;
             }
         }
         
