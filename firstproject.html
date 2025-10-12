@@ -1985,11 +1985,22 @@
 
         // 處理 hash 路由
         function handleHashRouting() {
+            console.log('🔄 handleHashRouting 被調用');
+            console.log('📍 當前 URL:', window.location.href);
+            console.log('📍 Hash:', window.location.hash);
+            
             const hash = window.location.hash.substring(1); // 移除 #
             const docType = hash || 'bank-statement'; // 默認為銀行對帳單
             
+            console.log('📍 解析結果:', { hash, docType });
+            console.log('📍 documentTypes:', documentTypes);
+            console.log('📍 documentTypes[docType]:', documentTypes[docType]);
+            
             if (documentTypes[docType]) {
+                console.log('✅ 找到文檔類型，調用 updatePageForDocumentType');
                 updatePageForDocumentType(docType);
+            } else {
+                console.error('❌ documentTypes 中找不到:', docType);
             }
         }
 
