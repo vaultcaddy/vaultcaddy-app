@@ -4,12 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>文檔詳情 - VaultCaddy</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="pages.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="config.js"></script>
     <script src="translations.js"></script>
     <script src="unified-auth.js"></script>
     <script src="global-auth-sync.js?v=3.9"></script>
     <script src="navbar-component.js?v=3.9"></script>
+    <script src="sidebar-component.js?v=3.9"></script>
     
     <style>
         * {
@@ -23,42 +27,28 @@
             background: #ffffff;
             color: #1f2937;
             min-height: 100vh;
+            margin: 0;
+            padding: 0;
         }
         
-        /* 頂部導航 */
-        .top-nav {
+        /* 使用與 firstproject.html 相同的布局結構 */
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
             background: #ffffff;
-            padding: 1rem 2rem;
-            border-bottom: 1px solid #e5e7eb;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            padding-top: 60px; /* 為導航欄留出空間 */
         }
         
-        .back-btn {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: #6b7280;
-            text-decoration: none;
-            font-size: 0.9rem;
-            transition: color 0.2s;
-        }
-        
-        .back-btn:hover {
-            color: #1f2937;
-        }
-        
-        .document-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #1f2937;
-        }
-        
-        .top-actions {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
+        .sidebar {
+            width: 280px;
+            background: #ffffff;
+            border-right: 1px solid #e5e7eb;
+            flex-shrink: 0;
+            position: fixed;
+            top: 60px;
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
         }
         
         .btn {
@@ -90,11 +80,59 @@
             gap: 0.5rem;
         }
         
-        /* 主容器 */
-        .main-container {
+        /* 主內容區域 */
+        .main-content {
+            margin-left: 280px;
+            flex: 1;
+            background: #ffffff;
+            min-height: calc(100vh - 60px);
+        }
+        
+        /* 詳情頁面頂部 */
+        .detail-header {
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 60px;
+            z-index: 10;
+        }
+        
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+            cursor: pointer;
+        }
+        
+        .back-btn:hover {
+            color: #1f2937;
+        }
+        
+        .document-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        /* 詳情內容容器 */
+        .detail-container {
             display: grid;
             grid-template-columns: 550px 1fr;
-            height: calc(100vh - 73px);
+            height: calc(100vh - 120px);
         }
         
         /* 左側 PDF 預覽區 */
@@ -440,30 +478,40 @@
     </style>
 </head>
 <body>
-    <!-- 頂部導航 -->
-    <div class="top-nav">
-        <a href="#" class="back-btn" onclick="goBackToDashboard()">
-            <i class="fas fa-arrow-left"></i>
-            Back to dashboard
-        </a>
-        <h1 class="document-title" id="documentTitle">載入中...</h1>
-        <div class="top-actions">
-            <span class="saved-indicator">
-                <i class="fas fa-cloud-check"></i>
-                Saved
-            </span>
-            <button class="btn btn-primary">
-                <i class="fas fa-download"></i>
-                Download
-            </button>
-            <button class="icon-btn">
-                <i class="fas fa-ellipsis-v"></i>
-            </button>
-        </div>
-    </div>
+    <!-- 頂部導航欄（由 navbar-component.js 動態生成） -->
+    <div id="navbar-root"></div>
     
     <!-- 主容器 -->
-    <div class="main-container">
+    <div class="dashboard-container">
+        <!-- 左側邊欄（由 sidebar-component.js 動態生成） -->
+        <div id="sidebar-root"></div>
+        
+        <!-- 主內容區域 -->
+        <div class="main-content">
+            <!-- 詳情頁面頂部 -->
+            <div class="detail-header">
+                <span class="back-btn" onclick="goBackToDashboard()">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to dashboard
+                </span>
+                <h1 class="document-title" id="documentTitle">載入中...</h1>
+                <div class="top-actions">
+                    <span class="saved-indicator">
+                        <i class="fas fa-cloud-check"></i>
+                        Saved
+                    </span>
+                    <button class="btn btn-primary">
+                        <i class="fas fa-download"></i>
+                        Download
+                    </button>
+                    <button class="icon-btn">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 詳情內容容器 -->
+            <div class="detail-container">
         <!-- 左側 PDF 預覽 -->
         <div class="pdf-preview-panel">
             <div class="pdf-controls">
@@ -598,7 +646,7 @@
             const documentId = getDocumentIdFromURL();
             const projectId = getProjectIdFromURL();
             
-            console.log('載入文檔:', { documentId, projectId });
+            console.log('🔍 載入文檔:', { documentId, projectId });
             
             if (!documentId || !projectId) {
                 alert('缺少必要參數');
@@ -608,8 +656,17 @@
             
             // 從 localStorage 獲取文檔
             const storageKey = `vaultcaddy_project_${projectId}_documents`;
-            const documents = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            console.log('📂 存儲鍵:', storageKey);
+            
+            const storedData = localStorage.getItem(storageKey);
+            console.log('💾 原始存儲數據:', storedData);
+            
+            const documents = JSON.parse(storedData || '[]');
+            console.log('📄 所有文檔:', documents);
+            console.log('📊 文檔數量:', documents.length);
+            
             const document = documents.find(doc => doc.id === documentId);
+            console.log('🎯 找到的文檔:', document);
             
             if (!document) {
                 alert('找不到文檔');
@@ -618,7 +675,17 @@
             }
             
             currentDocument = document;
-            console.log('文檔數據:', document);
+            console.log('');
+            console.log('========== 文檔詳細數據 ==========');
+            console.log('文檔名稱:', document.name || document.fileName);
+            console.log('是否處理中:', document.isProcessing);
+            console.log('狀態:', document.status);
+            console.log('處理進度:', document.processingProgress);
+            console.log('processedData:', document.processedData);
+            console.log('transactions (頂層):', document.transactions);
+            console.log('交易數量:', document.processedData?.transactions?.length || document.transactions?.length || 0);
+            console.log('==================================');
+            console.log('');
             
             // 更新頁面標題
             document.getElementById('documentTitle').textContent = document.name || document.fileName;
@@ -626,7 +693,7 @@
             // 顯示 PDF 預覽（暫時使用佔位符）
             displayPDFPreview();
             
-            // 顯示交易數據（暫時使用示例數據）
+            // 顯示交易數據
             displayTransactions();
         }
         
@@ -799,6 +866,9 @@
             loadDocument();
         });
     </script>
+        </div> <!-- 結束 detail-container -->
+        </div> <!-- 結束 main-content -->
+    </div> <!-- 結束 dashboard-container -->
 </body>
 </html>
 
