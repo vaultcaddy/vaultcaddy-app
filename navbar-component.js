@@ -130,11 +130,14 @@ class VaultCaddyNavbar {
      * 渲染導航欄
      */
     render() {
-        const navbarPlaceholder = document.getElementById('navbar-placeholder');
+        // 支持兩種 ID：navbar-placeholder（舊版）和 navbar-root（新版）
+        const navbarPlaceholder = document.getElementById('navbar-placeholder') || document.getElementById('navbar-root');
         if (!navbarPlaceholder) {
-            console.error('找不到導航欄占位符 #navbar-placeholder');
+            console.error('找不到導航欄占位符 #navbar-placeholder 或 #navbar-root');
             return;
         }
+        
+        console.log('✅ 找到導航欄容器:', navbarPlaceholder.id);
         
         // 創建完整的導航欄結構
         const navbarHTML = `
@@ -147,6 +150,7 @@ class VaultCaddyNavbar {
         
         // 更新導航欄內容
         navbarPlaceholder.innerHTML = navbarHTML;
+        console.log('✅ 導航欄 HTML 已插入，長度:', navbarHTML.length);
         
         // 重新綁定事件
         this.bindEvents();

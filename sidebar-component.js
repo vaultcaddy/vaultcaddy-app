@@ -33,16 +33,21 @@ class VaultCaddySidebar {
     }
     
     render() {
-        const sidebarContainer = document.querySelector('.sidebar');
+        // 支持兩種容器：#sidebar-root（新版）和 .sidebar（舊版）
+        const sidebarContainer = document.getElementById('sidebar-root') || document.querySelector('.sidebar');
         if (!sidebarContainer) {
-            console.error('找不到側邊欄容器 .sidebar');
+            console.error('找不到側邊欄容器 #sidebar-root 或 .sidebar');
             return;
         }
+        
+        console.log('✅ 找到側邊欄容器:', sidebarContainer.id || sidebarContainer.className);
         
         // 設置側邊欄為 flexbox 布局
         sidebarContainer.style.cssText = 'width: 280px; background: #ffffff; border-right: 1px solid #e5e7eb; padding: 1.5rem; display: flex; flex-direction: column; visibility: visible;';
         
-        sidebarContainer.innerHTML = this.getSidebarHTML();
+        const sidebarHTML = this.getSidebarHTML();
+        sidebarContainer.innerHTML = sidebarHTML;
+        console.log('✅ 側邊欄 HTML 已插入，長度:', sidebarHTML.length);
     }
     
     getSidebarHTML() {
