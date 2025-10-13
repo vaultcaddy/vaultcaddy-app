@@ -643,15 +643,25 @@
         
         // 載入文檔數據
         async function loadDocument() {
-            const documentId = getDocumentIdFromURL();
-            const projectId = getProjectIdFromURL();
-            
-            console.log('🔍 載入文檔:', { documentId, projectId });
-            
-            if (!documentId || !projectId) {
-                alert('缺少必要參數');
-                goBackToDashboard();
-                return;
+            try {
+                console.log('📄 loadDocument 函數開始執行');
+                
+                const documentId = getDocumentIdFromURL();
+                const projectId = getProjectIdFromURL();
+                
+                console.log('🔍 載入文檔參數:');
+                console.log('   documentId:', documentId);
+                console.log('   projectId:', projectId);
+                
+                if (!documentId || !projectId) {
+                    console.error('❌ 缺少必要參數');
+                    alert('缺少必要參數 (documentId 或 projectId)');
+                    goBackToDashboard();
+                    return;
+                }
+            } catch (error) {
+                console.error('❌ loadDocument 初始化失敗:', error);
+                throw error;
             }
             
             // 從 localStorage 獲取文檔
@@ -939,31 +949,80 @@
         
         // 頁面載入時執行
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('📱 文檔詳情頁面載入');
+            console.log('');
+            console.log('================================================================================');
+            console.log('📱 文檔詳情頁面開始載入');
+            console.log('   當前 URL:', window.location.href);
+            console.log('   時間:', new Date().toISOString());
+            console.log('================================================================================');
+            console.log('');
+            
+            // 檢查必要的全局對象
+            console.log('🔍 檢查全局對象:');
+            console.log('   window.VaultCaddyNavbar:', typeof window.VaultCaddyNavbar);
+            console.log('   window.VaultCaddySidebar:', typeof window.VaultCaddySidebar);
+            console.log('');
             
             // 初始化導航欄
-            console.log('🔧 初始化導航組件...');
+            console.log('🔧 === 初始化導航欄 ===');
             if (window.VaultCaddyNavbar) {
-                window.VaultCaddyNavbar.render();
-                console.log('✅ 導航欄已初始化');
+                try {
+                    window.VaultCaddyNavbar.render();
+                    console.log('✅ 導航欄已初始化');
+                } catch (error) {
+                    console.error('❌ 導航欄初始化失敗:', error);
+                }
             } else {
                 console.error('❌ VaultCaddyNavbar 未找到');
+                console.error('   可能原因: navbar-component.js 未載入或載入失敗');
             }
+            console.log('');
             
             // 初始化側邊欄（創建新實例）
+            console.log('🔧 === 初始化側邊欄 ===');
             if (window.VaultCaddySidebar) {
                 try {
                     sidebarInstance = new window.VaultCaddySidebar('document-detail');
                     console.log('✅ 側邊欄已初始化');
+                    console.log('   側邊欄實例:', sidebarInstance);
                 } catch (error) {
                     console.error('❌ 側邊欄初始化失敗:', error);
+                    console.error('   錯誤堆棧:', error.stack);
                 }
             } else {
                 console.error('❌ VaultCaddySidebar 類未找到');
+                console.error('   可能原因: sidebar-component.js 未載入或載入失敗');
             }
+            console.log('');
+            
+            // 檢查 DOM 元素
+            console.log('🔍 === 檢查 DOM 元素 ===');
+            const navbarRoot = document.getElementById('navbar-root');
+            const sidebarRoot = document.getElementById('sidebar-root');
+            const pdfViewer = document.getElementById('pdfViewer');
+            const transactionsBody = document.getElementById('transactionsBody');
+            
+            console.log('   navbar-root:', navbarRoot ? '✅ 存在' : '❌ 不存在');
+            console.log('   sidebar-root:', sidebarRoot ? '✅ 存在' : '❌ 不存在');
+            console.log('   pdfViewer:', pdfViewer ? '✅ 存在' : '❌ 不存在');
+            console.log('   transactionsBody:', transactionsBody ? '✅ 存在' : '❌ 不存在');
+            console.log('');
             
             // 載入文檔數據
-            loadDocument();
+            console.log('📄 === 開始載入文檔數據 ===');
+            try {
+                loadDocument();
+            } catch (error) {
+                console.error('❌ 載入文檔數據失敗:', error);
+                console.error('   錯誤堆棧:', error.stack);
+                
+                // 顯示錯誤消息給用戶
+                const documentTitle = document.getElementById('documentTitle');
+                if (documentTitle) {
+                    documentTitle.textContent = '載入失敗';
+                    documentTitle.style.color = '#ef4444';
+                }
+            }
         });
         
         // ========== 創建項目模態框函數 ==========
