@@ -3061,61 +3061,268 @@
                 
                 const data = aiResult.extractedData || {};
                 
-                const standardizedData = {
-                    // 基本信息
-                    documentType: data.documentType || 'Bank Statement',
-                    fileName: file?.name || '未命名文件',
-                    fileSize: file?.size || 0,
-                    extractedAt: new Date().toISOString(),
-                    
-                    // 銀行賬戶信息
-                    accountHolder: data.accountHolder || data.accountName || data.name || '',
-                    accountNumber: data.accountNumber || data.account || '',
-                    bankName: data.bankName || data.bank || '',
-                    
-                    // 對賬單期間
-                    startDate: data.startDate || data.statementStartDate || data.periodStart || '',
-                    endDate: data.endDate || data.statementEndDate || data.periodEnd || '',
-                    
-                    // 餘額信息
-                    startBalance: parseFloat(data.startBalance || data.openingBalance || data.beginningBalance || 0),
-                    endBalance: parseFloat(data.endBalance || data.closingBalance || data.endingBalance || 0),
-                    
-                    // 交易信息
-                    transactions: data.transactions || [],
-                    transactionCount: (data.transactions || []).length || data.transactionCount || 0,
-                    reconciledTransactions: data.reconciledTransactions || 0,
-                    
-                    // 狀態
-                    status: 'Success',
-                    reviewStatus: 'Review',
-                    notes: data.notes || '',
-                    
-                    // 其他通用字段（向後兼容）
-                    date: data.date || new Date().toISOString().split('T')[0],
-                    merchant: data.merchant || data.vendor || data.company || '',
-                    amount: data.amount || data.total || '',
-                    currency: data.currency || 'USD',
-                    description: data.description || data.purpose || '',
-                    items: data.items || [],
-                    rawText: aiResult.text || '',
-                    confidence: aiResult.confidence || 0
-                };
+                // 確定文檔類型（優先使用用戶選擇的類型）
+                const docType = determineDocumentType(file);
+                logAI(`📄 文檔類型: ${docType}`, 'info');
                 
-                logAI(`📊 數據解析完成: ${Object.keys(standardizedData).length} 個字段`, 'success');
-                logAI(`📋 賬戶持有人: ${standardizedData.accountHolder}`, 'info');
-                logAI(`📋 賬號: ${standardizedData.accountNumber}`, 'info');
-                logAI(`📋 期間: ${standardizedData.startDate} 至 ${standardizedData.endDate}`, 'info');
-                logAI(`📋 交易數量: ${standardizedData.transactionCount}`, 'info');
-                logAI(`💰 起始餘額: $${standardizedData.startBalance.toFixed(2)}`, 'info');
-                logAI(`💰 結束餘額: $${standardizedData.endBalance.toFixed(2)}`, 'info');
-                
-                return standardizedData;
+                // 根據文檔類型返回不同的數據結構
+                if (docType === 'invoice') {
+                    return parseInvoiceData(data, file, aiResult);
+                } else if (docType === 'receipt') {
+                    return parseReceiptData(data, file, aiResult);
+                } else if (docType === 'bank_statement') {
+                    return parseBankStatementData(data, file, aiResult);
+                } else {
+                    return parseGeneralData(data, file, aiResult);
+                }
                 
             } catch (error) {
                 logAI(`❌ 數據解析失敗: ${error.message}`, 'error');
                 throw error;
             }
+        }
+        
+        // 解析發票數據
+        function parseInvoiceData(data, file, aiResult) {
+            const standardizedData = {
+                // 基本信息
+                documentType: 'Invoice',
+                fileName: file?.name || '未命名文件',
+                fileSize: file?.size || 0,
+                extractedAt: new Date().toISOString(),
+                
+                // 發票信息
+                invoiceNumber: data.invoiceNumber || data.number || data.documentNumber || '',
+                issueDate: data.issueDate || data.invoiceDate || data.date || '',
+                dueDate: data.dueDate || data.paymentDue || '',
+                deliveryDate: data.deliveryDate || data.shippingDate || '',
+                
+                // 供應商信息
+                vendor: {
+                    name: data.vendor?.name || data.vendorName || data.supplier || data.from || '',
+                    address: data.vendor?.address || data.vendorAddress || '',
+                    phone: data.vendor?.phone || data.vendorPhone || '',
+                    email: data.vendor?.email || data.vendorEmail || '',
+                    taxId: data.vendor?.taxId || data.vendorTaxId || '',
+                    companyRegNo: data.vendor?.companyRegNo || ''
+                },
+                
+                // 客戶信息
+                customer: {
+                    name: data.customer?.name || data.customerName || data.billTo || data.to || '',
+                    address: data.customer?.address || data.customerAddress || data.shippingAddress || '',
+                    phone: data.customer?.phone || data.customerPhone || '',
+                    email: data.customer?.email || data.customerEmail || ''
+                },
+                
+                // 商品項目
+                lineItems: (data.lineItems || data.items || []).map(item => ({
+                    itemCode: item.itemCode || item.code || item.sku || '',
+                    description: item.description || item.name || item.product || '',
+                    quantity: parseFloat(item.quantity || item.qty || 0),
+                    unit: item.unit || item.uom || '件',
+                    unitPrice: parseFloat(item.unitPrice || item.price || 0),
+                    amount: parseFloat(item.amount || item.total || (item.quantity * item.unitPrice) || 0),
+                    taxRate: parseFloat(item.taxRate || 0),
+                    taxAmount: parseFloat(item.taxAmount || 0)
+                })),
+                
+                // 金額信息
+                subtotal: parseFloat(data.subtotal || data.subTotal || 0),
+                discount: parseFloat(data.discount || 0),
+                discountPercent: parseFloat(data.discountPercent || 0),
+                taxAmount: parseFloat(data.taxAmount || data.tax || 0),
+                taxRate: parseFloat(data.taxRate || 0),
+                totalAmount: parseFloat(data.totalAmount || data.total || data.grandTotal || 0),
+                currency: data.currency || 'HKD',
+                
+                // 付款信息
+                paymentMethod: data.paymentMethod || data.payment || '',
+                paymentTerms: data.paymentTerms || data.terms || '',
+                paymentStatus: data.paymentStatus || 'Unpaid',
+                paidDate: data.paidDate || '',
+                paidAmount: parseFloat(data.paidAmount || 0),
+                
+                // 狀態
+                status: 'Success',
+                reviewStatus: 'Review',
+                notes: data.notes || data.remarks || '',
+                
+                // 其他信息
+                rawText: aiResult.text || '',
+                confidence: aiResult.confidence || 0
+            };
+            
+            // 計算項目數量
+            standardizedData.itemCount = standardizedData.lineItems.length;
+            
+            // 如果沒有明確的總金額，計算它
+            if (!standardizedData.totalAmount && standardizedData.lineItems.length > 0) {
+                const itemsTotal = standardizedData.lineItems.reduce((sum, item) => sum + item.amount, 0);
+                standardizedData.subtotal = itemsTotal;
+                standardizedData.totalAmount = itemsTotal - standardizedData.discount + standardizedData.taxAmount;
+            }
+            
+            logAI(`📊 發票數據解析完成`, 'success');
+            logAI(`📄 發票號碼: ${standardizedData.invoiceNumber}`, 'info');
+            logAI(`📅 發票日期: ${standardizedData.issueDate}`, 'info');
+            logAI(`🏢 供應商: ${standardizedData.vendor.name}`, 'info');
+            logAI(`👤 客戶: ${standardizedData.customer.name}`, 'info');
+            logAI(`📦 項目數量: ${standardizedData.itemCount}`, 'info');
+            logAI(`💰 總金額: ${standardizedData.currency} $${standardizedData.totalAmount.toFixed(2)}`, 'info');
+            
+            return standardizedData;
+        }
+        
+        // 解析收據數據
+        function parseReceiptData(data, file, aiResult) {
+            const standardizedData = {
+                // 基本信息
+                documentType: 'Receipt',
+                fileName: file?.name || '未命名文件',
+                fileSize: file?.size || 0,
+                extractedAt: new Date().toISOString(),
+                
+                // 收據信息
+                receiptNumber: data.receiptNumber || data.number || '',
+                receiptDate: data.receiptDate || data.date || '',
+                
+                // 商戶信息
+                merchant: {
+                    name: data.merchant?.name || data.merchantName || data.store || data.vendor || '',
+                    address: data.merchant?.address || data.merchantAddress || data.location || '',
+                    phone: data.merchant?.phone || data.merchantPhone || ''
+                },
+                
+                // 項目明細
+                items: (data.items || data.lineItems || []).map(item => ({
+                    description: item.description || item.name || item.product || '',
+                    quantity: parseFloat(item.quantity || item.qty || 1),
+                    unitPrice: parseFloat(item.unitPrice || item.price || 0),
+                    amount: parseFloat(item.amount || item.total || 0)
+                })),
+                
+                // 金額信息
+                subtotal: parseFloat(data.subtotal || data.subTotal || 0),
+                tax: parseFloat(data.tax || data.taxAmount || 0),
+                tip: parseFloat(data.tip || 0),
+                totalAmount: parseFloat(data.totalAmount || data.total || 0),
+                currency: data.currency || 'HKD',
+                
+                // 付款信息
+                paymentMethod: data.paymentMethod || data.payment || '',
+                cardLastFour: data.cardLastFour || '',
+                
+                // 狀態
+                status: 'Success',
+                reviewStatus: 'Review',
+                notes: data.notes || '',
+                
+                // 其他信息
+                rawText: aiResult.text || '',
+                confidence: aiResult.confidence || 0
+            };
+            
+            standardizedData.itemCount = standardizedData.items.length;
+            
+            logAI(`📊 收據數據解析完成`, 'success');
+            logAI(`🧾 收據號碼: ${standardizedData.receiptNumber}`, 'info');
+            logAI(`📅 日期: ${standardizedData.receiptDate}`, 'info');
+            logAI(`🏪 商戶: ${standardizedData.merchant.name}`, 'info');
+            logAI(`📦 項目數量: ${standardizedData.itemCount}`, 'info');
+            logAI(`💰 總金額: ${standardizedData.currency} $${standardizedData.totalAmount.toFixed(2)}`, 'info');
+            
+            return standardizedData;
+        }
+        
+        // 解析銀行對帳單數據
+        function parseBankStatementData(data, file, aiResult) {
+            const standardizedData = {
+                // 基本信息
+                documentType: 'Bank Statement',
+                fileName: file?.name || '未命名文件',
+                fileSize: file?.size || 0,
+                extractedAt: new Date().toISOString(),
+                
+                // 銀行賬戶信息
+                accountHolder: data.accountHolder || data.accountName || data.name || '',
+                accountNumber: data.accountNumber || data.account || '',
+                bankName: data.bankName || data.bank || '',
+                
+                // 對賬單期間
+                startDate: data.startDate || data.statementStartDate || data.periodStart || '',
+                endDate: data.endDate || data.statementEndDate || data.periodEnd || '',
+                
+                // 餘額信息
+                startBalance: parseFloat(data.startBalance || data.openingBalance || data.beginningBalance || 0),
+                endBalance: parseFloat(data.endBalance || data.closingBalance || data.endingBalance || 0),
+                
+                // 交易信息
+                transactions: (data.transactions || []).map(tx => ({
+                    date: tx.date || '',
+                    description: tx.description || tx.memo || '',
+                    debit: parseFloat(tx.debit || 0),
+                    credit: parseFloat(tx.credit || 0),
+                    balance: parseFloat(tx.balance || 0),
+                    reference: tx.reference || tx.refNo || '',
+                    category: tx.category || ''
+                })),
+                transactionCount: (data.transactions || []).length || data.transactionCount || 0,
+                reconciledTransactions: data.reconciledTransactions || 0,
+                
+                // 狀態
+                status: 'Success',
+                reviewStatus: 'Review',
+                notes: data.notes || '',
+                
+                // 其他信息
+                currency: data.currency || 'HKD',
+                rawText: aiResult.text || '',
+                confidence: aiResult.confidence || 0
+            };
+            
+            logAI(`📊 銀行對帳單數據解析完成`, 'success');
+            logAI(`👤 賬戶持有人: ${standardizedData.accountHolder}`, 'info');
+            logAI(`🏦 賬號: ${standardizedData.accountNumber}`, 'info');
+            logAI(`📅 期間: ${standardizedData.startDate} 至 ${standardizedData.endDate}`, 'info');
+            logAI(`📋 交易數量: ${standardizedData.transactionCount}`, 'info');
+            logAI(`💰 起始餘額: $${standardizedData.startBalance.toFixed(2)}`, 'info');
+            logAI(`💰 結束餘額: $${standardizedData.endBalance.toFixed(2)}`, 'info');
+            
+            return standardizedData;
+        }
+        
+        // 解析通用文檔數據
+        function parseGeneralData(data, file, aiResult) {
+            const standardizedData = {
+                // 基本信息
+                documentType: 'General',
+                fileName: file?.name || '未命名文件',
+                fileSize: file?.size || 0,
+                extractedAt: new Date().toISOString(),
+                
+                // 通用字段
+                date: data.date || new Date().toISOString().split('T')[0],
+                title: data.title || data.subject || '',
+                description: data.description || data.content || '',
+                entities: data.entities || [],
+                keywords: data.keywords || [],
+                
+                // 狀態
+                status: 'Success',
+                reviewStatus: 'Review',
+                notes: data.notes || '',
+                
+                // 其他信息
+                rawText: aiResult.text || '',
+                confidence: aiResult.confidence || 0
+            };
+            
+            logAI(`📊 通用文檔數據解析完成`, 'success');
+            logAI(`📄 標題: ${standardizedData.title}`, 'info');
+            logAI(`📅 日期: ${standardizedData.date}`, 'info');
+            
+            return standardizedData;
         }
         
         function displayAIResults(data) {
@@ -3959,55 +4166,8 @@
             const isProcessing = file.isProcessing || file.status === 'Processing';
             const processingProgress = file.processingProgress || 0;
             
-            // Statement Period
-            const startDate = data.startDate || data.statementStartDate || '—';
-            const endDate = data.endDate || data.statementEndDate || '—';
-            const periodText = (startDate !== '—' && endDate !== '—') 
-                ? `${startDate} to ${endDate}` 
-                : isProcessing ? '處理中...' : '—';
-            const transactionCount = data.transactions?.length || data.transactionCount || 0;
-            const transactionsText = transactionCount > 0 
-                ? `${transactionCount} transactions` 
-                : isProcessing ? '' : '—';
-            
-            // Reconciliation - 如果正在處理，只顯示進度百分比
-            let reconciliationHTML;
-            if (isProcessing) {
-                reconciliationHTML = `
-                    <div>
-                        <div style="font-weight: 500; color: #f59e0b; display: flex; align-items: center; gap: 0.5rem;">
-                            <span>${processingProgress}%</span>
-                        </div>
-                        <div style="margin-top: 0.25rem; background: #e5e7eb; height: 6px; border-radius: 3px; overflow: hidden;">
-                            <div style="background: #f59e0b; height: 100%; width: ${processingProgress}%; transition: width 0.3s ease;"></div>
-                        </div>
-                    </div>
-                `;
-            } else {
-                const reconciledCount = data.reconciledTransactions || 0;
-                const totalTransactions = transactionCount;
-                const reconciledPercent = totalTransactions > 0 
-                    ? Math.round((reconciledCount / totalTransactions) * 100) 
-                    : 0;
-                reconciliationHTML = `
-                    <div>
-                        <div style="font-weight: 500; color: #1f2937;">${reconciledCount}/${totalTransactions}</div>
-                        <div style="margin-top: 0.25rem; background: #e5e7eb; height: 6px; border-radius: 3px; overflow: hidden;">
-                            <div style="background: #3b82f6; height: 100%; width: ${reconciledPercent}%; transition: width 0.3s ease;"></div>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            // Balance Info
-            const startBalance = data.startBalance || data.openingBalance || data.beginningBalance || 0;
-            const endBalance = data.endBalance || data.closingBalance || data.endingBalance || 0;
-            const formattedStartBalance = typeof startBalance === 'number' 
-                ? `$${startBalance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` 
-                : isProcessing ? '—' : startBalance;
-            const formattedEndBalance = typeof endBalance === 'number' 
-                ? `$${endBalance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` 
-                : isProcessing ? '—' : endBalance;
+            // 確定文檔類型
+            const docType = data.documentType || 'Bank Statement';
             
             // Status
             const status = isProcessing ? 'In Progress' : (data.status || 'Success');
@@ -4018,7 +4178,63 @@
             const reviewStatus = isProcessing ? 'Processing' : (data.reviewStatus || 'Review');
             const reviewColor = reviewStatus === 'Approved' ? '#10b981' : '#f59e0b';
             
-            row.innerHTML = `
+            // 根據文檔類型生成不同的行內容
+            let rowHTML = '';
+            if (docType === 'Invoice') {
+                rowHTML = createInvoiceRowHTML(file, data, isProcessing, status, statusColor, statusIcon, reviewStatus, reviewColor, uploadDate);
+            } else {
+                // 銀行對帳單和其他類型使用原有的顯示格式
+                // Statement Period
+                const startDate = data.startDate || data.statementStartDate || '—';
+                const endDate = data.endDate || data.statementEndDate || '—';
+                const periodText = (startDate !== '—' && endDate !== '—') 
+                    ? `${startDate} to ${endDate}` 
+                    : isProcessing ? '處理中...' : '—';
+                const transactionCount = data.transactions?.length || data.transactionCount || 0;
+                const transactionsText = transactionCount > 0 
+                    ? `${transactionCount} transactions` 
+                    : isProcessing ? '' : '—';
+                
+                // Reconciliation - 如果正在處理，只顯示進度百分比
+                let reconciliationHTML;
+                if (isProcessing) {
+                    reconciliationHTML = `
+                        <div>
+                            <div style="font-weight: 500; color: #f59e0b; display: flex; align-items: center; gap: 0.5rem;">
+                                <span>${processingProgress}%</span>
+                            </div>
+                            <div style="margin-top: 0.25rem; background: #e5e7eb; height: 6px; border-radius: 3px; overflow: hidden;">
+                                <div style="background: #f59e0b; height: 100%; width: ${processingProgress}%; transition: width 0.3s ease;"></div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    const reconciledCount = data.reconciledTransactions || 0;
+                    const totalTransactions = transactionCount;
+                    const reconciledPercent = totalTransactions > 0 
+                        ? Math.round((reconciledCount / totalTransactions) * 100) 
+                        : 0;
+                    reconciliationHTML = `
+                        <div>
+                            <div style="font-weight: 500; color: #1f2937;">${reconciledCount}/${totalTransactions}</div>
+                            <div style="margin-top: 0.25rem; background: #e5e7eb; height: 6px; border-radius: 3px; overflow: hidden;">
+                                <div style="background: #3b82f6; height: 100%; width: ${reconciledPercent}%; transition: width 0.3s ease;"></div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Balance Info
+                const startBalance = data.startBalance || data.openingBalance || data.beginningBalance || 0;
+                const endBalance = data.endBalance || data.closingBalance || data.endingBalance || 0;
+                const formattedStartBalance = typeof startBalance === 'number' 
+                    ? `$${startBalance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` 
+                    : isProcessing ? '—' : startBalance;
+                const formattedEndBalance = typeof endBalance === 'number' 
+                    ? `$${endBalance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` 
+                    : isProcessing ? '—' : endBalance;
+                
+                rowHTML = `
                 <td style="padding: 1rem; border-bottom: 1px solid #e5e7eb;">
                     <input type="checkbox" class="file-checkbox" onchange="updateSelection()">
                 </td>
@@ -4081,8 +4297,91 @@
                     </div>
                 </td>
             `;
+            }
             
+            row.innerHTML = rowHTML;
             tbody.appendChild(row);
+            console.log('✅ 文件行已添加到表格:', file.name || file.fileName, '類型:', docType);
+        }
+        
+        // 創建發票行
+        function createInvoiceRowHTML(file, data, isProcessing, status, statusColor, statusIcon, reviewStatus, reviewColor, uploadDate) {
+            const invoiceNumber = data.invoiceNumber || '—';
+            const issueDate = data.issueDate || (isProcessing ? '處理中...' : '—');
+            const deliveryDate = data.deliveryDate || '';
+            const vendorName = data.vendor?.name || (isProcessing ? '處理中...' : '—');
+            const customerName = data.customer?.name || (isProcessing ? '處理中...' : '—');
+            const itemCount = data.itemCount || data.lineItems?.length || 0;
+            const subtotal = data.subtotal || 0;
+            const discount = data.discount || 0;
+            const totalAmount = data.totalAmount || 0;
+            const currency = data.currency || 'HKD';
+            const paymentMethod = data.paymentMethod || '—';
+            
+            return `
+                <td style="padding: 1rem; border-bottom: 1px solid #e5e7eb;">
+                    <input type="checkbox" class="file-checkbox" onchange="updateSelection()">
+                </td>
+                <td style="padding: 1rem; border-bottom: 1px solid #e5e7eb;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-file-invoice" style="color: #3b82f6;"></i>
+                        <div>
+                            <div style="font-weight: 500; color: #1f2937;">
+                                <a href="javascript:void(0)" onclick="viewDocument('${file.id}')" style="color: #1f2937; text-decoration: none; cursor: pointer;">
+                                    📄 Invoice ${invoiceNumber}
+                                </a>
+                            </div>
+                            <div style="font-size: 0.875rem; color: #6b7280;">供應商: ${vendorName}</div>
+                            <div style="font-size: 0.75rem; color: #9ca3af;">客戶: ${customerName}</div>
+                        </div>
+                    </div>
+                </td>
+                <td style="padding: 1rem; border-bottom: 1px solid #e5e7eb;">
+                    <div>
+                        <div style="font-weight: 500; color: #1f2937;">📅 ${issueDate}</div>
+                        ${deliveryDate ? `<div style="font-size: 0.875rem; color: #6b7280;">送貨: ${deliveryDate}</div>` : ''}
+                    </div>
+                </td>
+                <td style="padding: 1rem; border-bottom: 1px solid #e5e7eb;">
+                    <div style="font-weight: 500; color: #1f2937;">${itemCount} 項商品</div>
+                </td>
+                <td style="padding: 1rem; border-bottom: 1px solid #e5e7eb;">
+                    <div>
+                        <div style="font-size: 0.875rem; color: #6b7280;">小計: ${currency} $${subtotal.toFixed(2)}</div>
+                        ${discount > 0 ? `<div style="font-size: 0.875rem; color: #10b981;">折扣: -$${discount.toFixed(2)}</div>` : ''}
+                        <div style="font-weight: 500; color: #1f2937;">總額: ${currency} $${totalAmount.toFixed(2)}</div>
+                    </div>
+                </td>
+                <td style="padding: 1rem; border-bottom: 1px solid #e5e7eb;">
+                    <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; background: ${statusColor}15; color: ${statusColor};">
+                        ${statusIcon} ${status}
+                    </span>
+                </td>
+                <td style="padding: 1rem; border-bottom: 1px solid #e5e7eb;">
+                    <span style="display: inline-flex; align-items: center; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; background: ${reviewColor}15; color: ${reviewColor};">
+                        ● ${reviewStatus}
+                    </span>
+                </td>
+                <td style="padding: 1rem; border-bottom: 1px solid #e5e7eb;">
+                    <span style="color: #6b7280; font-size: 0.875rem;">${paymentMethod}</span>
+                </td>
+                <td style="padding: 1rem; border-bottom: 1px solid #e5e7eb;">
+                    <span style="color: #6b7280; font-size: 0.875rem;">${uploadDate}</span>
+                </td>
+                <td style="padding: 1rem; border-bottom: 1px solid #e5e7eb;">
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button onclick="viewDocument('${file.id}')" style="padding: 0.5rem; background: transparent; border: none; color: #6b7280; cursor: pointer; border-radius: 4px; transition: all 0.2s;" onmouseover="this.style.background='#f3f4f6'; this.style.color='#1f2937'" onmouseout="this.style.background='transparent'; this.style.color='#6b7280'" title="查看">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button onclick="deleteDocument('${file.id}')" style="padding: 0.5rem; background: transparent; border: none; color: #6b7280; cursor: pointer; border-radius: 4px; transition: all 0.2s;" onmouseover="this.style.background='#fef2f2'; this.style.color='#ef4444'" onmouseout="this.style.background='transparent'; this.style.color='#6b7280'" title="刪除">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button onclick="openActionMenu('${file.id}', event)" style="padding: 0.5rem; background: transparent; border: none; color: #6b7280; cursor: pointer; border-radius: 4px; transition: all 0.2s;" onmouseover="this.style.background='#f3f4f6'; this.style.color='#1f2937'" onmouseout="this.style.background='transparent'; this.style.color='#6b7280'" title="更多">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
         }
         
         // 更新分頁信息
