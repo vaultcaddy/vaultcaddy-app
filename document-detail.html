@@ -566,30 +566,40 @@
                 </p>
             </div>
             
-            <!-- 銀行對帳單詳情 -->
-            <div class="bank-details-card">
-                <div class="card-header">
-                    <h3 class="card-title">Bank Statement Details & Notes</h3>
-                    <i class="fas fa-chevron-down expand-icon"></i>
-                </div>
+            <!-- 文檔詳情（根據類型動態顯示） -->
+            <div id="documentDetailsSection">
+                <!-- 將由 JavaScript 動態生成 -->
             </div>
             
-            <!-- 交易記錄 -->
-            <div class="transactions-section">
-                <div class="transactions-header">
-                    <h3 class="transactions-title">Transactions</h3>
-                    <div class="transaction-controls">
-                        <button class="control-btn">Show Unreconciled</button>
-                        <button class="control-btn">Toggle All</button>
-                        <button class="control-btn add">Add Item</button>
+            <!-- 數據表格（根據類型動態顯示） -->
+            <div id="documentDataSection">
+                <!-- 將由 JavaScript 動態生成 -->
+            </div>
+            
+            <!-- 原有的銀行對帳單交易記錄表格（保留作為備用） -->
+            <div id="bankStatementSection" style="display: none;">
+                <div class="bank-details-card">
+                    <div class="card-header">
+                        <h3 class="card-title">Bank Statement Details & Notes</h3>
+                        <i class="fas fa-chevron-down expand-icon"></i>
                     </div>
                 </div>
                 
-                <div class="transactions-info" id="transactionsInfo">
-                    Showing 0 to 0 of 0 transactions
-                </div>
-                
-                <table class="transactions-table">
+                <div class="transactions-section">
+                    <div class="transactions-header">
+                        <h3 class="transactions-title">Transactions</h3>
+                        <div class="transaction-controls">
+                            <button class="control-btn">Show Unreconciled</button>
+                            <button class="control-btn">Toggle All</button>
+                            <button class="control-btn add">Add Item</button>
+                        </div>
+                    </div>
+                    
+                    <div class="transactions-info" id="transactionsInfo">
+                        Showing 0 to 0 of 0 transactions
+                    </div>
+                    
+                    <table class="transactions-table">
                     <thead>
                         <tr>
                             <th class="checkbox-cell">
@@ -700,8 +710,8 @@
                 // 顯示 PDF 預覽（暫時使用佔位符）
                 displayPDFPreview();
                 
-                // 顯示交易數據
-                displayTransactions();
+                // 根據文檔類型顯示不同的內容
+                displayDocumentContent();
             } catch (error) {
                 console.error('❌ 載入文檔失敗:', error);
                 console.error('❌ 錯誤堆棧:', error.stack);
@@ -799,6 +809,263 @@
                 currentPageNumber = 1;
                 updatePageControls();
             }
+        }
+        
+        // 根據文檔類型顯示內容
+        function displayDocumentContent() {
+            if (!currentDocument) {
+                console.error('沒有文檔數據');
+                return;
+            }
+            
+            const processedData = currentDocument.processedData || {};
+            const documentType = processedData.documentType || 'Bank Statement';
+            
+            console.log('📄 顯示文檔內容，類型:', documentType);
+            console.log('   processedData:', processedData);
+            
+            // 根據文檔類型顯示不同的內容
+            if (documentType === 'Invoice') {
+                displayInvoiceDetails();
+            } else if (documentType === 'Receipt') {
+                displayReceiptDetails();
+            } else if (documentType === 'Bank Statement') {
+                displayBankStatementDetails();
+            } else {
+                displayGeneralDetails();
+            }
+        }
+        
+        // 顯示發票詳情
+        function displayInvoiceDetails() {
+            const processedData = currentDocument.processedData || {};
+            const detailsSection = document.getElementById('documentDetailsSection');
+            const dataSection = document.getElementById('documentDataSection');
+            
+            console.log('📄 顯示發票詳情');
+            console.log('   發票數據:', processedData);
+            
+            // 發票基本信息
+            const invoiceNumber = processedData.invoiceNumber || '—';
+            const issueDate = processedData.issueDate || '—';
+            const deliveryDate = processedData.deliveryDate || '';
+            const dueDate = processedData.dueDate || '';
+            
+            // 供應商和客戶信息
+            const vendor = processedData.vendor || {};
+            const customer = processedData.customer || {};
+            
+            // 金額信息
+            const subtotal = processedData.subtotal || 0;
+            const discount = processedData.discount || 0;
+            const taxAmount = processedData.taxAmount || 0;
+            const totalAmount = processedData.totalAmount || 0;
+            const currency = processedData.currency || 'HKD';
+            
+            // 付款信息
+            const paymentMethod = processedData.paymentMethod || '—';
+            const paymentStatus = processedData.paymentStatus || 'Unpaid';
+            
+            // 商品項目
+            const lineItems = processedData.lineItems || [];
+            
+            // 生成發票詳情 HTML
+            detailsSection.innerHTML = `
+                <div class="bank-details-card" style="margin-bottom: 1.5rem;">
+                    <div class="card-header" style="background: #ffffff; padding: 1.5rem; border-bottom: 1px solid #e5e7eb;">
+                        <h3 class="card-title" style="font-size: 1.25rem; font-weight: 600; color: #1f2937; margin: 0;">
+                            📄 Invoice Details & Notes
+                        </h3>
+                    </div>
+                    <div class="card-body" style="padding: 1.5rem; background: #ffffff;">
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem;">
+                            <!-- 左列：發票信息 -->
+                            <div>
+                                <h4 style="font-size: 1rem; font-weight: 600; color: #374151; margin: 0 0 1rem 0;">發票信息</h4>
+                                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span style="color: #6b7280;">發票號碼:</span>
+                                        <span style="font-weight: 500; color: #1f2937;">${invoiceNumber}</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span style="color: #6b7280;">發票日期:</span>
+                                        <span style="font-weight: 500; color: #1f2937;">${issueDate}</span>
+                                    </div>
+                                    ${deliveryDate ? `
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span style="color: #6b7280;">送貨日期:</span>
+                                        <span style="font-weight: 500; color: #1f2937;">${deliveryDate}</span>
+                                    </div>
+                                    ` : ''}
+                                    ${dueDate ? `
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span style="color: #6b7280;">到期日:</span>
+                                        <span style="font-weight: 500; color: #1f2937;">${dueDate}</span>
+                                    </div>
+                                    ` : ''}
+                                </div>
+                                
+                                <h4 style="font-size: 1rem; font-weight: 600; color: #374151; margin: 1.5rem 0 1rem 0;">供應商信息</h4>
+                                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span style="color: #6b7280;">名稱:</span>
+                                        <span style="font-weight: 500; color: #1f2937;">${vendor.name || '—'}</span>
+                                    </div>
+                                    ${vendor.address ? `
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span style="color: #6b7280;">地址:</span>
+                                        <span style="font-weight: 500; color: #1f2937; text-align: right; max-width: 60%;">${vendor.address}</span>
+                                    </div>
+                                    ` : ''}
+                                    ${vendor.phone ? `
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span style="color: #6b7280;">電話:</span>
+                                        <span style="font-weight: 500; color: #1f2937;">${vendor.phone}</span>
+                                    </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                            
+                            <!-- 右列：客戶和金額信息 -->
+                            <div>
+                                <h4 style="font-size: 1rem; font-weight: 600; color: #374151; margin: 0 0 1rem 0;">客戶信息</h4>
+                                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span style="color: #6b7280;">名稱:</span>
+                                        <span style="font-weight: 500; color: #1f2937;">${customer.name || '—'}</span>
+                                    </div>
+                                    ${customer.address ? `
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span style="color: #6b7280;">地址:</span>
+                                        <span style="font-weight: 500; color: #1f2937; text-align: right; max-width: 60%;">${customer.address}</span>
+                                    </div>
+                                    ` : ''}
+                                    ${customer.phone ? `
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span style="color: #6b7280;">電話:</span>
+                                        <span style="font-weight: 500; color: #1f2937;">${customer.phone}</span>
+                                    </div>
+                                    ` : ''}
+                                </div>
+                                
+                                <h4 style="font-size: 1rem; font-weight: 600; color: #374151; margin: 1.5rem 0 1rem 0;">金額明細</h4>
+                                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span style="color: #6b7280;">小計:</span>
+                                        <span style="font-weight: 500; color: #1f2937;">${currency} $${subtotal.toFixed(2)}</span>
+                                    </div>
+                                    ${discount > 0 ? `
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span style="color: #6b7280;">折扣:</span>
+                                        <span style="font-weight: 500; color: #10b981;">-$${discount.toFixed(2)}</span>
+                                    </div>
+                                    ` : ''}
+                                    ${taxAmount > 0 ? `
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span style="color: #6b7280;">稅額:</span>
+                                        <span style="font-weight: 500; color: #1f2937;">$${taxAmount.toFixed(2)}</span>
+                                    </div>
+                                    ` : ''}
+                                    <div style="display: flex; justify-content: space-between; padding-top: 0.75rem; border-top: 1px solid #e5e7eb;">
+                                        <span style="color: #1f2937; font-weight: 600;">總額:</span>
+                                        <span style="font-weight: 600; color: #1f2937; font-size: 1.125rem;">${currency} $${totalAmount.toFixed(2)}</span>
+                                    </div>
+                                </div>
+                                
+                                <h4 style="font-size: 1rem; font-weight: 600; color: #374151; margin: 1.5rem 0 1rem 0;">付款信息</h4>
+                                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span style="color: #6b7280;">付款方式:</span>
+                                        <span style="font-weight: 500; color: #1f2937;">${paymentMethod}</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span style="color: #6b7280;">付款狀態:</span>
+                                        <span style="font-weight: 500; color: ${paymentStatus === 'Paid' ? '#10b981' : '#f59e0b'};">${paymentStatus}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // 生成商品項目表格
+            dataSection.innerHTML = `
+                <div class="transactions-section" style="background: #ffffff; border-radius: 8px; border: 1px solid #e5e7eb;">
+                    <div class="transactions-header" style="padding: 1.5rem; border-bottom: 1px solid #e5e7eb;">
+                        <h3 class="transactions-title" style="font-size: 1.25rem; font-weight: 600; color: #1f2937; margin: 0;">
+                            📦 Line Items (商品項目)
+                        </h3>
+                    </div>
+                    
+                    <div class="transactions-info" style="padding: 1rem 1.5rem; background: #f9fafb; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; color: #6b7280;">
+                        Showing ${lineItems.length} item(s)
+                    </div>
+                    
+                    <table class="transactions-table" style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: #f9fafb; border-bottom: 1px solid #e5e7eb;">
+                                <th style="padding: 1rem 1.5rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.875rem;">商品編號</th>
+                                <th style="padding: 1rem 1.5rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.875rem;">商品描述</th>
+                                <th style="padding: 1rem 1.5rem; text-align: right; font-weight: 600; color: #374151; font-size: 0.875rem;">數量</th>
+                                <th style="padding: 1rem 1.5rem; text-align: right; font-weight: 600; color: #374151; font-size: 0.875rem;">單位</th>
+                                <th style="padding: 1rem 1.5rem; text-align: right; font-weight: 600; color: #374151; font-size: 0.875rem;">單價</th>
+                                <th style="padding: 1rem 1.5rem; text-align: right; font-weight: 600; color: #374151; font-size: 0.875rem;">金額</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${lineItems.length > 0 ? lineItems.map(item => `
+                                <tr style="border-bottom: 1px solid #e5e7eb;">
+                                    <td style="padding: 1rem 1.5rem; color: #6b7280;">${item.itemCode || '—'}</td>
+                                    <td style="padding: 1rem 1.5rem; color: #1f2937; font-weight: 500;">${item.description || '—'}</td>
+                                    <td style="padding: 1rem 1.5rem; text-align: right; color: #1f2937;">${item.quantity || 0}</td>
+                                    <td style="padding: 1rem 1.5rem; text-align: right; color: #6b7280;">${item.unit || '件'}</td>
+                                    <td style="padding: 1rem 1.5rem; text-align: right; color: #1f2937;">${currency} $${(item.unitPrice || 0).toFixed(2)}</td>
+                                    <td style="padding: 1rem 1.5rem; text-align: right; color: #1f2937; font-weight: 500;">${currency} $${(item.amount || 0).toFixed(2)}</td>
+                                </tr>
+                            `).join('') : `
+                                <tr>
+                                    <td colspan="6" style="padding: 2rem; text-align: center; color: #6b7280;">
+                                        ${currentDocument.isProcessing ? '⏳ AI 正在提取商品項目數據...' : '無商品項目'}
+                                    </td>
+                                </tr>
+                            `}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            // 隱藏銀行對帳單部分
+            document.getElementById('bankStatementSection').style.display = 'none';
+        }
+        
+        // 顯示收據詳情（待實施）
+        function displayReceiptDetails() {
+            console.log('🧾 顯示收據詳情（待實施）');
+            // TODO: 實施收據詳情顯示
+            displayBankStatementDetails(); // 暫時使用銀行對帳單格式
+        }
+        
+        // 顯示銀行對帳單詳情
+        function displayBankStatementDetails() {
+            console.log('🏦 顯示銀行對帳單詳情');
+            
+            // 隱藏動態內容區域
+            document.getElementById('documentDetailsSection').innerHTML = '';
+            document.getElementById('documentDataSection').innerHTML = '';
+            
+            // 顯示銀行對帳單部分
+            document.getElementById('bankStatementSection').style.display = 'block';
+            
+            // 調用原有的顯示交易記錄函數
+            displayTransactions();
+        }
+        
+        // 顯示通用文檔詳情（待實施）
+        function displayGeneralDetails() {
+            console.log('📋 顯示通用文檔詳情（待實施）');
+            // TODO: 實施通用文檔詳情顯示
+            displayBankStatementDetails(); // 暫時使用銀行對帳單格式
         }
         
         // 顯示交易記錄
