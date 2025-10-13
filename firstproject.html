@@ -2808,9 +2808,11 @@
         async function extractDataWithGemini(base64Data, mimeType) {
             // 從 config.js 獲取 API Key
             const GEMINI_API_KEY = window.VaultCaddyConfig?.apiConfig?.googleAI?.apiKey || 'AIzaSyCpH0qoL0wSEtHzutJzIqElbL_17cBuvug';
-            const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+            // 修正 API URL：使用 v1 而不是 v1beta，並使用正確的模型名稱
+            const API_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent';
             
             console.log('🔑 使用 API Key:', GEMINI_API_KEY ? (GEMINI_API_KEY.substring(0, 10) + '...') : '未設置');
+            console.log('🌐 API URL:', API_URL);
             
             if (!GEMINI_API_KEY) {
                 throw new Error('Gemini API Key 未設置，請檢查 config.js');
