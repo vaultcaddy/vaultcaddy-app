@@ -6,6 +6,7 @@
 class GoogleAIProcessor {
     constructor() {
         this.apiKey = null;
+        this.model = 'gemini-1.5-flash'; // 使用穩定的模型版本
         this.apiEndpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
         this.maxFileSize = 20 * 1024 * 1024; // 20MB
         this.supportedMimeTypes = [
@@ -20,13 +21,32 @@ class GoogleAIProcessor {
     }
     
     init() {
-        // 從配置中獲取API密鑰
-        this.apiKey = window.config?.googleAI?.apiKey;
+        // 從 VaultCaddyConfig 獲取 API 密鑰和配置
+        const config = window.VaultCaddyConfig?.apiConfig?.googleAI;
+        
+        if (config) {
+            this.apiKey = config.apiKey;
+            this.model = config.model || this.model;
+            
+            // 使用配置中的端點
+            if (config.endpoint) {
+                this.apiEndpoint = `${config.endpoint}/${this.model}:generateContent`;
+            }
+            
+            // 保存備用端點
+            this.fallbackEndpoints = config.fallbackEndpoints || [];
+        } else {
+            // 備用：嘗試舊的配置格式
+            this.apiKey = window.config?.googleAI?.apiKey;
+        }
         
         if (!this.apiKey || this.apiKey === 'demo-key') {
             console.warn('⚠️ Google AI API密鑰未設置，將使用模擬數據');
+            console.info('💡 請設置 API Key: localStorage.setItem("google_ai_api_key", "your-key")');
         } else {
             console.log('🤖 Google AI處理器已初始化');
+            console.log('   模型:', this.model);
+            console.log('   端點:', this.apiEndpoint);
         }
     }
     
@@ -298,21 +318,38 @@ class GoogleAIProcessor {
         };
         
         console.log('📡 調用Google AI API...');
+        console.log('   模型:', this.model);
+        console.log('   API Key:', this.apiKey ? (this.apiKey.substring(0, 10) + '...') : '未設置');
         
-        // 嘗試多個端點
-        const endpoints = [
+        // 構建端點列表（每個端點都需要加上模型路徑）
+        const baseEndpoints = [
             this.apiEndpoint,
-            ...(window.VaultCaddyConfig?.apiConfig?.googleAI?.fallbackEndpoints || [])
+            ...(this.fallbackEndpoints || [])
         ];
+        
+        // 如果端點已經包含完整路徑（包含 :generateContent），直接使用
+        // 否則添加模型路徑
+        const endpoints = baseEndpoints.map(endpoint => {
+            if (endpoint.includes(':generateContent')) {
+                return endpoint;
+            } else {
+                return `${endpoint}/${this.model}:generateContent`;
+            }
+        });
+        
+        console.log('   嘗試的端點:', endpoints);
         
         let lastError = null;
         
         for (let i = 0; i < endpoints.length; i++) {
             const endpoint = endpoints[i];
-            console.log(`🔄 嘗試端點 ${i + 1}/${endpoints.length}: ${endpoint}`);
+            const apiUrl = `${endpoint}?key=${this.apiKey}`;
+            
+            console.log(`🔄 嘗試端點 ${i + 1}/${endpoints.length}:`);
+            console.log(`   ${endpoint.replace(this.apiKey, '***')}`);
             
             try {
-                const response = await fetch(`${endpoint}/${this.model}:generateContent?key=${this.apiKey}`, {
+                const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
