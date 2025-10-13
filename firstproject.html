@@ -2808,11 +2808,11 @@
         async function extractDataWithGemini(base64Data, mimeType) {
             // 從 config.js 獲取 API Key
             const GEMINI_API_KEY = window.VaultCaddyConfig?.apiConfig?.googleAI?.apiKey || 'AIzaSyCpH0qoL0wSEtHzutJzIqElbL_17cBuvug';
-            // 使用最新的 Gemini 1.5 Pro API 端點（支持視覺輸入）
-            const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent';
+            // 使用 Gemini 1.5 Flash 模型（更穩定，支持視覺輸入）
+            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`;
             
             console.log('🔑 使用 API Key:', GEMINI_API_KEY ? (GEMINI_API_KEY.substring(0, 10) + '...') : '未設置');
-            console.log('🌐 API URL:', API_URL);
+            console.log('🌐 API URL:', API_URL.replace(GEMINI_API_KEY, '***'));
             
             if (!GEMINI_API_KEY) {
                 throw new Error('Gemini API Key 未設置，請檢查 config.js');
@@ -2896,7 +2896,7 @@
                 throw new Error(`圖片太大 (${estimatedSizeKB} KB)，請使用小於 15MB 的圖片`);
             }
             
-            const response = await fetch(`${API_URL}?key=${GEMINI_API_KEY}`, {
+            const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
