@@ -4333,7 +4333,138 @@
                 });
             }
         });
+        
+        // ========== 創建項目模態框函數 ==========
+        
+        // 打開創建項目模態框
+        function openCreateProjectModal() {
+            const modal = document.getElementById('createProjectModal');
+            if (!modal) {
+                console.error('❌ 找不到創建項目模態框');
+                // 如果在 firstproject.html，跳轉到 dashboard.html
+                if (window.location.pathname.includes('firstproject.html')) {
+                    window.location.href = 'dashboard.html';
+                }
+                return;
+            }
+            const input = document.getElementById('projectName');
+            modal.classList.add('active');
+            if (input) {
+                input.value = '';
+                input.focus();
+            }
+        }
+        
+        // 關閉創建項目模態框
+        function closeCreateProjectModal() {
+            const modal = document.getElementById('createProjectModal');
+            if (modal) {
+                modal.classList.remove('active');
+            }
+        }
+        
+        // 創建新項目
+        function createProject() {
+            const input = document.getElementById('projectName');
+            if (!input) return;
+            
+            const projectName = input.value.trim();
+            
+            if (!projectName) {
+                alert('請輸入項目名稱');
+                return;
+            }
+            
+            // 創建新項目對象
+            const newProject = {
+                id: 'project-' + Date.now(),
+                name: projectName,
+                thumbnail: null,
+                lastModified: new Date().toISOString(),
+                created: new Date().toISOString()
+            };
+            
+            // 獲取現有項目
+            const projects = JSON.parse(localStorage.getItem('vaultcaddy_projects') || '[]');
+            
+            // 添加新項目到列表開頭
+            projects.unshift(newProject);
+            
+            // 保存到 localStorage
+            localStorage.setItem('vaultcaddy_projects', JSON.stringify(projects));
+            
+            console.log('✅ 新項目已創建:', newProject);
+            
+            // 觸發項目創建事件，讓側邊欄更新
+            window.dispatchEvent(new CustomEvent('projectCreated', { 
+                detail: newProject 
+            }));
+            
+            // 關閉模態框
+            closeCreateProjectModal();
+            
+            // 跳轉到新項目頁面
+            window.location.href = `firstproject.html?project=${newProject.id}`;
+        }
+        
+        // 使函數全局可用
+        window.openCreateProjectModal = openCreateProjectModal;
+        window.closeCreateProjectModal = closeCreateProjectModal;
+        window.createProject = createProject;
     </script>
+    
+    <!-- 創建項目模態框 -->
+    <div class="modal-overlay" id="createProjectModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 9999; align-items: center; justify-content: center;">
+        <div class="modal-content" style="background: white; border-radius: 12px; padding: 2rem; max-width: 500px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);">
+            <div class="modal-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+                <h2 style="font-size: 1.5rem; font-weight: 600; color: #1f2937; margin: 0;">Create New Project</h2>
+                <button class="modal-close" onclick="closeCreateProjectModal()" style="background: none; border: none; color: #6b7280; cursor: pointer; font-size: 1.5rem; padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 4px; transition: background 0.2s;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label class="form-label" for="projectName" style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem;">Project Name</label>
+                    <input 
+                        type="text" 
+                        id="projectName" 
+                        class="form-input" 
+                        placeholder="Enter project name..."
+                        onkeypress="if(event.key === 'Enter') createProject()"
+                        style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 1rem; transition: border-color 0.2s;"
+                    >
+                </div>
+                <div class="modal-actions" style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+                    <button onclick="closeCreateProjectModal()" style="padding: 0.75rem 1.5rem; background: #f3f4f6; color: #374151; border: none; border-radius: 6px; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: background 0.2s;">
+                        Cancel
+                    </button>
+                    <button onclick="createProject()" style="padding: 0.75rem 1.5rem; background: #3b82f6; color: white; border: none; border-radius: 6px; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: background 0.2s;">
+                        Create
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+        .modal-overlay.active {
+            display: flex !important;
+        }
+        
+        .modal-close:hover {
+            background: #f3f4f6;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        button:hover {
+            opacity: 0.9;
+        }
+    </style>
 
 </body>
 </html>
