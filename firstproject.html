@@ -2808,8 +2808,8 @@
         async function extractDataWithGemini(base64Data, mimeType) {
             // 從 config.js 獲取 API Key
             const GEMINI_API_KEY = window.VaultCaddyConfig?.apiConfig?.googleAI?.apiKey || 'AIzaSyCpH0qoL0wSEtHzutJzIqElbL_17cBuvug';
-            // 修正 API URL：使用 v1 而不是 v1beta，並使用正確的模型名稱
-            const API_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent';
+            // 使用正確的 Gemini Pro Vision API 端點
+            const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent';
             
             console.log('🔑 使用 API Key:', GEMINI_API_KEY ? (GEMINI_API_KEY.substring(0, 10) + '...') : '未設置');
             console.log('🌐 API URL:', API_URL);
@@ -4235,14 +4235,68 @@
         }
         
         function deleteDocument(fileId) {
-            console.log('刪除文檔:', fileId);
-            if (confirm('確定要刪除這個文檔嗎？')) {
-                // 實現刪除功能
+            console.log('🗑️ 準備刪除文檔:', fileId);
+            
+            if (!confirm('確定要刪除這個文檔嗎？')) {
+                console.log('❌ 用戶取消刪除');
+                return;
+            }
+            
+            try {
+                // 1. 獲取當前項目 ID
+                const projectId = getCurrentProjectId();
+                if (!projectId) {
+                    console.error('❌ 無法獲取項目 ID');
+                    alert('無法刪除文檔：找不到項目 ID');
+                    return;
+                }
+                
+                console.log('📂 項目 ID:', projectId);
+                
+                // 2. 從 localStorage 中刪除文檔
+                const storageKey = `vaultcaddy_project_${projectId}_documents`;
+                const documents = JSON.parse(localStorage.getItem(storageKey) || '[]');
+                
+                console.log('📄 刪除前文檔數量:', documents.length);
+                
+                // 找到並刪除文檔
+                const filteredDocuments = documents.filter(doc => doc.id !== fileId);
+                
+                if (filteredDocuments.length === documents.length) {
+                    console.warn('⚠️ 未找到要刪除的文檔:', fileId);
+                    alert('找不到要刪除的文檔');
+                    return;
+                }
+                
+                // 保存更新後的文檔列表
+                localStorage.setItem(storageKey, JSON.stringify(filteredDocuments));
+                console.log('✅ 文檔已從存儲中刪除，剩餘文檔數量:', filteredDocuments.length);
+                
+                // 3. 從 DOM 中移除行
                 const row = document.querySelector(`[data-file-id="${fileId}"]`);
                 if (row) {
                     row.remove();
-                    updateDocumentStats();
+                    console.log('✅ 文檔行已從 DOM 中移除');
                 }
+                
+                // 4. 更新統計和空狀態
+                updateDocumentStats();
+                updatePaginationInfo(filteredDocuments.length);
+                
+                // 5. 如果沒有文檔了，顯示空狀態
+                if (filteredDocuments.length === 0) {
+                    const emptyState = document.getElementById('empty-state');
+                    if (emptyState) {
+                        emptyState.style.display = 'block';
+                        console.log('📭 顯示空狀態');
+                    }
+                }
+                
+                console.log('🎉 文檔刪除成功！');
+                
+            } catch (error) {
+                console.error('❌ 刪除文檔時出錯:', error);
+                alert('刪除文檔失敗：' + error.message);
             }
         }
         
