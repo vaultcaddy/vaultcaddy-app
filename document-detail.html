@@ -479,12 +479,12 @@
 </head>
 <body>
     <!-- 頂部導航欄（由 navbar-component.js 動態生成） -->
-    <div id="navbar-root"></div>
+    <div id="navbar-root" style="display: block !important; visibility: visible !important; opacity: 1 !important;"></div>
     
     <!-- 主容器 -->
     <div class="dashboard-container">
         <!-- 左側邊欄（由 sidebar-component.js 動態生成） -->
-        <div id="sidebar-root"></div>
+        <div id="sidebar-root" style="display: block !important; visibility: visible !important; opacity: 1 !important;"></div>
         
         <!-- 主內容區域 -->
         <div class="main-content">
@@ -997,14 +997,32 @@
             console.log('   window.VaultCaddySidebar:', typeof window.VaultCaddySidebar);
             console.log('');
             
+            // 檢查 DOM 元素是否存在
+            const navbarRoot = document.getElementById('navbar-root');
+            const sidebarRoot = document.getElementById('sidebar-root');
+            console.log('🔍 檢查 DOM 容器:');
+            console.log('   navbar-root:', navbarRoot ? '✅ 存在' : '❌ 不存在');
+            console.log('   sidebar-root:', sidebarRoot ? '✅ 存在' : '❌ 不存在');
+            console.log('');
+            
             // 初始化導航欄
             console.log('🔧 === 初始化導航欄 ===');
             if (window.VaultCaddyNavbar) {
                 try {
                     window.VaultCaddyNavbar.render();
                     console.log('✅ 導航欄已初始化');
+                    
+                    // 驗證導航欄是否真的渲染了
+                    setTimeout(() => {
+                        const navbarContent = document.querySelector('#navbar-root > *');
+                        console.log('🔍 導航欄內容檢查:', navbarContent ? '✅ 已渲染' : '❌ 未渲染');
+                        if (navbarContent) {
+                            console.log('   導航欄 HTML 長度:', navbarContent.innerHTML.length);
+                        }
+                    }, 100);
                 } catch (error) {
                     console.error('❌ 導航欄初始化失敗:', error);
+                    console.error('   錯誤堆棧:', error.stack);
                 }
             } else {
                 console.error('❌ VaultCaddyNavbar 未找到');
@@ -1019,6 +1037,15 @@
                     sidebarInstance = new window.VaultCaddySidebar('document-detail');
                     console.log('✅ 側邊欄已初始化');
                     console.log('   側邊欄實例:', sidebarInstance);
+                    
+                    // 驗證側邊欄是否真的渲染了
+                    setTimeout(() => {
+                        const sidebarContent = document.querySelector('#sidebar-root > *');
+                        console.log('🔍 側邊欄內容檢查:', sidebarContent ? '✅ 已渲染' : '❌ 未渲染');
+                        if (sidebarContent) {
+                            console.log('   側邊欄 HTML 長度:', sidebarContent.innerHTML.length);
+                        }
+                    }, 100);
                 } catch (error) {
                     console.error('❌ 側邊欄初始化失敗:', error);
                     console.error('   錯誤堆棧:', error.stack);
@@ -1029,15 +1056,11 @@
             }
             console.log('');
             
-            // 檢查 DOM 元素
-            console.log('🔍 === 檢查 DOM 元素 ===');
-            const navbarRoot = document.getElementById('navbar-root');
-            const sidebarRoot = document.getElementById('sidebar-root');
+            // 檢查其他 DOM 元素
+            console.log('🔍 === 檢查其他 DOM 元素 ===');
             const pdfViewer = document.getElementById('pdfViewer');
             const transactionsBody = document.getElementById('transactionsBody');
             
-            console.log('   navbar-root:', navbarRoot ? '✅ 存在' : '❌ 不存在');
-            console.log('   sidebar-root:', sidebarRoot ? '✅ 存在' : '❌ 不存在');
             console.log('   pdfViewer:', pdfViewer ? '✅ 存在' : '❌ 不存在');
             console.log('   transactionsBody:', transactionsBody ? '✅ 存在' : '❌ 不存在');
             console.log('');

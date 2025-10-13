@@ -2877,6 +2877,15 @@
             };
             
             console.log('📤 發送請求到 Gemini API...');
+            console.log('   圖片 MIME 類型:', mimeType);
+            console.log('   Base64 數據長度:', base64Data.length, 'characters');
+            console.log('   預估圖片大小:', Math.round(base64Data.length * 0.75 / 1024), 'KB');
+            
+            // 檢查圖片大小（Gemini API 限制約 20MB）
+            const estimatedSizeKB = Math.round(base64Data.length * 0.75 / 1024);
+            if (estimatedSizeKB > 15000) { // 15MB 限制
+                throw new Error(`圖片太大 (${estimatedSizeKB} KB)，請使用小於 15MB 的圖片`);
+            }
             
             const response = await fetch(`${API_URL}?key=${GEMINI_API_KEY}`, {
                 method: 'POST',
@@ -2888,8 +2897,22 @@
             
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error('API 錯誤響應:', errorText);
-                throw new Error(`Gemini API 錯誤: ${response.status}`);
+                console.error('❌ API 錯誤響應:', errorText);
+                console.error('   HTTP 狀態碼:', response.status);
+                console.error('   狀態文本:', response.statusText);
+                
+                // 嘗試解析錯誤詳情
+                try {
+                    const errorJson = JSON.parse(errorText);
+                    console.error('   錯誤詳情:', errorJson);
+                    if (errorJson.error) {
+                        throw new Error(`Gemini API 錯誤: ${errorJson.error.message || response.status}`);
+                    }
+                } catch (e) {
+                    // 無法解析 JSON，使用原始錯誤文本
+                }
+                
+                throw new Error(`Gemini API 錯誤: ${response.status} - ${errorText.substring(0, 200)}`);
             }
             
             const result = await response.json();
