@@ -631,6 +631,36 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('✅ Dashboard 頁面 DOM 已載入');
             
+            // ========== 🔐 身份驗證檢查（強制） ==========
+            console.log('🔐 === 強制檢查身份驗證狀態 ===');
+            
+            let isAuthenticated = false;
+            
+            if (window.GlobalAuthSync) {
+                const authState = window.GlobalAuthSync.getCurrentAuthState();
+                isAuthenticated = authState.isAuthenticated;
+                console.log('   GlobalAuthSync 狀態:', authState);
+                console.log('   是否已登入:', isAuthenticated);
+            } else {
+                console.warn('   ⚠️ GlobalAuthSync 未找到，檢查本地存儲');
+                const hasGoogleUser = !!localStorage.getItem('googleUser');
+                const hasVaultcaddyUser = !!localStorage.getItem('vaultcaddyUser');
+                isAuthenticated = hasGoogleUser || hasVaultcaddyUser;
+                console.log('   localStorage 檢查 - Google用戶:', hasGoogleUser, ', VaultCaddy用戶:', hasVaultcaddyUser);
+                console.log('   是否已登入:', isAuthenticated);
+            }
+            
+            // 如果未登入，強制重定向到登入頁面
+            if (!isAuthenticated) {
+                console.error('❌ 用戶未登入，強制重定向到登入頁面');
+                alert('請先登入才能訪問此頁面');
+                window.location.href = 'index.html';
+                return; // 停止執行後續代碼
+            }
+            
+            console.log('✅ 身份驗證通過，繼續載入頁面');
+            console.log('');
+            
             // 初始化統一側邊欄
             if (window.VaultCaddySidebar) {
                 window.dashboardSidebar = new VaultCaddySidebar('dashboard');
