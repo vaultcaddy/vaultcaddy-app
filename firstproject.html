@@ -1161,6 +1161,53 @@
 
             <!-- 上傳區域 -->
             <div class="ai-upload-content" style="padding: 2rem; overflow-y: auto; flex: 1;">
+                <!-- 文檔類型選擇器 -->
+                <div class="document-type-selector" style="margin-bottom: 2rem;">
+                    <h3 style="font-size: 1.1rem; color: #1f2937; margin: 0 0 1rem 0; font-weight: 600;">選擇文檔類型</h3>
+                    <div class="document-types-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                        <!-- Bank statements -->
+                        <div class="doc-type-card" data-type="bank_statement" onclick="selectDocumentType('bank_statement')" style="background: #ffffff; border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; cursor: pointer; transition: all 0.3s ease; position: relative;">
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                <div style="font-size: 1.5rem;">🏦</div>
+                                <div style="font-weight: 600; color: #1f2937; font-size: 1rem;">Bank statements</div>
+                                <div style="font-size: 0.875rem; color: #6b7280; line-height: 1.4;">Convert bank statements to excel and csv</div>
+                            </div>
+                            <div class="selected-indicator" style="display: none; position: absolute; top: 0.75rem; right: 0.75rem; width: 24px; height: 24px; background: #3b82f6; border-radius: 50%; color: white; align-items: center; justify-content: center; font-size: 0.875rem;">✓</div>
+                        </div>
+                        
+                        <!-- Invoices -->
+                        <div class="doc-type-card" data-type="invoice" onclick="selectDocumentType('invoice')" style="background: #ffffff; border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; cursor: pointer; transition: all 0.3s ease; position: relative;">
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                <div style="font-size: 1.5rem;">📄</div>
+                                <div style="font-weight: 600; color: #1f2937; font-size: 1rem;">Invoices</div>
+                                <div style="font-size: 0.875rem; color: #6b7280; line-height: 1.4;">Extract numbers, dates, item details, prices, and vendor information</div>
+                            </div>
+                            <div class="selected-indicator" style="display: none; position: absolute; top: 0.75rem; right: 0.75rem; width: 24px; height: 24px; background: #3b82f6; border-radius: 50%; color: white; align-items: center; justify-content: center; font-size: 0.875rem;">✓</div>
+                        </div>
+                        
+                        <!-- Receipts -->
+                        <div class="doc-type-card" data-type="receipt" onclick="selectDocumentType('receipt')" style="background: #ffffff; border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; cursor: pointer; transition: all 0.3s ease; position: relative;">
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                <div style="font-size: 1.5rem;">🧾</div>
+                                <div style="font-weight: 600; color: #1f2937; font-size: 1rem;">Receipts</div>
+                                <div style="font-size: 0.875rem; color: #6b7280; line-height: 1.4;">Classify dates, items, prices, and totals for financial management</div>
+                            </div>
+                            <div class="selected-indicator" style="display: none; position: absolute; top: 0.75rem; right: 0.75rem; width: 24px; height: 24px; background: #3b82f6; border-radius: 50%; color: white; align-items: center; justify-content: center; font-size: 0.875rem;">✓</div>
+                        </div>
+                        
+                        <!-- General -->
+                        <div class="doc-type-card" data-type="general" onclick="selectDocumentType('general')" style="background: #ffffff; border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; cursor: pointer; transition: all 0.3s ease; position: relative;">
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                <div style="font-size: 1.5rem;">📋</div>
+                                <div style="font-weight: 600; color: #1f2937; font-size: 1rem;">General</div>
+                                <div style="font-size: 0.875rem; color: #6b7280; line-height: 1.4;">Extract text, tables, and other data from any document</div>
+                            </div>
+                            <div class="selected-indicator" style="display: none; position: absolute; top: 0.75rem; right: 0.75rem; width: 24px; height: 24px; background: #3b82f6; border-radius: 50%; color: white; align-items: center; justify-content: center; font-size: 0.875rem;">✓</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 上傳區域 -->
                 <div id="aiUploadArea" class="ai-upload-area" style="border: 3px dashed #d1d5db; border-radius: 12px; padding: 3rem 2rem; text-align: center; cursor: pointer; transition: all 0.3s ease; background: #fafafa;">
                     <div class="ai-upload-icon" style="font-size: 4rem; margin-bottom: 1rem;">📄</div>
                     <div class="ai-upload-text" style="font-size: 1.2rem; color: #374151; margin-bottom: 0.5rem; font-weight: 600;">拖放文件到此處或點擊上傳</div>
@@ -2419,6 +2466,7 @@
         let aiCurrentFile = null;
         let aiIsProcessing = false;
         let aiProcessingResults = {};
+        let selectedDocumentType = 'bank_statement'; // 默認選擇銀行對帳單
         
         function initializeAIUpload() {
             console.log('🎬 initializeAIUpload 被調用');
@@ -2433,6 +2481,9 @@
                 console.error('❌ 關鍵元素缺失，無法初始化上傳');
                 return;
             }
+            
+            // 初始化默認選擇（Bank statements）
+            selectDocumentType('bank_statement');
             
             // 點擊上傳區域觸發文件選擇
             uploadArea.onclick = () => {
@@ -2942,16 +2993,64 @@
             }
         }
         
-        function determineDocumentType(file) {
-            const fileName = file.name.toLowerCase();
+        // 選擇文檔類型
+        function selectDocumentType(type) {
+            console.log('📋 用戶選擇文檔類型:', type);
             
-            if (fileName.includes('receipt') || fileName.includes('收據')) {
+            // 更新全局變量
+            selectedDocumentType = type;
+            
+            // 移除所有卡片的選中狀態
+            document.querySelectorAll('.doc-type-card').forEach(card => {
+                card.style.borderColor = '#e5e7eb';
+                card.style.background = '#ffffff';
+                const indicator = card.querySelector('.selected-indicator');
+                if (indicator) {
+                    indicator.style.display = 'none';
+                }
+            });
+            
+            // 添加選中狀態到當前卡片
+            const selectedCard = document.querySelector(`.doc-type-card[data-type="${type}"]`);
+            if (selectedCard) {
+                selectedCard.style.borderColor = '#3b82f6';
+                selectedCard.style.background = '#eff6ff';
+                const indicator = selectedCard.querySelector('.selected-indicator');
+                if (indicator) {
+                    indicator.style.display = 'flex';
+                }
+            }
+            
+            console.log('✅ 文檔類型已更新為:', selectedDocumentType);
+        }
+        window.selectDocumentType = selectDocumentType;
+        
+        function determineDocumentType(file) {
+            // 優先使用用戶選擇的類型
+            if (selectedDocumentType) {
+                console.log('✅ 使用用戶選擇的文檔類型:', selectedDocumentType);
+                return selectedDocumentType;
+            }
+            
+            // 備用：基於文件名自動檢測
+            const fileName = file.name.toLowerCase();
+            console.log('🔍 基於文件名自動檢測文檔類型:', fileName);
+            
+            if (fileName.includes('receipt') || fileName.includes('收據') || 
+                fileName.includes('小票') || fileName.includes('憑證')) {
+                console.log('   檢測結果: receipt');
                 return 'receipt';
-            } else if (fileName.includes('invoice') || fileName.includes('發票')) {
+            } else if (fileName.includes('invoice') || fileName.includes('發票') || 
+                       fileName.includes('帳單') || fileName.includes('bill')) {
+                console.log('   檢測結果: invoice');
                 return 'invoice';
-            } else if (fileName.includes('statement') || fileName.includes('對帳單')) {
+            } else if (fileName.includes('statement') || fileName.includes('對帳單') || 
+                       fileName.includes('月結單') || fileName.includes('bank') ||
+                       fileName.includes('銀行') || fileName.includes('eStatement')) {
+                console.log('   檢測結果: bank_statement');
                 return 'bank_statement';
             } else {
+                console.log('   檢測結果: general');
                 return 'general';
             }
         }
