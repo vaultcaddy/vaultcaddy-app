@@ -701,17 +701,91 @@
         function displayPDFPreview() {
             const pdfViewer = document.getElementById('pdfViewer');
             
-            // TODO: 實際實現需要使用 PDF.js 或類似庫
-            // 現在先顯示佔位符
-            pdfViewer.innerHTML = `
-                <div class="pdf-page">
-                    <img src="https://via.placeholder.com/500x700/1e293b/94a3b8?text=PDF+Page+1" alt="Page 1">
-                </div>
-            `;
+            console.log('📄 顯示 PDF 預覽');
+            console.log('   文檔數據:', currentDocument);
+            console.log('   文件類型:', currentDocument?.type || currentDocument?.fileType);
+            console.log('   是否有 fileDataURL:', !!currentDocument?.fileDataURL);
             
-            totalPagesCount = 1;
-            currentPageNumber = 1;
-            updatePageControls();
+            if (!currentDocument) {
+                pdfViewer.innerHTML = `
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <div>無法載入文檔</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            // 檢查是否有文件數據
+            const fileDataURL = currentDocument.fileDataURL;
+            const fileType = currentDocument.type || currentDocument.fileType;
+            
+            if (!fileDataURL) {
+                console.warn('⚠️ 文檔沒有 fileDataURL，無法預覽');
+                pdfViewer.innerHTML = `
+                    <div class="loading">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #f59e0b; margin-bottom: 1rem;"></i>
+                        <div>文件預覽不可用</div>
+                        <div style="font-size: 0.875rem; color: #6b7280; margin-top: 0.5rem;">
+                            此文檔未包含預覽數據
+                        </div>
+                    </div>
+                `;
+                totalPagesCount = 1;
+                currentPageNumber = 1;
+                updatePageControls();
+                return;
+            }
+            
+            // 根據文件類型顯示預覽
+            if (fileType && fileType.startsWith('image/')) {
+                // 圖片預覽
+                console.log('✅ 顯示圖片預覽');
+                pdfViewer.innerHTML = `
+                    <div class="pdf-page" style="width: 100%; padding: 1rem;">
+                        <img src="${fileDataURL}" alt="文檔預覽" style="
+                            width: 100%;
+                            height: auto;
+                            border-radius: 8px;
+                            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                            background: white;
+                        ">
+                    </div>
+                `;
+                totalPagesCount = 1;
+                currentPageNumber = 1;
+                updatePageControls();
+            } else if (fileType === 'application/pdf') {
+                // PDF 預覽（需要 PDF.js）
+                console.log('📋 顯示 PDF 預覽（使用 iframe）');
+                pdfViewer.innerHTML = `
+                    <div class="pdf-page" style="width: 100%; height: 100%; padding: 1rem;">
+                        <iframe 
+                            src="${fileDataURL}" 
+                            style="width: 100%; height: 100%; border: none; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);"
+                            title="PDF 預覽">
+                        </iframe>
+                    </div>
+                `;
+                totalPagesCount = 1;
+                currentPageNumber = 1;
+                updatePageControls();
+            } else {
+                // 不支持的文件類型
+                console.warn('⚠️ 不支持的文件類型:', fileType);
+                pdfViewer.innerHTML = `
+                    <div class="loading">
+                        <i class="fas fa-file" style="font-size: 3rem; color: #94a3b8; margin-bottom: 1rem;"></i>
+                        <div>不支持的文件類型</div>
+                        <div style="font-size: 0.875rem; color: #6b7280; margin-top: 0.5rem;">
+                            ${fileType || '未知類型'}
+                        </div>
+                    </div>
+                `;
+                totalPagesCount = 1;
+                currentPageNumber = 1;
+                updatePageControls();
+            }
         }
         
         // 顯示交易記錄
@@ -860,11 +934,14 @@
             checkboxes.forEach(cb => cb.checked = checkbox.checked);
         }
         
+        // 初始化側邊欄實例
+        let sidebarInstance = null;
+        
         // 頁面載入時執行
         document.addEventListener('DOMContentLoaded', () => {
             console.log('📱 文檔詳情頁面載入');
             
-            // 初始化導航欄和側邊欄
+            // 初始化導航欄
             console.log('🔧 初始化導航組件...');
             if (window.VaultCaddyNavbar) {
                 window.VaultCaddyNavbar.render();
@@ -873,11 +950,16 @@
                 console.error('❌ VaultCaddyNavbar 未找到');
             }
             
+            // 初始化側邊欄（創建新實例）
             if (window.VaultCaddySidebar) {
-                window.VaultCaddySidebar.render();
-                console.log('✅ 側邊欄已初始化');
+                try {
+                    sidebarInstance = new window.VaultCaddySidebar('document-detail');
+                    console.log('✅ 側邊欄已初始化');
+                } catch (error) {
+                    console.error('❌ 側邊欄初始化失敗:', error);
+                }
             } else {
-                console.error('❌ VaultCaddySidebar 未找到');
+                console.error('❌ VaultCaddySidebar 類未找到');
             }
             
             // 載入文檔數據

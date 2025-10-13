@@ -2499,6 +2499,16 @@
                 console.log('   創建文件 ID:', documentId);
                 console.log('   當前時間:', currentDate.toISOString());
                 
+                // 將文件轉換為 Data URL 以便預覽
+                console.log('   轉換文件為 Data URL...');
+                const fileDataURL = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+                console.log('   ✅ Data URL 轉換完成');
+                
                 // 創建文件記錄（第一部分：只包含基本信息）
                 const processingDocument = {
                     id: documentId,
@@ -2506,6 +2516,8 @@
                     fileName: file.name,
                     size: file.size,
                     fileSize: file.size,
+                    type: file.type,
+                    fileType: file.type,
                     uploadTime: currentDate.toISOString(),
                     uploadDate: currentDate.toISOString(),
                     projectId: projectId,
@@ -2513,6 +2525,8 @@
                     status: 'Processing',
                     processingProgress: 0,
                     isProcessing: true,
+                    // 存儲文件的 Data URL 以便預覽
+                    fileDataURL: fileDataURL,
                     // 預設數據（避免 undefined 錯誤）
                     processedData: {
                         fileName: file.name,
