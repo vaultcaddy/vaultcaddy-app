@@ -2730,7 +2730,7 @@
                 // 步驟 3: 解析並保存數據
                 console.log('');
                 console.log('💾 === 步驟 3: 解析並保存數據 ===');
-                const parsedData = parseAIResponse(aiResult);
+                const parsedData = parseAIResponse(aiResult, file);
                 console.log('✅ 數據解析完成');
                 console.log('   銀行名稱:', parsedData.bankName);
                 console.log('   帳戶持有人:', parsedData.accountHolder);
@@ -2956,7 +2956,7 @@
             }
         }
         
-        function parseAIResponse(aiResult) {
+        function parseAIResponse(aiResult, file) {
             try {
                 logAI('📋 解析 AI 提取的數據...', 'info');
                 
@@ -2965,8 +2965,8 @@
                 const standardizedData = {
                     // 基本信息
                     documentType: data.documentType || 'Bank Statement',
-                    fileName: aiCurrentFile.name,
-                    fileSize: aiCurrentFile.size,
+                    fileName: file?.name || '未命名文件',
+                    fileSize: file?.size || 0,
                     extractedAt: new Date().toISOString(),
                     
                     // 銀行賬戶信息
