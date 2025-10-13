@@ -219,28 +219,67 @@ class GoogleAIProcessor {
             `,
             
             'invoice': `
-請分析這份發票並提取以下信息，以JSON格式返回：
+請仔細分析這份發票並提取以下所有信息，以JSON格式返回：
 
 {
-  "invoiceNumber": "發票號碼",
-  "issueDate": "YYYY-MM-DD",
-  "dueDate": "YYYY-MM-DD",
-  "vendor": "供應商名稱",
-  "customer": "客戶名稱",
-  "totalAmount": 總金額(數字),
-  "taxAmount": 稅額(數字),
-  "currency": "貨幣代碼",
+  "documentType": "Invoice",
+  "invoiceNumber": "發票號碼（如：200602）",
+  "issueDate": "發票日期 YYYY-MM-DD",
+  "deliveryDate": "送貨日期 YYYY-MM-DD（如果有）",
+  "dueDate": "到期日 YYYY-MM-DD（如果有）",
+  
+  "vendor": {
+    "name": "供應商/賣方公司名稱",
+    "address": "供應商地址",
+    "phone": "供應商電話",
+    "email": "供應商郵箱（如果有）",
+    "taxId": "供應商稅號（如果有）",
+    "companyRegNo": "公司註冊號（如果有）"
+  },
+  
+  "customer": {
+    "name": "客戶/買方名稱",
+    "address": "客戶地址",
+    "phone": "客戶電話",
+    "email": "客戶郵箱（如果有）"
+  },
+  
   "lineItems": [
     {
-      "description": "項目描述",
-      "quantity": 數量(數字),
+      "itemCode": "商品編號（如：01301）",
+      "description": "商品描述（如：支雀巢 鮮奶絲滑咖啡 (268mlx15支)）",
+      "quantity": 數量(數字，如：2),
+      "unit": "單位（如：件、箱、支）",
       "unitPrice": 單價(數字),
-      "totalPrice": 總價(數字)
+      "amount": 小計金額(數字)
     }
-  ]
+  ],
+  
+  "subtotal": 小計金額(數字),
+  "discount": 折扣金額(數字，如果有),
+  "discountPercent": 折扣百分比(數字，如果有),
+  "taxAmount": 稅額(數字，如果有),
+  "taxRate": 稅率(數字，如果有),
+  "totalAmount": 總金額(數字),
+  "currency": "貨幣代碼（如：HKD、USD、CNY）",
+  
+  "paymentMethod": "付款方式（如：CASH、Credit Card、Bank Transfer、C.O.D）",
+  "paymentTerms": "付款條款（如：Net 30、C.O.D）",
+  "paymentStatus": "付款狀態（Paid 或 Unpaid）",
+  
+  "notes": "備註或其他信息"
 }
 
-請確保所有金額都是數字格式，日期都是YYYY-MM-DD格式。
+**重要提示**：
+1. 請仔細查看發票上的所有文字和數字
+2. 商品項目 lineItems 是一個數組，請提取所有商品行
+3. 如果發票上有 "CASH" 字樣，paymentMethod 應為 "CASH"
+4. 如果有 "C.O.D" 或 "貨到付款"，paymentTerms 應為 "C.O.D"
+5. 所有金額必須是純數字（不要包含貨幣符號）
+6. 日期格式必須是 YYYY-MM-DD
+7. 如果某些信息無法提取，請設為 null 或空字符串
+
+請返回完整的JSON，不要省略任何字段。
             `,
             
             'receipt': `
