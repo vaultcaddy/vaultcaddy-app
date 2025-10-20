@@ -12,9 +12,9 @@ class GoogleSmartProcessor {
         };
         
         this.processingOrder = [
-            'documentAI',  // 優先使用Document AI
-            'visionAI',    // 備用Vision API
-            'geminiAI'     // 最後嘗試Gemini
+            // 'documentAI',  // ❌ Document AI 需要 OAuth 2.0，暫時停用
+            'visionAI',    // ✅ 優先使用 Vision API（已測試成功）
+            'geminiAI'     // ✅ 備用 Gemini
         ];
         
         console.log('🧠 Google 智能處理器初始化');
@@ -60,6 +60,14 @@ class GoogleSmartProcessor {
             } catch (error) {
                 console.warn(`⚠️ 處理器 ${processorName} 失敗:`, error.message);
                 lastError = error;
+                
+                // 如果是認證錯誤（401, Unauthorized），跳過
+                if (error.message.includes('401') || 
+                    error.message.includes('Unauthorized') ||
+                    error.message.includes('authentication credentials')) {
+                    console.log(`🔐 檢測到認證錯誤（${processorName} 需要 OAuth 2.0），嘗試下一個處理器...`);
+                    continue;
+                }
                 
                 // 如果是地理限制錯誤，繼續嘗試下一個
                 if (error.message.includes('location is not supported') || 
