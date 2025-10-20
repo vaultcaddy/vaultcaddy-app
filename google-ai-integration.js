@@ -51,14 +51,22 @@ class GoogleAIProcessor {
     }
     
     /**
-     * 處理文件並提取數據
+     * 處理文件並提取數據（帶重試機制）
      */
-    async processDocument(file, documentType) {
+    async processDocument(file, documentType, options = {}) {
+        const maxRetries = options.maxRetries || 3;
+        const retryDelay = options.retryDelay || 2000;
+        
         console.log(`🚀 開始處理文檔: ${file.name} (${documentType})`);
+        console.log(`   最大重試次數: ${maxRetries}`);
         
         // 驗證文件
-        if (!this.validateFile(file)) {
-            throw new Error('文件格式不支援或文件過大');
+        const fileValidation = this.validateFileWithDetails(file);
+        if (!fileValidation.isValid) {
+            const error = new Error(fileValidation.error);
+            error.code = 'FILE_VALIDATION_ERROR';
+            error.details = fileValidation;
+            throw error;
         }
         
         // 如果沒有API密鑰，使用模擬數據
@@ -67,29 +75,191 @@ class GoogleAIProcessor {
             return await this.generateMockData(file, documentType);
         }
         
-        try {
-            // 將文件轉換為base64
-            const base64Data = await this.fileToBase64(file);
-            
-            // 生成提示詞
-            const prompt = this.generatePrompt(documentType);
-            
-            // 調用Google AI API
-            const extractedData = await this.callGoogleAI(base64Data, file.type, prompt);
-            
-            // 處理和驗證返回的數據
-            const processedData = this.processAIResponse(extractedData, documentType);
-            
-            console.log('✅ Google AI處理完成');
-            return processedData;
-            
-        } catch (error) {
-            console.error('❌ Google AI處理失敗:', error);
-            
-            // 如果API調用失敗，回退到模擬數據
-            console.log('🔄 回退到模擬數據');
-            return await this.generateMockData(file, documentType);
+        let lastError = null;
+        
+        // 重試循環
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                console.log(`🔄 嘗試 ${attempt}/${maxRetries}...`);
+                
+                // 將文件轉換為base64
+                const base64Data = await this.fileToBase64(file);
+                
+                // 生成提示詞
+                const prompt = this.generatePrompt(documentType);
+                
+                // 調用Google AI API
+                const extractedData = await this.callGoogleAI(base64Data, file.type, prompt);
+                
+                // 處理和驗證返回的數據
+                const processedData = this.processAIResponse(extractedData, documentType);
+                
+                // 檢查數據質量
+                const qualityCheck = this.checkDataQuality(processedData, documentType);
+                
+                if (qualityCheck.isAcceptable) {
+                    console.log('✅ Google AI處理完成');
+                    console.log(`   信心分數: ${processedData.extractedFields.confidenceScore || 'N/A'}%`);
+                    console.log(`   數據完整性: ${processedData.extractedFields.validationStatus?.completeness || 'N/A'}`);
+                    
+                    return {
+                        ...processedData,
+                        success: true,
+                        attempts: attempt,
+                        qualityScore: qualityCheck.score
+                    };
+                } else {
+                    // 數據質量不佳，但不是最後一次嘗試
+                    if (attempt < maxRetries) {
+                        console.warn(`⚠️ 數據質量不佳 (${qualityCheck.score}%)，重試...`);
+                        lastError = new Error(`數據質量不佳: ${qualityCheck.issues.join(', ')}`);
+                        await new Promise(resolve => setTimeout(resolve, retryDelay));
+                        continue;
+                    } else {
+                        // 最後一次嘗試，返回低質量數據並標記
+                        console.warn(`⚠️ 達到最大重試次數，返回低質量數據`);
+                        return {
+                            ...processedData,
+                            success: true,
+                            lowQuality: true,
+                            attempts: attempt,
+                            qualityScore: qualityCheck.score,
+                            qualityIssues: qualityCheck.issues
+                        };
+                    }
+                }
+                
+            } catch (error) {
+                console.error(`❌ 嘗試 ${attempt}/${maxRetries} 失敗:`, error.message);
+                lastError = this.enhanceError(error, file, documentType, attempt);
+                
+                // 如果不是最後一次嘗試，等待後重試
+                if (attempt < maxRetries) {
+                    const delay = retryDelay * attempt; // 指數退避
+                    console.log(`⏳ 等待 ${delay}ms 後重試...`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                } else {
+                    // 最後一次嘗試失敗，拋出增強的錯誤
+                    console.error('❌ 所有重試均失敗');
+                    throw lastError;
+                }
+            }
         }
+        
+        // 如果所有重試都失敗，拋出最後的錯誤
+        throw lastError || new Error('處理失敗，原因未知');
+    }
+    
+    /**
+     * 增強的文件驗證（返回詳細信息）
+     */
+    validateFileWithDetails(file) {
+        const result = {
+            isValid: true,
+            error: null,
+            warnings: []
+        };
+        
+        // 檢查文件大小（20MB限制）
+        const maxSize = 20 * 1024 * 1024;
+        if (file.size > maxSize) {
+            result.isValid = false;
+            result.error = `文件過大: ${(file.size / 1024 / 1024).toFixed(2)}MB (最大 20MB)`;
+            return result;
+        }
+        
+        // 檢查文件類型
+        const supportedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+        if (!supportedTypes.includes(file.type)) {
+            result.isValid = false;
+            result.error = `不支持的文件類型: ${file.type}。支持的類型: JPG, PNG, GIF, WEBP, PDF`;
+            return result;
+        }
+        
+        // 警告：大文件可能處理較慢
+        if (file.size > 5 * 1024 * 1024) {
+            result.warnings.push(`文件較大 (${(file.size / 1024 / 1024).toFixed(2)}MB)，處理可能需要更長時間`);
+        }
+        
+        return result;
+    }
+    
+    /**
+     * 檢查數據質量
+     */
+    checkDataQuality(processedData, documentType) {
+        const extractedFields = processedData.extractedFields || {};
+        const confidenceScore = extractedFields.confidenceScore || 0;
+        const validationStatus = extractedFields.validationStatus || {};
+        
+        const issues = [];
+        let score = confidenceScore;
+        
+        // 信心分數太低
+        if (confidenceScore < 50) {
+            issues.push(`信心分數過低 (${confidenceScore}%)`);
+        }
+        
+        // 驗證失敗
+        if (validationStatus.isValid === false) {
+            issues.push(`驗證失敗: ${validationStatus.issues?.join(', ') || '未知錯誤'}`);
+            score = Math.min(score, 40);
+        }
+        
+        // 數據不完整
+        if (validationStatus.completeness === 'Incomplete') {
+            issues.push('數據不完整');
+            score = Math.min(score, 60);
+        }
+        
+        return {
+            isAcceptable: score >= 50 && issues.length <= 2,
+            score: score,
+            issues: issues
+        };
+    }
+    
+    /**
+     * 增強錯誤信息
+     */
+    enhanceError(error, file, documentType, attempt) {
+        const enhancedError = new Error(error.message);
+        enhancedError.originalError = error;
+        enhancedError.fileName = file.name;
+        enhancedError.fileSize = file.size;
+        enhancedError.fileType = file.type;
+        enhancedError.documentType = documentType;
+        enhancedError.attempt = attempt;
+        enhancedError.timestamp = new Date().toISOString();
+        
+        // 根據錯誤類型添加用戶友好的消息
+        if (error.message.includes('API key not valid')) {
+            enhancedError.code = 'INVALID_API_KEY';
+            enhancedError.userMessage = 'API 密鑰無效，請檢查配置';
+            enhancedError.suggestion = '請在 config.js 中設置有效的 Google AI API 密鑰';
+        } else if (error.message.includes('location is not supported')) {
+            enhancedError.code = 'REGION_NOT_SUPPORTED';
+            enhancedError.userMessage = 'API 在當前地區不可用';
+            enhancedError.suggestion = '正在嘗試備用端點...';
+        } else if (error.message.includes('quota')) {
+            enhancedError.code = 'QUOTA_EXCEEDED';
+            enhancedError.userMessage = 'API 配額已用盡';
+            enhancedError.suggestion = '請稍後再試或升級 API 計劃';
+        } else if (error.message.includes('timeout')) {
+            enhancedError.code = 'TIMEOUT';
+            enhancedError.userMessage = '請求超時';
+            enhancedError.suggestion = '文件可能過大或網絡連接不穩定';
+        } else if (error.message.includes('JSON')) {
+            enhancedError.code = 'INVALID_RESPONSE';
+            enhancedError.userMessage = 'AI 返回的數據格式無效';
+            enhancedError.suggestion = '正在重試以獲取有效數據...';
+        } else {
+            enhancedError.code = 'UNKNOWN_ERROR';
+            enhancedError.userMessage = '處理失敗';
+            enhancedError.suggestion = '請重試或聯繫技術支持';
+        }
+        
+        return enhancedError;
     }
     
     /**
