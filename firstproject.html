@@ -2879,9 +2879,10 @@
                 const aiResult = await processWithGoogleAI(file);
                 
                 console.log('✅ Google AI 處理完成');
-                console.log('   處理器:', aiResult.processor || 'Unknown');
+                console.log('   處理器:', aiResult.processor || aiResult.engine || 'Unknown');
                 console.log('   成功狀態:', aiResult.success);
-                console.log('   提取的原始數據:', JSON.stringify(aiResult.extractedData, null, 2));
+                console.log('   提取的原始數據 (aiResult.data):', JSON.stringify(aiResult.data, null, 2));
+                console.log('   提取的原始數據 (aiResult.extractedData):', JSON.stringify(aiResult.extractedData, null, 2));
                 updateDocumentProgress(documentId, projectId, 70);
                 
                 // 步驟 3: 解析並保存數據
@@ -3170,7 +3171,16 @@
             try {
                 logAI('📋 解析 AI 提取的數據...', 'info');
                 
-                const data = aiResult.extractedData || {};
+                // ✅ 兼容不同 AI 處理器的返回格式
+                // Vision AI 返回: { success, data, processingTime, engine }
+                // Gemini AI 返回: { success, extractedData, processingTime }
+                const data = aiResult.data || aiResult.extractedData || {};
+                
+                console.log('🔍 parseAIResponse 調試:');
+                console.log('   aiResult keys:', Object.keys(aiResult));
+                console.log('   aiResult.data:', aiResult.data);
+                console.log('   aiResult.extractedData:', aiResult.extractedData);
+                console.log('   最終使用的 data:', data);
                 
                 // 確定文檔類型（優先使用用戶選擇的類型）
                 const docType = determineDocumentType(file);
