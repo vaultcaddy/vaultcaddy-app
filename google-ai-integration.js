@@ -185,124 +185,194 @@ class GoogleAIProcessor {
     generatePrompt(documentType) {
         const prompts = {
             'bank-statement': `
-請分析這份銀行對帳單並提取以下信息，以JSON格式返回：
+You are an expert bank statement data extraction AI. Analyze this bank statement image and extract ALL information into a valid JSON object.
 
+CRITICAL RULES:
+1. Return ONLY valid JSON - no markdown, no code blocks, no explanations
+2. Extract ACTUAL data from the image - do not use placeholder text
+3. All amounts must be pure numbers (no currency symbols, no commas)
+4. All dates must be in YYYY-MM-DD format
+5. Extract ALL transactions from the statement
+
+REQUIRED JSON STRUCTURE:
 {
-  "accountInfo": {
-    "accountHolder": "帳戶持有人姓名",
-    "accountNumber": "帳戶號碼",
-    "bankCode": "銀行代碼",
-    "branch": "分行名稱"
-  },
+  "documentType": "Bank Statement",
+  "bankName": "actual bank name (e.g., HSBC, 匯豐銀行, Hang Seng Bank, 恒生銀行)",
+  "accountHolder": "actual account holder name",
+  "accountNumber": "actual account number (last 4 digits if masked)",
+  "accountType": "Savings or Current or Credit Card",
+  "currency": "HKD or USD or CNY",
   "statementPeriod": {
     "startDate": "YYYY-MM-DD",
     "endDate": "YYYY-MM-DD"
   },
-  "financialPosition": {
-    "deposits": 存款金額(數字),
-    "personalLoans": 個人貸款金額(數字，負數),
-    "creditCards": 信用卡欠款(數字，負數),
-    "netPosition": 淨額(數字)
+  "balances": {
+    "openingBalance": actual_number,
+    "closingBalance": actual_number,
+    "availableBalance": actual_number_or_null
+  },
+  "summary": {
+    "totalDeposits": actual_number,
+    "totalWithdrawals": actual_number,
+    "numberOfTransactions": actual_number
   },
   "transactions": [
     {
       "date": "YYYY-MM-DD",
-      "description": "交易描述",
-      "amount": 交易金額(數字，正數為收入，負數為支出),
-      "balance": 餘額(數字),
-      "type": "交易類型(credit/debit/balance/deposit)"
+      "description": "actual transaction description",
+      "reference": "reference number or null",
+      "debit": actual_number_or_0,
+      "credit": actual_number_or_0,
+      "balance": actual_number,
+      "type": "Deposit or Withdrawal or Transfer or Fee or Interest"
     }
   ]
 }
 
-請確保所有金額都是數字格式，日期都是YYYY-MM-DD格式。如果某些信息無法提取，請設為null。
+EXTRACTION GUIDELINES:
+- Bank name is usually at the top (匯豐/HSBC, 恒生/Hang Seng, 中銀/Bank of China)
+- Account holder name may be labeled as 客戶姓名/Account Holder/Name
+- Account number may be partially masked (e.g., ****1234)
+- Statement period: look for 結單期/Statement Period/From...To...
+- Opening balance: 期初結餘/Opening Balance/Previous Balance
+- Closing balance: 期末結餘/Closing Balance/Current Balance
+- Transactions table columns: 日期/Date, 交易描述/Description, 支出/Debit, 存入/Credit, 結餘/Balance
+- Extract ALL transaction rows from the table
+- For amounts: positive = credit/deposit, negative = debit/withdrawal
+
+HONG KONG BANK FORMATS:
+- HSBC (匯豐銀行): Look for red/white logo
+- Hang Seng Bank (恒生銀行): Look for blue logo
+- Bank of China (中國銀行): Look for red logo
+- Standard Chartered (渣打銀行): Look for blue/green logo
+
+Extract the ACTUAL data from this bank statement image and return ONLY the JSON object.
             `,
             
             'invoice': `
-請仔細分析這份發票並提取以下所有信息，以JSON格式返回：
+You are an expert invoice data extraction AI. Analyze this invoice image and extract ALL information into a valid JSON object.
 
+CRITICAL RULES:
+1. Return ONLY valid JSON - no markdown, no code blocks, no explanations
+2. Extract ACTUAL data from the image - do not use placeholder text
+3. All amounts must be pure numbers (no currency symbols like $, HKD)
+4. All dates must be in YYYY-MM-DD format
+5. If a field cannot be found, use null or empty string ""
+
+REQUIRED JSON STRUCTURE:
 {
   "documentType": "Invoice",
-  "invoiceNumber": "發票號碼（如：200602）",
-  "issueDate": "發票日期 YYYY-MM-DD",
-  "deliveryDate": "送貨日期 YYYY-MM-DD（如果有）",
-  "dueDate": "到期日 YYYY-MM-DD（如果有）",
-  
+  "invoiceNumber": "actual invoice number from image",
+  "issueDate": "YYYY-MM-DD",
+  "deliveryDate": "YYYY-MM-DD or null",
+  "dueDate": "YYYY-MM-DD or null",
   "vendor": {
-    "name": "供應商/賣方公司名稱",
-    "address": "供應商地址",
-    "phone": "供應商電話",
-    "email": "供應商郵箱（如果有）",
-    "taxId": "供應商稅號（如果有）",
-    "companyRegNo": "公司註冊號（如果有）"
+    "name": "actual vendor company name",
+    "address": "actual vendor address",
+    "phone": "actual phone number",
+    "email": "email or null",
+    "taxId": "tax ID or null",
+    "companyRegNo": "company registration number or null"
   },
-  
   "customer": {
-    "name": "客戶/買方名稱",
-    "address": "客戶地址",
-    "phone": "客戶電話",
-    "email": "客戶郵箱（如果有）"
+    "name": "actual customer name",
+    "address": "actual customer address",
+    "phone": "actual customer phone",
+    "email": "email or null"
   },
-  
   "lineItems": [
     {
-      "itemCode": "商品編號（如：01301）",
-      "description": "商品描述（如：支雀巢 鮮奶絲滑咖啡 (268mlx15支)）",
-      "quantity": 數量(數字，如：2),
-      "unit": "單位（如：件、箱、支）",
-      "unitPrice": 單價(數字),
-      "amount": 小計金額(數字)
+      "itemCode": "actual item code from invoice",
+      "description": "actual product description",
+      "quantity": actual_number,
+      "unit": "actual unit (件/箱/支/etc)",
+      "unitPrice": actual_number,
+      "amount": actual_number
     }
   ],
-  
-  "subtotal": 小計金額(數字),
-  "discount": 折扣金額(數字，如果有),
-  "discountPercent": 折扣百分比(數字，如果有),
-  "taxAmount": 稅額(數字，如果有),
-  "taxRate": 稅率(數字，如果有),
-  "totalAmount": 總金額(數字),
-  "currency": "貨幣代碼（如：HKD、USD、CNY）",
-  
-  "paymentMethod": "付款方式（如：CASH、Credit Card、Bank Transfer、C.O.D）",
-  "paymentTerms": "付款條款（如：Net 30、C.O.D）",
-  "paymentStatus": "付款狀態（Paid 或 Unpaid）",
-  
-  "notes": "備註或其他信息"
+  "subtotal": actual_number,
+  "discount": actual_number_or_0,
+  "discountPercent": actual_number_or_0,
+  "taxAmount": actual_number_or_0,
+  "taxRate": actual_number_or_0,
+  "totalAmount": actual_number,
+  "currency": "HKD or USD or CNY",
+  "paymentMethod": "CASH or Credit Card or Bank Transfer or C.O.D",
+  "paymentTerms": "Net 30 or C.O.D or null",
+  "paymentStatus": "Paid or Unpaid",
+  "notes": "any notes or empty string"
 }
 
-**重要提示**：
-1. 請仔細查看發票上的所有文字和數字
-2. 商品項目 lineItems 是一個數組，請提取所有商品行
-3. 如果發票上有 "CASH" 字樣，paymentMethod 應為 "CASH"
-4. 如果有 "C.O.D" 或 "貨到付款"，paymentTerms 應為 "C.O.D"
-5. 所有金額必須是純數字（不要包含貨幣符號）
-6. 日期格式必須是 YYYY-MM-DD
-7. 如果某些信息無法提取，請設為 null 或空字符串
+EXTRACTION GUIDELINES:
+- Look for invoice number near the top (發票號碼/INVOICE)
+- Vendor info is usually at the top left (FROM/供應商)
+- Customer info is usually at the top right (TO/客戶/BILL TO)
+- Line items are in a table format with columns for item code, description, quantity, price
+- Look for keywords: 小計/Subtotal, 折扣/Discount, 總計/Total, 合計/Grand Total
+- Payment method keywords: CASH, 現金, C.O.D, 貨到付款, Credit Card, 信用卡
+- Extract ALL line items from the table, not just the first one
 
-請返回完整的JSON，不要省略任何字段。
+EXAMPLE (for reference only - extract ACTUAL data):
+If invoice shows "200602" as invoice number, return "invoiceNumber": "200602"
+If date shows "2025-09-25", return "issueDate": "2025-09-25"
+If total shows "$1,250.00", return "totalAmount": 1250.00
+If item shows "01301 - 雀巢咖啡 × 2件 = $250", extract as:
+{
+  "itemCode": "01301",
+  "description": "雀巢咖啡",
+  "quantity": 2,
+  "unit": "件",
+  "unitPrice": 125.00,
+  "amount": 250.00
+}
+
+Now extract the ACTUAL data from this invoice image and return ONLY the JSON object.
             `,
             
             'receipt': `
-請分析這份收據並提取以下信息，以JSON格式返回：
+You are an expert receipt data extraction AI. Analyze this receipt image and extract ALL information into a valid JSON object.
 
+CRITICAL RULES:
+1. Return ONLY valid JSON - no markdown, no code blocks, no explanations
+2. Extract ACTUAL data from the image - do not use placeholder text
+3. All amounts must be pure numbers (no currency symbols)
+4. All dates must be in YYYY-MM-DD format
+5. If a field cannot be found, use null or 0
+
+REQUIRED JSON STRUCTURE:
 {
-  "receiptNumber": "收據號碼",
+  "documentType": "Receipt",
+  "receiptNumber": "actual receipt number or null",
   "date": "YYYY-MM-DD",
-  "merchant": "商家名稱",
-  "totalAmount": 總金額(數字),
-  "taxAmount": 稅額(數字),
-  "paymentMethod": "付款方式",
-  "currency": "貨幣代碼",
+  "merchant": {
+    "name": "actual merchant/store name",
+    "address": "actual address or null",
+    "phone": "actual phone or null"
+  },
   "items": [
     {
-      "name": "商品名稱",
-      "quantity": 數量(數字),
-      "price": 價格(數字)
+      "name": "actual item name",
+      "quantity": actual_number,
+      "unitPrice": actual_number,
+      "amount": actual_number
     }
-  ]
+  ],
+  "subtotal": actual_number,
+  "taxAmount": actual_number_or_0,
+  "tipAmount": actual_number_or_0,
+  "totalAmount": actual_number,
+  "currency": "HKD or USD or CNY",
+  "paymentMethod": "Cash or Credit Card or Debit Card or Mobile Payment"
 }
 
-請確保所有金額都是數字格式，日期都是YYYY-MM-DD格式。
+EXTRACTION GUIDELINES:
+- Look for merchant name at the top (店名/商家)
+- Receipt number may be labeled as 收據號/Receipt No/單號
+- Items are usually in a list with name, quantity, and price
+- Look for: 小計/Subtotal, 稅/Tax, 小費/Tip, 總計/Total
+- Payment method: 現金/Cash, 信用卡/Credit Card, 八達通/Octopus, 支付寶/Alipay
+
+Extract the ACTUAL data from this receipt image and return ONLY the JSON object.
             `,
             
             'general': `
@@ -480,57 +550,368 @@ class GoogleAIProcessor {
      * 清理銀行對帳單數據
      */
     cleanBankStatementData(data) {
-        // 確保數字字段是數字類型
-        if (data.financialPosition) {
-            ['deposits', 'personalLoans', 'creditCards', 'netPosition'].forEach(field => {
-                if (data.financialPosition[field] !== null) {
-                    data.financialPosition[field] = parseFloat(data.financialPosition[field]) || 0;
-                }
-            });
+        console.log('🧹 清理銀行對帳單數據...');
+        
+        // 確保 balances 對象存在
+        if (!data.balances) {
+            data.balances = {
+                openingBalance: 0,
+                closingBalance: 0,
+                availableBalance: null
+            };
+        } else {
+            data.balances.openingBalance = parseFloat(data.balances.openingBalance) || 0;
+            data.balances.closingBalance = parseFloat(data.balances.closingBalance) || 0;
+            if (data.balances.availableBalance !== null) {
+                data.balances.availableBalance = parseFloat(data.balances.availableBalance) || 0;
+            }
+        }
+        
+        // 確保 summary 對象存在
+        if (!data.summary) {
+            data.summary = {
+                totalDeposits: 0,
+                totalWithdrawals: 0,
+                numberOfTransactions: 0
+            };
+        } else {
+            data.summary.totalDeposits = parseFloat(data.summary.totalDeposits) || 0;
+            data.summary.totalWithdrawals = parseFloat(data.summary.totalWithdrawals) || 0;
+            data.summary.numberOfTransactions = parseInt(data.summary.numberOfTransactions) || 0;
         }
         
         // 清理交易數據
         if (data.transactions && Array.isArray(data.transactions)) {
             data.transactions = data.transactions.map(transaction => ({
-                ...transaction,
-                amount: parseFloat(transaction.amount) || 0,
+                date: this.validateDate(transaction.date),
+                description: transaction.description || '',
+                reference: transaction.reference || null,
+                debit: parseFloat(transaction.debit) || 0,
+                credit: parseFloat(transaction.credit) || 0,
                 balance: parseFloat(transaction.balance) || 0,
-                date: this.validateDate(transaction.date)
+                type: transaction.type || 'Unknown'
             }));
+        } else {
+            data.transactions = [];
+        }
+        
+        // 驗證日期
+        if (data.statementPeriod) {
+            if (data.statementPeriod.startDate) {
+                data.statementPeriod.startDate = this.validateDate(data.statementPeriod.startDate);
+            }
+            if (data.statementPeriod.endDate) {
+                data.statementPeriod.endDate = this.validateDate(data.statementPeriod.endDate);
+            }
         }
         
         // 添加對帳信息
         data.reconciliation = {
-            totalTransactions: data.transactions ? data.transactions.length : 0,
+            totalTransactions: data.transactions.length,
             reconciledTransactions: 0,
             completionPercentage: 0
         };
         
+        // 計算信心分數
+        data.confidenceScore = this.calculateBankStatementConfidence(data);
+        
+        // 添加驗證狀態
+        data.validationStatus = this.validateBankStatementData(data);
+        
+        console.log('✅ 銀行對帳單數據清理完成');
+        console.log('   信心分數:', data.confidenceScore);
+        console.log('   驗證狀態:', data.validationStatus);
+        
         return data;
+    }
+    
+    /**
+     * 計算銀行對帳單數據的信心分數 (0-100)
+     */
+    calculateBankStatementConfidence(data) {
+        let score = 0;
+        let maxScore = 0;
+        
+        // 銀行名稱 (10分)
+        maxScore += 10;
+        if (data.bankName && data.bankName.length > 0) {
+            score += 10;
+        }
+        
+        // 帳戶信息 (20分)
+        maxScore += 20;
+        if (data.accountHolder && data.accountHolder.length > 0) {
+            score += 10;
+        }
+        if (data.accountNumber && data.accountNumber.length > 0) {
+            score += 10;
+        }
+        
+        // 對帳期間 (15分)
+        maxScore += 15;
+        if (data.statementPeriod?.startDate) {
+            score += 7;
+        }
+        if (data.statementPeriod?.endDate) {
+            score += 8;
+        }
+        
+        // 餘額信息 (20分)
+        maxScore += 20;
+        if (data.balances?.openingBalance !== undefined && data.balances.openingBalance !== null) {
+            score += 10;
+        }
+        if (data.balances?.closingBalance !== undefined && data.balances.closingBalance !== null) {
+            score += 10;
+        }
+        
+        // 交易記錄 (35分)
+        maxScore += 35;
+        if (data.transactions && data.transactions.length > 0) {
+            score += 20;
+            // 檢查交易記錄的完整性
+            const completeTransactions = data.transactions.filter(t => 
+                t.date && t.description && (t.debit > 0 || t.credit > 0)
+            );
+            if (completeTransactions.length === data.transactions.length) {
+                score += 15;
+            } else if (completeTransactions.length > data.transactions.length * 0.8) {
+                score += 10;
+            }
+        }
+        
+        // 計算百分比
+        const percentage = Math.round((score / maxScore) * 100);
+        console.log(`📊 信心分數計算: ${score}/${maxScore} = ${percentage}%`);
+        
+        return percentage;
+    }
+    
+    /**
+     * 驗證銀行對帳單數據完整性
+     */
+    validateBankStatementData(data) {
+        const issues = [];
+        
+        // 必填字段檢查
+        if (!data.bankName || data.bankName.length === 0) {
+            issues.push('缺少銀行名稱');
+        }
+        
+        if (!data.accountHolder || data.accountHolder.length === 0) {
+            issues.push('缺少帳戶持有人');
+        }
+        
+        if (!data.accountNumber || data.accountNumber.length === 0) {
+            issues.push('缺少帳戶號碼');
+        }
+        
+        if (!data.statementPeriod?.startDate || !data.statementPeriod?.endDate) {
+            issues.push('缺少對帳期間');
+        }
+        
+        if (!data.transactions || data.transactions.length === 0) {
+            issues.push('缺少交易記錄');
+        }
+        
+        // 餘額一致性檢查
+        if (data.transactions && data.transactions.length > 0 && data.balances) {
+            const lastTransaction = data.transactions[data.transactions.length - 1];
+            if (lastTransaction.balance && data.balances.closingBalance) {
+                const difference = Math.abs(lastTransaction.balance - data.balances.closingBalance);
+                if (difference > 0.01) { // 允許 0.01 的誤差
+                    issues.push(`期末餘額不匹配 (最後交易餘額: ${lastTransaction.balance.toFixed(2)}, 期末餘額: ${data.balances.closingBalance.toFixed(2)})`);
+                }
+            }
+        }
+        
+        return {
+            isValid: issues.length === 0,
+            issues: issues,
+            completeness: issues.length === 0 ? 'Complete' : (issues.length <= 2 ? 'Partial' : 'Incomplete')
+        };
     }
     
     /**
      * 清理發票數據
      */
     cleanInvoiceData(data) {
+        console.log('🧹 清理發票數據...');
+        
         // 確保金額字段是數字類型
-        ['totalAmount', 'taxAmount'].forEach(field => {
-            if (data[field] !== null) {
-                data[field] = parseFloat(data[field]) || 0;
+        const amountFields = ['subtotal', 'discount', 'discountPercent', 'taxAmount', 'taxRate', 'totalAmount'];
+        amountFields.forEach(field => {
+            if (data[field] !== undefined && data[field] !== null) {
+                const value = parseFloat(String(data[field]).replace(/[^0-9.-]/g, ''));
+                data[field] = isNaN(value) ? 0 : value;
+            } else {
+                data[field] = 0;
             }
         });
         
         // 清理行項目
         if (data.lineItems && Array.isArray(data.lineItems)) {
             data.lineItems = data.lineItems.map(item => ({
-                ...item,
+                itemCode: item.itemCode || '',
+                description: item.description || '',
                 quantity: parseFloat(item.quantity) || 0,
+                unit: item.unit || '',
                 unitPrice: parseFloat(item.unitPrice) || 0,
-                totalPrice: parseFloat(item.totalPrice) || 0
+                amount: parseFloat(item.amount) || 0
             }));
+        } else {
+            data.lineItems = [];
         }
         
+        // 驗證日期
+        if (data.issueDate) {
+            data.issueDate = this.validateDate(data.issueDate);
+        }
+        if (data.deliveryDate) {
+            data.deliveryDate = this.validateDate(data.deliveryDate);
+        }
+        if (data.dueDate) {
+            data.dueDate = this.validateDate(data.dueDate);
+        }
+        
+        // 確保 vendor 和 customer 對象存在
+        if (!data.vendor) {
+            data.vendor = { name: '', address: '', phone: '', email: null };
+        }
+        if (!data.customer) {
+            data.customer = { name: '', address: '', phone: '', email: null };
+        }
+        
+        // 計算信心分數
+        data.confidenceScore = this.calculateInvoiceConfidence(data);
+        
+        // 添加驗證狀態
+        data.validationStatus = this.validateInvoiceData(data);
+        
+        console.log('✅ 發票數據清理完成');
+        console.log('   信心分數:', data.confidenceScore);
+        console.log('   驗證狀態:', data.validationStatus);
+        
         return data;
+    }
+    
+    /**
+     * 計算發票數據的信心分數 (0-100)
+     */
+    calculateInvoiceConfidence(data) {
+        let score = 0;
+        let maxScore = 0;
+        
+        // 發票號碼 (10分)
+        maxScore += 10;
+        if (data.invoiceNumber && data.invoiceNumber.length > 0) {
+            score += 10;
+        }
+        
+        // 日期 (10分)
+        maxScore += 10;
+        if (data.issueDate) {
+            score += 10;
+        }
+        
+        // 供應商信息 (20分)
+        maxScore += 20;
+        if (data.vendor?.name && data.vendor.name.length > 0) {
+            score += 10;
+        }
+        if (data.vendor?.address && data.vendor.address.length > 0) {
+            score += 5;
+        }
+        if (data.vendor?.phone && data.vendor.phone.length > 0) {
+            score += 5;
+        }
+        
+        // 客戶信息 (15分)
+        maxScore += 15;
+        if (data.customer?.name && data.customer.name.length > 0) {
+            score += 10;
+        }
+        if (data.customer?.address && data.customer.address.length > 0) {
+            score += 5;
+        }
+        
+        // 行項目 (25分)
+        maxScore += 25;
+        if (data.lineItems && data.lineItems.length > 0) {
+            score += 15;
+            // 檢查行項目的完整性
+            const completeItems = data.lineItems.filter(item => 
+                item.description && item.quantity > 0 && item.amount > 0
+            );
+            if (completeItems.length === data.lineItems.length) {
+                score += 10;
+            }
+        }
+        
+        // 金額信息 (20分)
+        maxScore += 20;
+        if (data.totalAmount && data.totalAmount > 0) {
+            score += 10;
+        }
+        if (data.subtotal && data.subtotal > 0) {
+            score += 5;
+        }
+        if (data.currency && data.currency.length > 0) {
+            score += 5;
+        }
+        
+        // 計算百分比
+        const percentage = Math.round((score / maxScore) * 100);
+        console.log(`📊 信心分數計算: ${score}/${maxScore} = ${percentage}%`);
+        
+        return percentage;
+    }
+    
+    /**
+     * 驗證發票數據完整性
+     */
+    validateInvoiceData(data) {
+        const issues = [];
+        
+        // 必填字段檢查
+        if (!data.invoiceNumber || data.invoiceNumber.length === 0) {
+            issues.push('缺少發票號碼');
+        }
+        
+        if (!data.issueDate) {
+            issues.push('缺少發票日期');
+        }
+        
+        if (!data.vendor?.name || data.vendor.name.length === 0) {
+            issues.push('缺少供應商名稱');
+        }
+        
+        if (!data.customer?.name || data.customer.name.length === 0) {
+            issues.push('缺少客戶名稱');
+        }
+        
+        if (!data.lineItems || data.lineItems.length === 0) {
+            issues.push('缺少商品項目');
+        }
+        
+        if (!data.totalAmount || data.totalAmount <= 0) {
+            issues.push('缺少總金額或金額無效');
+        }
+        
+        // 金額一致性檢查
+        if (data.lineItems && data.lineItems.length > 0 && data.subtotal > 0) {
+            const calculatedSubtotal = data.lineItems.reduce((sum, item) => sum + (item.amount || 0), 0);
+            const difference = Math.abs(calculatedSubtotal - data.subtotal);
+            if (difference > 0.01) { // 允許 0.01 的誤差
+                issues.push(`小計金額不匹配 (計算值: ${calculatedSubtotal.toFixed(2)}, 提取值: ${data.subtotal.toFixed(2)})`);
+            }
+        }
+        
+        return {
+            isValid: issues.length === 0,
+            issues: issues,
+            completeness: issues.length === 0 ? 'Complete' : (issues.length <= 2 ? 'Partial' : 'Incomplete')
+        };
     }
     
     /**
