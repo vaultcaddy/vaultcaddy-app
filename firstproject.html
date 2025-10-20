@@ -2447,8 +2447,12 @@
             
             // 打開新的 AI 上傳模態框
             const modal = document.getElementById('aiUploadModal');
+            console.log('');
+            console.log('========================================');
+            console.log('🚀 openUploadModal 被調用');
             console.log('🔵 找到模態框:', modal);
             console.log('🔵 模態框元素存在:', !!modal);
+            console.log('========================================');
             
             if (modal) {
                 console.log('✅ 開啟上傳模態框');
@@ -2456,6 +2460,7 @@
                 
                 // 使用 setTimeout 確保 DOM 已渲染
                 setTimeout(() => {
+                    console.log('🔧 準備初始化 AI 上傳（100ms 後）...');
                     initializeAIUpload();
                 }, 100);
             } else {
@@ -2504,7 +2509,11 @@
         let selectedDocumentType = 'bank_statement'; // 默認選擇銀行對帳單
         
         function initializeAIUpload() {
+            console.log('');
+            console.log('========================================');
             console.log('🎬 initializeAIUpload 被調用');
+            console.log('   調用時間:', new Date().toISOString());
+            console.log('========================================');
             
             const uploadArea = document.getElementById('aiUploadArea');
             const fileInput = document.getElementById('aiFileInput');
@@ -2518,26 +2527,44 @@
             }
             
             // 初始化默認選擇（Bank statements）
+            console.log('🔧 設置默認文檔類型...');
             selectDocumentType('bank_statement');
             
             // 點擊上傳區域觸發文件選擇
             uploadArea.onclick = () => {
+                console.log('');
+                console.log('========================================');
                 console.log('🖱️ 上傳區域被點擊');
+                console.log('   時間:', new Date().toISOString());
+                console.log('========================================');
                 fileInput.click();
             };
             
             // 文件選擇事件
             fileInput.onchange = (e) => {
-                console.log('📁 文件被選擇');
+                console.log('');
+                console.log('========================================');
+                console.log('📁 fileInput.onchange 事件觸發');
+                console.log('   時間:', new Date().toISOString());
                 const files = Array.from(e.target.files);
                 console.log('   選擇的文件數量:', files.length);
                 if (files.length > 0) {
                     console.log('   文件名:', files[0].name);
+                    console.log('   文件大小:', files[0].size, 'bytes');
+                    console.log('   文件類型:', files[0].type);
+                    console.log('🔜 即將調用 handleAIFileUpload...');
+                    console.log('========================================');
                     handleAIFileUpload(files[0]);
+                } else {
+                    console.log('   ⚠️ 沒有選擇文件');
+                    console.log('========================================');
                 }
             };
             
             console.log('✅ AI 上傳初始化完成');
+            console.log('   uploadArea.onclick 已綁定:', typeof uploadArea.onclick === 'function');
+            console.log('   fileInput.onchange 已綁定:', typeof fileInput.onchange === 'function');
+            console.log('========================================');
             
             // 拖放事件
             uploadArea.ondragover = (e) => {
