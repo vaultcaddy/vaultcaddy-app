@@ -28,6 +28,9 @@
     
     <!-- 載入統一處理器 -->
     <script src="unified-document-processor.js"></script>
+    
+    <!-- 載入導出管理器 -->
+    <script src="export-manager.js"></script>
     <link rel="stylesheet" href="ledgerbox-styles.css">
     
     <style>
@@ -1461,6 +1464,38 @@
                             <span>Upload files</span>
                             <i class="fas fa-arrow-right"></i>
                         </button>
+                        <div class="dropdown" style="position: relative;">
+                            <button onclick="toggleExportMenu()" style="background: #10b981; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
+                                <i class="fas fa-download"></i>
+                                <span>Export</span>
+                                <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
+                            </button>
+                            <div id="exportMenu" class="export-menu" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 0.5rem; background: white; border: 1px solid #e5e7eb; border-radius: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-width: 200px; z-index: 1000;">
+                                <div style="padding: 0.5rem 0;">
+                                    <button onclick="exportDocuments('csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                                        <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
+                                        <div>
+                                            <div style="font-weight: 500;">CSV</div>
+                                            <div style="font-size: 0.75rem; color: #6b7280;">通用格式</div>
+                                        </div>
+                                    </button>
+                                    <button onclick="exportDocuments('iif')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                                        <i class="fas fa-file-alt" style="color: #3b82f6; width: 20px;"></i>
+                                        <div>
+                                            <div style="font-weight: 500;">IIF</div>
+                                            <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Desktop</div>
+                                        </div>
+                                    </button>
+                                    <button onclick="exportDocuments('qbo')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                                        <i class="fas fa-cloud" style="color: #8b5cf6; width: 20px;"></i>
+                                        <div>
+                                            <div style="font-weight: 500;">QBO</div>
+                                            <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Online</div>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                         <button style="background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; padding: 0.75rem 1rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
                             <i class="fas fa-sliders-h"></i>
                             <span>View</span>
@@ -4804,7 +4839,113 @@
         button:hover {
             opacity: 0.9;
         }
+        
+        /* 導出菜單樣式 */
+        .export-menu-item:hover {
+            background: #f9fafb !important;
+        }
     </style>
+    
+    <script>
+        // ==================== 導出功能 ====================
+        
+        /**
+         * 切換導出菜單
+         */
+        function toggleExportMenu() {
+            const menu = document.getElementById('exportMenu');
+            if (menu.style.display === 'none') {
+                menu.style.display = 'block';
+                // 點擊外部關閉菜單
+                setTimeout(() => {
+                    document.addEventListener('click', closeExportMenuOnClickOutside);
+                }, 0);
+            } else {
+                menu.style.display = 'none';
+                document.removeEventListener('click', closeExportMenuOnClickOutside);
+            }
+        }
+        
+        /**
+         * 點擊外部關閉菜單
+         */
+        function closeExportMenuOnClickOutside(event) {
+            const menu = document.getElementById('exportMenu');
+            const button = event.target.closest('button[onclick="toggleExportMenu()"]');
+            
+            if (!menu.contains(event.target) && !button) {
+                menu.style.display = 'none';
+                document.removeEventListener('click', closeExportMenuOnClickOutside);
+            }
+        }
+        
+        /**
+         * 導出文檔
+         */
+        async function exportDocuments(format) {
+            console.log(`📤 開始導出 (${format})...`);
+            
+            // 關閉菜單
+            document.getElementById('exportMenu').style.display = 'none';
+            document.removeEventListener('click', closeExportMenuOnClickOutside);
+            
+            try {
+                // 獲取當前項目的所有文檔
+                const projectId = new URLSearchParams(window.location.search).get('project');
+                if (!projectId) {
+                    alert('無法獲取項目 ID');
+                    return;
+                }
+                
+                const storageKey = `vaultcaddy_project_${projectId}_documents`;
+                const documents = JSON.parse(localStorage.getItem(storageKey) || '[]');
+                
+                // 過濾出發票和收據
+                const invoices = documents.filter(doc => {
+                    const docType = doc.processedData?.documentType || '';
+                    return docType === 'Invoice' || docType === 'Receipt';
+                });
+                
+                if (invoices.length === 0) {
+                    alert('沒有可導出的發票或收據');
+                    return;
+                }
+                
+                console.log(`   找到 ${invoices.length} 張發票/收據`);
+                
+                // 使用 ExportManager 導出
+                const blob = await window.exportManager.exportInvoices(invoices, format);
+                
+                // 生成文件名
+                const projectName = getProjectName(projectId);
+                const timestamp = new Date().toISOString().split('T')[0];
+                const filename = `${projectName}_invoices_${timestamp}.${format}`;
+                
+                // 下載文件
+                window.exportManager.downloadFile(blob, filename);
+                
+                // 顯示成功消息
+                alert(`✅ 成功導出 ${invoices.length} 張發票！\n\n文件: ${filename}\n格式: ${format.toUpperCase()}`);
+                
+            } catch (error) {
+                console.error('❌ 導出失敗:', error);
+                alert(`導出失敗: ${error.message}`);
+            }
+        }
+        
+        /**
+         * 獲取項目名稱
+         */
+        function getProjectName(projectId) {
+            const projects = JSON.parse(localStorage.getItem('vaultcaddy_projects') || '[]');
+            const project = projects.find(p => p.id === projectId);
+            return project ? project.name : 'project';
+        }
+        
+        // 確保導出功能全局可用
+        window.toggleExportMenu = toggleExportMenu;
+        window.exportDocuments = exportDocuments;
+    </script>
 
 </body>
 </html>
