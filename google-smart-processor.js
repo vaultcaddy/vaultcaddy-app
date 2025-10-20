@@ -13,8 +13,8 @@ class GoogleSmartProcessor {
         
         this.processingOrder = [
             // 'documentAI',  // ❌ Document AI 需要 OAuth 2.0，暫時停用
-            'visionAI',    // ✅ 優先使用 Vision API（已測試成功）
-            'geminiAI'     // ✅ 備用 Gemini
+            'geminiAI',    // ✅ 優先使用 Gemini（視覺理解能力更強）
+            'visionAI'     // ⚠️ 備用 Vision API（文本解析能力較弱）
         ];
         
         console.log('🧠 Google 智能處理器初始化');
