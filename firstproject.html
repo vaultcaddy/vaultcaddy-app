@@ -2716,7 +2716,24 @@
                 // 6. 開始第二部分：後台 AI 數據提取
                 console.log('');
                 console.log('🤖 === 開始第二部分：AI 數據提取 ===');
-                startBackgroundAIProcessing(file, documentId, projectId);
+                console.log('   文件對象類型:', file.constructor.name);
+                console.log('   是否為 File 對象:', file instanceof File);
+                console.log('   是否為 Blob 對象:', file instanceof Blob);
+                
+                startBackgroundAIProcessing(file, documentId, projectId).catch(err => {
+                    console.error('❌ 後台 AI 處理失敗:', err);
+                    console.error('❌ 錯誤堆棧:', err.stack);
+                    // 更新文檔狀態為失敗
+                    const storageKey = `vaultcaddy_project_${projectId}_documents`;
+                    const docs = JSON.parse(localStorage.getItem(storageKey) || '[]');
+                    const doc = docs.find(d => d.id === documentId);
+                    if (doc) {
+                        doc.status = 'Failed';
+                        doc.error = err.message;
+                        doc.isProcessing = false;
+                        localStorage.setItem(storageKey, JSON.stringify(docs));
+                    }
+                });
                 
                 // 重置處理標誌（第一部分完成）
                 aiIsProcessing = false;
