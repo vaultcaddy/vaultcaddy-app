@@ -154,15 +154,18 @@ class GoogleSmartProcessor {
      * 根據文檔類型優化處理順序
      */
     optimizeProcessingOrder(documentType) {
+        // ❌ Document AI 需要 OAuth 2.0，已全面停用
+        // ✅ 所有文檔類型統一使用: geminiAI → visionAI
+        
         switch (documentType) {
             case 'invoice':
             case 'receipt':
-                // 對於發票和收據，Document AI效果最好
-                return ['documentAI', 'visionAI', 'geminiAI'];
+                // 對於發票和收據，Gemini 視覺理解能力更強
+                return ['geminiAI', 'visionAI'];
                 
             case 'bank_statement':
-                // 對於銀行對帳單，可能需要更智能的處理
-                return ['geminiAI', 'documentAI', 'visionAI'];
+                // 對於銀行對帳單，Gemini 可以更好地理解表格結構
+                return ['geminiAI', 'visionAI'];
                 
             default:
                 // 通用文檔，保持默認順序
