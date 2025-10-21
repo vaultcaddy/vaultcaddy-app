@@ -180,66 +180,116 @@ class GeminiWorkerClient {
      */
     generatePrompt(documentType) {
         const prompts = {
-            invoice: `你是一個專業的發票數據提取專家。請仔細分析這張發票圖片，並提取所有可見信息。
+            invoice: `你是一個專業的發票數據提取專家。請**逐字逐句**仔細分析這張發票圖片，提取所有可見信息。
 
-**重要提示**：
-- 這是一張中文發票，可能包含繁體中文、簡體中文或英文
-- 發票號碼通常在頂部，格式可能是：Invoice No.、發票編號、單號、No. 等
-- 日期格式可能是：2025-10-01、2025/10/01、01/10/2025、2025年10月1日 等
-- 商品項目通常在表格中，包含：品名、數量、單價、金額等列
-- 小計、稅額、總額通常在底部
-- 請提取**所有可見的商品項目**，不要只提取第一個
+🔍 **第一步：識別發票結構**
+1. 查看**最頂部**：找到發票號碼（通常在左上角或右上角）
+   - 格式可能是：FI25093602、INV-001、No.12345 等
+2. 查看**公司信息區域**：
+   - 供應商名稱（通常在左上角，公司 Logo 附近）
+   - 客戶名稱（通常在中間或右側，標註為 CUSTOMER、客戶、收件人 等）
+3. 查看**日期信息**：
+   - 發票日期：DATE、日期、2025年10月1日、2025-10-17 等
+   - 到期日：DUE DATE、到期日 等
 
-請以 JSON 格式返回，格式如下：
+🔍 **第二步：提取表格數據**（最重要！）
+表格通常有以下列（從左到右）：
+- CODE NO / 代碼
+- DESCRIPTION / 品名 / 描述
+- QTY / 數量
+- UNIT PRICE / 單價
+- DS % / 折扣
+- AMOUNT / 金額
+
+**重要**：
+- ✅ 請**逐行**閱讀表格，提取**每一行**的商品信息
+- ✅ 不要跳過任何一行
+- ✅ 即使有些文字被遮擋（如 CREDIT 標記），也要提取可見部分
+- ✅ 商品描述可能很長（如：Premium Thai Hom Mali Rice (Golden Phoenix) 2...）
+
+🔍 **第三步：提取金額信息**（在底部）
+- 查找：SUBTOTAL、小計、NET TOTALS
+- 查找：TAX、稅額、GST
+- 查找：TOTAL、總計、合計
+
+---
+
+📋 **JSON 格式要求**：
 
 {
   "type": "invoice",
-  "supplier": "供應商名稱（公司全名）",
-  "invoice_number": "發票號碼（完整號碼）",
+  "supplier": "供應商完整名稱",
+  "invoice_number": "完整發票號碼",
   "date": "YYYY-MM-DD",
   "due_date": "YYYY-MM-DD",
-  "customer": "客戶名稱（公司全名）",
+  "customer": "客戶完整名稱",
   "subtotal": 1234.56,
-  "tax": 123.45,
-  "total": 1358.01,
+  "tax": 0,
+  "total": 1234.56,
   "currency": "HKD",
-  "payment_method": "Cash",
+  "payment_method": "",
   "payment_status": "Unpaid",
   "items": [
     {
-      "description": "商品名稱/描述",
-      "quantity": 10,
-      "unit_price": 123.45,
-      "amount": 1234.56
+      "code": "H01-7",
+      "description": "Rice Noodles (Ann Moon) 14KG",
+      "quantity": 1,
+      "unit_price": 54.00,
+      "discount_percent": 0,
+      "amount": 54.00
+    },
+    {
+      "code": "C001",
+      "description": "Korean Granulated White Sugar 30kg",
+      "quantity": 1,
+      "unit_price": 198.00,
+      "discount_percent": 0,
+      "amount": 198.00
     }
   ]
 }
 
-**CRITICAL RULES**（必須遵守）：
-1. ✅ 返回純 JSON，絕對不要包含 markdown 標記（如 \`\`\`json）
-2. ✅ 所有金額必須是**純數字**（例如：1407.28，不要：HKD $1407.28、$1,407.28）
-3. ✅ 日期必須轉換為 YYYY-MM-DD 格式（例如：2025-10-01）
-4. ✅ 如果某個字段找不到，使用空字符串 "" 或 0（金額）
-5. ✅ **必須提取所有可見的商品項目**（不要只提取第一個）
-6. ✅ 仔細查看圖片中的所有文字，包括：
-   - 頂部區域：發票號碼、日期
-   - 中間表格：所有商品項目（逐行提取）
-   - 底部區域：小計、稅額、總額
-7. ✅ quantity 和 unit_price 必須是數字
-8. ✅ 如果發票上有多個金額，總額通常是最大的那個
-9. ✅ 小計 + 稅額 = 總額（請驗證數學關係）
+---
 
-**數據提取優先級**：
-1. 總額 (total) - 最重要
-2. 供應商名稱 (supplier) - 第二重要
-3. 發票號碼 (invoice_number) - 第三重要
-4. 日期 (date) - 第四重要
-5. 商品項目 (items) - 必須提取所有
-6. 客戶名稱 (customer)
-7. 小計 (subtotal)、稅額 (tax)
-8. 付款方式 (payment_method)
+⚠️ **CRITICAL RULES**（必須嚴格遵守）：
 
-請開始分析！`,
+1. ✅ **返回純 JSON**：不要包含 \`\`\`json 或任何 markdown 標記
+2. ✅ **所有金額必須是純數字**：
+   - ✅ 正確：1407.28
+   - ❌ 錯誤：HKD $1407.28、$1,407.28、1407
+3. ✅ **日期格式統一為 YYYY-MM-DD**：
+   - ✅ 正確：2025-10-17
+   - ❌ 錯誤：2025年10月17日、17/10/2025
+4. ✅ **提取所有表格行**：
+   - 如果表格有 5 行商品，items 數組必須有 5 個對象
+   - 不要只提取第一行！
+5. ✅ **商品描述要完整**：
+   - ✅ 正確："Premium Thai Hom Mali Rice (Golden Phoenix) 25KG"
+   - ❌ 錯誤："AMOUNT"、"Rice"
+6. ✅ **quantity 和 unit_price 必須是數字**：
+   - ✅ 正確：1、2.0、54.00
+   - ❌ 錯誤："1件"、"54元"
+7. ✅ **如果字段找不到**：
+   - 文字字段：使用 ""
+   - 金額字段：使用 0
+8. ✅ **驗證數學關係**：
+   - 每行：quantity × unit_price = amount
+   - 總額：所有 amount 相加 ≈ total
+
+---
+
+🎯 **提取優先級**：
+1. 🥇 **total**（總額）- 最重要
+2. 🥈 **items**（商品列表）- 必須全部提取
+3. 🥉 **invoice_number**（發票號碼）
+4. **supplier**（供應商）
+5. **date**（日期）
+6. **customer**（客戶）
+7. **subtotal**、**tax**
+
+---
+
+現在請開始逐字分析這張發票！`,
 
             receipt: `你是一個專業的收據數據提取專家。請分析這張收據圖片，並提取以下信息：
 
