@@ -5,17 +5,13 @@
 
 class GeminiWorkerClient {
     constructor(workerUrl) {
-        // Cloudflare Worker URL（需要在設置完成後填入）
-        this.workerUrl = workerUrl || 'https://YOUR_WORKER_URL.workers.dev';
+        // Cloudflare Worker URL
+        this.workerUrl = workerUrl || 'https://gemini-proxy.vaultcaddy.workers.dev/v1beta/models/gemini-1.5-flash-latest:generateContent';
         this.maxRetries = 3;
         this.retryDelay = 2000; // 2 seconds
         
         console.log('🤖 Gemini Worker Client 初始化');
         console.log('   Worker URL:', this.workerUrl);
-        
-        if (this.workerUrl.includes('YOUR_WORKER_URL')) {
-            console.warn('⚠️ 警告：Worker URL 未設置！請在部署 Cloudflare Worker 後更新此 URL。');
-        }
     }
     
     /**
