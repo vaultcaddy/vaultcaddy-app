@@ -83,8 +83,10 @@ class GeminiWorkerClient {
                         ]
                     }],
                     generationConfig: {
-                        temperature: 0.1,
-                        maxOutputTokens: 2048,
+                        temperature: 0.1,  // 低溫度 = 更準確、更一致的輸出
+                        topK: 40,
+                        topP: 0.95,
+                        maxOutputTokens: 4096,  // 增加到 4096 以支持更多商品項目
                     }
                 };
                 
@@ -178,38 +180,66 @@ class GeminiWorkerClient {
      */
     generatePrompt(documentType) {
         const prompts = {
-            invoice: `你是一個專業的發票數據提取專家。請分析這張發票圖片，並提取以下信息：
+            invoice: `你是一個專業的發票數據提取專家。請仔細分析這張發票圖片，並提取所有可見信息。
+
+**重要提示**：
+- 這是一張中文發票，可能包含繁體中文、簡體中文或英文
+- 發票號碼通常在頂部，格式可能是：Invoice No.、發票編號、單號、No. 等
+- 日期格式可能是：2025-10-01、2025/10/01、01/10/2025、2025年10月1日 等
+- 商品項目通常在表格中，包含：品名、數量、單價、金額等列
+- 小計、稅額、總額通常在底部
+- 請提取**所有可見的商品項目**，不要只提取第一個
 
 請以 JSON 格式返回，格式如下：
 
 {
   "type": "invoice",
-  "supplier": "供應商名稱",
-  "invoice_number": "發票號碼",
+  "supplier": "供應商名稱（公司全名）",
+  "invoice_number": "發票號碼（完整號碼）",
   "date": "YYYY-MM-DD",
   "due_date": "YYYY-MM-DD",
-  "customer": "客戶名稱",
-  "subtotal": "小計金額（數字）",
-  "tax": "稅額（數字）",
-  "total": "總金額（數字）",
+  "customer": "客戶名稱（公司全名）",
+  "subtotal": 1234.56,
+  "tax": 123.45,
+  "total": 1358.01,
   "currency": "HKD",
-  "payment_method": "付款方式（Cash/Cheque/Bank Transfer/Credit Card）",
+  "payment_method": "Cash",
+  "payment_status": "Unpaid",
   "items": [
     {
-      "description": "商品描述",
-      "quantity": "數量",
-      "unit_price": "單價",
-      "amount": "金額"
+      "description": "商品名稱/描述",
+      "quantity": 10,
+      "unit_price": 123.45,
+      "amount": 1234.56
     }
   ]
 }
 
-CRITICAL RULES:
-1. 返回純 JSON，不要包含任何 markdown 標記
-2. 所有金額必須是數字（不要包含貨幣符號或逗號）
-3. 日期必須是 YYYY-MM-DD 格式
-4. 如果某個字段找不到，使用空字符串 ""
-5. items 數組必須包含所有商品項目`,
+**CRITICAL RULES**（必須遵守）：
+1. ✅ 返回純 JSON，絕對不要包含 markdown 標記（如 \`\`\`json）
+2. ✅ 所有金額必須是**純數字**（例如：1407.28，不要：HKD $1407.28、$1,407.28）
+3. ✅ 日期必須轉換為 YYYY-MM-DD 格式（例如：2025-10-01）
+4. ✅ 如果某個字段找不到，使用空字符串 "" 或 0（金額）
+5. ✅ **必須提取所有可見的商品項目**（不要只提取第一個）
+6. ✅ 仔細查看圖片中的所有文字，包括：
+   - 頂部區域：發票號碼、日期
+   - 中間表格：所有商品項目（逐行提取）
+   - 底部區域：小計、稅額、總額
+7. ✅ quantity 和 unit_price 必須是數字
+8. ✅ 如果發票上有多個金額，總額通常是最大的那個
+9. ✅ 小計 + 稅額 = 總額（請驗證數學關係）
+
+**數據提取優先級**：
+1. 總額 (total) - 最重要
+2. 供應商名稱 (supplier) - 第二重要
+3. 發票號碼 (invoice_number) - 第三重要
+4. 日期 (date) - 第四重要
+5. 商品項目 (items) - 必須提取所有
+6. 客戶名稱 (customer)
+7. 小計 (subtotal)、稅額 (tax)
+8. 付款方式 (payment_method)
+
+請開始分析！`,
 
             receipt: `你是一個專業的收據數據提取專家。請分析這張收據圖片，並提取以下信息：
 
