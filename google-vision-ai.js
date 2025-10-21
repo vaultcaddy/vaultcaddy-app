@@ -245,11 +245,24 @@ class GoogleVisionAI {
             if (data.due_date) console.log('   ✅ 到期日:', data.due_date);
         }
         
-        // 提取金額（多種格式）
+        // 提取金額（多種格式和多階段策略）
         const amountPatterns = [
-            { name: 'total', patterns: [/總[計額金][：:\s]*\$?\s*HKD?\s*([\d,]+\.?\d*)/i, /total[：:\s]*\$?\s*HKD?\s*([\d,]+\.?\d*)/i, /應付[：:\s]*\$?\s*HKD?\s*([\d,]+\.?\d*)/i] },
-            { name: 'subtotal', patterns: [/小計[：:\s]*\$?\s*HKD?\s*([\d,]+\.?\d*)/i, /subtotal[：:\s]*\$?\s*HKD?\s*([\d,]+\.?\d*)/i] },
-            { name: 'tax', patterns: [/稅[額金][：:\s]*\$?\s*HKD?\s*([\d,]+\.?\d*)/i, /tax[：:\s]*\$?\s*HKD?\s*([\d,]+\.?\d*)/i, /GST[：:\s]*\$?\s*HKD?\s*([\d,]+\.?\d*)/i] }
+            { name: 'total', patterns: [
+                /總[計額金][：:\s]*\$?\s*HKD?\s*([\d,]+\.?\d*)/i,
+                /total[：:\s]*\$?\s*HKD?\s*([\d,]+\.?\d*)/i,
+                /應付[：:\s]*\$?\s*HKD?\s*([\d,]+\.?\d*)/i,
+                /合計[：:\s]*\$?\s*HKD?\s*([\d,]+\.?\d*)/i,
+                /實收[：:\s]*\$?\s*HKD?\s*([\d,]+\.?\d*)/i
+            ]},
+            { name: 'subtotal', patterns: [
+                /小計[：:\s]*\$?\s*HKD?\s*([\d,]+\.?\d*)/i,
+                /subtotal[：:\s]*\$?\s*HKD?\s*([\d,]+\.?\d*)/i
+            ]},
+            { name: 'tax', patterns: [
+                /稅[額金][：:\s]*\$?\s*HKD?\s*([\d,]+\.?\d*)/i,
+                /tax[：:\s]*\$?\s*HKD?\s*([\d,]+\.?\d*)/i,
+                /GST[：:\s]*\$?\s*HKD?\s*([\d,]+\.?\d*)/i
+            ]}
         ];
         
         for (const { name, patterns } of amountPatterns) {
@@ -263,20 +276,43 @@ class GoogleVisionAI {
             }
         }
         
-        // 如果沒找到總計，嘗試找最大的金額
+        // 如果沒找到總計，使用更智能的策略
         if (!data.total) {
-            const allAmounts = [];
-            const amountPattern = /\$?\s*HKD?\s*([\d,]+\.?\d{2})/g;
+            console.log('   ⚠️ 未找到總計標籤，嘗試智能提取...');
+            
+            // 策略 1: 尋找獨立的大金額（通常在行首或行尾，金額 > 100）
+            const standaloneAmountPattern = /^\s*([\d,]+\.?\d{0,2})\s*$/gm;
+            const standaloneAmounts = [];
             let match;
-            while ((match = amountPattern.exec(text)) !== null) {
+            
+            while ((match = standaloneAmountPattern.exec(text)) !== null) {
+                const amount = parseFloat(match[1].replace(/,/g, ''));
+                if (amount >= 100) {  // 過濾掉小額（可能是數量或小計）
+                    standaloneAmounts.push(amount);
+                    console.log(`      找到獨立金額: ${amount}`);
+                }
+            }
+            
+            // 策略 2: 找所有金額（包括帶千分位逗號的）
+            const allAmountPattern = /([\d,]+\.\d{2})(?!\d)/g;
+            const allAmounts = [];
+            
+            while ((match = allAmountPattern.exec(text)) !== null) {
                 const amount = parseFloat(match[1].replace(/,/g, ''));
                 if (amount > 0) {
                     allAmounts.push(amount);
                 }
             }
-            if (allAmounts.length > 0) {
-                data.total = Math.max(...allAmounts).toString();
-                console.log('   ⚠️ 推測總金額（最大值）:', data.total);
+            
+            // 優先使用獨立金額中的最大值，否則使用所有金額中的最大值
+            if (standaloneAmounts.length > 0) {
+                data.total = Math.max(...standaloneAmounts).toFixed(2);
+                console.log(`   ✅ 推測總金額（獨立金額最大值）: ${data.total}`);
+            } else if (allAmounts.length > 0) {
+                data.total = Math.max(...allAmounts).toFixed(2);
+                console.log(`   ⚠️ 推測總金額（所有金額最大值）: ${data.total}`);
+            } else {
+                console.log('   ❌ 未能提取總金額');
             }
         }
         
