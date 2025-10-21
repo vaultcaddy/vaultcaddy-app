@@ -280,37 +280,46 @@ class GoogleVisionAI {
         if (!data.total) {
             console.log('   ⚠️ 未找到總計標籤，嘗試智能提取...');
             
-            // 策略 1: 尋找獨立的大金額（通常在行首或行尾，金額 > 100）
-            const standaloneAmountPattern = /^\s*([\d,]+\.?\d{0,2})\s*$/gm;
-            const standaloneAmounts = [];
+            // 策略 1: 找所有帶小數點的金額（最可靠）
+            const decimalAmountPattern = /([\d,]+\.\d{2})(?!\d)/g;
+            const decimalAmounts = [];
             let match;
             
-            while ((match = standaloneAmountPattern.exec(text)) !== null) {
-                const amount = parseFloat(match[1].replace(/,/g, ''));
-                if (amount >= 100) {  // 過濾掉小額（可能是數量或小計）
-                    standaloneAmounts.push(amount);
-                    console.log(`      找到獨立金額: ${amount}`);
+            while ((match = decimalAmountPattern.exec(text)) !== null) {
+                const amountStr = match[1].replace(/,/g, '');
+                const amount = parseFloat(amountStr);
+                
+                // 過濾條件：
+                // 1. 金額 > 0 且 < 10000000（1千萬，過濾掉明顯不是金額的大數字）
+                // 2. 不包含超過6位數字（避免發票號碼、日期等）
+                if (amount > 0 && amount < 10000000 && amountStr.length <= 10) {
+                    decimalAmounts.push(amount);
+                    console.log(`      找到小數金額: ${amount}`);
                 }
             }
             
-            // 策略 2: 找所有金額（包括帶千分位逗號的）
-            const allAmountPattern = /([\d,]+\.\d{2})(?!\d)/g;
-            const allAmounts = [];
+            // 策略 2: 尋找獨立的整數金額（備用）
+            const standaloneIntPattern = /(?:^|\s)([\d,]{1,6})(?:\s|$)/gm;
+            const intAmounts = [];
             
-            while ((match = allAmountPattern.exec(text)) !== null) {
-                const amount = parseFloat(match[1].replace(/,/g, ''));
-                if (amount > 0) {
-                    allAmounts.push(amount);
+            while ((match = standaloneIntPattern.exec(text)) !== null) {
+                const amountStr = match[1].replace(/,/g, '');
+                const amount = parseFloat(amountStr);
+                
+                // 只接受 100-100000 之間的整數（合理的發票金額範圍）
+                if (amount >= 100 && amount <= 100000 && amountStr.length <= 6) {
+                    intAmounts.push(amount);
+                    console.log(`      找到整數金額: ${amount}`);
                 }
             }
             
-            // 優先使用獨立金額中的最大值，否則使用所有金額中的最大值
-            if (standaloneAmounts.length > 0) {
-                data.total = Math.max(...standaloneAmounts).toFixed(2);
-                console.log(`   ✅ 推測總金額（獨立金額最大值）: ${data.total}`);
-            } else if (allAmounts.length > 0) {
-                data.total = Math.max(...allAmounts).toFixed(2);
-                console.log(`   ⚠️ 推測總金額（所有金額最大值）: ${data.total}`);
+            // 優先使用小數金額（更可靠），否則使用整數金額
+            if (decimalAmounts.length > 0) {
+                data.total = Math.max(...decimalAmounts).toFixed(2);
+                console.log(`   ✅ 推測總金額（小數金額最大值）: ${data.total}`);
+            } else if (intAmounts.length > 0) {
+                data.total = Math.max(...intAmounts).toFixed(2);
+                console.log(`   ⚠️ 推測總金額（整數金額最大值）: ${data.total}`);
             } else {
                 console.log('   ❌ 未能提取總金額');
             }
