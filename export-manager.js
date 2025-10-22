@@ -1,13 +1,19 @@
 /**
  * VaultCaddy 導出管理器
  * 
+ * 作用：
+ * 1. 將 AI 提取的發票和銀行對帳單數據導出為會計軟件支持的格式
+ * 2. 支持 QuickBooks、Xero、FreshBooks 等主流會計軟件
+ * 3. 確保數據格式符合會計準則和軟件要求
+ * 
  * 支持導出格式:
  * 1. CSV - 通用格式，所有會計軟件都支持
  * 2. IIF - QuickBooks Desktop 格式
  * 3. QBO - QuickBooks Online 格式
- * 4. Excel - 用於進一步編輯
+ * 4. Xero CSV - Xero 專用格式
  * 
- * @version 1.0.0
+ * @version 2.0.0
+ * @updated 2025-10-22
  */
 
 class ExportManager {
@@ -71,49 +77,63 @@ class ExportManager {
     
     /**
      * CSV 摘要格式（每張發票一行）
+     * 
+     * 匹配優化後的發票數據格式（gemini-worker-client.js）
      */
     exportToCSVSummary(invoices) {
         const headers = [
             'Invoice Number',
-            'Issue Date',
+            'Invoice Date',
             'Due Date',
-            'Vendor Name',
-            'Vendor Address',
-            'Vendor Phone',
+            'Supplier Name',
+            'Supplier Name (EN)',
+            'Supplier Address',
+            'Supplier Phone',
+            'Supplier Email',
             'Customer Name',
             'Customer Address',
+            'Customer Contact',
             'Customer Phone',
             'Subtotal',
             'Discount',
-            'Tax Amount',
-            'Total Amount',
+            'Tax',
+            'Total',
             'Currency',
             'Payment Method',
-            'Payment Terms',
             'Payment Status',
+            'FPS ID',
+            'PayMe Number',
             'Notes'
         ];
         
         const rows = invoices.map(invoice => {
-            const data = invoice.processedData || {};
+            const data = invoice.processedData || invoice;
+            const supplier = data.supplier || {};
+            const customer = data.customer || {};
+            const paymentInfo = data.payment_info || {};
+            
             return [
-                this.escapeCSV(data.invoiceNumber || ''),
-                this.escapeCSV(data.issueDate || ''),
-                this.escapeCSV(data.dueDate || ''),
-                this.escapeCSV(data.vendor?.name || ''),
-                this.escapeCSV(data.vendor?.address || ''),
-                this.escapeCSV(data.vendor?.phone || ''),
-                this.escapeCSV(data.customer?.name || ''),
-                this.escapeCSV(data.customer?.address || ''),
-                this.escapeCSV(data.customer?.phone || ''),
+                this.escapeCSV(data.invoice_number || ''),
+                this.escapeCSV(data.date || ''),
+                this.escapeCSV(data.due_date || ''),
+                this.escapeCSV(supplier.name || ''),
+                this.escapeCSV(supplier.name_en || ''),
+                this.escapeCSV(supplier.address || ''),
+                this.escapeCSV(supplier.phone || ''),
+                this.escapeCSV(supplier.email || ''),
+                this.escapeCSV(customer.name || ''),
+                this.escapeCSV(customer.address || ''),
+                this.escapeCSV(customer.contact || ''),
+                this.escapeCSV(customer.phone || ''),
                 data.subtotal || 0,
                 data.discount || 0,
-                data.taxAmount || 0,
-                data.totalAmount || 0,
+                data.tax || 0,
+                data.total || 0,
                 this.escapeCSV(data.currency || 'HKD'),
-                this.escapeCSV(data.paymentMethod || ''),
-                this.escapeCSV(data.paymentTerms || ''),
-                this.escapeCSV(data.paymentStatus || ''),
+                this.escapeCSV(data.payment_method || ''),
+                this.escapeCSV(data.payment_status || ''),
+                this.escapeCSV(paymentInfo.fps_id || ''),
+                this.escapeCSV(paymentInfo.payme_number || ''),
                 this.escapeCSV(data.notes || '')
             ].join(',');
         });
@@ -125,17 +145,20 @@ class ExportManager {
         const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
         
         console.log('✅ CSV 摘要格式導出完成');
+        console.log(`   導出 ${invoices.length} 張發票`);
         return blob;
     }
     
     /**
      * CSV 詳細格式（每個商品項目一行）
+     * 
+     * 匹配優化後的發票數據格式（gemini-worker-client.js）
      */
     exportToCSVDetailed(invoices) {
         const headers = [
             'Invoice Number',
-            'Issue Date',
-            'Vendor Name',
+            'Invoice Date',
+            'Supplier Name',
             'Customer Name',
             'Item Code',
             'Item Description',
@@ -154,16 +177,18 @@ class ExportManager {
         const rows = [];
         
         for (const invoice of invoices) {
-            const data = invoice.processedData || {};
-            const lineItems = data.lineItems || [];
+            const data = invoice.processedData || invoice;
+            const supplier = data.supplier || {};
+            const customer = data.customer || {};
+            const items = data.items || [];
             
-            if (lineItems.length === 0) {
+            if (items.length === 0) {
                 // 如果沒有商品項目，至少輸出一行發票信息
                 rows.push([
-                    this.escapeCSV(data.invoiceNumber || ''),
-                    this.escapeCSV(data.issueDate || ''),
-                    this.escapeCSV(data.vendor?.name || ''),
-                    this.escapeCSV(data.customer?.name || ''),
+                    this.escapeCSV(data.invoice_number || ''),
+                    this.escapeCSV(data.date || ''),
+                    this.escapeCSV(supplier.name || ''),
+                    this.escapeCSV(customer.name || ''),
                     '',
                     '',
                     '',
@@ -172,31 +197,31 @@ class ExportManager {
                     '',
                     data.subtotal || 0,
                     data.discount || 0,
-                    data.taxAmount || 0,
-                    data.totalAmount || 0,
+                    data.tax || 0,
+                    data.total || 0,
                     this.escapeCSV(data.currency || 'HKD'),
-                    this.escapeCSV(data.paymentMethod || '')
+                    this.escapeCSV(data.payment_method || '')
                 ].join(','));
             } else {
                 // 每個商品項目一行
-                for (const item of lineItems) {
+                for (const item of items) {
                     rows.push([
-                        this.escapeCSV(data.invoiceNumber || ''),
-                        this.escapeCSV(data.issueDate || ''),
-                        this.escapeCSV(data.vendor?.name || ''),
-                        this.escapeCSV(data.customer?.name || ''),
-                        this.escapeCSV(item.itemCode || ''),
+                        this.escapeCSV(data.invoice_number || ''),
+                        this.escapeCSV(data.date || ''),
+                        this.escapeCSV(supplier.name || ''),
+                        this.escapeCSV(customer.name || ''),
+                        this.escapeCSV(item.code || ''),
                         this.escapeCSV(item.description || ''),
                         item.quantity || 0,
                         this.escapeCSV(item.unit || ''),
-                        item.unitPrice || 0,
+                        item.unit_price || 0,
                         item.amount || 0,
                         data.subtotal || 0,
                         data.discount || 0,
-                        data.taxAmount || 0,
-                        data.totalAmount || 0,
+                        data.tax || 0,
+                        data.total || 0,
                         this.escapeCSV(data.currency || 'HKD'),
-                        this.escapeCSV(data.paymentMethod || '')
+                        this.escapeCSV(data.payment_method || '')
                     ].join(','));
                 }
             }
@@ -209,6 +234,7 @@ class ExportManager {
         const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
         
         console.log('✅ CSV 詳細格式導出完成');
+        console.log(`   導出 ${rows.length} 行商品項目`);
         return blob;
     }
     
@@ -404,33 +430,41 @@ NEWFILEUID:NONE
     
     /**
      * 銀行對帳單導出為 CSV
+     * 
+     * 匹配優化後的銀行對帳單數據格式（gemini-worker-client.js）
      */
     exportBankStatementsToCSV(statements, options = {}) {
         const headers = [
             'Date',
+            'Type',
             'Description',
-            'Reference',
-            'Debit',
-            'Credit',
+            'Deposit',
+            'Withdrawal',
             'Balance',
-            'Type'
+            'Bank Name',
+            'Account Number',
+            'Account Holder'
         ];
         
         const rows = [];
         
         for (const statement of statements) {
-            const data = statement.processedData || {};
+            const data = statement.processedData || statement;
+            const bank = data.bank || {};
+            const accountHolder = data.account_holder || {};
             const transactions = data.transactions || [];
             
             for (const txn of transactions) {
                 rows.push([
                     this.escapeCSV(txn.date || ''),
+                    this.escapeCSV(txn.type || ''),
                     this.escapeCSV(txn.description || ''),
-                    this.escapeCSV(txn.reference || ''),
-                    txn.debit || 0,
-                    txn.credit || 0,
+                    txn.deposit || 0,
+                    txn.withdrawal || 0,
                     txn.balance || 0,
-                    this.escapeCSV(txn.type || '')
+                    this.escapeCSV(bank.name || ''),
+                    this.escapeCSV(data.account_number || ''),
+                    this.escapeCSV(accountHolder.name || '')
                 ].join(','));
             }
         }
@@ -440,6 +474,7 @@ NEWFILEUID:NONE
         const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
         
         console.log('✅ 銀行對帳單 CSV 導出完成');
+        console.log(`   導出 ${rows.length} 筆交易`);
         return blob;
     }
     
