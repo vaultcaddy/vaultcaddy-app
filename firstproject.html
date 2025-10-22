@@ -19,9 +19,9 @@
     <script src="google-ai-integration.js"></script>
     <script src="google-document-ai.js?v=20251021-002"></script>
     <script src="google-vision-ai.js?v=20251021-002"></script>
-    <script src="google-smart-processor.js?v=20251021-002"></script>
+    <script src="gemini-worker-client.js?v=4.0"></script>
+    <script src="google-smart-processor.js?v=20251022-001"></script>
     <script src="google-cloud-storage.js?v=20251021-002"></script>
-    <script src="gemini-worker-client.js?v=3.0"></script>
     <script src="ledgerbox-integration.js"></script>
     
     <!-- 載入數據處理器 -->
@@ -1915,15 +1915,24 @@
             
             // ========== 🤖 初始化 Gemini Worker Client ==========
             console.log('🤖 初始化 Gemini Worker Client...');
-            if (window.GeminiWorkerClient) {
-                const geminiClient = new GeminiWorkerClient(
-                    'https://gemini-proxy.vaultcaddy.workers.dev/v1beta/models/gemini-1.5-flash-latest:generateContent'
-                );
-                window.geminiWorkerClient = geminiClient;
-                console.log('✅ Gemini Worker Client 已初始化');
-                console.log('   Worker URL:', geminiClient.workerUrl);
+            console.log('   window.GeminiWorkerClient:', typeof window.GeminiWorkerClient);
+            
+            if (typeof window.GeminiWorkerClient === 'function') {
+                try {
+                    const geminiClient = new window.GeminiWorkerClient(
+                        'https://gemini-proxy.vaultcaddy.workers.dev/v1beta/models/gemini-1.5-flash-latest:generateContent'
+                    );
+                    window.geminiWorkerClient = geminiClient;
+                    console.log('✅ Gemini Worker Client 已初始化');
+                    console.log('   Worker URL:', geminiClient.workerUrl);
+                    console.log('   Client 實例:', geminiClient);
+                } catch (error) {
+                    console.error('❌ Gemini Worker Client 初始化失敗:', error);
+                }
             } else {
                 console.error('❌ GeminiWorkerClient 類別未找到，請確保 gemini-worker-client.js 已載入');
+                console.error('   window.GeminiWorkerClient 類型:', typeof window.GeminiWorkerClient);
+                console.error('   可用的 window 屬性:', Object.keys(window).filter(k => k.toLowerCase().includes('gemini')));
             }
             
             // ========== 🔐 身份驗證檢查（強制） ==========

@@ -5,10 +5,11 @@
 
 class GoogleSmartProcessor {
     constructor() {
+        // ⚠️ 不在構造函數中直接引用 window 對象，而是動態獲取
         this.processors = {
-            documentAI: window.googleDocumentAI,
-            visionAI: window.googleVisionAI,
-            geminiAI: window.geminiWorkerClient  // ✅ 使用 Cloudflare Worker 代理
+            get documentAI() { return window.googleDocumentAI; },
+            get visionAI() { return window.googleVisionAI; },
+            get geminiAI() { return window.geminiWorkerClient; }  // ✅ 使用 Cloudflare Worker 代理
         };
         
         this.processingOrder = [
@@ -18,7 +19,21 @@ class GoogleSmartProcessor {
         ];
         
         console.log('🧠 Google 智能處理器初始化');
-        console.log('可用處理器:', Object.keys(this.processors).filter(key => this.processors[key]));
+        this.logAvailableProcessors();
+    }
+    
+    /**
+     * 記錄可用處理器（動態檢查）
+     */
+    logAvailableProcessors() {
+        const available = Object.keys(this.processors).filter(key => {
+            const processor = this.processors[key];
+            return processor !== null && processor !== undefined;
+        });
+        console.log('可用處理器:', available);
+        console.log('   - documentAI:', typeof window.googleDocumentAI);
+        console.log('   - visionAI:', typeof window.googleVisionAI);
+        console.log('   - geminiAI (geminiWorkerClient):', typeof window.geminiWorkerClient);
     }
     
     /**
