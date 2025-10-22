@@ -845,29 +845,38 @@
             console.log('📄 顯示發票詳情');
             console.log('   發票數據:', processedData);
             
-            // 發票基本信息
-            const invoiceNumber = processedData.invoiceNumber || '—';
-            const issueDate = processedData.issueDate || '—';
-            const deliveryDate = processedData.deliveryDate || '';
-            const dueDate = processedData.dueDate || '';
+            // 發票基本信息（支持新舊兩種字段名稱）
+            const invoiceNumber = processedData.invoice_number || processedData.invoiceNumber || '—';
+            const issueDate = processedData.date || processedData.issueDate || '—';
+            const deliveryDate = processedData.delivery_date || processedData.deliveryDate || '';
+            const dueDate = processedData.due_date || processedData.dueDate || '';
             
-            // 供應商和客戶信息
-            const vendor = processedData.vendor || {};
+            // 供應商和客戶信息（支持新舊兩種字段名稱）
+            const vendor = processedData.supplier || processedData.vendor || {};
             const customer = processedData.customer || {};
             
-            // 金額信息
+            // 金額信息（支持新舊兩種字段名稱）
             const subtotal = processedData.subtotal || 0;
             const discount = processedData.discount || 0;
-            const taxAmount = processedData.taxAmount || 0;
-            const totalAmount = processedData.totalAmount || 0;
+            const taxAmount = processedData.tax || processedData.taxAmount || 0;
+            const totalAmount = processedData.total || processedData.totalAmount || 0;
             const currency = processedData.currency || 'HKD';
             
-            // 付款信息
-            const paymentMethod = processedData.paymentMethod || '—';
-            const paymentStatus = processedData.paymentStatus || 'Unpaid';
+            // 付款信息（支持新舊兩種字段名稱）
+            const paymentMethod = processedData.payment_method || processedData.paymentMethod || '—';
+            const paymentStatus = processedData.payment_status || processedData.paymentStatus || 'Unpaid';
+            const paymentInfo = processedData.payment_info || {};
             
-            // 商品項目
-            const lineItems = processedData.lineItems || [];
+            // 商品項目（支持新舊兩種字段名稱）
+            const lineItems = processedData.items || processedData.lineItems || [];
+            
+            console.log('✅ 映射後的字段:');
+            console.log('   發票號碼:', invoiceNumber);
+            console.log('   發票日期:', issueDate);
+            console.log('   供應商:', vendor);
+            console.log('   客戶:', customer);
+            console.log('   商品項目:', lineItems);
+            console.log('   總金額:', totalAmount);
             
             // 生成發票詳情 HTML
             detailsSection.innerHTML = `
@@ -1016,11 +1025,11 @@
                         <tbody>
                             ${lineItems.length > 0 ? lineItems.map(item => `
                                 <tr style="border-bottom: 1px solid #e5e7eb;">
-                                    <td style="padding: 1rem 1.5rem; color: #6b7280;">${item.itemCode || '—'}</td>
+                                    <td style="padding: 1rem 1.5rem; color: #6b7280;">${item.code || item.itemCode || '—'}</td>
                                     <td style="padding: 1rem 1.5rem; color: #1f2937; font-weight: 500;">${item.description || '—'}</td>
                                     <td style="padding: 1rem 1.5rem; text-align: right; color: #1f2937;">${item.quantity || 0}</td>
                                     <td style="padding: 1rem 1.5rem; text-align: right; color: #6b7280;">${item.unit || '件'}</td>
-                                    <td style="padding: 1rem 1.5rem; text-align: right; color: #1f2937;">${currency} $${(item.unitPrice || 0).toFixed(2)}</td>
+                                    <td style="padding: 1rem 1.5rem; text-align: right; color: #1f2937;">${currency} $${(item.unit_price || item.unitPrice || 0).toFixed(2)}</td>
                                     <td style="padding: 1rem 1.5rem; text-align: right; color: #1f2937; font-weight: 500;">${currency} $${(item.amount || 0).toFixed(2)}</td>
                                 </tr>
                             `).join('') : `
