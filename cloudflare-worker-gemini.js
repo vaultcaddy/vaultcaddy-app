@@ -6,7 +6,7 @@
 
 // 配置
 const GEMINI_API_KEY = 'AIzaSyCpH0qoL0wSEtHzutJzIqElbL_17cBuvug'; // 你的 Gemini API Key
-const GEMINI_API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent';
+const GEMINI_API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent';
 
 // 允許的來源（CORS）
 const ALLOWED_ORIGINS = [

@@ -11,8 +11,8 @@
 
 class GeminiWorkerClient {
     constructor(workerUrl) {
-        // Cloudflare Worker URL
-        this.workerUrl = workerUrl || 'https://gemini-proxy.vaultcaddy.workers.dev/v1beta/models/gemini-1.5-flash-latest:generateContent';
+        // Cloudflare Worker URL（注意：Worker 會自己處理完整的 API 路徑，這裡只需要 Worker 的基礎 URL）
+        this.workerUrl = workerUrl || 'https://gemini-proxy.vaultcaddy.workers.dev';
         this.maxRetries = 3;
         this.retryDelay = 2000; // 2 seconds
         
