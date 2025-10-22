@@ -11,13 +11,14 @@
 
 class GeminiWorkerClient {
     constructor(workerUrl) {
-        // Cloudflare Worker URL（注意：Worker 會自己處理完整的 API 路徑，這裡只需要 Worker 的基礎 URL）
+        // ✅ Cloudflare Worker 基礎 URL（Worker 內部會處理完整的 API 路徑）
         this.workerUrl = workerUrl || 'https://gemini-proxy.vaultcaddy.workers.dev';
         this.maxRetries = 3;
         this.retryDelay = 2000; // 2 seconds
         
         console.log('🤖 Gemini Worker Client 初始化');
-        console.log('   Worker URL:', this.workerUrl);
+        console.log('   ✅ Worker URL:', this.workerUrl);
+        console.log('   ℹ️ Worker 會自動處理 Gemini API 的完整路徑');
     }
     
     /**
