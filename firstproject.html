@@ -1913,6 +1913,19 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🎯 Dashboard 頁面載入中...');
             
+            // ========== 🤖 初始化 Gemini Worker Client ==========
+            console.log('🤖 初始化 Gemini Worker Client...');
+            if (window.GeminiWorkerClient) {
+                const geminiClient = new GeminiWorkerClient(
+                    'https://gemini-proxy.vaultcaddy.workers.dev/v1beta/models/gemini-1.5-flash-latest:generateContent'
+                );
+                window.geminiWorkerClient = geminiClient;
+                console.log('✅ Gemini Worker Client 已初始化');
+                console.log('   Worker URL:', geminiClient.workerUrl);
+            } else {
+                console.error('❌ GeminiWorkerClient 類別未找到，請確保 gemini-worker-client.js 已載入');
+            }
+            
             // ========== 🔐 身份驗證檢查（強制） ==========
             console.log('🔐 === 強制檢查身份驗證狀態 ===');
             

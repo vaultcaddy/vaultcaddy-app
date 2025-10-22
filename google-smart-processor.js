@@ -8,12 +8,12 @@ class GoogleSmartProcessor {
         this.processors = {
             documentAI: window.googleDocumentAI,
             visionAI: window.googleVisionAI,
-            geminiAI: window.googleAIProcessor
+            geminiAI: window.geminiWorkerClient  // ✅ 使用 Cloudflare Worker 代理
         };
         
         this.processingOrder = [
             // 'documentAI',  // ❌ Document AI 需要 OAuth 2.0，暫時停用
-            'geminiAI',    // ✅ 優先使用 Gemini（視覺理解能力更強）
+            'geminiAI',    // ✅ 優先使用 Gemini（通過 Cloudflare Worker）
             'visionAI'     // ⚠️ 備用 Vision API（文本解析能力較弱）
         ];
         
