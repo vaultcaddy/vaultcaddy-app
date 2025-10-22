@@ -88,6 +88,7 @@ async function handleRequest(request) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Referer': 'https://vaultcaddy.com/',  // 添加 Referer 頭
       },
       body: JSON.stringify(requestData)
     });
