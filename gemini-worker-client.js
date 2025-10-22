@@ -555,35 +555,359 @@ CRITICAL RULES:
 2. 所有金額必須是數字（不要包含貨幣符號或逗號）
 3. 如果某個字段找不到，使用空字符串 ""`,
 
-            bank_statement: `你是一個專業的銀行對帳單數據提取專家。請分析這張銀行對帳單圖片，並提取以下信息：
+            bank_statement: `你是一個專業的香港銀行對帳單數據提取專家。請**逐字逐句**仔細分析這張銀行對帳單圖片，提取所有可見信息。
 
-請以 JSON 格式返回，格式如下：
+🎯 **你的任務目標**：
+將這張銀行對帳單的所有信息準確提取到 JSON 格式中，準確率必須達到 95% 以上。
 
+---
+
+## 📋 **第一步：識別銀行和帳戶信息**
+
+### 1.1 **銀行信息**
+- 🔍 查找位置：**最頂部**，通常有銀行 Logo
+- ✅ 提取內容：
+  - 銀行名稱（中文）：如「恆生銀行」
+  - 銀行名稱（英文）：如「HANG SENG BANK」
+  - 分行名稱：如「EAST POINT CITY (766)」
+  - 銀行代碼：如「024」
+
+### 1.2 **帳戶持有人**
+- 🔍 查找位置：通常在**左上角**或**右上角**
+- ✅ 提取內容：
+  - 姓名（如：MR YEUNG CAVLIN）
+  - 地址（可能多行，如：RM 2505 25/F MING TOA HSE / MING TAK EST / TSEUNG KWAN O NT）
+
+### 1.3 **帳戶號碼**
+- 🔍 查找位置：通常標註為「Account Number」或「戶口號碼」
+- ✅ 格式示例：
+  - \`766-450064-882\`（完整號碼）
+  - \`766-45006\*-\*\*\*\`（部分隱藏）
+- ⚠️ **提取規則**：
+  - 如果號碼部分隱藏，提取可見部分
+  - 保留分隔符（如 \`-\`）
+
+### 1.4 **對帳單日期**
+- 🔍 查找位置：「Statement Date」或「日期」
+- ✅ 格式示例：
+  - \`22 Mar 2025\` → \`2025-03-22\`
+  - \`2025年3月22日\` → \`2025-03-22\`
+
+---
+
+## 📊 **第二步：識別帳戶類型和餘額**
+
+### 2.1 **帳戶類型識別**
+香港銀行對帳單通常包含多種帳戶：
+
+#### **A. 綜合帳戶（Integrated Account）**
+- 標註：「Integrated Account」或「綜合戶口」
+- 包含：儲蓄、支票等子帳戶
+
+#### **B. 儲蓄帳戶（Savings Account）**
+- 標註：「HKD Statement Savings」或「港元儲蓄」
+- 顯示：期初餘額、期末餘額
+
+#### **C. 信用卡（Credit Card）**
+- 標註：「VISA Platinum Card」或「信用卡」
+- 顯示：信用額度、已用金額、可用餘額
+
+#### **D. 貸款（Personal Loan）**
+- 標註：「Personal Loan」或「私人貸款」
+- 顯示：貸款餘額（通常為負數）
+
+### 2.2 **餘額提取**
+- 🔍 查找位置：「FINANCIAL POSITION」或「財務狀況」區域
+- ✅ 提取內容：
+  \`\`\`json
+  "balances": {
+    "integrated_account": {
+      "opening": 30188.66,
+      "closing": 30188.66
+    },
+    "savings": {
+      "opening": 30188.66,
+      "closing": 30188.66
+    },
+    "personal_loan": {
+      "balance": -118986.00
+    },
+    "credit_card": {
+      "credit_limit": 270000.00,
+      "used": 19964.61,
+      "available": 250035.39
+    }
+  }
+  \`\`\`
+
+---
+
+## 💳 **第三步：提取交易明細**（最重要！）
+
+### 3.1 **交易表格識別**
+- 🔍 查找位置：「TRANSACTION HISTORY」或「交易記錄」區域
+- ✅ 表格列（從左到右）：
+  \`\`\`
+  | Date | Transaction Details | Deposit | Withdrawal | Balance |
+  | 日期 | 交易描述            | 存款    | 提款       | 餘額    |
+  \`\`\`
+
+### 3.2 **逐行提取交易**（CRITICAL！）
+⚠️ **重要規則**：
+1. ✅ **必須提取表格中的每一行交易**
+2. ✅ **不要跳過任何一行**
+3. ✅ **交易描述要完整**（不要只提取前幾個字）
+4. ✅ **正確識別存款和提款**
+
+### 3.3 **交易類型識別**
+常見的香港銀行交易類型：
+
+| 英文描述 | 中文描述 | 類型 | 示例 |
+|---------|---------|------|------|
+| BF BALANCE | 前結餘 | 餘額 | 期初餘額 |
+| CREDIT INTEREST | 利息 - 儲蓄 | 存款 | 銀行利息 |
+| CHEQUE DEPOSIT | 存入支票 | 存款 | 支票入帳 |
+| AUTOPAY | 自動轉帳 | 提款 | 自動付款 |
+| ATM WITHDRAWAL | 櫃員機提款 | 提款 | ATM 提款 |
+| BANK TRANSFER | 銀行轉帳 | 提款 | 轉帳 |
+| SALARY | 薪金 | 存款 | 薪金入帳 |
+
+### 3.4 **提取示例**
+如果看到以下交易：
+\`\`\`
+| 22 Feb | BF BALANCE 前結餘                    | -      | -      | 1,493.98  |
+| 26 Feb | CREDIT INTEREST 利息 - 儲蓄          | 2.61   | -      | 1,496.59  |
+| 07 Mar | CHEQUE DEPOSIT 存入支票              | 78,649.00 | -   | 80,145.59 |
+| 07 Mar | AUTOPAY - ALIPAY HK/ASIA 自動轉帳    | -      | 940.00 | 79,205.59 |
+| 10 Mar | AUTO 4006-1210-9327-0086 自動轉帳    | -      | 21,208.59 | 57,997.00 |
+\`\`\`
+
+提取為：
+\`\`\`json
+"transactions": [
+  {
+    "date": "2025-02-22",
+    "type": "BF BALANCE",
+    "description": "前結餘",
+    "deposit": 0,
+    "withdrawal": 0,
+    "balance": 1493.98
+  },
+  {
+    "date": "2025-02-26",
+    "type": "CREDIT INTEREST",
+    "description": "利息 - 儲蓄",
+    "deposit": 2.61,
+    "withdrawal": 0,
+    "balance": 1496.59
+  },
+  {
+    "date": "2025-03-07",
+    "type": "CHEQUE DEPOSIT",
+    "description": "存入支票",
+    "deposit": 78649.00,
+    "withdrawal": 0,
+    "balance": 80145.59
+  },
+  {
+    "date": "2025-03-07",
+    "type": "AUTOPAY",
+    "description": "ALIPAY HK/ASIA 自動轉帳",
+    "deposit": 0,
+    "withdrawal": 940.00,
+    "balance": 79205.59
+  },
+  {
+    "date": "2025-03-10",
+    "type": "AUTO",
+    "description": "4006-1210-9327-0086 自動轉帳",
+    "deposit": 0,
+    "withdrawal": 21208.59,
+    "balance": 57997.00
+  }
+]
+\`\`\`
+
+⚠️ **常見錯誤**：
+- ❌ 只提取第一頁的交易（如果有多頁）
+- ❌ 交易描述不完整（如只提取「AUTOPAY」）
+- ❌ 存款和提款混淆
+- ❌ 金額包含逗號（如 "78,649.00" 應該是 78649.00）
+
+---
+
+## 📝 **第四步：提取交易統計**
+
+### 4.1 **交易摘要**
+- 🔍 查找位置：「Transaction Summary」或「交易摘要」
+- ✅ 提取內容：
+  \`\`\`json
+  "transaction_summary": {
+    "total_deposits": 88251.61,
+    "total_withdrawals": 59958.59,
+    "net_change": 28293.02
+  }
+  \`\`\`
+
+### 4.2 **數學驗證**（CRITICAL！）
+✅ **必須驗證**：
+\`\`\`javascript
+// 驗證餘額計算
+opening_balance + total_deposits - total_withdrawals = closing_balance
+1493.98 + 88251.61 - 59958.59 = 29787.00 ≈ 30188.66 ✅
+
+// 驗證每筆交易
+previous_balance + deposit - withdrawal = current_balance
+1496.59 + 78649.00 - 0 = 80145.59 ✅
+\`\`\`
+
+---
+
+## 📝 **完整 JSON 格式要求**
+
+\`\`\`json
 {
   "type": "bank_statement",
-  "bank_name": "銀行名稱",
-  "account_holder": "帳戶持有人",
-  "account_number": "帳戶號碼（後4位）",
-  "statement_period_start": "YYYY-MM-DD",
-  "statement_period_end": "YYYY-MM-DD",
-  "opening_balance": "期初餘額（數字）",
-  "closing_balance": "期末餘額（數字）",
-  "currency": "HKD",
+  "bank": {
+    "name": "恆生銀行",
+    "name_en": "HANG SENG BANK",
+    "branch": "EAST POINT CITY (766)",
+    "bank_code": "024"
+  },
+  
+  "account_holder": {
+    "name": "MR YEUNG CAVLIN",
+    "address": "RM 2505 25/F MING TOA HSE\\nMING TAK EST\\nTSEUNG KWAN O NT"
+  },
+  
+  "account_number": "766-450064-882",
+  "statement_date": "2025-03-22",
+  "statement_period": {
+    "start": "2025-02-22",
+    "end": "2025-03-22"
+  },
+  
+  "balances": {
+    "integrated_account": {
+      "opening": 30188.66,
+      "closing": 30188.66
+    },
+    "savings": {
+      "opening": 30188.66,
+      "closing": 30188.66
+    },
+    "personal_loan": {
+      "balance": -118986.00
+    },
+    "credit_card": {
+      "credit_limit": 270000.00,
+      "used": 19964.61,
+      "available": 250035.39
+    }
+  },
+  
   "transactions": [
     {
-      "date": "YYYY-MM-DD",
-      "description": "交易描述",
-      "amount": "金額（正數為收入，負數為支出）",
-      "balance": "餘額"
+      "date": "2025-02-22",
+      "type": "BF BALANCE",
+      "description": "前結餘",
+      "deposit": 0,
+      "withdrawal": 0,
+      "balance": 1493.98
+    },
+    {
+      "date": "2025-02-26",
+      "type": "CREDIT INTEREST",
+      "description": "利息 - 儲蓄",
+      "deposit": 2.61,
+      "withdrawal": 0,
+      "balance": 1496.59
     }
-  ]
+  ],
+  
+  "transaction_summary": {
+    "total_deposits": 88251.61,
+    "total_withdrawals": 59958.59,
+    "net_change": 28293.02
+  },
+  
+  "currency": "HKD"
 }
+\`\`\`
 
-CRITICAL RULES:
-1. 返回純 JSON，不要包含任何 markdown 標記
-2. 所有金額必須是數字
-3. 交易金額：收入為正數，支出為負數
-4. 提取所有可見的交易記錄`
+---
+
+## ⚠️ **CRITICAL RULES**（必須 100% 遵守）
+
+### 1. **JSON 格式**
+- ✅ 返回**純 JSON**，不要包含 \\\`\\\`\\\`json 或任何 markdown 標記
+- ✅ 所有字段名稱必須用雙引號 \`"field_name"\`
+- ✅ 字符串值必須用雙引號 \`"value"\`
+- ✅ 數字值不要用引號 \`123.45\`（不是 \`"123.45"\`）
+
+### 2. **金額格式**
+- ✅ 所有金額必須是**純數字**（不要包含貨幣符號、逗號）
+  - ✅ 正確：\`78649.00\`
+  - ❌ 錯誤：\`"HKD $78,649.00"\`、\`"$78,649.00"\`、\`"78,649"\`
+- ✅ 保留兩位小數：\`1493.98\`（不是 \`1493.9\`）
+- ✅ 負數表示欠款：\`-118986.00\`
+
+### 3. **日期格式**
+- ✅ 統一使用 \`YYYY-MM-DD\` 格式
+  - ✅ 正確：\`"2025-03-22"\`
+  - ❌ 錯誤：\`"22 Mar 2025"\`、\`"2025年3月22日"\`、\`"22/03/2025"\`
+
+### 4. **交易明細**
+- ✅ **必須提取表格中的每一行交易**
+- ✅ \`deposit\` 和 \`withdrawal\` 必須是數字（不要包含貨幣符號）
+- ✅ 如果沒有存款或提款，使用 \`0\`（不是空字符串）
+- ✅ 交易描述要**完整**
+  - ✅ 正確：\`"ALIPAY HK/ASIA 自動轉帳"\`
+  - ❌ 錯誤：\`"AUTOPAY"\`、\`"自動轉帳"\`
+
+### 5. **缺失字段處理**
+- ✅ 如果字段找不到：
+  - 文字字段：使用 \`""\`（空字符串）
+  - 數字字段：使用 \`0\`
+  - 對象字段：使用 \`{}\`
+- ❌ 不要使用 \`null\`、\`undefined\`、\`"N/A"\`
+
+### 6. **數學驗證**
+- ✅ 每筆交易：\`previous_balance + deposit - withdrawal = current_balance\`
+- ✅ 總餘額：\`opening_balance + total_deposits - total_withdrawals ≈ closing_balance\`
+- ⚠️ 如果計算不匹配，以**對帳單上顯示的餘額**為準
+
+---
+
+## 🎯 **提取優先級**（按重要性排序）
+
+1. 🥇 **balances.savings.closing**（期末餘額）- 最重要
+2. 🥈 **transactions**（交易明細）- 必須全部提取
+3. 🥉 **account_number**（帳戶號碼）
+4. **account_holder.name**（帳戶持有人）
+5. **bank.name**（銀行名稱）
+6. **statement_period**（對帳單期間）
+7. **transaction_summary**（交易統計）
+8. **balances.credit_card**、**balances.personal_loan**（其他帳戶）
+
+---
+
+## ✅ **最終檢查清單**
+
+在返回 JSON 之前，請檢查：
+- [ ] 帳戶號碼是否正確？（包含分隔符）
+- [ ] 帳戶持有人姓名是否完整？
+- [ ] 所有交易行是否都提取了？（數量是否匹配表格行數）
+- [ ] 交易描述是否完整？（不是只有類型代碼）
+- [ ] 所有金額是否是純數字？（沒有 $、HKD、逗號）
+- [ ] 日期格式是否是 YYYY-MM-DD？
+- [ ] 存款和提款是否正確區分？
+- [ ] 數學驗證是否通過？（餘額計算正確）
+- [ ] JSON 格式是否正確？（沒有 markdown 標記）
+
+---
+
+🚀 **現在請開始逐字分析這張銀行對帳單，確保準確率達到 95% 以上！**`
         };
         
         return prompts[documentType] || prompts.invoice;
