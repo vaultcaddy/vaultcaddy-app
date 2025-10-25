@@ -20,7 +20,8 @@
     <script src="google-document-ai.js?v=20251021-002"></script>
     <script src="google-vision-ai.js?v=20251021-002"></script>
     <script src="gemini-worker-client.js?v=4.0"></script>
-    <script src="google-smart-processor.js?v=20251022-001"></script>
+    <script src="openai-vision-client.js?v=1.0"></script>
+    <script src="google-smart-processor.js?v=20251023-001"></script>
     <script src="google-cloud-storage.js?v=20251021-002"></script>
     <script src="ledgerbox-integration.js"></script>
     
@@ -1913,8 +1914,33 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🎯 Dashboard 頁面載入中...');
             
-            // ========== 🤖 初始化 Gemini Worker Client ==========
-            console.log('🤖 初始化 Gemini Worker Client...');
+            // ========== 🤖 初始化 OpenAI Vision Client ==========
+            console.log('🤖 初始化 OpenAI Vision Client...');
+            console.log('   window.OpenAIVisionClient:', typeof window.OpenAIVisionClient);
+            
+            if (typeof window.OpenAIVisionClient === 'function') {
+                try {
+                    // ⚠️ 請在這裡填入你的 OpenAI API Key
+                    const openaiApiKey = 'YOUR_OPENAI_API_KEY_HERE'; // ⚠️ 請替換為你的 API Key
+                    
+                    if (openaiApiKey === 'YOUR_OPENAI_API_KEY_HERE') {
+                        console.warn('⚠️ OpenAI API Key 尚未設置，請在 firstproject.html 中填入你的 API Key');
+                    } else {
+                        const openaiClient = new window.OpenAIVisionClient(openaiApiKey);
+                        window.openaiVisionClient = openaiClient;
+                        console.log('✅ OpenAI Vision Client 已初始化');
+                        console.log('   Model:', openaiClient.model);
+                        console.log('   Client 實例:', openaiClient);
+                    }
+                } catch (error) {
+                    console.error('❌ OpenAI Vision Client 初始化失敗:', error);
+                }
+            } else {
+                console.error('❌ OpenAIVisionClient 類別未找到，請確保 openai-vision-client.js 已載入');
+            }
+            
+            // ========== 🤖 初始化 Gemini Worker Client（備用） ==========
+            console.log('🤖 初始化 Gemini Worker Client（備用）...');
             console.log('   window.GeminiWorkerClient:', typeof window.GeminiWorkerClient);
             
             if (typeof window.GeminiWorkerClient === 'function') {

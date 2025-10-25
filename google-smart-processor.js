@@ -7,15 +7,16 @@ class GoogleSmartProcessor {
     constructor() {
         // ⚠️ 不在構造函數中直接引用 window 對象，而是動態獲取
         this.processors = {
-            get documentAI() { return window.googleDocumentAI; },
-            get visionAI() { return window.googleVisionAI; },
-            get geminiAI() { return window.geminiWorkerClient; }  // ✅ 使用 Cloudflare Worker 代理
+            get openaiVision() { return window.openaiVisionClient; },  // ✅ OpenAI GPT-4 Vision（最優先）
+            get geminiAI() { return window.geminiWorkerClient; },      // ✅ Gemini（備用1）
+            get visionAI() { return window.googleVisionAI; },          // ⚠️ Vision API（備用2）
+            get documentAI() { return window.googleDocumentAI; }       // ❌ Document AI（已停用）
         };
         
         this.processingOrder = [
-            // 'documentAI',  // ❌ Document AI 需要 OAuth 2.0，暫時停用
-            'geminiAI',    // ✅ 優先使用 Gemini（通過 Cloudflare Worker）
-            'visionAI'     // ⚠️ 備用 Vision API（文本解析能力較弱）
+            'openaiVision',  // ✅ 最優先：OpenAI GPT-4 Vision（準確度最高）
+            'geminiAI',      // ✅ 備用1：Gemini（通過 Cloudflare Worker）
+            'visionAI'       // ⚠️ 備用2：Vision API（文本解析能力較弱）
         ];
         
         console.log('🧠 Google 智能處理器初始化');
@@ -31,9 +32,10 @@ class GoogleSmartProcessor {
             return processor !== null && processor !== undefined;
         });
         console.log('可用處理器:', available);
-        console.log('   - documentAI:', typeof window.googleDocumentAI);
-        console.log('   - visionAI:', typeof window.googleVisionAI);
+        console.log('   - openaiVision:', typeof window.openaiVisionClient);
         console.log('   - geminiAI (geminiWorkerClient):', typeof window.geminiWorkerClient);
+        console.log('   - visionAI:', typeof window.googleVisionAI);
+        console.log('   - documentAI:', typeof window.googleDocumentAI);
     }
     
     /**
@@ -169,18 +171,17 @@ class GoogleSmartProcessor {
      * 根據文檔類型優化處理順序
      */
     optimizeProcessingOrder(documentType) {
-        // ❌ Document AI 需要 OAuth 2.0，已全面停用
-        // ✅ 所有文檔類型統一使用: geminiAI → visionAI
+        // ✅ 所有文檔類型統一使用: openaiVision → geminiAI → visionAI
         
         switch (documentType) {
             case 'invoice':
             case 'receipt':
-                // 對於發票和收據，Gemini 視覺理解能力更強
-                return ['geminiAI', 'visionAI'];
+                // 對於發票和收據，OpenAI GPT-4 Vision 準確度最高
+                return ['openaiVision', 'geminiAI', 'visionAI'];
                 
             case 'bank_statement':
-                // 對於銀行對帳單，Gemini 可以更好地理解表格結構
-                return ['geminiAI', 'visionAI'];
+                // 對於銀行對帳單，OpenAI GPT-4 Vision 可以更好地理解表格結構
+                return ['openaiVision', 'geminiAI', 'visionAI'];
                 
             default:
                 // 通用文檔，保持默認順序
