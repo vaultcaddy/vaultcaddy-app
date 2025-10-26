@@ -1335,6 +1335,140 @@
 
         <!-- 主內容區域 -->
         <main class="main-content" id="main-content" style="flex: 1; background: #ffffff; overflow-y: auto; min-height: calc(100vh - 60px); display: block !important; visibility: visible !important;">
+            <!-- 文檔列表視圖 -->
+            <div id="document-list-view" class="view-container" style="display: none;">
+                <!-- 頁面標題 -->
+                <header class="page-header">
+                    <div class="header-left">
+                        <div class="team-info">
+                            <div class="team-icon">
+                                <i class="fas fa-folder"></i>
+                            </div>
+                            <div class="team-details">
+                                <h1 id="project-title">Project</h1>
+                                <span class="subscription-badge" id="subscription-badge">Free</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="header-right">
+                        <button class="project-btn" onclick="confirmDeleteProject()" style="background: #ef4444;">
+                            <i class="fas fa-trash"></i>
+                            <span>Delete</span>
+                        </button>
+                    </div>
+                </header>
+
+                <!-- 控制欄 -->
+                <div class="controls-bar">
+                    <div class="search-filter">
+                        <input type="text" data-translate-placeholder="filter_document_name" placeholder="篩選文檔名稱..." class="filter-input" id="filter-input">
+                    </div>
+                    <div class="actions">
+                        <button class="upload-btn" onclick="openUploadModal()">
+                            <i class="fas fa-upload"></i>
+                            <span data-translate="upload_files">上傳文件</span>
+                        </button>
+                        <button class="view-btn" onclick="toggleView()">
+                            <i class="fas fa-list"></i>
+                            <span data-translate="view">檢視</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 文檔表格視圖 -->
+                <div class="documents-table-container" style="background: #ffffff;">
+                    <table class="documents-table" id="documents-table" style="width: 100%; border-collapse: collapse; background: #ffffff;">
+                        <thead style="background: #ffffff; border-bottom: 2px solid #e5e7eb;">
+                            <tr>
+                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; white-space: nowrap;">
+                                    <input type="checkbox" id="select-all" onchange="toggleSelectAll()" style="margin-right: 0.5rem;">
+                                    Document
+                                    <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af; font-size: 0.75rem;"></i>
+                                </th>
+                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; white-space: nowrap;">
+                                    Statement Period
+                                    <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af; font-size: 0.75rem;"></i>
+                                </th>
+                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; white-space: nowrap;">
+                                    Reconciliation
+                                    <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af; font-size: 0.75rem;"></i>
+                                </th>
+                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; white-space: nowrap;">
+                                    Balance Info
+                                    <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af; font-size: 0.75rem;"></i>
+                                </th>
+                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; white-space: nowrap;">
+                                    Status
+                                    <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af; font-size: 0.75rem;"></i>
+                                </th>
+                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; white-space: nowrap;">
+                                    Review Status
+                                    <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af; font-size: 0.75rem;"></i>
+                                </th>
+                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; white-space: nowrap;">
+                                    Notes
+                                    <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af; font-size: 0.75rem;"></i>
+                                </th>
+                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; white-space: nowrap;">
+                                    Date Uploaded
+                                    <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af; font-size: 0.75rem;"></i>
+                                </th>
+                                <th style="text-align: center; padding: 1rem; font-weight: 600; color: #374151;">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="documents-tbody">
+                            <!-- 文檔將動態載入到這裡 -->
+                        </tbody>
+                    </table>
+                    
+                    <!-- 空狀態 -->
+                    <div class="empty-state" id="empty-state" style="display: none; text-align: center; padding: 4rem 2rem; background: #ffffff;">
+                        <div class="empty-content">
+                            <i class="fas fa-file-alt" style="font-size: 3rem; color: #d1d5db; margin-bottom: 1rem;"></i>
+                            <h3 style="font-size: 1.25rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">No results.</h3>
+                            <p style="color: #6b7280;">上傳您的第一個文檔開始使用</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 分頁控制 -->
+                <div class="pagination">
+                    <div class="pagination-info">
+                        <span id="selection-info">0 of 0 row(s) selected.</span>
+                    </div>
+                    <div class="pagination-controls">
+                        <div class="rows-per-page">
+                            <span>Rows per page</span>
+                            <select id="rows-per-page" onchange="changeRowsPerPage()">
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
+                        <div class="page-info">
+                            <span id="page-info">Page 1 of 0</span>
+                        </div>
+                        <div class="page-buttons">
+                            <button class="page-btn" onclick="goToFirstPage()" disabled>
+                                <i class="fas fa-angle-double-left"></i>
+                            </button>
+                            <button class="page-btn" onclick="goToPreviousPage()" disabled>
+                                <i class="fas fa-angle-left"></i>
+                            </button>
+                            <button class="page-btn" onclick="goToNextPage()" disabled>
+                                <i class="fas fa-angle-right"></i>
+                            </button>
+                            <button class="page-btn" onclick="goToLastPage()" disabled>
+                                <i class="fas fa-angle-double-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Team Project 視圖 -->
             <div id="team-project-view" class="view-container" style="display: block !important; visibility: visible !important; padding: 2rem 3rem; background: #ffffff;">
                 <!-- 頁面標題 -->
@@ -1494,7 +1628,139 @@
                 </div>
             </div>
 
-            </main>
+            <!-- 銀行對帳單視圖 -->
+            <div id="bank-statement-view" class="view-container" style="display: none;">
+                <!-- 頁面標題 -->
+                <header class="page-header" style="padding: 2rem; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
+                    <div class="header-left">
+                        <div class="team-info" style="display: flex; align-items: center; gap: 1rem;">
+                            <div class="team-icon" style="width: 48px; height: 48px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem;">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="team-details">
+                                <h1 id="team-name" style="font-size: 1.5rem; font-weight: 700; color: #1f2937; margin: 0;">1扭扭批's team</h1>
+                                <span class="subscription-badge" id="subscription-badge" style="background: #6b7280; color: white; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">Free</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="header-right">
+                        <button class="project-btn" onclick="createNewProject()" style="background: #3b82f6; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
+                            <i class="fas fa-plus"></i>
+                            <span>+ Project</span>
+                        </button>
+                    </div>
+                </header>
+
+                <!-- 控制欄 -->
+                <div class="controls-bar" style="padding: 1rem 2rem; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
+                    <div class="search-filter">
+                        <input type="text" placeholder="篩選文檔名稱..." class="filter-input" id="filter-input" style="background: #ffffff; border: 1px solid #d1d5db; color: #1f2937; padding: 0.5rem 1rem; border-radius: 6px; width: 300px;">
+                    </div>
+                    <div class="actions" style="display: flex; gap: 1rem; align-items: center;">
+                        <button class="upload-btn" onclick="openUploadModal()" style="background: #3b82f6; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
+                            <i class="fas fa-upload"></i>
+                            <span>上傳文件</span>
+                        </button>
+                        <button class="view-btn" onclick="toggleView()" style="background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; padding: 0.75rem 1rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <i class="fas fa-list"></i>
+                            <span>檢視</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 文檔表格視圖 -->
+                <div class="documents-table-container" style="padding: 2rem; background: #ffffff; flex: 1; overflow-x: auto;">
+                <table class="documents-table" id="documents-table" style="width: 100%; border-collapse: collapse; background: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb;">
+                    <thead style="background: #ffffff; border-bottom: 2px solid #e5e7eb;">
+                        <tr>
+                            <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; white-space: nowrap;">
+                                <input type="checkbox" id="select-all-2" onchange="toggleSelectAll()" style="margin-right: 0.5rem;">
+                                Document
+                                <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af; font-size: 0.75rem;"></i>
+                            </th>
+                            <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; white-space: nowrap;">
+                                Statement Period
+                                <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af; font-size: 0.75rem;"></i>
+                            </th>
+                            <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; white-space: nowrap;">
+                                Reconciliation
+                                <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af; font-size: 0.75rem;"></i>
+                            </th>
+                            <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; white-space: nowrap;">
+                                Balance Info
+                                <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af; font-size: 0.75rem;"></i>
+                            </th>
+                            <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; white-space: nowrap;">
+                                Status
+                                <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af; font-size: 0.75rem;"></i>
+                            </th>
+                            <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; white-space: nowrap;">
+                                Review Status
+                                <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af; font-size: 0.75rem;"></i>
+                            </th>
+                            <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; white-space: nowrap;">
+                                Notes
+                                <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af; font-size: 0.75rem;"></i>
+                            </th>
+                            <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; white-space: nowrap;">
+                                Date Uploaded
+                                <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af; font-size: 0.75rem;"></i>
+                            </th>
+                            <th style="text-align: center; padding: 1rem; font-weight: 600; color: #374151;">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="documents-tbody">
+                        <!-- 文檔將動態載入到這裡 -->
+                    </tbody>
+                </table>
+                
+                <!-- 空狀態 -->
+                <div class="empty-state" id="empty-state" style="display: none; text-align: center; padding: 4rem 2rem; color: #6b7280; background: #ffffff;">
+                    <div class="empty-content">
+                        <i class="fas fa-file-alt" style="font-size: 3rem; margin-bottom: 1rem; color: #d1d5db;"></i>
+                        <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem; color: #374151;">No results.</h3>
+                        <p style="color: #6b7280; font-size: 0.9rem;">上傳您的第一個文檔開始使用</p>
+                    </div>
+                </div>
+                
+                <!-- 分頁控制 -->
+                <div class="pagination" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; border-top: 1px solid #e5e7eb; background: #ffffff;">
+                    <div class="pagination-info">
+                        <span id="selection-info" style="color: #6b7280;">0 of 0 row(s) selected.</span>
+                    </div>
+                    <div class="pagination-controls" style="display: flex; align-items: center; gap: 1rem;">
+                        <div class="rows-per-page" style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="color: #6b7280;">Rows per page</span>
+                            <select id="rows-per-page" onchange="changeRowsPerPage()" style="background: #ffffff; border: 1px solid #d1d5db; color: #1f2937; padding: 0.25rem 0.5rem; border-radius: 4px;">
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
+                        <div class="page-info">
+                            <span id="page-info" style="color: #374151;">Page 1 of 0</span>
+                        </div>
+                        <div class="page-buttons" style="display: flex; gap: 0.25rem;">
+                            <button class="page-btn" onclick="goToFirstPage()" disabled style="background: transparent; border: 1px solid #d1d5db; color: #9ca3af; padding: 0.5rem; border-radius: 4px; cursor: pointer;">
+                                <i class="fas fa-angle-double-left"></i>
+                            </button>
+                            <button class="page-btn" onclick="goToPreviousPage()" disabled style="background: transparent; border: 1px solid #d1d5db; color: #9ca3af; padding: 0.5rem; border-radius: 4px; cursor: pointer;">
+                                <i class="fas fa-angle-left"></i>
+                            </button>
+                            <button class="page-btn" onclick="goToNextPage()" disabled style="background: transparent; border: 1px solid #d1d5db; color: #9ca3af; padding: 0.5rem; border-radius: 4px; cursor: pointer;">
+                                <i class="fas fa-angle-right"></i>
+                            </button>
+                            <button class="page-btn" onclick="goToLastPage()" disabled style="background: transparent; border: 1px solid #d1d5db; color: #9ca3af; padding: 0.5rem; border-radius: 4px; cursor: pointer;">
+                                <i class="fas fa-angle-double-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 
     <!-- 上傳文件模態框 -->
