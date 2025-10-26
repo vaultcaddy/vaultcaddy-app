@@ -5,7 +5,7 @@
  */
 
 // 配置
-const DEEPSEEK_API_KEY = 'sk-4a43b8c2e7f54f4bb2c8e8f9e7b7a4'; // ⚠️ 請替換為從 DeepSeek 平台複製的完整 API Key
+const DEEPSEEK_API_KEY = 'sk-4a43b49a13a840009052be65f599b7a4'; // ✅ DeepSeek API Key（已更新）
 const DEEPSEEK_API_ENDPOINT = 'https://api.deepseek.com/v1/chat/completions';
 
 // 允許的來源（CORS）
