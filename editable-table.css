@@ -1,0 +1,282 @@
+/**
+ * VaultCaddy 可編輯表格樣式
+ * 
+ * 參考：LedgerBox 圖3 的白色主題
+ * 
+ * @version 1.0.0
+ * @updated 2025-10-26
+ */
+
+/* 可編輯單元格基礎樣式 */
+.editable-cell {
+    cursor: text;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.editable-cell:hover {
+    background: #f9fafb !important;
+    outline: 1px solid #e5e7eb;
+}
+
+.editable-cell:focus {
+    background: #ffffff !important;
+    outline: 2px solid #3b82f6;
+    outline-offset: -2px;
+}
+
+/* 編輯中狀態 */
+.editable-cell.editing {
+    background: #ffffff !important;
+    box-shadow: 0 0 0 2px #3b82f6 inset;
+}
+
+/* 已修改狀態 */
+.editable-cell.modified {
+    background: #fef3c7 !important;
+    position: relative;
+}
+
+.editable-cell.modified::after {
+    content: '●';
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    color: #f59e0b;
+    font-size: 8px;
+}
+
+/* 無效輸入狀態 */
+.editable-cell.invalid {
+    background: #fee2e2 !important;
+    outline: 2px solid #ef4444;
+}
+
+/* 錯誤消息 */
+.cell-error-message {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: #ef4444;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    z-index: 1000;
+    margin-top: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.cell-error-message::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 8px;
+    border: 4px solid transparent;
+    border-bottom-color: #ef4444;
+}
+
+/* 保存指示器 */
+.save-indicator {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    background: white;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    z-index: 1000;
+    transition: opacity 0.3s;
+}
+
+.save-indicator.saving {
+    color: #3b82f6;
+}
+
+.save-indicator.saving i {
+    color: #3b82f6;
+}
+
+.save-indicator.saved {
+    color: #10b981;
+}
+
+.save-indicator.saved i {
+    color: #10b981;
+}
+
+/* 對帳狀態樣式（參考 LedgerBox 圖3） */
+.reconciliation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.reconciliation-status {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.reconciliation-status span {
+    font-size: 0.9rem;
+    color: #6b7280;
+}
+
+.percentage-badge {
+    background: #f3f4f6;
+    color: #1f2937;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.percentage-badge.complete {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+/* 導出按鈕樣式（參考 LedgerBox 圖2） */
+.export-section {
+    position: relative;
+    display: inline-block;
+}
+
+.export-btn {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+}
+
+.export-btn:hover {
+    background: #2563eb;
+}
+
+.export-btn i {
+    font-size: 0.875rem;
+}
+
+/* 導出下拉菜單 */
+.export-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    min-width: 280px;
+    z-index: 1000;
+    display: none;
+}
+
+.export-menu.show {
+    display: block;
+}
+
+.export-menu h3 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0 0 0.75rem 0;
+}
+
+.export-method-select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+    cursor: pointer;
+}
+
+.export-method-select:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: -2px;
+}
+
+.export-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.export-format-btn {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.export-format-btn:hover {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+}
+
+.export-format-btn i {
+    color: #6b7280;
+}
+
+/* 下載按鈕（參考 LedgerBox 圖3） */
+.download-btn {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+}
+
+.download-btn:hover {
+    background: #2563eb;
+}
+
+.download-btn i {
+    font-size: 0.875rem;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .save-indicator {
+        top: 70px;
+        right: 10px;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+    }
+    
+    .export-menu {
+        min-width: 240px;
+    }
+}
+
