@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="dashboard.css">
     <link rel="stylesheet" href="pages.css">
+    <link rel="stylesheet" href="editable-table.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="config.js"></script>
     <script src="translations.js"></script>
@@ -14,6 +15,11 @@
     <script src="global-auth-sync.js?v=4.0"></script>
     <script src="navbar-component.js?v=4.0"></script>
     <script src="sidebar-component.js?v=4.0"></script>
+    
+    <!-- 功能模块 -->
+    <script src="editable-table.js"></script>
+    <script src="export-manager.js"></script>
+    <script src="reconciliation-engine.js"></script>
     
     <style>
         * {
@@ -501,10 +507,32 @@
                         <i class="fas fa-cloud-check"></i>
                         Saved
                     </span>
-                    <button class="btn btn-primary">
-                        <i class="fas fa-download"></i>
-                        Download
-                    </button>
+                    <!-- 导出按钮 -->
+                    <div class="export-dropdown" style="position: relative;">
+                        <button class="btn btn-primary" onclick="toggleExportMenu(event)">
+                            <i class="fas fa-download"></i>
+                            Export
+                            <i class="fas fa-chevron-down" style="margin-left: 0.5rem; font-size: 0.75rem;"></i>
+                        </button>
+                        <div class="export-menu" id="exportMenu" style="display: none; position: absolute; top: 100%; right: 0; background: white; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); min-width: 200px; margin-top: 0.5rem; z-index: 1000;">
+                            <div class="export-menu-item" onclick="exportDocument('csv')" style="padding: 0.75rem 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='white'">
+                                <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
+                                <span>CSV</span>
+                            </div>
+                            <div class="export-menu-item" onclick="exportDocument('iif')" style="padding: 0.75rem 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='white'">
+                                <i class="fas fa-file-invoice" style="color: #3b82f6; width: 20px;"></i>
+                                <span>IIF (QuickBooks)</span>
+                            </div>
+                            <div class="export-menu-item" onclick="exportDocument('qbo')" style="padding: 0.75rem 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='white'">
+                                <i class="fas fa-file-invoice-dollar" style="color: #8b5cf6; width: 20px;"></i>
+                                <span>QBO (QuickBooks)</span>
+                            </div>
+                            <div class="export-menu-item" onclick="exportDocument('json')" style="padding: 0.75rem 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; transition: background 0.2s; border-top: 1px solid #e5e7eb;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='white'">
+                                <i class="fas fa-file-code" style="color: #f59e0b; width: 20px;"></i>
+                                <span>JSON</span>
+                            </div>
+                        </div>
+                    </div>
                     <button class="icon-btn">
                         <i class="fas fa-ellipsis-v"></i>
                     </button>
@@ -1369,6 +1397,178 @@
         
         // 使函數全局可用
         window.openCreateProjectModal = openCreateProjectModal;
+        
+        // ========== 导出功能 ==========
+        
+        // 切换导出菜单
+        function toggleExportMenu(event) {
+            event.stopPropagation();
+            const menu = document.getElementById('exportMenu');
+            if (menu) {
+                menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+        
+        // 点击页面其他地方关闭菜单
+        document.addEventListener('click', function() {
+            const menu = document.getElementById('exportMenu');
+            if (menu) {
+                menu.style.display = 'none';
+            }
+        });
+        
+        // 导出文档
+        function exportDocument(format) {
+            console.log(`📤 导出文档，格式: ${format}`);
+            
+            // 关闭菜单
+            const menu = document.getElementById('exportMenu');
+            if (menu) {
+                menu.style.display = 'none';
+            }
+            
+            // 获取当前文档 ID
+            const urlParams = new URLSearchParams(window.location.search);
+            const documentId = urlParams.get('id');
+            
+            if (!documentId) {
+                alert('无法获取文档 ID');
+                return;
+            }
+            
+            // 从 localStorage 加载文档数据
+            const allDocuments = JSON.parse(localStorage.getItem('vaultcaddy_documents') || '[]');
+            const document = allDocuments.find(doc => doc.id === documentId);
+            
+            if (!document) {
+                alert('无法加载文档数据');
+                return;
+            }
+            
+            // 使用 ExportManager 导出
+            if (!window.exportManager) {
+                alert('导出管理器未初始化');
+                return;
+            }
+            
+            let result;
+            switch (format) {
+                case 'csv':
+                    result = window.exportManager.exportToCSV([document]);
+                    break;
+                case 'iif':
+                    result = window.exportManager.exportToIIF([document]);
+                    break;
+                case 'qbo':
+                    result = window.exportManager.exportToQBO([document]);
+                    break;
+                case 'json':
+                    result = window.exportManager.exportToJSON([document]);
+                    break;
+                default:
+                    alert('不支持的导出格式');
+                    return;
+            }
+            
+            if (result.success) {
+                console.log('✅ 导出成功:', result.filename);
+                // 显示成功提示
+                if (window.VaultCaddyNavbar && window.VaultCaddyNavbar.showNotification) {
+                    window.VaultCaddyNavbar.showNotification(`导出成功: ${result.filename}`, 'success');
+                }
+            } else {
+                console.error('❌ 导出失败:', result.error);
+                alert('导出失败: ' + result.error);
+            }
+        }
+        
+        // 使函数全局可用
+        window.toggleExportMenu = toggleExportMenu;
+        window.exportDocument = exportDocument;
+        
+        // ========== 可编辑表格功能 ==========
+        
+        // 初始化可编辑表格
+        function initEditableTable() {
+            console.log('🔧 初始化可编辑表格...');
+            
+            // 等待表格渲染完成
+            setTimeout(() => {
+                const tables = document.querySelectorAll('.invoice-details-table, .transactions-table, table');
+                console.log(`   找到 ${tables.length} 个表格`);
+                
+                if (window.editableTable) {
+                    tables.forEach((table, index) => {
+                        try {
+                            window.editableTable.makeTableEditable(table);
+                            console.log(`   ✅ 表格 ${index + 1} 已启用编辑功能`);
+                        } catch (error) {
+                            console.error(`   ❌ 表格 ${index + 1} 编辑功能初始化失败:`, error);
+                        }
+                    });
+                } else {
+                    console.warn('   ⚠️ editableTable 未找到');
+                }
+            }, 1000); // 等待 1 秒确保表格已渲染
+        }
+        
+        // 在文档加载后初始化
+        setTimeout(() => {
+            initEditableTable();
+        }, 2000); // 延迟 2 秒确保所有内容已加载
+        
+        // 监听表格编辑事件
+        document.addEventListener('cellEdited', function(e) {
+            const { row, cell, oldValue, newValue } = e.detail;
+            console.log('📝 单元格已编辑:', { row, cell, oldValue, newValue });
+            
+            // 保存更改到 localStorage
+            const urlParams = new URLSearchParams(window.location.search);
+            const documentId = urlParams.get('id');
+            
+            if (documentId) {
+                saveDocumentChanges(documentId, {
+                    field: cell.dataset.field || cell.textContent,
+                    value: newValue
+                });
+            }
+        });
+        
+        // 保存文档更改
+        function saveDocumentChanges(documentId, changes) {
+            console.log('💾 保存文档更改:', { documentId, changes });
+            
+            try {
+                const allDocuments = JSON.parse(localStorage.getItem('vaultcaddy_documents') || '[]');
+                const docIndex = allDocuments.findIndex(doc => doc.id === documentId);
+                
+                if (docIndex !== -1) {
+                    // 更新文档数据
+                    allDocuments[docIndex] = {
+                        ...allDocuments[docIndex],
+                        ...changes,
+                        lastModified: new Date().toISOString()
+                    };
+                    
+                    // 保存回 localStorage
+                    localStorage.setItem('vaultcaddy_documents', JSON.stringify(allDocuments));
+                    console.log('✅ 文档更改已保存');
+                    
+                    // 显示保存提示
+                    if (window.VaultCaddyNavbar && window.VaultCaddyNavbar.showNotification) {
+                        window.VaultCaddyNavbar.showNotification('更改已保存', 'success');
+                    }
+                } else {
+                    console.error('❌ 未找到文档');
+                }
+            } catch (error) {
+                console.error('❌ 保存文档更改失败:', error);
+            }
+        }
+        
+        // 使函数全局可用
+        window.initEditableTable = initEditableTable;
+        window.saveDocumentChanges = saveDocumentChanges;
     </script>
         </div> <!-- 結束 detail-container -->
         </div> <!-- 結束 main-content -->
