@@ -64,13 +64,14 @@ async function handleRequest(request) {
   
   // 只接受 POST 請求
   if (request.method !== 'POST') {
-    return new Response(JSON.stringify({ 
+    const errorResponse = new Response(JSON.stringify({ 
       error: 'Method not allowed',
       message: '只支持 POST 請求'
     }), { 
       status: 405,
       headers: { 'Content-Type': 'application/json' }
     });
+    return addCORSHeaders(errorResponse, origin);
   }
   
   try {
