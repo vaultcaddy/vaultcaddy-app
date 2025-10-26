@@ -18,8 +18,8 @@
 
 class ExportManager {
     constructor() {
-        this.version = '1.0.0';
-        this.supportedFormats = ['csv', 'iif', 'qbo', 'excel'];
+        this.version = '2.0.0';
+        this.supportedFormats = ['csv', 'iif', 'qbo', 'json', 'quickbooks'];
     }
     
     /**
@@ -45,9 +45,10 @@ class ExportManager {
             case 'iif':
                 return this.exportToIIF(invoices, options);
             case 'qbo':
+            case 'quickbooks':
                 return this.exportToQBO(invoices, options);
-            case 'excel':
-                return this.exportToExcel(invoices, options);
+            case 'json':
+                return this.exportToJSON(invoices, options);
             default:
                 throw new Error(`未實現的導出格式: ${format}`);
         }
@@ -591,6 +592,110 @@ NEWFILEUID:NONE
         const seconds = String(date.getSeconds()).padStart(2, '0');
         
         return `${year}${month}${day}${hours}${minutes}${seconds}`;
+    }
+    
+    /**
+     * 導出為 JSON 格式（參考 LedgerBox 圖1）
+     * 
+     * JSON 格式優勢:
+     * - 保留完整的數據結構
+     * - 可以用於 API 整合
+     * - 易於程序處理
+     */
+    exportToJSON(documents, options = {}) {
+        console.log('📊 導出為 JSON 格式...');
+        
+        // 根據文檔類型決定導出格式
+        const documentType = options.documentType || 'invoice';
+        
+        let jsonData;
+        
+        if (documentType === 'bank-statement') {
+            // 銀行對帳單格式（參考 LedgerBox 圖1）
+            jsonData = this.formatBankStatementJSON(documents[0]);
+        } else {
+            // 發票/收據格式
+            jsonData = documents.map(doc => this.formatInvoiceJSON(doc));
+            
+            // 如果只有一個文檔，直接返回對象而不是數組
+            if (jsonData.length === 1) {
+                jsonData = jsonData[0];
+            }
+        }
+        
+        const json = JSON.stringify(jsonData, null, 2);
+        const blob = new Blob([json], { type: 'application/json;charset=utf-8;' });
+        
+        console.log('✅ JSON 格式導出完成');
+        return blob;
+    }
+    
+    /**
+     * 格式化銀行對帳單為 JSON（參考 LedgerBox 圖1）
+     */
+    formatBankStatementJSON(statement) {
+        const data = statement.processedData || statement;
+        
+        return {
+            CustomerName: data.account_holder?.name || '',
+            AccountNumber: data.account_number || '',
+            AccountType: data.account_type || 'Integrated Account',
+            BankName: data.bank?.name || '',
+            BankAddress: data.bank?.address || '',
+            PeriodStartDate: data.statement_period?.from || '',
+            PeriodEndDate: data.statement_period?.to || '',
+            StartingBalance: data.opening_balance || 0,
+            EndingBalance: data.closing_balance || 0,
+            LineItems: (data.transactions || []).map(txn => ({
+                Date: txn.date || '',
+                Description: txn.description || '',
+                Credits: txn.type === 'credit' ? txn.amount : 0,
+                Debits: txn.type === 'debit' ? txn.amount : 0,
+                Balance: txn.balance || 0
+            }))
+        };
+    }
+    
+    /**
+     * 格式化發票為 JSON
+     */
+    formatInvoiceJSON(invoice) {
+        const data = invoice.processedData || invoice;
+        
+        return {
+            InvoiceNumber: data.invoice_number || '',
+            InvoiceDate: data.date || '',
+            DueDate: data.due_date || '',
+            Supplier: {
+                Name: data.supplier?.name || '',
+                NameEN: data.supplier?.name_en || '',
+                Address: data.supplier?.address || '',
+                Phone: data.supplier?.phone || '',
+                Email: data.supplier?.email || ''
+            },
+            Customer: {
+                Name: data.customer?.name || '',
+                Address: data.customer?.address || '',
+                Contact: data.customer?.contact || '',
+                Phone: data.customer?.phone || ''
+            },
+            LineItems: (data.items || []).map(item => ({
+                Code: item.code || '',
+                Description: item.description || '',
+                Quantity: item.quantity || 0,
+                Unit: item.unit || '',
+                UnitPrice: item.unit_price || 0,
+                Amount: item.amount || 0
+            })),
+            Subtotal: data.subtotal || 0,
+            Discount: data.discount || 0,
+            Tax: data.tax || 0,
+            Total: data.total || 0,
+            Currency: data.currency || 'HKD',
+            PaymentMethod: data.payment_method || '',
+            PaymentStatus: data.payment_status || '',
+            Notes: data.notes || ''
+        };
     }
 }
 
