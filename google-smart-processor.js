@@ -7,16 +7,18 @@ class GoogleSmartProcessor {
     constructor() {
         // ⚠️ 不在構造函數中直接引用 window 對象，而是動態獲取
         this.processors = {
-            get openaiVision() { return window.openaiVisionClient; },  // ✅ OpenAI GPT-4 Vision（最優先）
-            get geminiAI() { return window.geminiWorkerClient; },      // ✅ Gemini（備用1）
-            get visionAI() { return window.googleVisionAI; },          // ⚠️ Vision API（備用2）
-            get documentAI() { return window.googleDocumentAI; }       // ❌ Document AI（已停用）
+            get deepseekVision() { return window.deepseekVisionClient; },  // ✅ DeepSeek Vision（最優先）
+            get openaiVision() { return window.openaiVisionClient; },      // ✅ OpenAI GPT-4 Vision（備用1）
+            get geminiAI() { return window.geminiWorkerClient; },          // ✅ Gemini（備用2）
+            get visionAI() { return window.googleVisionAI; },              // ⚠️ Vision API（備用3）
+            get documentAI() { return window.googleDocumentAI; }           // ❌ Document AI（已停用）
         };
         
         this.processingOrder = [
-            'openaiVision',  // ✅ 最優先：OpenAI GPT-4 Vision（準確度最高）
-            'geminiAI',      // ✅ 備用1：Gemini（通過 Cloudflare Worker）
-            'visionAI'       // ⚠️ 備用2：Vision API（文本解析能力較弱）
+            'deepseekVision', // ✅ 最優先：DeepSeek Vision（準確度最高，成本最低）
+            'openaiVision',   // ✅ 備用1：OpenAI GPT-4 Vision（準確度高）
+            'geminiAI',       // ✅ 備用2：Gemini（通過 Cloudflare Worker）
+            'visionAI'        // ⚠️ 備用3：Vision API（文本解析能力較弱）
         ];
         
         console.log('🧠 Google 智能處理器初始化');
@@ -32,6 +34,7 @@ class GoogleSmartProcessor {
             return processor !== null && processor !== undefined;
         });
         console.log('可用處理器:', available);
+        console.log('   - deepseekVision:', typeof window.deepseekVisionClient);
         console.log('   - openaiVision:', typeof window.openaiVisionClient);
         console.log('   - geminiAI (geminiWorkerClient):', typeof window.geminiWorkerClient);
         console.log('   - visionAI:', typeof window.googleVisionAI);
@@ -171,17 +174,17 @@ class GoogleSmartProcessor {
      * 根據文檔類型優化處理順序
      */
     optimizeProcessingOrder(documentType) {
-        // ✅ 所有文檔類型統一使用: openaiVision → geminiAI → visionAI
+        // ✅ 所有文檔類型統一使用: deepseekVision → openaiVision → geminiAI → visionAI
         
         switch (documentType) {
             case 'invoice':
             case 'receipt':
-                // 對於發票和收據，OpenAI GPT-4 Vision 準確度最高
-                return ['openaiVision', 'geminiAI', 'visionAI'];
+                // 對於發票和收據，DeepSeek Vision 準確度最高且成本最低
+                return ['deepseekVision', 'openaiVision', 'geminiAI', 'visionAI'];
                 
             case 'bank_statement':
-                // 對於銀行對帳單，OpenAI GPT-4 Vision 可以更好地理解表格結構
-                return ['openaiVision', 'geminiAI', 'visionAI'];
+                // 對於銀行對帳單，DeepSeek Vision 可以更好地理解表格結構
+                return ['deepseekVision', 'openaiVision', 'geminiAI', 'visionAI'];
                 
             default:
                 // 通用文檔，保持默認順序

@@ -21,7 +21,8 @@
     <script src="google-vision-ai.js?v=20251021-002"></script>
     <script src="gemini-worker-client.js?v=4.0"></script>
     <script src="openai-vision-client.js?v=1.0"></script>
-    <script src="google-smart-processor.js?v=20251023-001"></script>
+    <script src="deepseek-vision-client.js?v=1.0"></script>
+    <script src="google-smart-processor.js?v=20251026-001"></script>
     <script src="google-cloud-storage.js?v=20251021-002"></script>
     <script src="ledgerbox-integration.js"></script>
     
@@ -1914,8 +1915,30 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🎯 Dashboard 頁面載入中...');
             
-            // ========== 🤖 初始化 OpenAI Vision Client ==========
-            console.log('🤖 初始化 OpenAI Vision Client...');
+            // ========== 🤖 初始化 DeepSeek Vision Client ==========
+            console.log('🤖 初始化 DeepSeek Vision Client...');
+            console.log('   window.DeepSeekVisionClient:', typeof window.DeepSeekVisionClient);
+            
+            if (typeof window.DeepSeekVisionClient === 'function') {
+                try {
+                    // ✅ 使用 Cloudflare Worker URL（API Key 已安全存儲在 Worker 中）
+                    const deepseekWorkerUrl = 'https://deepseek-proxy.vaultcaddy.workers.dev';
+                    
+                    const deepseekClient = new window.DeepSeekVisionClient(deepseekWorkerUrl);
+                    window.deepseekVisionClient = deepseekClient;
+                    console.log('✅ DeepSeek Vision Client 已初始化');
+                    console.log('   Worker URL:', deepseekClient.workerUrl);
+                    console.log('   Model:', deepseekClient.model);
+                    console.log('   Client 實例:', deepseekClient);
+                } catch (error) {
+                    console.error('❌ DeepSeek Vision Client 初始化失敗:', error);
+                }
+            } else {
+                console.error('❌ DeepSeekVisionClient 類別未找到，請確保 deepseek-vision-client.js 已載入');
+            }
+            
+            // ========== 🤖 初始化 OpenAI Vision Client（備用） ==========
+            console.log('🤖 初始化 OpenAI Vision Client（備用）...');
             console.log('   window.OpenAIVisionClient:', typeof window.OpenAIVisionClient);
             
             if (typeof window.OpenAIVisionClient === 'function') {
