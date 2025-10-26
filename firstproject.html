@@ -34,6 +34,10 @@
     
     <!-- 載入導出管理器 -->
     <script src="export-manager.js"></script>
+    
+    <!-- 載入批量上傳處理器 -->
+    <script src="batch-upload-processor.js?v=1.0"></script>
+    
     <link rel="stylesheet" href="ledgerbox-styles.css">
     
     <style>
@@ -1217,8 +1221,8 @@
                 <div id="aiUploadArea" class="ai-upload-area" style="border: 3px dashed #d1d5db; border-radius: 12px; padding: 3rem 2rem; text-align: center; cursor: pointer; transition: all 0.3s ease; background: #fafafa;">
                     <div class="ai-upload-icon" style="font-size: 4rem; margin-bottom: 1rem;">📄</div>
                     <div class="ai-upload-text" style="font-size: 1.2rem; color: #374151; margin-bottom: 0.5rem; font-weight: 600;">拖放文件到此處或點擊上傳</div>
-                    <div class="ai-upload-hint" style="color: #6b7280; font-size: 0.9rem;">支援 PDF、JPG、PNG 格式 (最大 20MB)</div>
-                    <input type="file" id="aiFileInput" class="ai-file-input" accept=".pdf,.jpg,.jpeg,.png" style="display: none;">
+                    <div class="ai-upload-hint" style="color: #6b7280; font-size: 0.9rem;">支援 PDF、JPG、PNG 格式 (最大 10MB)｜✨ 支持批量上傳</div>
+                    <input type="file" id="aiFileInput" class="ai-file-input" accept=".pdf,.jpg,.jpeg,.png,.gif,.webp" multiple style="display: none;">
                 </div>
 
                 <!-- 處理進度 -->
@@ -1243,6 +1247,19 @@
                     </div>
                     <div class="ai-progress-bar" style="width: 100%; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;">
                         <div class="ai-progress-fill" id="aiProgressFill" style="height: 100%; background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%); transition: width 0.5s ease; width: 0%;"></div>
+                    </div>
+                </div>
+
+                <!-- 批量處理進度列表 -->
+                <div id="batchProgressContainer" class="batch-progress-container" style="display: none; margin-top: 2rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h4 style="font-size: 1rem; color: #1f2937; margin: 0; font-weight: 600;">處理進度</h4>
+                        <div id="batchProgressSummary" style="font-size: 0.875rem; color: #6b7280;">
+                            <span id="batchCompletedCount">0</span> / <span id="batchTotalCount">0</span> 完成
+                        </div>
+                    </div>
+                    <div id="batchFilesList" class="batch-files-list" style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 400px; overflow-y: auto;">
+                        <!-- 文件項目將動態添加到這裡 -->
                     </div>
                 </div>
 
@@ -2613,7 +2630,7 @@
                 fileInput.click();
             };
             
-            // 文件選擇事件
+            // 文件選擇事件（支持批量上傳）
             fileInput.onchange = (e) => {
                 console.log('');
                 console.log('========================================');
@@ -2621,13 +2638,24 @@
                 console.log('   時間:', new Date().toISOString());
                 const files = Array.from(e.target.files);
                 console.log('   選擇的文件數量:', files.length);
+                
                 if (files.length > 0) {
-                    console.log('   文件名:', files[0].name);
-                    console.log('   文件大小:', files[0].size, 'bytes');
-                    console.log('   文件類型:', files[0].type);
-                    console.log('🔜 即將調用 handleAIFileUpload...');
-                    console.log('========================================');
-                    handleAIFileUpload(files[0]);
+                    if (files.length === 1) {
+                        // 單文件上傳
+                        console.log('   文件名:', files[0].name);
+                        console.log('   文件大小:', files[0].size, 'bytes');
+                        console.log('   文件類型:', files[0].type);
+                        console.log('🔜 即將調用 handleAIFileUpload...');
+                        console.log('========================================');
+                        handleAIFileUpload(files[0]);
+                    } else {
+                        // 批量上傳
+                        console.log('   📦 批量上傳模式');
+                        console.log('   文件列表:', files.map(f => f.name).join(', '));
+                        console.log('🔜 即將調用 handleBatchFileUpload...');
+                        console.log('========================================');
+                        handleBatchFileUpload(files);
+                    }
                 } else {
                     console.log('   ⚠️ 沒有選擇文件');
                     console.log('========================================');
@@ -3646,11 +3674,128 @@
         }
         window.saveAIResults = saveAIResults;
         
+        // 批量上傳處理函數
+        async function handleBatchFileUpload(files) {
+            console.log('📦 開始批量上傳處理:', files.length, '個文件');
+            
+            // 隱藏上傳區域，顯示批量處理進度
+            document.getElementById('aiUploadArea').style.display = 'none';
+            document.getElementById('batchProgressContainer').style.display = 'block';
+            
+            // 更新總數
+            document.getElementById('batchTotalCount').textContent = files.length;
+            document.getElementById('batchCompletedCount').textContent = '0';
+            
+            // 清空文件列表
+            const filesList = document.getElementById('batchFilesList');
+            filesList.innerHTML = '';
+            
+            // 為每個文件創建進度項
+            const fileProgressItems = {};
+            files.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.id = `batch-file-${index}`;
+                fileItem.style.cssText = 'background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; transition: all 0.3s;';
+                fileItem.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="flex-shrink: 0; width: 40px; height: 40px; background: #e5e7eb; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                            📄
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-weight: 500; color: #1f2937; font-size: 0.875rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${file.name}</div>
+                            <div style="font-size: 0.75rem; color: #6b7280; margin-top: 0.25rem;">
+                                <span class="file-status">等待處理...</span>
+                            </div>
+                            <div class="file-progress-bar" style="display: none; width: 100%; height: 4px; background: #e5e7eb; border-radius: 2px; margin-top: 0.5rem; overflow: hidden;">
+                                <div class="file-progress-fill" style="height: 100%; background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%); width: 0%; transition: width 0.3s;"></div>
+                            </div>
+                        </div>
+                        <div class="file-status-icon" style="flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: #f3f4f6; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">
+                            ⏳
+                        </div>
+                    </div>
+                `;
+                filesList.appendChild(fileItem);
+                fileProgressItems[index] = fileItem;
+            });
+            
+            // 獲取當前項目 ID
+            const projectId = getCurrentProjectId();
+            if (!projectId) {
+                alert('無法確定當前項目');
+                return;
+            }
+            
+            // 使用批量處理器處理文件
+            let completedCount = 0;
+            
+            await window.batchUploadProcessor.processBatch(
+                files,
+                selectedDocumentType,
+                projectId,
+                // 進度回調
+                (progress) => {
+                    const fileItem = fileProgressItems[Array.from(files).findIndex(f => f.name === progress.fileName)];
+                    if (!fileItem) return;
+                    
+                    const statusEl = fileItem.querySelector('.file-status');
+                    const statusIcon = fileItem.querySelector('.file-status-icon');
+                    const progressBar = fileItem.querySelector('.file-progress-bar');
+                    const progressFill = fileItem.querySelector('.file-progress-fill');
+                    
+                    if (progress.status === 'processing') {
+                        statusEl.textContent = progress.message || '處理中...';
+                        statusIcon.textContent = '🔄';
+                        statusIcon.style.background = '#dbeafe';
+                        progressBar.style.display = 'block';
+                        progressFill.style.width = `${progress.progress}%`;
+                    } else if (progress.status === 'completed') {
+                        completedCount++;
+                        document.getElementById('batchCompletedCount').textContent = completedCount;
+                        statusEl.textContent = '✅ 完成';
+                        statusIcon.textContent = '✓';
+                        statusIcon.style.background = '#dcfce7';
+                        statusIcon.style.color = '#16a34a';
+                        fileItem.style.background = '#f0fdf4';
+                        fileItem.style.borderColor = '#86efac';
+                        progressBar.style.display = 'none';
+                    } else if (progress.status === 'failed') {
+                        completedCount++;
+                        document.getElementById('batchCompletedCount').textContent = completedCount;
+                        statusEl.textContent = progress.message || '❌ 失敗';
+                        statusIcon.textContent = '✕';
+                        statusIcon.style.background = '#fee2e2';
+                        statusIcon.style.color = '#dc2626';
+                        fileItem.style.background = '#fef2f2';
+                        fileItem.style.borderColor = '#fca5a5';
+                        progressBar.style.display = 'none';
+                    }
+                },
+                // 完成回調
+                (result) => {
+                    console.log('✅ 批量處理完成:', result);
+                    
+                    // 顯示完成消息
+                    setTimeout(() => {
+                        alert(`批量上傳完成！\n成功: ${result.completed}\n失敗: ${result.failed}`);
+                        
+                        // 刷新頁面以顯示新文件
+                        location.reload();
+                    }, 1000);
+                }
+            );
+        }
+        window.handleBatchFileUpload = handleBatchFileUpload;
+        
         function resetAIUpload() {
             // 重置所有狀態
             aiCurrentFile = null;
             aiIsProcessing = false;
             aiProcessingResults = {};
+            
+            // 重置批量上傳狀態
+            document.getElementById('aiUploadArea').style.display = 'block';
+            document.getElementById('batchProgressContainer').style.display = 'none';
             
             // 重置 UI
             document.getElementById('aiUploadArea').style.display = 'block';
