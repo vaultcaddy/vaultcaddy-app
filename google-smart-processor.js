@@ -7,21 +7,22 @@ class GoogleSmartProcessor {
     constructor() {
         // ⚠️ 不在構造函數中直接引用 window 對象，而是動態獲取
         this.processors = {
-            get deepseekVision() { return window.deepseekVisionClient; },  // ✅ DeepSeek Vision（最優先）
-            get openaiVision() { return window.openaiVisionClient; },      // ✅ OpenAI GPT-4 Vision（備用1）
-            get geminiAI() { return window.geminiWorkerClient; },          // ✅ Gemini（備用2）
-            get visionAI() { return window.googleVisionAI; },              // ⚠️ Vision API（備用3）
-            get documentAI() { return window.googleDocumentAI; }           // ❌ Document AI（已停用）
+            get hybridOCRDeepSeek() { return window.hybridOCRDeepSeekProcessor; }, // ✅ 混合處理器（最優先）
+            get visionAI() { return window.googleVisionAI; },                      // ✅ Vision API（備用1）
+            get deepseekVision() { return window.deepseekVisionClient; },          // ❌ DeepSeek Vision（API 不支持圖片）
+            get openaiVision() { return window.openaiVisionClient; },              // ❌ OpenAI GPT-4 Vision（香港不可用）
+            get geminiAI() { return window.geminiWorkerClient; },                  // ❌ Gemini（香港不可用）
+            get documentAI() { return window.googleDocumentAI; }                   // ❌ Document AI（已停用）
         };
         
         this.processingOrder = [
-            'deepseekVision', // ✅ 最優先：DeepSeek Vision（智能模型選擇：VL2 > OCR > Janus-Pro）
-            'visionAI',       // ✅ 備用1：Vision API（可用，但準確度較低）
-            'openaiVision',   // ❌ 備用2：OpenAI GPT-4 Vision（香港不可用）
-            'geminiAI'        // ❌ 備用3：Gemini（香港不可用，CORS 錯誤）
+            'hybridOCRDeepSeek', // ✅ 最優先：混合處理器（Vision OCR + DeepSeek 文本處理）
+            'visionAI'           // ✅ 備用：Vision API 單獨使用（準確度較低）
+            // ❌ 其他處理器已禁用（不可用或不支持）
         ];
         
         console.log('🧠 Google 智能處理器初始化');
+        console.log('   🔄 使用混合處理器：Vision API OCR + DeepSeek 文本處理');
         this.logAvailableProcessors();
     }
     

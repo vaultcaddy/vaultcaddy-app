@@ -22,24 +22,26 @@
     <script src="gemini-worker-client.js?v=4.0"></script>
     <script src="openai-vision-client.js?v=1.0"></script>
     <script src="deepseek-vision-client.js?v=1.0"></script>
+    <script src="hybrid-ocr-deepseek-processor.js?v=1.0"></script>
     <script>
-        // ========== 🤖 立即初始化 DeepSeek Vision Client ==========
-        console.log('🤖 立即初始化 DeepSeek Vision Client...');
-        if (typeof window.DeepSeekVisionClient === 'function') {
+        // ========== 🤖 DeepSeek Vision Client（已禁用，API 不支持圖片）==========
+        console.log('⚠️  DeepSeek Vision Client 已禁用（API 不支持圖片輸入）');
+        
+        // ========== 🔄 立即初始化混合處理器（Vision OCR + DeepSeek 文本處理）==========
+        console.log('🔄 立即初始化混合處理器...');
+        if (typeof window.HybridOCRDeepSeekProcessor === 'function') {
             try {
-                const deepseekWorkerUrl = 'https://deepseek-proxy.vaultcaddy.workers.dev';
-                window.deepseekVisionClient = new window.DeepSeekVisionClient(deepseekWorkerUrl);
-                console.log('✅ DeepSeek Vision Client 已立即初始化');
-                console.log('   Worker URL:', window.deepseekVisionClient.workerUrl);
-                console.log('   Model:', window.deepseekVisionClient.model);
+                window.hybridOCRDeepSeekProcessor = new window.HybridOCRDeepSeekProcessor();
+                console.log('✅ 混合處理器已初始化');
+                console.log('   ✅ Vision API OCR + DeepSeek 文本處理');
             } catch (error) {
-                console.error('❌ DeepSeek Vision Client 立即初始化失敗:', error);
+                console.error('❌ 混合處理器初始化失敗:', error);
             }
         } else {
-            console.error('❌ DeepSeekVisionClient 類別未找到');
+            console.error('❌ HybridOCRDeepSeekProcessor 類別未找到');
         }
     </script>
-    <script src="google-smart-processor.js?v=20251026-001"></script>
+    <script src="google-smart-processor.js?v=20251027-001"></script>
     <script src="google-cloud-storage.js?v=20251021-002"></script>
     <script src="ledgerbox-integration.js"></script>
     
