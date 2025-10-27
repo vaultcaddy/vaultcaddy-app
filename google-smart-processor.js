@@ -15,10 +15,11 @@ class GoogleSmartProcessor {
         };
         
         this.processingOrder = [
-            'deepseekVision', // ✅ 最優先：DeepSeek Vision（準確度最高，成本最低）
-            'openaiVision',   // ✅ 備用1：OpenAI GPT-4 Vision（準確度高）
-            'geminiAI',       // ✅ 備用2：Gemini（通過 Cloudflare Worker）
-            'visionAI'        // ⚠️ 備用3：Vision API（文本解析能力較弱）
+            // ❌ 暫時禁用 DeepSeek - 不支持圖片輸入（一直返回 400 錯誤）
+            // 'deepseekVision',
+            'visionAI',       // ✅ 最優先：Vision API（可用，但準確度較低）
+            'openaiVision',   // ❌ 備用1：OpenAI GPT-4 Vision（香港不可用）
+            'geminiAI'        // ❌ 備用2：Gemini（香港不可用，CORS 錯誤）
         ];
         
         console.log('🧠 Google 智能處理器初始化');

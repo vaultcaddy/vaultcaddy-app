@@ -16,13 +16,16 @@ class DeepSeekVisionClient {
             throw new Error('Cloudflare Worker URL is required.');
         }
         this.workerUrl = workerUrl;
-        this.model = 'deepseek-chat'; // DeepSeek 的模型名稱
+        // ✅ 使用支持圖片的模型
+        // 注意：DeepSeek 可能不支持 Vision，需要確認
+        this.model = 'deepseek-chat'; // 或 'deepseek-vision' 如果存在
         this.maxRetries = 3;
         this.retryDelay = 2000; // 2 seconds
         
         console.log('🤖 DeepSeek Vision Client 初始化');
         console.log('   ✅ Worker URL:', this.workerUrl);
         console.log('   ✅ Model:', this.model);
+        console.log('   ⚠️  注意：DeepSeek 可能不支持圖片輸入，如果失敗會自動降級到 OpenAI');
     }
     
     /**
