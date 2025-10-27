@@ -78,10 +78,16 @@ async function handleRequest(request) {
     // 解析請求體
     const requestData = await request.json();
     
+    // ✅ 記錄請求詳情（包括模型名稱）
     console.log('📥 收到 DeepSeek 請求:', {
       origin,
-      timestamp: new Date().toISOString(),
-      hasMessages: !!requestData.messages
+      model: requestData.model,
+      hasMessages: !!requestData.messages,
+      hasImages: requestData.messages?.some(m => 
+        Array.isArray(m.content) && 
+        m.content.some(c => c.type === 'image_url')
+      ),
+      timestamp: new Date().toISOString()
     });
     
     // 調用 DeepSeek API
@@ -98,16 +104,24 @@ async function handleRequest(request) {
     const responseData = await deepseekResponse.json();
     
     console.log('📤 DeepSeek 響應:', {
+      model: requestData.model,
       status: deepseekResponse.status,
       ok: deepseekResponse.ok,
+      hasChoices: !!responseData.choices,
       timestamp: new Date().toISOString()
     });
     
     // 檢查是否有錯誤
     if (!deepseekResponse.ok) {
-      console.error('❌ DeepSeek API 錯誤:', responseData);
+      console.error('❌ DeepSeek API 錯誤:', {
+        model: requestData.model,
+        status: deepseekResponse.status,
+        error: responseData
+      });
+      
       return addCORSHeaders(new Response(JSON.stringify({
         error: 'DeepSeek API 錯誤',
+        model: requestData.model,
         status: deepseekResponse.status,
         details: responseData
       }), {
