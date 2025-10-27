@@ -137,9 +137,12 @@ async function handleRequest(request) {
         prompt_tokens: responseData.usage.prompt_tokens,
         completion_tokens: responseData.usage.completion_tokens,
         total_tokens: responseData.usage.total_tokens,
+        // ✅ 根據官方定價計算成本
+        // 輸入: ¥2/百萬tokens (緩存未命中) 或 ¥0.2/百萬tokens (緩存命中)
+        // 輸出: ¥3/百萬tokens
         estimated_cost_cny: (
           (responseData.usage.prompt_tokens / 1000000 * 2) + 
-          (responseData.usage.completion_tokens / 1000000 * 8)
+          (responseData.usage.completion_tokens / 1000000 * 3)
         ).toFixed(4)
       } : null,
       timestamp: new Date().toISOString()
