@@ -219,8 +219,8 @@ class DeepSeekVisionClient {
                 }
             ],
             max_tokens: 4000,
-            temperature: 0.1, // 降低溫度以獲得更準確的輸出
-            response_format: { type: "json_object" } // 強制 JSON 輸出
+            temperature: 0.1 // 降低溫度以獲得更準確的輸出
+            // ❌ 移除 response_format，DeepSeek 不支持此參數
         };
         
         for (let i = 0; i < this.maxRetries; i++) {
