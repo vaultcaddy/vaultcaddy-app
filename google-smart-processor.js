@@ -7,22 +7,16 @@ class GoogleSmartProcessor {
     constructor() {
         // ⚠️ 不在構造函數中直接引用 window 對象，而是動態獲取
         this.processors = {
-            get hybridOCRDeepSeek() { return window.hybridOCRDeepSeekProcessor; }, // ✅ 混合處理器（最優先）
-            get visionAI() { return window.googleVisionAI; },                      // ✅ Vision API（備用1）
-            get deepseekVision() { return window.deepseekVisionClient; },          // ❌ DeepSeek Vision（API 不支持圖片）
-            get openaiVision() { return window.openaiVisionClient; },              // ❌ OpenAI GPT-4 Vision（香港不可用）
-            get geminiAI() { return window.geminiWorkerClient; },                  // ❌ Gemini（香港不可用）
-            get documentAI() { return window.googleDocumentAI; }                   // ❌ Document AI（已停用）
+            get hybridOCRDeepSeek() { return window.hybridOCRDeepSeekProcessor; } // ✅ 唯一處理器
         };
         
         this.processingOrder = [
-            'hybridOCRDeepSeek', // ✅ 最優先：混合處理器（Vision OCR + DeepSeek 文本處理）
-            'visionAI'           // ✅ 備用：Vision API 單獨使用（準確度較低）
-            // ❌ 其他處理器已禁用（不可用或不支持）
+            'hybridOCRDeepSeek' // ✅ Vision API OCR + DeepSeek Reasoner
         ];
         
-        console.log('🧠 Google 智能處理器初始化');
-        console.log('   🔄 使用混合處理器：Vision API OCR + DeepSeek 文本處理');
+        console.log('🧠 智能處理器初始化');
+        console.log('   🔄 使用: Vision API OCR + DeepSeek Reasoner (思考模式)');
+        console.log('   ❌ 已禁用: OpenAI, Gemini, 其他 AI');
         this.logAvailableProcessors();
     }
     

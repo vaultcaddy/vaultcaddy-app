@@ -17,24 +17,17 @@ class HybridOCRDeepSeekProcessor {
     constructor() {
         this.visionAI = window.googleVisionAI;
         this.deepseekWorkerUrl = 'https://deepseek-proxy.vaultcaddy.workers.dev';
-        this.deepseekModel = 'deepseek-chat'; // 純文本模型
+        // ✅ 使用 DeepSeek-V3.2-Exp（思考模式）- 官方推薦用於複雜推理
+        this.deepseekModel = 'deepseek-reasoner';
+        this.useDeepSeek = true; // ✅ 啟用 DeepSeek
         
-        // ⚙️ 配置選項：是否使用 DeepSeek 進行文本處理
-        // 設為 true：使用 Vision API + DeepSeek（準確度 85-95%，成本 $1.64/1000張）
-        // 設為 false：只使用 Vision API（準確度 60-70%，成本 $1.50/1000張）
-        this.useDeepSeek = true; // ✅ 預設啟用 DeepSeek
-        
-        console.log('🔄 混合處理器初始化');
-        console.log('   ✅ Vision API:', this.visionAI ? '可用' : '不可用');
-        console.log('   ✅ DeepSeek:', this.useDeepSeek ? '啟用' : '禁用');
-        if (this.useDeepSeek) {
-            console.log('   ✅ DeepSeek Worker:', this.deepseekWorkerUrl);
-            console.log('   📊 預期準確度: 85-95%');
-            console.log('   💰 預期成本: $1.64 / 1000 張');
-        } else {
-            console.log('   📊 預期準確度: 60-70%');
-            console.log('   💰 預期成本: $1.50 / 1000 張');
-        }
+        console.log('🔄 混合處理器初始化（DeepSeek Reasoner）');
+        console.log('   ✅ Vision API OCR:', this.visionAI ? '可用' : '不可用');
+        console.log('   ✅ DeepSeek Model:', this.deepseekModel);
+        console.log('   ✅ DeepSeek Worker:', this.deepseekWorkerUrl);
+        console.log('   🧠 使用思考模式（Reasoning Mode）');
+        console.log('   📊 預期準確度: 90-95%');
+        console.log('   💰 成本: Vision API $1.50/1K + DeepSeek ¥2/1M tokens');
     }
     
     /**
