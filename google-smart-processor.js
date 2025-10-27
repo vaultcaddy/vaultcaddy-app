@@ -15,11 +15,10 @@ class GoogleSmartProcessor {
         };
         
         this.processingOrder = [
-            // ❌ 暫時禁用 DeepSeek - 不支持圖片輸入（一直返回 400 錯誤）
-            // 'deepseekVision',
-            'visionAI',       // ✅ 最優先：Vision API（可用，但準確度較低）
-            'openaiVision',   // ❌ 備用1：OpenAI GPT-4 Vision（香港不可用）
-            'geminiAI'        // ❌ 備用2：Gemini（香港不可用，CORS 錯誤）
+            'deepseekVision', // ✅ 最優先：DeepSeek Vision（智能模型選擇：VL2 > OCR > Janus-Pro）
+            'visionAI',       // ✅ 備用1：Vision API（可用，但準確度較低）
+            'openaiVision',   // ❌ 備用2：OpenAI GPT-4 Vision（香港不可用）
+            'geminiAI'        // ❌ 備用3：Gemini（香港不可用，CORS 錯誤）
         ];
         
         console.log('🧠 Google 智能處理器初始化');

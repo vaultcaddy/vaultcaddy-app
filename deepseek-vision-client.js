@@ -16,16 +16,29 @@ class DeepSeekVisionClient {
             throw new Error('Cloudflare Worker URL is required.');
         }
         this.workerUrl = workerUrl;
-        // ✅ 使用支持圖片的模型
-        // 注意：DeepSeek 可能不支持 Vision，需要確認
-        this.model = 'deepseek-chat'; // 或 'deepseek-vision' 如果存在
+        
+        // ✅ 嘗試使用支持圖片的模型
+        // 可能的模型名稱：
+        // - deepseek-vl2 (DeepSeek-VL2)
+        // - deepseek-ocr (DeepSeek-OCR)
+        // - janus-pro (Janus-Pro)
+        // 如果不支持，會自動降級
+        this.modelsToTry = [
+            'deepseek-vl2',      // DeepSeek-VL2 (最推薦)
+            'deepseek-ocr',      // DeepSeek-OCR
+            'janus-pro-7b',      // Janus-Pro 7B
+            'janus-pro-1b',      // Janus-Pro 1B
+            'deepseek-chat'      // 純文本模型（降級選項）
+        ];
+        
+        this.model = this.modelsToTry[0]; // 默認使用第一個
         this.maxRetries = 3;
         this.retryDelay = 2000; // 2 seconds
         
         console.log('🤖 DeepSeek Vision Client 初始化');
         console.log('   ✅ Worker URL:', this.workerUrl);
-        console.log('   ✅ Model:', this.model);
-        console.log('   ⚠️  注意：DeepSeek 可能不支持圖片輸入，如果失敗會自動降級到 OpenAI');
+        console.log('   ✅ 嘗試模型:', this.modelsToTry);
+        console.log('   ✅ 默認模型:', this.model);
     }
     
     /**
@@ -183,7 +196,7 @@ class DeepSeekVisionClient {
     }
     
     /**
-     * 處理文檔
+     * 處理文檔（智能模型選擇）
      */
     async processDocument(file, documentType = 'general') {
         console.log(`🚀 DeepSeek Vision Client 處理文檔: ${file.name} (${documentType})`);
@@ -198,37 +211,40 @@ class DeepSeekVisionClient {
         
         const { system, user } = this.generatePrompt(documentType, file);
         
-        const requestBody = {
-            model: this.model,
-            messages: [
-                {
-                    role: "system",
-                    content: system
-                },
-                {
-                    role: "user",
-                    content: [
-                        {
-                            type: "text",
-                            text: user
-                        },
-                        {
-                            type: "image_url",
-                            image_url: {
-                                url: `data:${file.type};base64,${base64Data}`
+        // 🔄 智能模型選擇：按順序嘗試每個模型
+        for (let modelIndex = 0; modelIndex < this.modelsToTry.length; modelIndex++) {
+            const currentModel = this.modelsToTry[modelIndex];
+            console.log(`\n🤖 嘗試模型 ${modelIndex + 1}/${this.modelsToTry.length}: ${currentModel}`);
+            
+            const requestBody = {
+                model: currentModel,
+                messages: [
+                    {
+                        role: "system",
+                        content: system
+                    },
+                    {
+                        role: "user",
+                        content: [
+                            {
+                                type: "text",
+                                text: user
+                            },
+                            {
+                                type: "image_url",
+                                image_url: {
+                                    url: `data:${file.type};base64,${base64Data}`
+                                }
                             }
-                        }
-                    ]
-                }
-            ],
-            max_tokens: 4000,
-            temperature: 0.1 // 降低溫度以獲得更準確的輸出
-            // ❌ 移除 response_format，DeepSeek 不支持此參數
-        };
-        
-        for (let i = 0; i < this.maxRetries; i++) {
+                        ]
+                    }
+                ],
+                max_tokens: 4000,
+                temperature: 0.1
+            };
+            
             try {
-                console.log(`🔄 嘗試 DeepSeek Vision API (重試 ${i + 1}/${this.maxRetries})...`);
+                console.log(`   📤 發送請求到 DeepSeek API...`);
                 const response = await fetch(this.workerUrl, {
                     method: 'POST',
                     headers: {
@@ -239,7 +255,14 @@ class DeepSeekVisionClient {
                 
                 if (!response.ok) {
                     const errorData = await response.json();
-                    console.error('❌ DeepSeek API 錯誤響應:', errorData);
+                    console.warn(`   ⚠️ 模型 ${currentModel} 失敗 (${response.status}):`, errorData.error?.message || errorData.message);
+                    
+                    // 如果是 400 錯誤（模型不支持），嘗試下一個模型
+                    if (response.status === 400) {
+                        console.log(`   ⏭️  跳過模型 ${currentModel}，嘗試下一個...`);
+                        continue;
+                    }
+                    
                     throw new Error(`DeepSeek API error: ${response.status} - ${errorData.error?.message || response.statusText}`);
                 }
                 
@@ -250,38 +273,59 @@ class DeepSeekVisionClient {
                 }
                 
                 const content = data.choices[0].message.content;
-                console.log('✅ DeepSeek 原始響應:', content);
+                console.log(`   ✅ 模型 ${currentModel} 成功返回響應`);
+                console.log(`   📄 響應內容:`, content.substring(0, 200) + '...');
                 
                 let parsedData;
                 try {
                     parsedData = JSON.parse(content);
                 } catch (jsonError) {
-                    console.error('❌ JSON 解析失敗:', jsonError);
-                    throw new Error('Failed to parse DeepSeek response as JSON.');
+                    console.error('   ❌ JSON 解析失敗:', jsonError);
+                    // 嘗試清理響應（移除 markdown 代碼塊）
+                    const cleaned = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+                    try {
+                        parsedData = JSON.parse(cleaned);
+                        console.log('   ✅ 清理後 JSON 解析成功');
+                    } catch (cleanError) {
+                        throw new Error('Failed to parse DeepSeek response as JSON.');
+                    }
                 }
                 
                 // 檢查並確保返回的 JSON 結構符合預期
                 if (!parsedData.document_type || !parsedData.extracted_data) {
-                    throw new Error('DeepSeek response JSON is missing required fields (document_type or extracted_data).');
+                    console.warn('   ⚠️ JSON 結構不完整，嘗試下一個模型...');
+                    continue;
                 }
+                
+                // 🎉 成功！記錄使用的模型
+                this.model = currentModel; // 更新為成功的模型
+                console.log(`\n🎉 成功使用模型: ${currentModel}`);
                 
                 return {
                     success: true,
                     documentType: parsedData.document_type,
                     confidence: parsedData.confidence_score || 0,
                     extractedData: parsedData.extracted_data,
-                    rawResponse: data // 包含原始響應以供調試
+                    model: currentModel, // 返回使用的模型名稱
+                    rawResponse: data
                 };
                 
             } catch (error) {
-                console.error(`❌ DeepSeek Vision API 失敗 (重試 ${i + 1}/${this.maxRetries}):`, error.message);
-                if (i < this.maxRetries - 1) {
-                    await new Promise(resolve => setTimeout(resolve, this.retryDelay));
+                console.error(`   ❌ 模型 ${currentModel} 處理失敗:`, error.message);
+                
+                // 如果不是最後一個模型，繼續嘗試下一個
+                if (modelIndex < this.modelsToTry.length - 1) {
+                    console.log(`   ⏭️  嘗試下一個模型...`);
+                    continue;
                 } else {
-                    throw error; // 最後一次重試失敗，拋出錯誤
+                    // 所有模型都失敗了
+                    throw new Error(`所有 DeepSeek 模型都失敗了。最後錯誤: ${error.message}`);
                 }
             }
         }
+        
+        // 如果所有模型都失敗（不應該到達這裡）
+        throw new Error('無法使用任何 DeepSeek 模型處理文檔');
     }
 }
 
