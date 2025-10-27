@@ -19,9 +19,22 @@ class HybridOCRDeepSeekProcessor {
         this.deepseekWorkerUrl = 'https://deepseek-proxy.vaultcaddy.workers.dev';
         this.deepseekModel = 'deepseek-chat'; // 純文本模型
         
-        console.log('🔄 混合處理器初始化（OCR + DeepSeek）');
+        // ⚙️ 配置選項：是否使用 DeepSeek 進行文本處理
+        // 設為 true：使用 Vision API + DeepSeek（準確度 85-95%，成本 $1.64/1000張）
+        // 設為 false：只使用 Vision API（準確度 60-70%，成本 $1.50/1000張）
+        this.useDeepSeek = true; // ✅ 預設啟用 DeepSeek
+        
+        console.log('🔄 混合處理器初始化');
         console.log('   ✅ Vision API:', this.visionAI ? '可用' : '不可用');
-        console.log('   ✅ DeepSeek Worker:', this.deepseekWorkerUrl);
+        console.log('   ✅ DeepSeek:', this.useDeepSeek ? '啟用' : '禁用');
+        if (this.useDeepSeek) {
+            console.log('   ✅ DeepSeek Worker:', this.deepseekWorkerUrl);
+            console.log('   📊 預期準確度: 85-95%');
+            console.log('   💰 預期成本: $1.64 / 1000 張');
+        } else {
+            console.log('   📊 預期準確度: 60-70%');
+            console.log('   💰 預期成本: $1.50 / 1000 張');
+        }
     }
     
     /**
@@ -33,7 +46,7 @@ class HybridOCRDeepSeekProcessor {
         
         try {
             // ========== 步驟 1：使用 Vision API 提取文本 ==========
-            console.log('📸 步驟 1/2: 使用 Vision API 進行 OCR...');
+            console.log('📸 步驟 1: 使用 Vision API 進行 OCR...');
             const ocrStartTime = Date.now();
             
             const ocrText = await this.extractTextWithVisionAPI(file);
@@ -42,27 +55,45 @@ class HybridOCRDeepSeekProcessor {
             console.log(`📄 提取的文本長度: ${ocrText.length} 字符`);
             console.log(`📄 文本預覽: ${ocrText.substring(0, 200)}...`);
             
-            // ========== 步驟 2：使用 DeepSeek 處理文本 ==========
-            console.log('\n🤖 步驟 2/2: 使用 DeepSeek 處理文本...');
-            const deepseekStartTime = Date.now();
+            // ========== 步驟 2：處理文本（根據配置決定是否使用 DeepSeek）==========
+            let structuredData;
+            let deepseekTime = 0;
             
-            const structuredData = await this.processTextWithDeepSeek(ocrText, documentType);
+            if (this.useDeepSeek) {
+                // 使用 DeepSeek 進行結構化處理
+                console.log('\n🤖 步驟 2: 使用 DeepSeek 處理文本...');
+                const deepseekStartTime = Date.now();
+                
+                structuredData = await this.processTextWithDeepSeek(ocrText, documentType);
+                deepseekTime = Date.now() - deepseekStartTime;
+                
+                console.log(`✅ DeepSeek 處理完成，耗時: ${deepseekTime}ms`);
+            } else {
+                // 只使用 Vision API 的基本解析
+                console.log('\n📋 步驟 2: 使用基本文本解析（不使用 DeepSeek）...');
+                const parseStartTime = Date.now();
+                
+                structuredData = this.parseTextBasic(ocrText, documentType);
+                deepseekTime = Date.now() - parseStartTime;
+                
+                console.log(`✅ 基本解析完成，耗時: ${deepseekTime}ms`);
+                console.log(`⚠️  注意：未使用 DeepSeek，準確度可能較低`);
+            }
             
-            console.log(`✅ DeepSeek 處理完成，耗時: ${Date.now() - deepseekStartTime}ms`);
-            console.log(`\n🎉 混合處理完成，總耗時: ${Date.now() - startTime}ms`);
+            console.log(`\n🎉 處理完成，總耗時: ${Date.now() - startTime}ms`);
             
             return {
                 success: true,
                 documentType: structuredData.document_type || documentType,
-                confidence: structuredData.confidence_score || 85,
+                confidence: structuredData.confidence_score || (this.useDeepSeek ? 85 : 60),
                 extractedData: structuredData.extracted_data,
                 ocrText: ocrText, // 保留原始 OCR 文本供調試
                 processingTime: {
                     ocr: Date.now() - ocrStartTime,
-                    deepseek: Date.now() - deepseekStartTime,
+                    processing: deepseekTime,
                     total: Date.now() - startTime
                 },
-                processor: 'hybrid-ocr-deepseek'
+                processor: this.useDeepSeek ? 'hybrid-ocr-deepseek' : 'vision-api-only'
             };
             
         } catch (error) {
@@ -330,6 +361,117 @@ Extract key information and return in this format:
   }
 }`;
         }
+    }
+    
+    /**
+     * 基本文本解析（不使用 DeepSeek）
+     * 使用簡單的正則表達式提取數據
+     */
+    parseTextBasic(text, documentType) {
+        console.log('   使用基本文本解析...');
+        
+        // 這是一個簡化版本，準確度較低
+        // 建議使用 DeepSeek 以獲得更好的結果
+        
+        const result = {
+            document_type: documentType,
+            confidence_score: 60, // 基本解析的信心分數較低
+            extracted_data: {}
+        };
+        
+        // 基本的正則提取（非常簡化）
+        switch (documentType) {
+            case 'invoice':
+                result.extracted_data = {
+                    invoice_number: this.extractPattern(text, /invoice\s*#?\s*:?\s*(\S+)/i) || '',
+                    date: this.extractDate(text) || '',
+                    total: this.extractAmount(text) || 0,
+                    currency: 'HKD',
+                    supplier: { name: '', address: '', phone: '', email: '' },
+                    customer: { name: '', address: '', phone: '' },
+                    items: [],
+                    subtotal: 0,
+                    tax: 0
+                };
+                break;
+                
+            case 'receipt':
+                result.extracted_data = {
+                    transaction_id: this.extractPattern(text, /transaction\s*#?\s*:?\s*(\S+)/i) || '',
+                    date: this.extractDate(text) || '',
+                    total: this.extractAmount(text) || 0,
+                    currency: 'HKD',
+                    merchant: { name: '', address: '', phone: '' },
+                    items: [],
+                    subtotal: 0,
+                    tax: 0,
+                    payment_method: ''
+                };
+                break;
+                
+            case 'bank_statement':
+                result.extracted_data = {
+                    account_number: this.extractPattern(text, /account\s*#?\s*:?\s*(\S+)/i) || '',
+                    opening_balance: 0,
+                    closing_balance: 0,
+                    currency: 'HKD',
+                    transactions: []
+                };
+                break;
+                
+            default:
+                result.extracted_data = {
+                    summary: text.substring(0, 500),
+                    key_entities: []
+                };
+        }
+        
+        return result;
+    }
+    
+    /**
+     * 提取匹配模式
+     */
+    extractPattern(text, pattern) {
+        const match = text.match(pattern);
+        return match ? match[1].trim() : null;
+    }
+    
+    /**
+     * 提取日期
+     */
+    extractDate(text) {
+        // 嘗試多種日期格式
+        const patterns = [
+            /(\d{4}-\d{2}-\d{2})/,  // YYYY-MM-DD
+            /(\d{2}\/\d{2}\/\d{4})/, // DD/MM/YYYY
+            /(\d{2}-\d{2}-\d{4})/    // DD-MM-YYYY
+        ];
+        
+        for (const pattern of patterns) {
+            const match = text.match(pattern);
+            if (match) {
+                return match[1];
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * 提取金額
+     */
+    extractAmount(text) {
+        // 尋找金額模式（如 $123.45 或 123.45）
+        const pattern = /\$?\s*(\d{1,10}(?:,\d{3})*(?:\.\d{2})?)/g;
+        const matches = text.match(pattern);
+        
+        if (matches && matches.length > 0) {
+            // 返回最大的金額（通常是總計）
+            const amounts = matches.map(m => parseFloat(m.replace(/[$,]/g, '')));
+            return Math.max(...amounts);
+        }
+        
+        return 0;
     }
     
     /**
