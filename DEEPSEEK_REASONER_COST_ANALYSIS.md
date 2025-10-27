@@ -34,9 +34,10 @@ DeepSeek Reasoner（思考模式 - 結構化提取）
 
 根據 [DeepSeek 官方定價](https://api-docs.deepseek.com/zh-cn/quick_start/pricing)：
 
-| 模型 | 輸入成本 | 輸出成本 |
-|------|---------|---------|
-| **deepseek-reasoner** | ¥2 / 百萬 tokens | ¥8 / 百萬 tokens |
+| 模型 | 輸入成本（緩存未命中） | 輸入成本（緩存命中） | 輸出成本 |
+|------|---------------------|-------------------|---------|
+| **deepseek-reasoner** | ¥2 / 百萬 tokens | ¥0.2 / 百萬 tokens | ¥3 / 百萬 tokens |
+| **deepseek-chat** | ¥2 / 百萬 tokens | ¥0.2 / 百萬 tokens | ¥3 / 百萬 tokens |
 
 **Token 估算**（每張發票）：
 - OCR 提取文本：約 500-1000 tokens
@@ -46,13 +47,13 @@ DeepSeek Reasoner（思考模式 - 結構化提取）
 
 **DeepSeek 成本計算**：
 - 輸入：1,500 tokens × ¥2 / 1,000,000 = ¥0.003
-- 輸出：1,000 tokens × ¥8 / 1,000,000 = ¥0.008
-- **每張圖片成本**：¥0.011（約 $0.0015 USD）
+- 輸出：1,000 tokens × ¥3 / 1,000,000 = ¥0.003
+- **每張圖片成本**：¥0.006（約 $0.00084 USD）
 
 ### 3. 匯率轉換
 
 - ¥1 CNY = $0.14 USD（2025年1月匯率）
-- DeepSeek 成本：¥0.011 = $0.00154 USD / 張
+- DeepSeek 成本：¥0.006 = $0.00084 USD / 張
 
 ---
 
