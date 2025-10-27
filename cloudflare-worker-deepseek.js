@@ -2,11 +2,20 @@
  * Cloudflare Worker - DeepSeek API 代理
  * 用途：繞過 CORS 限制，安全地調用 DeepSeek API
  * 部署：https://workers.cloudflare.com/
+ * 
+ * 支持的模型：
+ * - deepseek-chat: DeepSeek-V3.2-Exp（非思考模式）
+ * - deepseek-reasoner: DeepSeek-V3.2-Exp（思考模式）- 推薦
+ * 
+ * 最後更新：2025-10-27
  */
 
 // 配置
-const DEEPSEEK_API_KEY = 'sk-4a43b49a13a840009052be65f599b7a4'; // ✅ DeepSeek API Key（已更新）
+const DEEPSEEK_API_KEY = 'sk-4a43b49a13a840009052be65f599b7a4'; // ✅ DeepSeek API Key
 const DEEPSEEK_API_ENDPOINT = 'https://api.deepseek.com/v1/chat/completions';
+
+// 支持的模型列表
+const SUPPORTED_MODELS = ['deepseek-chat', 'deepseek-reasoner'];
 
 // 允許的來源（CORS）
 const ALLOWED_ORIGINS = [
@@ -78,17 +87,32 @@ async function handleRequest(request) {
     // 解析請求體
     const requestData = await request.json();
     
+    // ✅ 驗證模型名稱
+    if (requestData.model && !SUPPORTED_MODELS.includes(requestData.model)) {
+      console.warn(`⚠️  不支持的模型: ${requestData.model}`);
+      console.warn(`   支持的模型: ${SUPPORTED_MODELS.join(', ')}`);
+    }
+    
     // ✅ 記錄請求詳情（包括模型名稱）
     console.log('📥 收到 DeepSeek 請求:', {
       origin,
-      model: requestData.model,
+      model: requestData.model || 'deepseek-chat',
       hasMessages: !!requestData.messages,
+      messageCount: requestData.messages?.length || 0,
       hasImages: requestData.messages?.some(m => 
         Array.isArray(m.content) && 
         m.content.some(c => c.type === 'image_url')
       ),
       timestamp: new Date().toISOString()
     });
+    
+    // ⚠️  警告：DeepSeek API 不支持圖片輸入
+    if (requestData.messages?.some(m => 
+      Array.isArray(m.content) && 
+      m.content.some(c => c.type === 'image_url')
+    )) {
+      console.warn('⚠️  警告：DeepSeek API 不支持圖片輸入！請使用 Vision API OCR 先提取文本。');
+    }
     
     // 調用 DeepSeek API
     const deepseekResponse = await fetch(DEEPSEEK_API_ENDPOINT, {
@@ -103,11 +127,21 @@ async function handleRequest(request) {
     // 獲取響應
     const responseData = await deepseekResponse.json();
     
+    // ✅ 記錄響應詳情（包括 token 用量）
     console.log('📤 DeepSeek 響應:', {
       model: requestData.model,
       status: deepseekResponse.status,
       ok: deepseekResponse.ok,
       hasChoices: !!responseData.choices,
+      usage: responseData.usage ? {
+        prompt_tokens: responseData.usage.prompt_tokens,
+        completion_tokens: responseData.usage.completion_tokens,
+        total_tokens: responseData.usage.total_tokens,
+        estimated_cost_cny: (
+          (responseData.usage.prompt_tokens / 1000000 * 2) + 
+          (responseData.usage.completion_tokens / 1000000 * 8)
+        ).toFixed(4)
+      } : null,
       timestamp: new Date().toISOString()
     });
     
