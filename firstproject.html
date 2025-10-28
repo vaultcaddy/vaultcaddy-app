@@ -3586,8 +3586,22 @@
                     setTimeout(() => {
                         alert(`批量上傳完成！\n成功: ${result.completed}\n失敗: ${result.failed}`);
                         
-                        // 刷新頁面以顯示新文件
-                        location.reload();
+                        // ✅ 關閉上傳模態框
+                        closeUploadModal();
+                        
+                        // ✅ 重新加載文件列表，而不是刷新整個頁面
+                        const currentHash = window.location.hash;
+                        const currentDocType = currentHash ? currentHash.substring(1) : 'bank-statement';
+                        
+                        // 重新加載當前文檔類型的文件
+                        if (typeof loadFilesForDocumentType === 'function') {
+                            console.log('🔄 重新加載文件列表...');
+                            loadFilesForDocumentType(currentDocType);
+                        } else {
+                            // 如果函數不可用，才使用 location.reload()
+                            console.warn('⚠️  loadFilesForDocumentType 函數不可用，刷新頁面');
+                            location.reload();
+                        }
                     }, 1000);
                 }
             );
