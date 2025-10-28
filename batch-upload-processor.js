@@ -227,8 +227,8 @@ class BatchUploadProcessor {
      */
     saveFileToProject(projectId, fileData) {
         try {
-            // 獲取項目的文件列表
-            const storageKey = `vaultcaddy_project_${projectId}_files`;
+            // ✅ 修復：使用正確的存儲鍵（與 loadFilesForDocumentType 一致）
+            const storageKey = `vaultcaddy_project_${projectId}_documents`;  // 從 _files 改為 _documents
             const existingFiles = JSON.parse(localStorage.getItem(storageKey) || '[]');
             
             // 添加新文件
@@ -238,6 +238,8 @@ class BatchUploadProcessor {
             localStorage.setItem(storageKey, JSON.stringify(existingFiles));
             
             console.log(`💾 文件已保存到項目 ${projectId}:`, fileData.fileName);
+            console.log(`   存儲鍵: ${storageKey}`);
+            console.log(`   當前文件總數: ${existingFiles.length}`);
         } catch (error) {
             console.error('❌ 保存文件失敗:', error);
             throw error;
