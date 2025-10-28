@@ -29,11 +29,7 @@ class GoogleSmartProcessor {
             return processor !== null && processor !== undefined;
         });
         console.log('可用處理器:', available);
-        console.log('   - deepseekVision:', typeof window.deepseekVisionClient);
-        console.log('   - openaiVision:', typeof window.openaiVisionClient);
-        console.log('   - geminiAI (geminiWorkerClient):', typeof window.geminiWorkerClient);
-        console.log('   - visionAI:', typeof window.googleVisionAI);
-        console.log('   - documentAI:', typeof window.googleDocumentAI);
+        console.log('   - hybridOCRDeepSeek:', typeof window.hybridOCRDeepSeekProcessor);
     }
     
     /**
@@ -169,22 +165,11 @@ class GoogleSmartProcessor {
      * 根據文檔類型優化處理順序
      */
     optimizeProcessingOrder(documentType) {
-        // ✅ 所有文檔類型統一使用: deepseekVision → openaiVision → geminiAI → visionAI
+        // ✅ 所有文檔類型統一使用混合處理器：Vision API OCR + DeepSeek Reasoner
+        // 不再使用舊的處理器（deepseekVision, openaiVision, geminiAI, visionAI）
         
-        switch (documentType) {
-            case 'invoice':
-            case 'receipt':
-                // 對於發票和收據，DeepSeek Vision 準確度最高且成本最低
-                return ['deepseekVision', 'openaiVision', 'geminiAI', 'visionAI'];
-                
-            case 'bank_statement':
-                // 對於銀行對帳單，DeepSeek Vision 可以更好地理解表格結構
-                return ['deepseekVision', 'openaiVision', 'geminiAI', 'visionAI'];
-                
-            default:
-                // 通用文檔，保持默認順序
-                return this.processingOrder;
-        }
+        // 所有文檔類型都使用相同的處理順序
+        return ['hybridOCRDeepSeek']; // Vision API OCR + DeepSeek Reasoner (思考模式)
     }
     
     /**
