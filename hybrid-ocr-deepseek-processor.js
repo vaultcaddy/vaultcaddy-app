@@ -103,54 +103,45 @@ class HybridOCRDeepSeekProcessor {
             throw new Error('Vision API 不可用');
         }
         
-        // 將文件轉換為 base64
-        const base64Data = await this.fileToBase64(file);
-        
-        // 調用 Vision API
-        const config = window.VaultCaddyConfig?.apiConfig?.google;
-        const apiKey = config?.apiKey;
-        const endpoint = config?.endpoints?.vision;
-        
-        if (!apiKey) {
-            throw new Error('Google Vision API 密鑰未設置');
+        try {
+            // 使用 googleVisionAI 的 processDocument 方法
+            console.log('📸 調用 Vision API OCR...');
+            const result = await this.visionAI.processDocument(file, 'general');
+            
+            console.log('📄 Vision API 響應:', {
+                success: result.success,
+                hasData: !!result.data,
+                hasFullText: !!result.data?.fullTextAnnotation,
+                hasText: !!result.data?.text
+            });
+            
+            if (!result.success) {
+                throw new Error('Vision API 處理失敗');
+            }
+            
+            // 提取文本（優先使用 fullTextAnnotation.text，其次使用 text）
+            let extractedText = null;
+            
+            if (result.data?.fullTextAnnotation?.text) {
+                extractedText = result.data.fullTextAnnotation.text;
+            } else if (result.data?.text) {
+                extractedText = result.data.text;
+            } else if (result.data?.textAnnotations && result.data.textAnnotations.length > 0) {
+                // 如果有 textAnnotations，使用第一個（通常是完整文本）
+                extractedText = result.data.textAnnotations[0].description;
+            }
+            
+            if (!extractedText) {
+                throw new Error('Vision API 未能從圖片中提取任何文本');
+            }
+            
+            console.log('✅ 成功提取文本，長度:', extractedText.length);
+            return extractedText;
+            
+        } catch (error) {
+            console.error('❌ Vision API 提取文本失敗:', error);
+            throw new Error(`Vision API 錯誤: ${error.message}`);
         }
-        
-        const requestBody = {
-            requests: [{
-                image: {
-                    content: base64Data
-                },
-                features: [
-                    {
-                        type: 'DOCUMENT_TEXT_DETECTION', // 使用文檔文本檢測（更適合文檔）
-                        maxResults: 1
-                    }
-                ]
-            }]
-        };
-        
-        const response = await fetch(`${endpoint}/images:annotate?key=${apiKey}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(requestBody)
-        });
-        
-        if (!response.ok) {
-            const errorData = await response.text();
-            throw new Error(`Vision API 錯誤: ${response.status} - ${errorData}`);
-        }
-        
-        const result = await response.json();
-        
-        // 提取文本
-        const annotations = result.responses[0];
-        if (!annotations || !annotations.fullTextAnnotation) {
-            throw new Error('Vision API 未能提取文本');
-        }
-        
-        return annotations.fullTextAnnotation.text;
     }
     
     /**
