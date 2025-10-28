@@ -16,13 +16,13 @@
     <script src="navbar-component.js?v=3.9"></script>
     <script src="sidebar-component.js?v=3.9"></script>
     <!-- 載入統一處理器系統 -->
-    <script src="google-ai-integration.js"></script>
-    <script src="google-document-ai.js?v=20251027-002"></script>
-    <script src="google-vision-ai.js?v=20251027-002"></script>
-    <script src="gemini-worker-client.js?v=4.0"></script>
-    <script src="openai-vision-client.js?v=1.0"></script>
-    <script src="deepseek-vision-client.js?v=1.0"></script>
-    <script src="hybrid-ocr-deepseek-processor.js?v=20251027-001"></script>
+    <script src="google-ai-integration.js?v=20251027-003"></script>
+    <script src="google-document-ai.js?v=20251027-003"></script>
+    <script src="google-vision-ai.js?v=20251027-003"></script>
+    <script src="gemini-worker-client.js?v=20251027-003"></script>
+    <script src="openai-vision-client.js?v=20251027-003"></script>
+    <script src="deepseek-vision-client.js?v=20251027-003"></script>
+    <script src="hybrid-ocr-deepseek-processor.js?v=20251027-003"></script>
     <script>
         // ========== 🤖 DeepSeek Vision Client（已禁用，API 不支持圖片）==========
         console.log('⚠️  DeepSeek Vision Client 已禁用（API 不支持圖片輸入）');
@@ -30,37 +30,64 @@
         // ========== 🔄 立即初始化混合處理器（Vision OCR + DeepSeek 文本處理）==========
         console.log('🔄 立即初始化混合處理器...');
         
-        // 等待 DOM 完全加載後再初始化
+        // 等待所有依賴加載後再初始化
         function initHybridProcessor() {
-            if (typeof window.HybridOCRDeepSeekProcessor === 'function') {
-                try {
-                    // 檢查 Vision API 是否可用
-                    if (!window.googleVisionAI) {
-                        console.error('❌ Vision API 未初始化');
-                        return;
-                    }
-                    
-                    window.hybridOCRDeepSeekProcessor = new window.HybridOCRDeepSeekProcessor();
-                    console.log('✅ 混合處理器已初始化');
-                    console.log('   ✅ Vision API OCR + DeepSeek 文本處理');
-                } catch (error) {
-                    console.error('❌ 混合處理器初始化失敗:', error);
-                    console.error('   錯誤詳情:', error.message);
-                }
-            } else {
+            // 檢查所有依賴是否已加載
+            if (typeof window.HybridOCRDeepSeekProcessor !== 'function') {
                 console.error('❌ HybridOCRDeepSeekProcessor 類別未找到');
+                return false;
+            }
+            
+            if (!window.googleVisionAI) {
+                console.warn('⚠️  Vision API 未初始化，等待加載...');
+                return false;
+            }
+            
+            try {
+                window.hybridOCRDeepSeekProcessor = new window.HybridOCRDeepSeekProcessor();
+                console.log('✅ 混合處理器已初始化');
+                console.log('   ✅ Vision API OCR + DeepSeek 文本處理');
+                return true;
+            } catch (error) {
+                console.error('❌ 混合處理器初始化失敗:', error);
+                console.error('   錯誤詳情:', error.message);
+                console.error('   堆棧:', error.stack);
+                return false;
             }
         }
         
-        // 立即嘗試初始化，如果失敗則在 DOMContentLoaded 時再試
+        // 重試機制：最多嘗試 10 次，每次間隔 100ms
+        let retryCount = 0;
+        const maxRetries = 10;
+        
+        function tryInitWithRetry() {
+            if (initHybridProcessor()) {
+                console.log('✅ 混合處理器初始化成功');
+                return;
+            }
+            
+            retryCount++;
+            if (retryCount < maxRetries) {
+                console.log(`🔄 重試初始化混合處理器 (${retryCount}/${maxRetries})...`);
+                setTimeout(tryInitWithRetry, 100);
+            } else {
+                console.error('❌ 混合處理器初始化失敗：超過最大重試次數');
+                console.error('   請檢查：');
+                console.error('   1. google-vision-ai.js 是否正確加載');
+                console.error('   2. hybrid-ocr-deepseek-processor.js 是否正確加載');
+                console.error('   3. 控制台是否有其他錯誤');
+            }
+        }
+        
+        // 開始初始化
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initHybridProcessor);
+            document.addEventListener('DOMContentLoaded', tryInitWithRetry);
         } else {
-            initHybridProcessor();
+            tryInitWithRetry();
         }
     </script>
-    <script src="google-smart-processor.js?v=20251027-002"></script>
-    <script src="google-cloud-storage.js?v=20251021-002"></script>
+    <script src="google-smart-processor.js?v=20251027-003"></script>
+    <script src="google-cloud-storage.js?v=20251027-003"></script>
     <script src="ledgerbox-integration.js"></script>
     
     <!-- 載入數據處理器 -->
