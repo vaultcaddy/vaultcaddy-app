@@ -168,7 +168,7 @@ class HybridOCRDeepSeekProcessor {
                     content: prompt
                 }
             ],
-            max_tokens: 4000,
+            max_tokens: 8000,  // ✅ 增加到 8000，避免 JSON 被截斷
             temperature: 0.1
         };
         
@@ -273,32 +273,43 @@ CRITICAL RULES:
         switch (documentType) {
             case 'invoice':
                 return baseInstruction + `
-Extract the following fields:
+Extract the following fields from the invoice:
+
+IMPORTANT INSTRUCTIONS FOR DATE EXTRACTION:
+- Look for dates in ANY format: YYYY-MM-DD, DD/MM/YYYY, YYYY年MM月DD日, etc.
+- Convert ALL dates to YYYY-MM-DD format
+- Common labels: "日期", "Date", "訂貨日期", "送貨日期", etc.
+- If you see "2025年9月26日", convert to "2025-09-26"
+- If you see "25091134" as invoice number and "2025年9月26日" as date, extract the date correctly
+
+IMPORTANT INSTRUCTIONS FOR SUPPLIER EXTRACTION:
+- Look for company name at the TOP of the invoice
+- Common patterns: "XXX有限公司", "XXX (HK) Ltd.", "XXX Co., Ltd."
+- The supplier is usually the FIRST company name mentioned
+- Extract the FULL company name including legal suffix
+
+Return this exact JSON structure:
 
 {
   "document_type": "invoice",
   "confidence_score": 0-100,
   "extracted_data": {
     "invoice_number": "string",
-    "date": "YYYY-MM-DD",
-    "due_date": "YYYY-MM-DD",
-    "supplier": {
-      "name": "string",
-      "address": "string",
-      "phone": "string",
-      "email": "string"
-    },
-    "customer": {
-      "name": "string",
-      "address": "string",
-      "phone": "string"
-    },
+    "date": "YYYY-MM-DD (REQUIRED - convert Chinese dates like 2025年9月26日 to 2025-09-26)",
+    "due_date": "YYYY-MM-DD or empty string",
+    "supplier": "string (company name only, e.g., 'Hoi Wan Tat (HK) Ltd.')",
+    "supplier_address": "string",
+    "supplier_phone": "string",
+    "supplier_email": "string",
+    "customer": "string (customer name only)",
+    "customer_address": "string",
+    "customer_phone": "string",
     "items": [
       {
         "description": "string",
         "quantity": number,
-        "unit_price": number,
-        "amount": number
+        "unit_price": number (REQUIRED - extract from 單價 column)",
+        "amount": number (from 金額 column)"
       }
     ],
     "subtotal": number,
@@ -306,7 +317,12 @@ Extract the following fields:
     "total": number,
     "currency": "string (e.g., HKD, USD)"
   }
-}`;
+}
+
+CRITICAL: Pay special attention to:
+1. Date conversion from Chinese format (年月日) to YYYY-MM-DD
+2. Supplier should be a STRING, not an object
+3. Extract unit_price from the 單價 column (not $0.00)`;
             
             case 'receipt':
                 return baseInstruction + `
