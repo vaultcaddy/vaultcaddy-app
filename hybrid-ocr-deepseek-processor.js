@@ -148,7 +148,13 @@ class HybridOCRDeepSeekProcessor {
      * 使用 DeepSeek 處理文本
      */
     async processTextWithDeepSeek(text, documentType) {
+        console.log('📝 準備 DeepSeek 請求...');
+        console.log('   模型:', this.deepseekModel);
+        console.log('   Worker URL:', this.deepseekWorkerUrl);
+        console.log('   文本長度:', text.length);
+        
         const prompt = this.generatePrompt(text, documentType);
+        console.log('   Prompt 長度:', prompt.length);
         
         const requestBody = {
             model: this.deepseekModel,
@@ -163,41 +169,68 @@ class HybridOCRDeepSeekProcessor {
                 }
             ],
             max_tokens: 4000,
-            temperature: 0.1 // 低溫度以獲得更準確的輸出
+            temperature: 0.1
         };
         
-        const response = await fetch(this.deepseekWorkerUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(requestBody)
-        });
+        console.log('📤 發送 DeepSeek 請求...');
         
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(`DeepSeek API 錯誤: ${response.status} - ${errorData.error?.message || errorData.message}`);
-        }
-        
-        const data = await response.json();
-        
-        if (!data.choices || data.choices.length === 0 || !data.choices[0].message) {
-            throw new Error('DeepSeek API 返回無效響應');
-        }
-        
-        const content = data.choices[0].message.content;
-        
-        // 解析 JSON
-        let parsedData;
         try {
-            parsedData = JSON.parse(content);
-        } catch (jsonError) {
-            // 嘗試清理響應（移除 markdown 代碼塊）
-            const cleaned = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-            parsedData = JSON.parse(cleaned);
+            const response = await fetch(this.deepseekWorkerUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
+            });
+            
+            console.log('📥 收到響應，狀態碼:', response.status);
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('❌ DeepSeek API 錯誤:', errorData);
+                throw new Error(`DeepSeek API 錯誤: ${response.status} - ${errorData.error?.message || errorData.message || JSON.stringify(errorData)}`);
+            }
+            
+            const data = await response.json();
+            console.log('📄 DeepSeek 響應:', {
+                hasChoices: !!data.choices,
+                choicesLength: data.choices?.length,
+                hasMessage: !!data.choices?.[0]?.message,
+                hasContent: !!data.choices?.[0]?.message?.content,
+                usage: data.usage
+            });
+            
+            if (!data.choices || data.choices.length === 0 || !data.choices[0].message) {
+                console.error('❌ DeepSeek 響應無效:', data);
+                throw new Error('DeepSeek API 返回無效響應');
+            }
+            
+            const content = data.choices[0].message.content;
+            console.log('📝 DeepSeek 內容長度:', content.length);
+            console.log('📝 DeepSeek 內容預覽:', content.substring(0, 200) + '...');
+            
+            // 解析 JSON
+            let parsedData;
+            try {
+                parsedData = JSON.parse(content);
+                console.log('✅ JSON 解析成功');
+            } catch (jsonError) {
+                console.warn('⚠️  直接 JSON 解析失敗，嘗試清理...');
+                // 嘗試清理響應（移除 markdown 代碼塊）
+                const cleaned = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+                parsedData = JSON.parse(cleaned);
+                console.log('✅ 清理後 JSON 解析成功');
+            }
+            
+            return parsedData;
+            
+        } catch (error) {
+            console.error('❌ DeepSeek 處理失敗:', error);
+            console.error('   錯誤類型:', error.name);
+            console.error('   錯誤消息:', error.message);
+            console.error('   錯誤堆棧:', error.stack);
+            throw error;
         }
-        
-        return parsedData;
     }
     
     /**
