@@ -124,8 +124,28 @@ async function handleRequest(request) {
       body: JSON.stringify(requestData)
     });
     
-    // 獲取響應
-    const responseData = await deepseekResponse.json();
+    // ✅ 先讀取原始響應文本，以便調試
+    const responseText = await deepseekResponse.text();
+    console.log('📄 DeepSeek 原始響應長度:', responseText.length);
+    console.log('📄 DeepSeek 原始響應（前 500 字符）:', responseText.substring(0, 500));
+    
+    // 嘗試解析 JSON
+    let responseData;
+    try {
+      responseData = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('❌ DeepSeek 返回無效 JSON!');
+      console.error('   原始響應:', responseText);
+      
+      return addCORSHeaders(new Response(JSON.stringify({
+        error: 'DeepSeek 返回無效 JSON',
+        details: responseText,
+        parseError: parseError.message
+      }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }), origin);
+    }
     
     // ✅ 記錄響應詳情（包括 token 用量）
     console.log('📤 DeepSeek 響應:', {

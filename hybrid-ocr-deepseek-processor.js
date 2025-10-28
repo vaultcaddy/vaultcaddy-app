@@ -191,7 +191,22 @@ class HybridOCRDeepSeekProcessor {
                 throw new Error(`DeepSeek API 錯誤: ${response.status} - ${errorData.error?.message || errorData.message || JSON.stringify(errorData)}`);
             }
             
-            const data = await response.json();
+            // ✅ 先讀取原始響應文本，以便調試
+            const responseText = await response.text();
+            console.log('📄 DeepSeek 原始響應（前 500 字符）:');
+            console.log(responseText.substring(0, 500));
+            console.log(`   總長度: ${responseText.length} 字符`);
+            
+            // 嘗試解析 JSON
+            let data;
+            try {
+                data = JSON.parse(responseText);
+            } catch (parseError) {
+                console.error('❌ JSON 解析失敗!');
+                console.error('   原始響應:', responseText);
+                throw new Error(`DeepSeek 返回無效 JSON: ${parseError.message}`);
+            }
+            
             console.log('📄 DeepSeek 響應:', {
                 hasChoices: !!data.choices,
                 choicesLength: data.choices?.length,
