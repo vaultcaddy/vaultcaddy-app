@@ -18,16 +18,19 @@ class ClaudeVisionClient {
     constructor() {
         // ⚠️ API Key 應該通過 Cloudflare Worker 保護
         this.workerUrl = 'https://claude-proxy.vaultcaddy.workers.dev';
-        this.model = 'claude-3-5-sonnet-20241022';  // Claude 3.5 Sonnet（最新版）
-        // 或使用 'claude-3-haiku-20240307' (更便宜，90-93% 準確度)
+        
+        // ✅ 使用 Claude 3 Haiku（經濟型，高性價比）
+        this.model = 'claude-3-haiku-20240307';  
+        // 可選：'claude-3-5-sonnet-20241022' (最高準確度，成本較高)
         
         this.maxRetries = 3;
         this.retryDelay = 2000;
         
-        console.log('🤖 Claude Vision Client 初始化');
+        console.log('🤖 Claude Vision Client 初始化（Haiku）');
         console.log('   ✅ 模型:', this.model);
         console.log('   ✅ Worker URL:', this.workerUrl);
         console.log('   ✅ 支持格式: JPG, PNG, PDF, WebP');
+        console.log('   💰 成本: ~$0.003/張 (90-93% 準確度)');
     }
     
     /**
@@ -307,9 +310,13 @@ Extract all visible data from this document in a structured format.
     calculateCost(usage) {
         if (!usage) return 0;
         
-        // Claude 3.5 Sonnet 定價
-        const inputCostPer1M = 3.00;   // $3 / 1M tokens
-        const outputCostPer1M = 15.00; // $15 / 1M tokens
+        // Claude 3 Haiku 定價（經濟型）
+        const inputCostPer1M = 0.25;   // $0.25 / 1M tokens
+        const outputCostPer1M = 1.25;  // $1.25 / 1M tokens
+        
+        // 如果使用 Claude 3.5 Sonnet，請使用以下定價：
+        // const inputCostPer1M = 3.00;   // $3 / 1M tokens
+        // const outputCostPer1M = 15.00; // $15 / 1M tokens
         
         const inputCost = (usage.input_tokens / 1000000) * inputCostPer1M;
         const outputCost = (usage.output_tokens / 1000000) * outputCostPer1M;

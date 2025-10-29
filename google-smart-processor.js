@@ -7,16 +7,19 @@ class GoogleSmartProcessor {
     constructor() {
         // ⚠️ 不在構造函數中直接引用 window 對象，而是動態獲取
         this.processors = {
-            get hybridOCRDeepSeek() { return window.hybridOCRDeepSeekProcessor; } // ✅ 唯一處理器
+            get claudeVision() { return window.claudeVisionClient; },  // ✅ 最高優先級
+            get hybridOCRDeepSeek() { return window.hybridOCRDeepSeekProcessor; }  // 降級方案
         };
         
         this.processingOrder = [
-            'hybridOCRDeepSeek' // ✅ Vision API OCR + DeepSeek Reasoner
+            'claudeVision',        // ✅ 優先使用 Claude Haiku (90-93% 準確度，真正視覺理解)
+            'hybridOCRDeepSeek'    // 如果 Claude 失敗，使用 Vision OCR + DeepSeek
         ];
         
         console.log('🧠 智能處理器初始化');
-        console.log('   🔄 使用: Vision API OCR + DeepSeek Reasoner (思考模式)');
-        console.log('   ❌ 已禁用: OpenAI, Gemini, 其他 AI');
+        console.log('   🔄 主處理器: Claude 3 Haiku (90-93% 準確度，原生視覺)');
+        console.log('   🔄 降級處理器: Vision API OCR + DeepSeek Reasoner (70-80% 準確度)');
+        console.log('   💡 DeepSeek 沒有視覺 API，只能處理純文本');
         this.logAvailableProcessors();
     }
     
@@ -29,6 +32,7 @@ class GoogleSmartProcessor {
             return processor !== null && processor !== undefined;
         });
         console.log('可用處理器:', available);
+        console.log('   - claudeVision:', typeof window.claudeVisionClient);
         console.log('   - hybridOCRDeepSeek:', typeof window.hybridOCRDeepSeekProcessor);
     }
     
