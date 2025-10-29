@@ -1,10 +1,16 @@
 /**
- * Google 智能處理器選擇器
- * 自動選擇最適合的Google AI服務
+ * Google 智能處理器選擇器 - 版本 2025-10-29 FINAL
+ * ✅ 只使用 DeepSeek-VL（香港可用的視覺模型）
+ * ❌ 已完全移除：Claude, Hybrid OCR, OpenAI, Gemini
  */
 
 class GoogleSmartProcessor {
     constructor() {
+        // 版本標記（用於確認是否加載最新版本）
+        this.version = '2025-10-29-FINAL';
+        
+        console.log('🔄 加載 GoogleSmartProcessor 版本:', this.version);
+        
         // ⚠️ 不在構造函數中直接引用 window 對象，而是動態獲取
         this.processors = {
             get deepseekVL() { return window.deepseekVLClient; }  // ✅ 唯一處理器（香港可用）
@@ -15,9 +21,11 @@ class GoogleSmartProcessor {
         ];
         
         console.log('🧠 智能處理器初始化');
+        console.log('   ✅ 版本:', this.version);
         console.log('   🔄 唯一處理器: DeepSeek-VL (85-90% 準確度，香港可用 ✅)');
         console.log('   ❌ 已禁用所有其他處理器（Claude, Hybrid OCR）');
         console.log('   💡 直接使用 DeepSeek-VL 處理圖片，不使用 OCR');
+        console.log('   📋 處理順序:', this.processingOrder);
         this.logAvailableProcessors();
     }
     
