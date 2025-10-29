@@ -18,7 +18,8 @@
 class DeepSeekVLClient {
     constructor() {
         // ✅ 使用 Cloudflare Worker 保護 Token
-        this.workerUrl = 'https://huggingface-proxy.vaultcaddy.workers.dev';
+        // 🔄 復用現有的 deepseek-proxy Worker
+        this.workerUrl = 'https://deepseek-proxy.vaultcaddy.workers.dev';
         this.modelId = 'deepseek-ai/deepseek-vl-7b-chat';
         
         this.maxRetries = 3;
