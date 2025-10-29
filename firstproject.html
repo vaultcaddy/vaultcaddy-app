@@ -24,22 +24,30 @@
     <script src="deepseek-vision-client.js?v=20251027-003"></script>
     <script src="hybrid-ocr-deepseek-processor.js?v=20251027-009"></script>
     <script src="claude-vision-client.js?v=20251028-haiku"></script>
-    <script src="deepseek-vl-client.js?v=20251028-vl"></script>
+    <script src="deepseek-vl-client.js?v=20251029-final"></script>
     <script>
         // ========== 🤖 DeepSeek Vision Client（已禁用，API 不支持圖片）==========
         console.log('⚠️  DeepSeek Vision Client 已禁用（API 不支持圖片輸入）');
         
         // ========== 🤖 DeepSeek-VL Client 初始化（香港可用的視覺模型）==========
         console.log('🔄 立即初始化 DeepSeek-VL Client...');
+        console.log('   檢查 DeepSeekVLClient 類型:', typeof window.DeepSeekVLClient);
+        
         if (typeof window.DeepSeekVLClient === 'function') {
-            window.deepseekVLClient = new window.DeepSeekVLClient();
-            console.log('✅ DeepSeek-VL Client 已初始化');
-            console.log('   ✅ 模型: deepseek-ai/deepseek-vl-7b-chat');
-            console.log('   ✅ Worker: https://huggingface-proxy.vaultcaddy.workers.dev');
-            console.log('   🌏 香港可用: ✅');
-            console.log('   📊 預期準確度: 85-90%');
+            try {
+                window.deepseekVLClient = new window.DeepSeekVLClient();
+                console.log('✅ DeepSeek-VL Client 已初始化');
+                console.log('   ✅ 模型: deepseek-ai/deepseek-vl-7b-chat');
+                console.log('   ✅ Worker: https://deepseek-proxy.vaultcaddy.workers.dev');
+                console.log('   🌏 香港可用: ✅');
+                console.log('   📊 預期準確度: 85-90%');
+                console.log('   ✅ deepseekVLClient 對象:', window.deepseekVLClient);
+            } catch (error) {
+                console.error('❌ DeepSeek-VL Client 初始化失敗:', error);
+            }
         } else {
             console.error('❌ DeepSeekVLClient 類別未找到，請檢查 deepseek-vl-client.js 是否正確加載');
+            console.error('   window.DeepSeekVLClient:', window.DeepSeekVLClient);
         }
         
         // ========== 🔄 立即初始化混合處理器（Vision OCR + DeepSeek 文本處理）==========
@@ -101,7 +109,7 @@
             tryInitWithRetry();
         }
     </script>
-    <script src="google-smart-processor.js?v=20251027-005"></script>
+    <script src="google-smart-processor.js?v=20251029-final"></script>
     <script src="google-cloud-storage.js?v=20251027-003"></script>
     <script src="ledgerbox-integration.js"></script>
     
