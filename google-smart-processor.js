@@ -7,19 +7,22 @@ class GoogleSmartProcessor {
     constructor() {
         // ⚠️ 不在構造函數中直接引用 window 對象，而是動態獲取
         this.processors = {
-            get claudeVision() { return window.claudeVisionClient; },  // ✅ 最高優先級
+            get deepseekVL() { return window.deepseekVLClient; },  // ✅ 最高優先級（香港可用）
+            get claudeVision() { return window.claudeVisionClient; },  // Claude（香港不可用）
             get hybridOCRDeepSeek() { return window.hybridOCRDeepSeekProcessor; }  // 降級方案
         };
         
         this.processingOrder = [
-            'claudeVision',        // ✅ 優先使用 Claude Haiku (90-93% 準確度，真正視覺理解)
-            'hybridOCRDeepSeek'    // 如果 Claude 失敗，使用 Vision OCR + DeepSeek
+            'deepseekVL',          // ✅ 優先使用 DeepSeek-VL (85-90% 準確度，香港可用)
+            'claudeVision',        // 如果 DeepSeek-VL 失敗，嘗試 Claude（但香港不可用）
+            'hybridOCRDeepSeek'    // 最後降級到 Vision OCR + DeepSeek API
         ];
         
         console.log('🧠 智能處理器初始化');
-        console.log('   🔄 主處理器: Claude 3 Haiku (90-93% 準確度，原生視覺)');
-        console.log('   🔄 降級處理器: Vision API OCR + DeepSeek Reasoner (70-80% 準確度)');
-        console.log('   💡 DeepSeek 沒有視覺 API，只能處理純文本');
+        console.log('   🔄 主處理器: DeepSeek-VL (85-90% 準確度，香港可用 ✅)');
+        console.log('   🔄 降級處理器 1: Claude 3 Haiku (香港不可用 ❌)');
+        console.log('   🔄 降級處理器 2: Vision API OCR + DeepSeek API (70-80% 準確度)');
+        console.log('   💡 DeepSeek API 沒有視覺功能，DeepSeek-VL 是獨立的開源視覺模型');
         this.logAvailableProcessors();
     }
     
@@ -32,6 +35,7 @@ class GoogleSmartProcessor {
             return processor !== null && processor !== undefined;
         });
         console.log('可用處理器:', available);
+        console.log('   - deepseekVL:', typeof window.deepseekVLClient);
         console.log('   - claudeVision:', typeof window.claudeVisionClient);
         console.log('   - hybridOCRDeepSeek:', typeof window.hybridOCRDeepSeekProcessor);
     }
