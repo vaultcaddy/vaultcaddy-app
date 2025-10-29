@@ -7,22 +7,17 @@ class GoogleSmartProcessor {
     constructor() {
         // ⚠️ 不在構造函數中直接引用 window 對象，而是動態獲取
         this.processors = {
-            get deepseekVL() { return window.deepseekVLClient; },  // ✅ 最高優先級（香港可用）
-            get claudeVision() { return window.claudeVisionClient; },  // Claude（香港不可用）
-            get hybridOCRDeepSeek() { return window.hybridOCRDeepSeekProcessor; }  // 降級方案
+            get deepseekVL() { return window.deepseekVLClient; }  // ✅ 唯一處理器（香港可用）
         };
         
         this.processingOrder = [
-            'deepseekVL',          // ✅ 優先使用 DeepSeek-VL (85-90% 準確度，香港可用)
-            'claudeVision',        // 如果 DeepSeek-VL 失敗，嘗試 Claude（但香港不可用）
-            'hybridOCRDeepSeek'    // 最後降級到 Vision OCR + DeepSeek API
+            'deepseekVL'          // ✅ 只使用 DeepSeek-VL (85-90% 準確度，香港可用)
         ];
         
         console.log('🧠 智能處理器初始化');
-        console.log('   🔄 主處理器: DeepSeek-VL (85-90% 準確度，香港可用 ✅)');
-        console.log('   🔄 降級處理器 1: Claude 3 Haiku (香港不可用 ❌)');
-        console.log('   🔄 降級處理器 2: Vision API OCR + DeepSeek API (70-80% 準確度)');
-        console.log('   💡 DeepSeek API 沒有視覺功能，DeepSeek-VL 是獨立的開源視覺模型');
+        console.log('   🔄 唯一處理器: DeepSeek-VL (85-90% 準確度，香港可用 ✅)');
+        console.log('   ❌ 已禁用所有其他處理器（Claude, Hybrid OCR）');
+        console.log('   💡 直接使用 DeepSeek-VL 處理圖片，不使用 OCR');
         this.logAvailableProcessors();
     }
     
@@ -36,8 +31,13 @@ class GoogleSmartProcessor {
         });
         console.log('可用處理器:', available);
         console.log('   - deepseekVL:', typeof window.deepseekVLClient);
-        console.log('   - claudeVision:', typeof window.claudeVisionClient);
-        console.log('   - hybridOCRDeepSeek:', typeof window.hybridOCRDeepSeekProcessor);
+        
+        if (typeof window.deepseekVLClient === 'undefined') {
+            console.error('❌ DeepSeek-VL Client 未初始化！');
+            console.error('   請檢查 deepseek-vl-client.js 是否正確加載');
+        } else {
+            console.log('✅ DeepSeek-VL Client 已就緒');
+        }
     }
     
     /**
