@@ -1,30 +1,30 @@
 /**
- * Google 智能處理器選擇器 - 版本 2025-10-29 FINAL
- * ✅ 只使用 DeepSeek-VL（香港可用的視覺模型）
- * ❌ 已完全移除：Claude, Hybrid OCR, OpenAI, Gemini
+ * Google 智能處理器選擇器 - 版本 2025-10-30 LLAVA
+ * ✅ 只使用 LLaVA（完全支持 Hugging Face Inference API）
+ * ❌ DeepSeek-VL 不支持標準 Inference API，已切換到 LLaVA
  */
 
 class GoogleSmartProcessor {
     constructor() {
         // 版本標記（用於確認是否加載最新版本）
-        this.version = '2025-10-29-FINAL';
+        this.version = '2025-10-30-LLAVA';
         
         console.log('🔄 加載 GoogleSmartProcessor 版本:', this.version);
         
         // ⚠️ 不在構造函數中直接引用 window 對象，而是動態獲取
         this.processors = {
-            get deepseekVL() { return window.deepseekVLClient; }  // ✅ 唯一處理器（香港可用）
+            get llava() { return window.llavaClient; }  // ✅ 唯一處理器（香港可用，完全支持 HF API）
         };
         
         this.processingOrder = [
-            'deepseekVL'          // ✅ 只使用 DeepSeek-VL (85-90% 準確度，香港可用)
+            'llava'          // ✅ 只使用 LLaVA 1.5 7B (85-90% 準確度，香港可用)
         ];
         
         console.log('🧠 智能處理器初始化');
         console.log('   ✅ 版本:', this.version);
-        console.log('   🔄 唯一處理器: DeepSeek-VL (85-90% 準確度，香港可用 ✅)');
-        console.log('   ❌ 已禁用所有其他處理器（Claude, Hybrid OCR）');
-        console.log('   💡 直接使用 DeepSeek-VL 處理圖片，不使用 OCR');
+        console.log('   🔄 唯一處理器: LLaVA 1.5 7B (85-90% 準確度，香港可用 ✅)');
+        console.log('   ❌ 已禁用 DeepSeek-VL（不支持 Hugging Face Inference API）');
+        console.log('   💡 直接使用 LLaVA 處理圖片，完全支持標準 API');
         console.log('   📋 處理順序:', this.processingOrder);
         this.logAvailableProcessors();
     }
@@ -38,13 +38,13 @@ class GoogleSmartProcessor {
             return processor !== null && processor !== undefined;
         });
         console.log('可用處理器:', available);
-        console.log('   - deepseekVL:', typeof window.deepseekVLClient);
+        console.log('   - llava:', typeof window.llavaClient);
         
-        if (typeof window.deepseekVLClient === 'undefined') {
-            console.error('❌ DeepSeek-VL Client 未初始化！');
-            console.error('   請檢查 deepseek-vl-client.js 是否正確加載');
+        if (typeof window.llavaClient === 'undefined') {
+            console.error('❌ LLaVA Client 未初始化！');
+            console.error('   請檢查 llava-client.js 是否正確加載');
         } else {
-            console.log('✅ DeepSeek-VL Client 已就緒');
+            console.log('✅ LLaVA Client 已就緒');
         }
     }
     
