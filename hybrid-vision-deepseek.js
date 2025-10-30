@@ -195,67 +195,108 @@ class HybridVisionDeepSeekProcessor {
         
         switch (documentType) {
             case 'invoice':
-                return baseInstruction + `從發票中提取以下欄位：
+                return baseInstruction + `你正在分析一張香港發票/收據。這是會計軟件（QuickBooks/Xero）的核心數據。
+
+**CRITICAL - 必須提取的欄位（無論如何都要找到）：**
+1. **發票號碼（invoice_number）**: 通常在頂部，可能標記為「發票號碼」、「單號」、「Invoice #」、「No.」等
+2. **客戶名稱（customer）**: 收件人、客戶、聯絡人、「客戶名稱」、「客戶編號」等
+3. **供應商名稱（supplier）**: 公司名稱、商家名稱，通常在頂部
+4. **總額（total）**: 最下方的最終金額，可能標記為「總金額」、「總額」、「Total」、「應付」等
+
+**在文本中搜索這些線索：**
+- 發票號碼：數字序列（如：200602、#25091134、INV-2025-001）
+- 客戶名稱：「客戶」、「聯絡人」、「聯絡」、「聯絡人」欄位後的名字
+- 供應商：文檔頂部的公司名稱（通常最大、最顯眼）
+- 總額：最下方的金額，通常是最大的數字
 
 返回這個 JSON 結構：
 
 {
   "confidence": 0-100,
-  "invoice_number": "字符串",
+  "invoice_number": "必須 - 發票號碼",
   "date": "YYYY-MM-DD",
   "due_date": "YYYY-MM-DD 或空字符串",
-  "supplier": "字符串",
+  "supplier": "必須 - 供應商名稱（公司名稱）",
   "supplier_address": "字符串",
   "supplier_phone": "字符串",
   "supplier_email": "字符串",
-  "customer": "字符串",
+  "customer": "必須 - 客戶名稱",
   "customer_address": "字符串",
   "items": [
     {
-      "description": "字符串",
+      "description": "完整商品描述",
       "quantity": 數字,
       "unit_price": 數字,
       "amount": 數字
     }
   ],
   "subtotal": 數字,
+  "discount": 數字,
   "tax": 數字,
-  "total": 數字,
-  "currency": "HKD/USD/CNY"
-}`;
+  "total": 必須 - 總金額數字,
+  "payment_method": "CASH/CARD/C.O.D/其他",
+  "currency": "HKD"
+}
+
+**提取策略：**
+1. 先找供應商名稱（文檔頂部最顯眼的公司名）
+2. 再找發票號碼（通常在日期附近，是一串數字）
+3. 找客戶名稱（搜索「客戶」、「聯絡人」、「客 戶」等關鍵字）
+4. 找總金額（文檔最下方，可能有「總金額」、「總額」、「Total」標記）
+5. 提取所有表格中的商品項目（每一行都是一個 item）`;
             
             case 'receipt':
-                return baseInstruction + `從收據中提取以下欄位：
+                return baseInstruction + `你正在分析一張香港收據。這是會計軟件的核心數據。
+
+**CRITICAL - 必須提取的欄位：**
+1. **收據號碼（receipt_number）**: 單號、收據號、No.
+2. **商家名稱（merchant）**: 店名、公司名稱（頂部最顯眼）
+3. **總額（total）**: 最終金額（最下方）
+4. **付款方式（payment_method）**: CASH、CARD、現金、信用卡等
+
+返回這個 JSON 結構：
 
 {
   "confidence": 0-100,
-  "receipt_number": "字符串",
+  "receipt_number": "必須 - 收據號碼",
   "date": "YYYY-MM-DD",
   "time": "HH:MM:SS",
-  "merchant": "字符串",
+  "merchant": "必須 - 商家名稱",
   "merchant_address": "字符串",
+  "merchant_phone": "字符串",
+  "customer": "客戶名稱（如果有）",
   "items": [
     {
-      "description": "字符串",
+      "description": "完整商品描述",
       "quantity": 數字,
       "unit_price": 數字,
       "amount": 數字
     }
   ],
   "subtotal": 數字,
+  "discount": 數字,
   "tax": 數字,
-  "total": 數字,
-  "payment_method": "CASH/CARD/其他",
-  "currency": "HKD/USD"
+  "total": 必須 - 總金額數字,
+  "payment_method": "必須 - CASH/CARD/其他",
+  "currency": "HKD"
 }`;
             
             case 'bank-statement':
-                return baseInstruction + `從銀行對帳單中提取以下欄位：
+                return baseInstruction + `你正在分析一張香港銀行對帳單。這是會計對帳的核心數據。
+
+**CRITICAL - 必須提取的欄位：**
+1. **交易記錄（transactions）**: 每一筆交易都要提取
+2. **交易日期（date）**: 每筆交易的日期
+3. **交易金額（amount）**: 每筆交易的金額（正數=收入，負數=支出）
+4. **交易描述（description）**: 交易對手方或用途
+
+返回這個 JSON 結構：
 
 {
   "confidence": 0-100,
-  "account_holder": "字符串",
-  "account_number": "字符串",
+  "bank_name": "銀行名稱",
+  "account_holder": "戶主名稱",
+  "account_number": "賬戶號碼（部分遮蔽也可）",
   "statement_period": {
     "from": "YYYY-MM-DD",
     "to": "YYYY-MM-DD"
@@ -264,15 +305,24 @@ class HybridVisionDeepSeekProcessor {
   "closing_balance": 數字,
   "transactions": [
     {
-      "date": "YYYY-MM-DD",
-      "description": "字符串",
-      "debit": 數字或0,
-      "credit": 數字或0,
-      "balance": 數字
+      "date": "必須 - YYYY-MM-DD",
+      "description": "必須 - 交易描述/對手方",
+      "reference": "參考號碼（如果有）",
+      "debit": 數字或0（支出）,
+      "credit": 數字或0（收入）,
+      "balance": 數字（餘額）
     }
   ],
-  "currency": "HKD/USD"
-}`;
+  "total_debit": 數字,
+  "total_credit": 數字,
+  "currency": "HKD"
+}
+
+**提取策略：**
+1. 識別表格結構（通常有：日期、描述、支出、收入、餘額列）
+2. 逐行提取每筆交易
+3. 計算總支出和總收入
+4. 確保所有金額為正確的數字格式`;
             
             default:
                 return baseInstruction + `提取所有可見數據。`;
