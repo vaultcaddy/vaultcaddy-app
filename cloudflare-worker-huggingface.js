@@ -19,7 +19,7 @@
 // 3. 將此代碼複製到 Worker
 // 4. 將下面的 YOUR_TOKEN_HERE 替換為: hf_XFei...bogSX（完整 Token 在設置指南中）
 // 5. 部署 Worker
-const HUGGINGFACE_TOKEN = 'YOUR_HUGGINGFACE_TOKEN_HERE';
+const HUGGINGFACE_TOKEN = 'YOUR_HUGGINGFACE_TOKEN_HERE'; // ⚠️ 在 Cloudflare Worker 中替換為實際 Token
 const DEFAULT_MODEL = 'deepseek-ai/deepseek-vl-7b-chat';
 
 // 允許的來源（CORS）
