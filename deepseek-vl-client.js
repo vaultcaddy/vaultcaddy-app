@@ -53,15 +53,16 @@ class DeepSeekVLClient {
             const prompt = this.generatePrompt(documentType);
             
             // 3. 構建請求（使用 Hugging Face 的標準格式）
-            // DeepSeek-VL 使用 visual-question-answering 格式
+            // DeepSeek-VL 使用 conversational 格式，類似 LLaVA
+            // 參考：https://huggingface.co/docs/api-inference/detailed_parameters#visual-question-answering-task
             const requestBody = {
                 model: this.modelId,  // 告訴 Worker 使用哪個模型
                 inputs: {
-                    image: `data:${file.type};base64,${base64Data}`,
-                    question: prompt
+                    question: prompt,  // 問題/提示詞
+                    image: `data:${file.type};base64,${base64Data}`  // 圖片（base64）
                 },
                 parameters: {
-                    max_length: 2048,
+                    max_length: 2048,  // 使用 max_length 而不是 max_new_tokens
                     temperature: 0.1,
                     top_p: 0.9
                 }
