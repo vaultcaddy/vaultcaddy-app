@@ -6,10 +6,10 @@
  * 部署：https://workers.cloudflare.com/
  * 
  * 支持的模型：
- * - deepseek-ai/deepseek-vl-7b-chat（DeepSeek-VL 視覺語言模型）
+ * - llava-hf/llava-1.5-7b-hf（LLaVA 1.5 7B 視覺語言模型）✅ 推薦
  * - 其他 Hugging Face 視覺模型
  * 
- * 最後更新：2025-10-28
+ * 最後更新：2025-10-30
  */
 
 // ⚠️ 配置：請在部署到 Cloudflare 時設置您的 Token
@@ -17,10 +17,10 @@
 // 1. 登入 Cloudflare Dashboard
 // 2. 創建新 Worker: huggingface-proxy
 // 3. 將此代碼複製到 Worker
-// 4. 將下面的 YOUR_TOKEN_HERE 替換為: hf_XFei...bogSX（完整 Token 在設置指南中）
-// 5. 部署 Worker
+// 4. 將第22行的 YOUR_HUGGINGFACE_TOKEN_HERE 替換為實際 Token
+// 5. 點擊「Save and Deploy」
 const HUGGINGFACE_TOKEN = 'YOUR_HUGGINGFACE_TOKEN_HERE'; // ⚠️ 在 Cloudflare Worker 中替換為實際 Token
-const DEFAULT_MODEL = 'deepseek-ai/deepseek-vl-7b-chat';
+const DEFAULT_MODEL = 'llava-hf/llava-1.5-7b-hf'; // ✅ LLaVA 1.5 7B
 
 // 允許的來源（CORS）
 const ALLOWED_ORIGINS = [
