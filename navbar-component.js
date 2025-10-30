@@ -226,13 +226,7 @@ class VaultCaddyNavbar {
     getLanguageSelector() {
         const languages = {
             'en': 'English',
-            'zh-tw': '繁體中文',
-            'zh-cn': '简体中文',
-            'ja': '日本語',
-            'ko': '한국어',
-            'es': 'Español',
-            'fr': 'Français',
-            'de': 'Deutsch'
+            'zh-tw': '繁體中文'
         };
         
         const currentLang = this.language || 'zh-tw';
@@ -758,13 +752,7 @@ class VaultCaddyNavbar {
     getLanguageName(code) {
         const languages = {
             'en': 'English',
-            'zh-tw': '繁體中文',
-            'zh-cn': '简体中文',
-            'ja': '日本語',
-            'ko': '한국어',
-            'es': 'Español',
-            'fr': 'Français',
-            'de': 'Deutsch'
+            'zh-tw': '繁體中文'
         };
         return languages[code] || languages['zh-tw'];
     }
