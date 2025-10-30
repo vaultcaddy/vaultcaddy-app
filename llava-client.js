@@ -54,20 +54,21 @@ class LLaVAClient {
             const prompt = this.generatePrompt(documentType);
             
             // 3. 構建請求（使用 Hugging Face 標準格式）
-            // LLaVA 使用 image-to-text 格式
+            // LLaVA 使用簡單的字符串輸入格式（將圖片和文本組合）
+            // 參考：https://huggingface.co/docs/api-inference/detailed_parameters
             const requestBody = {
                 model: this.modelId,
-                inputs: {
-                    prompt: prompt,
-                    image: `data:${file.type};base64,${base64Data}`
-                },
+                inputs: `USER: <image>\n${prompt}\nASSISTANT:`,  // ✅ LLaVA 標準格式
                 parameters: {
                     max_new_tokens: 2048,
                     temperature: 0.1,
-                    top_p: 0.9,
-                    do_sample: false
+                    top_p: 0.9
                 }
             };
+            
+            // ⚠️ 注意：Hugging Face Inference API 對於 LLaVA 不支持直接的 base64 圖片
+            // 需要使用圖片 URL 或特殊格式
+            // 這裡先嘗試文本輸入，如果失敗再切換到其他方案
             
             // 4. 調用 Cloudflare Worker（Worker 會調用 Hugging Face API）
             console.log('📤 發送請求到 Cloudflare Worker...');
