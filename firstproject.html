@@ -19,6 +19,12 @@
     <!-- ✅ 混合處理器：Vision API OCR + DeepSeek Chat（香港優化版）-->
     <script src="hybrid-vision-deepseek.js?v=20251030-hk-optimized"></script>
     <script src="google-smart-processor.js?v=20251030-hk-optimized"></script>
+    
+    <!-- Firebase SDK（CDN 版本）-->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
     <script src="google-cloud-storage.js?v=20251027-003"></script>
     
     <!-- 載入數據處理器 -->
@@ -4396,17 +4402,18 @@
         
         // 創建發票行
         function createInvoiceRowHTML(file, data, isProcessing, status, statusColor, statusIcon, reviewStatus, reviewColor, uploadDate) {
-            const invoiceNumber = data.invoiceNumber || '—';
-            const issueDate = data.issueDate || (isProcessing ? '處理中...' : '—');
-            const deliveryDate = data.deliveryDate || '';
-            const vendorName = data.vendor?.name || (isProcessing ? '處理中...' : '—');
-            const customerName = data.customer?.name || (isProcessing ? '處理中...' : '—');
-            const itemCount = data.itemCount || data.lineItems?.length || 0;
-            const subtotal = data.subtotal || 0;
-            const discount = data.discount || 0;
-            const totalAmount = data.totalAmount || 0;
+            // 從 AI 提取的數據中獲取欄位（優先使用 snake_case，因為 DeepSeek 返回的是這種格式）
+            const invoiceNumber = data.invoice_number || data.invoiceNumber || '—';
+            const issueDate = data.date || data.invoice_date || data.issueDate || (isProcessing ? '處理中...' : '—');
+            const vendorName = data.supplier || data.vendor?.name || data.vendor || (isProcessing ? '處理中...' : '—');
+            const customerName = data.customer || data.customer?.name || (isProcessing ? '處理中...' : '—');
+            const items = data.items || data.lineItems || [];
+            const itemCount = items.length || data.itemCount || 0;
+            const subtotal = parseFloat(data.subtotal) || 0;
+            const discount = parseFloat(data.discount) || 0;
+            const totalAmount = parseFloat(data.total) || parseFloat(data.totalAmount) || 0;
             const currency = data.currency || 'HKD';
-            const paymentMethod = data.paymentMethod || '—';
+            const paymentMethod = data.payment_method || data.paymentMethod || '—';
             
             return `
                 <td style="padding: 1rem; border-bottom: 1px solid #e5e7eb;">
@@ -4418,7 +4425,7 @@
                         <div>
                             <div style="font-weight: 500; color: #1f2937;">
                                 <a href="javascript:void(0)" onclick="viewDocument('${file.id}')" style="color: #1f2937; text-decoration: none; cursor: pointer;">
-                                    📄 Invoice ${invoiceNumber}
+                                    📄 Invoice —
                                 </a>
                             </div>
                             <div style="font-size: 0.875rem; color: #6b7280;">供應商: ${vendorName}</div>
@@ -4429,7 +4436,6 @@
                 <td style="padding: 1rem; border-bottom: 1px solid #e5e7eb;">
                     <div>
                         <div style="font-weight: 500; color: #1f2937;">📅 ${issueDate}</div>
-                        ${deliveryDate ? `<div style="font-size: 0.875rem; color: #6b7280;">送貨: ${deliveryDate}</div>` : ''}
                     </div>
                 </td>
                 <td style="padding: 1rem; border-bottom: 1px solid #e5e7eb;">
