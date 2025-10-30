@@ -16,7 +16,7 @@
 
 class VisionOCROnlyClient {
     constructor() {
-        this.apiKey = 'AIzaSyD9w2gN8yH7HqKZM5xJ3vL4nP6rT8cW1eA';  // VaultCaddy 的 Vision API Key
+        this.apiKey = 'AIzaSyCpH0qoL0wSEtHzutJzIqElbL_17cBuvug';  // ✅ VaultCaddy 的 Vision API Key（2025-10-30）
         this.apiUrl = 'https://vision.googleapis.com/v1/images:annotate';
         
         console.log('🔍 Vision OCR Only Client 初始化');

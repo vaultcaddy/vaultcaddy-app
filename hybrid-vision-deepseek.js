@@ -18,7 +18,7 @@
 class HybridVisionDeepSeekProcessor {
     constructor() {
         // Google Vision API
-        this.visionApiKey = 'AIzaSyD9w2gN8yH7HqKZM5xJ3vL4nP6rT8cW1eA';
+        this.visionApiKey = 'AIzaSyCpH0qoL0wSEtHzutJzIqElbL_17cBuvug'; // ✅ 新的 API Key（2025-10-30）
         this.visionApiUrl = 'https://vision.googleapis.com/v1/images:annotate';
         
         // DeepSeek API（通過 Cloudflare Worker）
