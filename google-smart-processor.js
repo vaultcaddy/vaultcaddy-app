@@ -183,11 +183,11 @@ class GoogleSmartProcessor {
      * 根據文檔類型優化處理順序
      */
     optimizeProcessingOrder(documentType) {
-        // ✅ 所有文檔類型統一使用混合處理器：Vision API OCR + DeepSeek Reasoner
+        // ✅ 所有文檔類型統一使用混合處理器：Vision API OCR + DeepSeek Chat
         // 不再使用舊的處理器（deepseekVision, openaiVision, geminiAI, visionAI）
         
         // 所有文檔類型都使用相同的處理順序
-        return ['hybridOCRDeepSeek']; // Vision API OCR + DeepSeek Reasoner (思考模式)
+        return ['hybrid']; // Vision API OCR + DeepSeek Chat
     }
     
     /**
