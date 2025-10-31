@@ -909,10 +909,13 @@
             // 生成發票詳情 HTML
             detailsSection.innerHTML = `
                 <div class="bank-details-card" style="margin-bottom: 1.5rem;">
-                    <div class="card-header" style="background: #ffffff; padding: 1.5rem; border-bottom: 1px solid #e5e7eb;">
+                    <div class="card-header" style="background: #ffffff; padding: 1.5rem; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
                         <h3 class="card-title" style="font-size: 1.25rem; font-weight: 600; color: #1f2937; margin: 0;">
                             📄 Invoice Details & Notes
                         </h3>
+                        <button onclick="saveInvoiceDetails()" style="background: #3b82f6; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500; transition: background 0.2s;">
+                            💾 Save Changes
+                        </button>
                     </div>
                     <div class="card-body" style="padding: 1.5rem; background: #ffffff;">
                         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem;">
@@ -920,46 +923,45 @@
                             <div>
                                 <h4 style="font-size: 1rem; font-weight: 600; color: #374151; margin: 0 0 1rem 0;">發票信息</h4>
                                 <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                                    <div style="display: flex; justify-content: space-between;">
-                                        <span style="color: #6b7280;">發票號碼:</span>
-                                        <span style="font-weight: 500; color: #1f2937;">${invoiceNumber}</span>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="color: #6b7280; min-width: 80px;">發票號碼:</span>
+                                        <input type="text" id="edit-invoice-number" value="${invoiceNumber}" 
+                                               style="border: 1px solid #d1d5db; border-radius: 4px; padding: 0.5rem; flex: 1; font-size: 0.875rem;">
                                     </div>
-                                    <div style="display: flex; justify-content: space-between;">
-                                        <span style="color: #6b7280;">發票日期:</span>
-                                        <span style="font-weight: 500; color: #1f2937;">${issueDate}</span>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="color: #6b7280; min-width: 80px;">發票日期:</span>
+                                        <input type="date" id="edit-invoice-date" value="${issueDate}" 
+                                               style="border: 1px solid #d1d5db; border-radius: 4px; padding: 0.5rem; flex: 1; font-size: 0.875rem;">
                                     </div>
-                                    ${deliveryDate ? `
-                                    <div style="display: flex; justify-content: space-between;">
-                                        <span style="color: #6b7280;">送貨日期:</span>
-                                        <span style="font-weight: 500; color: #1f2937;">${deliveryDate}</span>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="color: #6b7280; min-width: 80px;">送貨日期:</span>
+                                        <input type="date" id="edit-delivery-date" value="${deliveryDate || ''}" 
+                                               style="border: 1px solid #d1d5db; border-radius: 4px; padding: 0.5rem; flex: 1; font-size: 0.875rem;">
                                     </div>
-                                    ` : ''}
-                                    ${dueDate ? `
-                                    <div style="display: flex; justify-content: space-between;">
-                                        <span style="color: #6b7280;">到期日:</span>
-                                        <span style="font-weight: 500; color: #1f2937;">${dueDate}</span>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="color: #6b7280; min-width: 80px;">到期日:</span>
+                                        <input type="date" id="edit-due-date" value="${dueDate || ''}" 
+                                               style="border: 1px solid #d1d5db; border-radius: 4px; padding: 0.5rem; flex: 1; font-size: 0.875rem;">
                                     </div>
-                                    ` : ''}
                                 </div>
                                 
                                 <h4 style="font-size: 1rem; font-weight: 600; color: #374151; margin: 1.5rem 0 1rem 0;">供應商信息</h4>
                                 <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                                    <div style="display: flex; justify-content: space-between;">
-                                        <span style="color: #6b7280;">名稱:</span>
-                                        <span style="font-weight: 500; color: #1f2937;">${vendor.name || '—'}</span>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="color: #6b7280; min-width: 80px;">名稱:</span>
+                                        <input type="text" id="edit-vendor-name" value="${vendor.name || ''}" 
+                                               style="border: 1px solid #d1d5db; border-radius: 4px; padding: 0.5rem; flex: 1; font-size: 0.875rem;">
                                     </div>
-                                    ${vendor.address ? `
-                                    <div style="display: flex; justify-content: space-between;">
-                                        <span style="color: #6b7280;">地址:</span>
-                                        <span style="font-weight: 500; color: #1f2937; text-align: right; max-width: 60%;">${vendor.address}</span>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="color: #6b7280; min-width: 80px;">地址:</span>
+                                        <input type="text" id="edit-vendor-address" value="${vendor.address || ''}" 
+                                               style="border: 1px solid #d1d5db; border-radius: 4px; padding: 0.5rem; flex: 1; font-size: 0.875rem;">
                                     </div>
-                                    ` : ''}
-                                    ${vendor.phone ? `
-                                    <div style="display: flex; justify-content: space-between;">
-                                        <span style="color: #6b7280;">電話:</span>
-                                        <span style="font-weight: 500; color: #1f2937;">${vendor.phone}</span>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="color: #6b7280; min-width: 80px;">電話:</span>
+                                        <input type="text" id="edit-vendor-phone" value="${vendor.phone || ''}" 
+                                               style="border: 1px solid #d1d5db; border-radius: 4px; padding: 0.5rem; flex: 1; font-size: 0.875rem;">
                                     </div>
-                                    ` : ''}
                                 </div>
                             </div>
                             
@@ -967,57 +969,68 @@
                             <div>
                                 <h4 style="font-size: 1rem; font-weight: 600; color: #374151; margin: 0 0 1rem 0;">客戶信息</h4>
                                 <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                                    <div style="display: flex; justify-content: space-between;">
-                                        <span style="color: #6b7280;">名稱:</span>
-                                        <span style="font-weight: 500; color: #1f2937;">${customer.name || '—'}</span>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="color: #6b7280; min-width: 80px;">名稱:</span>
+                                        <input type="text" id="edit-customer-name" value="${customer.name || ''}" 
+                                               style="border: 1px solid #d1d5db; border-radius: 4px; padding: 0.5rem; flex: 1; font-size: 0.875rem;">
                                     </div>
-                                    ${customer.address ? `
-                                    <div style="display: flex; justify-content: space-between;">
-                                        <span style="color: #6b7280;">地址:</span>
-                                        <span style="font-weight: 500; color: #1f2937; text-align: right; max-width: 60%;">${customer.address}</span>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="color: #6b7280; min-width: 80px;">地址:</span>
+                                        <input type="text" id="edit-customer-address" value="${customer.address || ''}" 
+                                               style="border: 1px solid #d1d5db; border-radius: 4px; padding: 0.5rem; flex: 1; font-size: 0.875rem;">
                                     </div>
-                                    ` : ''}
-                                    ${customer.phone ? `
-                                    <div style="display: flex; justify-content: space-between;">
-                                        <span style="color: #6b7280;">電話:</span>
-                                        <span style="font-weight: 500; color: #1f2937;">${customer.phone}</span>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="color: #6b7280; min-width: 80px;">電話:</span>
+                                        <input type="text" id="edit-customer-phone" value="${customer.phone || ''}" 
+                                               style="border: 1px solid #d1d5db; border-radius: 4px; padding: 0.5rem; flex: 1; font-size: 0.875rem;">
                                     </div>
-                                    ` : ''}
                                 </div>
                                 
                                 <h4 style="font-size: 1rem; font-weight: 600; color: #374151; margin: 1.5rem 0 1rem 0;">金額明細</h4>
                                 <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                                    <div style="display: flex; justify-content: space-between;">
-                                        <span style="color: #6b7280;">小計:</span>
-                                        <span style="font-weight: 500; color: #1f2937;">${currency} $${subtotal.toFixed(2)}</span>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="color: #6b7280; min-width: 80px;">幣種:</span>
+                                        <input type="text" id="edit-currency" value="${currency}" 
+                                               style="border: 1px solid #d1d5db; border-radius: 4px; padding: 0.5rem; flex: 1; font-size: 0.875rem;">
                                     </div>
-                                    ${discount > 0 ? `
-                                    <div style="display: flex; justify-content: space-between;">
-                                        <span style="color: #6b7280;">折扣:</span>
-                                        <span style="font-weight: 500; color: #10b981;">-$${discount.toFixed(2)}</span>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="color: #6b7280; min-width: 80px;">小計:</span>
+                                        <input type="number" id="edit-subtotal" value="${subtotal}" step="0.01"
+                                               style="border: 1px solid #d1d5db; border-radius: 4px; padding: 0.5rem; flex: 1; font-size: 0.875rem;">
                                     </div>
-                                    ` : ''}
-                                    ${taxAmount > 0 ? `
-                                    <div style="display: flex; justify-content: space-between;">
-                                        <span style="color: #6b7280;">稅額:</span>
-                                        <span style="font-weight: 500; color: #1f2937;">$${taxAmount.toFixed(2)}</span>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="color: #6b7280; min-width: 80px;">折扣:</span>
+                                        <input type="number" id="edit-discount" value="${discount}" step="0.01"
+                                               style="border: 1px solid #d1d5db; border-radius: 4px; padding: 0.5rem; flex: 1; font-size: 0.875rem;">
                                     </div>
-                                    ` : ''}
-                                    <div style="display: flex; justify-content: space-between; padding-top: 0.75rem; border-top: 1px solid #e5e7eb;">
-                                        <span style="color: #1f2937; font-weight: 600;">總額:</span>
-                                        <span style="font-weight: 600; color: #1f2937; font-size: 1.125rem;">${currency} $${totalAmount.toFixed(2)}</span>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="color: #6b7280; min-width: 80px;">稅額:</span>
+                                        <input type="number" id="edit-tax" value="${taxAmount}" step="0.01"
+                                               style="border: 1px solid #d1d5db; border-radius: 4px; padding: 0.5rem; flex: 1; font-size: 0.875rem;">
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.75rem; border-top: 1px solid #e5e7eb;">
+                                        <span style="color: #1f2937; font-weight: 600; min-width: 80px;">總額:</span>
+                                        <input type="number" id="edit-total" value="${totalAmount}" step="0.01"
+                                               style="border: 1px solid #d1d5db; border-radius: 4px; padding: 0.5rem; flex: 1; font-size: 0.875rem; font-weight: 600;">
                                     </div>
                                 </div>
                                 
                                 <h4 style="font-size: 1rem; font-weight: 600; color: #374151; margin: 1.5rem 0 1rem 0;">付款信息</h4>
                                 <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                                    <div style="display: flex; justify-content: space-between;">
-                                        <span style="color: #6b7280;">付款方式:</span>
-                                        <span style="font-weight: 500; color: #1f2937;">${paymentMethod}</span>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="color: #6b7280; min-width: 80px;">付款方式:</span>
+                                        <input type="text" id="edit-payment-method" value="${paymentMethod}" 
+                                               style="border: 1px solid #d1d5db; border-radius: 4px; padding: 0.5rem; flex: 1; font-size: 0.875rem;">
                                     </div>
-                                    <div style="display: flex; justify-content: space-between;">
-                                        <span style="color: #6b7280;">付款狀態:</span>
-                                        <span style="font-weight: 500; color: ${paymentStatus === 'Paid' ? '#10b981' : '#f59e0b'};">${paymentStatus}</span>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="color: #6b7280; min-width: 80px;">付款狀態:</span>
+                                        <select id="edit-payment-status" 
+                                                style="border: 1px solid #d1d5db; border-radius: 4px; padding: 0.5rem; flex: 1; font-size: 0.875rem;">
+                                            <option value="Unpaid" ${paymentStatus === 'Unpaid' ? 'selected' : ''}>Unpaid</option>
+                                            <option value="Paid" ${paymentStatus === 'Paid' ? 'selected' : ''}>Paid</option>
+                                            <option value="Partial" ${paymentStatus === 'Partial' ? 'selected' : ''}>Partial</option>
+                                            <option value="Overdue" ${paymentStatus === 'Overdue' ? 'selected' : ''}>Overdue</option>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
@@ -1071,6 +1084,22 @@
                     </table>
                 </div>
             `;
+            
+            // 初始化可編輯表格
+            setTimeout(() => {
+                const table = document.querySelector('.transactions-table');
+                if (table && window.EditableTable && lineItems.length > 0) {
+                    console.log('🔧 初始化可編輯表格...');
+                    new EditableTable(table, {
+                        onCellEdit: (row, cell, value) => {
+                            console.log('📝 商品項目已編輯:', { row, cell, value });
+                            // 自動保存
+                            saveInvoiceDetails();
+                        }
+                    });
+                    console.log('✅ 可編輯表格已初始化');
+                }
+            }, 100);
             
             // 隱藏銀行對帳單部分
             document.getElementById('bankStatementSection').style.display = 'none';
@@ -1566,9 +1595,82 @@
             }
         }
         
+        // 保存發票詳情
+        function saveInvoiceDetails() {
+            if (!currentDocument) {
+                alert('無法保存：未找到當前文檔');
+                return;
+            }
+            
+            console.log('💾 保存發票詳情...');
+            
+            // 獲取所有編輯的值
+            const updates = {
+                invoice_number: document.getElementById('edit-invoice-number')?.value || '',
+                date: document.getElementById('edit-invoice-date')?.value || '',
+                delivery_date: document.getElementById('edit-delivery-date')?.value || '',
+                due_date: document.getElementById('edit-due-date')?.value || '',
+                supplier: document.getElementById('edit-vendor-name')?.value || '',
+                vendor: {
+                    name: document.getElementById('edit-vendor-name')?.value || '',
+                    address: document.getElementById('edit-vendor-address')?.value || '',
+                    phone: document.getElementById('edit-vendor-phone')?.value || ''
+                },
+                customer: {
+                    name: document.getElementById('edit-customer-name')?.value || '',
+                    address: document.getElementById('edit-customer-address')?.value || '',
+                    phone: document.getElementById('edit-customer-phone')?.value || ''
+                },
+                currency: document.getElementById('edit-currency')?.value || 'HKD',
+                subtotal: parseFloat(document.getElementById('edit-subtotal')?.value) || 0,
+                discount: parseFloat(document.getElementById('edit-discount')?.value) || 0,
+                tax: parseFloat(document.getElementById('edit-tax')?.value) || 0,
+                total: parseFloat(document.getElementById('edit-total')?.value) || 0,
+                payment_method: document.getElementById('edit-payment-method')?.value || '',
+                payment_status: document.getElementById('edit-payment-status')?.value || 'Unpaid'
+            };
+            
+            console.log('📝 更新的數據:', updates);
+            
+            // 更新 currentDocument
+            currentDocument.processedData = {
+                ...currentDocument.processedData,
+                ...updates
+            };
+            
+            // 保存到 LocalStorage
+            const projectId = new URLSearchParams(window.location.search).get('project') || 'default';
+            const storageKey = `vaultcaddy_project_${projectId}_files`;
+            const files = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            const fileIndex = files.findIndex(f => f.id === currentDocument.id);
+            
+            if (fileIndex !== -1) {
+                files[fileIndex] = currentDocument;
+                localStorage.setItem(storageKey, JSON.stringify(files));
+                console.log('✅ 發票詳情已保存到 LocalStorage');
+            }
+            
+            // 如果 Firebase 可用，也保存到 Firebase
+            if (window.firebaseDataManager && window.firebaseDataManager.isInitialized) {
+                window.firebaseDataManager.updateDocument(projectId, currentDocument.id, {
+                    processedData: currentDocument.processedData
+                }).then(() => {
+                    console.log('✅ 發票詳情已保存到 Firebase');
+                    alert('✅ 保存成功！');
+                }).catch(error => {
+                    console.error('❌ Firebase 保存失敗:', error);
+                    alert('✅ 已保存到本地，但 Firebase 同步失敗');
+                });
+            } else {
+                console.log('ℹ️ Firebase 未初始化，僅保存到 LocalStorage');
+                alert('✅ 保存成功！');
+            }
+        }
+        
         // 使函数全局可用
         window.initEditableTable = initEditableTable;
         window.saveDocumentChanges = saveDocumentChanges;
+        window.saveInvoiceDetails = saveInvoiceDetails;
     </script>
         </div> <!-- 結束 detail-container -->
         </div> <!-- 結束 main-content -->
