@@ -1,24 +1,38 @@
 /**
- * VaultCaddy Firebase 數據管理器
+ * ============================================
+ * 🔥 VaultCaddy Firebase 數據管理器
+ * ============================================
  * 
  * 功能：
- * 1. 管理項目數據（CRUD）
- * 2. 管理文檔數據（CRUD）
- * 3. 數據同步和緩存
- * 4. 從 LocalStorage 遷移數據
+ * 1. 項目管理（CRUD）
+ * 2. 文檔管理（CRUD）
+ * 3. 文件上傳到 Cloud Storage
+ * 4. 數據同步和緩存
+ * 5. 從 LocalStorage 遷移數據
  * 
- * @version 1.0.0
- * @updated 2025-10-26
+ * 數據結構：
+ * users/{userId}/projects/{projectId}/documents/{documentId}
+ * 
+ * @version 2.0.0
+ * @updated 2025-10-30
  */
 
 class FirebaseDataManager {
     constructor() {
         this.db = null;
+        this.storage = null;
         this.auth = null;
         this.currentUser = null;
         this.isInitialized = false;
         
-        console.log('🔥 Firebase 數據管理器初始化');
+        console.log('🔥 Firebase 數據管理器初始化中...');
+        
+        // 監聽 Firebase 就緒事件
+        if (typeof window !== 'undefined') {
+            window.addEventListener('firebase-ready', () => {
+                this.initialize();
+            });
+        }
     }
     
     /**
@@ -26,18 +40,23 @@ class FirebaseDataManager {
      */
     async initialize() {
         try {
-            // 獲取 Firestore 和 Auth 實例
+            // 獲取 Firebase 服務實例
             this.db = window.getFirestore();
+            this.storage = window.getFirebaseStorage();
             this.auth = window.getAuth();
             
-            if (!this.db || !this.auth) {
-                throw new Error('Firebase 未正確初始化');
+            if (!this.db || !this.storage || !this.auth) {
+                throw new Error('Firebase 服務未正確初始化');
             }
             
             // 監聽用戶狀態
             this.auth.onAuthStateChanged((user) => {
                 this.currentUser = user;
-                console.log('👤 用戶狀態變更:', user ? user.email : '未登入');
+                if (user) {
+                    console.log('👤 用戶已登入:', user.email);
+                } else {
+                    console.log('👤 用戶未登入（使用匿名模式）');
+                }
             });
             
             this.isInitialized = true;
@@ -53,23 +72,33 @@ class FirebaseDataManager {
      * 獲取當前用戶 ID
      */
     getUserId() {
-        if (!this.currentUser) {
-            // 如果未登入，使用匿名 ID
-            let anonymousId = localStorage.getItem('vaultcaddy_anonymous_id');
-            if (!anonymousId) {
-                anonymousId = `anonymous_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-                localStorage.setItem('vaultcaddy_anonymous_id', anonymousId);
-            }
-            return anonymousId;
+        if (this.currentUser) {
+            return this.currentUser.uid;
         }
-        return this.currentUser.uid;
+        
+        // 如果未登入，使用匿名 ID
+        let anonymousId = localStorage.getItem('vaultcaddy_anonymous_id');
+        if (!anonymousId) {
+            anonymousId = `anonymous_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            localStorage.setItem('vaultcaddy_anonymous_id', anonymousId);
+            console.log('📝 創建匿名用戶 ID:', anonymousId);
+        }
+        return anonymousId;
     }
+    
+    // ============================================
+    // 項目管理
+    // ============================================
     
     /**
      * 創建項目
      */
     async createProject(projectData) {
         try {
+            if (!this.isInitialized) {
+                throw new Error('數據管理器未初始化');
+            }
+            
             const userId = this.getUserId();
             const projectId = projectData.id || `project_${Date.now()}`;
             
@@ -98,6 +127,10 @@ class FirebaseDataManager {
      */
     async getProjects() {
         try {
+            if (!this.isInitialized) {
+                throw new Error('數據管理器未初始化');
+            }
+            
             const userId = this.getUserId();
             const snapshot = await this.db.collection('users').doc(userId)
                 .collection('projects')
@@ -106,9 +139,13 @@ class FirebaseDataManager {
             
             const projects = [];
             snapshot.forEach((doc) => {
+                const data = doc.data();
                 projects.push({
                     id: doc.id,
-                    ...doc.data()
+                    ...data,
+                    // 轉換 Timestamp 為 Date
+                    createdAt: data.createdAt?.toDate(),
+                    updatedAt: data.updatedAt?.toDate()
                 });
             });
             
@@ -125,6 +162,10 @@ class FirebaseDataManager {
      */
     async updateProject(projectId, updates) {
         try {
+            if (!this.isInitialized) {
+                throw new Error('數據管理器未初始化');
+            }
+            
             const userId = this.getUserId();
             
             await this.db.collection('users').doc(userId)
@@ -146,6 +187,10 @@ class FirebaseDataManager {
      */
     async deleteProject(projectId) {
         try {
+            if (!this.isInitialized) {
+                throw new Error('數據管理器未初始化');
+            }
+            
             const userId = this.getUserId();
             
             // 刪除項目下的所有文檔
@@ -172,11 +217,19 @@ class FirebaseDataManager {
         }
     }
     
+    // ============================================
+    // 文檔管理
+    // ============================================
+    
     /**
      * 創建文檔
      */
     async createDocument(projectId, documentData) {
         try {
+            if (!this.isInitialized) {
+                throw new Error('數據管理器未初始化');
+            }
+            
             const userId = this.getUserId();
             const documentId = documentData.id || `doc_${Date.now()}`;
             
@@ -207,6 +260,10 @@ class FirebaseDataManager {
      */
     async getDocuments(projectId) {
         try {
+            if (!this.isInitialized) {
+                throw new Error('數據管理器未初始化');
+            }
+            
             const userId = this.getUserId();
             const snapshot = await this.db.collection('users').doc(userId)
                 .collection('projects').doc(projectId)
@@ -216,9 +273,13 @@ class FirebaseDataManager {
             
             const documents = [];
             snapshot.forEach((doc) => {
+                const data = doc.data();
                 documents.push({
                     id: doc.id,
-                    ...doc.data()
+                    ...data,
+                    // 轉換 Timestamp 為 Date
+                    createdAt: data.createdAt?.toDate(),
+                    updatedAt: data.updatedAt?.toDate()
                 });
             });
             
@@ -235,6 +296,10 @@ class FirebaseDataManager {
      */
     async updateDocument(projectId, documentId, updates) {
         try {
+            if (!this.isInitialized) {
+                throw new Error('數據管理器未初始化');
+            }
+            
             const userId = this.getUserId();
             
             await this.db.collection('users').doc(userId)
@@ -257,6 +322,10 @@ class FirebaseDataManager {
      */
     async deleteDocument(projectId, documentId) {
         try {
+            if (!this.isInitialized) {
+                throw new Error('數據管理器未初始化');
+            }
+            
             const userId = this.getUserId();
             
             await this.db.collection('users').doc(userId)
@@ -271,11 +340,102 @@ class FirebaseDataManager {
         }
     }
     
+    // ============================================
+    // 文件上傳到 Cloud Storage
+    // ============================================
+    
+    /**
+     * 上傳文件到 Cloud Storage
+     * @param {File} file - 文件對象
+     * @param {string} projectId - 項目 ID
+     * @param {Function} onProgress - 進度回調函數
+     * @returns {Promise<string>} 文件 URL
+     */
+    async uploadFile(file, projectId, onProgress) {
+        try {
+            if (!this.isInitialized) {
+                throw new Error('數據管理器未初始化');
+            }
+            
+            const userId = this.getUserId();
+            const timestamp = Date.now();
+            const fileName = `${timestamp}_${file.name}`;
+            const filePath = `users/${userId}/projects/${projectId}/${fileName}`;
+            
+            console.log('📤 開始上傳文件:', fileName);
+            
+            // 創建 Storage 引用
+            const storageRef = this.storage.ref(filePath);
+            
+            // 上傳文件
+            const uploadTask = storageRef.put(file);
+            
+            // 監聽上傳進度
+            return new Promise((resolve, reject) => {
+                uploadTask.on('state_changed',
+                    (snapshot) => {
+                        // 計算進度
+                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        console.log(`   上傳進度: ${progress.toFixed(1)}%`);
+                        
+                        if (onProgress) {
+                            onProgress(progress);
+                        }
+                    },
+                    (error) => {
+                        console.error('❌ 文件上傳失敗:', error);
+                        reject(error);
+                    },
+                    async () => {
+                        // 上傳完成，獲取下載 URL
+                        try {
+                            const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+                            console.log('✅ 文件上傳成功:', downloadURL);
+                            resolve(downloadURL);
+                        } catch (error) {
+                            reject(error);
+                        }
+                    }
+                );
+            });
+        } catch (error) {
+            console.error('❌ 上傳文件失敗:', error);
+            throw error;
+        }
+    }
+    
+    /**
+     * 刪除 Cloud Storage 中的文件
+     */
+    async deleteFile(fileUrl) {
+        try {
+            if (!this.isInitialized) {
+                throw new Error('數據管理器未初始化');
+            }
+            
+            const storageRef = this.storage.refFromURL(fileUrl);
+            await storageRef.delete();
+            
+            console.log('✅ 文件已刪除:', fileUrl);
+        } catch (error) {
+            console.error('❌ 刪除文件失敗:', error);
+            throw error;
+        }
+    }
+    
+    // ============================================
+    // 數據遷移
+    // ============================================
+    
     /**
      * 從 LocalStorage 遷移數據到 Firebase
      */
     async migrateFromLocalStorage() {
         try {
+            if (!this.isInitialized) {
+                throw new Error('數據管理器未初始化');
+            }
+            
             console.log('🔄 開始從 LocalStorage 遷移數據...');
             
             // 遷移項目
@@ -312,7 +472,9 @@ class FirebaseDataManager {
     }
 }
 
+// ============================================
 // 全局暴露
+// ============================================
 if (typeof window !== 'undefined') {
     window.FirebaseDataManager = FirebaseDataManager;
     window.firebaseDataManager = new FirebaseDataManager();
@@ -323,4 +485,3 @@ if (typeof window !== 'undefined') {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = FirebaseDataManager;
 }
-
