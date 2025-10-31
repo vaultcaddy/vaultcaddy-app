@@ -22,18 +22,47 @@ class AuthHandler {
     initialize() {
         try {
             this.auth = window.getAuth();
-            this.initialized = true;
             
-            console.log('🔐 Auth Handler 已初始化');
+            // 確保 auth 不是 null 才標記為已初始化
+            if (!this.auth) {
+                console.error('❌ Auth Handler 初始化失敗: window.getAuth() 返回 null');
+                console.log('⏳ 等待 Firebase Auth 準備好...');
+                
+                // 重試機制：每 500ms 檢查一次，最多 20 次（10 秒）
+                let retryCount = 0;
+                const retryInterval = setInterval(() => {
+                    retryCount++;
+                    console.log(`🔄 重試 Auth 初始化 (${retryCount}/20)...`);
+                    
+                    this.auth = window.getAuth();
+                    if (this.auth) {
+                        clearInterval(retryInterval);
+                        this.finishInitialization();
+                    } else if (retryCount >= 20) {
+                        clearInterval(retryInterval);
+                        console.error('❌ Auth Handler 初始化超時：10 秒後仍然無法獲取 Auth');
+                    }
+                }, 500);
+                return;
+            }
             
-            // 監聽用戶狀態變化
-            this.auth.onAuthStateChanged((user) => {
-                this.currentUser = user;
-                this.handleAuthStateChange(user);
-            });
+            this.finishInitialization();
         } catch (error) {
             console.error('❌ Auth Handler 初始化失敗:', error);
         }
+    }
+    
+    // 完成初始化
+    finishInitialization() {
+        this.initialized = true;
+        console.log('✅ Auth Handler 已成功初始化');
+        console.log('   Auth 對象:', this.auth ? '✓' : '✗');
+        
+        // 監聽用戶狀態變化
+        this.auth.onAuthStateChanged((user) => {
+            this.currentUser = user;
+            this.handleAuthStateChange(user);
+        });
     }
     
     // 處理用戶狀態變化
@@ -268,11 +297,12 @@ class AuthHandler {
     
     // 等待初始化完成
     async waitForInit() {
-        if (this.initialized) return true;
+        // 必須確保 initialized 為 true 且 auth 不是 null
+        if (this.initialized && this.auth) return true;
         
         return new Promise((resolve) => {
             const checkInit = setInterval(() => {
-                if (this.initialized) {
+                if (this.initialized && this.auth) {
                     clearInterval(checkInit);
                     resolve(true);
                 }
@@ -281,6 +311,10 @@ class AuthHandler {
             // 超時保護（10 秒）
             setTimeout(() => {
                 clearInterval(checkInit);
+                console.error('❌ waitForInit 超時:', {
+                    initialized: this.initialized,
+                    authExists: !!this.auth
+                });
                 resolve(false);
             }, 10000);
         });

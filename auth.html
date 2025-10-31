@@ -505,26 +505,32 @@
     <script>
         // 等待 Firebase Auth 初始化
         function waitForAuthHandler() {
-            return new Promise((resolve) => {
-                if (window.authHandler && window.authHandler.initialized) {
-                    console.log('✅ authHandler 已初始化');
+            return new Promise((resolve, reject) => {
+                // 檢查 authHandler 是否存在、已初始化且 auth 不是 null
+                if (window.authHandler && window.authHandler.initialized && window.authHandler.auth) {
+                    console.log('✅ authHandler 已初始化且可用');
                     resolve();
                 } else {
                     console.log('⏳ 等待 authHandler 初始化...');
                     const checkInterval = setInterval(() => {
-                        if (window.authHandler && window.authHandler.initialized) {
+                        if (window.authHandler && window.authHandler.initialized && window.authHandler.auth) {
                             console.log('✅ authHandler 初始化完成');
+                            console.log('   - initialized:', window.authHandler.initialized);
+                            console.log('   - auth 對象:', window.authHandler.auth ? '✓' : '✗');
                             clearInterval(checkInterval);
                             resolve();
                         }
                     }, 100);
                     
-                    // 超時保護：10 秒後強制失敗
+                    // 超時保護：15 秒後強制失敗
                     setTimeout(() => {
                         clearInterval(checkInterval);
-                        console.error('❌ authHandler 初始化超時');
-                        resolve(); // 仍然 resolve，但會在使用時報錯
-                    }, 10000);
+                        const errorMsg = window.authHandler 
+                            ? `authHandler 存在但未就緒 (initialized: ${window.authHandler.initialized}, auth: ${!!window.authHandler.auth})`
+                            : 'authHandler 不存在';
+                        console.error('❌ authHandler 初始化超時:', errorMsg);
+                        reject(new Error('Firebase Auth 初始化超時，請刷新頁面重試'));
+                    }, 15000);
                 }
             });
         }
