@@ -503,6 +503,32 @@
     <script src="config.js"></script>
     <script src="translations.js?v=20251031"></script>
     <script>
+        // 等待 Firebase Auth 初始化
+        function waitForAuthHandler() {
+            return new Promise((resolve) => {
+                if (window.authHandler && window.authHandler.initialized) {
+                    console.log('✅ authHandler 已初始化');
+                    resolve();
+                } else {
+                    console.log('⏳ 等待 authHandler 初始化...');
+                    const checkInterval = setInterval(() => {
+                        if (window.authHandler && window.authHandler.initialized) {
+                            console.log('✅ authHandler 初始化完成');
+                            clearInterval(checkInterval);
+                            resolve();
+                        }
+                    }, 100);
+                    
+                    // 超時保護：10 秒後強制失敗
+                    setTimeout(() => {
+                        clearInterval(checkInterval);
+                        console.error('❌ authHandler 初始化超時');
+                        resolve(); // 仍然 resolve，但會在使用時報錯
+                    }, 10000);
+                }
+            });
+        }
+        
         // 表單切換
         function switchToRegister() {
             document.getElementById('login-form').classList.remove('active');
@@ -553,6 +579,9 @@
                 btnText.style.display = 'none';
                 btnLoader.classList.add('show');
                 
+                // 等待 authHandler 初始化
+                await waitForAuthHandler();
+                
                 const email = document.getElementById('login-email').value;
                 const password = document.getElementById('login-password').value;
                 
@@ -591,6 +620,9 @@
                 btnText.style.display = 'none';
                 btnLoader.classList.add('show');
                 
+                // 等待 authHandler 初始化
+                await waitForAuthHandler();
+                
                 const firstName = document.getElementById('register-firstName').value;
                 const lastName = document.getElementById('register-lastName').value;
                 const email = document.getElementById('register-email').value;
@@ -612,6 +644,9 @@
         // Google 登入
         async function googleLogin() {
             try {
+                // 等待 authHandler 初始化
+                await waitForAuthHandler();
+                
                 await window.authHandler.loginWithGoogle();
                 showNotification('Google 登入成功！正在跳轉...', 'success');
                 // authHandler 會自動重定向到 dashboard.html
