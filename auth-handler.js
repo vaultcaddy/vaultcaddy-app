@@ -38,6 +38,12 @@ class AuthHandler {
     
     // 處理用戶狀態變化
     handleAuthStateChange(user) {
+        // 移除 auth-checking 類，顯示頁面
+        document.documentElement.classList.remove('auth-checking');
+        document.documentElement.classList.add('auth-ready');
+        document.body.classList.remove('auth-checking');
+        document.body.classList.add('auth-ready');
+        
         if (user) {
             console.log('👤 用戶已登入:', user.email);
             console.log('   UID:', user.uid);
@@ -81,6 +87,12 @@ class AuthHandler {
         if (!publicPages.includes(currentPage)) {
             console.log('🔒 受保護頁面，重定向到登錄頁...');
             window.location.href = 'login.html';
+        } else {
+            // 如果是公開頁面，移除 auth-checking 類
+            document.documentElement.classList.remove('auth-checking');
+            document.documentElement.classList.add('auth-ready');
+            document.body.classList.remove('auth-checking');
+            document.body.classList.add('auth-ready');
         }
     }
     
