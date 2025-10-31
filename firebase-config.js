@@ -69,9 +69,10 @@ function initializeFirebase() {
         console.log('✅ Cloud Storage 已初始化');
         console.log('   Storage Bucket:', firebaseConfig.storageBucket);
         
-        // 初始化 Authentication
-        auth = firebase.auth();
-        console.log('✅ Firebase Authentication 已初始化');
+        // 設置 Firestore 設定（必須在 enablePersistence 之前）
+        db.settings({
+            cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED
+        });
         
         // 啟用 Firestore 離線持久化
         db.enablePersistence({ synchronizeTabs: true })
@@ -84,13 +85,14 @@ function initializeFirebase() {
                     console.warn('⚠️ 多個標籤頁打開，離線持久化僅在一個標籤頁啟用');
                 } else if (err.code === 'unimplemented') {
                     console.warn('⚠️ 瀏覽器不支持離線持久化');
+                } else {
+                    console.warn('⚠️ Firestore 持久化失敗:', err.message);
                 }
             });
         
-        // 設置 Firestore 設定（可選）
-        db.settings({
-            cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED
-        });
+        // 初始化 Authentication
+        auth = firebase.auth();
+        console.log('✅ Firebase Authentication 已初始化');
         
         return true;
     } catch (error) {
@@ -129,6 +131,9 @@ if (typeof window !== 'undefined') {
             const success = initializeFirebase();
             
             if (success) {
+                // 設置全局標誌
+                window.firebaseInitialized = true;
+                
                 // 觸發自定義事件，通知其他模塊 Firebase 已就緒
                 window.dispatchEvent(new CustomEvent('firebase-ready', {
                     detail: {
@@ -138,6 +143,8 @@ if (typeof window !== 'undefined') {
                         auth: auth
                     }
                 }));
+                
+                console.log('🔥 Firebase 已就緒，觸發 firebase-ready 事件');
             }
         }
     }, 100);

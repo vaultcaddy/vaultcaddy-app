@@ -8,13 +8,37 @@ class AuthHandler {
         this.currentUser = null;
         this.initialized = false;
         
+        console.log('🔐 創建 AuthHandler...');
+        
         // 等待 Firebase 初始化
-        if (window.firebaseInitialized) {
+        if (window.firebaseInitialized && window.getAuth) {
+            console.log('✅ Firebase 已初始化，立即初始化 AuthHandler');
             this.initialize();
         } else {
+            console.log('⏳ Firebase 尚未初始化，等待 firebase-ready 事件...');
             window.addEventListener('firebase-ready', () => {
+                console.log('✅ 收到 firebase-ready 事件');
                 this.initialize();
             });
+            
+            // 備用方案：輪詢檢查（防止錯過事件）
+            const checkFirebase = setInterval(() => {
+                if (window.firebaseInitialized && window.getAuth && !this.initialized) {
+                    console.log('✅ 檢測到 Firebase 已初始化（輪詢）');
+                    clearInterval(checkFirebase);
+                    this.initialize();
+                }
+            }, 200);
+            
+            // 超時保護（15 秒）
+            setTimeout(() => {
+                clearInterval(checkFirebase);
+                if (!this.initialized) {
+                    console.error('❌ AuthHandler 初始化超時（15 秒）');
+                    console.error('   firebaseInitialized:', window.firebaseInitialized);
+                    console.error('   getAuth 存在:', !!window.getAuth);
+                }
+            }, 15000);
         }
     }
     
