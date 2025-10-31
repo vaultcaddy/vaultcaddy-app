@@ -832,7 +832,43 @@ class VaultCaddyNavbar {
 }
 
 // 創建全局實例
-window.VaultCaddyNavbar = new VaultCaddyNavbar();
+// 等待 Firebase Auth 初始化完成後再創建 navbar
+function initNavbar() {
+    console.log('🎨 開始初始化 VaultCaddy Navbar...');
+    
+    // 檢查 Firebase Auth 是否已初始化
+    if (window.authHandler && window.authHandler.initialized) {
+        console.log('✅ Firebase Auth 已初始化，立即創建 navbar');
+        window.VaultCaddyNavbar = new VaultCaddyNavbar();
+    } else {
+        console.log('⏳ 等待 Firebase Auth 初始化...');
+        
+        // 監聽 Firebase Auth 初始化完成事件
+        const checkAuth = setInterval(() => {
+            if (window.authHandler && window.authHandler.initialized) {
+                console.log('✅ Firebase Auth 初始化完成，創建 navbar');
+                clearInterval(checkAuth);
+                window.VaultCaddyNavbar = new VaultCaddyNavbar();
+            }
+        }, 100); // 每 100ms 檢查一次
+        
+        // 超時保護：5 秒後強制創建（向後兼容）
+        setTimeout(() => {
+            if (!window.VaultCaddyNavbar) {
+                console.warn('⚠️ Firebase Auth 初始化超時，使用向後兼容模式');
+                clearInterval(checkAuth);
+                window.VaultCaddyNavbar = new VaultCaddyNavbar();
+            }
+        }, 5000);
+    }
+}
+
+// 在 DOM 加載完成後初始化
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initNavbar);
+} else {
+    initNavbar();
+}
 
 
 // 測試登入狀態的輔助函數
