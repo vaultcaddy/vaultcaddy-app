@@ -167,11 +167,12 @@ class UnifiedAuthManager {
         }));
         
         // 更新導航欄 (如果存在)
-        if (window.VaultCaddyNavbar) {
-            window.VaultCaddyNavbar.loadUserState().then(() => {
-                window.VaultCaddyNavbar.render();
-            });
-        }
+        // ⚠️ 已禁用：Firebase Auth 現在處理導航欄更新
+        // if (window.VaultCaddyNavbar) {
+        //     window.VaultCaddyNavbar.loadUserState().then(() => {
+        //         window.VaultCaddyNavbar.render();
+        //     });
+        // }
         
         console.log('🔄 User state updated:', this.userState);
     }
