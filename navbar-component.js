@@ -38,13 +38,35 @@ class VaultCaddyNavbar {
         try {
             console.log('🔄 導航欄載入用戶狀態...');
             
-            // 優先使用 GlobalAuthSync
-            if (window.GlobalAuthSync) {
+            // 🔥 優先使用 Firebase Auth（最新）
+            if (window.authHandler && window.authHandler.initialized) {
+                const currentUser = window.authHandler.getCurrentUser();
+                console.log('🔥 導航欄從 Firebase Auth 獲取狀態:', currentUser);
+                
+                if (currentUser) {
+                    this.isLoggedIn = true;
+                    this.isAuthenticated = true;
+                    this.user = {
+                        id: currentUser.uid,
+                        email: currentUser.email || 'user@vaultcaddy.com',
+                        name: currentUser.displayName || currentUser.email?.split('@')[0] || 'User',
+                        avatar: currentUser.photoURL || 'https://static.vecteezy.com/system/resources/previews/019/879/186/non_2x/user-icon-on-transparent-background-free-png.png'
+                    };
+                    // TODO: 從 Firestore 獲取 credits
+                    this.credits = localStorage.getItem('userCredits') || '0';
+                    
+                    console.log('✅ Firebase Auth 用戶已載入:', this.user.email);
+                } else {
+                    this.resetUserState();
+                }
+            }
+            // 使用 GlobalAuthSync（向後兼容）
+            else if (window.GlobalAuthSync) {
                 const authState = window.GlobalAuthSync.getCurrentAuthState();
                 console.log('🌐 導航欄從 GlobalAuthSync 獲取狀態:', authState);
                 
                 this.isLoggedIn = authState.isAuthenticated;
-                this.isAuthenticated = authState.isAuthenticated; // 添加這個屬性以便診斷
+                this.isAuthenticated = authState.isAuthenticated;
                 
                 if (this.isLoggedIn) {
                     // 安全提取用戶信息
@@ -83,19 +105,8 @@ class VaultCaddyNavbar {
                     this.isLoggedIn = true;
                     this.isAuthenticated = true;
                 } else {
-                    // 回退到簡單模擬（開發階段）
-                    this.isLoggedIn = localStorage.getItem('userLoggedIn') === 'true';
-                    this.isAuthenticated = this.isLoggedIn;
-                    this.credits = parseInt(localStorage.getItem('userCredits') || '10');
-                    
-                    if (this.isLoggedIn) {
-                        this.user = {
-                            id: 'demo_user',
-                            email: 'demo@vaultcaddy.com',
-                            name: 'Demo User',
-                            avatar: 'https://static.vecteezy.com/system/resources/previews/019/879/186/non_2x/user-icon-on-transparent-background-free-png.png'
-                        };
-                    }
+                    // 未登入
+                    this.resetUserState();
                 }
             }
             
@@ -107,11 +118,11 @@ class VaultCaddyNavbar {
                 isAuthenticated: this.isAuthenticated,
                 credits: this.credits,
                 user: this.user?.email || 'N/A',
-                source: window.GlobalAuthSync ? 'GlobalAuthSync' : 'localStorage'
+                source: window.authHandler ? 'Firebase Auth' : (window.GlobalAuthSync ? 'GlobalAuthSync' : 'localStorage')
             });
             
         } catch (error) {
-            console.error('載入用戶狀態失敗:', error);
+            console.error('❌ 載入用戶狀態失敗:', error);
             this.resetUserState();
         }
     }
@@ -425,7 +436,13 @@ class VaultCaddyNavbar {
             this.loadUserState().then(() => this.render());
         });
         
-        // 監聽auth系統的登入/登出事件
+        // 🔥 監聽 Firebase Auth 狀態變化（最新）
+        window.addEventListener('auth-state-changed', (e) => {
+            console.log('🔥 Firebase Auth 狀態變化檢測到:', e.detail);
+            this.loadUserState().then(() => this.render());
+        });
+        
+        // 監聽auth系統的登入/登出事件（向後兼容）
         window.addEventListener('vaultcaddy:auth:login', (e) => {
             console.log('🔐 登入事件檢測到:', e.detail);
             this.loadUserState().then(() => this.render());
@@ -469,32 +486,44 @@ class VaultCaddyNavbar {
      */
     async logout() {
         try {
-            // 如果是 Google 用戶，使用 Google 登出
-            if (window.googleAuth && window.googleAuth.isLoggedIn()) {
-                await window.googleAuth.signOut();
-                console.log('✅ Google 用戶已登出');
-            } else {
-                // 原有登出邏輯
-                localStorage.removeItem('vaultcaddy_token');
-                localStorage.removeItem('vaultcaddy_user');
-                localStorage.removeItem('vaultcaddy_credits');
-                localStorage.removeItem('userLoggedIn');
-                localStorage.removeItem('userCredits');
+            console.log('🚪 開始登出流程...');
+            
+            // 優先使用 Firebase Auth 登出
+            if (window.authHandler && window.authHandler.isLoggedIn()) {
+                console.log('🔐 使用 Firebase Auth 登出');
+                await window.authHandler.logout();
+                // authHandler.logout() 會自動重定向到 login.html，所以這裡不需要再處理
+                return;
             }
+            
+            // 如果是舊的 Google 用戶，使用 Google 登出
+            if (window.googleAuth && window.googleAuth.isLoggedIn()) {
+                console.log('🔐 使用 Google Auth 登出');
+                await window.googleAuth.signOut();
+            }
+            
+            // 清理 LocalStorage（向後兼容）
+            console.log('🧹 清理 LocalStorage...');
+            localStorage.removeItem('vaultcaddy_token');
+            localStorage.removeItem('vaultcaddy_user');
+            localStorage.removeItem('vaultcaddy_credits');
+            localStorage.removeItem('userLoggedIn');
+            localStorage.removeItem('userCredits');
             
             // 觸發狀態更新
             window.dispatchEvent(new CustomEvent('userStateChanged'));
+            window.dispatchEvent(new CustomEvent('vaultcaddy:auth:logout'));
             
             // 顯示登出成功消息
             this.showNotification('已成功登出', 'success');
             
             // 延遲跳轉讓用戶看到消息
             setTimeout(() => {
-                window.location.href = 'index.html';
+                window.location.href = 'login.html';
             }, 1000);
             
         } catch (error) {
-            console.error('登出失敗:', error);
+            console.error('❌ 登出失敗:', error);
             this.showNotification('登出失敗，請稍後再試', 'error');
         }
     }
