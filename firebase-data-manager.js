@@ -72,18 +72,24 @@ class FirebaseDataManager {
      * 獲取當前用戶 ID
      */
     getUserId() {
+        // 優先使用 Firebase Auth 用戶 ID
         if (this.currentUser) {
             return this.currentUser.uid;
         }
         
-        // 如果未登入，使用匿名 ID
-        let anonymousId = localStorage.getItem('vaultcaddy_anonymous_id');
-        if (!anonymousId) {
-            anonymousId = `anonymous_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-            localStorage.setItem('vaultcaddy_anonymous_id', anonymousId);
-            console.log('📝 創建匿名用戶 ID:', anonymousId);
+        // 如果未登入，重定向到登錄頁
+        console.warn('⚠️ 用戶未登入，需要登入才能訪問此功能');
+        
+        // 檢查是否在公開頁面
+        const publicPages = ['login.html', 'register.html', 'index.html', 'privacy.html', 'terms.html'];
+        const currentPage = window.location.pathname.split('/').pop();
+        
+        if (!publicPages.includes(currentPage)) {
+            console.log('🔒 重定向到登錄頁...');
+            window.location.href = 'login.html';
         }
-        return anonymousId;
+        
+        return null;
     }
     
     // ============================================
