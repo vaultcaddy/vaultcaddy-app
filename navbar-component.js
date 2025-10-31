@@ -316,23 +316,55 @@ class VaultCaddyNavbar {
      * 獲取用戶區塊
      */
     getUserSection() {
-        // 檢查 Google 認證狀態
-        const isGoogleLoggedIn = window.googleAuth && window.googleAuth.isLoggedIn();
-        const googleUser = isGoogleLoggedIn ? window.googleAuth.getCurrentUser() : null;
+        // 🔥 優先檢查 Firebase Auth（最新）
+        let currentUser = null;
+        let userCredits = 0;
+        let userPhotoURL = 'https://static.vecteezy.com/system/resources/previews/019/879/186/non_2x/user-icon-on-transparent-background-free-png.png';
+        let userName = 'User';
+        let userEmail = '';
+        let isFirebaseUser = false;
+        let isGoogleUser = false;
         
-        // 優先使用 Google 認證，否則使用原有認證
-        const currentUser = googleUser || (this.isLoggedIn ? this.user : null);
-        const userCredits = googleUser ? 
-            (window.googleAuth.getUserDataManager().getUserData()?.credits || 0) : 
-            this.credits;
+        if (window.authHandler && window.authHandler.initialized) {
+            const firebaseUser = window.authHandler.getCurrentUser();
+            if (firebaseUser) {
+                currentUser = firebaseUser;
+                userPhotoURL = firebaseUser.photoURL || userPhotoURL;
+                userName = firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User';
+                userEmail = firebaseUser.email || '';
+                userCredits = this.credits || 0;
+                isFirebaseUser = true;
+                console.log('🔥 導航欄顯示 Firebase Auth 用戶:', userEmail);
+            }
+        }
+        
+        // 向後兼容：檢查 Google 認證狀態
+        if (!currentUser) {
+            const isGoogleLoggedIn = window.googleAuth && window.googleAuth.isLoggedIn();
+            const googleUser = isGoogleLoggedIn ? window.googleAuth.getCurrentUser() : null;
+            
+            if (googleUser) {
+                currentUser = googleUser;
+                userPhotoURL = googleUser.photoURL || userPhotoURL;
+                userName = googleUser.displayName || 'User';
+                userEmail = googleUser.email || '';
+                userCredits = window.googleAuth.getUserDataManager().getUserData()?.credits || 0;
+                isGoogleUser = true;
+                console.log('🌐 導航欄顯示 Google Auth 用戶:', userEmail);
+            }
+        }
+        
+        // 向後兼容：使用原有認證
+        if (!currentUser && this.isLoggedIn && this.user) {
+            currentUser = this.user;
+            userPhotoURL = this.user.avatar || userPhotoURL;
+            userName = this.user.name || 'User';
+            userEmail = this.user.email || '';
+            userCredits = this.credits || 0;
+            console.log('📦 導航欄顯示 LocalStorage 用戶:', userEmail);
+        }
         
         if (currentUser) {
-            const userPhotoURL = googleUser ? 
-                googleUser.photoURL : 
-                'https://static.vecteezy.com/system/resources/previews/019/879/186/non_2x/user-icon-on-transparent-background-free-png.png';
-            
-            const userName = googleUser ? googleUser.displayName : (currentUser.name || 'User');
-            const userEmail = googleUser ? googleUser.email : (currentUser.email || '');
             
             return `
                 <div class="user-profile" id="user-profile" style="position: relative;">
@@ -341,7 +373,8 @@ class VaultCaddyNavbar {
                         <div class="user-info" style="padding: 1rem 1.5rem; background: #f9fafb; border-bottom: 1px solid #e5e7eb;">
                             <div style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem;">Credits: ${userCredits}</div>
                             <div style="font-size: 0.875rem; color: #6b7280;">${userEmail}</div>
-                            ${googleUser ? '<div style="font-size: 0.75rem; color: #10b981; margin-top: 0.25rem;"><i class="fab fa-google"></i> Google 帳戶</div>' : ''}
+                            ${isFirebaseUser ? '<div style="font-size: 0.75rem; color: #3b82f6; margin-top: 0.25rem;"><i class="fas fa-shield-alt"></i> Firebase 帳戶</div>' : ''}
+                            ${isGoogleUser ? '<div style="font-size: 0.75rem; color: #10b981; margin-top: 0.25rem;"><i class="fab fa-google"></i> Google 帳戶</div>' : ''}
                         </div>
                         <a href="account.html" class="user-menu-item" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.5rem; color: #374151; text-decoration: none; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
                             <div style="display: flex; align-items: center;">
@@ -361,7 +394,7 @@ class VaultCaddyNavbar {
                         <a href="#" class="user-menu-item logout" onclick="window.VaultCaddyNavbar.logout()" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.5rem; color: #dc2626; text-decoration: none; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#fef2f2'" onmouseout="this.style.backgroundColor='transparent'">
                             <div style="display: flex; align-items: center;">
                                 <i class="fas fa-sign-out-alt" style="width: 16px; margin-right: 0.75rem;"></i>
-                                <span>${googleUser ? 'Google 登出' : 'Log out'}</span>
+                                <span>Log out</span>
                             </div>
                             <span style="font-size: 0.75rem; color: #9ca3af;">⌘Q</span>
                         </a>
