@@ -1343,7 +1343,12 @@
                 <!-- 頁面標題 -->
                 <header style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-start;">
                     <div>
-                        <h1 id="team-project-title" style="font-size: 2rem; font-weight: 700; color: #1f2937; margin: 0 0 0.5rem 0;">Project</h1>
+                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                            <h1 id="team-project-title" contenteditable="false" style="font-size: 2rem; font-weight: 700; color: #1f2937; margin: 0; outline: none; border: 2px solid transparent; padding: 0.25rem 0.5rem; border-radius: 4px; transition: all 0.2s;">Project</h1>
+                            <button id="edit-project-name-btn" onclick="toggleProjectNameEdit()" style="background: transparent; border: none; cursor: pointer; color: #6b7280; padding: 0.5rem; border-radius: 4px; transition: all 0.2s;" title="編輯項目名稱">
+                                <i class="fas fa-pen" style="font-size: 1.25rem;"></i>
+                            </button>
+                        </div>
                         <p style="color: #6b7280; font-size: 1rem; margin: 0;">Manage and view your documents</p>
                     </div>
                     <button onclick="confirmDeleteProject()" style="background: #ef4444; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
@@ -1652,6 +1657,87 @@
         }
 
         // 確認刪除項目
+        // 切換項目名稱編輯模式
+        function toggleProjectNameEdit() {
+            const titleElement = document.getElementById('team-project-title');
+            const btnElement = document.getElementById('edit-project-name-btn');
+            const isEditable = titleElement.getAttribute('contenteditable') === 'true';
+            
+            if (!isEditable) {
+                // 進入編輯模式
+                titleElement.setAttribute('contenteditable', 'true');
+                titleElement.style.border = '2px solid #3b82f6';
+                titleElement.style.background = '#f0f9ff';
+                titleElement.focus();
+                
+                // 選中文字
+                const range = document.createRange();
+                range.selectNodeContents(titleElement);
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+                
+                // 更改按鈕圖標為保存
+                btnElement.innerHTML = '<i class="fas fa-check" style="font-size: 1.25rem; color: #10b981;"></i>';
+                btnElement.title = '保存項目名稱';
+            } else {
+                // 保存並退出編輯模式
+                saveProjectName();
+            }
+        }
+        
+        // 保存項目名稱
+        function saveProjectName() {
+            const titleElement = document.getElementById('team-project-title');
+            const btnElement = document.getElementById('edit-project-name-btn');
+            const newName = titleElement.textContent.trim();
+            
+            if (!newName) {
+                alert('項目名稱不能為空');
+                return;
+            }
+            
+            const project = getCurrentProject();
+            if (!project) {
+                alert('無法找到當前項目');
+                return;
+            }
+            
+            // 更新項目名稱
+            const projects = JSON.parse(localStorage.getItem('vaultcaddy_projects') || '[]');
+            const projectIndex = projects.findIndex(p => p.id === project.id);
+            
+            if (projectIndex !== -1) {
+                projects[projectIndex].name = newName;
+                localStorage.setItem('vaultcaddy_projects', JSON.stringify(projects));
+                
+                // 如果 Firebase 可用，也更新 Firebase
+                if (window.firebaseDataManager && window.firebaseDataManager.isInitialized) {
+                    window.firebaseDataManager.updateProject(project.id, { name: newName })
+                        .then(() => {
+                            console.log('✅ 項目名稱已保存到 Firebase');
+                        })
+                        .catch(error => {
+                            console.error('❌ Firebase 更新失敗:', error);
+                        });
+                }
+                
+                // 更新側邊欄
+                updateSidebarProjects();
+                
+                console.log('✅ 項目名稱已更新:', newName);
+            }
+            
+            // 退出編輯模式
+            titleElement.setAttribute('contenteditable', 'false');
+            titleElement.style.border = '2px solid transparent';
+            titleElement.style.background = 'transparent';
+            
+            // 恢復按鈕圖標
+            btnElement.innerHTML = '<i class="fas fa-pen" style="font-size: 1.25rem;"></i>';
+            btnElement.title = '編輯項目名稱';
+        }
+        
         function confirmDeleteProject() {
             const project = getCurrentProject();
             if (!project) {

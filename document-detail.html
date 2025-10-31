@@ -583,17 +583,6 @@
                 <button class="tab">JSON</button>
             </div>
             
-            <!-- 核對狀態 -->
-            <div class="reconciliation-card">
-                <div class="reconciliation-header">
-                    <h3 class="reconciliation-title">Reconciliation Status</h3>
-                    <span class="progress-badge" id="progressBadge">0% Complete</span>
-                </div>
-                <p class="reconciliation-subtitle" id="reconciliationStatus">
-                    0 of 0 transactions reconciled
-                </p>
-            </div>
-            
             <!-- 文檔詳情（根據類型動態顯示） -->
             <div id="documentDetailsSection">
                 <!-- 將由 JavaScript 動態生成 -->
@@ -1064,14 +1053,14 @@
                             </tr>
                         </thead>
                         <tbody>
-                            ${lineItems.length > 0 ? lineItems.map(item => `
+                            ${lineItems.length > 0 ? lineItems.map((item, index) => `
                                 <tr style="border-bottom: 1px solid #e5e7eb;">
-                                    <td style="padding: 1rem 1.5rem; color: #6b7280;">${item.code || item.itemCode || '—'}</td>
-                                    <td style="padding: 1rem 1.5rem; color: #1f2937; font-weight: 500;">${item.description || '—'}</td>
-                                    <td style="padding: 1rem 1.5rem; text-align: right; color: #1f2937;">${item.quantity || 0}</td>
-                                    <td style="padding: 1rem 1.5rem; text-align: right; color: #6b7280;">${item.unit || '件'}</td>
-                                    <td style="padding: 1rem 1.5rem; text-align: right; color: #1f2937;">${currency} $${(item.unit_price || item.unitPrice || 0).toFixed(2)}</td>
-                                    <td style="padding: 1rem 1.5rem; text-align: right; color: #1f2937; font-weight: 500;">${currency} $${(item.amount || 0).toFixed(2)}</td>
+                                    <td contenteditable="true" data-field="code" data-index="${index}" style="padding: 1rem 1.5rem; color: #6b7280; cursor: text;">${item.code || item.itemCode || '—'}</td>
+                                    <td contenteditable="true" data-field="description" data-index="${index}" style="padding: 1rem 1.5rem; color: #1f2937; font-weight: 500; cursor: text;">${item.description || '—'}</td>
+                                    <td contenteditable="true" data-field="quantity" data-index="${index}" style="padding: 1rem 1.5rem; text-align: right; color: #1f2937; cursor: text;">${item.quantity || 0}</td>
+                                    <td contenteditable="true" data-field="unit" data-index="${index}" style="padding: 1rem 1.5rem; text-align: right; color: #6b7280; cursor: text;">${item.unit || '件'}</td>
+                                    <td contenteditable="true" data-field="unit_price" data-index="${index}" style="padding: 1rem 1.5rem; text-align: right; color: #1f2937; cursor: text;">${(item.unit_price || item.unitPrice || 0).toFixed(2)}</td>
+                                    <td contenteditable="true" data-field="amount" data-index="${index}" style="padding: 1rem 1.5rem; text-align: right; color: #1f2937; font-weight: 500; cursor: text;">${(item.amount || 0).toFixed(2)}</td>
                                 </tr>
                             `).join('') : `
                                 <tr>
@@ -1085,18 +1074,57 @@
                 </div>
             `;
             
-            // 初始化可編輯表格
+            // 初始化可編輯表格（使用 contenteditable）
             setTimeout(() => {
-                const table = document.querySelector('.transactions-table');
-                if (table && window.EditableTable && lineItems.length > 0) {
+                const table = document.querySelector('.transactions-table tbody');
+                if (table && lineItems.length > 0) {
                     console.log('🔧 初始化可編輯表格...');
-                    new EditableTable(table, {
-                        onCellEdit: (row, cell, value) => {
-                            console.log('📝 商品項目已編輯:', { row, cell, value });
+                    
+                    // 為所有可編輯單元格添加事件監聽器
+                    const editableCells = table.querySelectorAll('td[contenteditable="true"]');
+                    editableCells.forEach(cell => {
+                        // 聚焦時選中文字
+                        cell.addEventListener('focus', function() {
+                            const range = document.createRange();
+                            range.selectNodeContents(this);
+                            const selection = window.getSelection();
+                            selection.removeAllRanges();
+                            selection.addRange(range);
+                        });
+                        
+                        // 失焦時保存
+                        cell.addEventListener('blur', function() {
+                            const field = this.getAttribute('data-field');
+                            const index = parseInt(this.getAttribute('data-index'));
+                            const value = this.textContent.trim();
+                            
+                            console.log('📝 商品項目已編輯:', { field, index, value });
+                            
+                            // 更新 lineItems 數據
+                            if (currentDocument.processedData.items && currentDocument.processedData.items[index]) {
+                                currentDocument.processedData.items[index][field] = value;
+                            }
+                            
                             // 自動保存
                             saveInvoiceDetails();
-                        }
+                        });
+                        
+                        // 按 Enter 跳到下一個單元格
+                        cell.addEventListener('keydown', function(e) {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                this.blur();
+                                
+                                // 找到下一個可編輯單元格
+                                const allCells = Array.from(editableCells);
+                                const currentIndex = allCells.indexOf(this);
+                                if (currentIndex < allCells.length - 1) {
+                                    allCells[currentIndex + 1].focus();
+                                }
+                            }
+                        });
                     });
+                    
                     console.log('✅ 可編輯表格已初始化');
                 }
             }, 100);
