@@ -1676,17 +1676,28 @@
         }
 
         // 獲取當前項目信息
-        function getCurrentProject() {
+        async function getCurrentProject() {
             const projectId = getCurrentProjectId();
             if (!projectId) return null;
             
+            // 🔥 優先從 Firebase 獲取
+            if (window.firebaseDataManager && window.firebaseDataManager.isInitialized) {
+                try {
+                    const projects = await window.firebaseDataManager.getProjects();
+                    return projects.find(p => p.id === projectId);
+                } catch (error) {
+                    console.error('❌ 從 Firebase 獲取項目失敗:', error);
+                }
+            }
+            
+            // 向後兼容：從 LocalStorage 獲取
             const projects = JSON.parse(localStorage.getItem('vaultcaddy_projects') || '[]');
             return projects.find(p => p.id === projectId);
         }
 
         // 更新頁面標題為項目名稱
-        function updateProjectTitle() {
-            const project = getCurrentProject();
+        async function updateProjectTitle() {
+            const project = await getCurrentProject();
             if (project) {
                 // 更新 document-list-view 中的標題
                 const projectTitle = document.getElementById('project-title');
@@ -1735,7 +1746,7 @@
         }
         
         // 保存項目名稱
-        function saveProjectName() {
+        async function saveProjectName() {
             const titleElement = document.getElementById('team-project-title');
             const btnElement = document.getElementById('edit-project-name-btn');
             const newName = titleElement.textContent.trim();
@@ -1745,35 +1756,37 @@
                 return;
             }
             
-            const project = getCurrentProject();
+            const project = await getCurrentProject();
             if (!project) {
                 alert('無法找到當前項目');
                 return;
             }
             
-            // 更新項目名稱
-            const projects = JSON.parse(localStorage.getItem('vaultcaddy_projects') || '[]');
-            const projectIndex = projects.findIndex(p => p.id === project.id);
-            
-            if (projectIndex !== -1) {
-                projects[projectIndex].name = newName;
-                localStorage.setItem('vaultcaddy_projects', JSON.stringify(projects));
-                
-                // 如果 Firebase 可用，也更新 Firebase
+            try {
+                // 🔥 優先保存到 Firebase
                 if (window.firebaseDataManager && window.firebaseDataManager.isInitialized) {
-                    window.firebaseDataManager.updateProject(project.id, { name: newName })
-                        .then(() => {
-                            console.log('✅ 項目名稱已保存到 Firebase');
-                        })
-                        .catch(error => {
-                            console.error('❌ Firebase 更新失敗:', error);
-                        });
+                    await window.firebaseDataManager.updateProject(project.id, { name: newName });
+                    console.log('✅ 項目名稱已保存到 Firebase');
+                }
+                
+                // 向後兼容：同時保存到 LocalStorage
+                const projects = JSON.parse(localStorage.getItem('vaultcaddy_projects') || '[]');
+                const projectIndex = projects.findIndex(p => p.id === project.id);
+                
+                if (projectIndex !== -1) {
+                    projects[projectIndex].name = newName;
+                    localStorage.setItem('vaultcaddy_projects', JSON.stringify(projects));
+                    console.log('✅ 項目名稱已保存到 LocalStorage（備份）');
                 }
                 
                 // 更新側邊欄
                 updateSidebarProjects();
                 
                 console.log('✅ 項目名稱已更新:', newName);
+                
+            } catch (error) {
+                console.error('❌ 保存項目名稱失敗:', error);
+                alert('保存失敗，請重試');
             }
             
             // 退出編輯模式
@@ -1786,8 +1799,8 @@
             btnElement.title = '編輯項目名稱';
         }
         
-        function confirmDeleteProject() {
-            const project = getCurrentProject();
+        async function confirmDeleteProject() {
+            const project = await getCurrentProject();
             if (!project) {
                 alert('無法找到當前項目');
                 return;
@@ -1795,27 +1808,31 @@
             
             const confirmed = confirm(`是否刪除項目「${project.name}」？\n\n此操作無法撤銷。`);
             if (confirmed) {
-                deleteProject(project.id);
+                await deleteProject(project.id);
             }
         }
 
         // 刪除項目
-        function deleteProject(projectId) {
-            // 從 localStorage 獲取項目列表
-            const projects = JSON.parse(localStorage.getItem('vaultcaddy_projects') || '[]');
-            
-            // 過濾掉要刪除的項目
-            const updatedProjects = projects.filter(p => p.id !== projectId);
-            
-            // 保存更新後的列表
-            localStorage.setItem('vaultcaddy_projects', JSON.stringify(updatedProjects));
-            
-            // 觸發項目刪除事件，讓側邊欄更新
-            window.dispatchEvent(new CustomEvent('projectDeleted', { 
-                detail: { projectId } 
-            }));
-            
-            console.log('✅ 項目已刪除:', projectId);
+        async function deleteProject(projectId) {
+            try {
+                // 🔥 優先從 Firebase 刪除
+                if (window.firebaseDataManager && window.firebaseDataManager.isInitialized) {
+                    await window.firebaseDataManager.deleteProject(projectId);
+                    console.log('✅ 項目已從 Firebase 刪除');
+                }
+                
+                // 向後兼容：同時從 LocalStorage 刪除
+                const projects = JSON.parse(localStorage.getItem('vaultcaddy_projects') || '[]');
+                const updatedProjects = projects.filter(p => p.id !== projectId);
+                localStorage.setItem('vaultcaddy_projects', JSON.stringify(updatedProjects));
+                console.log('✅ 項目已從 LocalStorage 刪除（備份）');
+                
+                // 觸發項目刪除事件，讓側邊欄更新
+                window.dispatchEvent(new CustomEvent('projectDeleted', { 
+                    detail: { projectId } 
+                }));
+                
+                console.log('✅ 項目已刪除:', projectId);
             
             // 返回到 dashboard
             window.location.href = 'dashboard.html';

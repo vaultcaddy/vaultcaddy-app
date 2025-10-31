@@ -430,6 +430,60 @@ class FirebaseDataManager {
     }
     
     // ============================================
+    // 用戶數據管理
+    // ============================================
+    
+    /**
+     * 獲取用戶 credits
+     */
+    async getUserCredits() {
+        try {
+            const userId = this.getUserId();
+            if (!userId) {
+                console.warn('⚠️ 無法獲取用戶 ID');
+                return 0;
+            }
+            
+            const userDoc = await this.db.collection('users').doc(userId).get();
+            
+            if (userDoc.exists) {
+                const credits = userDoc.data().credits || 0;
+                console.log('✅ 從 Firebase 獲取 credits:', credits);
+                return credits;
+            } else {
+                console.log('ℹ️ 用戶文檔不存在，返回默認 credits: 0');
+                return 0;
+            }
+        } catch (error) {
+            console.error('❌ 獲取用戶 credits 失敗:', error);
+            return 0;
+        }
+    }
+    
+    /**
+     * 更新用戶 credits
+     */
+    async updateUserCredits(credits) {
+        try {
+            const userId = this.getUserId();
+            if (!userId) {
+                throw new Error('無法獲取用戶 ID');
+            }
+            
+            await this.db.collection('users').doc(userId).set({
+                credits: credits,
+                updatedAt: new Date().toISOString()
+            }, { merge: true });
+            
+            console.log('✅ 用戶 credits 已更新:', credits);
+            return true;
+        } catch (error) {
+            console.error('❌ 更新用戶 credits 失敗:', error);
+            throw error;
+        }
+    }
+    
+    // ============================================
     // 數據遷移
     // ============================================
     

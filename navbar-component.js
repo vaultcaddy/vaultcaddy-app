@@ -52,8 +52,19 @@ class VaultCaddyNavbar {
                         name: currentUser.displayName || currentUser.email?.split('@')[0] || 'User',
                         avatar: currentUser.photoURL || 'https://static.vecteezy.com/system/resources/previews/019/879/186/non_2x/user-icon-on-transparent-background-free-png.png'
                     };
-                    // TODO: 從 Firestore 獲取 credits
-                    this.credits = localStorage.getItem('userCredits') || '0';
+                    
+                    // 🔥 從 Firestore 獲取 credits
+                    if (window.firebaseDataManager && window.firebaseDataManager.isInitialized) {
+                        try {
+                            this.credits = await window.firebaseDataManager.getUserCredits();
+                            console.log('✅ 從 Firestore 獲取 credits:', this.credits);
+                        } catch (error) {
+                            console.error('❌ 獲取 credits 失敗:', error);
+                            this.credits = localStorage.getItem('userCredits') || '0';
+                        }
+                    } else {
+                        this.credits = localStorage.getItem('userCredits') || '0';
+                    }
                     
                     console.log('✅ Firebase Auth 用戶已載入:', this.user.email);
                 } else {

@@ -32,7 +32,7 @@ class VaultCaddySidebar {
         });
     }
     
-    render() {
+    async render() {
         // 支持兩種容器：#sidebar-root（新版）和 .sidebar（舊版）
         const sidebarContainer = document.getElementById('sidebar-root') || document.querySelector('.sidebar');
         if (!sidebarContainer) {
@@ -45,14 +45,30 @@ class VaultCaddySidebar {
         // 設置側邊欄為 flexbox 布局
         sidebarContainer.style.cssText = 'width: 280px; background: #ffffff; border-right: 1px solid #e5e7eb; padding: 1.5rem; display: flex; flex-direction: column; visibility: visible;';
         
-        const sidebarHTML = this.getSidebarHTML();
+        const sidebarHTML = await this.getSidebarHTML();
         sidebarContainer.innerHTML = sidebarHTML;
         console.log('✅ 側邊欄 HTML 已插入，長度:', sidebarHTML.length);
     }
     
-    getSidebarHTML() {
-        // 獲取項目列表
-        const projects = JSON.parse(localStorage.getItem('vaultcaddy_projects') || '[]');
+    async getSidebarHTML() {
+        // 🔥 優先從 Firebase 獲取項目列表
+        let projects = [];
+        
+        if (window.firebaseDataManager && window.firebaseDataManager.isInitialized) {
+            try {
+                projects = await window.firebaseDataManager.getProjects();
+                console.log('✅ 側邊欄從 Firebase 加載項目:', projects.length);
+            } catch (error) {
+                console.error('❌ 從 Firebase 加載項目失敗:', error);
+                // 回退到 LocalStorage
+                projects = JSON.parse(localStorage.getItem('vaultcaddy_projects') || '[]');
+                console.log('⚠️ 側邊欄回退到 LocalStorage:', projects.length);
+            }
+        } else {
+            // 向後兼容：從 LocalStorage 獲取
+            projects = JSON.parse(localStorage.getItem('vaultcaddy_projects') || '[]');
+            console.log('ℹ️ 側邊欄從 LocalStorage 加載項目:', projects.length);
+        }
         
         // 獲取當前項目 ID（從 URL 參數）
         const urlParams = new URLSearchParams(window.location.search);
