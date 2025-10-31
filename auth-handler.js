@@ -107,7 +107,7 @@ class AuthHandler {
             
             // 重定向到 dashboard（如果在登錄/註冊頁面）
             const currentPage = window.location.pathname.split('/').pop();
-            if (currentPage === 'login.html' || currentPage === 'register.html') {
+            if (currentPage === 'login.html' || currentPage === 'register.html' || currentPage === 'auth.html') {
                 console.log('🔄 重定向到 dashboard...');
                 window.location.href = 'dashboard.html';
             }
@@ -128,9 +128,11 @@ class AuthHandler {
         const publicPages = [
             'login.html',
             'register.html',
+            'auth.html',
             'index.html',
             'privacy.html',
             'terms.html',
+            'billing.html',
             ''
         ];
         
