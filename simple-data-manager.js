@@ -127,13 +127,18 @@ class SimpleDataManager {
             const userId = this.getUserId();
             const snapshot = await this.db.collection('projects')
                 .where('userId', '==', userId)
-                .orderBy('createdAt', 'desc')
                 .get();
             
+            // 在客戶端排序（避免需要 Firestore 索引）
             const projects = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
-            }));
+            })).sort((a, b) => {
+                // 按創建時間降序排序（最新的在前）
+                const timeA = a.createdAt?.toMillis?.() || 0;
+                const timeB = b.createdAt?.toMillis?.() || 0;
+                return timeB - timeA;
+            });
             
             console.log(`✅ 獲取 ${projects.length} 個項目`);
             return projects;
