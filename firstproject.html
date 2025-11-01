@@ -62,11 +62,11 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
     
         <!-- Firebase 配置和數據管理器 -->
-        <script src="firebase-config.js?v=20251101"></script>
+        <script src="firebase-config.js?v=20251101-fix"></script>
         
         <!-- 🔥 新的簡化系統 -->
-        <script src="simple-auth.js?v=20251101"></script>
-        <script src="simple-data-manager.js?v=20251101"></script>
+        <script src="simple-auth.js?v=20251101-fix"></script>
+        <script src="simple-data-manager.js?v=20251101-fix"></script>
     
     <!-- 載入數據處理器 -->
     <script src="data-processor.js"></script>
@@ -1627,17 +1627,12 @@
 
         // ========== 🔧 立即定義全局函數（避免 ReferenceError） ==========
         // 這些函數會在 DOMContentLoaded 時被重新定義，這裡只是占位符
+        let pendingOpenUploadModal = false;
+        
         window.openUploadModal = function() {
-            console.log('⏳ openUploadModal 占位符被調用，等待 DOM 載入...');
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', function() {
-                    if (window.openUploadModal) {
-                        window.openUploadModal();
-                    }
-                });
-            } else {
-                console.error('❌ openUploadModal 尚未初始化');
-            }
+            console.log('⏳ openUploadModal 占位符被調用');
+            pendingOpenUploadModal = true;
+            // 不做任何事情，等待真實函數定義後會被調用
         };
         
         window.closeAIUploadModal = function() {
@@ -2527,6 +2522,13 @@
         
         // 確保函數全局可用
         window.openUploadModal = openUploadModal;
+        
+        // 🔥 檢查是否有待處理的調用
+        if (window.pendingOpenUploadModal) {
+            console.log('🔥 檢測到待處理的 openUploadModal 調用，立即執行');
+            window.pendingOpenUploadModal = false;
+            openUploadModal();
+        }
         
         function closeAIUploadModal() {
             const modal = document.getElementById('aiUploadModal');

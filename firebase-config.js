@@ -124,30 +124,41 @@ if (typeof window !== 'undefined') {
 // 自動初始化
 // ============================================
 if (typeof window !== 'undefined') {
+    console.log('🔧 開始 Firebase 自動初始化...');
+    
     // 等待 Firebase SDK 加載
     const checkFirebase = setInterval(() => {
-        if (typeof firebase !== 'undefined') {
+        if (typeof firebase !== 'undefined' && firebase.apps !== undefined) {
             clearInterval(checkFirebase);
-            const success = initializeFirebase();
+            console.log('✅ Firebase SDK 已加載');
             
-            if (success) {
-                // 設置全局標誌
-                window.firebaseInitialized = true;
+            try {
+                const success = initializeFirebase();
                 
-                // 觸發自定義事件，通知其他模塊 Firebase 已就緒
-                window.dispatchEvent(new CustomEvent('firebase-ready', {
-                    detail: {
-                        app: app,
-                        db: db,
-                        storage: storage,
-                        auth: auth
-                    }
-                }));
-                
-                console.log('🔥 Firebase 已就緒，觸發 firebase-ready 事件');
+                if (success) {
+                    // 設置全局標誌
+                    window.firebaseInitialized = true;
+                    console.log('✅ window.firebaseInitialized = true');
+                    
+                    // 觸發自定義事件，通知其他模塊 Firebase 已就緒
+                    window.dispatchEvent(new CustomEvent('firebase-ready', {
+                        detail: {
+                            app: app,
+                            db: db,
+                            storage: storage,
+                            auth: auth
+                        }
+                    }));
+                    
+                    console.log('🔥 Firebase 已就緒，觸發 firebase-ready 事件');
+                } else {
+                    console.error('❌ Firebase 初始化返回 false');
+                }
+            } catch (error) {
+                console.error('❌ Firebase 自動初始化失敗:', error);
             }
         }
-    }, 100);
+    }, 50); // 減少輪詢間隔到 50ms
     
     // 超時檢查（10 秒）
     setTimeout(() => {
@@ -155,6 +166,9 @@ if (typeof window !== 'undefined') {
         if (typeof firebase === 'undefined') {
             console.error('❌ Firebase SDK 加載超時（10 秒）');
             console.error('   請檢查網絡連接和 CDN 可用性');
+        } else if (!window.firebaseInitialized) {
+            console.error('❌ Firebase 初始化超時（10 秒）');
+            console.error('   Firebase SDK 已加載，但初始化失敗');
         }
     }, 10000);
 }
