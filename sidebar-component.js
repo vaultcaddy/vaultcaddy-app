@@ -54,20 +54,20 @@ class VaultCaddySidebar {
         // 🔥 優先從 Firebase 獲取項目列表
         let projects = [];
         
-        if (window.firebaseDataManager && window.firebaseDataManager.isInitialized) {
+        // 使用 simpleDataManager（新版）或 firebaseDataManager（向後兼容）
+        const dataManager = window.simpleDataManager || window.firebaseDataManager;
+        
+        if (dataManager && dataManager.initialized) {
             try {
-                projects = await window.firebaseDataManager.getProjects();
+                projects = await dataManager.getProjects();
                 console.log('✅ 側邊欄從 Firebase 加載項目:', projects.length);
             } catch (error) {
                 console.error('❌ 從 Firebase 加載項目失敗:', error);
-                // 回退到 LocalStorage
-                projects = JSON.parse(localStorage.getItem('vaultcaddy_projects') || '[]');
-                console.log('⚠️ 側邊欄回退到 LocalStorage:', projects.length);
+                projects = [];
             }
         } else {
-            // 向後兼容：從 LocalStorage 獲取
-            projects = JSON.parse(localStorage.getItem('vaultcaddy_projects') || '[]');
-            console.log('ℹ️ 側邊欄從 LocalStorage 加載項目:', projects.length);
+            console.warn('⚠️ SimpleDataManager 未初始化，側邊欄項目列表為空');
+            projects = [];
         }
         
         // 獲取當前項目 ID（從 URL 參數）

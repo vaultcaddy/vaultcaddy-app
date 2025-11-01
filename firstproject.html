@@ -49,7 +49,7 @@
     <script src="config.js"></script>
     <script src="translations.js?v=20251031"></script>
     <script src="navbar-component.js?v=20251031-clean"></script>
-    <script src="sidebar-component.js?v=20251031"></script>
+    <script src="sidebar-component.js?v=1761990032"></script>
     <!-- 載入統一處理器系統 -->
     <!-- ✅ 混合處理器：Vision API OCR + DeepSeek Chat（香港優化版）-->
     <script src="hybrid-vision-deepseek.js?v=20251030-hk-optimized"></script>
@@ -1706,18 +1706,18 @@
             if (!projectId) return null;
             
             // 🔥 優先從 Firebase 獲取
-            if (window.firebaseDataManager && window.firebaseDataManager.isInitialized) {
+            const dataManager = window.simpleDataManager || window.firebaseDataManager;
+            if (dataManager && dataManager.initialized) {
                 try {
-                    const projects = await window.firebaseDataManager.getProjects();
+                    const projects = await dataManager.getProjects();
                     return projects.find(p => p.id === projectId);
                 } catch (error) {
                     console.error('❌ 從 Firebase 獲取項目失敗:', error);
                 }
             }
             
-            // 向後兼容：從 LocalStorage 獲取
-            const projects = JSON.parse(localStorage.getItem('vaultcaddy_projects') || '[]');
-            return projects.find(p => p.id === projectId);
+            console.warn('⚠️ SimpleDataManager 未初始化，無法獲取項目');
+            return null;
         }
 
         // 更新頁面標題為項目名稱
@@ -1792,25 +1792,20 @@
             
             try {
                 // 🔥 優先保存到 Firebase
-                if (window.firebaseDataManager && window.firebaseDataManager.isInitialized) {
-                    await window.firebaseDataManager.updateProject(project.id, { name: newName });
+                const dataManager = window.simpleDataManager || window.firebaseDataManager;
+                if (dataManager && dataManager.initialized) {
+                    await dataManager.updateProject(project.id, { name: newName });
                     console.log('✅ 項目名稱已保存到 Firebase');
+                    
+                    // 更新側邊欄
+                    if (window.dashboardSidebar) {
+                        await window.dashboardSidebar.render();
+                    }
+                    
+                    console.log('✅ 項目名稱已更新:', newName);
+                } else {
+                    throw new Error('SimpleDataManager 未初始化');
                 }
-                
-                // 向後兼容：同時保存到 LocalStorage
-                const projects = JSON.parse(localStorage.getItem('vaultcaddy_projects') || '[]');
-                const projectIndex = projects.findIndex(p => p.id === project.id);
-                
-                if (projectIndex !== -1) {
-                    projects[projectIndex].name = newName;
-                    localStorage.setItem('vaultcaddy_projects', JSON.stringify(projects));
-                    console.log('✅ 項目名稱已保存到 LocalStorage（備份）');
-                }
-                
-                // 更新側邊欄
-                updateSidebarProjects();
-                
-                console.log('✅ 項目名稱已更新:', newName);
                 
             } catch (error) {
                 console.error('❌ 保存項目名稱失敗:', error);
@@ -1847,26 +1842,27 @@
         async function deleteProject(projectId) {
             try {
                 // 🔥 優先從 Firebase 刪除
-                if (window.firebaseDataManager && window.firebaseDataManager.isInitialized) {
-                    await window.firebaseDataManager.deleteProject(projectId);
+                const dataManager = window.simpleDataManager || window.firebaseDataManager;
+                if (dataManager && dataManager.initialized) {
+                    await dataManager.deleteProject(projectId);
                     console.log('✅ 項目已從 Firebase 刪除');
+                    
+                    // 觸發項目刪除事件，讓側邊欄更新
+                    window.dispatchEvent(new CustomEvent('projectDeleted', { 
+                        detail: { projectId } 
+                    }));
+                    
+                    console.log('✅ 項目已刪除:', projectId);
+                    
+                    // 返回到 dashboard
+                    window.location.href = 'dashboard.html';
+                } else {
+                    throw new Error('SimpleDataManager 未初始化');
                 }
-                
-                // 向後兼容：同時從 LocalStorage 刪除
-                const projects = JSON.parse(localStorage.getItem('vaultcaddy_projects') || '[]');
-                const updatedProjects = projects.filter(p => p.id !== projectId);
-                localStorage.setItem('vaultcaddy_projects', JSON.stringify(updatedProjects));
-                console.log('✅ 項目已從 LocalStorage 刪除（備份）');
-                
-                // 觸發項目刪除事件，讓側邊欄更新
-                window.dispatchEvent(new CustomEvent('projectDeleted', { 
-                    detail: { projectId } 
-                }));
-                
-                console.log('✅ 項目已刪除:', projectId);
-            
-            // 返回到 dashboard
-            window.location.href = 'dashboard.html';
+            } catch (error) {
+                console.error('❌ 刪除項目失敗:', error);
+                alert('刪除失敗，請重試');
+            }
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -2049,8 +2045,28 @@
                 setTimeout(initializeWithGlobalSync, 100);
             }
 
-            // 初始化統一側邊欄
+            // 初始化統一側邊欄（等待 SimpleDataManager 初始化後會自動更新）
             window.unifiedSidebar = new VaultCaddySidebar();
+            
+            // 等待 SimpleDataManager 初始化後更新項目標題
+            const waitForDataManager = setInterval(async () => {
+                const dataManager = window.simpleDataManager || window.firebaseDataManager;
+                if (dataManager && dataManager.initialized) {
+                    clearInterval(waitForDataManager);
+                    console.log('✅ SimpleDataManager 已初始化，更新項目標題');
+                    await updateProjectTitle();
+                    
+                    // 重新渲染側邊欄以顯示 Firebase 項目
+                    if (window.unifiedSidebar) {
+                        await window.unifiedSidebar.render();
+                    }
+                }
+            }, 100);
+            
+            // 超時保護（10 秒）
+            setTimeout(() => {
+                clearInterval(waitForDataManager);
+            }, 10000);
             
             // 初始化用戶團隊信息
             initializeUserTeamInfo();
