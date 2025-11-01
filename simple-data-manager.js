@@ -18,17 +18,20 @@ class SimpleDataManager {
         this.auth = null;
         this.initialized = false;
         
-        console.log('📦 初始化 SimpleDataManager...');
-        this.init();
+        console.log('📦 SimpleDataManager 構造函數執行');
+        // 不在構造函數中初始化，等待 firebase-ready 事件
     }
     
     // 初始化
     async init() {
         try {
-            // 等待 Firebase
-            await this.waitForFirebase();
+            console.log('📦 開始初始化 SimpleDataManager...');
             
-            // 獲取實例
+            // 直接使用 Firebase（已由 firebase-config.js 初始化）
+            if (!firebase || !firebase.firestore || !firebase.storage) {
+                throw new Error('Firebase SDK 未加載');
+            }
+            
             this.db = firebase.firestore();
             this.storage = firebase.storage();
             this.auth = firebase.auth();
@@ -336,4 +339,10 @@ window.simpleDataManager = new SimpleDataManager();
 
 // 向後兼容（供舊代碼使用）
 window.firebaseDataManager = window.simpleDataManager;
+
+// 監聽 firebase-ready 事件，自動初始化
+window.addEventListener('firebase-ready', async () => {
+    console.log('🔥 收到 firebase-ready 事件，初始化 SimpleDataManager');
+    await window.simpleDataManager.init();
+});
 

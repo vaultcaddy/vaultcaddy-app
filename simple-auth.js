@@ -16,17 +16,20 @@ class SimpleAuth {
         this.currentUser = null;
         this.initialized = false;
         
-        console.log('🔐 初始化 SimpleAuth...');
-        this.init();
+        console.log('🔐 SimpleAuth 構造函數執行');
+        // 不在構造函數中初始化，等待 firebase-ready 事件
     }
     
     // 初始化
     async init() {
         try {
-            // 等待 Firebase
-            await this.waitForFirebase();
+            console.log('🔐 開始初始化 SimpleAuth...');
             
-            // 獲取 Auth 實例
+            // 直接使用 Firebase（已由 firebase-config.js 初始化）
+            if (!firebase || !firebase.auth) {
+                throw new Error('Firebase SDK 未加載');
+            }
+            
             this.auth = firebase.auth();
             this.initialized = true;
             
@@ -274,4 +277,10 @@ window.simpleAuth = new SimpleAuth();
 
 // 向後兼容（供舊代碼使用）
 window.authHandler = window.simpleAuth;
+
+// 監聽 firebase-ready 事件，自動初始化
+window.addEventListener('firebase-ready', async () => {
+    console.log('🔥 收到 firebase-ready 事件，初始化 SimpleAuth');
+    await window.simpleAuth.init();
+});
 
