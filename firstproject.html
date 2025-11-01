@@ -80,13 +80,6 @@
     <!-- 載入批量上傳處理器 -->
     <script src="batch-upload-processor.js?v=20251028-001"></script>
     
-    <!-- Firebase SDK (v9 compat) -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    
-    <!-- 已在上方引入 Firebase 配置和數據管理器 -->
-    
     
     <style>
         /* 白色主題樣式 */
@@ -1955,8 +1948,28 @@
                 });
             }
             
-            // 更新項目標題
-            updateProjectTitle();
+            // 等待 Firebase 和 SimpleDataManager 初始化後再更新項目標題
+            const waitForFirebaseAndUpdateTitle = async () => {
+                console.log('⏳ 等待 Firebase 和 SimpleDataManager 初始化...');
+                
+                // 等待 SimpleDataManager 初始化
+                const checkInterval = setInterval(async () => {
+                    if (window.simpleDataManager && window.simpleDataManager.initialized) {
+                        clearInterval(checkInterval);
+                        console.log('✅ SimpleDataManager 已初始化，更新項目標題');
+                        await updateProjectTitle();
+                    }
+                }, 100);
+                
+                // 超時保護（10 秒）
+                setTimeout(() => {
+                    clearInterval(checkInterval);
+                    console.warn('⚠️ SimpleDataManager 初始化超時，使用 LocalStorage 備份');
+                    updateProjectTitle(); // 仍然嘗試更新（使用 LocalStorage）
+                }, 10000);
+            };
+            
+            waitForFirebaseAndUpdateTitle();
             
             // 等待全域同步系統載入
             const initializeWithGlobalSync = () => {

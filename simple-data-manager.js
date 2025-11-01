@@ -153,6 +153,16 @@ class SimpleDataManager {
     async createProject(name) {
         try {
             const userId = this.getUserId();
+            
+            // 🔍 檢查是否已存在同名項目
+            const existingProjects = await this.getProjects();
+            const duplicateName = existingProjects.find(p => p.name === name);
+            
+            if (duplicateName) {
+                console.warn('⚠️ 項目名稱已存在:', name);
+                throw new Error(`項目名稱 "${name}" 已存在，請使用其他名稱`);
+            }
+            
             const projectData = {
                 userId,
                 name,
