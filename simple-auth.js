@@ -40,6 +40,8 @@ class SimpleAuth {
             
         } catch (error) {
             console.error('❌ SimpleAuth 初始化失敗:', error);
+            console.error('   錯誤詳情:', error.message);
+            console.error('   錯誤堆棧:', error.stack);
         }
     }
     
