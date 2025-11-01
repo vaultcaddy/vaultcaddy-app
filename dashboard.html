@@ -745,11 +745,30 @@
                 console.log('✅ 側邊欄已初始化');
             }
             
-            // 初始化示例項目 - 已移除，新用戶應該看到空白列表
-            // initializeSampleProjects();
+            // 等待 SimpleDataManager 初始化後再載入項目
+            async function waitForDataManagerAndLoad() {
+                console.log('⏳ 等待 SimpleDataManager 初始化...');
+                
+                return new Promise((resolve) => {
+                    const checkInterval = setInterval(async () => {
+                        if (window.simpleDataManager && window.simpleDataManager.initialized) {
+                            clearInterval(checkInterval);
+                            console.log('✅ SimpleDataManager 已初始化，載入項目');
+                            await loadProjects();
+                            resolve();
+                        }
+                    }, 100);
+                    
+                    // 超時保護（10 秒）
+                    setTimeout(() => {
+                        clearInterval(checkInterval);
+                        console.error('❌ SimpleDataManager 初始化超時');
+                        resolve();
+                    }, 10000);
+                });
+            }
             
-            // 載入項目列表
-            loadProjects();
+            await waitForDataManagerAndLoad();
         });
 
         // 監聽全局身份驗證事件
