@@ -566,7 +566,7 @@
         }
 
         // 創建新項目
-        function createProject() {
+        async function createProject() {
             const input = document.getElementById('projectName');
             const projectName = input.value.trim();
             
@@ -584,14 +584,15 @@
                 created: new Date().toISOString()
             };
             
-            // 獲取現有項目
-            const projects = JSON.parse(localStorage.getItem('vaultcaddy_projects') || '[]');
-            
-            // 添加新項目到列表開頭
-            projects.unshift(newProject);
-            
-            // 保存到 localStorage
-            localStorage.setItem('vaultcaddy_projects', JSON.stringify(projects));
+            // 保存到 Firebase
+            try {
+                await window.simpleDataManager.createProject(projectName);
+                console.log('✅ 項目已保存到 Firebase');
+            } catch (error) {
+                console.error('❌ 保存到 Firebase 失敗:', error);
+                alert('創建項目失敗，請重試');
+                return;
+            }
             
             // 觸發項目創建事件，讓側邊欄更新
             window.dispatchEvent(new CustomEvent('projectCreated', { 
@@ -621,11 +622,18 @@
         }
 
         // 載入項目列表
-        function loadProjects() {
+        async function loadProjects() {
             console.log('🔄 載入項目列表');
             
-            // 從 localStorage 獲取項目數據
-            const projects = JSON.parse(localStorage.getItem('vaultcaddy_projects') || '[]');
+            // 從 Firebase 獲取項目數據
+            let projects = [];
+            try {
+                projects = await window.simpleDataManager.getProjects();
+                console.log(`✅ 從 Firebase 加載 ${projects.length} 個項目`);
+            } catch (error) {
+                console.error('❌ 從 Firebase 加載項目失敗:', error);
+                projects = [];
+            }
             
             const tbody = document.getElementById('projects-tbody');
             
