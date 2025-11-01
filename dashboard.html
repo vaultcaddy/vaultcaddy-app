@@ -68,10 +68,10 @@
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
     
     <!-- Firebase 配置和數據管理器 - defer 確保按順序執行 -->
-    <script defer src="firebase-config.js?v=1761982123"></script>
+    <script defer src="firebase-config.js?v=1761989004"></script>
     <!-- 🔥 新的簡化系統 - defer 確保 Firebase 初始化後才執行 -->
-    <script defer src="simple-auth.js?v=1761982123"></script>
-    <script defer src="simple-data-manager.js?v=1761982123"></script>
+    <script defer src="simple-auth.js?v=1761989004"></script>
+    <script defer src="simple-data-manager.js?v=1761989004"></script>
     
     <style>
         body {
@@ -697,84 +697,66 @@
         //     新用戶註冊時不應該有任何預設項目
         // }
 
-        // 頁面載入完成後初始化
-        document.addEventListener('DOMContentLoaded', async function() {
-            console.log('✅ Dashboard 頁面 DOM 已載入');
-            
-            // ========== 🔐 身份驗證檢查（SimpleAuth） ==========
-            console.log('🔐 === 使用 SimpleAuth 檢查身份驗證狀態 ===');
-            
-            // SimpleAuth 會自動處理頁面保護和重定向
-            // 這裡只需要等待 SimpleAuth 初始化完成
-            function waitForAuth() {
-                return new Promise((resolve) => {
-                    if (window.simpleAuth && window.simpleAuth.initialized) {
-                        resolve();
-                    } else {
-                        const checkInterval = setInterval(() => {
-                            if (window.simpleAuth && window.simpleAuth.initialized) {
-                                clearInterval(checkInterval);
-                                resolve();
-                            }
-                        }, 100);
-                        
-                        // 超時保護（10 秒）
-                        setTimeout(() => {
-                            clearInterval(checkInterval);
-                            console.error('❌ SimpleAuth 初始化超時');
-                            resolve();
-                        }, 10000);
-                    }
-                });
-            }
-            
-            await waitForAuth();
+        // 🔥 監聽 SimpleAuth 初始化完成事件
+        let authInitialized = false;
+        let dataManagerInitialized = false;
+        
+        window.addEventListener('auth-state-changed', async function(e) {
+            console.log('🔥 收到 auth-state-changed 事件');
+            authInitialized = true;
             
             // 檢查是否已登入
-            if (!window.simpleAuth.isLoggedIn()) {
-                console.error('❌ 用戶未登入，SimpleAuth 將自動重定向');
+            if (!e.detail.user) {
+                console.log('❌ 用戶未登入');
                 return; // SimpleAuth 會自動處理重定向
             }
             
-            console.log('✅ 身份驗證通過 (SimpleAuth)，繼續載入頁面');
-            console.log('');
+            console.log('✅ 用戶已登入:', e.detail.user.email);
             
-            // 初始化統一側邊欄
-            if (window.VaultCaddySidebar) {
+            // 初始化側邊欄
+            initializeDashboard();
+        });
+        
+        // 初始化 Dashboard
+        function initializeDashboard() {
+            console.log('🎯 初始化 Dashboard...');
+            
+            // 初始化側邊欄
+            if (window.VaultCaddySidebar && !window.dashboardSidebar) {
                 window.dashboardSidebar = new VaultCaddySidebar('dashboard');
                 console.log('✅ 側邊欄已初始化');
             }
             
-            // 等待 SimpleDataManager 初始化後再載入項目
-            async function waitForDataManagerAndLoad() {
-                console.log('⏳ 等待 SimpleDataManager 初始化...');
-                
-                return new Promise((resolve) => {
-                    const checkInterval = setInterval(async () => {
-                        if (window.simpleDataManager && window.simpleDataManager.initialized) {
-                            clearInterval(checkInterval);
-                            console.log('✅ SimpleDataManager 已初始化，載入項目');
-                            await loadProjects();
-                            resolve();
-                        }
-                    }, 100);
-                    
-                    // 超時保護（10 秒）
-                    setTimeout(() => {
-                        clearInterval(checkInterval);
-                        console.error('❌ SimpleDataManager 初始化超時');
-                        resolve();
-                    }, 10000);
-                });
+            // 如果 SimpleDataManager 已初始化，載入項目
+            if (window.simpleDataManager && window.simpleDataManager.initialized) {
+                console.log('✅ SimpleDataManager 已就緒，載入項目');
+                loadProjects();
             }
-            
-            await waitForDataManagerAndLoad();
-        });
-
-        // 監聽全局身份驗證事件
-        window.addEventListener('globalAuthReady', function() {
-            console.log('✅ 全局身份驗證已就緒');
-        });
+        }
+        
+        // 監聽 SimpleDataManager 初始化完成
+        // （通過輪詢檢查，因為 simple-data-manager.js 沒有觸發專用事件）
+        const checkDataManager = setInterval(() => {
+            if (window.simpleDataManager && window.simpleDataManager.initialized && !dataManagerInitialized) {
+                dataManagerInitialized = true;
+                clearInterval(checkDataManager);
+                console.log('✅ SimpleDataManager 已初始化');
+                
+                // 如果用戶已登入，載入項目
+                if (authInitialized && window.simpleAuth && window.simpleAuth.isLoggedIn()) {
+                    console.log('✅ 用戶已登入 + SimpleDataManager 已就緒，載入項目');
+                    loadProjects();
+                }
+            }
+        }, 100);
+        
+        // 超時保護（15 秒）
+        setTimeout(() => {
+            clearInterval(checkDataManager);
+            if (!dataManagerInitialized) {
+                console.error('❌ SimpleDataManager 初始化超時');
+            }
+        }, 15000);
     </script>
 </body>
 </html>
