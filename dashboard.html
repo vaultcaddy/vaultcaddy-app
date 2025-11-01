@@ -690,37 +690,45 @@
         // }
 
         // 頁面載入完成後初始化
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             console.log('✅ Dashboard 頁面 DOM 已載入');
             
-            // ========== 🔐 身份驗證檢查（強制） ==========
-            console.log('🔐 === 強制檢查身份驗證狀態 ===');
+            // ========== 🔐 身份驗證檢查（SimpleAuth） ==========
+            console.log('🔐 === 使用 SimpleAuth 檢查身份驗證狀態 ===');
             
-            let isAuthenticated = false;
-            
-            if (window.GlobalAuthSync) {
-                const authState = window.GlobalAuthSync.getCurrentAuthState();
-                isAuthenticated = authState.isAuthenticated;
-                console.log('   GlobalAuthSync 狀態:', authState);
-                console.log('   是否已登入:', isAuthenticated);
-            } else {
-                console.warn('   ⚠️ GlobalAuthSync 未找到，檢查本地存儲');
-                const hasGoogleUser = !!localStorage.getItem('googleUser');
-                const hasVaultcaddyUser = !!localStorage.getItem('vaultcaddyUser');
-                isAuthenticated = hasGoogleUser || hasVaultcaddyUser;
-                console.log('   localStorage 檢查 - Google用戶:', hasGoogleUser, ', VaultCaddy用戶:', hasVaultcaddyUser);
-                console.log('   是否已登入:', isAuthenticated);
+            // SimpleAuth 會自動處理頁面保護和重定向
+            // 這裡只需要等待 SimpleAuth 初始化完成
+            function waitForAuth() {
+                return new Promise((resolve) => {
+                    if (window.simpleAuth && window.simpleAuth.initialized) {
+                        resolve();
+                    } else {
+                        const checkInterval = setInterval(() => {
+                            if (window.simpleAuth && window.simpleAuth.initialized) {
+                                clearInterval(checkInterval);
+                                resolve();
+                            }
+                        }, 100);
+                        
+                        // 超時保護（10 秒）
+                        setTimeout(() => {
+                            clearInterval(checkInterval);
+                            console.error('❌ SimpleAuth 初始化超時');
+                            resolve();
+                        }, 10000);
+                    }
+                });
             }
             
-            // 如果未登入，強制重定向到登入頁面
-            if (!isAuthenticated) {
-                console.error('❌ 用戶未登入，強制重定向到登入頁面');
-                alert('請先登入才能訪問此頁面');
-                window.location.href = 'index.html';
-                return; // 停止執行後續代碼
+            await waitForAuth();
+            
+            // 檢查是否已登入
+            if (!window.simpleAuth.isLoggedIn()) {
+                console.error('❌ 用戶未登入，SimpleAuth 將自動重定向');
+                return; // SimpleAuth 會自動處理重定向
             }
             
-            console.log('✅ 身份驗證通過，繼續載入頁面');
+            console.log('✅ 身份驗證通過 (SimpleAuth)，繼續載入頁面');
             console.log('');
             
             // 初始化統一側邊欄
