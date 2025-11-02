@@ -1336,6 +1336,41 @@
     </div>
 
     <script>
+        // ========== 🔧 立即定義全局函數（避免 ReferenceError） ==========
+        // 這些占位符必須在所有 HTML 元素之前定義
+        const createPlaceholder = (functionName) => {
+            return function(...args) {
+                console.log(`⏳ ${functionName} 占位符被調用，等待真實函數定義...`);
+                
+                // 等待真實函數定義（最多等待 5 秒）
+                let attempts = 0;
+                const maxAttempts = 50; // 5 秒 / 100ms
+                const checkInterval = setInterval(() => {
+                    attempts++;
+                    const realFunction = window[functionName];
+                    
+                    // 檢查是否已定義真實函數（不是占位符）
+                    if (realFunction && realFunction.toString().indexOf('占位符') === -1) {
+                        console.log(`✅ ${functionName} 真實函數已定義，立即執行`);
+                        clearInterval(checkInterval);
+                        realFunction(...args);
+                    } else if (attempts >= maxAttempts) {
+                        console.error(`❌ ${functionName} 真實函數定義超時`);
+                        clearInterval(checkInterval);
+                    }
+                }, 100);
+            };
+        };
+        
+        window.openUploadModal = createPlaceholder('openUploadModal');
+        window.closeAIUploadModal = createPlaceholder('closeAIUploadModal');
+        window.toggleExportMenu = createPlaceholder('toggleExportMenu');
+        window.exportDocuments = createPlaceholder('exportDocuments');
+        window.confirmDeleteProject = createPlaceholder('confirmDeleteProject');
+        window.toggleProjectNameEdit = createPlaceholder('toggleProjectNameEdit');
+        
+        console.log('✅ 全局函數占位符已定義');
+        
         // 立即執行的頁面可見性腳本
         (function() {
             document.documentElement.style.cssText = 'display: block !important; visibility: visible !important;';
@@ -1625,40 +1660,8 @@
             }
         };
 
-        // ========== 🔧 立即定義全局函數（避免 ReferenceError） ==========
-        // 這些函數會在 DOMContentLoaded 時被重新定義，這裡只是占位符
-        // 占位符會自動等待真實函數定義後重試
-        
-        const createPlaceholder = (functionName) => {
-            return function(...args) {
-                console.log(`⏳ ${functionName} 占位符被調用，等待真實函數定義...`);
-                
-                // 等待真實函數定義（最多等待 5 秒）
-                let attempts = 0;
-                const maxAttempts = 50; // 5 秒 / 100ms
-                const checkInterval = setInterval(() => {
-                    attempts++;
-                    const realFunction = window[functionName];
-                    
-                    // 檢查是否已定義真實函數（不是占位符）
-                    if (realFunction && realFunction.toString().indexOf('占位符') === -1) {
-                        console.log(`✅ ${functionName} 真實函數已定義，立即執行`);
-                        clearInterval(checkInterval);
-                        realFunction(...args);
-                    } else if (attempts >= maxAttempts) {
-                        console.error(`❌ ${functionName} 真實函數定義超時`);
-                        clearInterval(checkInterval);
-                    }
-                }, 100);
-            };
-        };
-        
-        window.openUploadModal = createPlaceholder('openUploadModal');
-        window.closeAIUploadModal = createPlaceholder('closeAIUploadModal');
-        window.toggleExportMenu = createPlaceholder('toggleExportMenu');
-        window.exportDocuments = createPlaceholder('exportDocuments');
-        window.confirmDeleteProject = createPlaceholder('confirmDeleteProject');
-        window.toggleProjectNameEdit = createPlaceholder('toggleProjectNameEdit');
+        // ========== 🔧 全局函數占位符已在第 1338 行定義 ==========
+        // 不需要重複定義
         
         // 頁面初始化
         // 立即執行：確保頁面可見
