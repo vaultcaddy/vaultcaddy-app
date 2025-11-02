@@ -1607,14 +1607,17 @@
                 console.log('✅ AI 處理完成:', result);
                 
                 // 保存到 Firebase
-                await window.saveDocumentToFirebase(result);
-                console.log('✅ 文檔已保存');
+                const savedDoc = await window.saveDocumentToFirebase(result);
+                console.log('✅ 文檔已保存:', savedDoc);
                 
                 // 關閉模態框
                 window.closeAIUploadModal();
                 
-                // 刷新頁面以顯示新文檔
-                window.location.reload();
+                // 直接在前端添加表格行（不刷新頁面）
+                window.addDocumentToTable(savedDoc);
+                
+                // 顯示成功提示
+                alert('✅ 文檔上傳成功！');
                 
             } catch (error) {
                 console.error('❌ 處理失敗:', error);
@@ -1675,18 +1678,30 @@
                 throw new Error('無法獲取項目 ID');
             }
             
+            // 準備文檔數據
+            const doc = {
+                id: Date.now().toString(),
+                name: documentData.fileName || documentData.name || '未命名文檔',
+                type: window.selectedDocumentType || 'general',
+                uploadDate: new Date().toISOString(),
+                processedData: documentData,
+                status: 'completed'
+            };
+            
             // 保存到 Firebase
             const dataManager = window.simpleDataManager || window.firebaseDataManager;
             if (dataManager && dataManager.initialized) {
-                await dataManager.createDocument(projectId, documentData);
+                await dataManager.createDocument(projectId, doc);
                 console.log('✅ 已保存到 Firebase');
             } else {
                 console.warn('⚠️ Firebase 未初始化，保存到 LocalStorage');
                 // 保存到 LocalStorage（向後兼容）
                 const documents = JSON.parse(localStorage.getItem(`vaultcaddy_documents_${projectId}`) || '[]');
-                documents.push(documentData);
+                documents.push(doc);
                 localStorage.setItem(`vaultcaddy_documents_${projectId}`, JSON.stringify(documents));
             }
+            
+            return doc;
         };
         
         // 重置上傳狀態
@@ -1714,6 +1729,64 @@
             }
         };
         
+        // 添加文檔到表格
+        window.addDocumentToTable = function(doc) {
+            console.log('📄 添加文檔到表格:', doc);
+            
+            const tbody = document.getElementById('documents-tbody');
+            if (!tbody) {
+                console.error('❌ 找不到表格 tbody');
+                return;
+            }
+            
+            // 移除 "No results." 提示
+            const noResults = tbody.querySelector('tr td[colspan]');
+            if (noResults) {
+                tbody.innerHTML = '';
+            }
+            
+            // 提取數據
+            const data = doc.processedData || {};
+            const invoiceDate = data.invoiceDate || data.date || '-';
+            const items = data.lineItems || data.items || [];
+            const itemsCount = items.length || 0;
+            const total = data.totalAmount || data.total || '-';
+            
+            // 創建新行
+            const newRow = document.createElement('tr');
+            newRow.style.cssText = 'border-bottom: 1px solid #e5e7eb;';
+            newRow.innerHTML = `
+                <td style="padding: 1rem 1.5rem;">
+                    <input type="checkbox" class="document-checkbox">
+                </td>
+                <td style="padding: 1rem 1.5rem;">
+                    <div style="display: flex; align-items: center;">
+                        <i class="fas fa-file-alt" style="color: #3b82f6; margin-right: 0.75rem; font-size: 1.25rem;"></i>
+                        <a href="document-detail.html?project=${new URLSearchParams(window.location.search).get('project')}&document=${doc.id}" style="color: #2563eb; text-decoration: none; font-weight: 500;">${doc.name}</a>
+                    </div>
+                </td>
+                <td style="padding: 1rem 1.5rem; color: #6b7280;">${invoiceDate}</td>
+                <td style="padding: 1rem 1.5rem; color: #6b7280;">${itemsCount} 項</td>
+                <td style="padding: 1rem 1.5rem; color: #6b7280;">${total}</td>
+                <td style="padding: 1rem 1.5rem;">
+                    <span style="background: #d1fae5; color: #065f46; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500;">已完成</span>
+                </td>
+                <td style="padding: 1rem 1.5rem;">
+                    <span style="background: #fef3c7; color: #92400e; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500;">待審核</span>
+                </td>
+                <td style="padding: 1rem 1.5rem; color: #6b7280;">-</td>
+                <td style="padding: 1rem 1.5rem; color: #6b7280;">${new Date(doc.uploadDate).toLocaleDateString()}</td>
+                <td style="padding: 1rem 1.5rem;">
+                    <button onclick="deleteDocument('${doc.id}')" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 0.5rem;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            
+            tbody.insertBefore(newRow, tbody.firstChild);
+            console.log('✅ 文檔已添加到表格');
+        };
+        
         console.log('✅ 所有依賴函數已定義');
         console.log('   - deleteProject');
         console.log('   - initializeAIUpload');
@@ -1722,6 +1795,7 @@
         console.log('   - processWithAI');
         console.log('   - saveDocumentToFirebase');
         console.log('   - resetAIUpload');
+        console.log('   - addDocumentToTable');
         
         // 立即執行的頁面可見性腳本
         (function() {
@@ -1735,25 +1809,8 @@
         })();
     </script>
 
-    <!-- 導航欄 -->
-    <div id="navbar-placeholder">
-        <!-- Fallback 導航欄 -->
-        <nav class="fallback-navbar" style="position: fixed; top: 0; left: 0; right: 0; height: 60px; background: #ffffff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; z-index: 1000;">
-            <div class="navbar-left" style="display: flex; align-items: center;">
-                <div class="logo" style="display: flex; align-items: center; gap: 0.75rem;">
-                    <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.2rem; font-weight: bold;">VC</div>
-                    <div>
-                        <div style="font-size: 1.25rem; font-weight: 700; color: #1f2937;">VaultCaddy</div>
-                        <div style="font-size: 0.75rem; color: #6b7280;">AI DOCUMENT PROCESSING</div>
-                    </div>
-                </div>
-            </div>
-            <div class="navbar-right" style="display: flex; align-items: center; gap: 1rem;">
-                <span id="navbar-page-title" style="color: #6b7280;">Team Project</span>
-                <div style="width: 32px; height: 32px; background: #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">C</div>
-            </div>
-        </nav>
-    </div>
+    <!-- 導航欄（由 navbar-component.js 動態生成）-->
+    <div id="navbar-placeholder"></div>
 
     <!-- Dashboard 容器 -->
     <div class="dashboard-container" style="display: flex !important; min-height: calc(100vh - 60px); background: #ffffff; padding-top: 60px; visibility: visible !important;">
