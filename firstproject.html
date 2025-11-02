@@ -3210,19 +3210,20 @@
                 console.log('📊 步驟 0: 更新進度到 10%...');
                 updateDocumentProgress(documentId, projectId, 10);
                 
-                // 步驟 1 & 2: 使用 Google Smart Processor 處理文件
+                // 步驟 1 & 2: 使用混合 AI 處理器處理文件
                 console.log('');
-                console.log('🧠 === 使用 Google AI 處理器處理文件 ===');
+                console.log('🧠 === 使用混合 AI 處理器處理文件 ===');
                 console.log('   文件名:', file.name);
                 console.log('   文件類型:', file.type);
+                console.log('   處理器: HybridVisionDeepSeekProcessor');
                 
                 updateDocumentProgress(documentId, projectId, 30);
                 
-                // 調用 processWithGoogleAI（已經集成了 Google Smart Processor）
+                // 調用 processWithGoogleAI（現在使用 HybridVisionDeepSeekProcessor）
                 const aiResult = await processWithGoogleAI(file);
                 
-                console.log('✅ Google AI 處理完成');
-                console.log('   處理器:', aiResult.processor || aiResult.engine || 'Unknown');
+                console.log('✅ 混合 AI 處理完成');
+                console.log('   處理器:', aiResult.processor || aiResult.engine || 'HybridVisionDeepSeek');
                 console.log('   成功狀態:', aiResult.success);
                 console.log('   提取的原始數據 (aiResult.data):', JSON.stringify(aiResult.data, null, 2));
                 console.log('   提取的原始數據 (aiResult.extractedData):', JSON.stringify(aiResult.extractedData, null, 2));
@@ -3295,7 +3296,7 @@
         }
         
         // 注意：fileToBase64、extractDataWithGemini、parseBankStatementData 函數已刪除
-        // 現在統一使用 processWithGoogleAI (第3080行) 和 parseAIResponse (第3133行)
+        // 現在統一使用 processWithGoogleAI (使用 HybridVisionDeepSeekProcessor) 和 parseAIResponse
         
         // 更新文檔處理進度
         function updateDocumentProgress(documentId, projectId, progress) {
@@ -3411,10 +3412,29 @@
         
         async function processWithGoogleAI(file) {
             try {
-                logAI('🧠 使用 Google AI 處理器...', 'info');
+                logAI('🧠 使用混合 AI 處理器...', 'info');
                 
-                // 檢查 Google Smart Processor
-                if (window.googleSmartProcessor) {
+                // ✅ 優先使用 HybridVisionDeepSeekProcessor（混合處理器）
+                if (window.HybridVisionDeepSeekProcessor) {
+                    const documentType = determineDocumentType(file);
+                    logAI(`📋 文檔類型: ${documentType}`, 'info');
+                    
+                    // 實例化處理器
+                    const processor = new window.HybridVisionDeepSeekProcessor();
+                    logAI('✅ 混合處理器已初始化', 'info');
+                    
+                    // 處理文檔
+                    const result = await processor.processDocument(file, documentType);
+                    
+                    if (!result.success) {
+                        throw new Error(result.error || 'AI 處理失敗');
+                    }
+                    
+                    logAI(`✅ ${result.processor || 'HybridVisionDeepSeek'} 處理成功`, 'success');
+                    return result;
+                    
+                } else if (window.googleSmartProcessor) {
+                    // 備用：Google Smart Processor
                     const documentType = determineDocumentType(file);
                     logAI(`📋 文檔類型: ${documentType}`, 'info');
                     
@@ -3427,23 +3447,12 @@
                     logAI(`✅ ${result.processor} 處理成功`, 'success');
                     return result;
                     
-                } else if (window.googleAIProcessor) {
-                    const documentType = determineDocumentType(file);
-                    const result = await window.googleAIProcessor.processDocument(file, documentType);
-                    
-                    if (!result.success) {
-                        throw new Error(result.error || 'AI 處理失敗');
-                    }
-                    
-                    logAI(`✅ Gemini AI 分析完成`, 'success');
-                    return result;
-                    
                 } else {
-                    throw new Error('沒有可用的 Google AI 處理器');
+                    throw new Error('沒有可用的 AI 處理器（需要 HybridVisionDeepSeekProcessor）');
                 }
                 
             } catch (error) {
-                logAI(`❌ Google AI 處理失敗: ${error.message}`, 'error');
+                logAI(`❌ AI 處理失敗: ${error.message}`, 'error');
                 throw error;
             }
         }
