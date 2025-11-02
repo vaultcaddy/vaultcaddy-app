@@ -2587,15 +2587,24 @@
                 return;
             }
             
-            // 從當前項目的存儲載入文件
+            // ✅ 從 Firebase 載入文件（不再使用 LocalStorage）
             let storedFiles = [];
-            const projectStorageKey = `vaultcaddy_project_${projectId}_documents`;
             
-            console.log(`📂 從項目 ${projectId} 載入文件`);
-            const projectDocuments = JSON.parse(localStorage.getItem(projectStorageKey) || '[]');
+            console.log(`📂 從 Firebase 載入項目 ${projectId} 的文件`);
             
-            // 轉換為顯示格式（保留所有原始數據）
-            storedFiles = projectDocuments.map(doc => ({
+            try {
+                // 等待 SimpleDataManager 初始化
+                if (!window.simpleDataManager || !window.simpleDataManager.initialized) {
+                    console.warn('⚠️ SimpleDataManager 未初始化，等待...');
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+                
+                // 從 Firebase 獲取文檔
+                const projectDocuments = await window.simpleDataManager.getDocuments(projectId);
+                console.log(`✅ 從 Firebase 載入了 ${projectDocuments.length} 個文件`);
+                
+                // 轉換為顯示格式（保留所有原始數據）
+                storedFiles = projectDocuments.map(doc => ({
                 id: doc.id,
                 name: doc.fileName || doc.name || '未命名文件',
                 size: doc.fileSize || doc.size || 0,
@@ -2609,10 +2618,15 @@
                 processedData: doc,
                 // 同時也在頂層暴露關鍵字段以便訪問
                 ...doc
-            }));
-            
-            console.log(`📁 項目 ${projectId} 載入文件:`, storedFiles.length, '個文件');
-            console.log('📄 文件詳情:', storedFiles);
+                }));
+                
+                console.log(`📁 項目 ${projectId} 載入文件:`, storedFiles.length, '個文件');
+                console.log('📄 文件詳情:', storedFiles);
+                
+            } catch (error) {
+                console.error('❌ 從 Firebase 載入文件失敗:', error);
+                storedFiles = [];
+            }
             
             // 表格始終顯示
             documentsTable.style.display = 'table';
@@ -3029,25 +3043,43 @@
                 console.log('   ✅ 文件記錄創建完成');
                 console.log('   文件記錄:', JSON.stringify(processingDocument, null, 2));
                 
-                // 4. 保存到 localStorage
+                // 4. ✅ 保存到 Firebase（不再使用 LocalStorage）
                 console.log('');
-                console.log('4️⃣ 保存到 localStorage...');
-                const storageKey = `vaultcaddy_project_${projectId}_documents`;
-                console.log('   存儲鍵:', storageKey);
+                console.log('4️⃣ 保存到 Firebase Firestore...');
+                console.log('   項目 ID:', projectId);
+                console.log('   文檔 ID:', documentId);
                 
-                let existingDocs = [];
                 try {
-                    const stored = localStorage.getItem(storageKey);
-                    existingDocs = stored ? JSON.parse(stored) : [];
-                    console.log('   現有文檔數量:', existingDocs.length);
-                } catch (e) {
-                    console.error('   ⚠️ 讀取現有文檔失敗:', e);
-                    existingDocs = [];
+                    // 等待 SimpleDataManager 初始化
+                    if (!window.simpleDataManager || !window.simpleDataManager.initialized) {
+                        console.warn('   ⚠️ SimpleDataManager 未初始化，等待...');
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    }
+                    
+                    // 準備文檔數據
+                    const documentData = {
+                        name: processingDocument.name || file.name,
+                        type: processingDocument.type || selectedDocumentType || 'bank-statement',
+                        status: 'pending',
+                        fileUrl: processingDocument.fileUrl || '',
+                        thumbnailUrl: processingDocument.thumbnailUrl || '',
+                        processedData: {},
+                        uploadedAt: new Date().toISOString()
+                    };
+                    
+                    console.log('   準備保存的數據:', JSON.stringify(documentData, null, 2));
+                    
+                    // 保存到 Firebase
+                    const savedDocId = await window.simpleDataManager.createDocument(projectId, documentData);
+                    console.log('   ✅ 保存到 Firebase 成功！文檔 ID:', savedDocId);
+                    
+                    // 更新 processingDocument 的 ID
+                    processingDocument.id = savedDocId;
+                    
+                } catch (error) {
+                    console.error('   ❌ 保存到 Firebase 失敗:', error);
+                    throw error;
                 }
-                
-                existingDocs.push(processingDocument);
-                localStorage.setItem(storageKey, JSON.stringify(existingDocs));
-                console.log('   ✅ 保存成功，現在有', existingDocs.length, '個文檔');
                 
                 // 5. 在頁面中顯示文件行
                 console.log('');
@@ -3073,10 +3105,15 @@
                 createDocumentRow(documentsTbody, processingDocument);
                 console.log('   ✅ 文件行已添加到表格');
                 
-                // 更新分頁信息
+                // 更新分頁信息（從 Firebase 獲取文檔數量）
                 console.log('   更新分頁信息...');
-                updatePaginationInfo(existingDocs.length);
-                console.log('   ✅ 分頁信息已更新');
+                try {
+                    const allDocs = await window.simpleDataManager.getDocuments(projectId);
+                    updatePaginationInfo(allDocs.length);
+                    console.log('   ✅ 分頁信息已更新，總文檔數:', allDocs.length);
+                } catch (error) {
+                    console.warn('   ⚠️ 更新分頁信息失敗:', error);
+                }
                 
                 // 完成第一部分
                 console.log('');
@@ -3298,52 +3335,67 @@
         // 注意：fileToBase64、extractDataWithGemini、parseBankStatementData 函數已刪除
         // 現在統一使用 processWithGoogleAI (使用 HybridVisionDeepSeekProcessor) 和 parseAIResponse
         
-        // 更新文檔處理進度
-        function updateDocumentProgress(documentId, projectId, progress) {
-            const storageKey = `vaultcaddy_project_${projectId}_documents`;
-            const documents = JSON.parse(localStorage.getItem(storageKey) || '[]');
-            
-            const docIndex = documents.findIndex(doc => doc.id === documentId);
-            if (docIndex !== -1) {
-                documents[docIndex].processingProgress = progress;
-                localStorage.setItem(storageKey, JSON.stringify(documents));
-                console.log(`📊 更新進度: ${progress}%`);
-            }
-        }
-        
-        // 更新文檔狀態
-        function updateDocumentStatus(documentId, projectId, status, errorMessage = '') {
-            const storageKey = `vaultcaddy_project_${projectId}_documents`;
-            const documents = JSON.parse(localStorage.getItem(storageKey) || '[]');
-            
-            const docIndex = documents.findIndex(doc => doc.id === documentId);
-            if (docIndex !== -1) {
-                documents[docIndex].status = status;
-                documents[docIndex].isProcessing = false;
-                if (errorMessage) {
-                    documents[docIndex].errorMessage = errorMessage;
+        // ✅ 更新文檔處理進度（改用 Firebase）
+        async function updateDocumentProgress(documentId, projectId, progress) {
+            try {
+                if (!window.simpleDataManager || !window.simpleDataManager.initialized) {
+                    console.warn('⚠️ SimpleDataManager 未初始化，跳過進度更新');
+                    return;
                 }
-                localStorage.setItem(storageKey, JSON.stringify(documents));
-                console.log(`📝 更新狀態: ${status}`);
+                
+                await window.simpleDataManager.updateDocument(projectId, documentId, {
+                    processingProgress: progress
+                });
+                console.log(`📊 更新進度到 Firebase: ${progress}%`);
+            } catch (error) {
+                console.error('❌ 更新進度失敗:', error);
             }
         }
         
-        // 更新文檔的提取數據
-        function updateDocumentWithExtractedData(documentId, projectId, extractedData) {
-            const storageKey = `vaultcaddy_project_${projectId}_documents`;
-            const documents = JSON.parse(localStorage.getItem(storageKey) || '[]');
-            
-            const docIndex = documents.findIndex(doc => doc.id === documentId);
-            if (docIndex !== -1) {
-                documents[docIndex].isProcessing = false;
-                documents[docIndex].status = 'Success';
-                documents[docIndex].processedData = extractedData;
+        // ✅ 更新文檔狀態（改用 Firebase）
+        async function updateDocumentStatus(documentId, projectId, status, errorMessage = '') {
+            try {
+                if (!window.simpleDataManager || !window.simpleDataManager.initialized) {
+                    console.warn('⚠️ SimpleDataManager 未初始化，跳過狀態更新');
+                    return;
+                }
                 
-                // 同時將提取的數據複製到頂層，方便訪問
-                Object.assign(documents[docIndex], extractedData);
+                const updateData = {
+                    status: status,
+                    isProcessing: false
+                };
                 
-                localStorage.setItem(storageKey, JSON.stringify(documents));
-                console.log('💾 提取的數據已保存');
+                if (errorMessage) {
+                    updateData.errorMessage = errorMessage;
+                }
+                
+                await window.simpleDataManager.updateDocument(projectId, documentId, updateData);
+                console.log(`📝 更新狀態到 Firebase: ${status}`);
+            } catch (error) {
+                console.error('❌ 更新狀態失敗:', error);
+            }
+        }
+        
+        // ✅ 更新文檔的提取數據（改用 Firebase）
+        async function updateDocumentWithExtractedData(documentId, projectId, extractedData) {
+            try {
+                if (!window.simpleDataManager || !window.simpleDataManager.initialized) {
+                    console.warn('⚠️ SimpleDataManager 未初始化，跳過數據更新');
+                    return;
+                }
+                
+                // 保存提取的數據到 processedData
+                const updateData = {
+                    isProcessing: false,
+                    status: 'Success',
+                    processedData: extractedData,
+                    ...extractedData // 同時將提取的數據複製到頂層
+                };
+                
+                await window.simpleDataManager.updateDocument(projectId, documentId, updateData);
+                console.log('💾 提取的數據已保存到 Firebase');
+            } catch (error) {
+                console.error('❌ 保存提取數據失敗:', error);
             }
         }
         
@@ -5518,3 +5570,4 @@
 
 </body>
 </html>
+
