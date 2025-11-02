@@ -48,8 +48,8 @@
     
     <script src="config.js"></script>
     <script src="translations.js?v=20251031"></script>
-    <script src="navbar-component.js?v=20251102-cleanup"></script>
-    <script src="sidebar-component.js?v=20251102-cleanup"></script>
+    <script src="navbar-component.js?v=20251102-fix4"></script>
+    <script src="sidebar-component.js?v=20251102-fix4"></script>
     <!-- 載入統一處理器系統 -->
     <!-- ✅ 混合處理器：Vision API OCR + DeepSeek Chat（香港優化版）-->
     <script src="hybrid-vision-deepseek.js?v=20251030-hk-optimized"></script>
@@ -2351,31 +2351,32 @@
                 });
             }
             
-            // ✅ 極簡初始化：只監聽 firebase-ready 事件
-
-            // 🔥 直接創建側邊欄（不等待，使用事件驅動）
+            // ✅ 極簡初始化：等待 SimpleDataManager 就緒
             console.log('🎨 立即創建側邊欄');
             window.unifiedSidebar = new VaultCaddySidebar();
             
-            // 監聽 firebase-ready 事件，重新渲染側邊欄
-            window.addEventListener('firebase-ready', async () => {
-                console.log('🔥 Firebase 就緒，重新渲染側邊欄和項目標題');
+            // 定義更新函數
+            const updateContent = async () => {
+                console.log('📊 更新內容：側邊欄 + 項目標題');
                 if (window.unifiedSidebar) {
                     await window.unifiedSidebar.render();
                 }
                 await updateProjectTitle();
-            });
+            };
             
-            // 如果 SimpleDataManager 已初始化，立即更新
-            if (window.simpleDataManager && window.simpleDataManager.initialized) {
-                console.log('✅ SimpleDataManager 已就緒，立即更新');
-                setTimeout(async () => {
-                    if (window.unifiedSidebar) {
-                        await window.unifiedSidebar.render();
-                    }
-                    await updateProjectTitle();
-                }, 100);
-            }
+            // 監聽 SimpleDataManager 初始化完成
+            const checkDataManager = setInterval(async () => {
+                if (window.simpleDataManager && window.simpleDataManager.initialized) {
+                    clearInterval(checkDataManager);
+                    console.log('✅ SimpleDataManager 已就緒');
+                    await updateContent();
+                }
+            }, 100);
+            
+            // 超時保護（5秒）
+            setTimeout(() => {
+                clearInterval(checkDataManager);
+            }, 5000);
             
             // 初始化用戶團隊信息
             initializeUserTeamInfo();

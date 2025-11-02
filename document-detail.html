@@ -38,8 +38,8 @@
     <script src="simple-auth.js?v=20251101"></script>
     <script src="simple-data-manager.js?v=20251101"></script>
     
-    <script src="navbar-component.js?v=20251031-clean"></script>
-    <script src="sidebar-component.js?v=20251031"></script>
+    <script src="navbar-component.js?v=20251102-fix4"></script>
+    <script src="sidebar-component.js?v=20251102-fix4"></script>
     
     <!-- 功能模块 -->
     <script src="editable-table.js"></script>
@@ -1344,6 +1344,26 @@
         // 初始化側邊欄實例
         let sidebarInstance = null;
         
+        // ✅ 等待 SimpleAuth 初始化後再檢查登入
+        let authChecked = false;
+        
+        window.addEventListener('auth-state-changed', (e) => {
+            console.log('🔐 收到 auth-state-changed 事件:', e.detail);
+            
+            if (authChecked) return; // 避免重複檢查
+            authChecked = true;
+            
+            if (!e.detail.user) {
+                console.error('❌ 用戶未登入，重定向到登入頁面');
+                alert('請先登入才能查看文檔');
+                window.location.href = 'auth.html';
+                return;
+            }
+            
+            console.log('✅ 身份驗證通過，繼續載入頁面');
+            initializeDocumentDetail();
+        });
+        
         // 頁面載入時執行
         document.addEventListener('DOMContentLoaded', () => {
             console.log('');
@@ -1354,44 +1374,28 @@
             console.log('================================================================================');
             console.log('');
             
-            // ========== 🔐 身份驗證檢查 ==========
-            console.log('🔐 === 檢查身份驗證狀態 ===');
-            
-            // ✅ 簡化：直接使用 SimpleAuth
-            const isAuthenticated = window.simpleAuth && window.simpleAuth.isLoggedIn();
-            console.log('   是否已登入:', isAuthenticated);
-            
-            // 如果未登入，重定向到登入頁面
-            if (!isAuthenticated) {
-                console.error('❌ 用戶未登入，重定向到登入頁面');
-                alert('請先登入才能查看文檔');
-                window.location.href = 'index.html';
-                return; // 停止執行後續代碼
+            // 如果 SimpleAuth 已經初始化且已登入，立即初始化
+            if (window.simpleAuth && window.simpleAuth.isLoggedIn() && !authChecked) {
+                console.log('✅ SimpleAuth 已就緒且已登入');
+                authChecked = true;
+                initializeDocumentDetail();
             }
-            
-            console.log('✅ 身份驗證通過，繼續載入頁面');
+        });
+        
+        // 初始化文檔詳情頁面
+        function initializeDocumentDetail() {
+            console.log('🎨 開始初始化文檔詳情頁面...');
             console.log('');
             
-            // 檢查必要的全局對象
-            console.log('🔍 檢查全局對象:');
-            console.log('   window.VaultCaddyNavbar:', typeof window.VaultCaddyNavbar);
-            console.log('   window.VaultCaddySidebar:', typeof window.VaultCaddySidebar);
+            // ✅ 導航欄和側邊欄由 navbar-component.js 和 sidebar-component.js 自動初始化
+            console.log('✅ 導航欄和側邊欄將自動初始化');
             console.log('');
             
-            // 檢查 DOM 元素是否存在
-            const navbarRoot = document.getElementById('navbar-root');
-            const sidebarRoot = document.getElementById('sidebar-root');
-            console.log('🔍 檢查 DOM 容器:');
-            console.log('   navbar-root:', navbarRoot ? '✅ 存在' : '❌ 不存在');
-            console.log('   sidebar-root:', sidebarRoot ? '✅ 存在' : '❌ 不存在');
-            console.log('');
-            
-            // 初始化導航欄
-            console.log('🔧 === 初始化導航欄 ===');
-            if (window.VaultCaddyNavbar) {
+            // 創建側邊欄實例（如果需要）
+            if (window.VaultCaddySidebar && !sidebarInstance) {
                 try {
-                    window.VaultCaddyNavbar.render();
-                    console.log('✅ 導航欄已初始化');
+                    sidebarInstance = new VaultCaddySidebar('document-detail');
+                    console.log('✅ 側邊欄實例已創建');
                     
                     // 驗證導航欄是否真的渲染了
                     setTimeout(() => {
