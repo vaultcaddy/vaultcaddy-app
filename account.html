@@ -282,27 +282,29 @@
         <aside class="sidebar"></aside>
 
         <!-- 主要內容區域 -->
-        <main class="main-content">
-            <div class="account-layout">
-                <!-- 左側導航 -->
-                <div class="account-sidebar">
-                    <h2>Account</h2>
-                    <p>Manage your account info.</p>
-                    
-                    <nav class="account-nav">
-                        <button class="account-nav-item active" onclick="showSection('profile')">
-                            <i class="fas fa-user"></i>
-                            <span>Profile</span>
-                        </button>
-                        <button class="account-nav-item" onclick="showSection('security')">
-                            <i class="fas fa-shield-alt"></i>
-                            <span>Security</span>
-                        </button>
-                    </nav>
-                </div>
+        <main class="main-content" style="flex: 1; padding: 2rem; background: #ffffff; margin-left: 280px; overflow-y: auto;">
+            <!-- 頁面標題 -->
+            <div style="margin-bottom: 2rem;">
+                <h1 style="font-size: 2rem; font-weight: 700; color: #1f2937; margin-bottom: 0.5rem;">Account</h1>
+                <p style="color: #6b7280; font-size: 1rem;">Manage your account info.</p>
+            </div>
+            
+            <!-- 導航標籤 -->
+            <div style="border-bottom: 1px solid #e5e7eb; margin-bottom: 2rem;">
+                <nav style="display: flex; gap: 2rem;">
+                    <button class="account-tab active" onclick="showSection('profile')" style="padding: 1rem 0; border: none; background: none; color: #2563eb; border-bottom: 2px solid #2563eb; font-weight: 500; cursor: pointer;">
+                        <i class="fas fa-user" style="margin-right: 0.5rem;"></i>
+                        Profile
+                    </button>
+                    <button class="account-tab" onclick="showSection('security')" style="padding: 1rem 0; border: none; background: none; color: #6b7280; font-weight: 500; cursor: pointer;">
+                        <i class="fas fa-shield-alt" style="margin-right: 0.5rem;"></i>
+                        Security
+                    </button>
+                </nav>
+            </div>
 
-                <!-- 主要內容 -->
-                <div class="account-content">
+            <!-- 主要內容 -->
+            <div class="account-content" style="max-width: 800px;">
                     <!-- Profile Section -->
                     <div id="profile-section">
                         <h2>Profile details</h2>
@@ -378,7 +380,6 @@
                         <h2>Security</h2>
                         <p style="color: #9ca3af;">Manage your security settings and preferences.</p>
                     </div>
-                </div>
             </div>
         </main>
     </div>
@@ -433,22 +434,30 @@
         function showSection(section) {
             const profileSection = document.getElementById('profile-section');
             const securitySection = document.getElementById('security-section');
-            const navItems = document.querySelectorAll('.account-nav-item');
+            const tabs = document.querySelectorAll('.account-tab');
             
             // 隱藏所有區塊
             if (profileSection) profileSection.style.display = 'none';
             if (securitySection) securitySection.style.display = 'none';
             
-            // 移除所有活躍狀態
-            navItems.forEach(item => item.classList.remove('active'));
+            // 移除所有標籤活躍狀態
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+                tab.style.color = '#6b7280';
+                tab.style.borderBottom = 'none';
+            });
             
-            // 顯示選中的區塊
+            // 顯示選中的區塊並高亮標籤
             if (section === 'profile' && profileSection) {
                 profileSection.style.display = 'block';
-                navItems[0].classList.add('active');
+                tabs[0].classList.add('active');
+                tabs[0].style.color = '#2563eb';
+                tabs[0].style.borderBottom = '2px solid #2563eb';
             } else if (section === 'security' && securitySection) {
                 securitySection.style.display = 'block';
-                navItems[1].classList.add('active');
+                tabs[1].classList.add('active');
+                tabs[1].style.color = '#2563eb';
+                tabs[1].style.borderBottom = '2px solid #2563eb';
             }
         }
 
