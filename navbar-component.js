@@ -256,7 +256,7 @@ class VaultCaddyNavbar {
         
         return `
             <div class="language-selector" style="position: relative;">
-                <button class="language-btn" onclick="window.VaultCaddyNavbar.toggleLanguageDropdown(event)" style="
+                <button class="language-btn" onclick="window.vaultcaddyNavbar.toggleLanguageDropdown(event)" style="
                     display: flex;
                     align-items: center;
                     gap: 0.5rem;
@@ -289,7 +289,7 @@ class VaultCaddyNavbar {
                     margin-top: 4px;
                 ">
                     ${Object.entries(languages).map(([code, name]) => `
-                        <button class="language-option" onclick="window.VaultCaddyNavbar.changeLanguage('${code}')" style="
+                        <button class="language-option" onclick="window.vaultcaddyNavbar.changeLanguage('${code}')" style="
                             display: flex;
                             align-items: center;
                             justify-content: space-between;
@@ -368,7 +368,7 @@ class VaultCaddyNavbar {
             
             return `
                 <div class="user-profile" id="user-profile" style="position: relative;">
-                    <img src="${userPhotoURL}" alt="${userName}" class="user-avatar" onclick="window.VaultCaddyNavbar.toggleUserDropdown(event)" style="cursor: pointer; border-radius: 50%; width: 32px; height: 32px;">
+                    <img src="${userPhotoURL}" alt="${userName}" class="user-avatar" onclick="window.vaultcaddyNavbar.toggleUserDropdown(event)" style="cursor: pointer; border-radius: 50%; width: 32px; height: 32px;">
                     <div class="user-dropdown-menu" id="user-dropdown-menu" style="display: none; position: absolute; top: 100%; right: 0; background: white; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15); min-width: 220px; z-index: 1000; padding: 0.5rem 0; margin-top: 8px;">
                         <div class="user-info" style="padding: 1rem 1.5rem; background: #f9fafb; border-bottom: 1px solid #e5e7eb;">
                             <div style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem;">Credits: ${userCredits}</div>
@@ -391,7 +391,7 @@ class VaultCaddyNavbar {
                             <span style="font-size: 0.75rem; color: #9ca3af;">⌘B</span>
                         </a>
                         <div style="margin: 0.5rem 0; border-top: 1px solid #e5e7eb;"></div>
-                        <a href="#" class="user-menu-item logout" onclick="window.VaultCaddyNavbar.logout()" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.5rem; color: #dc2626; text-decoration: none; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#fef2f2'" onmouseout="this.style.backgroundColor='transparent'">
+                        <a href="#" class="user-menu-item logout" onclick="window.vaultcaddyNavbar.logout()" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.5rem; color: #dc2626; text-decoration: none; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#fef2f2'" onmouseout="this.style.backgroundColor='transparent'">
                             <div style="display: flex; align-items: center;">
                                 <i class="fas fa-sign-out-alt" style="width: 16px; margin-right: 0.75rem;"></i>
                                 <span>Log out</span>
@@ -405,7 +405,7 @@ class VaultCaddyNavbar {
             return `
                 <div class="auth-buttons" style="display: flex; align-items: center; gap: 1rem;">
                     <div id="google-signin-button" class="google-signin-container"></div>
-                    <button class="nav-link login-btn traditional" data-translate="nav_login" onclick="window.VaultCaddyNavbar.handleLogin()">
+                    <button class="nav-link login-btn traditional" data-translate="nav_login" onclick="window.vaultcaddyNavbar.handleLogin()">
                         登入 →
                     </button>
                 </div>
@@ -839,7 +839,7 @@ function initNavbar() {
     // 檢查 Firebase Auth 是否已初始化
     if (window.authHandler && window.authHandler.initialized) {
         console.log('✅ Firebase Auth 已初始化，立即創建 navbar');
-        window.VaultCaddyNavbar = new VaultCaddyNavbar();
+        window.vaultcaddyNavbar = new VaultCaddyNavbar();
     } else {
         console.log('⏳ 等待 Firebase Auth 初始化...');
         
@@ -848,16 +848,16 @@ function initNavbar() {
             if (window.authHandler && window.authHandler.initialized) {
                 console.log('✅ Firebase Auth 初始化完成，創建 navbar');
                 clearInterval(checkAuth);
-                window.VaultCaddyNavbar = new VaultCaddyNavbar();
+                window.vaultcaddyNavbar = new VaultCaddyNavbar();
             }
         }, 100); // 每 100ms 檢查一次
         
         // 超時保護：5 秒後強制創建（向後兼容）
         setTimeout(() => {
-            if (!window.VaultCaddyNavbar) {
+            if (!window.vaultcaddyNavbar) {
                 console.warn('⚠️ Firebase Auth 初始化超時，使用向後兼容模式');
                 clearInterval(checkAuth);
-                window.VaultCaddyNavbar = new VaultCaddyNavbar();
+                window.vaultcaddyNavbar = new VaultCaddyNavbar();
             }
         }, 5000);
     }
@@ -876,7 +876,7 @@ function checkLoginStatus() {
     const token = localStorage.getItem('vaultcaddy_token');
     const userData = localStorage.getItem('vaultcaddy_user');
     const userLoggedIn = localStorage.getItem('userLoggedIn');
-    const navbarStatus = window.VaultCaddyNavbar ? window.VaultCaddyNavbar.isLoggedIn : false;
+    const navbarStatus = window.vaultcaddyNavbar ? window.vaultcaddyNavbar.isLoggedIn : false;
     
     console.log('🔍 當前登入狀態檢查:', {
         vaultcaddyToken: !!token,
@@ -910,7 +910,9 @@ if (document.readyState === 'loading') {
         // 確保 navbar-placeholder 存在後再初始化
         if (document.getElementById('navbar-placeholder')) {
             console.log('🔄 DOMContentLoaded: 重新初始化導航欄');
-            window.VaultCaddyNavbar.render();
+            if (window.vaultcaddyNavbar && window.vaultcaddyNavbar.render) {
+                window.vaultcaddyNavbar.render();
+            }
             
             // 監聽全域身份驗證狀態變化
             initNavbarGlobalAuthListener();
@@ -920,7 +922,7 @@ if (document.readyState === 'loading') {
     // 如果文檔已載入，立即檢查並渲染
     if (document.getElementById('navbar-placeholder')) {
         console.log('🔄 Document Ready: 立即渲染導航欄');
-        window.VaultCaddyNavbar.render();
+        window.vaultcaddyNavbar.render();
         
         // 監聽全域身份驗證狀態變化
         initNavbarGlobalAuthListener();
@@ -937,9 +939,9 @@ function initNavbarGlobalAuthListener() {
             console.log('🔄 導航欄收到全域身份驗證狀態變化:', authState);
             
             // 重新載入用戶狀態並渲染導航欄
-            if (window.VaultCaddyNavbar) {
-                window.VaultCaddyNavbar.loadUserState();
-                window.VaultCaddyNavbar.render();
+            if (window.vaultcaddyNavbar) {
+                window.vaultcaddyNavbar.loadUserState();
+                window.vaultcaddyNavbar.render();
                 console.log('✅ 導航欄已根據新的身份驗證狀態重新渲染');
             }
         });
@@ -959,9 +961,9 @@ function initNavbarGlobalAuthListener() {
     window.addEventListener('vaultcaddy:global:authStateChanged', (event) => {
         console.log('📡 導航欄收到自定義身份驗證事件:', event.detail);
         
-        if (window.VaultCaddyNavbar) {
-            window.VaultCaddyNavbar.loadUserState();
-            window.VaultCaddyNavbar.render();
+        if (window.vaultcaddyNavbar) {
+            window.vaultcaddyNavbar.loadUserState();
+            window.vaultcaddyNavbar.render();
             console.log('✅ 導航欄已根據自定義事件重新渲染');
         }
     });
