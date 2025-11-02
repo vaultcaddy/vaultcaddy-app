@@ -49,7 +49,7 @@
     <script src="config.js"></script>
     <script src="translations.js?v=20251031"></script>
     <script src="navbar-component.js?v=20251102-critical-fix"></script>
-    <script src="sidebar-component.js?v=20251102-fixed"></script>
+    <script src="sidebar-component.js?v=20251102-event-driven"></script>
     <!-- 載入統一處理器系統 -->
     <!-- ✅ 混合處理器：Vision API OCR + DeepSeek Chat（香港優化版）-->
     <script src="hybrid-vision-deepseek.js?v=20251030-hk-optimized"></script>
@@ -2418,40 +2418,28 @@
                 setTimeout(initializeWithGlobalSync, 100);
             }
 
-            // 🔥 等待 SimpleDataManager 初始化後再創建側邊欄
-            const initializeSidebarAndProject = async () => {
-                const dataManager = window.simpleDataManager || window.firebaseDataManager;
-                if (dataManager && dataManager.initialized) {
-                    console.log('✅ SimpleDataManager 已初始化，創建側邊欄');
-                    
-                    // 創建統一側邊欄
-                    window.unifiedSidebar = new VaultCaddySidebar();
-                    
-                    // 更新項目標題
-                    await updateProjectTitle();
-                    
-                    return true;
+            // 🔥 直接創建側邊欄（不等待，使用事件驅動）
+            console.log('🎨 立即創建側邊欄');
+            window.unifiedSidebar = new VaultCaddySidebar();
+            
+            // 監聽 firebase-ready 事件，重新渲染側邊欄
+            window.addEventListener('firebase-ready', async () => {
+                console.log('🔥 Firebase 就緒，重新渲染側邊欄和項目標題');
+                if (window.unifiedSidebar) {
+                    await window.unifiedSidebar.render();
                 }
-                return false;
-            };
+                await updateProjectTitle();
+            });
             
-            // 立即嘗試初始化（如果 SimpleDataManager 已就緒）
-            const immediateInit = await initializeSidebarAndProject();
-            
-            // 如果未就緒，使用快速輪詢（每 50ms 檢查一次，最多 3 秒）
-            if (!immediateInit) {
-                let attempts = 0;
-                const maxAttempts = 60; // 3 秒 / 50ms
-                const waitForDataManager = setInterval(async () => {
-                    attempts++;
-                    const success = await initializeSidebarAndProject();
-                    if (success || attempts >= maxAttempts) {
-                        clearInterval(waitForDataManager);
-                        if (!success) {
-                            console.warn('⚠️ SimpleDataManager 初始化超時（3秒），側邊欄將顯示為空');
-                        }
+            // 如果 SimpleDataManager 已初始化，立即更新
+            if (window.simpleDataManager && window.simpleDataManager.initialized) {
+                console.log('✅ SimpleDataManager 已就緒，立即更新');
+                setTimeout(async () => {
+                    if (window.unifiedSidebar) {
+                        await window.unifiedSidebar.render();
                     }
-                }, 50); // 減少到 50ms，更快響應
+                    await updateProjectTitle();
+                }, 100);
             }
             
             // 初始化用戶團隊信息
