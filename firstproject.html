@@ -1336,52 +1336,120 @@
     </div>
 
     <script>
-        // ========== 🔧 立即定義全局函數（避免 ReferenceError） ==========
-        // 這些占位符必須在所有 HTML 元素之前定義
-        // 存儲占位符引用，用於比較
-        const placeholderFunctions = {};
+        // ========== 🔧 立即定義全局函數（簡化版，無占位符） ==========
+        console.log('🚀 開始定義全局函數...');
         
-        const createPlaceholder = (functionName) => {
-            const placeholder = function(...args) {
-                console.log(`⏳ ${functionName} 占位符被調用，等待真實函數定義...`);
+        // 1. Upload files 按鈕
+        window.openUploadModal = function() {
+            console.log('🔵 openUploadModal 被調用');
+            
+            // 等待 DOM 加載完成
+            if (document.readyState === 'loading') {
+                console.log('⏳ DOM 尚未載入，等待 DOMContentLoaded...');
+                document.addEventListener('DOMContentLoaded', window.openUploadModal);
+                return;
+            }
+            
+            // 打開模態框
+            const modal = document.getElementById('aiUploadModal');
+            if (modal) {
+                console.log('✅ 找到模態框，正在打開...');
+                modal.style.display = 'flex';
                 
-                // 等待真實函數定義（最多等待 5 秒）
-                let attempts = 0;
-                const maxAttempts = 50; // 5 秒 / 100ms
-                const checkInterval = setInterval(() => {
-                    attempts++;
-                    const realFunction = window[functionName];
-                    
-                    // 檢查是否已定義真實函數（不是占位符本身）
-                    if (realFunction && realFunction !== placeholderFunctions[functionName]) {
-                        console.log(`✅ ${functionName} 真實函數已定義，立即執行`);
-                        clearInterval(checkInterval);
-                        try {
-                            realFunction(...args);
-                        } catch (error) {
-                            console.error(`❌ ${functionName} 執行失敗:`, error);
-                        }
-                    } else if (attempts >= maxAttempts) {
-                        console.error(`❌ ${functionName} 真實函數定義超時`);
-                        console.error(`   當前 window.${functionName}:`, typeof realFunction);
-                        clearInterval(checkInterval);
+                // 延遲初始化上傳功能
+                setTimeout(() => {
+                    if (typeof window.initializeAIUpload === 'function') {
+                        window.initializeAIUpload();
+                    } else {
+                        console.warn('⚠️ initializeAIUpload 尚未定義，稍後重試...');
+                        setTimeout(() => {
+                            if (typeof window.initializeAIUpload === 'function') {
+                                window.initializeAIUpload();
+                            }
+                        }, 500);
                     }
                 }, 100);
-            };
-            
-            // 存儲占位符引用
-            placeholderFunctions[functionName] = placeholder;
-            return placeholder;
+            } else {
+                console.error('❌ 找不到 aiUploadModal 元素');
+                alert('上傳功能初始化失敗，請重新整理頁面');
+            }
         };
         
-        window.openUploadModal = createPlaceholder('openUploadModal');
-        window.closeAIUploadModal = createPlaceholder('closeAIUploadModal');
-        window.toggleExportMenu = createPlaceholder('toggleExportMenu');
-        window.exportDocuments = createPlaceholder('exportDocuments');
-        window.confirmDeleteProject = createPlaceholder('confirmDeleteProject');
-        window.toggleProjectNameEdit = createPlaceholder('toggleProjectNameEdit');
+        // 2. Close upload modal
+        window.closeAIUploadModal = function() {
+            console.log('🔵 closeAIUploadModal 被調用');
+            const modal = document.getElementById('aiUploadModal');
+            if (modal) {
+                modal.style.display = 'none';
+                if (typeof window.resetAIUpload === 'function') {
+                    window.resetAIUpload();
+                }
+            }
+        };
         
-        console.log('✅ 全局函數占位符已定義');
+        // 3. Delete 按鈕
+        window.confirmDeleteProject = function() {
+            console.log('🔵 confirmDeleteProject 被調用');
+            
+            const confirmed = confirm('是否刪除此頁面？');
+            if (!confirmed) {
+                console.log('❌ 用戶取消刪除');
+                return;
+            }
+            
+            // 獲取項目 ID
+            const urlParams = new URLSearchParams(window.location.search);
+            const projectId = urlParams.get('project') || urlParams.get('projectId');
+            
+            if (!projectId) {
+                console.error('❌ 無法獲取項目 ID');
+                alert('無法刪除項目：項目 ID 不存在');
+                return;
+            }
+            
+            console.log('🗑️ 準備刪除項目:', projectId);
+            
+            // 調用刪除函數
+            if (typeof window.deleteProject === 'function') {
+                window.deleteProject(projectId);
+            } else {
+                console.error('❌ deleteProject 函數尚未定義');
+                alert('刪除功能尚未初始化，請稍後再試');
+            }
+        };
+        
+        // 4. Toggle project name edit
+        window.toggleProjectNameEdit = function() {
+            console.log('🔵 toggleProjectNameEdit 被調用');
+            if (typeof window.updateProjectTitle === 'function') {
+                window.updateProjectTitle();
+            } else {
+                console.warn('⚠️ updateProjectTitle 尚未定義');
+            }
+        };
+        
+        // 5. Toggle export menu
+        window.toggleExportMenu = function() {
+            console.log('🔵 toggleExportMenu 被調用');
+            const menu = document.getElementById('export-menu');
+            if (menu) {
+                menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+            }
+        };
+        
+        // 6. Export documents
+        window.exportDocuments = function(format) {
+            console.log('🔵 exportDocuments 被調用，格式:', format);
+            alert(`導出功能開發中：${format}`);
+        };
+        
+        console.log('✅ 全局函數已定義（簡化版）');
+        console.log('   - openUploadModal');
+        console.log('   - closeAIUploadModal');
+        console.log('   - confirmDeleteProject');
+        console.log('   - toggleProjectNameEdit');
+        console.log('   - toggleExportMenu');
+        console.log('   - exportDocuments');
         
         // 立即執行的頁面可見性腳本
         (function() {
@@ -1836,31 +1904,8 @@
             btnElement.title = '編輯項目名稱';
         }
         
-        async function confirmDeleteProject() {
-            const project = await getCurrentProject();
-            if (!project) {
-                alert('無法找到當前項目');
-                return;
-            }
-            
-            const confirmed = confirm(`是否刪除項目「${project.name}」？\n\n此操作無法撤銷。`);
-            if (confirmed) {
-                await deleteProject(project.id);
-            }
-        }
-        
-        // 確保函數全局可用
-        console.log('');
-        console.log('========================================');
-        console.log('✅ 定義真實 confirmDeleteProject 函數');
-        console.log('   時間戳:', new Date().toLocaleTimeString());
-        console.log('   函數類型:', typeof confirmDeleteProject);
-        console.log('   賦值前 window.confirmDeleteProject:', typeof window.confirmDeleteProject);
-        window.confirmDeleteProject = confirmDeleteProject;
-        console.log('   賦值後 window.confirmDeleteProject:', typeof window.confirmDeleteProject);
-        console.log('   是否相同:', window.confirmDeleteProject === confirmDeleteProject);
-        console.log('========================================');
-        console.log('');
+        // ✅ confirmDeleteProject 已在第 1391-1419 行定義
+        // 這裡不再重複定義，避免衝突
 
         // 刪除項目
         async function deleteProject(projectId) {
@@ -2510,88 +2555,8 @@
             alert('Document processing help will be shown here.');
         }
 
-        function openUploadModal() {
-            console.log('');
-            console.log('========================================');
-            console.log('🔵 真實 openUploadModal 被調用！');
-            console.log('🔵 時間戳:', new Date().toLocaleTimeString());
-            console.log('🔵 DOM 狀態:', document.readyState);
-            console.log('🔵 這是真實函數，不是占位符！');
-            console.log('========================================');
-            
-            // 確保 DOM 已完全載入
-            if (document.readyState === 'loading') {
-                console.log('⏳ DOM 尚未載入完成，等待...');
-                document.addEventListener('DOMContentLoaded', openUploadModal);
-                return;
-            }
-            
-            // 打開新的 AI 上傳模態框
-            const modal = document.getElementById('aiUploadModal');
-            console.log('');
-            console.log('========================================');
-            console.log('🚀 openUploadModal 被調用');
-            console.log('🔵 找到模態框:', modal);
-            console.log('🔵 模態框元素存在:', !!modal);
-            console.log('========================================');
-            
-            if (modal) {
-                console.log('✅ 開啟上傳模態框');
-                modal.style.display = 'flex';
-                
-                // 使用 setTimeout 確保 DOM 已渲染
-                setTimeout(() => {
-                    console.log('🔧 準備初始化 AI 上傳（100ms 後）...');
-                    initializeAIUpload();
-                }, 100);
-            } else {
-                console.error('❌ 找不到 aiUploadModal');
-                console.error('❌ Body 內容:', document.body ? '存在' : '不存在');
-                console.error('❌ 所有元素數量:', document.getElementsByTagName('*').length);
-                
-                // 嘗試多次延遲重試
-                let retryCount = 0;
-                const maxRetries = 5;
-                const retryInterval = setInterval(() => {
-                    retryCount++;
-                    console.log(`🔄 重試第 ${retryCount} 次...`);
-                    
-                    const retryModal = document.getElementById('aiUploadModal');
-                    if (retryModal) {
-                        console.log('✅ 重試成功，找到模態框');
-                        clearInterval(retryInterval);
-                        retryModal.style.display = 'flex';
-                        setTimeout(() => initializeAIUpload(), 100);
-                    } else if (retryCount >= maxRetries) {
-                        console.error(`❌ 重試 ${maxRetries} 次後仍然失敗`);
-                        clearInterval(retryInterval);
-                        alert('上傳功能初始化失敗，請重新整理頁面後再試');
-                    }
-                }, 300);
-            }
-        }
-        
-        // 確保函數全局可用（立即覆蓋占位符）
-        console.log('');
-        console.log('========================================');
-        console.log('✅ 定義真實 openUploadModal 函數');
-        console.log('   時間戳:', new Date().toLocaleTimeString());
-        console.log('   函數類型:', typeof openUploadModal);
-        console.log('   賦值前 window.openUploadModal:', typeof window.openUploadModal);
-        window.openUploadModal = openUploadModal;
-        console.log('   賦值後 window.openUploadModal:', typeof window.openUploadModal);
-        console.log('   是否相同:', window.openUploadModal === openUploadModal);
-        console.log('========================================');
-        console.log('');
-        
-        function closeAIUploadModal() {
-            const modal = document.getElementById('aiUploadModal');
-            if (modal) {
-                modal.style.display = 'none';
-                resetAIUpload();
-            }
-        }
-        window.closeAIUploadModal = closeAIUploadModal;
+        // ✅ openUploadModal 和 closeAIUploadModal 已在第 1343-1388 行定義
+        // 這裡不再重複定義，避免衝突
         
         // AI 上傳處理器
         let aiCurrentFile = null;
