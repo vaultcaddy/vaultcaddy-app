@@ -38,87 +38,37 @@ class VaultCaddyNavbar {
         try {
             console.log('🔄 導航欄載入用戶狀態...');
             
-            // 🔥 優先使用 Firebase Auth（最新）
-            if (window.authHandler && window.authHandler.initialized) {
-                const currentUser = window.authHandler.getCurrentUser();
-                console.log('🔥 導航欄從 Firebase Auth 獲取狀態:', currentUser);
+            // ✅ 簡化：只使用 SimpleAuth
+            if (window.simpleAuth && window.simpleAuth.isLoggedIn()) {
+                const currentUser = window.simpleAuth.getCurrentUser();
+                console.log('✅ 導航欄從 SimpleAuth 獲取用戶:', currentUser);
                 
-                if (currentUser) {
-                    this.isLoggedIn = true;
-                    this.isAuthenticated = true;
-                    this.user = {
-                        id: currentUser.uid,
-                        email: currentUser.email || 'user@vaultcaddy.com',
-                        name: currentUser.displayName || currentUser.email?.split('@')[0] || 'User',
-                        avatar: currentUser.photoURL || 'https://static.vecteezy.com/system/resources/previews/019/879/186/non_2x/user-icon-on-transparent-background-free-png.png'
-                    };
-                    
-                    // 🔥 從 Firestore 獲取 credits
-                    if (window.firebaseDataManager && window.firebaseDataManager.isInitialized) {
-                        try {
-                            this.credits = await window.firebaseDataManager.getUserCredits();
-                            console.log('✅ 從 Firestore 獲取 credits:', this.credits);
-                        } catch (error) {
-                            console.error('❌ 獲取 credits 失敗:', error);
-                            this.credits = localStorage.getItem('userCredits') || '0';
-                        }
-                    } else {
-                        this.credits = localStorage.getItem('userCredits') || '0';
+                this.isLoggedIn = true;
+                this.isAuthenticated = true;
+                this.user = {
+                    id: currentUser.uid,
+                    email: currentUser.email || 'user@vaultcaddy.com',
+                    name: currentUser.displayName || currentUser.email?.split('@')[0] || 'User',
+                    avatar: currentUser.photoURL || 'https://static.vecteezy.com/system/resources/previews/019/879/186/non_2x/user-icon-on-transparent-background-free-png.png'
+                };
+                
+                // 從 SimpleDataManager 獲取 credits
+                if (window.simpleDataManager && window.simpleDataManager.initialized) {
+                    try {
+                        this.credits = await window.simpleDataManager.getUserCredits();
+                        console.log('✅ 從 Firestore 獲取 credits:', this.credits);
+                    } catch (error) {
+                        console.error('❌ 獲取 credits 失敗:', error);
+                        this.credits = '10';
                     }
-                    
-                    console.log('✅ Firebase Auth 用戶已載入:', this.user.email);
                 } else {
-                    this.resetUserState();
+                    this.credits = '10';
                 }
-            }
-            // 使用 GlobalAuthSync（向後兼容）
-            else if (window.GlobalAuthSync) {
-                const authState = window.GlobalAuthSync.getCurrentAuthState();
-                console.log('🌐 導航欄從 GlobalAuthSync 獲取狀態:', authState);
                 
-                this.isLoggedIn = authState.isAuthenticated;
-                this.isAuthenticated = authState.isAuthenticated;
-                
-                if (this.isLoggedIn) {
-                    // 安全提取用戶信息
-                    let safeEmail = authState.userEmail;
-                    let safeName = authState.userName;
-                    
-                    // 清理可能的 JSON 數據
-                    if (safeEmail && safeEmail.includes('{"uid"')) {
-                        safeEmail = 'vaultcaddy@gmail.com';
-                        console.log('🧹 導航欄清理了異常的郵箱 JSON 數據');
-                    }
-                    if (safeName && safeName.includes('{"uid"')) {
-                        safeName = 'Caddy Vault';
-                        console.log('🧹 導航欄清理了異常的姓名 JSON 數據');
-                    }
-                    
-                    this.user = {
-                        id: 'auth_user',
-                        email: safeEmail || 'vaultcaddy@gmail.com',
-                        name: safeName || 'Caddy Vault',
-                        avatar: 'https://static.vecteezy.com/system/resources/previews/019/879/186/non_2x/user-icon-on-transparent-background-free-png.png'
-                    };
-                    this.credits = authState.credits || '7';
-                } else {
-                    this.resetUserState();
-                }
+                console.log('✅ 用戶已載入:', this.user.email);
             } else {
-                // 兜底：檢查是否有真實的認證 token
-                const token = localStorage.getItem('vaultcaddy_token');
-                const userData = localStorage.getItem('vaultcaddy_user');
-                
-                if (token && userData) {
-                    // 真實認證系統
-                    this.user = JSON.parse(userData);
-                    this.credits = this.user.credits || 0;
-                    this.isLoggedIn = true;
-                    this.isAuthenticated = true;
-                } else {
-                    // 未登入
-                    this.resetUserState();
-                }
+                // 未登入
+                this.resetUserState();
             }
             
             // 載入語言設置
@@ -129,7 +79,7 @@ class VaultCaddyNavbar {
                 isAuthenticated: this.isAuthenticated,
                 credits: this.credits,
                 user: this.user?.email || 'N/A',
-                source: window.authHandler ? 'Firebase Auth' : (window.GlobalAuthSync ? 'GlobalAuthSync' : 'localStorage')
+                source: 'SimpleAuth'
             });
             
         } catch (error) {
@@ -871,22 +821,9 @@ if (document.readyState === 'loading') {
 }
 
 
-// 測試登入狀態的輔助函數
+// ✅ 簡化：直接使用 SimpleAuth
 function checkLoginStatus() {
-    const token = localStorage.getItem('vaultcaddy_token');
-    const userData = localStorage.getItem('vaultcaddy_user');
-    const userLoggedIn = localStorage.getItem('userLoggedIn');
-    const navbarStatus = window.vaultcaddyNavbar ? window.vaultcaddyNavbar.isLoggedIn : false;
-    
-    console.log('🔍 當前登入狀態檢查:', {
-        vaultcaddyToken: !!token,
-        vaultcaddyUser: !!userData,
-        userLoggedIn: userLoggedIn,
-        navbarInstance: navbarStatus,
-        recommendation: (token && userData) || userLoggedIn === 'true' ? '應該已登入' : '應該未登入'
-    });
-    
-    return (token && userData) || userLoggedIn === 'true';
+    return window.simpleAuth && window.simpleAuth.isLoggedIn();
 }
 
 

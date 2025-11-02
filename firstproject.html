@@ -2018,20 +2018,9 @@
     </div>
 
     <script>
-        // 登入狀態檢查 - 使用全域同步系統
+        // ✅ 簡化：直接使用 SimpleAuth
         function checkLoginStatus() {
-            console.log('🔍 Dashboard 檢查身份驗證狀態...');
-            
-            // 使用全域身份驗證同步系統
-            if (window.GlobalAuthSync) {
-                const globalState = window.GlobalAuthSync.getCurrentAuthState();
-                console.log('🌐 Dashboard 全域身份驗證狀態:', globalState);
-                return globalState.isAuthenticated;
-            }
-            
-            // 兜底邏輯：如果全域系統未載入，使用本地檢查
-            console.log('⚠️ 全域同步系統未載入，使用本地檢查');
-            return window.checkGlobalAuthState ? window.checkGlobalAuthState() : true;
+            return window.simpleAuth && window.simpleAuth.isLoggedIn();
         }
 
         // 文檔類型配置
@@ -2359,64 +2348,7 @@
                 });
             }
             
-            // 等待 Firebase 和 SimpleDataManager 初始化後再更新項目標題
-            const waitForFirebaseAndUpdateTitle = async () => {
-                console.log('⏳ 等待 Firebase 和 SimpleDataManager 初始化...');
-                
-                // 等待 SimpleDataManager 初始化
-                const checkInterval = setInterval(async () => {
-                    if (window.simpleDataManager && window.simpleDataManager.initialized) {
-                        clearInterval(checkInterval);
-                        console.log('✅ SimpleDataManager 已初始化，更新項目標題');
-                        await updateProjectTitle();
-                    }
-                }, 100);
-                
-                // 超時保護（10 秒）
-                setTimeout(() => {
-                    clearInterval(checkInterval);
-                    console.warn('⚠️ SimpleDataManager 初始化超時，使用 LocalStorage 備份');
-                    updateProjectTitle(); // 仍然嘗試更新（使用 LocalStorage）
-                }, 10000);
-            };
-            
-            waitForFirebaseAndUpdateTitle();
-            
-            // 等待全域同步系統載入
-            const initializeWithGlobalSync = () => {
-                if (window.GlobalAuthSync) {
-                    console.log('🌐 使用全域身份驗證同步系統');
-                    
-                    // 監聽全域身份驗證狀態變化
-                    window.onGlobalAuthChange((authState) => {
-                        console.log('🔄 Dashboard 收到全域身份驗證狀態變化:', authState);
-                        updateDashboardAuthState(authState);
-                    });
-                    
-                    // 初始檢查
-                    const authResult = checkLoginStatus();
-                    console.log('🎯 Dashboard 初始身份驗證結果:', authResult);
-                    
-                    if (!authResult) {
-                        console.log('⚠️ Dashboard 未檢測到登入狀態，顯示提示');
-                        showLoginPromptInDashboard();
-                    }
-                } else {
-                    console.log('⚠️ 全域同步系統未載入，使用兜底邏輯');
-                    // 兜底邏輯
-                    const authResult = checkLoginStatus();
-                    if (!authResult) {
-                        showLoginPromptInDashboard();
-                    }
-                }
-            };
-            
-            // 如果全域同步系統已載入，立即初始化；否則等待
-            if (window.GlobalAuthSync) {
-                initializeWithGlobalSync();
-            } else {
-                setTimeout(initializeWithGlobalSync, 100);
-            }
+            // ✅ 極簡初始化：只監聽 firebase-ready 事件
 
             // 🔥 直接創建側邊欄（不等待，使用事件驅動）
             console.log('🎨 立即創建側邊欄');
