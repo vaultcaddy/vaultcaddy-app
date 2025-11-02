@@ -46,6 +46,20 @@
     <script src="export-manager.js"></script>
     <script src="reconciliation-engine.js"></script>
     
+    <!-- ✅ 提前定義 goBackToDashboard 函數 -->
+    <script>
+        // 返回儀表板（提前定義，避免 ReferenceError）
+        function goBackToDashboard() {
+            const params = new URLSearchParams(window.location.search);
+            const projectId = params.get('project');
+            if (projectId) {
+                window.location.href = `firstproject.html?project=${projectId}`;
+            } else {
+                window.location.href = 'dashboard.html';
+            }
+        }
+    </script>
+    
     <style>
         * {
             margin: 0;
@@ -721,25 +735,24 @@
             }
             
             try {
-                // 從 localStorage 獲取文檔
-                const storageKey = `vaultcaddy_project_${projectId}_documents`;
-            console.log('📂 存儲鍵:', storageKey);
-            
-            const storedData = localStorage.getItem(storageKey);
-            console.log('💾 原始存儲數據:', storedData);
-            
-            const documents = JSON.parse(storedData || '[]');
-            console.log('📄 所有文檔:', documents);
-            console.log('📊 文檔數量:', documents.length);
-            
-            const foundDocument = documents.find(doc => doc.id === documentId);
-            console.log('🎯 找到的文檔:', foundDocument);
-            
-            if (!foundDocument) {
-                alert('找不到文檔');
-                goBackToDashboard();
-                return;
-            }
+                // ✅ 從 Firebase 獲取文檔
+                console.log('📂 從 Firebase 載入文檔...');
+                
+                // 等待 SimpleDataManager 初始化
+                if (!window.simpleDataManager || !window.simpleDataManager.initialized) {
+                    console.warn('⚠️ SimpleDataManager 未初始化，等待...');
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+                
+                // 從 Firebase 獲取文檔
+                const foundDocument = await window.simpleDataManager.getDocument(projectId, documentId);
+                console.log('🎯 從 Firebase 找到的文檔:', foundDocument);
+                
+                if (!foundDocument) {
+                    alert('找不到文檔');
+                    goBackToDashboard();
+                    return;
+                }
             
             currentDocument = foundDocument;
             console.log('');

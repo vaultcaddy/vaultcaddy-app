@@ -255,6 +255,30 @@ class SimpleDataManager {
         }
     }
     
+    // ✅ 獲取單個文檔
+    async getDocument(projectId, documentId) {
+        try {
+            const docRef = await this.db.collection('documents').doc(documentId).get();
+            
+            if (!docRef.exists) {
+                console.warn('⚠️ 文檔不存在:', documentId);
+                return null;
+            }
+            
+            const document = {
+                id: docRef.id,
+                ...docRef.data()
+            };
+            
+            console.log('✅ 獲取文檔成功:', documentId);
+            return document;
+            
+        } catch (error) {
+            console.error('❌ 獲取文檔失敗:', error);
+            return null;
+        }
+    }
+    
     // 創建文檔
     async createDocument(projectId, documentData) {
         try {
