@@ -16,6 +16,7 @@ class SimpleDataManager {
         this.db = null;
         this.storage = null;
         this.auth = null;
+        this.currentUser = null; // ✅ 緩存當前用戶
         this.initialized = false;
         
         console.log('📦 SimpleDataManager 構造函數執行');
@@ -35,6 +36,13 @@ class SimpleDataManager {
             this.db = firebase.firestore();
             this.storage = firebase.storage();
             this.auth = firebase.auth();
+            
+            // ✅ 監聽身份驗證狀態變化
+            this.auth.onAuthStateChanged((user) => {
+                this.currentUser = user;
+                console.log('🔥 SimpleDataManager: Auth 狀態變化:', user ? user.email : '未登入');
+            });
+            
             this.initialized = true;
             
             console.log('✅ SimpleDataManager 已初始化');
@@ -76,7 +84,8 @@ class SimpleDataManager {
     
     // 獲取當前用戶 ID
     getUserId() {
-        const user = this.auth.currentUser;
+        // ✅ 優先使用緩存的用戶，再檢查 auth.currentUser
+        const user = this.currentUser || this.auth.currentUser;
         if (!user) {
             throw new Error('用戶未登入');
         }

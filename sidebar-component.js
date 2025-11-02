@@ -32,6 +32,32 @@ class VaultCaddySidebar {
         });
     }
     
+    // ✅ 等待用戶登入
+    waitForUser(dataManager, timeout = 3000) {
+        return new Promise((resolve) => {
+            // 立即檢查
+            if (dataManager.currentUser) {
+                console.log('✅ 用戶已登入:', dataManager.currentUser.email);
+                resolve(dataManager.currentUser);
+                return;
+            }
+            
+            // 輪詢檢查
+            const startTime = Date.now();
+            const checkInterval = setInterval(() => {
+                if (dataManager.currentUser) {
+                    clearInterval(checkInterval);
+                    console.log('✅ 用戶已登入:', dataManager.currentUser.email);
+                    resolve(dataManager.currentUser);
+                } else if (Date.now() - startTime > timeout) {
+                    clearInterval(checkInterval);
+                    console.warn('⏱️ 等待用戶登入超時');
+                    resolve(null);
+                }
+            }, 50);
+        });
+    }
+    
     async render() {
         // 支持兩種容器：#sidebar-root（新版）和 .sidebar（舊版）
         const sidebarContainer = document.getElementById('sidebar-root') || document.querySelector('.sidebar');
@@ -59,8 +85,15 @@ class VaultCaddySidebar {
         
         if (dataManager && dataManager.initialized) {
             try {
-                projects = await dataManager.getProjects();
-                console.log('✅ 側邊欄從 Firebase 加載項目:', projects.length);
+                // ✅ 等待用戶登入（最多 3 秒）
+                const user = await this.waitForUser(dataManager, 3000);
+                if (user) {
+                    projects = await dataManager.getProjects();
+                    console.log('✅ 側邊欄從 Firebase 加載項目:', projects.length);
+                } else {
+                    console.warn('⚠️ 用戶未登入，側邊欄項目列表為空');
+                    projects = [];
+                }
             } catch (error) {
                 console.error('❌ 從 Firebase 加載項目失敗:', error);
                 projects = [];

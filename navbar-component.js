@@ -612,9 +612,18 @@ class VaultCaddyNavbar {
     /**
      * 更新 Credits
      */
-    updateCredits(newCredits) {
+    async updateCredits(newCredits) {
         this.credits = newCredits;
-        localStorage.setItem('userCredits', newCredits.toString());
+        
+        // ✅ 保存到 Firebase（移除 LocalStorage）
+        if (window.simpleDataManager && window.simpleDataManager.initialized) {
+            try {
+                await window.simpleDataManager.updateUserCredits(newCredits);
+                console.log('✅ Credits 已保存到 Firebase:', newCredits);
+            } catch (error) {
+                console.error('❌ 保存 Credits 到 Firebase 失敗:', error);
+            }
+        }
         
         // 更新顯示
         const creditsElement = document.getElementById('credits-count');
