@@ -605,10 +605,21 @@ document.addEventListener('DOMContentLoaded', function() {
         uploadText.innerHTML = `${baseText} <span class="or">或</span> <button class="browse-btn">瀏覽</button>`;
     }
     
-    // Credits積分系統
-    let userCredits = parseInt(localStorage.getItem('userCredits')) || 10;
+    // Credits積分系統（從 Firebase 獲取）
+    let userCredits = 10; // 預設值，實際從 Firebase 獲取
     
-    function initCreditsSystem() {
+    async function initCreditsSystem() {
+        // ✅ 從 Firebase 獲取 credits
+        if (window.simpleDataManager && window.simpleDataManager.initialized) {
+            try {
+                userCredits = await window.simpleDataManager.getUserCredits();
+                console.log('✅ 從 Firebase 獲取 credits:', userCredits);
+            } catch (error) {
+                console.error('❌ 獲取 credits 失敗:', error);
+                userCredits = 10;
+            }
+        }
+        
         updateCreditsDisplay();
         
         // 監聽文件上傳
@@ -630,8 +641,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const isLoggedIn = window.VaultCaddyAuth && window.VaultCaddyAuth.isAuthenticated();
         
         if (!isLoggedIn) {
-            // 保存要處理的文檔類型到localStorage
-            localStorage.setItem('pendingDocumentType', selectedModel);
             // 未登入，跳轉到登入頁面
             window.location.href = 'auth.html';
             return false;
@@ -676,9 +685,16 @@ document.addEventListener('DOMContentLoaded', function() {
         showProcessingModal();
         
         setTimeout(() => {
-            // 扣除Credits
+            // ✅ 扣除 Credits（保存到 Firebase）
             userCredits -= creditsUsed;
-            localStorage.setItem('userCredits', userCredits);
+            if (window.simpleDataManager && window.simpleDataManager.initialized) {
+                try {
+                    await window.simpleDataManager.updateUserCredits(userCredits);
+                    console.log('✅ Credits 已更新到 Firebase:', userCredits);
+                } catch (error) {
+                    console.error('❌ 更新 credits 失敗:', error);
+                }
+            }
             updateCreditsDisplay();
             
             hideProcessingModal();
@@ -852,8 +868,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
-        // 檢查是否已登入（從localStorage）
-        const isLoggedIn = localStorage.getItem('userLoggedIn') === 'true';
+        // ✅ 檢查是否已登入（從 SimpleAuth）
+        const isLoggedIn = window.simpleAuth && window.simpleAuth.isLoggedIn();
         if (isLoggedIn) {
             body.classList.add('user-logged-in');
             if (loginBtn) loginBtn.textContent = '登出 →';
@@ -985,16 +1001,12 @@ checkBrowserSupport();
  * 檢查用戶登入狀態，未登入則引導到登入頁面
  */
 function checkAuthBeforeUpload() {
-    const token = localStorage.getItem('vaultcaddy_token');
-    const userData = localStorage.getItem('vaultcaddy_user');
-    const isLoggedIn = localStorage.getItem('userLoggedIn') === 'true';
+    // ✅ 使用 SimpleAuth 檢查登入狀態
+    const isLoggedIn = window.simpleAuth && window.simpleAuth.isLoggedIn();
     
     // 檢查是否已登入
-    if (!token && !userData && !isLoggedIn) {
+    if (!isLoggedIn) {
         console.log('🔐 用戶未登入，引導到登入頁面...');
-        
-        // 保存當前頁面，登入後返回
-        localStorage.setItem('vaultcaddy_redirect_after_login', window.location.href);
         
         // 顯示提示並跳轉
         alert('請先登入以使用文檔處理功能');

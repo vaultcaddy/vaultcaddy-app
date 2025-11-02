@@ -106,17 +106,18 @@ class SimpleDataManager {
     }
     
     // 更新用戶 Credits
-    async updateUserCredits(credits) {
+    async updateUserCredits(newCredits) {
         try {
             const userId = this.getUserId();
             await this.db.collection('users').doc(userId).update({
-                credits: credits,
+                credits: newCredits,
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-            console.log('✅ Credits 已更新:', credits);
+            console.log('✅ 用戶 Credits 已更新:', newCredits);
+            return true;
         } catch (error) {
-            console.error('❌ 更新 Credits 失敗:', error);
-            throw error;
+            console.error('❌ 更新用戶 Credits 失敗:', error);
+            return false;
         }
     }
     

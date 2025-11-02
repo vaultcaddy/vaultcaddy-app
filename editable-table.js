@@ -328,8 +328,8 @@ class EditableTable {
             changes[rowIndex][fieldName] = value;
         });
         
-        // 保存到 LocalStorage
-        this.saveToLocalStorage(changes);
+        // 保存到 Firestore
+        await this.saveToFirestore(changes);
         
         // 清除未保存標記
         this.unsavedChanges.forEach(cell => {
@@ -344,9 +344,9 @@ class EditableTable {
     }
     
     /**
-     * 保存到 LocalStorage
+     * 保存到 Firestore
      */
-    saveToLocalStorage(changes) {
+    async saveToFirestore(changes) {
         // 獲取當前文檔 ID 和項目 ID
         const params = new URLSearchParams(window.location.search);
         const documentId = params.get('id');
@@ -357,38 +357,43 @@ class EditableTable {
             return;
         }
         
-        // 從 LocalStorage 讀取項目數據
-        const storageKey = `vaultcaddy_project_${projectId}_files`;
-        const filesData = localStorage.getItem(storageKey);
-        
-        if (!filesData) {
-            console.error('❌ 無法保存：找不到項目數據');
+        // ✅ 使用 SimpleDataManager 保存到 Firebase
+        if (!window.simpleDataManager || !window.simpleDataManager.initialized) {
+            console.error('❌ SimpleDataManager 未初始化');
             return;
         }
         
-        const files = JSON.parse(filesData);
-        const fileIndex = files.findIndex(f => f.id === documentId);
-        
-        if (fileIndex === -1) {
-            console.error('❌ 無法保存：找不到文檔');
-            return;
-        }
-        
-        // 更新文檔數據
-        const file = files[fileIndex];
-        const transactions = file.processedData?.transactions || [];
-        
-        Object.keys(changes).forEach(rowIndex => {
-            const index = parseInt(rowIndex);
-            if (transactions[index]) {
-                Object.assign(transactions[index], changes[rowIndex]);
+        try {
+            // 獲取當前文檔數據
+            const doc = await window.simpleDataManager.getDocument(documentId);
+            
+            if (!doc) {
+                console.error('❌ 找不到文檔');
+                return;
             }
-        });
-        
-        // 保存回 LocalStorage
-        localStorage.setItem(storageKey, JSON.stringify(files));
-        
-        console.log('✅ 數據已保存到 LocalStorage');
+            
+            // 更新文檔數據
+            const transactions = doc.processedData?.transactions || [];
+            
+            Object.keys(changes).forEach(rowIndex => {
+                const index = parseInt(rowIndex);
+                if (transactions[index]) {
+                    Object.assign(transactions[index], changes[rowIndex]);
+                }
+            });
+            
+            // 保存回 Firestore
+            await window.simpleDataManager.updateDocument(documentId, {
+                processedData: {
+                    ...doc.processedData,
+                    transactions
+                }
+            });
+            
+            console.log('✅ 數據已保存到 Firestore');
+        } catch (error) {
+            console.error('❌ 保存到 Firestore 失敗:', error);
+        }
     }
     
     /**

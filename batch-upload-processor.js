@@ -223,25 +223,35 @@ class BatchUploadProcessor {
     }
     
     /**
-     * 保存文件到項目
+     * 保存文件到項目（Firebase）
      */
-    saveFileToProject(projectId, fileData) {
+    async saveFileToProject(projectId, fileData) {
         try {
-            // ✅ 修復：使用正確的存儲鍵（與 loadFilesForDocumentType 一致）
-            const storageKey = `vaultcaddy_project_${projectId}_documents`;  // 從 _files 改為 _documents
-            const existingFiles = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            // ✅ 使用 SimpleDataManager 保存到 Firebase
+            if (!window.simpleDataManager || !window.simpleDataManager.initialized) {
+                throw new Error('SimpleDataManager 未初始化');
+            }
             
-            // 添加新文件
-            existingFiles.push(fileData);
+            // 準備文檔數據
+            const documentData = {
+                name: fileData.fileName || 'Untitled Document',
+                type: fileData.documentType || 'unknown',
+                processedData: fileData.processedData || {},
+                status: fileData.status || 'processed',
+                fileUrl: fileData.fileUrl || '',
+                thumbnailUrl: fileData.thumbnailUrl || ''
+            };
             
-            // 保存回 LocalStorage
-            localStorage.setItem(storageKey, JSON.stringify(existingFiles));
+            // 保存到 Firestore
+            const docId = await window.simpleDataManager.createDocument(projectId, documentData);
             
-            console.log(`💾 文件已保存到項目 ${projectId}:`, fileData.fileName);
-            console.log(`   存儲鍵: ${storageKey}`);
-            console.log(`   當前文件總數: ${existingFiles.length}`);
+            console.log(`✅ 文件已保存到 Firebase:`, fileData.fileName);
+            console.log(`   項目 ID: ${projectId}`);
+            console.log(`   文檔 ID: ${docId}`);
+            
+            return docId;
         } catch (error) {
-            console.error('❌ 保存文件失敗:', error);
+            console.error('❌ 保存文件到 Firebase 失敗:', error);
             throw error;
         }
     }
