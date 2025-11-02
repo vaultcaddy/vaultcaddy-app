@@ -2418,27 +2418,25 @@
                 setTimeout(initializeWithGlobalSync, 100);
             }
 
-            // 初始化統一側邊欄（等待 SimpleDataManager 初始化後會自動更新）
-            window.unifiedSidebar = new VaultCaddySidebar();
-            
-            // 🔥 監聽 SimpleDataManager 初始化完成（立即檢查或等待事件）
-            const initializeProjectTitle = async () => {
+            // 🔥 等待 SimpleDataManager 初始化後再創建側邊欄
+            const initializeSidebarAndProject = async () => {
                 const dataManager = window.simpleDataManager || window.firebaseDataManager;
                 if (dataManager && dataManager.initialized) {
-                    console.log('✅ SimpleDataManager 已初始化，立即更新項目標題');
+                    console.log('✅ SimpleDataManager 已初始化，創建側邊欄');
+                    
+                    // 創建統一側邊欄
+                    window.unifiedSidebar = new VaultCaddySidebar();
+                    
+                    // 更新項目標題
                     await updateProjectTitle();
                     
-                    // 重新渲染側邊欄以顯示 Firebase 項目
-                    if (window.unifiedSidebar) {
-                        await window.unifiedSidebar.render();
-                    }
                     return true;
                 }
                 return false;
             };
             
             // 立即嘗試初始化（如果 SimpleDataManager 已就緒）
-            const immediateInit = await initializeProjectTitle();
+            const immediateInit = await initializeSidebarAndProject();
             
             // 如果未就緒，使用快速輪詢（每 50ms 檢查一次，最多 3 秒）
             if (!immediateInit) {
@@ -2446,11 +2444,11 @@
                 const maxAttempts = 60; // 3 秒 / 50ms
                 const waitForDataManager = setInterval(async () => {
                     attempts++;
-                    const success = await initializeProjectTitle();
+                    const success = await initializeSidebarAndProject();
                     if (success || attempts >= maxAttempts) {
                         clearInterval(waitForDataManager);
                         if (!success) {
-                            console.warn('⚠️ SimpleDataManager 初始化超時（3秒），項目標題可能不正確');
+                            console.warn('⚠️ SimpleDataManager 初始化超時（3秒），側邊欄將顯示為空');
                         }
                     }
                 }, 50); // 減少到 50ms，更快響應
