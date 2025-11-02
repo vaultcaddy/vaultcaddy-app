@@ -1627,39 +1627,38 @@
 
         // ========== 🔧 立即定義全局函數（避免 ReferenceError） ==========
         // 這些函數會在 DOMContentLoaded 時被重新定義，這裡只是占位符
-        window.openUploadModal = function() {
-            console.log('⏳ openUploadModal 占位符被調用，等待 DOM 載入...');
-            // 等待 DOM 載入完成後重試
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', function() {
-                    setTimeout(() => {
-                        if (window.openUploadModal && window.openUploadModal.toString().indexOf('占位符') === -1) {
-                            window.openUploadModal();
-                        }
-                    }, 500);
-                });
-            }
+        // 占位符會自動等待真實函數定義後重試
+        
+        const createPlaceholder = (functionName) => {
+            return function(...args) {
+                console.log(`⏳ ${functionName} 占位符被調用，等待真實函數定義...`);
+                
+                // 等待真實函數定義（最多等待 5 秒）
+                let attempts = 0;
+                const maxAttempts = 50; // 5 秒 / 100ms
+                const checkInterval = setInterval(() => {
+                    attempts++;
+                    const realFunction = window[functionName];
+                    
+                    // 檢查是否已定義真實函數（不是占位符）
+                    if (realFunction && realFunction.toString().indexOf('占位符') === -1) {
+                        console.log(`✅ ${functionName} 真實函數已定義，立即執行`);
+                        clearInterval(checkInterval);
+                        realFunction(...args);
+                    } else if (attempts >= maxAttempts) {
+                        console.error(`❌ ${functionName} 真實函數定義超時`);
+                        clearInterval(checkInterval);
+                    }
+                }, 100);
+            };
         };
         
-        window.closeAIUploadModal = function() {
-            console.log('⏳ closeAIUploadModal 占位符被調用');
-        };
-        
-        window.toggleExportMenu = function() {
-            console.log('⏳ toggleExportMenu 占位符被調用');
-        };
-        
-        window.exportDocuments = function() {
-            console.log('⏳ exportDocuments 占位符被調用');
-        };
-        
-        window.confirmDeleteProject = function() {
-            console.log('⏳ confirmDeleteProject 占位符被調用');
-        };
-        
-        window.toggleProjectNameEdit = function() {
-            console.log('⏳ toggleProjectNameEdit 占位符被調用');
-        };
+        window.openUploadModal = createPlaceholder('openUploadModal');
+        window.closeAIUploadModal = createPlaceholder('closeAIUploadModal');
+        window.toggleExportMenu = createPlaceholder('toggleExportMenu');
+        window.exportDocuments = createPlaceholder('exportDocuments');
+        window.confirmDeleteProject = createPlaceholder('confirmDeleteProject');
+        window.toggleProjectNameEdit = createPlaceholder('toggleProjectNameEdit');
         
         // 頁面初始化
         // 立即執行：確保頁面可見
@@ -2023,25 +2022,40 @@
             // 初始化統一側邊欄（等待 SimpleDataManager 初始化後會自動更新）
             window.unifiedSidebar = new VaultCaddySidebar();
             
-            // 等待 SimpleDataManager 初始化後更新項目標題
-            const waitForDataManager = setInterval(async () => {
+            // 🔥 監聽 SimpleDataManager 初始化完成（立即檢查或等待事件）
+            const initializeProjectTitle = async () => {
                 const dataManager = window.simpleDataManager || window.firebaseDataManager;
                 if (dataManager && dataManager.initialized) {
-                    clearInterval(waitForDataManager);
-                    console.log('✅ SimpleDataManager 已初始化，更新項目標題');
+                    console.log('✅ SimpleDataManager 已初始化，立即更新項目標題');
                     await updateProjectTitle();
                     
                     // 重新渲染側邊欄以顯示 Firebase 項目
                     if (window.unifiedSidebar) {
                         await window.unifiedSidebar.render();
                     }
+                    return true;
                 }
-            }, 100);
+                return false;
+            };
             
-            // 超時保護（10 秒）
-            setTimeout(() => {
-                clearInterval(waitForDataManager);
-            }, 10000);
+            // 立即嘗試初始化（如果 SimpleDataManager 已就緒）
+            const immediateInit = await initializeProjectTitle();
+            
+            // 如果未就緒，使用快速輪詢（每 50ms 檢查一次，最多 3 秒）
+            if (!immediateInit) {
+                let attempts = 0;
+                const maxAttempts = 60; // 3 秒 / 50ms
+                const waitForDataManager = setInterval(async () => {
+                    attempts++;
+                    const success = await initializeProjectTitle();
+                    if (success || attempts >= maxAttempts) {
+                        clearInterval(waitForDataManager);
+                        if (!success) {
+                            console.warn('⚠️ SimpleDataManager 初始化超時（3秒），項目標題可能不正確');
+                        }
+                    }
+                }, 50); // 減少到 50ms，更快響應
+            }
             
             // 初始化用戶團隊信息
             initializeUserTeamInfo();

@@ -42,8 +42,8 @@ class VaultCaddySidebar {
         
         console.log('✅ 找到側邊欄容器:', sidebarContainer.id || sidebarContainer.className);
         
-        // 設置側邊欄為 flexbox 布局
-        sidebarContainer.style.cssText = 'width: 280px; background: #ffffff; border-right: 1px solid #e5e7eb; padding: 1.5rem; display: flex; flex-direction: column; visibility: visible;';
+        // 設置側邊欄為 flexbox 布局（向下 10pt）
+        sidebarContainer.style.cssText = 'width: 280px; background: #ffffff; border-right: 1px solid #e5e7eb; padding: 1.5rem; padding-top: calc(1.5rem + 10pt); display: flex; flex-direction: column; visibility: visible;';
         
         const sidebarHTML = await this.getSidebarHTML();
         sidebarContainer.innerHTML = sidebarHTML;
