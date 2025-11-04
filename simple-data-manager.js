@@ -37,10 +37,15 @@ class SimpleDataManager {
             this.storage = firebase.storage();
             this.auth = firebase.auth();
             
-            // ✅ 監聽身份驗證狀態變化
+            // ✅ 立即檢查當前用戶（同步）
+            this.currentUser = this.auth.currentUser;
+            console.log('📦 SimpleDataManager: 立即檢查用戶:', this.currentUser ? this.currentUser.email : 'null');
+            
+            // ✅ 監聽身份驗證狀態變化（異步）
             this.auth.onAuthStateChanged((user) => {
+                console.log('🔥 SimpleDataManager: Auth 狀態變化觸發');
                 this.currentUser = user;
-                console.log('🔥 SimpleDataManager: Auth 狀態變化:', user ? user.email : '未登入');
+                console.log('   新用戶狀態:', user ? user.email : '未登入');
             });
             
             this.initialized = true;
