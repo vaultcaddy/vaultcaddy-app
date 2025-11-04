@@ -86,7 +86,14 @@ class SimpleDataManager {
     getUserId() {
         // ✅ 優先使用緩存的用戶，再檢查 auth.currentUser
         const user = this.currentUser || this.auth.currentUser;
+        
+        console.log('🔍 SimpleDataManager.getUserId() 檢查:');
+        console.log('   this.currentUser:', this.currentUser ? this.currentUser.email : 'null');
+        console.log('   this.auth.currentUser:', this.auth.currentUser ? this.auth.currentUser.email : 'null');
+        console.log('   最終 user:', user ? user.email : 'null');
+        
         if (!user) {
+            console.error('❌ getUserId: 用戶未登入');
             throw new Error('用戶未登入');
         }
         return user.uid;
@@ -137,10 +144,15 @@ class SimpleDataManager {
     // 獲取所有項目
     async getProjects() {
         try {
+            console.log('📂 getProjects() 開始執行...');
             const userId = this.getUserId();
+            console.log('   userId:', userId);
+            
             const snapshot = await this.db.collection('projects')
                 .where('userId', '==', userId)
                 .get();
+            
+            console.log('   查詢結果:', snapshot.docs.length, '個項目');
             
             // 在客戶端排序（避免需要 Firestore 索引）
             const projects = snapshot.docs.map(doc => ({

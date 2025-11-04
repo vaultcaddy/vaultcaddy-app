@@ -2125,24 +2125,38 @@
         // ✅ 等待用戶登入（與 sidebar 相同的邏輯）
         function waitForUser(dataManager, timeout = 3000) {
             return new Promise((resolve) => {
+                console.log('⏳ waitForUser: 開始等待用戶登入...');
+                console.log('   dataManager:', dataManager);
+                console.log('   dataManager.currentUser:', dataManager.currentUser);
+                console.log('   dataManager.auth:', dataManager.auth);
+                console.log('   dataManager.auth.currentUser:', dataManager.auth ? dataManager.auth.currentUser : 'auth未初始化');
+                
                 // 立即檢查
                 if (dataManager.currentUser) {
-                    console.log('✅ 用戶已登入:', dataManager.currentUser.email);
+                    console.log('✅ 用戶已登入（立即檢查）:', dataManager.currentUser.email);
                     resolve(dataManager.currentUser);
                     return;
                 }
                 
                 // 輪詢檢查
                 const startTime = Date.now();
+                let checkCount = 0;
                 const checkInterval = setInterval(() => {
+                    checkCount++;
+                    const elapsed = Date.now() - startTime;
+                    
                     if (dataManager.currentUser) {
                         clearInterval(checkInterval);
-                        console.log('✅ 用戶已登入:', dataManager.currentUser.email);
+                        console.log(`✅ 用戶已登入（第 ${checkCount} 次檢查，耗時 ${elapsed}ms）:`, dataManager.currentUser.email);
                         resolve(dataManager.currentUser);
-                    } else if (Date.now() - startTime > timeout) {
+                    } else if (elapsed > timeout) {
                         clearInterval(checkInterval);
-                        console.warn('⏱️ 等待用戶登入超時');
+                        console.error(`❌ 等待用戶登入超時（檢查了 ${checkCount} 次，耗時 ${elapsed}ms）`);
+                        console.error('   dataManager.currentUser 仍為:', dataManager.currentUser);
+                        console.error('   dataManager.auth.currentUser:', dataManager.auth ? dataManager.auth.currentUser : 'auth未初始化');
                         resolve(null);
+                    } else if (checkCount % 10 === 0) {
+                        console.log(`   檢查中... (第 ${checkCount} 次，耗時 ${elapsed}ms)`);
                     }
                 }, 50);
             });
