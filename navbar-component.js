@@ -891,17 +891,8 @@ function initNavbarGlobalAuthListener() {
                 console.log('✅ 導航欄已根據新的身份驗證狀態重新渲染');
             }
         });
-    } else {
-        // 如果 GlobalAuthSync 尚未載入，延遲重試
-        setTimeout(() => {
-            if (window.onGlobalAuthChange) {
-                console.log('🔗 延遲初始化導航欄監聽器成功');
-                initNavbarGlobalAuthListener();
-            } else {
-                console.log('⚠️ GlobalAuthSync 系統未載入，導航欄將使用本地狀態');
-            }
-        }, 500);
     }
+    // ✅ GlobalAuthSync 已刪除，只使用 SimpleAuth
     
     // 額外監聽自定義事件
     window.addEventListener('vaultcaddy:global:authStateChanged', (event) => {

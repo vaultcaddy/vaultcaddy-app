@@ -2490,20 +2490,13 @@
         function initializeUserTeamInfo() {
             console.log('👥 初始化用戶團隊信息...');
             
-            // 獲取用戶名稱
+            // ✅ 獲取用戶名稱（只使用 SimpleAuth）
             let userName = '1扭扭批'; // 默認名稱
             
-            if (window.GlobalAuthSync) {
-                const authState = window.GlobalAuthSync.getCurrentAuthState();
-                if (authState.userName && !authState.userName.includes('{"uid"')) {
-                    userName = authState.userName;
-                }
-            } else {
-                // 從localStorage獲取
-                const storedName = localStorage.getItem('google_user_name') || localStorage.getItem('user_name');
-                if (storedName && !storedName.includes('{"uid"')) {
-                    userName = storedName;
-                }
+            if (window.simpleAuth && window.simpleAuth.currentUser) {
+                userName = window.simpleAuth.currentUser.displayName || 
+                           window.simpleAuth.currentUser.email?.split('@')[0] || 
+                           '用戶';
             }
             
             // 生成團隊名稱
@@ -2516,15 +2509,13 @@
                 console.log('✅ 團隊名稱已更新:', teamName);
             }
             
-            // 獲取並設置訂閱方案
+            // ✅ 獲取並設置訂閱方案（只使用 SimpleAuth/Firebase）
             let subscriptionPlan = 'free'; // 默認為免費版
             
-            if (window.GlobalAuthSync) {
-                const authState = window.GlobalAuthSync.getCurrentAuthState();
-                subscriptionPlan = authState.subscriptionPlan || 'free';
-            } else {
-                subscriptionPlan = localStorage.getItem('vaultcaddy_subscription') || 'free';
-            }
+            // TODO: 從 Firebase Firestore 獲取訂閱方案
+            // if (window.simpleDataManager && window.simpleDataManager.initialized) {
+            //     subscriptionPlan = await window.simpleDataManager.getUserSubscription();
+            // }
             
             // 更新訂閱方案顯示
             updateSubscriptionBadge(subscriptionPlan);

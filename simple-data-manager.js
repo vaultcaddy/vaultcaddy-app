@@ -37,20 +37,34 @@ class SimpleDataManager {
             this.storage = firebase.storage();
             this.auth = firebase.auth();
             
-            // ✅ 立即檢查當前用戶（同步）
-            this.currentUser = this.auth.currentUser;
-            console.log('📦 SimpleDataManager: 立即檢查用戶:', this.currentUser ? this.currentUser.email : 'null');
+            // ✅ 等待 Auth 狀態確定（異步）
+            console.log('⏳ 等待 Firebase Auth 狀態確定...');
+            await new Promise((resolve) => {
+                const unsubscribe = this.auth.onAuthStateChanged((user) => {
+                    this.currentUser = user;
+                    console.log('🔥 SimpleDataManager: Auth 狀態確定:', user ? user.email : '未登入');
+                    unsubscribe(); // 只監聽第一次
+                    resolve();
+                });
+                
+                // 超時保護（5秒）
+                setTimeout(() => {
+                    if (!this.currentUser) {
+                        console.warn('⚠️ Auth 狀態確定超時，使用當前狀態');
+                        this.currentUser = this.auth.currentUser;
+                    }
+                    resolve();
+                }, 5000);
+            });
             
-            // ✅ 監聽身份驗證狀態變化（異步）
+            // ✅ 繼續監聽後續變化
             this.auth.onAuthStateChanged((user) => {
-                console.log('🔥 SimpleDataManager: Auth 狀態變化觸發');
+                console.log('🔄 SimpleDataManager: Auth 狀態變化:', user ? user.email : '未登入');
                 this.currentUser = user;
-                console.log('   新用戶狀態:', user ? user.email : '未登入');
             });
             
             this.initialized = true;
-            
-            console.log('✅ SimpleDataManager 已初始化');
+            console.log('✅ SimpleDataManager 已初始化，currentUser:', this.currentUser ? this.currentUser.email : 'null');
             
         } catch (error) {
             console.error('❌ SimpleDataManager 初始化失敗:', error);
@@ -152,12 +166,25 @@ class SimpleDataManager {
             console.log('📂 getProjects() 開始執行...');
             const userId = this.getUserId();
             console.log('   userId:', userId);
+            console.log('   準備查詢 Firestore collection: projects');
             
             const snapshot = await this.db.collection('projects')
                 .where('userId', '==', userId)
                 .get();
             
+            console.log('   ✅ Firestore 查詢完成');
+            console.log('   snapshot.empty:', snapshot.empty);
+            console.log('   snapshot.size:', snapshot.size);
             console.log('   查詢結果:', snapshot.docs.length, '個項目');
+            
+            if (snapshot.empty) {
+                console.warn('   ⚠️ Firestore 中沒有找到任何項目！');
+                console.warn('   請檢查：');
+                console.warn('   1. Firebase Console 中是否有項目數據');
+                console.warn('   2. userId 是否匹配:', userId);
+                console.warn('   3. Firestore 權限規則是否正確');
+                console.warn('   4. collection 名稱是否為 "projects"');
+            }
             
             // 在客戶端排序（避免需要 Firestore 索引）
             const projects = snapshot.docs.map(doc => ({
