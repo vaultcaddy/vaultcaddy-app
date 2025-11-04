@@ -11,11 +11,49 @@ class VaultCaddySidebar {
     }
     
     init() {
-        this.render();
+        // ❌ 不要立即渲染，等待 SimpleDataManager 就緒
+        // this.render();
+        
         this.bindEvents();
         this.loadStats();
         this.setupLanguageListener();
         this.setupProjectListener();
+        
+        // ✅ 延遲渲染，等待 SimpleDataManager 和 Auth 就緒
+        this.delayedRender();
+    }
+    
+    // ✅ 延遲渲染：等待 SimpleDataManager 和 Auth 就緒
+    async delayedRender() {
+        console.log('⏳ Sidebar: 等待 SimpleDataManager 和 Auth 就緒...');
+        
+        // 等待 SimpleDataManager 初始化
+        const maxWait = 10000; // 最多等 10 秒
+        const startTime = Date.now();
+        
+        while (Date.now() - startTime < maxWait) {
+            if (window.simpleDataManager && window.simpleDataManager.initialized) {
+                console.log('✅ Sidebar: SimpleDataManager 已就緒');
+                
+                // 再等待 Auth 狀態（增加到 5 秒）
+                const user = await this.waitForUser(window.simpleDataManager, 5000);
+                if (user) {
+                    console.log('✅ Sidebar: Auth 已就緒，開始渲染');
+                    await this.render();
+                    return;
+                } else {
+                    console.warn('⚠️ Sidebar: Auth 超時，使用空項目列表渲染');
+                    await this.render();
+                    return;
+                }
+            }
+            
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        
+        console.error('❌ Sidebar: SimpleDataManager 初始化超時（10秒）');
+        // 仍然渲染，但項目列表為空
+        await this.render();
     }
     
     setupProjectListener() {
@@ -85,8 +123,8 @@ class VaultCaddySidebar {
         
         if (dataManager && dataManager.initialized) {
             try {
-                // ✅ 等待用戶登入（最多 3 秒）
-                const user = await this.waitForUser(dataManager, 3000);
+                // ✅ 等待用戶登入（最多 5 秒，給更多時間）
+                const user = await this.waitForUser(dataManager, 5000);
                 if (user) {
                     projects = await dataManager.getProjects();
                     console.log('✅ 側邊欄從 Firebase 加載項目:', projects.length);

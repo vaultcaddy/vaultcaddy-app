@@ -2390,16 +2390,23 @@
                 });
             }
             
-            // ✅ 極簡初始化：等待 SimpleDataManager 就緒
-            console.log('🎨 立即創建側邊欄');
-            window.unifiedSidebar = new VaultCaddySidebar();
+            // ✅ 延遲初始化：等待 SimpleDataManager 和 Auth 就緒
+            console.log('⏳ 等待 SimpleDataManager 和 Auth 就緒後再創建側邊欄');
             
             // 定義更新函數
             const updateContent = async () => {
                 console.log('📊 更新內容：側邊欄 + 項目標題');
-                if (window.unifiedSidebar) {
+                
+                // ✅ 確保 sidebar 存在
+                if (!window.unifiedSidebar) {
+                    console.log('🎨 創建側邊欄實例');
+                    window.unifiedSidebar = new VaultCaddySidebar();
+                } else {
+                    // ✅ 如果已存在，重新渲染
+                    console.log('🔄 重新渲染側邊欄');
                     await window.unifiedSidebar.render();
                 }
+                
                 await updateProjectTitle();
             };
             
@@ -2439,6 +2446,27 @@
                     updatePageForDocumentType(docType);
                 }
                 // 注意：側邊欄的語言更新由 VaultCaddySidebar 的 setupLanguageListener 處理
+            });
+            
+            // ✅ 監聽 auth-state-changed 事件
+            window.addEventListener('auth-state-changed', async function(e) {
+                console.log('🔥 firstproject: 收到 auth-state-changed 事件');
+                
+                if (e.detail.user) {
+                    console.log('✅ 用戶已登入:', e.detail.user.email);
+                    
+                    // 重新渲染 sidebar 和更新項目標題
+                    if (window.unifiedSidebar) {
+                        console.log('🔄 重新渲染 sidebar');
+                        await window.unifiedSidebar.render();
+                    } else {
+                        console.log('🎨 創建 sidebar');
+                        window.unifiedSidebar = new VaultCaddySidebar();
+                    }
+                    await updateProjectTitle();
+                } else {
+                    console.log('❌ 用戶未登入');
+                }
             });
             
             console.log('✅ Unified Dashboard 初始化完成');
