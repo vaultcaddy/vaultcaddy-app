@@ -281,6 +281,18 @@ window.authHandler = window.simpleAuth;
 // 監聽 firebase-ready 事件，自動初始化
 window.addEventListener('firebase-ready', async () => {
     console.log('🔥 收到 firebase-ready 事件，初始化 SimpleAuth');
-    await window.simpleAuth.init();
+    if (!window.simpleAuth.initialized) {
+        await window.simpleAuth.init();
+    } else {
+        console.log('ℹ️ SimpleAuth 已經初始化，跳過');
+    }
 });
+
+// ✅ 後備檢查：如果 Firebase 已經就緒，立即初始化
+setTimeout(async () => {
+    if (window.firebaseInitialized && !window.simpleAuth.initialized) {
+        console.log('🔄 Firebase 已就緒但 SimpleAuth 未初始化，立即初始化...');
+        await window.simpleAuth.init();
+    }
+}, 100); // 100ms 後檢查
 

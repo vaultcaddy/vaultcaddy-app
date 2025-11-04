@@ -389,6 +389,18 @@ window.firebaseDataManager = window.simpleDataManager;
 // 監聽 firebase-ready 事件，自動初始化
 window.addEventListener('firebase-ready', async () => {
     console.log('🔥 收到 firebase-ready 事件，初始化 SimpleDataManager');
-    await window.simpleDataManager.init();
+    if (!window.simpleDataManager.initialized) {
+        await window.simpleDataManager.init();
+    } else {
+        console.log('ℹ️ SimpleDataManager 已經初始化，跳過');
+    }
 });
+
+// ✅ 後備檢查：如果 Firebase 已經就緒，立即初始化
+setTimeout(async () => {
+    if (window.firebaseInitialized && !window.simpleDataManager.initialized) {
+        console.log('🔄 Firebase 已就緒但 SimpleDataManager 未初始化，立即初始化...');
+        await window.simpleDataManager.init();
+    }
+}, 100); // 100ms 後檢查
 
