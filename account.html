@@ -4,485 +4,538 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>帳戶設定 - VaultCaddy</title>
-    <meta name="description" content="管理您的VaultCaddy帳戶設定">
-    <link rel="icon" type="image/png" href="https://vaultcaddy.com/favicon.png">
-    <link rel="canonical" href="https://vaultcaddy.com/account">
     
-    <!-- 樣式表 -->
+    <!-- CSS -->
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="dashboard.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- 核心配置 -->
     <script src="config.js"></script>
-    <script src="translations.js"></script>
-    <script src="unified-auth.js"></script>
-    <script src="global-auth-sync.js?v=2.6"></script>
-    <script src="navbar-component.js?v=20251104-final"></script>
-    <script src="sidebar-component.js?v=20251104-final"></script>
+    <script src="translations.js?v=20251102"></script>
+    
+    <!-- UI 組件 -->
+    <script src="navbar-component.js?v=20251105-force-init"></script>
+    <script src="sidebar-component.js?v=20251105-force-init"></script>
+    
+    <!-- Firebase SDK -->
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    
+    <!-- Firebase 初始化和身份驗證 -->
+    <script defer src="firebase-config.js?v=20251105-force-init"></script>
+    <script defer src="simple-auth.js?v=20251105-force-init"></script>
+    <script defer src="simple-data-manager.js?v=20251105-force-init"></script>
+    
     <style>
         body {
             background: #ffffff;
             color: #1f2937;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             margin: 0;
             padding: 0;
         }
-
+        
         .dashboard-container {
             display: flex;
-            min-height: calc(100vh - 60px);
+            min-height: 100vh;
             background: #ffffff;
             padding-top: 60px;
         }
-
+        
+        .sidebar {
+            width: 280px;
+            background: #ffffff;
+            border-right: 1px solid #e5e7eb;
+            flex-shrink: 0;
+            position: fixed;
+            top: 60px;
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
+        }
+        
         .main-content {
             flex: 1;
-            background: #ffffff;
             margin-left: 280px;
-            overflow-y: auto;
+            padding: 2rem 3rem;
+            background: #f9fafb;
             min-height: calc(100vh - 60px);
         }
-
-        .account-layout {
-            display: flex;
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 2rem;
-            gap: 2rem;
+        
+        .account-header {
+            margin-bottom: 2rem;
         }
-
-        .account-sidebar {
-            width: 250px;
-            flex-shrink: 0;
-        }
-
-        .account-sidebar h2 {
-            font-size: 1.5rem;
+        
+        .account-header h1 {
+            font-size: 2rem;
             font-weight: 700;
             color: #1f2937;
             margin: 0 0 0.5rem 0;
         }
-
-        .account-sidebar p {
+        
+        .account-header p {
             color: #6b7280;
-            font-size: 0.875rem;
-            margin: 0 0 2rem 0;
+            font-size: 1rem;
+            margin: 0;
         }
-
-        .account-nav {
+        
+        .settings-container {
+            max-width: 800px;
+        }
+        
+        .settings-section {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0 0 1.5rem 0;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            color: #1f2937;
+            background: #ffffff;
+            transition: all 0.2s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+        
+        .form-input:disabled {
+            background: #f3f4f6;
+            color: #9ca3af;
+            cursor: not-allowed;
+        }
+        
+        .form-description {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 0.5rem;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+        
+        .btn-primary {
+            background: #8b5cf6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #7c3aed;
+        }
+        
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+        }
+        
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .avatar-section {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            font-weight: 600;
+        }
+        
+        .avatar-actions {
             display: flex;
             flex-direction: column;
             gap: 0.5rem;
         }
-
-        .account-nav-item {
-            display: flex;
-            align-items: center;
-            padding: 0.75rem 1rem;
-            color: #6b7280;
-            background: transparent;
+        
+        .link-button {
+            background: none;
             border: none;
-            border-radius: 6px;
+            color: #8b5cf6;
+            font-size: 0.875rem;
             cursor: pointer;
+            padding: 0;
             text-align: left;
-            font-size: 0.875rem;
-            transition: all 0.2s;
         }
-
-        .account-nav-item:hover {
-            background: #f3f4f6;
-            color: #1f2937;
+        
+        .link-button:hover {
+            text-decoration: underline;
         }
-
-        .account-nav-item.active {
-            background: #374151;
-            color: #ffffff;
+        
+        .danger-zone {
+            border: 1px solid #fca5a5;
+            background: #fef2f2;
         }
-
-        .account-nav-item i {
-            margin-right: 0.75rem;
-            width: 20px;
-        }
-
-        .account-content {
-            flex: 1;
-            background: #374151;
-            border-radius: 12px;
-            padding: 2rem;
-            max-width: 900px;
-        }
-
-        .account-content h2 {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #ffffff;
-            margin: 0 0 2rem 0;
-        }
-
-        .profile-section {
-            margin-bottom: 2rem;
-            padding-bottom: 2rem;
-            border-bottom: 1px solid #4b5563;
-        }
-
-        .profile-section:last-child {
-            border-bottom: none;
-        }
-
-        .profile-section h3 {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: #9ca3af;
-            margin: 0 0 1rem 0;
-        }
-
-        .profile-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-
-        .profile-row:last-child {
-            margin-bottom: 0;
-        }
-
-        .profile-label {
-            color: #d1d5db;
-            font-size: 0.875rem;
-        }
-
-        .profile-value {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .profile-avatar {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-
-        .profile-name {
-            color: #ffffff;
-            font-weight: 500;
-        }
-
-        .profile-email {
-            color: #d1d5db;
-            font-size: 0.875rem;
-        }
-
-        .badge {
-            background: #4b5563;
-            color: #d1d5db;
-            padding: 0.25rem 0.75rem;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 500;
-        }
-
-        .btn-secondary {
-            background: transparent;
-            color: #d1d5db;
-            border: 1px solid #4b5563;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.875rem;
-            transition: all 0.2s;
-        }
-
-        .btn-secondary:hover {
-            background: #4b5563;
-            color: #ffffff;
-            border-color: #6b7280;
-        }
-
-        .btn-link {
-            background: transparent;
-            color: #d1d5db;
-            border: none;
-            padding: 0.5rem 1rem;
-            cursor: pointer;
-            font-size: 0.875rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: color 0.2s;
-        }
-
-        .btn-link:hover {
-            color: #ffffff;
-        }
-
-        .connected-account {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .connected-account img {
-            width: 20px;
-            height: 20px;
-        }
-
-        .menu-btn {
-            background: transparent;
-            border: none;
-            color: #9ca3af;
-            cursor: pointer;
-            padding: 0.5rem;
-            font-size: 1.25rem;
-        }
-
-        .menu-btn:hover {
-            color: #ffffff;
+        
+        .danger-zone .section-title {
+            color: #dc2626;
+            border-bottom-color: #fca5a5;
         }
     </style>
 </head>
 <body>
-    <script>
-        // 立即執行的頁面可見性腳本
-        (function() {
-            const body = document.body;
-            const container = document.querySelector('.dashboard-container');
-            const sidebar = document.querySelector('.sidebar');
-            const mainContent = document.querySelector('.main-content');
-            
-            if (body) body.style.cssText = 'display: block !important; visibility: visible !important;';
-            if (container) container.style.cssText += 'display: flex !important; visibility: visible !important;';
-            if (sidebar) sidebar.style.cssText += 'display: flex !important; visibility: visible !important;';
-            if (mainContent) mainContent.style.cssText += 'display: block !important; visibility: visible !important;';
-        })();
-    </script>
-
     <!-- 導航欄 -->
-    <div id="navbar-placeholder">
-        <!-- Fallback 導航欄 -->
-        <nav class="fallback-navbar" style="position: fixed; top: 0; left: 0; right: 0; height: 60px; background: #ffffff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; z-index: 1000;">
-            <div style="display: flex; align-items: center; gap: 2rem;">
-                <a href="index.html" style="display: flex; align-items: center; text-decoration: none;">
-                    <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; font-size: 1.2rem;">VC</div>
-                </a>
-                <span id="navbar-page-title" style="font-size: 1rem; font-weight: 500; color: #1f2937;">帳戶</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 1rem;">
-                <button onclick="checkLoginStatus()" style="background: transparent; border: none; color: #6b7280; cursor: pointer; padding: 0.5rem;">
-                    <i class="fas fa-user-circle" style="font-size: 1.5rem;"></i>
-                </button>
-            </div>
-        </nav>
-    </div>
+    <div id="navbar-placeholder"></div>
 
     <!-- Dashboard 容器 -->
     <div class="dashboard-container">
-        <!-- 左側邊欄 (由 sidebar-component.js 動態生成) -->
+        <!-- 左側邊欄 -->
         <aside class="sidebar"></aside>
 
-        <!-- 主要內容區域 -->
-        <main class="main-content" style="flex: 1; padding: 2rem; background: #ffffff; margin-left: 280px; overflow-y: auto;">
-            <!-- 頁面標題 -->
-            <div style="margin-bottom: 2rem;">
-                <h1 style="font-size: 2rem; font-weight: 700; color: #1f2937; margin-bottom: 0.5rem;">Account</h1>
-                <p style="color: #6b7280; font-size: 1rem;">Manage your account info.</p>
-            </div>
-            
-            <!-- 導航標籤 -->
-            <div style="border-bottom: 1px solid #e5e7eb; margin-bottom: 2rem;">
-                <nav style="display: flex; gap: 2rem;">
-                    <button class="account-tab active" onclick="showSection('profile')" style="padding: 1rem 0; border: none; background: none; color: #2563eb; border-bottom: 2px solid #2563eb; font-weight: 500; cursor: pointer;">
-                        <i class="fas fa-user" style="margin-right: 0.5rem;"></i>
-                        Profile
-                    </button>
-                    <button class="account-tab" onclick="showSection('security')" style="padding: 1rem 0; border: none; background: none; color: #6b7280; font-weight: 500; cursor: pointer;">
-                        <i class="fas fa-shield-alt" style="margin-right: 0.5rem;"></i>
-                        Security
-                    </button>
-                </nav>
+        <!-- 主內容區域 -->
+        <main class="main-content">
+            <div class="account-header">
+                <h1>帳戶設定</h1>
+                <p>管理您的個人資料和帳戶偏好設定</p>
             </div>
 
-            <!-- 主要內容 -->
-            <div class="account-content" style="max-width: 800px;">
-                    <!-- Profile Section -->
-                    <div id="profile-section">
-                        <h2>Profile details</h2>
-                        
-                        <!-- Profile -->
-                        <div class="profile-section">
-                            <h3>Profile</h3>
-                            <div class="profile-row">
-                                <span class="profile-label">Profile</span>
-                                <div class="profile-value">
-                                    <img src="https://ui-avatars.com/api/?name=扭扭批1&background=667eea&color=fff" alt="Profile" class="profile-avatar" id="profile-avatar">
-                                    <span class="profile-name" id="profile-name">扭扭批1</span>
-                                    <button class="btn-secondary">Update profile</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Email addresses -->
-                        <div class="profile-section">
-                            <h3>Email addresses</h3>
-                            <div class="profile-row">
-                                <span class="profile-label">Email addresses</span>
-                                <div class="profile-value">
-                                    <span class="profile-email" id="user-email">osclin2011@gmail.com</span>
-                                    <span class="badge">Primary</span>
-                                    <button class="menu-btn">
-                                        <i class="fas fa-ellipsis-h"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="profile-row">
-                                <span class="profile-label"></span>
-                                <div class="profile-value">
-                                    <button class="btn-link">
-                                        <i class="fas fa-plus"></i>
-                                        <span>Add email address</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Connected accounts -->
-                        <div class="profile-section">
-                            <h3>Connected accounts</h3>
-                            <div class="profile-row">
-                                <span class="profile-label">Connected accounts</span>
-                                <div class="profile-value">
-                                    <div class="connected-account">
-                                        <i class="fab fa-google" style="color: #4285f4; font-size: 1.25rem;"></i>
-                                        <span class="profile-email">Google</span>
-                                        <span style="color: #9ca3af;">•</span>
-                                        <span class="profile-email" id="connected-email">osclin2011@gmail.com</span>
-                                    </div>
-                                    <button class="menu-btn">
-                                        <i class="fas fa-ellipsis-h"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="profile-row">
-                                <span class="profile-label"></span>
-                                <div class="profile-value">
-                                    <button class="btn-link">
-                                        <i class="fas fa-plus"></i>
-                                        <span>Connect account</span>
-                                    </button>
-                                </div>
-                            </div>
+            <div class="settings-container">
+                <!-- 個人資料 -->
+                <div class="settings-section">
+                    <h2 class="section-title">個人資料</h2>
+                    
+                    <div class="avatar-section">
+                        <div class="avatar" id="user-avatar">U</div>
+                        <div class="avatar-actions">
+                            <button class="link-button">上傳新頭像</button>
+                            <button class="link-button" style="color: #6b7280;">移除頭像</button>
                         </div>
                     </div>
-
-                    <!-- Security Section (hidden by default) -->
-                    <div id="security-section" style="display: none;">
-                        <h2>Security</h2>
-                        <p style="color: #9ca3af;">Manage your security settings and preferences.</p>
+                    
+                    <div class="form-group">
+                        <label class="form-label">姓名</label>
+                        <input type="text" class="form-input" id="user-name" placeholder="輸入您的姓名">
                     </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">電子郵件</label>
+                        <input type="email" class="form-input" id="user-email" disabled>
+                        <p class="form-description">您的電子郵件地址無法更改</p>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="saveProfile()">儲存變更</button>
+                        <button class="btn btn-secondary" onclick="cancelEdit()">取消</button>
+                    </div>
+                </div>
+
+                <!-- 密碼 -->
+                <div class="settings-section">
+                    <h2 class="section-title">密碼</h2>
+                    
+                    <div class="form-group">
+                        <label class="form-label">目前密碼</label>
+                        <input type="password" class="form-input" id="current-password" placeholder="輸入目前密碼">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">新密碼</label>
+                        <input type="password" class="form-input" id="new-password" placeholder="輸入新密碼">
+                        <p class="form-description">密碼至少需要 8 個字元</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">確認新密碼</label>
+                        <input type="password" class="form-input" id="confirm-password" placeholder="再次輸入新密碼">
+                    </div>
+                    
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="changePassword()">更新密碼</button>
+                    </div>
+                </div>
+
+                <!-- 偏好設定 -->
+                <div class="settings-section">
+                    <h2 class="section-title">偏好設定</h2>
+                    
+                    <div class="form-group">
+                        <label class="form-label">語言</label>
+                        <select class="form-input" id="language-select">
+                            <option value="zh-TW">繁體中文</option>
+                            <option value="en">English</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">時區</label>
+                        <select class="form-input" id="timezone-select">
+                            <option value="Asia/Taipei">台北 (GMT+8)</option>
+                            <option value="Asia/Hong_Kong">香港 (GMT+8)</option>
+                            <option value="UTC">UTC (GMT+0)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="savePreferences()">儲存偏好設定</button>
+                    </div>
+                </div>
+
+                <!-- 通知設定 -->
+                <div class="settings-section">
+                    <h2 class="section-title">通知設定</h2>
+                    
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
+                            <input type="checkbox" id="email-notifications" checked style="width: 18px; height: 18px; cursor: pointer;">
+                            <div>
+                                <div class="form-label" style="margin: 0;">電子郵件通知</div>
+                                <p class="form-description" style="margin: 0;">接收有關帳戶活動的電子郵件</p>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
+                            <input type="checkbox" id="marketing-emails" style="width: 18px; height: 18px; cursor: pointer;">
+                            <div>
+                                <div class="form-label" style="margin: 0;">行銷郵件</div>
+                                <p class="form-description" style="margin: 0;">接收產品更新和特別優惠</p>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="saveNotifications()">儲存通知設定</button>
+                    </div>
+                </div>
+
+                <!-- 危險區域 -->
+                <div class="settings-section danger-zone">
+                    <h2 class="section-title">危險區域</h2>
+                    
+                    <div class="form-group">
+                        <p style="color: #6b7280; font-size: 0.875rem; margin-bottom: 1rem;">
+                            刪除您的帳戶將永久移除所有資料，包括項目、文檔和設定。此操作無法復原。
+                        </p>
+                        <button class="btn btn-danger" onclick="deleteAccount()">刪除帳戶</button>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
 
-    <!-- 載入統一身份驗證同步 -->
     <script>
-        // 檢查登入狀態
-        function checkLoginStatus() {
-            if (window.globalAuthSync) {
-                const user = window.globalAuthSync.getCurrentUser();
-                if (user) {
-                    console.log('✅ 當前用戶:', user);
-                    return true;
-                }
+        // 初始化
+        window.addEventListener('auth-state-changed', async (e) => {
+            console.log('🔥 收到 auth-state-changed 事件');
+            
+            if (!e.detail.user) {
+                console.log('❌ 用戶未登入，重定向到首頁');
+                window.location.href = 'index.html';
+                return;
             }
-            console.log('❌ 未登入');
-            return false;
-        }
-
-        // 初始化帳戶頁面
-        function initAccountPage() {
-            console.log('🔧 初始化帳戶頁面');
             
-            // 獲取當前用戶信息
-            if (window.globalAuthSync) {
-                const user = window.globalAuthSync.getCurrentUser();
-                if (user) {
-                    // 更新顯示名稱
-                    const profileName = document.getElementById('profile-name');
-                    const userEmail = document.getElementById('user-email');
-                    const connectedEmail = document.getElementById('connected-email');
-                    const profileAvatar = document.getElementById('profile-avatar');
-                    
-                    if (user.displayName && profileName) {
-                        profileName.textContent = user.displayName;
-                        if (profileAvatar) {
-                            profileAvatar.src = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName)}&background=667eea&color=fff`;
-                        }
-                    }
-                    
-                    if (user.email) {
-                        if (userEmail) userEmail.textContent = user.email;
-                        if (connectedEmail) connectedEmail.textContent = user.email;
-                    }
-                    
-                    console.log('✅ 用戶信息已更新');
-                }
-            }
-        }
-
-        // 切換區塊顯示
-        function showSection(section) {
-            const profileSection = document.getElementById('profile-section');
-            const securitySection = document.getElementById('security-section');
-            const tabs = document.querySelectorAll('.account-tab');
+            console.log('✅ 用戶已登入:', e.detail.user.email);
             
-            // 隱藏所有區塊
-            if (profileSection) profileSection.style.display = 'none';
-            if (securitySection) securitySection.style.display = 'none';
-            
-            // 移除所有標籤活躍狀態
-            tabs.forEach(tab => {
-                tab.classList.remove('active');
-                tab.style.color = '#6b7280';
-                tab.style.borderBottom = 'none';
-            });
-            
-            // 顯示選中的區塊並高亮標籤
-            if (section === 'profile' && profileSection) {
-                profileSection.style.display = 'block';
-                tabs[0].classList.add('active');
-                tabs[0].style.color = '#2563eb';
-                tabs[0].style.borderBottom = '2px solid #2563eb';
-            } else if (section === 'security' && securitySection) {
-                securitySection.style.display = 'block';
-                tabs[1].classList.add('active');
-                tabs[1].style.color = '#2563eb';
-                tabs[1].style.borderBottom = '2px solid #2563eb';
-            }
-        }
-
-        // 頁面載入完成後初始化
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('✅ 帳戶頁面 DOM 已載入');
-            
-            // 初始化統一側邊欄
-            if (window.VaultCaddySidebar) {
+            // 創建側邊欄
+            if (window.VaultCaddySidebar && !window.accountSidebar) {
+                console.log('🎨 創建側邊欄');
                 window.accountSidebar = new VaultCaddySidebar('account');
-                console.log('✅ 側邊欄已初始化');
             }
             
-            // 初始化帳戶頁面
-            setTimeout(() => {
-                initAccountPage();
-            }, 500);
+            // 載入用戶資料
+            loadUserData(e.detail.user);
         });
-
-        // 監聽全局身份驗證事件
-        window.addEventListener('globalAuthReady', function() {
-            console.log('✅ 全局身份驗證已就緒');
-            initAccountPage();
-        });
+        
+        // 載入用戶資料
+        function loadUserData(user) {
+            document.getElementById('user-email').value = user.email;
+            document.getElementById('user-name').value = user.displayName || '';
+            
+            // 設置頭像
+            const avatar = document.getElementById('user-avatar');
+            if (user.displayName) {
+                avatar.textContent = user.displayName.charAt(0).toUpperCase();
+            } else {
+                avatar.textContent = user.email.charAt(0).toUpperCase();
+            }
+        }
+        
+        // 儲存個人資料
+        async function saveProfile() {
+            const name = document.getElementById('user-name').value;
+            
+            if (!name.trim()) {
+                alert('請輸入姓名');
+                return;
+            }
+            
+            try {
+                const user = window.simpleAuth.currentUser;
+                await user.updateProfile({
+                    displayName: name
+                });
+                
+                alert('個人資料已更新');
+                loadUserData(user);
+            } catch (error) {
+                console.error('❌ 更新失敗:', error);
+                alert('更新失敗: ' + error.message);
+            }
+        }
+        
+        // 取消編輯
+        function cancelEdit() {
+            const user = window.simpleAuth.currentUser;
+            loadUserData(user);
+        }
+        
+        // 更改密碼
+        async function changePassword() {
+            const currentPassword = document.getElementById('current-password').value;
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                alert('請填寫所有密碼欄位');
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                alert('新密碼與確認密碼不符');
+                return;
+            }
+            
+            if (newPassword.length < 8) {
+                alert('密碼至少需要 8 個字元');
+                return;
+            }
+            
+            try {
+                const user = window.simpleAuth.currentUser;
+                const credential = firebase.auth.EmailAuthProvider.credential(
+                    user.email,
+                    currentPassword
+                );
+                
+                await user.reauthenticateWithCredential(credential);
+                await user.updatePassword(newPassword);
+                
+                alert('密碼已更新');
+                
+                // 清空密碼欄位
+                document.getElementById('current-password').value = '';
+                document.getElementById('new-password').value = '';
+                document.getElementById('confirm-password').value = '';
+            } catch (error) {
+                console.error('❌ 更新密碼失敗:', error);
+                alert('更新密碼失敗: ' + error.message);
+            }
+        }
+        
+        // 儲存偏好設定
+        function savePreferences() {
+            const language = document.getElementById('language-select').value;
+            const timezone = document.getElementById('timezone-select').value;
+            
+            // 儲存到 localStorage
+            localStorage.setItem('userLanguage', language);
+            localStorage.setItem('userTimezone', timezone);
+            
+            alert('偏好設定已儲存');
+        }
+        
+        // 儲存通知設定
+        function saveNotifications() {
+            const emailNotifications = document.getElementById('email-notifications').checked;
+            const marketingEmails = document.getElementById('marketing-emails').checked;
+            
+            // 儲存到 localStorage
+            localStorage.setItem('emailNotifications', emailNotifications);
+            localStorage.setItem('marketingEmails', marketingEmails);
+            
+            alert('通知設定已儲存');
+        }
+        
+        // 刪除帳戶
+        async function deleteAccount() {
+            const confirmed = confirm('您確定要刪除帳戶嗎？此操作無法復原。');
+            if (!confirmed) return;
+            
+            const doubleConfirm = confirm('這將永久刪除您的所有資料。您確定要繼續嗎？');
+            if (!doubleConfirm) return;
+            
+            try {
+                const user = window.simpleAuth.currentUser;
+                await user.delete();
+                
+                alert('帳戶已刪除');
+                window.location.href = 'index.html';
+            } catch (error) {
+                console.error('❌ 刪除帳戶失敗:', error);
+                alert('刪除帳戶失敗: ' + error.message);
+            }
+        }
     </script>
 </body>
 </html>
-
