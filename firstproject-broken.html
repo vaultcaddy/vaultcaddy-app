@@ -1298,6 +1298,513 @@
                 <div id="batchProgressContainer" class="batch-progress-container" style="display: none; margin-top: 2rem;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                         <h4 style="font-size: 1rem; color: #1f2937; margin: 0; font-weight: 600;">處理進度</h4>
+                        <div id="batchProgressSummary" style="font-size: 0.875rem; color: #6b7280;">
+                            <span id="batchCompletedCount">0</span> / <span id="batchTotalCount">0</span> 完成
+                        </div>
+                    </div>
+                    <div id="batchFilesList" class="batch-files-list" style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 400px; overflow-y: auto;">
+                        <!-- 文件項目將動態添加到這裡 -->
+                    </div>
+                </div>
+
+                <!-- 處理日誌 -->
+                <div id="aiLogContainer" class="ai-log-container" style="display: none; margin-top: 1.5rem; background: #1f2937; border-radius: 8px; padding: 1rem; max-height: 200px; overflow-y: auto;">
+                    <div class="ai-log-header" style="color: #9ca3af; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">處理日誌</div>
+                    <div id="aiLogContent" class="ai-log-content" style="font-family: 'Monaco', 'Courier New', monospace; font-size: 0.75rem; color: #d1d5db; line-height: 1.6;"></div>
+                </div>
+
+                <!-- 提取結果 -->
+                <div id="aiResultsContainer" class="ai-results-container" style="display: none; margin-top: 1.5rem; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+                    <div class="ai-results-header" style="background: #f9fafb; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">📊 提取的數據</div>
+                    <div id="aiResultsContent" class="ai-results-content" style="padding: 1.5rem; max-height: 300px; overflow-y: auto;"></div>
+                    <div class="ai-results-actions" style="display: flex; gap: 1rem; padding: 1rem; background: #f9fafb; border-top: 1px solid #e5e7eb;">
+                        <button class="ai-btn ai-btn-primary" onclick="saveAIResults()" style="flex: 1; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s; background: #4f46e5; color: white;">
+                            <i class="fas fa-save"></i> 保存到項目
+                        </button>
+                        <button class="ai-btn ai-btn-secondary" onclick="resetAIUpload()" style="flex: 1; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s; background: #f3f4f6; color: #374151;">
+                            <i class="fas fa-redo"></i> 處理另一個文件
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== 🔧 立即定義全局函數（簡化版，無占位符） ==========
+        console.log('🚀 開始定義全局函數...');
+        
+        // 1. Upload files 按鈕
+        window.openUploadModal = function() {
+            console.log('🔵 openUploadModal 被調用');
+            
+            // 等待 DOM 加載完成
+            if (document.readyState === 'loading') {
+                console.log('⏳ DOM 尚未載入，等待 DOMContentLoaded...');
+                document.addEventListener('DOMContentLoaded', window.openUploadModal);
+                return;
+            }
+            
+            // 打開模態框
+            const modal = document.getElementById('aiUploadModal');
+            if (modal) {
+                console.log('✅ 找到模態框，正在打開...');
+                modal.style.display = 'flex';
+                
+                // 延遲初始化上傳功能
+                setTimeout(() => {
+                    if (typeof window.initializeAIUpload === 'function') {
+                        window.initializeAIUpload();
+                    } else {
+                        console.warn('⚠️ initializeAIUpload 尚未定義，稍後重試...');
+                        setTimeout(() => {
+                            if (typeof window.initializeAIUpload === 'function') {
+                                window.initializeAIUpload();
+                            }
+                        }, 500);
+                    }
+                }, 100);
+            } else {
+                console.error('❌ 找不到 aiUploadModal 元素');
+                alert('上傳功能初始化失敗，請重新整理頁面');
+            }
+        };
+        
+        // 2. Close upload modal
+        window.closeAIUploadModal = function() {
+            console.log('🔵 closeAIUploadModal 被調用');
+            const modal = document.getElementById('aiUploadModal');
+            if (modal) {
+                modal.style.display = 'none';
+                if (typeof window.resetAIUpload === 'function') {
+                    window.resetAIUpload();
+                }
+            }
+        };
+        
+        // 3. Delete 按鈕
+        window.confirmDeleteProject = function() {
+            console.log('🔵 confirmDeleteProject 被調用');
+            
+            const confirmed = confirm('是否刪除此頁面？');
+            if (!confirmed) {
+                console.log('❌ 用戶取消刪除');
+                return;
+            }
+            
+            // 獲取項目 ID
+            const urlParams = new URLSearchParams(window.location.search);
+            const projectId = urlParams.get('project') || urlParams.get('projectId');
+            
+            if (!projectId) {
+                console.error('❌ 無法獲取項目 ID');
+                alert('無法刪除項目：項目 ID 不存在');
+                return;
+            }
+            
+            console.log('🗑️ 準備刪除項目:', projectId);
+            
+            // 調用刪除函數
+            if (typeof window.deleteProject === 'function') {
+                window.deleteProject(projectId);
+            } else {
+                console.error('❌ deleteProject 函數尚未定義');
+                alert('刪除功能尚未初始化，請稍後再試');
+            }
+        };
+        
+        // 4. Toggle project name edit
+        window.toggleProjectNameEdit = function() {
+            console.log('🔵 toggleProjectNameEdit 被調用');
+            if (typeof window.updateProjectTitle === 'function') {
+                window.updateProjectTitle();
+            } else {
+                console.warn('⚠️ updateProjectTitle 尚未定義');
+            }
+        };
+        
+        // 5. Toggle export menu
+        window.toggleExportMenu = function() {
+            console.log('🔵 toggleExportMenu 被調用');
+            const menu = document.getElementById('export-menu');
+            if (menu) {
+                menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+            }
+        };
+        
+        // 6. Export documents
+        window.exportDocuments = function(format) {
+            console.log('🔵 exportDocuments 被調用，格式:', format);
+            alert(`導出功能開發中：${format}`);
+        };
+        
+        console.log('✅ 全局函數已定義（簡化版）');
+        console.log('   - openUploadModal');
+        console.log('   - closeAIUploadModal');
+        console.log('   - confirmDeleteProject');
+        console.log('   - toggleProjectNameEdit');
+        console.log('   - toggleExportMenu');
+        console.log('   - exportDocuments');
+        
+        // ========== 🔧 定義依賴函數（Delete 功能） ==========
+        window.deleteProject = async function(projectId) {
+            try {
+                console.log('🗑️ 開始刪除項目:', projectId);
+                
+                // 從 Firebase 刪除
+                const dataManager = window.simpleDataManager || window.firebaseDataManager;
+                if (dataManager && dataManager.initialized) {
+                    await dataManager.deleteProject(projectId);
+                    console.log('✅ 項目已從 Firebase 刪除');
+                } else {
+                    console.warn('⚠️ Firebase 未初始化，僅從 LocalStorage 刪除');
+                }
+                
+                // 從 LocalStorage 刪除（向後兼容）
+                try {
+                    const projects = JSON.parse(localStorage.getItem('vaultcaddy_projects') || '[]');
+                    const updatedProjects = projects.filter(p => p.id !== projectId);
+                    localStorage.setItem('vaultcaddy_projects', JSON.stringify(updatedProjects));
+                    console.log('✅ 項目已從 LocalStorage 刪除');
+                } catch (error) {
+                    console.error('❌ LocalStorage 刪除失敗:', error);
+                }
+                
+                // 觸發事件，更新側邊欄
+                window.dispatchEvent(new CustomEvent('project-deleted', { 
+                    detail: { projectId } 
+                }));
+                
+                // 重定向到 dashboard
+                console.log('🔄 重定向到 dashboard.html');
+                window.location.href = 'dashboard.html';
+            } catch (error) {
+                console.error('❌ 刪除項目失敗:', error);
+                alert('刪除失敗：' + error.message);
+            }
+        };
+        
+        // ========== 🔧 定義依賴函數（Upload 功能） ==========
+        
+        // 全局變量
+        window.selectedDocumentType = 'bank_statement'; // 默認類型
+        window.aiCurrentFile = null;
+        window.aiIsProcessing = false;
+        
+        // 初始化上傳功能
+        window.initializeAIUpload = function() {
+            console.log('🎬 initializeAIUpload 被調用');
+            
+            const uploadArea = document.getElementById('aiUploadArea');
+            const fileInput = document.getElementById('aiFileInput');
+            
+            if (!uploadArea || !fileInput) {
+                console.error('❌ 找不到上傳元素');
+                console.error('   uploadArea:', !!uploadArea);
+                console.error('   fileInput:', !!fileInput);
+                return;
+            }
+            
+            console.log('✅ 找到上傳元素，開始綁定事件');
+            
+            // 拖放事件
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.style.borderColor = '#3b82f6';
+                uploadArea.style.background = '#eff6ff';
+            });
+            
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.style.borderColor = '#d1d5db';
+                uploadArea.style.background = '#ffffff';
+            });
+            
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.style.borderColor = '#d1d5db';
+                uploadArea.style.background = '#ffffff';
+                const file = e.dataTransfer.files[0];
+                if (file) {
+                    console.log('📁 拖放文件:', file.name);
+                    window.handleAIFileUpload(file);
+                }
+            });
+            
+            // 點擊上傳
+            uploadArea.addEventListener('click', () => {
+                console.log('🖱️ 點擊上傳區域');
+                fileInput.click();
+            });
+            
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    console.log('📁 選擇文件:', file.name);
+                    window.handleAIFileUpload(file);
+                }
+            });
+            
+            console.log('✅ AI 上傳已初始化');
+        };
+        
+        // 選擇文檔類型
+        window.selectDocumentType = function(type) {
+            console.log('📄 選擇文檔類型:', type);
+            window.selectedDocumentType = type;
+            
+            // 更新 UI（高亮選中的類型）
+            document.querySelectorAll('.document-type-card').forEach(card => {
+                card.classList.remove('selected');
+                card.style.borderColor = '#e5e7eb';
+                card.style.background = '#ffffff';
+            });
+            
+            const selectedCard = document.querySelector(`[data-type="${type}"]`);
+            if (selectedCard) {
+                selectedCard.classList.add('selected');
+                selectedCard.style.borderColor = '#3b82f6';
+                selectedCard.style.background = '#eff6ff';
+            }
+            
+            console.log('✅ 文檔類型已選擇:', type);
+        };
+        
+        // 處理文件上傳
+        window.handleAIFileUpload = async function(file) {
+            console.log('📤 開始處理文件:', file.name);
+            console.log('   文件大小:', (file.size / 1024 / 1024).toFixed(2), 'MB');
+            console.log('   文件類型:', file.type);
+            console.log('   文檔類型:', window.selectedDocumentType);
+            
+            if (window.aiIsProcessing) {
+                alert('正在處理中，請稍候...');
+                return;
+            }
+            
+            window.aiIsProcessing = true;
+            window.aiCurrentFile = file;
+            
+            try {
+                // 顯示處理中狀態
+                const uploadArea = document.getElementById('aiUploadArea');
+                if (uploadArea) {
+                    uploadArea.innerHTML = `
+                        <div style="text-align: center;">
+                            <div style="width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
+                            <p style="color: #6b7280;">正在處理文件...</p>
+                            <p style="color: #9ca3af; font-size: 0.875rem;">${file.name}</p>
+                        </div>
+                    `;
+                }
+                
+                // AI 處理
+                const result = await window.processWithAI(file, window.selectedDocumentType);
+                console.log('✅ AI 處理完成:', result);
+                
+                // 保存到 Firebase
+                const savedDoc = await window.saveDocumentToFirebase(result);
+                console.log('✅ 文檔已保存:', savedDoc);
+                
+                // 關閉模態框
+                window.closeAIUploadModal();
+                
+                // 直接在前端添加表格行（不刷新頁面）
+                window.addDocumentToTable(savedDoc);
+                
+                // 顯示成功提示
+                alert('✅ 文檔上傳成功！');
+                
+            } catch (error) {
+                console.error('❌ 處理失敗:', error);
+                alert('處理失敗：' + error.message);
+                
+                // 重置上傳區域
+                window.resetAIUpload();
+            } finally {
+                window.aiIsProcessing = false;
+            }
+        };
+        
+        // AI 處理文件
+        window.processWithAI = async function(file, documentType) {
+            console.log('🤖 開始 AI 處理...');
+            console.log('   文檔類型:', documentType);
+            
+            // 檢查處理器類是否存在
+            if (typeof window.HybridVisionDeepSeekProcessor === 'undefined') {
+                throw new Error('HybridVisionDeepSeekProcessor 類別未加載，請確保 hybrid-vision-deepseek.js 已加載');
+            }
+            
+            // 如果實例不存在，創建一個
+            if (!window.hybridVisionDeepSeekProcessor) {
+                console.log('🔧 創建 HybridVisionDeepSeekProcessor 實例...');
+                window.hybridVisionDeepSeekProcessor = new window.HybridVisionDeepSeekProcessor();
+            }
+            
+            const processor = window.hybridVisionDeepSeekProcessor;
+            
+            // 映射文檔類型（前端 → 處理器）
+            const typeMap = {
+                'bank_statement': 'bank-statement',
+                'invoice': 'invoice',
+                'receipt': 'receipt',
+                'general': 'general'
+            };
+            
+            const processorType = typeMap[documentType] || documentType;
+            console.log('   映射類型:', documentType, '→', processorType);
+            
+            // 處理文檔
+            const result = await processor.processDocument(file, processorType);
+            console.log('✅ AI 處理完成');
+            
+            return result;
+        };
+        
+        // 保存到 Firebase
+        window.saveDocumentToFirebase = async function(documentData) {
+            console.log('💾 保存到 Firebase...');
+            
+            // 獲取項目 ID
+            const urlParams = new URLSearchParams(window.location.search);
+            const projectId = urlParams.get('project') || urlParams.get('projectId');
+            
+            if (!projectId) {
+                throw new Error('無法獲取項目 ID');
+            }
+            
+            // 準備文檔數據
+            const doc = {
+                id: Date.now().toString(),
+                name: documentData.fileName || documentData.name || '未命名文檔',
+                type: window.selectedDocumentType || 'general',
+                uploadDate: new Date().toISOString(),
+                processedData: documentData,
+                status: 'completed'
+            };
+            
+            // 保存到 Firebase
+            const dataManager = window.simpleDataManager || window.firebaseDataManager;
+            if (dataManager && dataManager.initialized) {
+                await dataManager.createDocument(projectId, doc);
+                console.log('✅ 已保存到 Firebase');
+            } else {
+                console.warn('⚠️ Firebase 未初始化，保存到 LocalStorage');
+                // 保存到 LocalStorage（向後兼容）
+                const documents = JSON.parse(localStorage.getItem(`vaultcaddy_documents_${projectId}`) || '[]');
+                documents.push(doc);
+                localStorage.setItem(`vaultcaddy_documents_${projectId}`, JSON.stringify(documents));
+            }
+            
+            return doc;
+        };
+        
+        // 重置上傳狀態
+        window.resetAIUpload = function() {
+            console.log('🔄 重置上傳狀態');
+            
+            window.selectedDocumentType = 'bank_statement';
+            window.aiCurrentFile = null;
+            window.aiIsProcessing = false;
+            
+            const fileInput = document.getElementById('aiFileInput');
+            if (fileInput) {
+                fileInput.value = '';
+            }
+            
+            const uploadArea = document.getElementById('aiUploadArea');
+            if (uploadArea) {
+                uploadArea.innerHTML = `
+                    <div style="text-align: center; padding: 3rem;">
+                        <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: #9ca3af; margin-bottom: 1rem;"></i>
+                        <h3 style="color: #374151; margin-bottom: 0.5rem;">拖放文件到此處或點擊選擇</h3>
+                        <p style="color: #6b7280; font-size: 0.875rem;">支持 PDF、JPG、PNG 格式（最大 10MB）</p>
+                    </div>
+                `;
+            }
+        };
+        
+        // 添加文檔到表格
+        window.addDocumentToTable = function(doc) {
+            console.log('📄 添加文檔到表格:', doc);
+            
+            const tbody = document.getElementById('documents-tbody');
+            if (!tbody) {
+                console.error('❌ 找不到表格 tbody');
+                return;
+            }
+            
+            // 移除 "No results." 提示
+            const noResults = tbody.querySelector('tr td[colspan]');
+            if (noResults) {
+                tbody.innerHTML = '';
+            }
+            
+            // 提取數據
+            const data = doc.processedData || {};
+            const invoiceDate = data.invoiceDate || data.date || '-';
+            const items = data.lineItems || data.items || [];
+            const itemsCount = items.length || 0;
+            const total = data.totalAmount || data.total || '-';
+            
+            // 創建新行
+            const newRow = document.createElement('tr');
+            newRow.style.cssText = 'border-bottom: 1px solid #e5e7eb;';
+            newRow.innerHTML = `
+                <td style="padding: 1rem 1.5rem;">
+                    <input type="checkbox" class="document-checkbox">
+                </td>
+                <td style="padding: 1rem 1.5rem;">
+                    <div style="display: flex; align-items: center;">
+                        <i class="fas fa-file-alt" style="color: #3b82f6; margin-right: 0.75rem; font-size: 1.25rem;"></i>
+                        <a href="document-detail.html?project=${new URLSearchParams(window.location.search).get('project')}&document=${doc.id}" style="color: #2563eb; text-decoration: none; font-weight: 500;">${doc.name}</a>
+                    </div>
+                </td>
+                <td style="padding: 1rem 1.5rem; color: #6b7280;">${invoiceDate}</td>
+                <td style="padding: 1rem 1.5rem; color: #6b7280;">${itemsCount} 項</td>
+                <td style="padding: 1rem 1.5rem; color: #6b7280;">${total}</td>
+                <td style="padding: 1rem 1.5rem;">
+                    <span style="background: #d1fae5; color: #065f46; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500;">已完成</span>
+                </td>
+                <td style="padding: 1rem 1.5rem;">
+                    <span style="background: #fef3c7; color: #92400e; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500;">待審核</span>
+                </td>
+                <td style="padding: 1rem 1.5rem; color: #6b7280;">-</td>
+                <td style="padding: 1rem 1.5rem; color: #6b7280;">${new Date(doc.uploadDate).toLocaleDateString()}</td>
+                <td style="padding: 1rem 1.5rem;">
+                    <button onclick="deleteDocument('${doc.id}')" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 0.5rem;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            
+            tbody.insertBefore(newRow, tbody.firstChild);
+            console.log('✅ 文檔已添加到表格');
+        };
+        
+        console.log('✅ 所有依賴函數已定義');
+        console.log('   - deleteProject');
+        console.log('   - initializeAIUpload');
+        console.log('   - selectDocumentType');
+        console.log('   - handleAIFileUpload');
+        console.log('   - processWithAI');
+        console.log('   - saveDocumentToFirebase');
+        console.log('   - resetAIUpload');
+        console.log('   - addDocumentToTable');
+        
+        // 立即執行的頁面可見性腳本
+        (function() {
+            document.documentElement.style.cssText = 'display: block !important; visibility: visible !important;';
+            document.body.style.cssText = 'display: block !important; visibility: visible !important; background: #ffffff;';
+            
+            // 立即確認模態框存在
+            console.log('🚀 Body 開始載入，立即檢查模態框');
+            const immediateCheck = document.getElementById('aiUploadModal');
+            console.log('⚡ 立即檢查結果:', immediateCheck ? '✅ 模態框已在 DOM 中' : '❌ 模態框不存在');
+        })();
+    </script>
+
+    <!-- 導航欄（由 navbar-component.js 動態生成）-->
     <div id="navbar-placeholder"></div>
 
     <!-- Dashboard 容器 -->
@@ -1341,203 +1848,6 @@
                                 <i class="fas fa-download"></i>
                                 <span>Export</span>
                                 <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
-                            </button>
-                            <div id="exportMenu" class="export-menu" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 0.5rem; background: white; border: 1px solid #e5e7eb; border-radius: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-width: 200px; z-index: 1000;">
-                                <div style="padding: 0.5rem 0;">
-                                    <button onclick="exportDocuments('csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                                        <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
-                                        <div>
-                                            <div style="font-weight: 500;">CSV</div>
-                                            <div style="font-size: 0.75rem; color: #6b7280;">通用格式</div>
-                                        </div>
-                                    </button>
-                                    <button onclick="exportDocuments('iif')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                                        <i class="fas fa-file-alt" style="color: #3b82f6; width: 20px;"></i>
-                                        <div>
-                                            <div style="font-weight: 500;">IIF</div>
-                                            <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Desktop</div>
-                                        </div>
-                                    </button>
-                                    <button onclick="exportDocuments('qbo')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                                        <i class="fas fa-cloud" style="color: #8b5cf6; width: 20px;"></i>
-                                        <div>
-                                            <div style="font-weight: 500;">QBO</div>
-                                            <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Online</div>
-                                        </div>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        <button style="background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; padding: 0.75rem 1rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                            <i class="fas fa-sliders-h"></i>
-                            <span>View</span>
-                        </button>
-                        <button style="background: transparent; border: none; color: #6b7280; padding: 0.5rem; cursor: pointer; font-size: 1.25rem;">
-                            <i class="fas fa-question-circle"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- 文檔表格 -->
-                <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <thead style="background: #f8fafc;">
-                            <tr>
-                                <!-- Checkbox 列 -->
-                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; width: 50px;">
-                                    <input type="checkbox" id="select-all-checkbox" onchange="toggleSelectAll()">
-                                </th>
-                                <!-- 文檔列 -->
-                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
-                                    <span data-translate="document">Document</span>
-                                    <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i>
-                                </th>
-                                <!-- 帳單日期列 -->
-                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
-                                    <span data-translate="invoice_date">Invoice Date</span>
-                                    <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i>
-                                </th>
-                                <!-- 商品列 -->
-                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
-                                    <span data-translate="items_count">Items</span>
-                                    <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i>
-                                </th>
-                                <!-- 餘額信息列 -->
-                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
-                                    <span data-translate="balance_info">Balance Info</span>
-                                    <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i>
-                                </th>
-                                <!-- 狀態列 -->
-                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
-                                    <span data-translate="status">Status</span>
-                                    <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i>
-                                </th>
-                                <!-- 審核狀態列 -->
-                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
-                                    <span data-translate="review_status">Review Status</span>
-                                    <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i>
-                                </th>
-                                <!-- 備註列 -->
-                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
-                                    <span data-translate="notes">Notes</span>
-                                    <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i>
-                                </th>
-                                <!-- 上傳日期列 -->
-                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
-                                    <span data-translate="date_uploaded">Date Uploaded</span>
-                                    <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i>
-                                </th>
-                                <!-- 操作列 -->
-                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
-                                    <span data-translate="actions">Actions</span>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody id="team-project-tbody">
-                            <!-- 空狀態 -->
-                            <tr>
-                                <td colspan="9" style="text-align: center; padding: 4rem 2rem;">
-                                    <div style="color: #6b7280;">
-                                        <i class="fas fa-file-alt" style="font-size: 3rem; margin-bottom: 1rem; color: #d1d5db;"></i>
-                                        <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem; color: #374151;">No results.</h3>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- 分頁控制 -->
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; margin-top: 1rem;">
-                    <div>
-                        <span style="color: #6b7280; font-size: 0.875rem;">0 of 0 row(s) selected.</span>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 1rem;">
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <span style="color: #6b7280; font-size: 0.875rem;">Rows per page</span>
-                            <select style="background: #ffffff; border: 1px solid #d1d5db; color: #1f2937; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.875rem;">
-                                <option value="10">10</option>
-                                <option value="25">25</option>
-                                <option value="50">50</option>
-                                <option value="100">100</option>
-                            </select>
-                        </div>
-                        <div>
-                            <span style="color: #374151; font-size: 0.875rem;">Page 1 of 0</span>
-                        </div>
-                        <div style="display: flex; gap: 0.25rem;">
-                            <button disabled style="background: transparent; border: 1px solid #d1d5db; color: #9ca3af; padding: 0.5rem; border-radius: 4px; cursor: not-allowed;">
-                                <i class="fas fa-angle-double-left"></i>
-                            </button>
-                            <button disabled style="background: transparent; border: 1px solid #d1d5db; color: #9ca3af; padding: 0.5rem; border-radius: 4px; cursor: not-allowed;">
-                                <i class="fas fa-angle-left"></i>
-                            </button>
-                            <button disabled style="background: transparent; border: 1px solid #d1d5db; color: #9ca3af; padding: 0.5rem; border-radius: 4px; cursor: not-allowed;">
-                                <i class="fas fa-angle-right"></i>
-                            </button>
-                            <button disabled style="background: transparent; border: 1px solid #d1d5db; color: #9ca3af; padding: 0.5rem; border-radius: 4px; cursor: not-allowed;">
-                                <i class="fas fa-angle-double-right"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-    <div id="aiUploadModal" class="ai-upload-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 10000; align-items: center; justify-content: center;">
-        <div class="ai-upload-overlay" onclick="closeAIUploadModal()" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px);"></div>
-        <div class="ai-upload-container" style="position: relative; background: white; border-radius: 16px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2); width: 90%; max-width: 800px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column;">
-            <!-- 關閉按鈕（右上角） -->
-            <button class="ai-close-btn" onclick="closeAIUploadModal()" style="position: absolute; top: 1rem; right: 1rem; background: #f3f4f6; border: none; color: #6b7280; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" onmouseover="this.style.background='#e5e7eb'; this.style.color='#1f2937'" onmouseout="this.style.background='#f3f4f6'; this.style.color='#6b7280'">
-                <i class="fas fa-times"></i>
-            </button>
-
-            <!-- 上傳區域 -->
-            <div class="ai-upload-content" style="padding: 2rem; overflow-y: auto; flex: 1;">
-                <!-- 文檔類型選擇器 -->
-                <div class="document-type-selector" style="margin-bottom: 2rem;">
-                    <h3 style="font-size: 1.1rem; color: #1f2937; margin: 0 0 1rem 0; font-weight: 600;">選擇文檔類型</h3>
-                    <div class="document-types-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
-                        <!-- Bank statements -->
-                        <div class="doc-type-card" data-type="bank_statement" onclick="selectDocumentType('bank_statement')" style="background: #ffffff; border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; cursor: pointer; transition: all 0.3s ease; position: relative;">
-                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                                <div style="font-size: 1.5rem;">🏦</div>
-                                <div style="font-weight: 600; color: #1f2937; font-size: 1rem;">Bank statements</div>
-                                <div style="font-size: 0.875rem; color: #6b7280; line-height: 1.4;">Convert bank statements to excel and csv</div>
-                            </div>
-                            <div class="selected-indicator" style="display: none; position: absolute; top: 0.75rem; right: 0.75rem; width: 24px; height: 24px; background: #3b82f6; border-radius: 50%; color: white; align-items: center; justify-content: center; font-size: 0.875rem;">✓</div>
-                        </div>
-                        
-                        <!-- Invoices -->
-                        <div class="doc-type-card" data-type="invoice" onclick="selectDocumentType('invoice')" style="background: #ffffff; border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; cursor: pointer; transition: all 0.3s ease; position: relative;">
-                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                                <div style="font-size: 1.5rem;">📄</div>
-                                <div style="font-weight: 600; color: #1f2937; font-size: 1rem;">Invoices</div>
-                                <div style="font-size: 0.875rem; color: #6b7280; line-height: 1.4;">Extract numbers, dates, item details, prices, and vendor information</div>
-                            </div>
-                            <div class="selected-indicator" style="display: none; position: absolute; top: 0.75rem; right: 0.75rem; width: 24px; height: 24px; background: #3b82f6; border-radius: 50%; color: white; align-items: center; justify-content: center; font-size: 0.875rem;">✓</div>
-                        </div>
-                        
-                        <!-- Receipts -->
-                        <div class="doc-type-card" data-type="receipt" onclick="selectDocumentType('receipt')" style="background: #ffffff; border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; cursor: pointer; transition: all 0.3s ease; position: relative;">
-                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                                <div style="font-size: 1.5rem;">🧾</div>
-                                <div style="font-weight: 600; color: #1f2937; font-size: 1rem;">Receipts</div>
-                                <div style="font-size: 0.875rem; color: #6b7280; line-height: 1.4;">Classify dates, items, prices, and totals for financial management</div>
-                            </div>
-                            <div class="selected-indicator" style="display: none; position: absolute; top: 0.75rem; right: 0.75rem; width: 24px; height: 24px; background: #3b82f6; border-radius: 50%; color: white; align-items: center; justify-content: center; font-size: 0.875rem;">✓</div>
-                        </div>
-                        
-                        <!-- General -->
-                        <div class="doc-type-card" data-type="general" onclick="selectDocumentType('general')" style="background: #ffffff; border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; cursor: pointer; transition: all 0.3s ease; position: relative;">
-                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                                <div style="font-size: 1.5rem;">📋</div>
-                                <div style="font-weight: 600; color: #1f2937; font-size: 1rem;">General</div>
-                                <div style="font-size: 0.875rem; color: #6b7280; line-height: 1.4;">Extract text, tables, and other data from any document</div>
-                            </div>
-                            <div class="selected-indicator" style="display: none; position: absolute; top: 0.75rem; right: 0.75rem; width: 24px; height: 24px; background: #3b82f6; border-radius: 50%; color: white; align-items: center; justify-content: center; font-size: 0.875rem;">✓</div>
-                        </div>
-            </div>
-        </main>
-    </div>
-
     <script>
         // ==================== 全局變量 ====================
         let currentProjectId = null;
@@ -1604,17 +1914,12 @@
                 
                 const tbody = document.getElementById('team-project-tbody');
                 
-                if (!tbody) {
-                    console.error('❌ 找不到 tbody 元素');
-                    return;
-                }
-                
                 if (documents.length === 0) {
                     tbody.innerHTML = `
                         <tr>
-                            <td colspan="10" style="text-align: center; padding: 4rem 2rem;">
-                                <div style="color: #6b7280;">
-                                    <i class="fas fa-file-alt" style="font-size: 3rem; margin-bottom: 1rem; color: #d1d5db;"></i>
+                            <td colspan="10">
+                                <div style="text-align: center; padding: 4rem 2rem; color: #6b7280;">
+                                    <i class="fas fa-file-alt" style="font-size: 4rem; color: #d1d5db; margin-bottom: 1rem;"></i>
                                     <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem; color: #374151;">No results.</h3>
                                 </div>
                             </td>
@@ -1629,8 +1934,8 @@
                     const uploadDate = new Date(doc.createdAt).toLocaleDateString('zh-TW');
                     
                     return `
-                        <tr ${!isProcessing ? `onclick="viewDocument('${doc.id}')" style="cursor: pointer;"` : 'style="cursor: default;"'}>
-                            <td style="padding: 1rem;"><input type="checkbox" onclick="event.stopPropagation();"></td>
+                        <tr ${!isProcessing ? `onclick="viewDocument('${doc.id}')" style="cursor: pointer;"` : ''}>
+                            <td style="padding: 1rem;"><input type="checkbox"></td>
                             <td style="padding: 1rem;">
                                 <div style="display: flex; align-items: center; gap: 0.75rem;">
                                     <i class="fas fa-file-pdf" style="color: #3b82f6; font-size: 1.25rem;"></i>
@@ -1664,13 +1969,10 @@
         
         // ==================== 上傳模態框 ====================
         window.openUploadModal = function() {
-            console.log('🎯 打開上傳模態框');
             const modal = document.getElementById('aiUploadModal');
             if (modal) {
                 modal.style.display = 'flex';
                 initializeAIUpload();
-            } else {
-                console.error('❌ 找不到上傳模態框');
             }
         };
         
@@ -1685,10 +1987,7 @@
             const fileInput = document.getElementById('aiFileInput');
             const uploadArea = document.getElementById('aiUploadArea');
             
-            if (!fileInput || !uploadArea) {
-                console.error('❌ 找不到上傳元素');
-                return;
-            }
+            if (!fileInput || !uploadArea) return;
             
             uploadArea.onclick = () => fileInput.click();
             
@@ -1701,7 +2000,6 @@
         }
         
         window.selectDocumentType = function(type) {
-            console.log('📋 選擇文檔類型:', type);
             selectedDocumentType = type;
             
             document.querySelectorAll('.doc-type-card').forEach(card => {
@@ -1721,7 +2019,6 @@
         };
         
         async function handleUpload(files) {
-            console.log('📤 開始上傳', files.length, '個文件');
             closeAIUploadModal();
             
             for (let file of files) {
@@ -1740,7 +2037,6 @@
                     fileName: file.name,
                     fileSize: file.size,
                     fileType: file.type,
-                    documentType: selectedDocumentType,
                     status: 'processing',
                     createdAt: new Date().toISOString()
                 };
@@ -1789,7 +2085,6 @@
                     status: 'failed',
                     error: error.message
                 });
-                await loadDocuments();
             }
         }
         
@@ -1835,10 +2130,6 @@
         window.exportDocuments = function(format) {
             console.log('導出格式:', format);
             alert('導出功能開發中');
-        };
-        
-        window.toggleSelectAll = function() {
-            console.log('全選功能待實現');
         };
     </script>
 </body>
