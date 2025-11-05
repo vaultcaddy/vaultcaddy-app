@@ -2,91 +2,910 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>項目 - VaultCaddy</title>
     
-    <!-- CSS -->
+    <!-- 🔒 頁面保護：立即隱藏內容，等待 Auth 檢查 -->
+    <style>
+        body.auth-checking {
+            visibility: hidden !important;
+        }
+        .auth-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            visibility: visible !important;
+        }
+        body.auth-ready .auth-loading {
+            display: none;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    <script>
+        document.documentElement.classList.add('auth-checking');
+        if (document.body) {
+            document.body.classList.add('auth-checking');
+        } else {
+            document.addEventListener('DOMContentLoaded', function() {
+                document.body.classList.add('auth-checking');
+            });
+        }
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-translate="page_title_dashboard">儀表板 - VaultCaddy</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="pages.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
-    <!-- 核心配置 -->
+    <!-- ✅ 核心配置 -->
     <script src="config.js"></script>
     <script src="translations.js?v=20251102"></script>
     
-    <!-- UI 組件 -->
-    <script src="navbar-component.js?v=20251105-force-init"></script>
-    <script src="sidebar-component.js?v=20251105-force-init"></script>
+    <!-- ✅ UI 組件 -->
+    <script src="navbar-component.js?v=20251105-ultimate"></script>
+    <script src="sidebar-component.js?v=20251105-ultimate"></script>
     
-    <!-- Firebase SDK -->
+    <!-- ✅ Firebase SDK（CDN 版本）-->
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
     
-    <!-- Firebase 初始化 -->
+    <!-- ✅ Firebase 初始化和身份驗證 -->
     <script defer src="firebase-config.js?v=20251105-force-init"></script>
     <script defer src="simple-auth.js?v=20251105-force-init"></script>
     <script defer src="simple-data-manager.js?v=20251105-force-init"></script>
     
-    <!-- AI 處理器 -->
+    <!-- ✅ AI 處理器 -->
     <script src="hybrid-vision-deepseek.js?v=20251104-final"></script>
     
+    <!-- ✅ 文檔處理和導出 -->
+    <script src="export-manager.js?v=20251104-final"></script>
+    <script src="batch-upload-processor.js?v=20251104-final"></script>
+    
+    
     <style>
+        /* 白色主題樣式 */
         body {
+            background: #ffffff !important;
+            color: #1f2937 !important;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #ffffff;
         }
         
         .dashboard-container {
             display: flex;
             min-height: 100vh;
-            padding-top: 60px;
+            background: #ffffff;
+            padding-top: 60px; /* 為導航欄留出空間 */
         }
         
         .sidebar {
             width: 280px;
+            background: #ffffff;
             border-right: 1px solid #e5e7eb;
+            flex-shrink: 0;
             position: fixed;
             top: 60px;
             bottom: 0;
             left: 0;
             overflow-y: auto;
-            background: #ffffff;
+            display: flex;
+            flex-direction: column;
             padding: 1.5rem;
+        }
+        
+        .sidebar-header {
+            padding: 1.5rem 1rem 1rem 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .sidebar-header h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0;
+        }
+        
+        .sidebar-nav {
+            flex: 1;
+            padding: 1rem 0;
+        }
+        
+        .sidebar-nav ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .sidebar-nav .nav-item {
+            margin: 0;
+        }
+        
+        .sidebar-nav .nav-item a {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            color: #6b7280;
+            text-decoration: none;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+        
+        .sidebar-nav .nav-item.active a {
+            background: #eff6ff;
+            color: #2563eb;
+            border-left-color: #2563eb;
+        }
+        
+        .sidebar-nav .nav-item a:hover {
+            background: #f1f5f9;
+            color: #374151;
+        }
+        
+        .sidebar-nav .nav-item a i {
+            width: 20px;
+            margin-right: 0.75rem;
+            font-size: 1rem;
+        }
+        
+        .sidebar-section {
+            padding: 1rem 0;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .sidebar-section h3 {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin: 0 0 0.5rem 1rem;
+        }
+        
+        .sidebar-footer {
+            padding: 1rem;
+            border-top: 1px solid #e2e8f0;
+            background: #ffffff;
+        }
+        
+        .sidebar-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+        }
+        
+        .stat-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .stat-left {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex: 1;
+        }
+        
+        .stat-label {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+        
+        .stat-value {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1f2937;
         }
         
         .main-content {
             flex: 1;
+            background: #ffffff;
             margin-left: 280px;
-            padding: 2rem;
+            overflow-y: auto;
+            min-height: calc(100vh - 60px);
+            display: block !important;
+            visibility: visible !important;
         }
         
-        .project-header {
+        .page-header {
+            padding: 2rem;
+            border-bottom: 1px solid #e2e8f0;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 2rem;
+            background: #ffffff;
         }
         
-        .project-title-section h1 {
-            font-size: 2rem;
-            margin: 0;
+        .team-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .team-icon {
+            width: 48px;
+            height: 48px;
+            background: #fbbf24;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+        
+        .team-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .team-details h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
             color: #1f2937;
+            margin: 0;
         }
         
-        .project-title-section p {
-            color: #6b7280;
-            margin: 0.5rem 0 0 0;
+        .subscription-badge {
+            background: #3b82f6;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            width: fit-content;
         }
         
-        .delete-btn {
-            background: #ef4444;
+        .subscription-badge::after {
+            content: '▼';
+            font-size: 0.6rem;
+            opacity: 0.8;
+        }
+        
+        .project-btn {
+            background: #3b82f6;
             color: white;
             border: none;
             padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        
+        .project-btn:hover {
+            background: #2563eb;
+        }
+        
+        .controls-bar {
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e2e8f0;
+            background: #ffffff;
+        }
+        
+        .filter-input {
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            color: #1f2937;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            width: 300px;
+            font-size: 14px;
+        }
+        
+        .filter-input::placeholder {
+            color: #9ca3af;
+        }
+        
+        .filter-input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        .actions {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .upload-btn {
+            background: #6366f1;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        
+        .upload-btn:hover {
+            background: #4f46e5;
+        }
+        
+        .view-btn {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        
+        .view-btn:hover {
+            background: #e5e7eb;
+        }
+        
+        .documents-table-container {
+            padding: 2rem;
+            background: #ffffff;
+            flex: 1;
+            overflow-x: auto;
+        }
+        
+        .folder-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+            max-width: 1200px;
+        }
+        
+        .folder-item {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            min-height: 180px;
+            justify-content: center;
+        }
+        
+        .folder-item:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        .folder-icon {
+            width: 64px;
+            height: 64px;
+            background: #f3f4f6;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+        
+        .folder-icon i {
+            font-size: 2rem;
+            color: #6b7280;
+        }
+        
+        .folder-icon::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 8px;
+            width: 20px;
+            height: 8px;
+            background: #f3f4f6;
+            border-radius: 4px 4px 0 0;
+        }
+        
+        .folder-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+        
+        .folder-files-count {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+        }
+        
+        .folder-updated {
+            font-size: 0.75rem;
+            color: #9ca3af;
+        }
+        
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 3rem;
+            color: #6b7280;
+        }
+        
+        .empty-state-icon {
+            font-size: 4rem;
+            color: #d1d5db;
+            margin-bottom: 1rem;
+        }
+        
+        .empty-state h3 {
+            font-size: 1.25rem;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+        
+        .empty-state p {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+        
+        .documents-table {
+            width: 100%;
+            min-width: 1200px; /* 確保表格最小寬度，觸發水平滾動 */
+            border-collapse: collapse;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .documents-table thead th {
+            background: #f8fafc;
+            color: #374151;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 1px solid #e2e8f0;
+            white-space: nowrap; /* 防止標題文字換行 */
+            font-size: 14px;
+        }
+        
+        .documents-table tbody tr {
+            border-bottom: 1px solid #f3f4f6;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .documents-table tbody tr:hover {
+            background: #f9fafb;
+        }
+        
+        .documents-table tbody tr:last-child {
+            border-bottom: none;
+        }
+        
+        .documents-table tbody td {
+            padding: 1rem;
+            color: #374151;
+            vertical-align: middle;
+            white-space: nowrap; /* 防止單元格內容換行 */
+            font-size: 14px;
+        }
+        
+        .document-cell {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .file-icon {
+            color: #ef4444;
+            font-size: 1.5rem;
+        }
+        
+        .doc-name {
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .doc-details {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+        
+        .period-info {
+            color: #6b7280;
+        }
+        
+        .reconciliation {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .reconciliation-text {
+            font-weight: 600;
+        }
+        
+        .progress-bar {
+            width: 100px;
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #10b981;
+            transition: width 0.3s;
+        }
+        
+        .progress-percentage {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+        
+        .reconciliation-status {
+            font-size: 0.75rem;
+            color: #fbbf24;
+        }
+        
+        .balance-info {
+            font-size: 0.875rem;
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .status-badge.success {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+        
+        .review-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .review-badge.review {
+            background: rgba(249, 115, 22, 0.2);
+            color: #f97316;
+        }
+        
+        .action-btn {
+            background: none;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        
+        .action-btn:hover {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        
+        .pagination-info {
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #6b7280;
+            border-top: 1px solid #e2e8f0;
+            background: #ffffff;
+            font-size: 14px;
+        }
+        
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .rows-per-page {
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            color: #374151;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .rows-per-page:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+        
+        .pagination-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .page-btn {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            color: #374151;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .page-btn:hover:not(:disabled) {
+            background: #e5e7eb;
+        }
+        
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* 可編輯輸入框樣式 */
+        .editable-input {
+            border: 1px solid transparent;
+            background: transparent;
+            padding: 0.5rem;
+            font-size: 14px;
+            color: #374151;
+            width: 100%;
+            box-sizing: border-box;
+            transition: all 0.2s;
+        }
+        
+        .editable-input:hover {
+            border-color: #d1d5db;
+            background: #f9fafb;
+        }
+        
+        .editable-input:focus {
+            outline: none;
+            border-color: #6366f1;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        .editable-input[readonly] {
+            background: #f3f4f6;
+            color: #6b7280;
+            cursor: not-allowed;
+        }
+        
+        .editable-input[readonly]:hover {
+            border-color: transparent;
+            background: #f3f4f6;
+        }
+        
+        .date-input {
+            min-width: 140px;
+        }
+        
+        .description-input {
+            min-width: 200px;
+        }
+        
+        .amount-input,
+        .balance-input {
+            min-width: 100px;
+            text-align: right;
+        }
+        
+        .delete-transaction-btn {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        
+        .delete-transaction-btn:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+        
+        /* 文檔詳細視圖樣式 */
+        .back-navigation {
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #334155;
+        }
+        
+        .back-btn {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+        }
+        
+        .back-btn:hover {
+            color: #e2e8f0;
+        }
+        
+        .document-detail-container {
+            display: flex;
+            min-height: calc(100vh - 200px);
+            height: auto;
+        }
+        
+        .pdf-preview-container {
+            width: 40%;
+            border-right: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            background: #ffffff;
+        }
+        
+        .pdf-controls {
+            padding: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: #f8fafc;
+        }
+        
+        .pdf-control-btn {
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            color: #475569;
+            padding: 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .pdf-control-btn:hover {
+            background: #e2e8f0;
+            border-color: #cbd5e1;
+        }
+        
+        .page-info {
+            color: #64748b;
+            font-weight: 500;
+        }
+        
+        .pdf-viewer {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8fafc;
+            padding: 2rem;
+        }
+        
+        .pdf-placeholder {
+            text-align: center;
+            color: #64748b;
+            padding: 2rem;
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            background: #ffffff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .pdf-placeholder i {
+            font-size: 3rem;
+            color: #3b82f6;
+            margin-bottom: 1rem;
+        }
+        
+        .pdf-placeholder h3 {
+            color: #1f2937;
+            margin: 0 0 0.5rem 0;
+        }
+        
+        .pdf-placeholder p {
+            color: #6b7280;
+            margin: 0;
+        }
+        
+        .pdf-placeholder i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        
+        .data-extraction-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            max-height: calc(100vh - 200px);
+        }
+        
+        .extraction-header {
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .extraction-header h2 {
+            font-size: 1.5rem;
+            color: #e2e8f0;
+            margin: 0;
+        }
+        
+        .extraction-tabs {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .tab-btn {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+        
+        .tab-btn.active {
+            color: #8b5cf6;
+            border-bottom-color: #8b5cf6;
+        }
+        
+        .document-actions {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .save-btn, .download-btn, .more-actions-btn {
+            background: #475569;
+            border: none;
+            color: #e2e8f0;
+            padding: 0.5rem 1rem;
             border-radius: 6px;
             cursor: pointer;
             display: flex;
@@ -94,165 +913,946 @@
             gap: 0.5rem;
         }
         
-        .controls-bar {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 2rem;
+        .reconciliation-status {
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #334155;
         }
         
-        .upload-btn {
-            background: #8b5cf6;
-            color: white;
+        .reconciliation-status h3 {
+            color: #e2e8f0;
+            margin: 0 0 0.5rem 0;
+        }
+        
+        .completion-status {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+        
+        .bank-statement-details {
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #334155;
+        }
+        
+        .bank-statement-details h3 {
+            color: #e2e8f0;
+            margin: 0;
+        }
+        
+        .transactions-section {
+            flex: 1;
+            padding: 1rem 2rem;
+        }
+        
+        .transactions-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .transactions-header h3 {
+            color: #e2e8f0;
+            margin: 0;
+        }
+        
+        .transaction-controls {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .control-btn {
+            background: #475569;
             border: none;
-            padding: 0.75rem 1.5rem;
+            color: #e2e8f0;
+            padding: 0.5rem 1rem;
             border-radius: 6px;
             cursor: pointer;
         }
         
-        .documents-table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
+        .add-btn {
+            background: #8b5cf6;
+        }
+        
+        .transaction-info {
+            margin-bottom: 1rem;
+            color: #94a3b8;
+        }
+        
+        .transactions-table-container {
             border: 1px solid #e5e7eb;
             border-radius: 8px;
             overflow: hidden;
         }
         
-        .documents-table thead {
-            background: #f8fafc;
+        .transactions-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #ffffff;
         }
         
-        .documents-table th {
-            padding: 1rem;
+        .transactions-table thead th {
+            background: #f8fafc;
+            color: #374151;
+            padding: 0.75rem;
             text-align: left;
             font-weight: 600;
-            color: #374151;
             border-bottom: 1px solid #e5e7eb;
         }
         
-        .documents-table td {
-            padding: 1rem;
-            border-bottom: 1px solid #f3f4f6;
+        .transactions-table tbody tr {
+            border-bottom: 1px solid #e5e7eb;
         }
         
-        .documents-table tbody tr:hover {
+        .transactions-table tbody tr:last-child {
+            border-bottom: none;
+        }
+        
+        .transactions-table tbody td {
+            padding: 0.75rem;
+            color: #374151;
+        }
+        
+        .transaction-checkbox {
+            margin: 0;
+        }
+        
+        .delete-transaction-btn {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            padding: 0.25rem;
+        }
+        
+        .delete-transaction-btn:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+        
+        .view-container {
+            height: 100%;
+            display: block !important;
+            visibility: visible !important;
+        }
+        
+        /* 可編輯表格樣式 */
+        .editable-input {
+            width: 100%;
+            border: 1px solid transparent;
+            background: transparent;
+            padding: 0.5rem;
+            font-size: 14px;
+            color: #374151;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .editable-input:focus {
+            outline: none;
+            border-color: #6366f1;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        .editable-input:hover {
             background: #f9fafb;
+            border-color: #d1d5db;
         }
         
-        .document-name {
+        .date-input {
+            min-width: 140px;
+        }
+        
+        .description-input {
+            min-width: 200px;
+        }
+        
+        .amount-input, .balance-input {
+            min-width: 100px;
+            text-align: right;
+        }
+        
+        .transaction-row:hover .editable-input {
+            border-color: #d1d5db;
+        }
+        
+        .delete-transaction-btn {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .delete-transaction-btn:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+        }
+        
+        /* 側邊欄搜索欄 */
+        .sidebar-search {
+            margin-bottom: 1.5rem;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: #ffffff;
+            color: #1f2937;
+            font-size: 0.875rem;
+        }
+        
+        .search-input::placeholder {
+            color: #9ca3af;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        /* 項目區塊 */
+        .project-header {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
         }
         
-        .document-name i {
-            color: #3b82f6;
-            font-size: 1.25rem;
-        }
-        
-        .status-badge {
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
+        .project-title {
             font-size: 0.875rem;
-            font-weight: 500;
+            font-weight: 600;
+            color: #374151;
         }
         
-        .status-processing {
-            background: #fef3c7;
-            color: #92400e;
-        }
-        
-        .status-completed {
-            background: #d1fae5;
-            color: #065f46;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 4rem 2rem;
+        .add-project-btn {
+            background: none;
+            border: none;
             color: #6b7280;
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 4px;
+            transition: all 0.2s;
         }
         
-        .empty-state i {
-            font-size: 4rem;
-            color: #d1d5db;
-            margin-bottom: 1rem;
+        .add-project-btn:hover {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        
+        .project-item {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 0;
+            color: #6b7280;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        
+        .project-item:hover {
+            color: #374151;
+        }
+        
+        .project-item i {
+            margin-right: 0.75rem;
+            width: 16px;
+        }
+        
+        /* 配置區塊 */
+        .config-item {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 0;
+            color: #6b7280;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        
+        .config-item:hover {
+            color: #374151;
+        }
+        
+        .config-item i {
+            margin-right: 0.75rem;
+            width: 16px;
+        }
+        
+        /* 側邊欄項目hover效果 */
+        .nav-item:hover {
+            background: #f1f5f9 !important;
+        }
+        
+        .nav-item.active {
+            background: #eff6ff !important;
+            color: #2563eb !important;
         }
     </style>
 </head>
-<body>
-    <!-- 導航欄 -->
-    <div id="navbar-placeholder"></div>
-    
-    <!-- Dashboard 容器 -->
-    <div class="dashboard-container">
-        <!-- 左側欄（由 sidebar-component.js 生成）-->
-        <aside class="sidebar"></aside>
-        
-        <!-- 主內容 -->
-        <main class="main-content">
-            <!-- 項目標題 -->
-            <div class="project-header">
-                <div class="project-title-section">
-                    <h1 id="project-name">載入中...</h1>
-                    <p>管理和查看您的文檔</p>
-                </div>
-                <button class="delete-btn" onclick="deleteProject()">
-                    <i class="fas fa-trash"></i>
-                    <span>刪除</span>
-                </button>
-            </div>
-            
-            <!-- 控制欄 -->
-            <div class="controls-bar">
-                <input type="text" placeholder="篩選文檔名稱..." style="padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; width: 300px;">
-                <button class="upload-btn" onclick="openUploadModal()">
-                    <i class="fas fa-upload"></i>
-                    上傳文件
-                </button>
-            </div>
-            
-            <!-- 文檔表格 -->
-            <table class="documents-table">
-                <thead>
-                    <tr>
-                        <th>文檔</th>
-                        <th>上傳日期</th>
-                        <th>狀態</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody id="documents-tbody">
-                    <tr>
-                        <td colspan="4">
-                            <div class="empty-state">
-                                <i class="fas fa-file-alt"></i>
-                                <h3>沒有文檔</h3>
-                                <p>上傳您的第一個文檔開始使用</p>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </main>
-    </div>
-    
-    <!-- 上傳模態框（簡化版）-->
-    <div id="upload-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
-        <div style="background: white; padding: 2rem; border-radius: 12px; max-width: 500px; width: 90%;">
-            <h2>上傳文件</h2>
-            <input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png" multiple style="margin: 1rem 0;">
-            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-                <button onclick="closeUploadModal()" style="padding: 0.75rem 1.5rem; border: 1px solid #d1d5db; background: white; border-radius: 6px; cursor: pointer;">取消</button>
-                <button onclick="handleUpload()" style="padding: 0.75rem 1.5rem; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer;">上傳</button>
-            </div>
+<body class="auth-checking">
+    <!-- 🔒 Auth 加載動畫 -->
+    <div class="auth-loading">
+        <div style="text-align: center;">
+            <div style="width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
+            <p style="color: #6b7280; font-size: 0.875rem;">正在驗證身份...</p>
         </div>
     </div>
     
+    <!-- ✅ 統一導航欄容器 -->
+    <div id="navbar-placeholder"></div>
+    
+    <!-- AI 上傳模態框 - 放在 body 最前面確保立即載入 -->
+    <div id="aiUploadModal" class="ai-upload-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 10000; align-items: center; justify-content: center;">
+        <div class="ai-upload-overlay" onclick="closeAIUploadModal()" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px);"></div>
+        <div class="ai-upload-container" style="position: relative; background: white; border-radius: 16px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2); width: 90%; max-width: 800px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column;">
+            <!-- 關閉按鈕（右上角） -->
+            <button class="ai-close-btn" onclick="closeAIUploadModal()" style="position: absolute; top: 1rem; right: 1rem; background: #f3f4f6; border: none; color: #6b7280; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" onmouseover="this.style.background='#e5e7eb'; this.style.color='#1f2937'" onmouseout="this.style.background='#f3f4f6'; this.style.color='#6b7280'">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <!-- 上傳區域 -->
+            <div class="ai-upload-content" style="padding: 2rem; overflow-y: auto; flex: 1;">
+                <!-- 文檔類型選擇器 -->
+                <div class="document-type-selector" style="margin-bottom: 2rem;">
+                    <h3 style="font-size: 1.1rem; color: #1f2937; margin: 0 0 1rem 0; font-weight: 600;">選擇文檔類型</h3>
+                    <div class="document-types-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                        <!-- Bank statements -->
+                        <div class="doc-type-card" data-type="bank_statement" onclick="selectDocumentType('bank_statement')" style="background: #ffffff; border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; cursor: pointer; transition: all 0.3s ease; position: relative;">
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                <div style="font-size: 1.5rem;">🏦</div>
+                                <div style="font-weight: 600; color: #1f2937; font-size: 1rem;">Bank statements</div>
+                                <div style="font-size: 0.875rem; color: #6b7280; line-height: 1.4;">Convert bank statements to excel and csv</div>
+                            </div>
+                            <div class="selected-indicator" style="display: none; position: absolute; top: 0.75rem; right: 0.75rem; width: 24px; height: 24px; background: #3b82f6; border-radius: 50%; color: white; align-items: center; justify-content: center; font-size: 0.875rem;">✓</div>
+                        </div>
+                        
+                        <!-- Invoices -->
+                        <div class="doc-type-card" data-type="invoice" onclick="selectDocumentType('invoice')" style="background: #ffffff; border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; cursor: pointer; transition: all 0.3s ease; position: relative;">
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                <div style="font-size: 1.5rem;">📄</div>
+                                <div style="font-weight: 600; color: #1f2937; font-size: 1rem;">Invoices</div>
+                                <div style="font-size: 0.875rem; color: #6b7280; line-height: 1.4;">Extract numbers, dates, item details, prices, and vendor information</div>
+                            </div>
+                            <div class="selected-indicator" style="display: none; position: absolute; top: 0.75rem; right: 0.75rem; width: 24px; height: 24px; background: #3b82f6; border-radius: 50%; color: white; align-items: center; justify-content: center; font-size: 0.875rem;">✓</div>
+                        </div>
+                        
+                        <!-- Receipts -->
+                        <div class="doc-type-card" data-type="receipt" onclick="selectDocumentType('receipt')" style="background: #ffffff; border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; cursor: pointer; transition: all 0.3s ease; position: relative;">
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                <div style="font-size: 1.5rem;">🧾</div>
+                                <div style="font-weight: 600; color: #1f2937; font-size: 1rem;">Receipts</div>
+                                <div style="font-size: 0.875rem; color: #6b7280; line-height: 1.4;">Classify dates, items, prices, and totals for financial management</div>
+                            </div>
+                            <div class="selected-indicator" style="display: none; position: absolute; top: 0.75rem; right: 0.75rem; width: 24px; height: 24px; background: #3b82f6; border-radius: 50%; color: white; align-items: center; justify-content: center; font-size: 0.875rem;">✓</div>
+                        </div>
+                        
+                        <!-- General -->
+                        <div class="doc-type-card" data-type="general" onclick="selectDocumentType('general')" style="background: #ffffff; border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; cursor: pointer; transition: all 0.3s ease; position: relative;">
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                <div style="font-size: 1.5rem;">📋</div>
+                                <div style="font-weight: 600; color: #1f2937; font-size: 1rem;">General</div>
+                                <div style="font-size: 0.875rem; color: #6b7280; line-height: 1.4;">Extract text, tables, and other data from any document</div>
+                            </div>
+                            <div class="selected-indicator" style="display: none; position: absolute; top: 0.75rem; right: 0.75rem; width: 24px; height: 24px; background: #3b82f6; border-radius: 50%; color: white; align-items: center; justify-content: center; font-size: 0.875rem;">✓</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 上傳區域 -->
+                <div id="aiUploadArea" class="ai-upload-area" style="border: 3px dashed #d1d5db; border-radius: 12px; padding: 3rem 2rem; text-align: center; cursor: pointer; transition: all 0.3s ease; background: #fafafa;">
+                    <div class="ai-upload-icon" style="font-size: 4rem; margin-bottom: 1rem;">📄</div>
+                    <div class="ai-upload-text" style="font-size: 1.2rem; color: #374151; margin-bottom: 0.5rem; font-weight: 600;">拖放文件到此處或點擊上傳</div>
+                    <div class="ai-upload-hint" style="color: #6b7280; font-size: 0.9rem;">支援 PDF、JPG、PNG 格式 (最大 10MB)｜✨ 支持批量上傳</div>
+                    <input type="file" id="aiFileInput" class="ai-file-input" accept=".pdf,.jpg,.jpeg,.png,.gif,.webp" multiple style="display: none;">
+                </div>
+
+                <!-- 處理進度 -->
+                <div id="aiProgressContainer" class="ai-progress-container" style="display: none; margin-top: 2rem;">
+                    <div class="ai-progress-steps" style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
+                        <div class="ai-step" data-step="1" style="flex: 1; text-align: center; opacity: 0.4; transition: all 0.3s ease;">
+                            <div class="ai-step-icon" style="font-size: 2.5rem; margin-bottom: 0.5rem; position: relative; display: inline-block;">📤</div>
+                            <div class="ai-step-text" style="font-size: 0.875rem; color: #6b7280; font-weight: 500;">文件上傳</div>
+                        </div>
+                        <div class="ai-step" data-step="2" style="flex: 1; text-align: center; opacity: 0.4; transition: all 0.3s ease;">
+                            <div class="ai-step-icon" style="font-size: 2.5rem; margin-bottom: 0.5rem; position: relative; display: inline-block;">🤖</div>
+                            <div class="ai-step-text" style="font-size: 0.875rem; color: #6b7280; font-weight: 500;">AI 分析</div>
+                        </div>
+                        <div class="ai-step" data-step="3" style="flex: 1; text-align: center; opacity: 0.4; transition: all 0.3s ease;">
+                            <div class="ai-step-icon" style="font-size: 2.5rem; margin-bottom: 0.5rem; position: relative; display: inline-block;">📊</div>
+                            <div class="ai-step-text" style="font-size: 0.875rem; color: #6b7280; font-weight: 500;">數據提取</div>
+                        </div>
+                        <div class="ai-step" data-step="4" style="flex: 1; text-align: center; opacity: 0.4; transition: all 0.3s ease;">
+                            <div class="ai-step-icon" style="font-size: 2.5rem; margin-bottom: 0.5rem; position: relative; display: inline-block;">☁️</div>
+                            <div class="ai-step-text" style="font-size: 0.875rem; color: #6b7280; font-weight: 500;">雲端存儲</div>
+                        </div>
+                    </div>
+                    <div class="ai-progress-bar" style="width: 100%; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;">
+                        <div class="ai-progress-fill" id="aiProgressFill" style="height: 100%; background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%); transition: width 0.5s ease; width: 0%;"></div>
+                    </div>
+                </div>
+
+                <!-- 批量處理進度列表 -->
+                <div id="batchProgressContainer" class="batch-progress-container" style="display: none; margin-top: 2rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h4 style="font-size: 1rem; color: #1f2937; margin: 0; font-weight: 600;">處理進度</h4>
+                        <div id="batchProgressSummary" style="font-size: 0.875rem; color: #6b7280;">
+                            <span id="batchCompletedCount">0</span> / <span id="batchTotalCount">0</span> 完成
+                        </div>
+                    </div>
+                    <div id="batchFilesList" class="batch-files-list" style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 400px; overflow-y: auto;">
+                        <!-- 文件項目將動態添加到這裡 -->
+                    </div>
+                </div>
+
+                <!-- 處理日誌 -->
+                <div id="aiLogContainer" class="ai-log-container" style="display: none; margin-top: 1.5rem; background: #1f2937; border-radius: 8px; padding: 1rem; max-height: 200px; overflow-y: auto;">
+                    <div class="ai-log-header" style="color: #9ca3af; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">處理日誌</div>
+                    <div id="aiLogContent" class="ai-log-content" style="font-family: 'Monaco', 'Courier New', monospace; font-size: 0.75rem; color: #d1d5db; line-height: 1.6;"></div>
+                </div>
+
+                <!-- 提取結果 -->
+                <div id="aiResultsContainer" class="ai-results-container" style="display: none; margin-top: 1.5rem; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+                    <div class="ai-results-header" style="background: #f9fafb; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">📊 提取的數據</div>
+                    <div id="aiResultsContent" class="ai-results-content" style="padding: 1.5rem; max-height: 300px; overflow-y: auto;"></div>
+                    <div class="ai-results-actions" style="display: flex; gap: 1rem; padding: 1rem; background: #f9fafb; border-top: 1px solid #e5e7eb;">
+                        <button class="ai-btn ai-btn-primary" onclick="saveAIResults()" style="flex: 1; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s; background: #4f46e5; color: white;">
+                            <i class="fas fa-save"></i> 保存到項目
+                        </button>
+                        <button class="ai-btn ai-btn-secondary" onclick="resetAIUpload()" style="flex: 1; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s; background: #f3f4f6; color: #374151;">
+                            <i class="fas fa-redo"></i> 處理另一個文件
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== 🔧 立即定義全局函數（簡化版，無占位符） ==========
+        console.log('🚀 開始定義全局函數...');
+        
+        // 1. Upload files 按鈕
+        window.openUploadModal = function() {
+            console.log('🔵 openUploadModal 被調用');
+            
+            // 等待 DOM 加載完成
+            if (document.readyState === 'loading') {
+                console.log('⏳ DOM 尚未載入，等待 DOMContentLoaded...');
+                document.addEventListener('DOMContentLoaded', window.openUploadModal);
+                return;
+            }
+            
+            // 打開模態框
+            const modal = document.getElementById('aiUploadModal');
+            if (modal) {
+                console.log('✅ 找到模態框，正在打開...');
+                modal.style.display = 'flex';
+                
+                // 延遲初始化上傳功能
+                setTimeout(() => {
+                    if (typeof window.initializeAIUpload === 'function') {
+                        window.initializeAIUpload();
+                    } else {
+                        console.warn('⚠️ initializeAIUpload 尚未定義，稍後重試...');
+                        setTimeout(() => {
+                            if (typeof window.initializeAIUpload === 'function') {
+                                window.initializeAIUpload();
+                            }
+                        }, 500);
+                    }
+                }, 100);
+            } else {
+                console.error('❌ 找不到 aiUploadModal 元素');
+                alert('上傳功能初始化失敗，請重新整理頁面');
+            }
+        };
+        
+        // 2. Close upload modal
+        window.closeAIUploadModal = function() {
+            console.log('🔵 closeAIUploadModal 被調用');
+            const modal = document.getElementById('aiUploadModal');
+            if (modal) {
+                modal.style.display = 'none';
+                if (typeof window.resetAIUpload === 'function') {
+                    window.resetAIUpload();
+                }
+            }
+        };
+        
+        // 3. Delete 按鈕
+        window.confirmDeleteProject = function() {
+            console.log('🔵 confirmDeleteProject 被調用');
+            
+            const confirmed = confirm('是否刪除此頁面？');
+            if (!confirmed) {
+                console.log('❌ 用戶取消刪除');
+                return;
+            }
+            
+            // 獲取項目 ID
+            const urlParams = new URLSearchParams(window.location.search);
+            const projectId = urlParams.get('project') || urlParams.get('projectId');
+            
+            if (!projectId) {
+                console.error('❌ 無法獲取項目 ID');
+                alert('無法刪除項目：項目 ID 不存在');
+                return;
+            }
+            
+            console.log('🗑️ 準備刪除項目:', projectId);
+            
+            // 調用刪除函數
+            if (typeof window.deleteProject === 'function') {
+                window.deleteProject(projectId);
+            } else {
+                console.error('❌ deleteProject 函數尚未定義');
+                alert('刪除功能尚未初始化，請稍後再試');
+            }
+        };
+        
+        // 4. Toggle project name edit
+        window.toggleProjectNameEdit = function() {
+            console.log('🔵 toggleProjectNameEdit 被調用');
+            if (typeof window.updateProjectTitle === 'function') {
+                window.updateProjectTitle();
+            } else {
+                console.warn('⚠️ updateProjectTitle 尚未定義');
+            }
+        };
+        
+        // 5. Toggle export menu
+        window.toggleExportMenu = function() {
+            console.log('🔵 toggleExportMenu 被調用');
+            const menu = document.getElementById('export-menu');
+            if (menu) {
+                menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+            }
+        };
+        
+        // 6. Export documents
+        window.exportDocuments = function(format) {
+            console.log('🔵 exportDocuments 被調用，格式:', format);
+            alert(`導出功能開發中：${format}`);
+        };
+        
+        console.log('✅ 全局函數已定義（簡化版）');
+        console.log('   - openUploadModal');
+        console.log('   - closeAIUploadModal');
+        console.log('   - confirmDeleteProject');
+        console.log('   - toggleProjectNameEdit');
+        console.log('   - toggleExportMenu');
+        console.log('   - exportDocuments');
+        
+        // ========== 🔧 定義依賴函數（Delete 功能） ==========
+        window.deleteProject = async function(projectId) {
+            try {
+                console.log('🗑️ 開始刪除項目:', projectId);
+                
+                // 從 Firebase 刪除
+                const dataManager = window.simpleDataManager || window.firebaseDataManager;
+                if (dataManager && dataManager.initialized) {
+                    await dataManager.deleteProject(projectId);
+                    console.log('✅ 項目已從 Firebase 刪除');
+                } else {
+                    console.warn('⚠️ Firebase 未初始化，僅從 LocalStorage 刪除');
+                }
+                
+                // 從 LocalStorage 刪除（向後兼容）
+                try {
+                    const projects = JSON.parse(localStorage.getItem('vaultcaddy_projects') || '[]');
+                    const updatedProjects = projects.filter(p => p.id !== projectId);
+                    localStorage.setItem('vaultcaddy_projects', JSON.stringify(updatedProjects));
+                    console.log('✅ 項目已從 LocalStorage 刪除');
+                } catch (error) {
+                    console.error('❌ LocalStorage 刪除失敗:', error);
+                }
+                
+                // 觸發事件，更新側邊欄
+                window.dispatchEvent(new CustomEvent('project-deleted', { 
+                    detail: { projectId } 
+                }));
+                
+                // 重定向到 dashboard
+                console.log('🔄 重定向到 dashboard.html');
+                window.location.href = 'dashboard.html';
+            } catch (error) {
+                console.error('❌ 刪除項目失敗:', error);
+                alert('刪除失敗：' + error.message);
+            }
+        };
+        
+        // ========== 🔧 定義依賴函數（Upload 功能） ==========
+        
+        // 全局變量
+        window.selectedDocumentType = 'bank_statement'; // 默認類型
+        window.aiCurrentFile = null;
+        window.aiIsProcessing = false;
+        
+        // 初始化上傳功能
+        window.initializeAIUpload = function() {
+            console.log('🎬 initializeAIUpload 被調用');
+            
+            const uploadArea = document.getElementById('aiUploadArea');
+            const fileInput = document.getElementById('aiFileInput');
+            
+            if (!uploadArea || !fileInput) {
+                console.error('❌ 找不到上傳元素');
+                console.error('   uploadArea:', !!uploadArea);
+                console.error('   fileInput:', !!fileInput);
+                return;
+            }
+            
+            console.log('✅ 找到上傳元素，開始綁定事件');
+            
+            // 拖放事件
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.style.borderColor = '#3b82f6';
+                uploadArea.style.background = '#eff6ff';
+            });
+            
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.style.borderColor = '#d1d5db';
+                uploadArea.style.background = '#ffffff';
+            });
+            
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.style.borderColor = '#d1d5db';
+                uploadArea.style.background = '#ffffff';
+                const file = e.dataTransfer.files[0];
+                if (file) {
+                    console.log('📁 拖放文件:', file.name);
+                    window.handleAIFileUpload(file);
+                }
+            });
+            
+            // 點擊上傳
+            uploadArea.addEventListener('click', () => {
+                console.log('🖱️ 點擊上傳區域');
+                fileInput.click();
+            });
+            
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    console.log('📁 選擇文件:', file.name);
+                    window.handleAIFileUpload(file);
+                }
+            });
+            
+            console.log('✅ AI 上傳已初始化');
+        };
+        
+        // 選擇文檔類型
+        window.selectDocumentType = function(type) {
+            console.log('📄 選擇文檔類型:', type);
+            window.selectedDocumentType = type;
+            
+            // 更新 UI（高亮選中的類型）
+            document.querySelectorAll('.document-type-card').forEach(card => {
+                card.classList.remove('selected');
+                card.style.borderColor = '#e5e7eb';
+                card.style.background = '#ffffff';
+            });
+            
+            const selectedCard = document.querySelector(`[data-type="${type}"]`);
+            if (selectedCard) {
+                selectedCard.classList.add('selected');
+                selectedCard.style.borderColor = '#3b82f6';
+                selectedCard.style.background = '#eff6ff';
+            }
+            
+            console.log('✅ 文檔類型已選擇:', type);
+        };
+        
+        // 處理文件上傳
+        window.handleAIFileUpload = async function(file) {
+            console.log('📤 開始處理文件:', file.name);
+            console.log('   文件大小:', (file.size / 1024 / 1024).toFixed(2), 'MB');
+            console.log('   文件類型:', file.type);
+            console.log('   文檔類型:', window.selectedDocumentType);
+            
+            if (window.aiIsProcessing) {
+                alert('正在處理中，請稍候...');
+                return;
+            }
+            
+            window.aiIsProcessing = true;
+            window.aiCurrentFile = file;
+            
+            try {
+                // 顯示處理中狀態
+                const uploadArea = document.getElementById('aiUploadArea');
+                if (uploadArea) {
+                    uploadArea.innerHTML = `
+                        <div style="text-align: center;">
+                            <div style="width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
+                            <p style="color: #6b7280;">正在處理文件...</p>
+                            <p style="color: #9ca3af; font-size: 0.875rem;">${file.name}</p>
+                        </div>
+                    `;
+                }
+                
+                // AI 處理
+                const result = await window.processWithAI(file, window.selectedDocumentType);
+                console.log('✅ AI 處理完成:', result);
+                
+                // 保存到 Firebase
+                const savedDoc = await window.saveDocumentToFirebase(result);
+                console.log('✅ 文檔已保存:', savedDoc);
+                
+                // 關閉模態框
+                window.closeAIUploadModal();
+                
+                // 直接在前端添加表格行（不刷新頁面）
+                window.addDocumentToTable(savedDoc);
+                
+                // 顯示成功提示
+                alert('✅ 文檔上傳成功！');
+                
+            } catch (error) {
+                console.error('❌ 處理失敗:', error);
+                alert('處理失敗：' + error.message);
+                
+                // 重置上傳區域
+                window.resetAIUpload();
+            } finally {
+                window.aiIsProcessing = false;
+            }
+        };
+        
+        // AI 處理文件
+        window.processWithAI = async function(file, documentType) {
+            console.log('🤖 開始 AI 處理...');
+            console.log('   文檔類型:', documentType);
+            
+            // 檢查處理器類是否存在
+            if (typeof window.HybridVisionDeepSeekProcessor === 'undefined') {
+                throw new Error('HybridVisionDeepSeekProcessor 類別未加載，請確保 hybrid-vision-deepseek.js 已加載');
+            }
+            
+            // 如果實例不存在，創建一個
+            if (!window.hybridVisionDeepSeekProcessor) {
+                console.log('🔧 創建 HybridVisionDeepSeekProcessor 實例...');
+                window.hybridVisionDeepSeekProcessor = new window.HybridVisionDeepSeekProcessor();
+            }
+            
+            const processor = window.hybridVisionDeepSeekProcessor;
+            
+            // 映射文檔類型（前端 → 處理器）
+            const typeMap = {
+                'bank_statement': 'bank-statement',
+                'invoice': 'invoice',
+                'receipt': 'receipt',
+                'general': 'general'
+            };
+            
+            const processorType = typeMap[documentType] || documentType;
+            console.log('   映射類型:', documentType, '→', processorType);
+            
+            // 處理文檔
+            const result = await processor.processDocument(file, processorType);
+            console.log('✅ AI 處理完成');
+            
+            return result;
+        };
+        
+        // 保存到 Firebase
+        window.saveDocumentToFirebase = async function(documentData) {
+            console.log('💾 保存到 Firebase...');
+            
+            // 獲取項目 ID
+            const urlParams = new URLSearchParams(window.location.search);
+            const projectId = urlParams.get('project') || urlParams.get('projectId');
+            
+            if (!projectId) {
+                throw new Error('無法獲取項目 ID');
+            }
+            
+            // 準備文檔數據
+            const doc = {
+                id: Date.now().toString(),
+                name: documentData.fileName || documentData.name || '未命名文檔',
+                type: window.selectedDocumentType || 'general',
+                uploadDate: new Date().toISOString(),
+                processedData: documentData,
+                status: 'completed'
+            };
+            
+            // 保存到 Firebase
+            const dataManager = window.simpleDataManager || window.firebaseDataManager;
+            if (dataManager && dataManager.initialized) {
+                await dataManager.createDocument(projectId, doc);
+                console.log('✅ 已保存到 Firebase');
+            } else {
+                console.warn('⚠️ Firebase 未初始化，保存到 LocalStorage');
+                // 保存到 LocalStorage（向後兼容）
+                const documents = JSON.parse(localStorage.getItem(`vaultcaddy_documents_${projectId}`) || '[]');
+                documents.push(doc);
+                localStorage.setItem(`vaultcaddy_documents_${projectId}`, JSON.stringify(documents));
+            }
+            
+            return doc;
+        };
+        
+        // 重置上傳狀態
+        window.resetAIUpload = function() {
+            console.log('🔄 重置上傳狀態');
+            
+            window.selectedDocumentType = 'bank_statement';
+            window.aiCurrentFile = null;
+            window.aiIsProcessing = false;
+            
+            const fileInput = document.getElementById('aiFileInput');
+            if (fileInput) {
+                fileInput.value = '';
+            }
+            
+            const uploadArea = document.getElementById('aiUploadArea');
+            if (uploadArea) {
+                uploadArea.innerHTML = `
+                    <div style="text-align: center; padding: 3rem;">
+                        <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: #9ca3af; margin-bottom: 1rem;"></i>
+                        <h3 style="color: #374151; margin-bottom: 0.5rem;">拖放文件到此處或點擊選擇</h3>
+                        <p style="color: #6b7280; font-size: 0.875rem;">支持 PDF、JPG、PNG 格式（最大 10MB）</p>
+                    </div>
+                `;
+            }
+        };
+        
+        // 添加文檔到表格
+        window.addDocumentToTable = function(doc) {
+            console.log('📄 添加文檔到表格:', doc);
+            
+            const tbody = document.getElementById('documents-tbody');
+            if (!tbody) {
+                console.error('❌ 找不到表格 tbody');
+                return;
+            }
+            
+            // 移除 "No results." 提示
+            const noResults = tbody.querySelector('tr td[colspan]');
+            if (noResults) {
+                tbody.innerHTML = '';
+            }
+            
+            // 提取數據
+            const data = doc.processedData || {};
+            const invoiceDate = data.invoiceDate || data.date || '-';
+            const items = data.lineItems || data.items || [];
+            const itemsCount = items.length || 0;
+            const total = data.totalAmount || data.total || '-';
+            
+            // 創建新行
+            const newRow = document.createElement('tr');
+            newRow.style.cssText = 'border-bottom: 1px solid #e5e7eb;';
+            newRow.innerHTML = `
+                <td style="padding: 1rem 1.5rem;">
+                    <input type="checkbox" class="document-checkbox">
+                </td>
+                <td style="padding: 1rem 1.5rem;">
+                    <div style="display: flex; align-items: center;">
+                        <i class="fas fa-file-alt" style="color: #3b82f6; margin-right: 0.75rem; font-size: 1.25rem;"></i>
+                        <a href="document-detail.html?project=${new URLSearchParams(window.location.search).get('project')}&document=${doc.id}" style="color: #2563eb; text-decoration: none; font-weight: 500;">${doc.name}</a>
+                    </div>
+                </td>
+                <td style="padding: 1rem 1.5rem; color: #6b7280;">${invoiceDate}</td>
+                <td style="padding: 1rem 1.5rem; color: #6b7280;">${itemsCount} 項</td>
+                <td style="padding: 1rem 1.5rem; color: #6b7280;">${total}</td>
+                <td style="padding: 1rem 1.5rem;">
+                    <span style="background: #d1fae5; color: #065f46; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500;">已完成</span>
+                </td>
+                <td style="padding: 1rem 1.5rem;">
+                    <span style="background: #fef3c7; color: #92400e; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500;">待審核</span>
+                </td>
+                <td style="padding: 1rem 1.5rem; color: #6b7280;">-</td>
+                <td style="padding: 1rem 1.5rem; color: #6b7280;">${new Date(doc.uploadDate).toLocaleDateString()}</td>
+                <td style="padding: 1rem 1.5rem;">
+                    <button onclick="deleteDocument('${doc.id}')" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 0.5rem;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            
+            tbody.insertBefore(newRow, tbody.firstChild);
+            console.log('✅ 文檔已添加到表格');
+        };
+        
+        console.log('✅ 所有依賴函數已定義');
+        console.log('   - deleteProject');
+        console.log('   - initializeAIUpload');
+        console.log('   - selectDocumentType');
+        console.log('   - handleAIFileUpload');
+        console.log('   - processWithAI');
+        console.log('   - saveDocumentToFirebase');
+        console.log('   - resetAIUpload');
+        console.log('   - addDocumentToTable');
+        
+        // 立即執行的頁面可見性腳本
+        (function() {
+            document.documentElement.style.cssText = 'display: block !important; visibility: visible !important;';
+            document.body.style.cssText = 'display: block !important; visibility: visible !important; background: #ffffff;';
+            
+            // 立即確認模態框存在
+            console.log('🚀 Body 開始載入，立即檢查模態框');
+            const immediateCheck = document.getElementById('aiUploadModal');
+            console.log('⚡ 立即檢查結果:', immediateCheck ? '✅ 模態框已在 DOM 中' : '❌ 模態框不存在');
+        })();
+    </script>
+
+    <!-- 導航欄（由 navbar-component.js 動態生成）-->
+    <div id="navbar-placeholder"></div>
+
+    <!-- Dashboard 容器 -->
+    <div class="dashboard-container" style="display: flex !important; min-height: calc(100vh - 60px); background: #ffffff; padding-top: 60px; visibility: visible !important;">
+        <!-- 左側邊欄 (由 sidebar-component.js 動態生成) -->
+        <aside class="sidebar"></aside>
+
+        <!-- 主內容區域 -->
+        <main class="main-content" id="main-content" style="flex: 1; background: #ffffff; overflow-y: auto; min-height: calc(100vh - 60px); display: block !important; visibility: visible !important;">
+            <!-- Team Project 視圖 -->
+            <div id="team-project-view" class="view-container" style="display: block !important; visibility: visible !important; padding: 2rem 3rem; background: #ffffff;">
+                <!-- 頁面標題 -->
+                <header style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                            <h1 id="team-project-title" contenteditable="false" style="font-size: 2rem; font-weight: 700; color: #1f2937; margin: 0; outline: none; border: 2px solid transparent; padding: 0.25rem 0.5rem; border-radius: 4px; transition: all 0.2s;">Project</h1>
+                            <button id="edit-project-name-btn" onclick="toggleProjectNameEdit()" style="background: transparent; border: none; cursor: pointer; color: #6b7280; padding: 0.5rem; border-radius: 4px; transition: all 0.2s;" title="編輯項目名稱">
+                                <i class="fas fa-pen" style="font-size: 1.25rem;"></i>
+                            </button>
+                        </div>
+                        <p style="color: #6b7280; font-size: 1rem; margin: 0;">Manage and view your documents</p>
+                    </div>
+                    <button onclick="confirmDeleteProject()" style="background: #ef4444; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
+                        <i class="fas fa-trash"></i>
+                        <span>Delete</span>
+                    </button>
+                </header>
+
+                <!-- 控制欄 -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <div style="flex: 1; max-width: 300px;">
+                        <input type="text" placeholder="Filter document name..." style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #d1d5db; border-radius: 6px; background: #ffffff; color: #1f2937; font-size: 0.875rem;">
+                    </div>
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <button onclick="openUploadModal()" style="background: #8b5cf6; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
+                            <span>Upload files</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                        <div class="dropdown" style="position: relative;">
+                            <button onclick="toggleExportMenu()" style="background: #10b981; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
+                                <i class="fas fa-download"></i>
+                                <span>Export</span>
+                                <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
     <script>
         // ==================== 全局變量 ====================
         let currentProjectId = null;
         let currentProject = null;
+        let selectedDocumentType = 'bank_statement';
         
         // ==================== 初始化 ====================
         window.addEventListener('auth-state-changed', async (e) => {
@@ -279,7 +1879,6 @@
         // ==================== 載入項目 ====================
         async function loadProject() {
             try {
-                // 從 URL 獲取項目 ID
                 const urlParams = new URLSearchParams(window.location.search);
                 currentProjectId = urlParams.get('project');
                 
@@ -290,16 +1889,12 @@
                 
                 console.log('📂 載入項目:', currentProjectId);
                 
-                // 從 Firebase 獲取項目
                 const projects = await window.simpleDataManager.getProjects();
                 currentProject = projects.find(p => p.id === currentProjectId);
                 
                 if (currentProject) {
-                    document.getElementById('project-name').textContent = currentProject.name;
+                    document.getElementById('team-project-title').textContent = currentProject.name;
                     console.log('✅ 項目名稱:', currentProject.name);
-                } else {
-                    console.error('❌ 找不到項目');
-                    document.getElementById('project-name').textContent = '找不到項目';
                 }
                 
             } catch (error) {
@@ -314,20 +1909,18 @@
                 
                 console.log('📄 載入文檔列表');
                 
-                // 從 Firebase 獲取文檔
                 const documents = await window.simpleDataManager.getDocuments(currentProjectId);
                 console.log('✅ 找到', documents.length, '個文檔');
                 
-                const tbody = document.getElementById('documents-tbody');
+                const tbody = document.getElementById('team-project-tbody');
                 
                 if (documents.length === 0) {
                     tbody.innerHTML = `
                         <tr>
-                            <td colspan="4">
-                                <div class="empty-state">
-                                    <i class="fas fa-file-alt"></i>
-                                    <h3>沒有文檔</h3>
-                                    <p>上傳您的第一個文檔開始使用</p>
+                            <td colspan="10">
+                                <div style="text-align: center; padding: 4rem 2rem; color: #6b7280;">
+                                    <i class="fas fa-file-alt" style="font-size: 4rem; color: #d1d5db; margin-bottom: 1rem;"></i>
+                                    <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem; color: #374151;">No results.</h3>
                                 </div>
                             </td>
                         </tr>
@@ -335,25 +1928,35 @@
                     return;
                 }
                 
-                // 渲染文檔列表
                 tbody.innerHTML = documents.map(doc => {
                     const isProcessing = doc.status === 'processing';
-                    const canClick = !isProcessing;
-                    const statusClass = isProcessing ? 'status-processing' : 'status-completed';
-                    const statusText = isProcessing ? '處理中' : '已完成';
+                    const data = doc.processedData || {};
+                    const uploadDate = new Date(doc.createdAt).toLocaleDateString('zh-TW');
                     
                     return `
-                        <tr ${canClick ? `onclick="viewDocument('${doc.id}')" style="cursor: pointer;"` : ''}>
-                            <td>
-                                <div class="document-name">
-                                    <i class="fas fa-file-pdf"></i>
+                        <tr ${!isProcessing ? `onclick="viewDocument('${doc.id}')" style="cursor: pointer;"` : ''}>
+                            <td style="padding: 1rem;"><input type="checkbox"></td>
+                            <td style="padding: 1rem;">
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <i class="fas fa-file-pdf" style="color: #3b82f6; font-size: 1.25rem;"></i>
                                     <span>${doc.name || doc.fileName || '未命名'}</span>
                                 </div>
                             </td>
-                            <td>${new Date(doc.createdAt).toLocaleDateString('zh-TW')}</td>
-                            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-                            <td>
-                                ${canClick ? `<button onclick="event.stopPropagation(); deleteDocument('${doc.id}')" style="background: none; border: none; color: #ef4444; cursor: pointer;"><i class="fas fa-trash"></i></button>` : '-'}
+                            <td style="padding: 1rem;">${data.invoiceDate || '-'}</td>
+                            <td style="padding: 1rem;">${data.itemCount || 0}</td>
+                            <td style="padding: 1rem;">${data.totalAmount ? `$${data.totalAmount}` : '-'}</td>
+                            <td style="padding: 1rem;">
+                                <span style="padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; background: ${isProcessing ? '#fef3c7' : '#d1fae5'}; color: ${isProcessing ? '#92400e' : '#065f46'};">
+                                    ${isProcessing ? '處理中' : '已完成'}
+                                </span>
+                            </td>
+                            <td style="padding: 1rem;">
+                                <span style="padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; background: #fef3c7; color: #92400e;">待審核</span>
+                            </td>
+                            <td style="padding: 1rem;">-</td>
+                            <td style="padding: 1rem;">${uploadDate}</td>
+                            <td style="padding: 1rem;">
+                                ${!isProcessing ? `<button onclick="event.stopPropagation(); deleteDocument('${doc.id}')" style="background: none; border: none; color: #ef4444; cursor: pointer;"><i class="fas fa-trash"></i></button>` : '-'}
                             </td>
                         </tr>
                     `;
@@ -364,34 +1967,64 @@
             }
         }
         
-        // ==================== 上傳文件 ====================
-        function openUploadModal() {
-            document.getElementById('upload-modal').style.display = 'flex';
-        }
-        
-        function closeUploadModal() {
-            document.getElementById('upload-modal').style.display = 'none';
-            document.getElementById('file-input').value = '';
-        }
-        
-        async function handleUpload() {
-            const fileInput = document.getElementById('file-input');
-            const files = fileInput.files;
-            
-            if (files.length === 0) {
-                alert('請選擇文件');
-                return;
+        // ==================== 上傳模態框 ====================
+        window.openUploadModal = function() {
+            const modal = document.getElementById('aiUploadModal');
+            if (modal) {
+                modal.style.display = 'flex';
+                initializeAIUpload();
             }
+        };
+        
+        window.closeAIUploadModal = function() {
+            const modal = document.getElementById('aiUploadModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        };
+        
+        function initializeAIUpload() {
+            const fileInput = document.getElementById('aiFileInput');
+            const uploadArea = document.getElementById('aiUploadArea');
             
-            console.log('📤 開始上傳', files.length, '個文件');
+            if (!fileInput || !uploadArea) return;
             
-            closeUploadModal();
+            uploadArea.onclick = () => fileInput.click();
+            
+            fileInput.onchange = (e) => {
+                const files = Array.from(e.target.files);
+                if (files.length > 0) {
+                    handleUpload(files);
+                }
+            };
+        }
+        
+        window.selectDocumentType = function(type) {
+            selectedDocumentType = type;
+            
+            document.querySelectorAll('.doc-type-card').forEach(card => {
+                card.style.borderColor = '#e5e7eb';
+                card.style.background = '#ffffff';
+                const indicator = card.querySelector('.selected-indicator');
+                if (indicator) indicator.style.display = 'none';
+            });
+            
+            const selectedCard = document.querySelector(`[data-type="${type}"]`);
+            if (selectedCard) {
+                selectedCard.style.borderColor = '#3b82f6';
+                selectedCard.style.background = '#eff6ff';
+                const indicator = selectedCard.querySelector('.selected-indicator');
+                if (indicator) indicator.style.display = 'flex';
+            }
+        };
+        
+        async function handleUpload(files) {
+            closeAIUploadModal();
             
             for (let file of files) {
                 await uploadFile(file);
             }
             
-            // 重新載入文檔列表
             await loadDocuments();
         }
         
@@ -399,7 +2032,6 @@
             try {
                 console.log('📤 上傳文件:', file.name);
                 
-                // 1. 創建文檔記錄（狀態：處理中）
                 const docData = {
                     name: file.name,
                     fileName: file.name,
@@ -412,7 +2044,10 @@
                 const docId = await window.simpleDataManager.createDocument(currentProjectId, docData);
                 console.log('✅ 文檔記錄已創建:', docId);
                 
-                // 2. 後台處理 AI（不阻塞 UI）
+                // 重新載入列表以顯示新文檔
+                await loadDocuments();
+                
+                // 後台處理 AI
                 processFileWithAI(file, docId).catch(err => {
                     console.error('❌ AI 處理失敗:', err);
                 });
@@ -427,31 +2062,25 @@
             try {
                 console.log('🤖 開始 AI 處理:', file.name);
                 
-                // 使用 HybridVisionDeepSeekProcessor
                 if (!window.HybridVisionDeepSeekProcessor) {
                     throw new Error('AI 處理器未載入');
                 }
                 
                 const processor = new window.HybridVisionDeepSeekProcessor();
-                const result = await processor.processDocument(file, 'bank-statement');
+                const result = await processor.processDocument(file, selectedDocumentType);
                 
                 console.log('✅ AI 處理完成');
                 
-                // 更新文檔狀態
                 await window.simpleDataManager.updateDocument(currentProjectId, docId, {
                     status: 'completed',
                     processedData: result.data || result.extractedData
                 });
                 
                 console.log('✅ 文檔狀態已更新');
-                
-                // 重新載入列表
                 await loadDocuments();
                 
             } catch (error) {
                 console.error('❌ AI 處理失敗:', error);
-                
-                // 更新為失敗狀態
                 await window.simpleDataManager.updateDocument(currentProjectId, docId, {
                     status: 'failed',
                     error: error.message
@@ -459,12 +2088,11 @@
             }
         }
         
-        // ==================== 查看文檔 ====================
+        // ==================== 其他功能 ====================
         function viewDocument(docId) {
             window.location.href = `document-detail.html?project=${currentProjectId}&id=${docId}`;
         }
         
-        // ==================== 刪除文檔 ====================
         async function deleteDocument(docId) {
             if (!confirm('確定要刪除這個文檔嗎？')) return;
             
@@ -478,20 +2106,31 @@
             }
         }
         
-        // ==================== 刪除項目 ====================
-        async function deleteProject() {
-            if (!confirm('確定要刪除整個項目嗎？這將刪除所有文檔！')) return;
+        window.confirmDeleteProject = function() {
+            if (!confirm('確定要刪除整個項目嗎？')) return;
             
-            try {
-                await window.simpleDataManager.deleteProject(currentProjectId);
-                console.log('✅ 項目已刪除');
+            window.simpleDataManager.deleteProject(currentProjectId).then(() => {
                 window.location.href = 'dashboard.html';
-            } catch (error) {
-                console.error('❌ 刪除失敗:', error);
+            }).catch(error => {
                 alert('刪除失敗: ' + error.message);
+            });
+        };
+        
+        window.toggleProjectNameEdit = function() {
+            console.log('編輯項目名稱功能待實現');
+        };
+        
+        window.toggleExportMenu = function() {
+            const menu = document.getElementById('exportMenu');
+            if (menu) {
+                menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
             }
-        }
+        };
+        
+        window.exportDocuments = function(format) {
+            console.log('導出格式:', format);
+            alert('導出功能開發中');
+        };
     </script>
 </body>
 </html>
-
