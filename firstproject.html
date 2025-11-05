@@ -2104,8 +2104,8 @@
             const dataManager = window.simpleDataManager || window.firebaseDataManager;
             if (dataManager && dataManager.initialized) {
                 try {
-                    // ✅ 等待用戶登入（最多 3 秒）
-                    const user = await waitForUser(dataManager, 3000);
+                    // ✅ 等待用戶登入（最多 10 秒）
+                    const user = await waitForUser(dataManager, 10000);
                     if (user) {
                         const projects = await dataManager.getProjects();
                         return projects.find(p => p.id === projectId);
@@ -2123,7 +2123,7 @@
         }
         
         // ✅ 等待用戶登入（與 sidebar 相同的邏輯）
-        function waitForUser(dataManager, timeout = 3000) {
+        function waitForUser(dataManager, timeout = 10000) {
             return new Promise((resolve) => {
                 console.log('⏳ waitForUser: 開始等待用戶登入...');
                 console.log('   dataManager:', dataManager);
@@ -2410,19 +2410,22 @@
                 await updateProjectTitle();
             };
             
-            // 監聽 SimpleDataManager 初始化完成
+            // ✅ 監聽 SimpleDataManager 初始化完成 + currentUser 就緒
             const checkDataManager = setInterval(async () => {
-                if (window.simpleDataManager && window.simpleDataManager.initialized) {
+                if (window.simpleDataManager && 
+                    window.simpleDataManager.initialized && 
+                    window.simpleDataManager.currentUser) {
                     clearInterval(checkDataManager);
-                    console.log('✅ SimpleDataManager 已就緒');
+                    console.log('✅ SimpleDataManager 已就緒 + currentUser 已設置');
                     await updateContent();
                 }
             }, 100);
             
-            // 超時保護（5秒）
+            // 超時保護（10秒）
             setTimeout(() => {
                 clearInterval(checkDataManager);
-            }, 5000);
+                console.warn('⚠️ SimpleDataManager 或 currentUser 初始化超時');
+            }, 10000);
             
             // 初始化用戶團隊信息
             initializeUserTeamInfo();
@@ -2640,10 +2643,29 @@
             console.log(`📂 從 Firebase 載入項目 ${projectId} 的文件`);
             
             try {
-                // 等待 SimpleDataManager 初始化
-                if (!window.simpleDataManager || !window.simpleDataManager.initialized) {
-                    console.warn('⚠️ SimpleDataManager 未初始化，等待...');
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                // ✅ 等待 SimpleDataManager 初始化 + currentUser 就緒
+                if (!window.simpleDataManager || !window.simpleDataManager.initialized || !window.simpleDataManager.currentUser) {
+                    console.warn('⚠️ SimpleDataManager 或 currentUser 未就緒，等待...');
+                    
+                    // 最多等待 10 秒
+                    const maxWait = 10000;
+                    const startTime = Date.now();
+                    
+                    while (Date.now() - startTime < maxWait) {
+                        if (window.simpleDataManager && 
+                            window.simpleDataManager.initialized && 
+                            window.simpleDataManager.currentUser) {
+                            console.log('✅ SimpleDataManager 和 currentUser 已就緒');
+                            break;
+                        }
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    }
+                    
+                    // 超時檢查
+                    if (!window.simpleDataManager || !window.simpleDataManager.initialized || !window.simpleDataManager.currentUser) {
+                        console.error('❌ SimpleDataManager 或 currentUser 初始化超時');
+                        throw new Error('SimpleDataManager 或 currentUser 未就緒');
+                    }
                 }
                 
                 // 從 Firebase 獲取文檔
