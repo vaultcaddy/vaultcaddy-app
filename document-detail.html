@@ -1293,9 +1293,38 @@
         }
         
         // 更新核對狀態
-        function updateReconciliation(transactionIndex, isReconciled) {
+        async function updateReconciliation(transactionIndex, isReconciled) {
             console.log('更新核對狀態:', transactionIndex, isReconciled);
-            // TODO: 更新 localStorage
+            
+            // ✅ 更新 Firebase
+            if (!currentDocument) {
+                console.error('❌ 找不到當前文檔');
+                return;
+            }
+            
+            try {
+                const projectId = new URLSearchParams(window.location.search).get('project');
+                const documentId = currentDocument.id;
+                
+                if (!projectId || !documentId) {
+                    console.error('❌ 缺少必要參數');
+                    return;
+                }
+                
+                // 更新交易的核對狀態
+                const transactions = currentDocument.processedData?.transactions || [];
+                if (transactions[transactionIndex]) {
+                    transactions[transactionIndex].reconciled = isReconciled;
+                    
+                    await window.simpleDataManager.updateDocument(projectId, documentId, {
+                        'processedData.transactions': transactions
+                    });
+                    
+                    console.log('✅ 核對狀態已更新到 Firebase');
+                }
+            } catch (error) {
+                console.error('❌ 更新核對狀態失敗:', error);
+            }
         }
         
         // 編輯交易
@@ -1522,7 +1551,7 @@
         });
         
         // 导出文档
-        function exportDocument(format) {
+        async function exportDocument(format) {
             console.log(`📤 导出文档，格式: ${format}`);
             
             // 关闭菜单
@@ -1531,23 +1560,13 @@
                 menu.style.display = 'none';
             }
             
-            // 获取当前文档 ID
-            const urlParams = new URLSearchParams(window.location.search);
-            const documentId = urlParams.get('id');
-            
-            if (!documentId) {
-                alert('无法获取文档 ID');
+            // ✅ 使用當前已載入的文檔數據
+            if (!currentDocument) {
+                alert('無法獲取文檔數據');
                 return;
             }
             
-            // 从 localStorage 加载文档数据
-            const allDocuments = JSON.parse(localStorage.getItem('vaultcaddy_documents') || '[]');
-            const document = allDocuments.find(doc => doc.id === documentId);
-            
-            if (!document) {
-                alert('无法加载文档数据');
-                return;
-            }
+            const document = currentDocument;
             
             // 使用 ExportManager 导出
             if (!window.exportManager) {
@@ -1639,39 +1658,54 @@
         });
         
         // 保存文档更改
-        function saveDocumentChanges(documentId, changes) {
+        async function saveDocumentChanges(documentId, changes) {
             console.log('💾 保存文档更改:', { documentId, changes });
             
             try {
-                const allDocuments = JSON.parse(localStorage.getItem('vaultcaddy_documents') || '[]');
-                const docIndex = allDocuments.findIndex(doc => doc.id === documentId);
+                // ✅ 獲取項目 ID
+                const urlParams = new URLSearchParams(window.location.search);
+                const projectId = urlParams.get('project');
                 
-                if (docIndex !== -1) {
-                    // 更新文档数据
-                    allDocuments[docIndex] = {
-                        ...allDocuments[docIndex],
-                        ...changes,
-                        lastModified: new Date().toISOString()
+                if (!projectId) {
+                    console.error('❌ 找不到項目 ID');
+                    return;
+                }
+                
+                // ✅ 使用 SimpleDataManager 更新 Firebase
+                if (!window.simpleDataManager || !window.simpleDataManager.initialized) {
+                    console.error('❌ SimpleDataManager 未初始化');
+                    return;
+                }
+                
+                // 更新文檔數據
+                const updateData = {
+                    ...changes,
+                    lastModified: new Date().toISOString()
+                };
+                
+                await window.simpleDataManager.updateDocument(projectId, documentId, updateData);
+                console.log('✅ 文档更改已保存到 Firebase');
+                
+                // 更新本地 currentDocument
+                if (currentDocument) {
+                    currentDocument = {
+                        ...currentDocument,
+                        ...updateData
                     };
-                    
-                    // 保存回 localStorage
-                    localStorage.setItem('vaultcaddy_documents', JSON.stringify(allDocuments));
-                    console.log('✅ 文档更改已保存');
-                    
-                    // 显示保存提示
-                    if (window.VaultCaddyNavbar && window.VaultCaddyNavbar.showNotification) {
-                        window.VaultCaddyNavbar.showNotification('更改已保存', 'success');
-                    }
-                } else {
-                    console.error('❌ 未找到文档');
+                }
+                
+                // 显示保存提示
+                if (window.vaultcaddyNavbar && window.vaultcaddyNavbar.showNotification) {
+                    window.vaultcaddyNavbar.showNotification('更改已保存', 'success');
                 }
             } catch (error) {
                 console.error('❌ 保存文档更改失败:', error);
+                alert('保存失敗: ' + error.message);
             }
         }
         
         // 保存發票詳情
-        function saveInvoiceDetails() {
+        async function saveInvoiceDetails() {
             if (!currentDocument) {
                 alert('無法保存：未找到當前文檔');
                 return;
@@ -1713,32 +1747,31 @@
                 ...updates
             };
             
-            // 保存到 LocalStorage
-            const projectId = new URLSearchParams(window.location.search).get('project') || 'default';
-            const storageKey = `vaultcaddy_project_${projectId}_files`;
-            const files = JSON.parse(localStorage.getItem(storageKey) || '[]');
-            const fileIndex = files.findIndex(f => f.id === currentDocument.id);
-            
-            if (fileIndex !== -1) {
-                files[fileIndex] = currentDocument;
-                localStorage.setItem(storageKey, JSON.stringify(files));
-                console.log('✅ 發票詳情已保存到 LocalStorage');
-            }
-            
-            // 如果 Firebase 可用，也保存到 Firebase
-            if (window.firebaseDataManager && window.firebaseDataManager.isInitialized) {
-                window.firebaseDataManager.updateDocument(projectId, currentDocument.id, {
-                    processedData: currentDocument.processedData
-                }).then(() => {
-                    console.log('✅ 發票詳情已保存到 Firebase');
-                    alert('✅ 保存成功！');
-                }).catch(error => {
-                    console.error('❌ Firebase 保存失敗:', error);
-                    alert('✅ 已保存到本地，但 Firebase 同步失敗');
+            // ✅ 保存到 Firebase
+            try {
+                const projectId = new URLSearchParams(window.location.search).get('project');
+                
+                if (!projectId) {
+                    alert('❌ 找不到項目 ID');
+                    return;
+                }
+                
+                if (!window.simpleDataManager || !window.simpleDataManager.initialized) {
+                    alert('❌ 數據管理器未初始化');
+                    return;
+                }
+                
+                await window.simpleDataManager.updateDocument(projectId, currentDocument.id, {
+                    processedData: currentDocument.processedData,
+                    lastModified: new Date().toISOString()
                 });
-            } else {
-                console.log('ℹ️ Firebase 未初始化，僅保存到 LocalStorage');
+                
+                console.log('✅ 發票詳情已保存到 Firebase');
                 alert('✅ 保存成功！');
+                
+            } catch (error) {
+                console.error('❌ Firebase 保存失敗:', error);
+                alert('❌ 保存失敗: ' + error.message);
             }
         }
         
