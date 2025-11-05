@@ -1554,8 +1554,13 @@
         window.addEventListener('auth-state-changed', async (e) => {
             console.log('🔥 收到 auth-state-changed 事件');
             
+            // 移除 auth-checking 類別，顯示頁面
+            document.body.classList.remove('auth-checking');
+            document.body.classList.add('auth-ready');
+            
             if (!e.detail.user) {
-                console.log('❌ 用戶未登入');
+                console.log('❌ 用戶未登入，重定向到首頁');
+                window.location.href = 'index.html';
                 return;
             }
             
