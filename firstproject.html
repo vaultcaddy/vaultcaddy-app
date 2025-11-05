@@ -1393,49 +1393,44 @@
                                 <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; width: 50px;">
                                     <input type="checkbox" id="select-all-checkbox" onchange="toggleSelectAll()">
                                 </th>
-                                <!-- 文檔列 -->
+                                <!-- 文檔名稱列 -->
                                 <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
-                                    <span data-translate="document">Document</span>
+                                    <span>文檔名稱</span>
                                     <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i>
                                 </th>
-                                <!-- 帳單日期列 -->
-                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
-                                    <span data-translate="invoice_date">Invoice Date</span>
+                                <!-- 類型列 -->
+                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; width: 100px;">
+                                    <span>類型</span>
                                     <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i>
                                 </th>
-                                <!-- 商品列 -->
+                                <!-- 供應商/來源列 -->
                                 <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
-                                    <span data-translate="items_count">Items</span>
+                                    <span>供應商/來源</span>
                                     <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i>
                                 </th>
-                                <!-- 餘額信息列 -->
+                                <!-- 金額列 -->
+                                <th style="text-align: right; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
+                                    <span>金額</span>
+                                    <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i>
+                                </th>
+                                <!-- 日期列 -->
                                 <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
-                                    <span data-translate="balance_info">Balance Info</span>
+                                    <span>日期</span>
                                     <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i>
                                 </th>
                                 <!-- 狀態列 -->
                                 <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
-                                    <span data-translate="status">Status</span>
-                                    <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i>
-                                </th>
-                                <!-- 審核狀態列 -->
-                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
-                                    <span data-translate="review_status">Review Status</span>
-                                    <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i>
-                                </th>
-                                <!-- 備註列 -->
-                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
-                                    <span data-translate="notes">Notes</span>
+                                    <span>狀態</span>
                                     <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i>
                                 </th>
                                 <!-- 上傳日期列 -->
                                 <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
-                                    <span data-translate="date_uploaded">Date Uploaded</span>
+                                    <span>上傳日期</span>
                                     <i class="fas fa-sort" style="margin-left: 0.5rem; color: #9ca3af;"></i>
                                 </th>
                                 <!-- 操作列 -->
-                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
-                                    <span data-translate="actions">Actions</span>
+                                <th style="text-align: center; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; width: 100px;">
+                                    <span>操作</span>
                                 </th>
                             </tr>
                         </thead>
@@ -1636,33 +1631,87 @@
                 
                 tbody.innerHTML = documents.map(doc => {
                     const isProcessing = doc.status === 'processing';
+                    const isFailed = doc.status === 'failed';
                     const data = doc.processedData || {};
-                    const uploadDate = new Date(doc.createdAt).toLocaleDateString('zh-TW');
+                    const uploadDate = doc.createdAt ? new Date(doc.createdAt).toLocaleDateString('zh-TW') : 'Invalid Date';
+                    
+                    // 獲取文檔類型圖標和顏色
+                    const getTypeIcon = (type) => {
+                        const types = {
+                            'bank_statement': { icon: 'fa-university', color: '#10b981', label: '銀行對帳單' },
+                            'invoice': { icon: 'fa-file-invoice', color: '#3b82f6', label: '發票' },
+                            'receipt': { icon: 'fa-receipt', color: '#8b5cf6', label: '收據' },
+                            'general': { icon: 'fa-file-alt', color: '#6b7280', label: '一般' }
+                        };
+                        return types[type] || types['general'];
+                    };
+                    
+                    const typeInfo = getTypeIcon(doc.documentType || doc.type);
+                    
+                    // 提取關鍵數據
+                    const vendor = data.vendor || data.supplier || data.merchantName || '-';
+                    const amount = data.totalAmount || data.amount || data.total;
+                    const amountDisplay = amount ? `$${parseFloat(amount).toLocaleString('zh-TW', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '-';
+                    const date = data.invoiceDate || data.transactionDate || data.date || '-';
                     
                     return `
-                        <tr ${!isProcessing ? `onclick="viewDocument('${doc.id}')" style="cursor: pointer;"` : 'style="cursor: default;"'}>
+                        <tr ${!isProcessing && !isFailed ? `onclick="viewDocument('${doc.id}')" style="cursor: pointer;"` : 'style="cursor: default;"'} onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='transparent'">
                             <td style="padding: 1rem;"><input type="checkbox" onclick="event.stopPropagation();"></td>
+                            
+                            <!-- 文檔名稱 -->
                             <td style="padding: 1rem;">
                                 <div style="display: flex; align-items: center; gap: 0.75rem;">
-                                    <i class="fas fa-file-pdf" style="color: #3b82f6; font-size: 1.25rem;"></i>
-                                    <span>${doc.name || doc.fileName || '未命名'}</span>
+                                    <i class="fas fa-file-pdf" style="color: #ef4444; font-size: 1.25rem;"></i>
+                                    <span style="font-weight: 500; color: #1f2937;">${doc.name || doc.fileName || '未命名'}</span>
                                 </div>
                             </td>
-                            <td style="padding: 1rem;">${data.invoiceDate || '-'}</td>
-                            <td style="padding: 1rem;">${data.itemCount || 0}</td>
-                            <td style="padding: 1rem;">${data.totalAmount ? `$${data.totalAmount}` : '-'}</td>
+                            
+                            <!-- 類型 -->
                             <td style="padding: 1rem;">
-                                <span style="padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; background: ${isProcessing ? '#fef3c7' : '#d1fae5'}; color: ${isProcessing ? '#92400e' : '#065f46'};">
-                                    ${isProcessing ? '處理中' : '已完成'}
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="fas ${typeInfo.icon}" style="color: ${typeInfo.color}; font-size: 1rem;"></i>
+                                    <span style="font-size: 0.875rem; color: #6b7280;">${typeInfo.label}</span>
+                                </div>
+                            </td>
+                            
+                            <!-- 供應商/來源 -->
+                            <td style="padding: 1rem;">
+                                <span style="color: #374151;">${vendor}</span>
+                            </td>
+                            
+                            <!-- 金額 -->
+                            <td style="padding: 1rem; text-align: right;">
+                                <span style="font-weight: 600; color: #059669; font-size: 0.9375rem;">${amountDisplay}</span>
+                            </td>
+                            
+                            <!-- 日期 -->
+                            <td style="padding: 1rem;">
+                                <span style="color: #374151;">${date}</span>
+                            </td>
+                            
+                            <!-- 狀態 -->
+                            <td style="padding: 1rem;">
+                                <span style="padding: 0.375rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; background: ${isProcessing ? '#fef3c7' : isFailed ? '#fee2e2' : '#d1fae5'}; color: ${isProcessing ? '#92400e' : isFailed ? '#991b1b' : '#065f46'};">
+                                    ${isProcessing ? '處理中' : isFailed ? '失敗' : '已完成'}
                                 </span>
                             </td>
+                            
+                            <!-- 上傳日期 -->
                             <td style="padding: 1rem;">
-                                <span style="padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; background: #fef3c7; color: #92400e;">待審核</span>
+                                <span style="color: #6b7280; font-size: 0.875rem;">${uploadDate}</span>
                             </td>
-                            <td style="padding: 1rem;">-</td>
-                            <td style="padding: 1rem;">${uploadDate}</td>
-                            <td style="padding: 1rem;">
-                                ${!isProcessing ? `<button onclick="event.stopPropagation(); deleteDocument('${doc.id}')" style="background: none; border: none; color: #ef4444; cursor: pointer;"><i class="fas fa-trash"></i></button>` : '-'}
+                            
+                            <!-- 操作 -->
+                            <td style="padding: 1rem; text-align: center;">
+                                <button 
+                                    onclick="event.stopPropagation(); deleteDocument('${doc.id}')" 
+                                    style="background: none; border: none; color: #9ca3af; cursor: pointer; padding: 0.5rem; border-radius: 4px; transition: all 0.2s;"
+                                    onmouseover="this.style.color='#ef4444'; this.style.backgroundColor='#fee2e2'"
+                                    onmouseout="this.style.color='#9ca3af'; this.style.backgroundColor='transparent'"
+                                    title="刪除文檔"
+                                >
+                                    <i class="fas fa-trash" style="font-size: 1rem;"></i>
+                                </button>
                             </td>
                         </tr>
                     `;
