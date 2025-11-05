@@ -793,19 +793,19 @@ class VaultCaddyNavbar {
 // 創建全局實例
 // 等待 Firebase Auth 初始化完成後再創建 navbar
 function initNavbar() {
-    console.log('🎨 開始初始化 VaultCaddy Navbar...');
+    console.log('🎨 開始初始化 VaultCaddy Navbar... [VERSION: 20251105-force-init]');
     
-    // 檢查 Firebase Auth 是否已初始化
-    if (window.authHandler && window.authHandler.initialized) {
-        console.log('✅ Firebase Auth 已初始化，立即創建 navbar');
+    // ✅ 使用 SimpleAuth 而不是舊的 authHandler
+    if (window.simpleAuth && window.simpleAuth.initialized) {
+        console.log('✅ SimpleAuth 已初始化，立即創建 navbar');
         window.vaultcaddyNavbar = new VaultCaddyNavbar();
     } else {
-        console.log('⏳ 等待 Firebase Auth 初始化...');
+        console.log('⏳ 等待 SimpleAuth 初始化...');
         
-        // 監聽 Firebase Auth 初始化完成事件
+        // 監聽 SimpleAuth 初始化完成事件
         const checkAuth = setInterval(() => {
-            if (window.authHandler && window.authHandler.initialized) {
-                console.log('✅ Firebase Auth 初始化完成，創建 navbar');
+            if (window.simpleAuth && window.simpleAuth.initialized) {
+                console.log('✅ SimpleAuth 初始化完成，創建 navbar');
                 clearInterval(checkAuth);
                 window.vaultcaddyNavbar = new VaultCaddyNavbar();
             }
@@ -814,7 +814,7 @@ function initNavbar() {
         // 超時保護：5 秒後強制創建（向後兼容）
         setTimeout(() => {
             if (!window.vaultcaddyNavbar) {
-                console.warn('⚠️ Firebase Auth 初始化超時，使用向後兼容模式');
+                console.warn('⚠️ SimpleAuth 初始化超時，強制創建 navbar');
                 clearInterval(checkAuth);
                 window.vaultcaddyNavbar = new VaultCaddyNavbar();
             }

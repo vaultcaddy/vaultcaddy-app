@@ -282,13 +282,19 @@ class SimpleDataManager {
         try {
             const snapshot = await this.db.collection('documents')
                 .where('projectId', '==', projectId)
-                .orderBy('createdAt', 'desc')
                 .get();
             
-            const documents = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
+            // 在客戶端排序，避免需要 Firebase 複合索引
+            const documents = snapshot.docs
+                .map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }))
+                .sort((a, b) => {
+                    const dateA = new Date(a.createdAt || 0);
+                    const dateB = new Date(b.createdAt || 0);
+                    return dateB - dateA; // 降序排列（最新的在前）
+                });
             
             console.log(`✅ 獲取 ${documents.length} 個文檔`);
             return documents;
@@ -335,10 +341,8 @@ class SimpleDataManager {
             const docRef = await this.db.collection('documents').add(data);
             console.log('✅ 文檔已創建:', docRef.id);
             
-            return {
-                id: docRef.id,
-                ...data
-            };
+            // 返回文檔 ID（字符串）
+            return docRef.id;
             
         } catch (error) {
             console.error('❌ 創建文檔失敗:', error);
