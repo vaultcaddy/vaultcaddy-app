@@ -307,7 +307,7 @@ class EditableTable {
     /**
      * 保存更改
      */
-    save() {
+    async save() {
         if (this.unsavedChanges.size === 0) {
             return;
         }

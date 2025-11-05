@@ -44,7 +44,6 @@
     <!-- 功能模块 -->
     <script src="editable-table.js"></script>
     <script src="export-manager.js"></script>
-    <script src="reconciliation-engine.js"></script>
     
     <!-- ✅ 提前定義 goBackToDashboard 函數 -->
     <script>
@@ -1641,16 +1640,16 @@
         }, 2000); // 延迟 2 秒确保所有内容已加载
         
         // 监听表格编辑事件
-        document.addEventListener('cellEdited', function(e) {
+        document.addEventListener('cellEdited', async function(e) {
             const { row, cell, oldValue, newValue } = e.detail;
             console.log('📝 单元格已编辑:', { row, cell, oldValue, newValue });
             
-            // 保存更改到 localStorage
+            // 保存更改到 Firebase
             const urlParams = new URLSearchParams(window.location.search);
             const documentId = urlParams.get('id');
             
             if (documentId) {
-                saveDocumentChanges(documentId, {
+                await saveDocumentChanges(documentId, {
                     field: cell.dataset.field || cell.textContent,
                     value: newValue
                 });
