@@ -26,7 +26,7 @@ class SimpleDataManager {
     // 初始化
     async init() {
         try {
-            console.log('📦 開始初始化 SimpleDataManager...');
+            console.log('📦 開始初始化 SimpleDataManager... [VERSION: 20251105-ultimate]');
             
             // 直接使用 Firebase（已由 firebase-config.js 初始化）
             if (!firebase || !firebase.firestore || !firebase.storage) {
