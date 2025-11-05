@@ -296,3 +296,15 @@ setTimeout(async () => {
     }
 }, 100); // 100ms 後檢查
 
+// ✅✅ 終極後備：強制初始化（3秒後）
+setTimeout(async () => {
+    if (!window.simpleAuth.initialized) {
+        console.warn('⚠️ SimpleAuth 3秒後仍未初始化，強制初始化');
+        try {
+            await window.simpleAuth.init();
+        } catch (error) {
+            console.error('❌ 強制初始化失敗:', error);
+        }
+    }
+}, 3000);
+
