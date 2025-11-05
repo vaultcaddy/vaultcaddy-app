@@ -2390,29 +2390,19 @@
                 });
             }
             
-            // ✅ 超級簡化的初始化：直接創建 sidebar，讓它自己處理等待邏輯
-            console.log('🚀 超級簡化初始化開始...');
+            // ✅ 基本初始化（不創建 sidebar，等待 auth-state-changed）
+            console.log('🚀 基本初始化開始...');
             
-            // 1️⃣ 立即創建 sidebar（它內部會等待 Auth）
-            console.log('🎨 創建側邊欄實例');
-            window.unifiedSidebar = new VaultCaddySidebar();
-            
-            // 2️⃣ 立即更新項目標題（函數內部會等待 Auth）
-            updateProjectTitle();
-            
-            // 3️⃣ 初始化用戶團隊信息
-            initializeUserTeamInfo();
-            
-            // 4️⃣ 處理 hash 路由
+            // 1️⃣ 處理 hash 路由
             handleHashRouting();
             
-            // 5️⃣ 確保頁面內容可見
+            // 2️⃣ 確保頁面內容可見
             ensurePageContentVisible();
             
-            // 6️⃣ 監聽 hash 變化
+            // 3️⃣ 監聽 hash 變化
             window.addEventListener('hashchange', handleHashRouting);
             
-            // 7️⃣ 監聽語言變更事件
+            // 4️⃣ 監聽語言變更事件
             window.addEventListener('languageChanged', function(e) {
                 console.log('Dashboard: 語言已變更為', e.detail.language);
                 const hash = window.location.hash.substring(1);
@@ -2422,7 +2412,33 @@
                 }
             });
             
-            console.log('✅ 超級簡化初始化完成');
+            console.log('✅ 基本初始化完成（等待 auth-state-changed 事件）');
+        });
+        
+        // 🔥 監聽 auth-state-changed 事件（和 dashboard.html 一樣）
+        window.addEventListener('auth-state-changed', async function(e) {
+            console.log('🔥 firstproject: 收到 auth-state-changed 事件');
+            
+            // 檢查是否已登入
+            if (!e.detail.user) {
+                console.log('❌ 用戶未登入');
+                return; // SimpleAuth 會自動處理重定向
+            }
+            
+            console.log('✅ 用戶已登入:', e.detail.user.email);
+            
+            // ✅ 在這裡初始化 sidebar（用戶已登入後）
+            if (window.VaultCaddySidebar && !window.unifiedSidebar) {
+                console.log('🎨 創建側邊欄實例（auth 後）');
+                window.unifiedSidebar = new VaultCaddySidebar();
+                console.log('✅ 側邊欄已初始化');
+            }
+            
+            // ✅ 更新項目標題
+            await updateProjectTitle();
+            
+            // ✅ 初始化用戶團隊信息
+            initializeUserTeamInfo();
         });
 
         // 初始化用戶團隊信息
