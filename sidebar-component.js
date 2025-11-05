@@ -11,6 +11,8 @@ class VaultCaddySidebar {
     }
     
     init() {
+        console.log('🎨 Sidebar: init() 開始');
+        
         // ❌ 不要立即渲染，等待 SimpleDataManager 就緒
         // this.render();
         
@@ -20,40 +22,62 @@ class VaultCaddySidebar {
         this.setupProjectListener();
         
         // ✅ 延遲渲染，等待 SimpleDataManager 和 Auth 就緒
-        this.delayedRender();
+        // 注意：這是 async 函數，會在背景執行
+        this.delayedRender().catch(err => {
+            console.error('❌ Sidebar: delayedRender() 失敗:', err);
+        });
+        
+        console.log('🎨 Sidebar: init() 完成（delayedRender 在背景執行）');
     }
     
     // ✅ 延遲渲染：等待 SimpleDataManager 和 Auth 就緒
     async delayedRender() {
-        console.log('⏳ Sidebar: 等待 SimpleDataManager 和 Auth 就緒...');
+        console.log('⏳ Sidebar: delayedRender() 開始執行...');
+        console.log('   window.simpleDataManager:', !!window.simpleDataManager);
+        console.log('   window.simpleDataManager?.initialized:', window.simpleDataManager?.initialized);
+        console.log('   window.simpleDataManager?.currentUser:', window.simpleDataManager?.currentUser?.email || 'null');
         
-        // 等待 SimpleDataManager 初始化
-        const maxWait = 10000; // 最多等 10 秒
-        const startTime = Date.now();
-        
-        while (Date.now() - startTime < maxWait) {
-            if (window.simpleDataManager && window.simpleDataManager.initialized) {
-                console.log('✅ Sidebar: SimpleDataManager 已就緒');
-                
-                // 再等待 Auth 狀態（增加到 5 秒）
-                const user = await this.waitForUser(window.simpleDataManager, 5000);
-                if (user) {
-                    console.log('✅ Sidebar: Auth 已就緒，開始渲染');
-                    await this.render();
-                    return;
-                } else {
-                    console.warn('⚠️ Sidebar: Auth 超時，使用空項目列表渲染');
-                    await this.render();
-                    return;
+        try {
+            // 等待 SimpleDataManager 初始化
+            const maxWait = 10000; // 最多等 10 秒
+            const startTime = Date.now();
+            
+            console.log('⏳ Sidebar: 開始輪詢等待 SimpleDataManager...');
+            
+            while (Date.now() - startTime < maxWait) {
+                if (window.simpleDataManager && window.simpleDataManager.initialized) {
+                    console.log('✅ Sidebar: SimpleDataManager 已就緒');
+                    console.log('   currentUser:', window.simpleDataManager.currentUser ? window.simpleDataManager.currentUser.email : 'null');
+                    
+                    // 再等待 Auth 狀態（增加到 5 秒）
+                    console.log('⏳ Sidebar: 等待 Auth 狀態...');
+                    const user = await this.waitForUser(window.simpleDataManager, 5000);
+                    if (user) {
+                        console.log('✅ Sidebar: Auth 已就緒，開始渲染');
+                        await this.render();
+                        console.log('✅ Sidebar: render() 完成');
+                        return;
+                    } else {
+                        console.warn('⚠️ Sidebar: Auth 超時，使用空項目列表渲染');
+                        await this.render();
+                        console.log('✅ Sidebar: render() 完成（空列表）');
+                        return;
+                    }
                 }
+                
+                await new Promise(resolve => setTimeout(resolve, 100));
             }
             
-            await new Promise(resolve => setTimeout(resolve, 100));
+            console.error('❌ Sidebar: SimpleDataManager 初始化超時（10秒）');
+            // 仍然渲染，但項目列表為空
+            await this.render();
+            console.log('✅ Sidebar: render() 完成（超時後）');
+            
+        } catch (error) {
+            console.error('❌ Sidebar: delayedRender() 發生錯誤:', error);
+            console.error('   錯誤堆棧:', error.stack);
+            throw error;
         }
-        
-        console.error('❌ Sidebar: SimpleDataManager 初始化超時（10秒）');
-        // 仍然渲染，但項目列表為空
-        await this.render();
     }
     
     setupProjectListener() {
