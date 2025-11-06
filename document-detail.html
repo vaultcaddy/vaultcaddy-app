@@ -17,13 +17,13 @@
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
     
     <!-- Firebase 配置和管理器 -->
-    <script defer src="firebase-config.js?v=20251106-rebuild"></script>
-    <script defer src="simple-auth.js?v=20251106-rebuild"></script>
-    <script defer src="simple-data-manager.js?v=20251106-rebuild"></script>
+    <script defer src="firebase-config.js?v=20251106-auth-fix"></script>
+    <script defer src="simple-auth.js?v=20251106-auth-fix"></script>
+    <script defer src="simple-data-manager.js?v=20251106-auth-fix"></script>
     
     <!-- UI 組件 -->
-    <script defer src="navbar-component.js?v=20251106-rebuild"></script>
-    <script defer src="sidebar-component.js?v=20251106-rebuild"></script>
+    <script defer src="navbar-component.js?v=20251106-auth-fix"></script>
+    <script defer src="sidebar-component.js?v=20251106-auth-fix"></script>
     
     <style>
         body {
@@ -421,14 +421,19 @@
             
             console.log('✅ SimpleAuth 已就緒');
             
-            // 檢查登入狀態
-            if (!window.simpleAuth.isLoggedIn()) {
-                console.log('❌ 用戶未登入，跳轉到登入頁');
-                window.location.href = 'index.html';
-                return;
+            // 等待用戶狀態確定（等待 currentUser 被設置）
+            console.log('⏳ 等待用戶狀態確定...');
+            attempts = 0;
+            while (!window.simpleAuth.currentUser) {
+                if (attempts++ > 100) {
+                    console.log('❌ 用戶未登入（超時），跳轉到登入頁');
+                    window.location.href = 'index.html';
+                    return;
+                }
+                await new Promise(resolve => setTimeout(resolve, 100));
             }
             
-            console.log('✅ 用戶已登入');
+            console.log('✅ 用戶已登入:', window.simpleAuth.currentUser.email);
             
             // 載入文檔
             await loadDocument();
