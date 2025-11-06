@@ -2,254 +2,687 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
+    
+    <!-- 🔒 頁面保護 -->
+    <style>
+        body.auth-checking { visibility: hidden !important; }
+        .auth-loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; align-items: center; justify-content: center; z-index: 9999; visibility: visible !important; }
+        body.auth-ready .auth-loading { display: none; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+    <script>
+        document.documentElement.classList.add('auth-checking');
+        if (document.body) { document.body.classList.add('auth-checking'); } 
+        else { document.addEventListener('DOMContentLoaded', function() { document.body.classList.add('auth-checking'); }); }
+    </script>
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>文檔詳情 - VaultCaddy</title>
-    
-    <!-- 樣式 -->
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="pages.css">
+    <link rel="stylesheet" href="editable-table.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="config.js"></script>
+    <script src="translations.js"></script>
     
     <!-- Firebase SDK -->
-    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
-    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
-    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
-    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
     
-    <!-- Firebase 配置和管理器 -->
-    <script defer src="firebase-config.js?v=20251106-final"></script>
-    <script defer src="simple-auth.js?v=20251106-final"></script>
-    <script defer src="simple-data-manager.js?v=20251106-final"></script>
+    <!-- Firebase 配置和數據管理器 -->
+    <script src="firebase-config.js?v=20251106-old-ui"></script>
+    <!-- 🔥 新的簡化系統 -->
+    <script src="simple-auth.js?v=20251106-old-ui"></script>
+    <script src="simple-data-manager.js?v=20251106-old-ui"></script>
     
-    <!-- UI 組件 -->
-    <script defer src="navbar-component.js?v=20251106-final"></script>
-    <script defer src="sidebar-component.js?v=20251106-final"></script>
+    <script src="navbar-component.js?v=20251106-old-ui"></script>
+    <script src="sidebar-component.js?v=20251106-old-ui"></script>
+    
+    <!-- 功能模块 -->
+    <script src="editable-table.js?v=20251106-old-ui"></script>
+    <script src="export-manager.js?v=20251106-old-ui"></script>
+    
+    <!-- ✅ 提前定義 goBackToDashboard 函數 -->
+    <script>
+        // 返回儀表板（提前定義，避免 ReferenceError）
+        function goBackToDashboard() {
+            const params = new URLSearchParams(window.location.search);
+            const projectId = params.get('project');
+            if (projectId) {
+                window.location.href = `firstproject.html?project=${projectId}`;
+            } else {
+                window.location.href = 'dashboard.html';
+            }
+        }
+    </script>
     
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f9fafb;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #ffffff;
+            color: #1f2937;
+            min-height: 100vh;
             margin: 0;
             padding: 0;
         }
         
+        /* 使用與 firstproject.html 相同的布局結構 */
         .dashboard-container {
             display: flex;
             min-height: 100vh;
-            padding-top: 60px;
+            background: #ffffff;
+            padding-top: 60px; /* 為導航欄留出空間 */
         }
         
+        .sidebar {
+            width: 280px;
+            background: #ffffff;
+            border-right: 1px solid #e5e7eb;
+            flex-shrink: 0;
+            position: fixed;
+            top: 60px;
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: none;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .saved-indicator {
+            color: #10b981;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        /* 主內容區域 */
         .main-content {
+            margin-left: 10pt; /* 只保留 10pt 與左側欄的間距 */
             flex: 1;
-            margin-left: 280px;
-            padding: 2rem;
+            background: #ffffff;
+            min-height: calc(100vh - 60px);
         }
         
-        .document-header {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 8px;
-            margin-bottom: 2rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        /* 詳情頁面頂部 */
+        .detail-header {
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1rem 2rem 1rem 10pt; /* 左邊距改為 10pt */
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 60px;
+            z-index: 10;
         }
         
-        .document-header h1 {
-            margin: 0 0 0.5rem 0;
-            font-size: 1.5rem;
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+            cursor: pointer;
+        }
+        
+        .back-btn:hover {
             color: #1f2937;
         }
         
-        .document-meta {
+        .document-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .top-actions {
             display: flex;
-            gap: 2rem;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        /* 詳情內容容器 */
+        .detail-container {
+            display: grid;
+            grid-template-columns: 550px 1fr;
+            gap: 0; /* 移除中間空白 */
+            height: calc(100vh - 120px);
+        }
+        
+        /* 左側 PDF 預覽區 */
+        .pdf-preview-panel {
+            background: #f9fafb;
+            border-right: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .pdf-controls {
+            padding: 1rem 1rem 1rem 10pt; /* 左側 padding 改為 10pt */
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+        
+        .page-nav-btn {
+            background: #ffffff;
+            color: #1f2937;
+            border: 1px solid #d1d5db;
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .page-nav-btn:hover:not(:disabled) {
+            background: #f3f4f6;
+            border-color: #9ca3af;
+        }
+        
+        .page-nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        
+        .page-indicator {
             color: #6b7280;
             font-size: 0.9rem;
         }
         
-        .document-content {
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        .pdf-zoom-controls {
+            display: flex;
+            gap: 0.5rem;
         }
         
-        .data-section {
-            margin-bottom: 2rem;
-        }
-        
-        .data-section h2 {
-            font-size: 1.2rem;
-            color: #1f2937;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid #e5e7eb;
-        }
-        
-        .data-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
+        .pdf-viewer {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem 1rem 1rem 10pt; /* 左側 padding 改為 10pt */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             gap: 1rem;
         }
         
-        .data-item {
-            padding: 1rem;
-            background: #f9fafb;
-            border-radius: 6px;
+        .pdf-page {
+            background: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            max-width: 100%;
         }
         
-        .data-label {
-            font-size: 0.85rem;
+        .pdf-page img {
+            width: 100%;
+            display: block;
+            border-radius: 4px;
+        }
+        
+        /* 右側數據面板 */
+        .data-panel {
+            background: #ffffff;
+            overflow-y: auto;
+            padding: 2rem;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .tab {
+            padding: 0.75rem 1rem;
+            background: none;
+            border: none;
             color: #6b7280;
-            margin-bottom: 0.25rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+            font-weight: 500;
         }
         
-        .data-value {
-            font-size: 1rem;
+        .tab.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+        }
+        
+        .tab:hover {
             color: #1f2937;
+        }
+        
+        /* 核對狀態卡片 */
+        .reconciliation-card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .reconciliation-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+        
+        .reconciliation-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .progress-badge {
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
             font-weight: 500;
+        }
+        
+        .reconciliation-subtitle {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        
+        /* 銀行對帳單詳情 */
+        .bank-details-card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            cursor: pointer;
+        }
+        
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .expand-icon {
+            color: #6b7280;
+            transition: transform 0.2s;
+        }
+        
+        .card-header:hover .expand-icon {
+            color: #1f2937;
+        }
+        
+        /* 交易表格 */
+        .transactions-section {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+        
+        .transactions-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+        
+        .transactions-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .transaction-controls {
+            display: flex;
+            gap: 0.75rem;
+        }
+        
+        .control-btn {
+            padding: 0.5rem 1rem;
+            background: #f3f4f6;
+            color: #1f2937;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .control-btn:hover {
+            background: #e5e7eb;
+        }
+        
+        .control-btn.add {
+            background: #7c3aed;
+            color: white;
+            border-color: #7c3aed;
+        }
+        
+        .control-btn.add:hover {
+            background: #6d28d9;
+        }
+        
+        .transactions-info {
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
         }
         
         .transactions-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 1rem;
         }
         
-        .transactions-table th,
-        .transactions-table td {
-            padding: 0.75rem;
-            text-align: left;
-            border-bottom: 1px solid #e5e7eb;
+        .transactions-table thead {
+            background: #f9fafb;
         }
         
         .transactions-table th {
-            background: #f9fafb;
+            padding: 0.75rem;
+            text-align: left;
+            font-size: 0.85rem;
             font-weight: 600;
-            color: #374151;
-            font-size: 0.875rem;
+            color: #6b7280;
+            border-bottom: 1px solid #e5e7eb;
         }
         
-        .transactions-table td {
-            color: #1f2937;
-        }
-        
-        .back-button {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.75rem 1.5rem;
-            background: #6b7280;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            text-decoration: none;
+        .transactions-table tbody tr {
+            border-bottom: 1px solid #e5e7eb;
             transition: background 0.2s;
         }
         
-        .back-button:hover {
-            background: #4b5563;
+        .transactions-table tbody tr:hover {
+            background: #f9fafb;
         }
         
+        .transactions-table td {
+            padding: 0.75rem;
+            font-size: 0.9rem;
+            color: #1f2937;
+        }
+        
+        .checkbox-cell {
+            width: 40px;
+        }
+        
+        .checkbox-cell input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+        
+        .amount-cell {
+            font-family: 'Courier New', monospace;
+            font-weight: 500;
+        }
+        
+        .amount-positive {
+            color: #10b981;
+        }
+        
+        .amount-negative {
+            color: #ef4444;
+        }
+        
+        .action-cell {
+            width: 100px;
+        }
+        
+        .action-btns {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .icon-btn {
+            background: none;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 0.25rem;
+            transition: color 0.2s;
+        }
+        
+        .icon-btn:hover {
+            color: #1f2937;
+        }
+        
+        .icon-btn.delete:hover {
+            color: #ef4444;
+        }
+        
+        /* 載入動畫 */
         .loading {
-            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             padding: 3rem;
             color: #6b7280;
         }
         
-        .error {
-            background: #fee2e2;
-            border: 1px solid #fecaca;
-            color: #991b1b;
-            padding: 1rem;
-            border-radius: 6px;
-            margin: 1rem 0;
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e5e7eb;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
-<body>
-    <!-- 導航欄 -->
-    <div id="navbar-root"></div>
+<body class="auth-checking">
+    <!-- 🔒 Auth 加載動畫 -->
+    <div class="auth-loading">
+        <div style="text-align: center;">
+            <div style="width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
+            <p style="color: #6b7280; font-size: 0.875rem;">正在驗證身份...</p>
+        </div>
+    </div>
     
-    <!-- 側邊欄 -->
-    <div id="sidebar-root"></div>
+    <!-- 頂部導航欄（由 navbar-component.js 動態生成） -->
+    <div id="navbar-root" style="display: block !important; visibility: visible !important; opacity: 1 !important;"></div>
     
-    <!-- 主內容 -->
+    <!-- 主容器 -->
     <div class="dashboard-container">
+        <!-- 左側邊欄（由 sidebar-component.js 動態生成） -->
+        <div id="sidebar-root" style="display: block !important; visibility: visible !important; opacity: 1 !important;"></div>
+        
+        <!-- 主內容區域 -->
         <div class="main-content">
-            <div id="loadingMessage" class="loading">
-                <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #8b5cf6;"></i>
-                <p style="margin-top: 1rem;">載入中...</p>
-            </div>
-            
-            <div id="errorMessage" class="error" style="display: none;"></div>
-            
-            <div id="documentContainer" style="display: none;">
-                <!-- 返回按鈕 -->
-                <a href="#" id="backButton" class="back-button" style="margin-bottom: 1.5rem;">
+            <!-- 詳情頁面頂部 -->
+            <div class="detail-header">
+                <span class="back-btn" onclick="goBackToDashboard()">
                     <i class="fas fa-arrow-left"></i>
-                    返回項目
-                </a>
-                
-                <!-- 文檔標題 -->
-                <div class="document-header">
-                    <h1 id="documentTitle">文檔名稱</h1>
-                    <div class="document-meta">
-                        <span><i class="far fa-calendar"></i> <span id="documentDate">-</span></span>
-                        <span><i class="far fa-file"></i> <span id="documentType">-</span></span>
-                        <span><i class="fas fa-tag"></i> <span id="documentStatus">-</span></span>
-                    </div>
-                </div>
-                
-                <!-- 文檔內容 -->
-                <div class="document-content">
-                    <!-- 基本信息 -->
-                    <div class="data-section" id="basicInfoSection">
-                        <h2>基本信息</h2>
-                        <div class="data-grid">
-                            <div class="data-item">
-                                <div class="data-label">供應商/來源</div>
-                                <div class="data-value" id="vendor">-</div>
+                    Back to dashboard
+                </span>
+                <h1 class="document-title" id="documentTitle">載入中...</h1>
+                <div class="top-actions">
+                    <span class="saved-indicator">
+                        <i class="fas fa-cloud-check"></i>
+                        Saved
+                    </span>
+                    <!-- 导出按钮 -->
+                    <div class="export-dropdown" style="position: relative;">
+                        <button class="btn btn-primary" onclick="toggleExportMenu(event)">
+                            <i class="fas fa-download"></i>
+                            Export
+                            <i class="fas fa-chevron-down" style="margin-left: 0.5rem; font-size: 0.75rem;"></i>
+                        </button>
+                        <div class="export-menu" id="exportMenu" style="display: none; position: absolute; top: 100%; right: 0; background: white; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); min-width: 200px; margin-top: 0.5rem; z-index: 1000;">
+                            <div class="export-menu-item" onclick="exportDocument('csv')" style="padding: 0.75rem 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='white'">
+                                <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
+                                <span>CSV</span>
                             </div>
-                            <div class="data-item">
-                                <div class="data-label">金額</div>
-                                <div class="data-value" id="amount">-</div>
+                            <div class="export-menu-item" onclick="exportDocument('iif')" style="padding: 0.75rem 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='white'">
+                                <i class="fas fa-file-invoice" style="color: #3b82f6; width: 20px;"></i>
+                                <span>IIF (QuickBooks)</span>
                             </div>
-                            <div class="data-item">
-                                <div class="data-label">帳單日期</div>
-                                <div class="data-value" id="billDate">-</div>
+                            <div class="export-menu-item" onclick="exportDocument('qbo')" style="padding: 0.75rem 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='white'">
+                                <i class="fas fa-file-invoice-dollar" style="color: #8b5cf6; width: 20px;"></i>
+                                <span>QBO (QuickBooks)</span>
                             </div>
-                            <div class="data-item">
-                                <div class="data-label">上傳日期</div>
-                                <div class="data-value" id="uploadDate">-</div>
+                            <div class="export-menu-item" onclick="exportDocument('json')" style="padding: 0.75rem 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; transition: background 0.2s; border-top: 1px solid #e5e7eb;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='white'">
+                                <i class="fas fa-file-code" style="color: #f59e0b; width: 20px;"></i>
+                                <span>JSON</span>
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- 交易明細 -->
-                    <div class="data-section" id="transactionsSection" style="display: none;">
-                        <h2>交易明細</h2>
-                        <table class="transactions-table">
-                            <thead>
-                                <tr>
-                                    <th>日期</th>
-                                    <th>描述</th>
-                                    <th>金額</th>
-                                    <th>餘額</th>
-                                </tr>
-                            </thead>
-                            <tbody id="transactionsBody">
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <!-- 原始數據 -->
-                    <div class="data-section" id="rawDataSection" style="display: none;">
-                        <h2>原始數據</h2>
-                        <pre id="rawData" style="background: #f9fafb; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.85rem;"></pre>
+                    <button class="icon-btn">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 詳情內容容器 -->
+            <div class="detail-container">
+        <!-- 左側 PDF 預覽 -->
+        <div class="pdf-preview-panel">
+            <div class="pdf-controls">
+                <button class="page-nav-btn" id="prevPageBtn" onclick="previousPage()">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <span class="page-indicator">
+                    <span id="currentPage">1</span> of <span id="totalPages">1</span>
+                </span>
+                <button class="page-nav-btn" id="nextPageBtn" onclick="nextPage()">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+                
+                <div class="pdf-zoom-controls">
+                    <button class="page-nav-btn" onclick="zoomOut()">
+                        <i class="fas fa-search-minus"></i>
+                    </button>
+                    <button class="page-nav-btn" onclick="resetZoom()">
+                        <i class="fas fa-undo"></i>
+                    </button>
+                    <button class="page-nav-btn" onclick="zoomIn()">
+                        <i class="fas fa-search-plus"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="pdf-viewer" id="pdfViewer">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <div>載入文檔中...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 右側數據面板 -->
+        <div class="data-panel">
+            <div class="tabs">
+                <button class="tab active">Results</button>
+                <button class="tab">Export</button>
+                <button class="tab">JSON</button>
+            </div>
+            
+            <!-- 文檔詳情（根據類型動態顯示） -->
+            <div id="documentDetailsSection">
+                <!-- 將由 JavaScript 動態生成 -->
+            </div>
+            
+            <!-- 數據表格（根據類型動態顯示） -->
+            <div id="documentDataSection">
+                <!-- 將由 JavaScript 動態生成 -->
+            </div>
+            
+            <!-- 原有的銀行對帳單交易記錄表格（保留作為備用） -->
+            <div id="bankStatementSection" style="display: none;">
+                <div class="bank-details-card">
+                    <div class="card-header">
+                        <h3 class="card-title">Bank Statement Details & Notes</h3>
+                        <i class="fas fa-chevron-down expand-icon"></i>
                     </div>
                 </div>
+                
+                <div class="transactions-section">
+                    <div class="transactions-header">
+                        <h3 class="transactions-title">Transactions</h3>
+                        <div class="transaction-controls">
+                            <button class="control-btn">Show Unreconciled</button>
+                            <button class="control-btn">Toggle All</button>
+                            <button class="control-btn add">Add Item</button>
+                        </div>
+                    </div>
+                    
+                    <div class="transactions-info" id="transactionsInfo">
+                        Showing 0 to 0 of 0 transactions
+                    </div>
+                    
+                    <table class="transactions-table">
+                    <thead>
+                        <tr>
+                            <th class="checkbox-cell">
+                                <input type="checkbox" onchange="toggleAllTransactions(this)">
+                            </th>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                            <th>Balance</th>
+                            <th class="action-cell">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionsBody">
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 2rem; color: #94a3b8;">
+                                載入交易記錄中...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -257,45 +690,48 @@
     <script>
         console.log('📄 document-detail.html 開始載入');
         
-        // 🔧 調試模式：設置為 true 可以阻止跳轉，查看詳細日誌
-        const DEBUG_MODE = true;
+        // 🔧 調試模式
+        const DEBUG_MODE = false;  // 生產模式，設置為 false
         
         // 全局變量
         let currentDocument = null;
         let currentProjectId = null;
         let currentDocumentId = null;
+        let currentPageNumber = 1;
+        let totalPagesCount = 1;
+        let zoomLevel = 100;
         
         // 從 URL 獲取參數
-        function getUrlParams() {
+        function getDocumentIdFromURL() {
             const params = new URLSearchParams(window.location.search);
-            currentProjectId = params.get('project');
-            currentDocumentId = params.get('id');
-            
-            console.log('📋 URL 參數:');
-            console.log('   projectId:', currentProjectId);
-            console.log('   documentId:', currentDocumentId);
-            
-            return { projectId: currentProjectId, documentId: currentDocumentId };
+            return params.get('id');
         }
         
-        // 顯示錯誤
-        function showError(message) {
-            console.error('❌', message);
-            document.getElementById('loadingMessage').style.display = 'none';
-            document.getElementById('errorMessage').textContent = message;
-            document.getElementById('errorMessage').style.display = 'block';
+        function getProjectIdFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('project');
         }
         
         // 載入文檔
         async function loadDocument() {
             console.log('📂 開始載入文檔...');
             
-            const { projectId, documentId } = getUrlParams();
+            const documentId = getDocumentIdFromURL();
+            const projectId = getProjectIdFromURL();
             
-            if (!projectId || !documentId) {
-                showError('缺少必要參數 (projectId 或 documentId)');
+            console.log('📋 URL 參數:');
+            console.log('   documentId:', documentId);
+            console.log('   projectId:', projectId);
+            
+            if (!documentId || !projectId) {
+                console.error('❌ 缺少必要參數');
+                alert('缺少必要參數 (documentId 或 projectId)');
+                goBackToDashboard();
                 return;
             }
+            
+            currentDocumentId = documentId;
+            currentProjectId = projectId;
             
             try {
                 // 等待 SimpleDataManager 初始化
@@ -311,101 +747,297 @@
                 
                 // 從 Firebase 獲取文檔
                 console.log('📥 從 Firebase 獲取文檔...');
-                const document = await window.simpleDataManager.getDocument(projectId, documentId);
+                const foundDocument = await window.simpleDataManager.getDocument(projectId, documentId);
                 
-                if (!document) {
-                    showError('找不到文檔');
+                if (!foundDocument) {
+                    alert('找不到文檔');
+                    goBackToDashboard();
                     return;
                 }
                 
-                console.log('✅ 文檔載入成功:', document);
-                currentDocument = document;
+                console.log('✅ 文檔載入成功:', foundDocument);
+                currentDocument = foundDocument;
                 
-                // 顯示文檔
-                displayDocument(document);
+                // 更新頁面標題
+                const titleElement = document.getElementById('documentTitle');
+                if (titleElement) {
+                    titleElement.textContent = foundDocument.name || foundDocument.fileName || '未命名文檔';
+                }
+                
+                // 顯示數據
+                displayDocumentData(foundDocument);
                 
             } catch (error) {
                 console.error('❌ 載入文檔失敗:', error);
-                showError('載入文檔失敗: ' + error.message);
+                alert('載入文檔失敗: ' + error.message);
             }
         }
         
-        // 顯示文檔
-        function displayDocument(doc) {
-            console.log('🎨 開始顯示文檔...');
+        // 顯示文檔數據
+        function displayDocumentData(doc) {
+            console.log('🎨 開始顯示文檔數據...');
             
-            // 隱藏載入消息
-            document.getElementById('loadingMessage').style.display = 'none';
-            document.getElementById('documentContainer').style.display = 'block';
-            
-            // 設置返回按鈕
-            document.getElementById('backButton').href = `firstproject.html?project=${currentProjectId}`;
-            
-            // 顯示基本信息
-            document.getElementById('documentTitle').textContent = doc.name || doc.fileName || '未命名文檔';
-            document.getElementById('documentType').textContent = doc.type || '未知類型';
-            document.getElementById('documentStatus').textContent = doc.status === 'completed' ? '已完成' : '處理中';
-            
-            // 顯示日期
-            if (doc.createdAt) {
-                let dateStr = '-';
-                if (typeof doc.createdAt === 'object' && doc.createdAt.seconds) {
-                    dateStr = new Date(doc.createdAt.seconds * 1000).toLocaleDateString('zh-TW');
-                } else if (typeof doc.createdAt === 'string' || typeof doc.createdAt === 'number') {
-                    dateStr = new Date(doc.createdAt).toLocaleDateString('zh-TW');
-                }
-                document.getElementById('documentDate').textContent = dateStr;
-                document.getElementById('uploadDate').textContent = dateStr;
-            }
-            
-            // 顯示提取的數據
             const processedData = doc.processedData || {};
+            const docType = doc.type || 'unknown';
             
-            // 供應商
-            const vendor = processedData.vendor || processedData.supplier || processedData.from || '-';
-            document.getElementById('vendor').textContent = vendor;
+            console.log('   文檔類型:', docType);
+            console.log('   處理數據:', processedData);
             
-            // 金額
-            let amount = '-';
-            if (processedData.total) {
-                amount = `$${parseFloat(processedData.total).toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-            } else if (processedData.amount) {
-                amount = `$${parseFloat(processedData.amount).toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            // 根據文檔類型顯示不同的內容
+            if (docType === '發票' || processedData.invoice_number) {
+                displayInvoiceData(processedData);
+            } else if (docType === '銀行對帳單' || processedData.transactions) {
+                displayBankStatementData(processedData);
+            } else if (docType === '收據' || processedData.receipt_number) {
+                displayReceiptData(processedData);
+            } else {
+                // 通用顯示
+                displayGenericData(processedData);
             }
-            document.getElementById('amount').textContent = amount;
             
-            // 帳單日期
-            const billDate = processedData.date || processedData.invoiceDate || processedData.statementDate || '-';
-            document.getElementById('billDate').textContent = billDate;
+            console.log('✅ 文檔數據顯示完成');
+        }
+        
+        // 顯示發票數據
+        function displayInvoiceData(data) {
+            const detailsSection = document.getElementById('documentDetailsSection');
+            const dataSection = document.getElementById('documentDataSection');
             
-            // 顯示交易明細（如果有）
-            const transactions = processedData.transactions || [];
-            if (transactions.length > 0) {
-                document.getElementById('transactionsSection').style.display = 'block';
-                const tbody = document.getElementById('transactionsBody');
-                tbody.innerHTML = '';
+            if (!detailsSection || !dataSection) return;
+            
+            // 詳情卡片
+            detailsSection.innerHTML = `
+                <div style="padding: 1.5rem; background: white; border-bottom: 1px solid #e5e7eb;">
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.1rem; font-weight: 600; color: #1f2937;">發票詳情</h3>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                        <div>
+                            <div style="font-size: 0.85rem; color: #6b7280; margin-bottom: 0.25rem;">發票號碼</div>
+                            <div style="font-weight: 500; color: #1f2937;">${data.invoice_number || '-'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.85rem; color: #6b7280; margin-bottom: 0.25rem;">日期</div>
+                            <div style="font-weight: 500; color: #1f2937;">${data.date || '-'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.85rem; color: #6b7280; margin-bottom: 0.25rem;">供應商</div>
+                            <div style="font-weight: 500; color: #1f2937;">${data.supplier || data.vendor || '-'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.85rem; color: #6b7280; margin-bottom: 0.25rem;">總金額</div>
+                            <div style="font-weight: 600; color: #059669; font-size: 1.1rem;">$${parseFloat(data.total || 0).toLocaleString('zh-TW', { minimumFractionDigits: 2 })}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // 項目列表
+            const items = data.items || [];
+            if (items.length > 0) {
+                let itemsHTML = '<div style="padding: 1.5rem;"><h3 style="margin: 0 0 1rem 0; font-size: 1.1rem; font-weight: 600; color: #1f2937;">項目明細</h3><table style="width: 100%; border-collapse: collapse;"><thead><tr style="border-bottom: 2px solid #e5e7eb;"><th style="padding: 0.75rem; text-align: left; font-size: 0.875rem; font-weight: 600; color: #6b7280;">描述</th><th style="padding: 0.75rem; text-align: right; font-size: 0.875rem; font-weight: 600; color: #6b7280;">數量</th><th style="padding: 0.75rem; text-align: right; font-size: 0.875rem; font-weight: 600; color: #6b7280;">單價</th><th style="padding: 0.75rem; text-align: right; font-size: 0.875rem; font-weight: 600; color: #6b7280;">金額</th></tr></thead><tbody>';
                 
-                transactions.forEach(tx => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${tx.date || '-'}</td>
-                        <td>${tx.description || tx.desc || '-'}</td>
-                        <td>${tx.amount ? '$' + parseFloat(tx.amount).toLocaleString('zh-TW', { minimumFractionDigits: 2 }) : '-'}</td>
-                        <td>${tx.balance ? '$' + parseFloat(tx.balance).toLocaleString('zh-TW', { minimumFractionDigits: 2 }) : '-'}</td>
-                    `;
-                    tbody.appendChild(row);
+                items.forEach(item => {
+                    itemsHTML += `<tr style="border-bottom: 1px solid #f3f4f6;">
+                        <td style="padding: 0.75rem; color: #1f2937;">${item.description || '-'}</td>
+                        <td style="padding: 0.75rem; text-align: right; color: #1f2937;">${item.quantity || '-'}</td>
+                        <td style="padding: 0.75rem; text-align: right; color: #1f2937;">$${parseFloat(item.unit_price || 0).toLocaleString('zh-TW', { minimumFractionDigits: 2 })}</td>
+                        <td style="padding: 0.75rem; text-align: right; font-weight: 500; color: #1f2937;">$${parseFloat(item.amount || 0).toLocaleString('zh-TW', { minimumFractionDigits: 2 })}</td>
+                    </tr>`;
                 });
                 
-                console.log(`✅ 顯示 ${transactions.length} 筆交易`);
+                itemsHTML += '</tbody></table></div>';
+                dataSection.innerHTML = itemsHTML;
+            }
+        }
+        
+        // 顯示銀行對帳單數據
+        function displayBankStatementData(data) {
+            const detailsSection = document.getElementById('documentDetailsSection');
+            const dataSection = document.getElementById('documentDataSection');
+            
+            if (!detailsSection || !dataSection) return;
+            
+            // 詳情卡片
+            detailsSection.innerHTML = `
+                <div style="padding: 1.5rem; background: white; border-bottom: 1px solid #e5e7eb;">
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.1rem; font-weight: 600; color: #1f2937;">銀行對帳單詳情</h3>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                        <div>
+                            <div style="font-size: 0.85rem; color: #6b7280; margin-bottom: 0.25rem;">銀行名稱</div>
+                            <div style="font-weight: 500; color: #1f2937;">${data.bank_name || '-'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.85rem; color: #6b7280; margin-bottom: 0.25rem;">帳戶號碼</div>
+                            <div style="font-weight: 500; color: #1f2937;">${data.account_number || '-'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.85rem; color: #6b7280; margin-bottom: 0.25rem;">期間</div>
+                            <div style="font-weight: 500; color: #1f2937;">${data.statement_period || '-'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.85rem; color: #6b7280; margin-bottom: 0.25rem;">期末餘額</div>
+                            <div style="font-weight: 600; color: #059669; font-size: 1.1rem;">$${parseFloat(data.closing_balance || 0).toLocaleString('zh-TW', { minimumFractionDigits: 2 })}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // 交易列表
+            const transactions = data.transactions || [];
+            if (transactions.length > 0) {
+                // 更新舊的交易表格
+                const tbody = document.getElementById('transactionsBody');
+                if (tbody) {
+                    tbody.innerHTML = '';
+                    transactions.forEach(tx => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td style="padding: 0.75rem; text-align: center;">
+                                <input type="checkbox" onchange="updateReconciliation(this)">
+                            </td>
+                            <td style="padding: 0.75rem; color: #1f2937;">${tx.date || '-'}</td>
+                            <td style="padding: 0.75rem; color: #1f2937;">${tx.description || '-'}</td>
+                            <td style="padding: 0.75rem; text-align: right; font-weight: 500; color: ${parseFloat(tx.amount || 0) < 0 ? '#dc2626' : '#059669'};">$${parseFloat(tx.amount || 0).toLocaleString('zh-TW', { minimumFractionDigits: 2 })}</td>
+                            <td style="padding: 0.75rem; text-align: right; color: #1f2937;">$${parseFloat(tx.balance || 0).toLocaleString('zh-TW', { minimumFractionDigits: 2 })}</td>
+                            <td style="padding: 0.75rem; text-align: center;">
+                                <button onclick="editTransaction(this)" style="background: none; border: none; color: #3b82f6; cursor: pointer;">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                    
+                    // 顯示銀行對帳單區域
+                    const bankSection = document.getElementById('bankStatementSection');
+                    if (bankSection) {
+                        bankSection.style.display = 'block';
+                    }
+                    
+                    // 更新交易信息
+                    const transactionsInfo = document.getElementById('transactionsInfo');
+                    if (transactionsInfo) {
+                        transactionsInfo.textContent = `Showing 1 to ${transactions.length} of ${transactions.length} transactions`;
+                    }
+                }
+            }
+        }
+        
+        // 顯示收據數據
+        function displayReceiptData(data) {
+            const detailsSection = document.getElementById('documentDetailsSection');
+            
+            if (!detailsSection) return;
+            
+            detailsSection.innerHTML = `
+                <div style="padding: 1.5rem; background: white; border-bottom: 1px solid #e5e7eb;">
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.1rem; font-weight: 600; color: #1f2937;">收據詳情</h3>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                        <div>
+                            <div style="font-size: 0.85rem; color: #6b7280; margin-bottom: 0.25rem;">收據號碼</div>
+                            <div style="font-weight: 500; color: #1f2937;">${data.receipt_number || '-'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.85rem; color: #6b7280; margin-bottom: 0.25rem;">日期</div>
+                            <div style="font-weight: 500; color: #1f2937;">${data.date || '-'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.85rem; color: #6b7280; margin-bottom: 0.25rem;">商家</div>
+                            <div style="font-weight: 500; color: #1f2937;">${data.merchant || data.vendor || '-'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.85rem; color: #6b7280; margin-bottom: 0.25rem;">總金額</div>
+                            <div style="font-weight: 600; color: #059669; font-size: 1.1rem;">$${parseFloat(data.total || 0).toLocaleString('zh-TW', { minimumFractionDigits: 2 })}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // 顯示通用數據
+        function displayGenericData(data) {
+            const detailsSection = document.getElementById('documentDetailsSection');
+            
+            if (!detailsSection) return;
+            
+            let html = '<div style="padding: 1.5rem; background: white;"><h3 style="margin: 0 0 1rem 0; font-size: 1.1rem; font-weight: 600; color: #1f2937;">提取的數據</h3><div style="background: #f9fafb; padding: 1rem; border-radius: 6px; font-family: monospace; font-size: 0.875rem; overflow-x: auto;"><pre>' + JSON.stringify(data, null, 2) + '</pre></div></div>';
+            
+            detailsSection.innerHTML = html;
+        }
+        
+        // PDF 控制函數（保留舊功能）
+        function nextPage() {
+            if (currentPageNumber < totalPagesCount) {
+                currentPageNumber++;
+                updatePageDisplay();
+            }
+        }
+        
+        function previousPage() {
+            if (currentPageNumber > 1) {
+                currentPageNumber--;
+                updatePageDisplay();
+            }
+        }
+        
+        function zoomIn() {
+            zoomLevel += 10;
+            updateZoom();
+        }
+        
+        function zoomOut() {
+            if (zoomLevel > 50) {
+                zoomLevel -= 10;
+                updateZoom();
+            }
+        }
+        
+        function resetZoom() {
+            zoomLevel = 100;
+            updateZoom();
+        }
+        
+        function updatePageDisplay() {
+            const pageNumElement = document.getElementById('currentPageNum');
+            if (pageNumElement) {
+                pageNumElement.textContent = currentPageNumber;
+            }
+        }
+        
+        function updateZoom() {
+            const pdfViewer = document.getElementById('pdfViewer');
+            if (pdfViewer) {
+                pdfViewer.style.transform = `scale(${zoomLevel / 100})`;
+            }
+        }
+        
+        // 交易相關函數
+        function toggleAllTransactions(checkbox) {
+            const checkboxes = document.querySelectorAll('#transactionsBody input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = checkbox.checked);
+        }
+        
+        function updateReconciliation(checkbox) {
+            console.log('更新對帳狀態:', checkbox.checked);
+        }
+        
+        function editTransaction(button) {
+            console.log('編輯交易');
+        }
+        
+        // 導出功能
+        function toggleExportMenu(event) {
+            event.stopPropagation();
+            console.log('切換導出菜單');
+        }
+        
+        async function exportDocument(format) {
+            if (!currentDocument) {
+                alert('沒有可導出的文檔');
+                return;
             }
             
-            // 顯示原始數據（調試用）
-            if (Object.keys(processedData).length > 0) {
-                document.getElementById('rawDataSection').style.display = 'block';
-                document.getElementById('rawData').textContent = JSON.stringify(processedData, null, 2);
-            }
-            
-            console.log('✅ 文檔顯示完成');
+            console.log('導出文檔，格式:', format);
+            // 這裡可以添加實際的導出邏輯
         }
         
         // 初始化
@@ -413,17 +1045,14 @@
             console.log('🚀 開始初始化...');
             console.log('🔧 調試模式:', DEBUG_MODE ? '開啟' : '關閉');
             
-            // 等待 Firebase 和 Auth 初始化
-            console.log('⏳ 步驟 1/5: 等待 SimpleAuth 初始化...');
+            // 等待 SimpleAuth 初始化
+            console.log('⏳ 步驟 1/3: 等待 SimpleAuth 初始化...');
             let attempts = 0;
             while (!window.simpleAuth || !window.simpleAuth.initialized) {
                 if (attempts++ > 50) {
-                    const error = '身份驗證初始化超時';
-                    console.error('❌', error);
-                    showError(error);
-                    if (DEBUG_MODE) {
-                        console.log('🔧 調試模式：阻止跳轉');
-                        return;
+                    console.error('❌ 身份驗證初始化超時');
+                    if (!DEBUG_MODE) {
+                        window.location.href = 'index.html';
                     }
                     return;
                 }
@@ -431,47 +1060,26 @@
             }
             
             console.log('✅ SimpleAuth 已就緒');
-            console.log('   - initialized:', window.simpleAuth.initialized);
             console.log('   - currentUser:', window.simpleAuth.currentUser);
             
-            // ✅ 檢查登入狀態（SimpleAuth.init() 已經等待了 currentUser）
-            console.log('⏳ 步驟 2/5: 檢查登入狀態...');
+            // 檢查登入狀態
+            console.log('⏳ 步驟 2/3: 檢查登入狀態...');
             
             if (!window.simpleAuth.currentUser) {
-                console.log('');
-                console.log('========================================');
                 console.log('❌ 用戶未登入');
-                console.log('========================================');
-                console.log('調試信息：');
-                console.log('   - SimpleAuth.initialized:', window.simpleAuth.initialized);
-                console.log('   - SimpleAuth.currentUser:', window.simpleAuth.currentUser);
-                console.log('   - Firebase Auth currentUser:', window.simpleAuth.auth?.currentUser);
-                console.log('========================================');
-                
                 if (DEBUG_MODE) {
-                    console.log('🔧 調試模式：阻止跳轉到 index.html');
-                    showError('用戶未登入 - 調試模式已阻止跳轉');
+                    console.log('🔧 調試模式：阻止跳轉');
+                    alert('用戶未登入 - 調試模式');
                     return;
                 }
-                
-                console.log('🔄 跳轉到登入頁...');
                 window.location.href = 'index.html';
                 return;
             }
             
-            console.log('');
-            console.log('========================================');
-            console.log('✅ 用戶已登入');
-            console.log('========================================');
-            console.log('用戶信息：');
-            console.log('   - Email:', window.simpleAuth.currentUser.email);
-            console.log('   - UID:', window.simpleAuth.currentUser.uid);
-            console.log('   - Display Name:', window.simpleAuth.currentUser.displayName);
-            console.log('========================================');
-            console.log('');
+            console.log('✅ 用戶已登入:', window.simpleAuth.currentUser.email);
             
             // 載入文檔
-            console.log('⏳ 步驟 3/5: 載入文檔數據...');
+            console.log('⏳ 步驟 3/3: 載入文檔數據...');
             await loadDocument();
         }
         
