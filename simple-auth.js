@@ -31,15 +31,38 @@ class SimpleAuth {
             }
             
             this.auth = firebase.auth();
-            this.initialized = true;
             
-            console.log('✅ SimpleAuth 已初始化');
+            console.log('⏳ 等待第一次 Auth 狀態回調...');
             
-            // 監聽用戶狀態變化
+            // ✅ 等待第一次 onAuthStateChanged 回調
+            await new Promise((resolve) => {
+                const unsubscribe = this.auth.onAuthStateChanged((user) => {
+                    console.log('🔔 Auth 狀態回調觸發:', user ? `用戶: ${user.email}` : '未登入');
+                    this.currentUser = user;
+                    this.handleAuthStateChange(user);
+                    
+                    // 第一次回調後立即 resolve
+                    unsubscribe();
+                    resolve();
+                });
+                
+                // 超時保護（10 秒）
+                setTimeout(() => {
+                    console.warn('⚠️ Auth 狀態回調超時（10 秒）');
+                    unsubscribe();
+                    resolve();
+                }, 10000);
+            });
+            
+            // 繼續監聽後續的狀態變化
             this.auth.onAuthStateChanged((user) => {
                 this.currentUser = user;
                 this.handleAuthStateChange(user);
             });
+            
+            this.initialized = true;
+            console.log('✅ SimpleAuth 已初始化');
+            console.log('   - currentUser:', this.currentUser ? this.currentUser.email : 'null');
             
         } catch (error) {
             console.error('❌ SimpleAuth 初始化失敗:', error);
