@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文檔詳情 - VaultCaddy</title>
+    
+    <!-- 樣式 -->
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK -->
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    
+    <!-- Firebase 配置和管理器 -->
+    <script defer src="firebase-config.js?v=20251106-final"></script>
+    <script defer src="simple-auth.js?v=20251106-final"></script>
+    <script defer src="simple-data-manager.js?v=20251106-final"></script>
+    
+    <!-- UI 組件 -->
+    <script defer src="navbar-component.js?v=20251106-final"></script>
+    <script defer src="sidebar-component.js?v=20251106-final"></script>
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f9fafb;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+            padding-top: 60px;
+        }
+        
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 2rem;
+        }
+        
+        .document-header {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .document-header h1 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.5rem;
+            color: #1f2937;
+        }
+        
+        .document-meta {
+            display: flex;
+            gap: 2rem;
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        
+        .document-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .data-section {
+            margin-bottom: 2rem;
+        }
+        
+        .data-section h2 {
+            font-size: 1.2rem;
+            color: #1f2937;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+        
+        .data-item {
+            padding: 1rem;
+            background: #f9fafb;
+            border-radius: 6px;
+        }
+        
+        .data-label {
+            font-size: 0.85rem;
+            color: #6b7280;
+            margin-bottom: 0.25rem;
+        }
+        
+        .data-value {
+            font-size: 1rem;
+            color: #1f2937;
+            font-weight: 500;
+        }
+        
+        .transactions-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        
+        .transactions-table th,
+        .transactions-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .transactions-table th {
+            background: #f9fafb;
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.875rem;
+        }
+        
+        .transactions-table td {
+            color: #1f2937;
+        }
+        
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: #6b7280;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+        
+        .back-button:hover {
+            background: #4b5563;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #6b7280;
+        }
+        
+        .error {
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- 導航欄 -->
+    <div id="navbar-root"></div>
+    
+    <!-- 側邊欄 -->
+    <div id="sidebar-root"></div>
+    
+    <!-- 主內容 -->
+    <div class="dashboard-container">
+        <div class="main-content">
+            <div id="loadingMessage" class="loading">
+                <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #8b5cf6;"></i>
+                <p style="margin-top: 1rem;">載入中...</p>
+            </div>
+            
+            <div id="errorMessage" class="error" style="display: none;"></div>
+            
+            <div id="documentContainer" style="display: none;">
+                <!-- 返回按鈕 -->
+                <a href="#" id="backButton" class="back-button" style="margin-bottom: 1.5rem;">
+                    <i class="fas fa-arrow-left"></i>
+                    返回項目
+                </a>
+                
+                <!-- 文檔標題 -->
+                <div class="document-header">
+                    <h1 id="documentTitle">文檔名稱</h1>
+                    <div class="document-meta">
+                        <span><i class="far fa-calendar"></i> <span id="documentDate">-</span></span>
+                        <span><i class="far fa-file"></i> <span id="documentType">-</span></span>
+                        <span><i class="fas fa-tag"></i> <span id="documentStatus">-</span></span>
+                    </div>
+                </div>
+                
+                <!-- 文檔內容 -->
+                <div class="document-content">
+                    <!-- 基本信息 -->
+                    <div class="data-section" id="basicInfoSection">
+                        <h2>基本信息</h2>
+                        <div class="data-grid">
+                            <div class="data-item">
+                                <div class="data-label">供應商/來源</div>
+                                <div class="data-value" id="vendor">-</div>
+                            </div>
+                            <div class="data-item">
+                                <div class="data-label">金額</div>
+                                <div class="data-value" id="amount">-</div>
+                            </div>
+                            <div class="data-item">
+                                <div class="data-label">帳單日期</div>
+                                <div class="data-value" id="billDate">-</div>
+                            </div>
+                            <div class="data-item">
+                                <div class="data-label">上傳日期</div>
+                                <div class="data-value" id="uploadDate">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 交易明細 -->
+                    <div class="data-section" id="transactionsSection" style="display: none;">
+                        <h2>交易明細</h2>
+                        <table class="transactions-table">
+                            <thead>
+                                <tr>
+                                    <th>日期</th>
+                                    <th>描述</th>
+                                    <th>金額</th>
+                                    <th>餘額</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionsBody">
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- 原始數據 -->
+                    <div class="data-section" id="rawDataSection" style="display: none;">
+                        <h2>原始數據</h2>
+                        <pre id="rawData" style="background: #f9fafb; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.85rem;"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        console.log('📄 document-detail.html 開始載入');
+        
+        // 🔧 調試模式：設置為 true 可以阻止跳轉，查看詳細日誌
+        const DEBUG_MODE = true;
+        
+        // 全局變量
+        let currentDocument = null;
+        let currentProjectId = null;
+        let currentDocumentId = null;
+        
+        // 從 URL 獲取參數
+        function getUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            currentProjectId = params.get('project');
+            currentDocumentId = params.get('id');
+            
+            console.log('📋 URL 參數:');
+            console.log('   projectId:', currentProjectId);
+            console.log('   documentId:', currentDocumentId);
+            
+            return { projectId: currentProjectId, documentId: currentDocumentId };
+        }
+        
+        // 顯示錯誤
+        function showError(message) {
+            console.error('❌', message);
+            document.getElementById('loadingMessage').style.display = 'none';
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorMessage').style.display = 'block';
+        }
+        
+        // 載入文檔
+        async function loadDocument() {
+            console.log('📂 開始載入文檔...');
+            
+            const { projectId, documentId } = getUrlParams();
+            
+            if (!projectId || !documentId) {
+                showError('缺少必要參數 (projectId 或 documentId)');
+                return;
+            }
+            
+            try {
+                // 等待 SimpleDataManager 初始化
+                let attempts = 0;
+                while (!window.simpleDataManager || !window.simpleDataManager.initialized) {
+                    if (attempts++ > 50) {
+                        throw new Error('SimpleDataManager 初始化超時');
+                    }
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+                
+                console.log('✅ SimpleDataManager 已就緒');
+                
+                // 從 Firebase 獲取文檔
+                console.log('📥 從 Firebase 獲取文檔...');
+                const document = await window.simpleDataManager.getDocument(projectId, documentId);
+                
+                if (!document) {
+                    showError('找不到文檔');
+                    return;
+                }
+                
+                console.log('✅ 文檔載入成功:', document);
+                currentDocument = document;
+                
+                // 顯示文檔
+                displayDocument(document);
+                
+            } catch (error) {
+                console.error('❌ 載入文檔失敗:', error);
+                showError('載入文檔失敗: ' + error.message);
+            }
+        }
+        
+        // 顯示文檔
+        function displayDocument(doc) {
+            console.log('🎨 開始顯示文檔...');
+            
+            // 隱藏載入消息
+            document.getElementById('loadingMessage').style.display = 'none';
+            document.getElementById('documentContainer').style.display = 'block';
+            
+            // 設置返回按鈕
+            document.getElementById('backButton').href = `firstproject.html?project=${currentProjectId}`;
+            
+            // 顯示基本信息
+            document.getElementById('documentTitle').textContent = doc.name || doc.fileName || '未命名文檔';
+            document.getElementById('documentType').textContent = doc.type || '未知類型';
+            document.getElementById('documentStatus').textContent = doc.status === 'completed' ? '已完成' : '處理中';
+            
+            // 顯示日期
+            if (doc.createdAt) {
+                let dateStr = '-';
+                if (typeof doc.createdAt === 'object' && doc.createdAt.seconds) {
+                    dateStr = new Date(doc.createdAt.seconds * 1000).toLocaleDateString('zh-TW');
+                } else if (typeof doc.createdAt === 'string' || typeof doc.createdAt === 'number') {
+                    dateStr = new Date(doc.createdAt).toLocaleDateString('zh-TW');
+                }
+                document.getElementById('documentDate').textContent = dateStr;
+                document.getElementById('uploadDate').textContent = dateStr;
+            }
+            
+            // 顯示提取的數據
+            const processedData = doc.processedData || {};
+            
+            // 供應商
+            const vendor = processedData.vendor || processedData.supplier || processedData.from || '-';
+            document.getElementById('vendor').textContent = vendor;
+            
+            // 金額
+            let amount = '-';
+            if (processedData.total) {
+                amount = `$${parseFloat(processedData.total).toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            } else if (processedData.amount) {
+                amount = `$${parseFloat(processedData.amount).toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            }
+            document.getElementById('amount').textContent = amount;
+            
+            // 帳單日期
+            const billDate = processedData.date || processedData.invoiceDate || processedData.statementDate || '-';
+            document.getElementById('billDate').textContent = billDate;
+            
+            // 顯示交易明細（如果有）
+            const transactions = processedData.transactions || [];
+            if (transactions.length > 0) {
+                document.getElementById('transactionsSection').style.display = 'block';
+                const tbody = document.getElementById('transactionsBody');
+                tbody.innerHTML = '';
+                
+                transactions.forEach(tx => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${tx.date || '-'}</td>
+                        <td>${tx.description || tx.desc || '-'}</td>
+                        <td>${tx.amount ? '$' + parseFloat(tx.amount).toLocaleString('zh-TW', { minimumFractionDigits: 2 }) : '-'}</td>
+                        <td>${tx.balance ? '$' + parseFloat(tx.balance).toLocaleString('zh-TW', { minimumFractionDigits: 2 }) : '-'}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                
+                console.log(`✅ 顯示 ${transactions.length} 筆交易`);
+            }
+            
+            // 顯示原始數據（調試用）
+            if (Object.keys(processedData).length > 0) {
+                document.getElementById('rawDataSection').style.display = 'block';
+                document.getElementById('rawData').textContent = JSON.stringify(processedData, null, 2);
+            }
+            
+            console.log('✅ 文檔顯示完成');
+        }
+        
+        // 初始化
+        async function init() {
+            console.log('🚀 開始初始化...');
+            console.log('🔧 調試模式:', DEBUG_MODE ? '開啟' : '關閉');
+            
+            // 等待 Firebase 和 Auth 初始化
+            console.log('⏳ 步驟 1/5: 等待 SimpleAuth 初始化...');
+            let attempts = 0;
+            while (!window.simpleAuth || !window.simpleAuth.initialized) {
+                if (attempts++ > 50) {
+                    const error = '身份驗證初始化超時';
+                    console.error('❌', error);
+                    showError(error);
+                    if (DEBUG_MODE) {
+                        console.log('🔧 調試模式：阻止跳轉');
+                        return;
+                    }
+                    return;
+                }
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
+            console.log('✅ SimpleAuth 已就緒');
+            console.log('   - initialized:', window.simpleAuth.initialized);
+            console.log('   - currentUser:', window.simpleAuth.currentUser);
+            
+            // ✅ 檢查登入狀態（SimpleAuth.init() 已經等待了 currentUser）
+            console.log('⏳ 步驟 2/5: 檢查登入狀態...');
+            
+            if (!window.simpleAuth.currentUser) {
+                console.log('');
+                console.log('========================================');
+                console.log('❌ 用戶未登入');
+                console.log('========================================');
+                console.log('調試信息：');
+                console.log('   - SimpleAuth.initialized:', window.simpleAuth.initialized);
+                console.log('   - SimpleAuth.currentUser:', window.simpleAuth.currentUser);
+                console.log('   - Firebase Auth currentUser:', window.simpleAuth.auth?.currentUser);
+                console.log('========================================');
+                
+                if (DEBUG_MODE) {
+                    console.log('🔧 調試模式：阻止跳轉到 index.html');
+                    showError('用戶未登入 - 調試模式已阻止跳轉');
+                    return;
+                }
+                
+                console.log('🔄 跳轉到登入頁...');
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            console.log('');
+            console.log('========================================');
+            console.log('✅ 用戶已登入');
+            console.log('========================================');
+            console.log('用戶信息：');
+            console.log('   - Email:', window.simpleAuth.currentUser.email);
+            console.log('   - UID:', window.simpleAuth.currentUser.uid);
+            console.log('   - Display Name:', window.simpleAuth.currentUser.displayName);
+            console.log('========================================');
+            console.log('');
+            
+            // 載入文檔
+            console.log('⏳ 步驟 3/5: 載入文檔數據...');
+            await loadDocument();
+        }
+        
+        // 頁面載入完成後初始化
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+</html>
