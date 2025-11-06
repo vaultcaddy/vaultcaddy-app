@@ -17,13 +17,13 @@
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
     
     <!-- Firebase 配置和管理器 -->
-    <script defer src="firebase-config.js?v=20251106-auth-fix"></script>
-    <script defer src="simple-auth.js?v=20251106-auth-fix"></script>
-    <script defer src="simple-data-manager.js?v=20251106-auth-fix"></script>
+    <script defer src="firebase-config.js?v=20251106-debug"></script>
+    <script defer src="simple-auth.js?v=20251106-debug"></script>
+    <script defer src="simple-data-manager.js?v=20251106-debug"></script>
     
     <!-- UI 組件 -->
-    <script defer src="navbar-component.js?v=20251106-auth-fix"></script>
-    <script defer src="sidebar-component.js?v=20251106-auth-fix"></script>
+    <script defer src="navbar-component.js?v=20251106-debug"></script>
+    <script defer src="sidebar-component.js?v=20251106-debug"></script>
     
     <style>
         body {
@@ -257,6 +257,9 @@
     <script>
         console.log('📄 document-detail.html 開始載入');
         
+        // 🔧 調試模式：設置為 true 可以阻止跳轉，查看詳細日誌
+        const DEBUG_MODE = true;
+        
         // 全局變量
         let currentDocument = null;
         let currentProjectId = null;
@@ -408,34 +411,74 @@
         // 初始化
         async function init() {
             console.log('🚀 開始初始化...');
+            console.log('🔧 調試模式:', DEBUG_MODE ? '開啟' : '關閉');
             
             // 等待 Firebase 和 Auth 初始化
+            console.log('⏳ 步驟 1/5: 等待 SimpleAuth 初始化...');
             let attempts = 0;
             while (!window.simpleAuth || !window.simpleAuth.initialized) {
                 if (attempts++ > 50) {
-                    showError('身份驗證初始化超時');
+                    const error = '身份驗證初始化超時';
+                    console.error('❌', error);
+                    showError(error);
+                    if (DEBUG_MODE) {
+                        console.log('🔧 調試模式：阻止跳轉');
+                        return;
+                    }
                     return;
                 }
                 await new Promise(resolve => setTimeout(resolve, 100));
             }
             
             console.log('✅ SimpleAuth 已就緒');
+            console.log('   - initialized:', window.simpleAuth.initialized);
+            console.log('   - currentUser:', window.simpleAuth.currentUser);
+            console.log('   - auth 對象:', window.simpleAuth.auth);
             
             // 等待用戶狀態確定（等待 currentUser 被設置）
-            console.log('⏳ 等待用戶狀態確定...');
+            console.log('⏳ 步驟 2/5: 等待用戶狀態確定...');
             attempts = 0;
             while (!window.simpleAuth.currentUser) {
+                console.log(`   嘗試 ${attempts + 1}/100: currentUser =`, window.simpleAuth.currentUser);
+                
                 if (attempts++ > 100) {
-                    console.log('❌ 用戶未登入（超時），跳轉到登入頁');
+                    console.log('');
+                    console.log('========================================');
+                    console.log('❌ 用戶未登入（超時 10 秒）');
+                    console.log('========================================');
+                    console.log('調試信息：');
+                    console.log('   - SimpleAuth.initialized:', window.simpleAuth.initialized);
+                    console.log('   - SimpleAuth.currentUser:', window.simpleAuth.currentUser);
+                    console.log('   - SimpleAuth.auth:', window.simpleAuth.auth);
+                    console.log('   - Firebase Auth currentUser:', window.simpleAuth.auth?.currentUser);
+                    console.log('========================================');
+                    
+                    if (DEBUG_MODE) {
+                        console.log('🔧 調試模式：阻止跳轉到 index.html');
+                        showError('用戶未登入（超時）- 調試模式已阻止跳轉');
+                        return;
+                    }
+                    
+                    console.log('🔄 跳轉到登入頁...');
                     window.location.href = 'index.html';
                     return;
                 }
                 await new Promise(resolve => setTimeout(resolve, 100));
             }
             
-            console.log('✅ 用戶已登入:', window.simpleAuth.currentUser.email);
+            console.log('');
+            console.log('========================================');
+            console.log('✅ 用戶已登入');
+            console.log('========================================');
+            console.log('用戶信息：');
+            console.log('   - Email:', window.simpleAuth.currentUser.email);
+            console.log('   - UID:', window.simpleAuth.currentUser.uid);
+            console.log('   - Display Name:', window.simpleAuth.currentUser.displayName);
+            console.log('========================================');
+            console.log('');
             
             // 載入文檔
+            console.log('⏳ 步驟 3/5: 載入文檔數據...');
             await loadDocument();
         }
         
