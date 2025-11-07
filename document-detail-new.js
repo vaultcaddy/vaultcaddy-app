@@ -152,12 +152,17 @@ async function displayPDFPreview() {
         return;
     }
     
+    console.log('📄 文檔對象完整內容:', JSON.stringify(currentDocument, null, 2));
+    console.log('📄 文檔對象所有鍵:', Object.keys(currentDocument));
+    
     // 嘗試多個可能的圖片 URL 字段
     let imageUrl = currentDocument.imageUrl || 
                    currentDocument.downloadURL || 
                    currentDocument.url || 
                    currentDocument.fileUrl ||
-                   currentDocument.storageUrl;
+                   currentDocument.storageUrl ||
+                   (currentDocument.processedData && currentDocument.processedData.imageUrl) ||
+                   (currentDocument.processedData && currentDocument.processedData.downloadURL);
     
     // 如果沒有直接的 URL，嘗試從 Firebase Storage 獲取
     if (!imageUrl && currentDocument.storagePath) {
@@ -172,9 +177,39 @@ async function displayPDFPreview() {
         }
     }
     
+    // 嘗試從文件名構建 Storage 路徑
+    if (!imageUrl && currentDocument.fileName) {
+        console.log('🔍 嘗試從文件名構建 Storage 路徑:', currentDocument.fileName);
+        try {
+            const storage = firebase.storage();
+            const userId = window.simpleAuth.currentUser.uid;
+            const projectId = currentDocument.projectId;
+            
+            // 嘗試多個可能的路徑
+            const possiblePaths = [
+                `users/${userId}/projects/${projectId}/${currentDocument.fileName}`,
+                `projects/${projectId}/${currentDocument.fileName}`,
+                `documents/${currentDocument.fileName}`,
+                currentDocument.fileName
+            ];
+            
+            for (const path of possiblePaths) {
+                try {
+                    console.log('🔍 嘗試路徑:', path);
+                    const storageRef = storage.ref(path);
+                    imageUrl = await storageRef.getDownloadURL();
+                    console.log('✅ 從路徑獲取 URL 成功:', path, imageUrl);
+                    break;
+                } catch (e) {
+                    console.log('❌ 路徑不存在:', path);
+                }
+            }
+        } catch (error) {
+            console.error('❌ 從文件名構建路徑失敗:', error);
+        }
+    }
+    
     console.log('🖼️ 最終圖片 URL:', imageUrl);
-    console.log('📄 文檔對象完整內容:', JSON.stringify(currentDocument, null, 2));
-    console.log('📄 文檔對象所有鍵:', Object.keys(currentDocument));
     
     if (imageUrl) {
         pdfViewer.innerHTML = `

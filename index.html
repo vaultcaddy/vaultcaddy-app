@@ -73,18 +73,51 @@
         })();
     </script>
 
-    <!-- 導航欄（由 navbar-component.js 動態生成）-->
-    <div id="navbar-placeholder"></div>
+    <!-- 導航欄 -->
+    <div id="navbar-placeholder">
+        <!-- Fallback 導航欄（在 JS 加載前顯示）-->
+        <nav class="fallback-navbar" style="position: fixed; top: 0; left: 0; right: 0; height: 60px; background: #ffffff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; z-index: 1000;">
+            <div style="display: flex; align-items: center; gap: 2rem;">
+                <a href="index.html" style="display: flex; align-items: center; gap: 0.75rem; text-decoration: none;">
+                    <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                        <svg width="24" height="24" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M8 6 L20 28 L32 6 L28 6 L20 20 L12 6 Z" fill="white" stroke="none"/>
+                        </svg>
+                    </div>
+                    <div style="display: flex; flex-direction: column;">
+                        <span style="font-size: 1.25rem; font-weight: 700; color: #1f2937;">VaultCaddy</span>
+                        <span style="font-size: 0.75rem; color: #6b7280;">AI Document Processing</span>
+                    </div>
+                </a>
+            </div>
+            <div style="display: flex; align-items: center; gap: 1.5rem;">
+                <a href="index.html#features" style="color: #4b5563; text-decoration: none; font-size: 0.9rem;">功能</a>
+                <a href="index.html#pricing" style="color: #4b5563; text-decoration: none; font-size: 0.9rem;">價格</a>
+                <a href="dashboard.html" style="color: #4b5563; text-decoration: none; font-size: 0.9rem;">儀表板</a>
+                <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border: 1px solid #e5e7eb; border-radius: 6px; cursor: pointer;">
+                    <i class="fas fa-globe" style="color: #6b7280;"></i>
+                    <span style="color: #4b5563; font-size: 0.9rem;">繁體中文</span>
+                </div>
+                <button style="background: transparent; border: none; color: #6b7280; cursor: pointer; padding: 0.5rem;">
+                    <i class="fas fa-user-circle" style="font-size: 1.5rem;"></i>
+                </button>
+            </div>
+        </nav>
+    </div>
     
     <!-- 初始化導航欄 -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🔄 初始化導航欄...');
             if (window.VaultCaddyNavbar) {
+                // 移除 fallback 導航欄
+                const fallback = document.querySelector('.fallback-navbar');
+                if (fallback) fallback.remove();
+                
                 window.vaultcaddyNavbar = new window.VaultCaddyNavbar();
                 console.log('✅ 導航欄已初始化');
             } else {
-                console.error('❌ VaultCaddyNavbar 未找到');
+                console.error('❌ VaultCaddyNavbar 未找到，使用 Fallback 導航欄');
             }
         });
     </script>
