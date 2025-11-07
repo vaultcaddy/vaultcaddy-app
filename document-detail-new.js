@@ -173,7 +173,8 @@ async function displayPDFPreview() {
     }
     
     console.log('🖼️ 最終圖片 URL:', imageUrl);
-    console.log('📄 文檔對象:', currentDocument);
+    console.log('📄 文檔對象完整內容:', JSON.stringify(currentDocument, null, 2));
+    console.log('📄 文檔對象所有鍵:', Object.keys(currentDocument));
     
     if (imageUrl) {
         pdfViewer.innerHTML = `
