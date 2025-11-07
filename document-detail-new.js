@@ -155,62 +155,37 @@ async function displayPDFPreview() {
     console.log('📄 文檔對象完整內容:', JSON.stringify(currentDocument, null, 2));
     console.log('📄 文檔對象所有鍵:', Object.keys(currentDocument));
     
-    // 嘗試多個可能的圖片 URL 字段
-    let imageUrl = currentDocument.imageUrl || 
-                   currentDocument.downloadURL || 
-                   currentDocument.url || 
-                   currentDocument.fileUrl ||
-                   currentDocument.storageUrl ||
-                   (currentDocument.processedData && currentDocument.processedData.imageUrl) ||
-                   (currentDocument.processedData && currentDocument.processedData.downloadURL);
+    // 簡化版：直接從 Firebase Storage 獲取圖片 URL
+    let imageUrl = null;
     
-    // 如果沒有直接的 URL，嘗試從 Firebase Storage 獲取
-    if (!imageUrl && currentDocument.storagePath) {
-        console.log('🔍 嘗試從 storagePath 獲取 URL:', currentDocument.storagePath);
-        try {
-            const storage = firebase.storage();
-            const storageRef = storage.ref(currentDocument.storagePath);
-            imageUrl = await storageRef.getDownloadURL();
-            console.log('✅ 從 Storage 獲取 URL:', imageUrl);
-        } catch (error) {
-            console.error('❌ 從 Storage 獲取 URL 失敗:', error);
-        }
-    }
+    // 方法1：嘗試從文檔對象中的 URL 字段
+    imageUrl = currentDocument.imageUrl || 
+               currentDocument.downloadURL || 
+               currentDocument.url || 
+               currentDocument.fileUrl;
     
-    // 嘗試從文件名構建 Storage 路徑
-    if (!imageUrl && (currentDocument.fileName || currentDocument.name)) {
-        const fileName = currentDocument.fileName || currentDocument.name;
-        console.log('🔍 嘗試從文件名構建 Storage 路徑:', fileName);
+    console.log('📌 方法1 - 文檔對象 URL:', imageUrl || '無');
+    
+    // 方法2：如果沒有 URL，從 Firebase Storage 獲取
+    if (!imageUrl) {
         try {
             const storage = firebase.storage();
             const userId = window.simpleAuth?.currentUser?.uid || firebase.auth().currentUser?.uid;
             const projectId = currentDocument.projectId;
+            const fileName = currentDocument.fileName || currentDocument.name;
             
-            // 嘗試多個可能的路徑（基於 simple-data-manager.js 的 uploadFile 路徑）
-            const possiblePaths = [
-                `documents/${userId}/${projectId}/${fileName}`, // simple-data-manager.js 使用的路徑
-                `users/${userId}/projects/${projectId}/${fileName}`,
-                `projects/${projectId}/${fileName}`,
-                `documents/${projectId}/${fileName}`,
-                `documents/${fileName}`,
-                fileName
-            ];
+            console.log('📂 Storage 參數:', { userId, projectId, fileName });
             
-            console.log('📂 用戶ID:', userId, '項目ID:', projectId);
+            // 基於 simple-data-manager.js 的上傳路徑
+            const storagePath = `documents/${userId}/${projectId}/${fileName}`;
+            console.log('🔍 嘗試 Storage 路徑:', storagePath);
             
-            for (const path of possiblePaths) {
-                try {
-                    console.log('🔍 嘗試路徑:', path);
-                    const storageRef = storage.ref(path);
-                    imageUrl = await storageRef.getDownloadURL();
-                    console.log('✅ 從路徑獲取 URL 成功:', path, imageUrl);
-                    break;
-                } catch (e) {
-                    console.log('❌ 路徑不存在:', path, e.code);
-                }
-            }
+            const storageRef = storage.ref(storagePath);
+            imageUrl = await storageRef.getDownloadURL();
+            console.log('✅ 成功獲取圖片 URL');
         } catch (error) {
-            console.error('❌ 從文件名構建路徑失敗:', error);
+            console.error('❌ 從 Storage 獲取失敗:', error.code, error.message);
+            console.log('💡 提示：請檢查 Firebase Storage 中的實際文件路徑');
         }
     }
     
