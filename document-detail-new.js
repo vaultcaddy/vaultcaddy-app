@@ -263,14 +263,19 @@ function displayInvoiceContent(data) {
     
     let itemsHTML = '';
     items.forEach((item, index) => {
+        // 安全地轉換為數字
+        const unitPrice = parseFloat(item.unit_price || item.unitPrice || 0) || 0;
+        const amount = parseFloat(item.amount || 0) || 0;
+        const quantity = parseFloat(item.quantity || 0) || 0;
+        
         itemsHTML += `
             <tr>
                 <td contenteditable="true" data-field="code" data-index="${index}" style="padding: 0.75rem; color: #6b7280; cursor: text;">${item.code || item.itemCode || '—'}</td>
                 <td contenteditable="true" data-field="description" data-index="${index}" style="padding: 0.75rem; color: #1f2937; font-weight: 500; cursor: text;">${item.description || '—'}</td>
-                <td contenteditable="true" data-field="quantity" data-index="${index}" style="padding: 0.75rem; text-align: right; color: #1f2937; cursor: text;">${item.quantity || 0}</td>
+                <td contenteditable="true" data-field="quantity" data-index="${index}" style="padding: 0.75rem; text-align: right; color: #1f2937; cursor: text;">${quantity}</td>
                 <td contenteditable="true" data-field="unit" data-index="${index}" style="padding: 0.75rem; text-align: right; color: #6b7280; cursor: text;">${item.unit || '件'}</td>
-                <td contenteditable="true" data-field="unit_price" data-index="${index}" style="padding: 0.75rem; text-align: right; color: #1f2937; cursor: text;">${(item.unit_price || item.unitPrice || 0).toFixed(2)}</td>
-                <td contenteditable="true" data-field="amount" data-index="${index}" style="padding: 0.75rem; text-align: right; color: #1f2937; font-weight: 500; cursor: text;">${(item.amount || 0).toFixed(2)}</td>
+                <td contenteditable="true" data-field="unit_price" data-index="${index}" style="padding: 0.75rem; text-align: right; color: #1f2937; cursor: text;">${unitPrice.toFixed(2)}</td>
+                <td contenteditable="true" data-field="amount" data-index="${index}" style="padding: 0.75rem; text-align: right; color: #1f2937; font-weight: 500; cursor: text;">${amount.toFixed(2)}</td>
             </tr>
         `;
     });
