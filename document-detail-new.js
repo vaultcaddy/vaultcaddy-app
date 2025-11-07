@@ -210,6 +210,9 @@ async function displayPDFPreview() {
     }
     
     console.log('🖼️ 最終圖片 URL:', imageUrl);
+    console.log('⚠️ 如果圖片 URL 為空，請檢查 Firebase Console Storage 中的實際文件路徑');
+    console.log('📝 文檔名稱:', currentDocument.name || currentDocument.fileName);
+    console.log('📂 項目ID:', currentDocument.projectId);
     
     if (imageUrl) {
         pdfViewer.innerHTML = `
