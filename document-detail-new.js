@@ -178,20 +178,25 @@ async function displayPDFPreview() {
     }
     
     // 嘗試從文件名構建 Storage 路徑
-    if (!imageUrl && currentDocument.fileName) {
-        console.log('🔍 嘗試從文件名構建 Storage 路徑:', currentDocument.fileName);
+    if (!imageUrl && (currentDocument.fileName || currentDocument.name)) {
+        const fileName = currentDocument.fileName || currentDocument.name;
+        console.log('🔍 嘗試從文件名構建 Storage 路徑:', fileName);
         try {
             const storage = firebase.storage();
-            const userId = window.simpleAuth.currentUser.uid;
+            const userId = window.simpleAuth?.currentUser?.uid || firebase.auth().currentUser?.uid;
             const projectId = currentDocument.projectId;
             
-            // 嘗試多個可能的路徑
+            // 嘗試多個可能的路徑（基於 simple-data-manager.js 的 uploadFile 路徑）
             const possiblePaths = [
-                `users/${userId}/projects/${projectId}/${currentDocument.fileName}`,
-                `projects/${projectId}/${currentDocument.fileName}`,
-                `documents/${currentDocument.fileName}`,
-                currentDocument.fileName
+                `documents/${userId}/${projectId}/${fileName}`, // simple-data-manager.js 使用的路徑
+                `users/${userId}/projects/${projectId}/${fileName}`,
+                `projects/${projectId}/${fileName}`,
+                `documents/${projectId}/${fileName}`,
+                `documents/${fileName}`,
+                fileName
             ];
+            
+            console.log('📂 用戶ID:', userId, '項目ID:', projectId);
             
             for (const path of possiblePaths) {
                 try {
@@ -201,7 +206,7 @@ async function displayPDFPreview() {
                     console.log('✅ 從路徑獲取 URL 成功:', path, imageUrl);
                     break;
                 } catch (e) {
-                    console.log('❌ 路徑不存在:', path);
+                    console.log('❌ 路徑不存在:', path, e.code);
                 }
             }
         } catch (error) {
