@@ -176,16 +176,39 @@ async function displayPDFPreview() {
             
             console.log('📂 Storage 參數:', { userId, projectId, fileName });
             
-            // 基於 simple-data-manager.js 的上傳路徑
-            const storagePath = `documents/${userId}/${projectId}/${fileName}`;
-            console.log('🔍 嘗試 Storage 路徑:', storagePath);
+            // 嘗試多個可能的路徑
+            const possiblePaths = [
+                `documents/${userId}/${projectId}/${fileName}`,  // simple-data-manager.js 路徑
+                `users/${userId}/projects/${projectId}/${fileName}`,
+                `projects/${projectId}/documents/${fileName}`,
+                `${projectId}/${fileName}`,
+                fileName
+            ];
             
-            const storageRef = storage.ref(storagePath);
-            imageUrl = await storageRef.getDownloadURL();
-            console.log('✅ 成功獲取圖片 URL');
+            console.log('🔍 嘗試以下 Storage 路徑:');
+            for (let i = 0; i < possiblePaths.length; i++) {
+                const path = possiblePaths[i];
+                console.log(`  ${i + 1}. ${path}`);
+                try {
+                    const storageRef = storage.ref(path);
+                    imageUrl = await storageRef.getDownloadURL();
+                    console.log(`✅ 成功！使用路徑 ${i + 1}: ${path}`);
+                    console.log(`🖼️ 圖片 URL: ${imageUrl}`);
+                    break;
+                } catch (error) {
+                    console.log(`  ❌ 路徑 ${i + 1} 失敗: ${error.code}`);
+                }
+            }
+            
+            if (!imageUrl) {
+                console.error('❌ 所有路徑都失敗了');
+                console.log('💡 請在 Firebase Console Storage 中查找實際文件路徑');
+                console.log('💡 文件名:', fileName);
+                console.log('💡 項目ID:', projectId);
+                console.log('💡 用戶ID:', userId);
+            }
         } catch (error) {
             console.error('❌ 從 Storage 獲取失敗:', error.code, error.message);
-            console.log('💡 提示：請檢查 Firebase Storage 中的實際文件路徑');
         }
     }
     

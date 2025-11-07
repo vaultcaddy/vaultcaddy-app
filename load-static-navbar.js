@@ -21,15 +21,11 @@
             return;
         }
         
-        // 移除舊的 navbar-placeholder 和 fallback-navbar
-        const oldPlaceholder = document.getElementById('navbar-placeholder');
-        if (oldPlaceholder) {
-            oldPlaceholder.remove();
-        }
-        
-        const oldFallback = document.getElementById('fallback-navbar');
+        // 移除舊的 fallback-navbar（但保留 navbar-placeholder）
+        const oldFallback = document.querySelector('.fallback-navbar');
         if (oldFallback) {
             oldFallback.remove();
+            console.log('🗑️ 移除舊的 Fallback 導航欄');
         }
         
         // 創建導航欄 HTML
@@ -201,10 +197,21 @@
             </nav>
         `;
         
-        // 插入到 body 開頭
+        // 插入到 body 開頭或 navbar-placeholder 中
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = navbarHTML;
-        document.body.insertBefore(tempDiv.firstElementChild, document.body.firstChild);
+        const navbar = tempDiv.firstElementChild;
+        
+        const placeholder = document.getElementById('navbar-placeholder');
+        if (placeholder) {
+            // 如果有 placeholder，插入到裡面
+            placeholder.appendChild(navbar);
+            console.log('✅ 導航欄已插入到 navbar-placeholder');
+        } else {
+            // 否則插入到 body 開頭
+            document.body.insertBefore(navbar, document.body.firstChild);
+            console.log('✅ 導航欄已插入到 body 開頭');
+        }
         
         // 更新用戶頭像
         updateUserAvatar();

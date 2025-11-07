@@ -1906,6 +1906,10 @@
             try {
                 console.log('📤 上傳文件:', file.name);
                 
+                // 先上傳文件到 Storage
+                const downloadURL = await window.simpleDataManager.uploadFile(currentProjectId, file);
+                console.log('✅ 文件已上傳到 Storage:', downloadURL);
+                
                 const docData = {
                     name: file.name,
                     fileName: file.name,
@@ -1913,7 +1917,11 @@
                     fileType: file.type,
                     documentType: selectedDocumentType,
                     status: 'processing',
-                    createdAt: new Date().toISOString()
+                    createdAt: new Date().toISOString(),
+                    // 保存圖片 URL
+                    imageUrl: downloadURL,
+                    downloadURL: downloadURL,
+                    url: downloadURL
                 };
                 
                 const docId = await window.simpleDataManager.createDocument(currentProjectId, docData);
