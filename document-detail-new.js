@@ -1,0 +1,782 @@
+// ============================================
+// VaultCaddy Document Detail Page
+// 完全重寫的簡化版本
+// ============================================
+
+// 調試模式
+const DEBUG_MODE = false;
+
+// 全局變量
+let currentDocument = null;
+let currentPageNumber = 1;
+let totalPagesCount = 1;
+let zoomLevel = 100;
+
+// ============================================
+// 初始化函數
+// ============================================
+
+async function init() {
+    console.log('🚀 初始化文檔詳情頁面...');
+    
+    // 步驟 1: 等待 SimpleAuth 初始化
+    console.log('⏳ 步驟 1/5: 等待 SimpleAuth 初始化...');
+    let attempts = 0;
+    while (!window.simpleAuth || !window.simpleAuth.initialized) {
+        if (attempts++ > 100) { // Max 10 seconds wait
+            console.error('❌ SimpleAuth 初始化超時');
+            if (!DEBUG_MODE) {
+                alert('系統初始化失敗，請刷新頁面');
+                window.location.href = 'index.html';
+            }
+            return;
+        }
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    console.log('✅ SimpleAuth 已就緒');
+    
+    // 步驟 2: 等待用戶狀態確定
+    console.log('⏳ 步驟 2/5: 等待用戶狀態確定...');
+    attempts = 0;
+    while (!window.simpleAuth.currentUser) {
+        if (attempts++ > 100) { // Max 10 seconds wait
+            console.error('❌ 用戶未登入');
+            if (!DEBUG_MODE) {
+                alert('請先登入');
+                window.location.href = 'index.html';
+            }
+            return;
+        }
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    console.log('✅ 用戶已登入:', window.simpleAuth.currentUser.email);
+    
+    // 步驟 3: 移除頁面保護
+    console.log('⏳ 步驟 3/5: 移除頁面保護...');
+    document.body.classList.remove('auth-checking');
+    document.body.classList.add('auth-ready');
+    console.log('✅ 頁面已顯示');
+    
+    // 步驟 4: 等待 SimpleDataManager 初始化
+    console.log('⏳ 步驟 4/5: 等待 SimpleDataManager 初始化...');
+    attempts = 0;
+    while (!window.simpleDataManager || !window.simpleDataManager.initialized) {
+        if (attempts++ > 100) {
+            console.error('❌ SimpleDataManager 初始化超時');
+            alert('數據管理器初始化失敗');
+            return;
+        }
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    console.log('✅ SimpleDataManager 已就緒');
+    
+    // 步驟 5: 載入文檔
+    console.log('⏳ 步驟 5/5: 載入文檔...');
+    await loadDocument();
+    console.log('✅ 初始化完成！');
+}
+
+// ============================================
+// 文檔載入函數
+// ============================================
+
+async function loadDocument() {
+    console.log('📄 開始載入文檔...');
+    
+    // 獲取 URL 參數
+    const urlParams = new URLSearchParams(window.location.search);
+    const projectId = urlParams.get('project');
+    const documentId = urlParams.get('id');
+    
+    console.log('📋 參數:', { projectId, documentId });
+    
+    if (!projectId || !documentId) {
+        console.error('❌ 缺少必要參數');
+        alert('缺少必要參數');
+        goBackToDashboard();
+        return;
+    }
+    
+    try {
+        // 從 Firebase 獲取文檔
+        console.log('🔍 從 Firebase 獲取文檔...');
+        const doc = await window.simpleDataManager.getDocument(projectId, documentId);
+        
+        if (!doc) {
+            console.error('❌ 找不到文檔');
+            alert('找不到文檔');
+            goBackToDashboard();
+            return;
+        }
+        
+        console.log('✅ 文檔載入成功:', doc);
+        currentDocument = doc;
+        
+        // 更新頁面標題
+        document.getElementById('documentTitle').textContent = doc.name || doc.fileName || '未命名文檔';
+        
+        // 顯示 PDF 預覽
+        displayPDFPreview();
+        
+        // 顯示文檔內容
+        displayDocumentContent();
+        
+    } catch (error) {
+        console.error('❌ 載入文檔失敗:', error);
+        alert('載入文檔失敗: ' + error.message);
+        goBackToDashboard();
+    }
+}
+
+// ============================================
+// PDF 預覽函數
+// ============================================
+
+function displayPDFPreview() {
+    console.log('📄 顯示 PDF 預覽');
+    const pdfViewer = document.getElementById('pdfViewer');
+    
+    if (!currentDocument) {
+        pdfViewer.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div>無法載入文檔</div></div>';
+        return;
+    }
+    
+    // 如果有圖片 URL，顯示圖片
+    if (currentDocument.imageUrl || currentDocument.downloadURL || currentDocument.url) {
+        const imageUrl = currentDocument.imageUrl || currentDocument.downloadURL || currentDocument.url;
+        pdfViewer.innerHTML = `
+            <div class="pdf-page" style="transform: scale(${zoomLevel / 100});">
+                <img src="${imageUrl}" alt="Document Preview" onerror="this.parentElement.innerHTML='<div style=\\'padding: 2rem; text-align: center; color: #6b7280;\\'>無法載入預覽</div>'">
+            </div>
+        `;
+    } else {
+        pdfViewer.innerHTML = '<div style="padding: 2rem; text-align: center; color: #6b7280;">無預覽可用</div>';
+    }
+}
+
+// ============================================
+// 文檔內容顯示函數
+// ============================================
+
+function displayDocumentContent() {
+    console.log('📋 顯示文檔內容');
+    
+    const detailsSection = document.getElementById('documentDetailsSection');
+    const dataSection = document.getElementById('documentDataSection');
+    
+    if (!currentDocument) {
+        detailsSection.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div>載入中...</div></div>';
+        return;
+    }
+    
+    const data = currentDocument.processedData || {};
+    const docType = currentDocument.type || currentDocument.documentType || 'general';
+    
+    console.log('📊 文檔類型:', docType);
+    console.log('📊 處理數據:', data);
+    
+    // 根據文檔類型顯示不同內容
+    if (docType === 'invoice') {
+        displayInvoiceContent(data);
+    } else if (docType === 'bank_statement') {
+        displayBankStatementContent(data);
+    } else if (docType === 'receipt') {
+        displayReceiptContent(data);
+    } else {
+        displayGeneralContent(data);
+    }
+}
+
+// ============================================
+// 發票內容顯示
+// ============================================
+
+function displayInvoiceContent(data) {
+    console.log('📄 顯示發票內容');
+    
+    const detailsSection = document.getElementById('documentDetailsSection');
+    const dataSection = document.getElementById('documentDataSection');
+    
+    // 發票詳情卡片
+    detailsSection.innerHTML = `
+        <div class="bank-details-card">
+            <h3 class="card-title" style="margin-bottom: 1.5rem;">
+                <i class="fas fa-file-invoice" style="color: #3b82f6; margin-right: 0.5rem;"></i>
+                發票詳情
+            </h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <div>
+                    <label style="display: block; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">發票號碼</label>
+                    <input type="text" id="invoiceNumber" value="${data.invoiceNumber || data.invoice_number || '—'}" 
+                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">日期</label>
+                    <input type="date" id="invoiceDate" value="${data.date || data.invoice_date || ''}" 
+                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">供應商</label>
+                    <input type="text" id="vendor" value="${data.vendor || data.supplier || data.merchantName || '—'}" 
+                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">總金額</label>
+                    <input type="text" id="totalAmount" value="${formatCurrency(data.total || data.totalAmount || 0)}" 
+                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; font-weight: 600; color: #10b981;">
+                </div>
+            </div>
+            <button onclick="saveInvoiceDetails()" class="btn btn-primary" style="margin-top: 1.5rem;">
+                <i class="fas fa-save"></i>
+                保存更改
+            </button>
+        </div>
+    `;
+    
+    // 項目明細表格（可編輯）
+    const items = data.items || data.lineItems || [];
+    
+    let itemsHTML = '';
+    items.forEach((item, index) => {
+        itemsHTML += `
+            <tr>
+                <td contenteditable="true" data-field="code" data-index="${index}" style="padding: 0.75rem; color: #6b7280; cursor: text;">${item.code || item.itemCode || '—'}</td>
+                <td contenteditable="true" data-field="description" data-index="${index}" style="padding: 0.75rem; color: #1f2937; font-weight: 500; cursor: text;">${item.description || '—'}</td>
+                <td contenteditable="true" data-field="quantity" data-index="${index}" style="padding: 0.75rem; text-align: right; color: #1f2937; cursor: text;">${item.quantity || 0}</td>
+                <td contenteditable="true" data-field="unit" data-index="${index}" style="padding: 0.75rem; text-align: right; color: #6b7280; cursor: text;">${item.unit || '件'}</td>
+                <td contenteditable="true" data-field="unit_price" data-index="${index}" style="padding: 0.75rem; text-align: right; color: #1f2937; cursor: text;">${(item.unit_price || item.unitPrice || 0).toFixed(2)}</td>
+                <td contenteditable="true" data-field="amount" data-index="${index}" style="padding: 0.75rem; text-align: right; color: #1f2937; font-weight: 500; cursor: text;">${(item.amount || 0).toFixed(2)}</td>
+            </tr>
+        `;
+    });
+    
+    dataSection.innerHTML = `
+        <div class="transactions-section">
+            <h3 class="transactions-title" style="margin-bottom: 1rem;">
+                <i class="fas fa-list" style="color: #8b5cf6; margin-right: 0.5rem;"></i>
+                項目明細
+                <span style="font-size: 0.875rem; color: #6b7280; font-weight: normal; margin-left: 0.5rem;">(可編輯)</span>
+            </h3>
+            <table class="transactions-table">
+                <thead>
+                    <tr>
+                        <th>代碼</th>
+                        <th>描述</th>
+                        <th style="text-align: right;">數量</th>
+                        <th style="text-align: right;">單位</th>
+                        <th style="text-align: right;">單價</th>
+                        <th style="text-align: right;">金額</th>
+                    </tr>
+                </thead>
+                <tbody id="itemsTableBody">
+                    ${itemsHTML || '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: #6b7280;">無項目數據</td></tr>'}
+                </tbody>
+            </table>
+        </div>
+    `;
+    
+    // 添加編輯事件監聽器
+    addEditableListeners();
+}
+
+// ============================================
+// 銀行對帳單內容顯示
+// ============================================
+
+function displayBankStatementContent(data) {
+    console.log('🏦 顯示銀行對帳單內容');
+    
+    const detailsSection = document.getElementById('documentDetailsSection');
+    const dataSection = document.getElementById('documentDataSection');
+    
+    // 帳戶詳情
+    detailsSection.innerHTML = `
+        <div class="bank-details-card">
+            <h3 class="card-title" style="margin-bottom: 1.5rem;">
+                <i class="fas fa-university" style="color: #10b981; margin-right: 0.5rem;"></i>
+                帳戶信息
+            </h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <div>
+                    <label style="display: block; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">帳戶名稱</label>
+                    <div style="padding: 0.5rem; background: #f9fafb; border-radius: 6px; font-size: 0.9rem;">${data.accountName || '—'}</div>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">帳戶號碼</label>
+                    <div style="padding: 0.5rem; background: #f9fafb; border-radius: 6px; font-size: 0.9rem;">${data.accountNumber || '—'}</div>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">期初餘額</label>
+                    <div style="padding: 0.5rem; background: #f9fafb; border-radius: 6px; font-size: 0.9rem; font-weight: 600;">${formatCurrency(data.openingBalance || 0)}</div>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">期末餘額</label>
+                    <div style="padding: 0.5rem; background: #f9fafb; border-radius: 6px; font-size: 0.9rem; font-weight: 600;">${formatCurrency(data.closingBalance || 0)}</div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // 交易列表
+    const transactions = data.transactions || currentDocument.transactions || [];
+    
+    let transactionsHTML = '';
+    transactions.forEach((tx, index) => {
+        const amount = parseFloat(tx.amount || 0);
+        const amountClass = amount >= 0 ? 'amount-positive' : 'amount-negative';
+        
+        transactionsHTML += `
+            <tr>
+                <td class="checkbox-cell"><input type="checkbox"></td>
+                <td>${tx.date || '—'}</td>
+                <td>${tx.description || '—'}</td>
+                <td class="amount-cell ${amountClass}">${formatCurrency(amount)}</td>
+                <td class="amount-cell">${formatCurrency(tx.balance || 0)}</td>
+                <td class="action-cell">
+                    <div class="action-btns">
+                        <button class="icon-btn"><i class="fas fa-edit"></i></button>
+                        <button class="icon-btn delete"><i class="fas fa-trash"></i></button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+    
+    dataSection.innerHTML = `
+        <div class="transactions-section">
+            <div class="transactions-header">
+                <h3 class="transactions-title">
+                    <i class="fas fa-exchange-alt" style="color: #3b82f6; margin-right: 0.5rem;"></i>
+                    交易記錄
+                </h3>
+            </div>
+            <div class="transactions-info">
+                共 ${transactions.length} 筆交易
+            </div>
+            <table class="transactions-table">
+                <thead>
+                    <tr>
+                        <th class="checkbox-cell"><input type="checkbox"></th>
+                        <th>日期</th>
+                        <th>描述</th>
+                        <th>金額</th>
+                        <th>餘額</th>
+                        <th class="action-cell">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${transactionsHTML || '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: #6b7280;">無交易記錄</td></tr>'}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+// ============================================
+// 收據內容顯示
+// ============================================
+
+function displayReceiptContent(data) {
+    console.log('🧾 顯示收據內容');
+    
+    const detailsSection = document.getElementById('documentDetailsSection');
+    const dataSection = document.getElementById('documentDataSection');
+    
+    detailsSection.innerHTML = `
+        <div class="bank-details-card">
+            <h3 class="card-title" style="margin-bottom: 1.5rem;">
+                <i class="fas fa-receipt" style="color: #8b5cf6; margin-right: 0.5rem;"></i>
+                收據詳情
+            </h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <div>
+                    <label style="display: block; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">商家</label>
+                    <div style="padding: 0.5rem; background: #f9fafb; border-radius: 6px; font-size: 0.9rem;">${data.merchantName || data.vendor || '—'}</div>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">日期</label>
+                    <div style="padding: 0.5rem; background: #f9fafb; border-radius: 6px; font-size: 0.9rem;">${data.date || '—'}</div>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">總金額</label>
+                    <div style="padding: 0.5rem; background: #f9fafb; border-radius: 6px; font-size: 0.9rem; font-weight: 600; color: #10b981;">${formatCurrency(data.total || data.totalAmount || 0)}</div>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">付款方式</label>
+                    <div style="padding: 0.5rem; background: #f9fafb; border-radius: 6px; font-size: 0.9rem;">${data.paymentMethod || '—'}</div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    dataSection.innerHTML = `
+        <div class="bank-details-card">
+            <h3 class="card-title" style="margin-bottom: 1rem;">原始數據</h3>
+            <pre style="background: #f9fafb; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.85rem;">${JSON.stringify(data, null, 2)}</pre>
+        </div>
+    `;
+}
+
+// ============================================
+// 通用內容顯示
+// ============================================
+
+function displayGeneralContent(data) {
+    console.log('📋 顯示通用內容');
+    
+    const detailsSection = document.getElementById('documentDetailsSection');
+    const dataSection = document.getElementById('documentDataSection');
+    
+    detailsSection.innerHTML = `
+        <div class="bank-details-card">
+            <h3 class="card-title" style="margin-bottom: 1rem;">
+                <i class="fas fa-file-alt" style="color: #6b7280; margin-right: 0.5rem;"></i>
+                文檔信息
+            </h3>
+            <div style="padding: 1rem; background: #f9fafb; border-radius: 6px;">
+                <p style="color: #6b7280; font-size: 0.9rem;">此文檔尚未處理或類型未知</p>
+            </div>
+        </div>
+    `;
+    
+    dataSection.innerHTML = `
+        <div class="bank-details-card">
+            <h3 class="card-title" style="margin-bottom: 1rem;">原始數據</h3>
+            <pre style="background: #f9fafb; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.85rem;">${JSON.stringify(data, null, 2)}</pre>
+        </div>
+    `;
+}
+
+// ============================================
+// 可編輯表格功能
+// ============================================
+
+function addEditableListeners() {
+    console.log('✏️ 添加可編輯監聽器');
+    
+    const editableCells = document.querySelectorAll('[contenteditable="true"]');
+    
+    editableCells.forEach(cell => {
+        // 失焦時保存
+        cell.addEventListener('blur', async function() {
+            const field = this.getAttribute('data-field');
+            const index = parseInt(this.getAttribute('data-index'));
+            const value = this.textContent.trim();
+            
+            console.log('💾 保存編輯:', { field, index, value });
+            
+            // 更新 currentDocument
+            if (!currentDocument.processedData.items) {
+                currentDocument.processedData.items = [];
+            }
+            
+            if (!currentDocument.processedData.items[index]) {
+                currentDocument.processedData.items[index] = {};
+            }
+            
+            currentDocument.processedData.items[index][field] = value;
+            
+            // 保存到 Firebase
+            await saveDocumentChanges();
+        });
+        
+        // Enter 鍵保存並移到下一個
+        cell.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                this.blur();
+            }
+        });
+    });
+}
+
+// ============================================
+// 保存函數
+// ============================================
+
+async function saveInvoiceDetails() {
+    console.log('💾 保存發票詳情...');
+    
+    if (!currentDocument) {
+        alert('無法保存：未找到當前文檔');
+        return;
+    }
+    
+    // 獲取編輯的值
+    const invoiceNumber = document.getElementById('invoiceNumber')?.value;
+    const invoiceDate = document.getElementById('invoiceDate')?.value;
+    const vendor = document.getElementById('vendor')?.value;
+    const totalAmount = document.getElementById('totalAmount')?.value;
+    
+    // 更新 currentDocument
+    currentDocument.processedData = {
+        ...currentDocument.processedData,
+        invoiceNumber: invoiceNumber,
+        date: invoiceDate,
+        vendor: vendor,
+        total: parseFloat(totalAmount.replace(/[^0-9.-]+/g, '')) || 0
+    };
+    
+    // 保存到 Firebase
+    await saveDocumentChanges();
+    
+    alert('✅ 保存成功！');
+}
+
+async function saveDocumentChanges() {
+    console.log('💾 保存文檔更改到 Firebase...');
+    
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const projectId = urlParams.get('project');
+        const documentId = urlParams.get('id');
+        
+        if (!projectId || !documentId) {
+            console.error('❌ 缺少必要參數');
+            return;
+        }
+        
+        await window.simpleDataManager.updateDocument(projectId, documentId, {
+            processedData: currentDocument.processedData,
+            lastModified: new Date().toISOString()
+        });
+        
+        console.log('✅ 保存成功');
+    } catch (error) {
+        console.error('❌ 保存失敗:', error);
+        alert('保存失敗: ' + error.message);
+    }
+}
+
+// ============================================
+// PDF 控制函數
+// ============================================
+
+function zoomIn() {
+    zoomLevel = Math.min(200, zoomLevel + 25);
+    displayPDFPreview();
+}
+
+function zoomOut() {
+    zoomLevel = Math.max(50, zoomLevel - 25);
+    displayPDFPreview();
+}
+
+function resetZoom() {
+    zoomLevel = 100;
+    displayPDFPreview();
+}
+
+function previousPage() {
+    if (currentPageNumber > 1) {
+        currentPageNumber--;
+        updatePageDisplay();
+    }
+}
+
+function nextPage() {
+    if (currentPageNumber < totalPagesCount) {
+        currentPageNumber++;
+        updatePageDisplay();
+    }
+}
+
+function updatePageDisplay() {
+    document.getElementById('currentPage').textContent = currentPageNumber;
+    document.getElementById('totalPages').textContent = totalPagesCount;
+    document.getElementById('prevPageBtn').disabled = currentPageNumber === 1;
+    document.getElementById('nextPageBtn').disabled = currentPageNumber === totalPagesCount;
+}
+
+// ============================================
+// 導出功能
+// ============================================
+
+function toggleExportMenu(event) {
+    event.stopPropagation();
+    const menu = document.getElementById('exportMenu');
+    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
+
+// 點擊其他地方關閉菜單
+document.addEventListener('click', function() {
+    const menu = document.getElementById('exportMenu');
+    if (menu) menu.style.display = 'none';
+});
+
+async function exportDocument(format) {
+    console.log('📥 導出文檔:', format);
+    
+    if (!currentDocument) {
+        alert('無法導出：未找到文檔數據');
+        return;
+    }
+    
+    const data = currentDocument.processedData || {};
+    const fileName = currentDocument.name || currentDocument.fileName || 'document';
+    
+    try {
+        let content = '';
+        let mimeType = '';
+        let fileExtension = '';
+        
+        switch (format) {
+            case 'csv':
+                content = exportToCSV(data);
+                mimeType = 'text/csv';
+                fileExtension = 'csv';
+                break;
+            
+            case 'iif':
+                content = exportToIIF(data);
+                mimeType = 'text/plain';
+                fileExtension = 'iif';
+                break;
+            
+            case 'qbo':
+                content = exportToQBO(data);
+                mimeType = 'application/xml';
+                fileExtension = 'qbo';
+                break;
+            
+            case 'json':
+                content = JSON.stringify(currentDocument, null, 2);
+                mimeType = 'application/json';
+                fileExtension = 'json';
+                break;
+            
+            default:
+                alert('不支持的導出格式');
+                return;
+        }
+        
+        // 創建下載
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${fileName}.${fileExtension}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        console.log('✅ 導出成功');
+        
+    } catch (error) {
+        console.error('❌ 導出失敗:', error);
+        alert('導出失敗: ' + error.message);
+    }
+}
+
+// CSV 導出
+function exportToCSV(data) {
+    const docType = currentDocument.type || currentDocument.documentType || 'general';
+    
+    if (docType === 'invoice') {
+        // 發票 CSV
+        let csv = 'Code,Description,Quantity,Unit,Unit Price,Amount\n';
+        const items = data.items || data.lineItems || [];
+        items.forEach(item => {
+            csv += `"${item.code || ''}","${item.description || ''}",${item.quantity || 0},"${item.unit || ''}",${item.unit_price || item.unitPrice || 0},${item.amount || 0}\n`;
+        });
+        return csv;
+    } else if (docType === 'bank_statement') {
+        // 銀行對帳單 CSV
+        let csv = 'Date,Description,Amount,Balance\n';
+        const transactions = data.transactions || currentDocument.transactions || [];
+        transactions.forEach(tx => {
+            csv += `"${tx.date || ''}","${tx.description || ''}",${tx.amount || 0},${tx.balance || 0}\n`;
+        });
+        return csv;
+    } else {
+        // 通用 CSV
+        return JSON.stringify(data, null, 2);
+    }
+}
+
+// IIF 導出 (QuickBooks)
+function exportToIIF(data) {
+    let iif = '!TRNS\tTRNSID\tTRNSTYPE\tDATE\tACCNT\tNAME\tAMOUNT\tMEMO\n';
+    
+    const docType = currentDocument.type || currentDocument.documentType || 'general';
+    
+    if (docType === 'invoice') {
+        const invoiceDate = data.date || data.invoice_date || new Date().toISOString().split('T')[0];
+        const vendor = data.vendor || data.supplier || 'Unknown';
+        const total = data.total || data.totalAmount || 0;
+        
+        iif += `TRNS\t\tINVOICE\t${invoiceDate}\tAccounts Receivable\t${vendor}\t${total}\t${data.invoiceNumber || ''}\n`;
+        
+        const items = data.items || data.lineItems || [];
+        items.forEach(item => {
+            iif += `SPL\t\t\t${invoiceDate}\tIncome\t\t${item.amount || 0}\t${item.description || ''}\n`;
+        });
+    } else if (docType === 'bank_statement') {
+        const transactions = data.transactions || currentDocument.transactions || [];
+        transactions.forEach(tx => {
+            iif += `TRNS\t\tDEPOSIT\t${tx.date || ''}\tBank Account\t\t${tx.amount || 0}\t${tx.description || ''}\n`;
+        });
+    }
+    
+    return iif;
+}
+
+// QBO 導出 (QuickBooks Online)
+function exportToQBO(data) {
+    const docType = currentDocument.type || currentDocument.documentType || 'general';
+    
+    let qbo = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+    qbo += `<QBXML>\n`;
+    qbo += `  <QBXMLMsgsRq onError="stopOnError">\n`;
+    
+    if (docType === 'invoice') {
+        qbo += `    <InvoiceAddRq>\n`;
+        qbo += `      <InvoiceAdd>\n`;
+        qbo += `        <CustomerRef>\n`;
+        qbo += `          <FullName>${data.vendor || 'Unknown'}</FullName>\n`;
+        qbo += `        </CustomerRef>\n`;
+        qbo += `        <TxnDate>${data.date || new Date().toISOString().split('T')[0]}</TxnDate>\n`;
+        qbo += `        <RefNumber>${data.invoiceNumber || ''}</RefNumber>\n`;
+        
+        const items = data.items || data.lineItems || [];
+        items.forEach(item => {
+            qbo += `        <InvoiceLineAdd>\n`;
+            qbo += `          <ItemRef>\n`;
+            qbo += `            <FullName>${item.description || 'Item'}</FullName>\n`;
+            qbo += `          </ItemRef>\n`;
+            qbo += `          <Quantity>${item.quantity || 0}</Quantity>\n`;
+            qbo += `          <Rate>${item.unit_price || item.unitPrice || 0}</Rate>\n`;
+            qbo += `        </InvoiceLineAdd>\n`;
+        });
+        
+        qbo += `      </InvoiceAdd>\n`;
+        qbo += `    </InvoiceAddRq>\n`;
+    }
+    
+    qbo += `  </QBXMLMsgsRq>\n`;
+    qbo += `</QBXML>`;
+    
+    return qbo;
+}
+
+// ============================================
+// 工具函數
+// ============================================
+
+function formatCurrency(amount) {
+    const num = parseFloat(amount) || 0;
+    return '$' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// ============================================
+// 頁面載入時初始化
+// ============================================
+
+// 等待 DOM 載入完成
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
+
