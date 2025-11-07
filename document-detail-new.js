@@ -141,7 +141,7 @@ async function loadDocument() {
 // PDF 預覽函數
 // ============================================
 
-function displayPDFPreview() {
+async function displayPDFPreview() {
     console.log('📄 顯示 PDF 預覽');
     const pdfViewer = document.getElementById('pdfViewer');
     
@@ -151,21 +151,34 @@ function displayPDFPreview() {
     }
     
     // 嘗試多個可能的圖片 URL 字段
-    const imageUrl = currentDocument.imageUrl || 
-                     currentDocument.downloadURL || 
-                     currentDocument.url || 
-                     currentDocument.fileUrl ||
-                     currentDocument.storageUrl;
+    let imageUrl = currentDocument.imageUrl || 
+                   currentDocument.downloadURL || 
+                   currentDocument.url || 
+                   currentDocument.fileUrl ||
+                   currentDocument.storageUrl;
     
-    console.log('🖼️ 圖片 URL:', imageUrl);
+    // 如果沒有直接的 URL，嘗試從 Firebase Storage 獲取
+    if (!imageUrl && currentDocument.storagePath) {
+        console.log('🔍 嘗試從 storagePath 獲取 URL:', currentDocument.storagePath);
+        try {
+            const storage = firebase.storage();
+            const storageRef = storage.ref(currentDocument.storagePath);
+            imageUrl = await storageRef.getDownloadURL();
+            console.log('✅ 從 Storage 獲取 URL:', imageUrl);
+        } catch (error) {
+            console.error('❌ 從 Storage 獲取 URL 失敗:', error);
+        }
+    }
+    
+    console.log('🖼️ 最終圖片 URL:', imageUrl);
     console.log('📄 文檔對象:', currentDocument);
     
     if (imageUrl) {
         pdfViewer.innerHTML = `
-            <div class="pdf-page" style="transform: scale(${zoomLevel / 100}); transition: transform 0.2s;">
+            <div class="pdf-page" style="transform: scale(${zoomLevel / 100}); transition: transform 0.2s; transform-origin: top center;">
                 <img src="${imageUrl}" alt="Document Preview" 
-                     style="max-width: 100%; height: auto; display: block;"
-                     onerror="console.error('圖片載入失敗:', '${imageUrl}'); this.parentElement.innerHTML='<div style=\\'padding: 2rem; text-align: center; color: #6b7280;\\'>無法載入預覽<br><small style=\\'color: #9ca3af; font-size: 0.75rem;\\'>URL: ${imageUrl}</small></div>'">
+                     style="max-width: 100%; height: auto; display: block; border-radius: 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"
+                     onerror="console.error('圖片載入失敗:', '${imageUrl}'); this.parentElement.innerHTML='<div style=\\'padding: 2rem; text-align: center; color: #6b7280;\\'>無法載入預覽<br><small style=\\'color: #9ca3af; font-size: 0.75rem; word-break: break-all;\\'>URL: ${imageUrl}</small></div>'">
             </div>
         `;
     } else {
@@ -174,6 +187,7 @@ function displayPDFPreview() {
                 <i class="fas fa-file-image" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
                 <p>無預覽可用</p>
                 <small style="color: #9ca3af; font-size: 0.75rem;">文檔可能尚未處理或不支持預覽</small>
+                ${currentDocument.name ? `<br><small style="color: #9ca3af; font-size: 0.75rem;">文件名: ${currentDocument.name}</small>` : ''}
             </div>
         `;
     }
@@ -222,37 +236,37 @@ function displayInvoiceContent(data) {
     const detailsSection = document.getElementById('documentDetailsSection');
     const dataSection = document.getElementById('documentDataSection');
     
-    // 發票詳情卡片（移除保存按鈕，改為自動保存）
+    // 發票詳情卡片（改為單列卡片式布局）
     detailsSection.innerHTML = `
         <div class="bank-details-card">
             <h3 class="card-title" style="margin-bottom: 1.5rem;">
                 <i class="fas fa-file-invoice" style="color: #3b82f6; margin-right: 0.5rem;"></i>
                 發票詳情
             </h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
-                <div>
-                    <label style="display: block; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">發票號碼</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">發票號碼</label>
                     <input type="text" id="invoiceNumber" value="${data.invoiceNumber || data.invoice_number || '—'}" 
                            onchange="autoSaveInvoiceDetails()"
-                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem;">
+                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
                 </div>
-                <div>
-                    <label style="display: block; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">日期</label>
+                <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">日期</label>
                     <input type="date" id="invoiceDate" value="${data.date || data.invoice_date || ''}" 
                            onchange="autoSaveInvoiceDetails()"
-                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem;">
+                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
                 </div>
-                <div>
-                    <label style="display: block; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">供應商</label>
+                <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">供應商</label>
                     <input type="text" id="vendor" value="${data.vendor || data.supplier || data.merchantName || '—'}" 
                            onchange="autoSaveInvoiceDetails()"
-                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem;">
+                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
                 </div>
-                <div>
-                    <label style="display: block; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">總金額</label>
+                <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">總金額</label>
                     <input type="text" id="totalAmount" value="${formatCurrency(data.total || data.totalAmount || 0)}" 
                            onchange="autoSaveInvoiceDetails()"
-                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; font-weight: 600; color: #10b981;">
+                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; font-weight: 600; color: #10b981; background: white;">
                 </div>
             </div>
         </div>
