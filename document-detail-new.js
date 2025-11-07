@@ -51,10 +51,19 @@ async function init() {
     }
     console.log('✅ 用戶已登入:', window.simpleAuth.currentUser.email);
     
-    // 步驟 3: 移除頁面保護
-    console.log('⏳ 步驟 3/5: 移除頁面保護...');
+    // 步驟 3: 移除頁面保護並初始化 Navbar/Sidebar
+    console.log('⏳ 步驟 3/5: 移除頁面保護並初始化 UI...');
     document.body.classList.remove('auth-checking');
     document.body.classList.add('auth-ready');
+    
+    // 初始化 Navbar 和 Sidebar
+    if (window.VaultCaddyNavbar) {
+        window.vaultcaddyNavbar = new window.VaultCaddyNavbar();
+    }
+    if (window.VaultCaddySidebar) {
+        window.unifiedSidebar = new window.VaultCaddySidebar();
+    }
+    
     console.log('✅ 頁面已顯示');
     
     // 步驟 4: 等待 SimpleDataManager 初始化
@@ -141,16 +150,32 @@ function displayPDFPreview() {
         return;
     }
     
-    // 如果有圖片 URL，顯示圖片
-    if (currentDocument.imageUrl || currentDocument.downloadURL || currentDocument.url) {
-        const imageUrl = currentDocument.imageUrl || currentDocument.downloadURL || currentDocument.url;
+    // 嘗試多個可能的圖片 URL 字段
+    const imageUrl = currentDocument.imageUrl || 
+                     currentDocument.downloadURL || 
+                     currentDocument.url || 
+                     currentDocument.fileUrl ||
+                     currentDocument.storageUrl;
+    
+    console.log('🖼️ 圖片 URL:', imageUrl);
+    console.log('📄 文檔對象:', currentDocument);
+    
+    if (imageUrl) {
         pdfViewer.innerHTML = `
-            <div class="pdf-page" style="transform: scale(${zoomLevel / 100});">
-                <img src="${imageUrl}" alt="Document Preview" onerror="this.parentElement.innerHTML='<div style=\\'padding: 2rem; text-align: center; color: #6b7280;\\'>無法載入預覽</div>'">
+            <div class="pdf-page" style="transform: scale(${zoomLevel / 100}); transition: transform 0.2s;">
+                <img src="${imageUrl}" alt="Document Preview" 
+                     style="max-width: 100%; height: auto; display: block;"
+                     onerror="console.error('圖片載入失敗:', '${imageUrl}'); this.parentElement.innerHTML='<div style=\\'padding: 2rem; text-align: center; color: #6b7280;\\'>無法載入預覽<br><small style=\\'color: #9ca3af; font-size: 0.75rem;\\'>URL: ${imageUrl}</small></div>'">
             </div>
         `;
     } else {
-        pdfViewer.innerHTML = '<div style="padding: 2rem; text-align: center; color: #6b7280;">無預覽可用</div>';
+        pdfViewer.innerHTML = `
+            <div style="padding: 2rem; text-align: center; color: #6b7280;">
+                <i class="fas fa-file-image" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                <p>無預覽可用</p>
+                <small style="color: #9ca3af; font-size: 0.75rem;">文檔可能尚未處理或不支持預覽</small>
+            </div>
+        `;
     }
 }
 
@@ -197,7 +222,7 @@ function displayInvoiceContent(data) {
     const detailsSection = document.getElementById('documentDetailsSection');
     const dataSection = document.getElementById('documentDataSection');
     
-    // 發票詳情卡片
+    // 發票詳情卡片（移除保存按鈕，改為自動保存）
     detailsSection.innerHTML = `
         <div class="bank-details-card">
             <h3 class="card-title" style="margin-bottom: 1.5rem;">
@@ -208,28 +233,28 @@ function displayInvoiceContent(data) {
                 <div>
                     <label style="display: block; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">發票號碼</label>
                     <input type="text" id="invoiceNumber" value="${data.invoiceNumber || data.invoice_number || '—'}" 
+                           onchange="autoSaveInvoiceDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem;">
                 </div>
                 <div>
                     <label style="display: block; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">日期</label>
                     <input type="date" id="invoiceDate" value="${data.date || data.invoice_date || ''}" 
+                           onchange="autoSaveInvoiceDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem;">
                 </div>
                 <div>
                     <label style="display: block; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">供應商</label>
                     <input type="text" id="vendor" value="${data.vendor || data.supplier || data.merchantName || '—'}" 
+                           onchange="autoSaveInvoiceDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem;">
                 </div>
                 <div>
                     <label style="display: block; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">總金額</label>
                     <input type="text" id="totalAmount" value="${formatCurrency(data.total || data.totalAmount || 0)}" 
+                           onchange="autoSaveInvoiceDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; font-weight: 600; color: #10b981;">
                 </div>
             </div>
-            <button onclick="saveInvoiceDetails()" class="btn btn-primary" style="margin-top: 1.5rem;">
-                <i class="fas fa-save"></i>
-                保存更改
-            </button>
         </div>
     `;
     
@@ -494,11 +519,11 @@ function addEditableListeners() {
 // 保存函數
 // ============================================
 
-async function saveInvoiceDetails() {
-    console.log('💾 保存發票詳情...');
+// 自動保存發票詳情（無提示）
+async function autoSaveInvoiceDetails() {
+    console.log('💾 自動保存發票詳情...');
     
     if (!currentDocument) {
-        alert('無法保存：未找到當前文檔');
         return;
     }
     
@@ -516,6 +541,38 @@ async function saveInvoiceDetails() {
         vendor: vendor,
         total: parseFloat(totalAmount.replace(/[^0-9.-]+/g, '')) || 0
     };
+    
+    // 保存到 Firebase
+    await saveDocumentChanges();
+}
+
+// 手動保存所有更改（從頂部按鈕調用）
+async function saveAllChanges() {
+    console.log('💾 保存所有更改...');
+    
+    if (!currentDocument) {
+        alert('無法保存：未找到當前文檔');
+        return;
+    }
+    
+    // 如果是發票，獲取發票詳情
+    const docType = currentDocument.type || currentDocument.documentType || 'general';
+    if (docType === 'invoice') {
+        const invoiceNumber = document.getElementById('invoiceNumber')?.value;
+        const invoiceDate = document.getElementById('invoiceDate')?.value;
+        const vendor = document.getElementById('vendor')?.value;
+        const totalAmount = document.getElementById('totalAmount')?.value;
+        
+        if (invoiceNumber || invoiceDate || vendor || totalAmount) {
+            currentDocument.processedData = {
+                ...currentDocument.processedData,
+                invoiceNumber: invoiceNumber,
+                date: invoiceDate,
+                vendor: vendor,
+                total: parseFloat(totalAmount?.replace(/[^0-9.-]+/g, '')) || 0
+            };
+        }
+    }
     
     // 保存到 Firebase
     await saveDocumentChanges();
