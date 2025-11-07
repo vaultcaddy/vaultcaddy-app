@@ -11,6 +11,8 @@ let currentDocument = null;
 let currentPageNumber = 1;
 let totalPagesCount = 1;
 let zoomLevel = 100;
+let autoSaveTimeout = null;
+let hasUnsavedChanges = false;
 
 // ============================================
 // 初始化函數
@@ -501,13 +503,13 @@ function addEditableListeners() {
     const editableCells = document.querySelectorAll('[contenteditable="true"]');
     
     editableCells.forEach(cell => {
-        // 失焦時保存
-        cell.addEventListener('blur', async function() {
+        // 輸入時標記為已更改
+        cell.addEventListener('input', function() {
             const field = this.getAttribute('data-field');
             const index = parseInt(this.getAttribute('data-index'));
             const value = this.textContent.trim();
             
-            console.log('💾 保存編輯:', { field, index, value });
+            console.log('✏️ 編輯中:', { field, index, value });
             
             // 更新 currentDocument
             if (!currentDocument.processedData.items) {
@@ -518,13 +520,18 @@ function addEditableListeners() {
                 currentDocument.processedData.items[index] = {};
             }
             
-            currentDocument.processedData.items[index][field] = value;
+            // 根據字段類型轉換值
+            if (field === 'quantity' || field === 'unit_price' || field === 'amount') {
+                currentDocument.processedData.items[index][field] = parseFloat(value) || 0;
+            } else {
+                currentDocument.processedData.items[index][field] = value;
+            }
             
-            // 保存到 Firebase
-            await saveDocumentChanges();
+            // 觸發自動保存
+            markAsChanged();
         });
         
-        // Enter 鍵保存並移到下一個
+        // Enter 鍵移到下一個
         cell.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -538,39 +545,44 @@ function addEditableListeners() {
 // 保存函數
 // ============================================
 
-// 自動保存發票詳情（無提示）
-async function autoSaveInvoiceDetails() {
-    console.log('💾 自動保存發票詳情...');
+// 顯示/隱藏 Saved 指示器
+function showSavedIndicator() {
+    const indicator = document.getElementById('savedIndicator');
+    if (indicator) {
+        indicator.style.display = 'flex';
+        hasUnsavedChanges = false;
+        
+        // 3 秒後隱藏
+        setTimeout(() => {
+            indicator.style.display = 'none';
+        }, 3000);
+    }
+}
+
+// 標記有未保存的更改
+function markAsChanged() {
+    hasUnsavedChanges = true;
     
-    if (!currentDocument) {
+    // 清除之前的自動保存計時器
+    if (autoSaveTimeout) {
+        clearTimeout(autoSaveTimeout);
+    }
+    
+    // 設置新的自動保存計時器（1 秒後保存）
+    autoSaveTimeout = setTimeout(() => {
+        autoSaveAllChanges();
+    }, 1000);
+}
+
+// 自動保存所有更改
+async function autoSaveAllChanges() {
+    if (!hasUnsavedChanges) {
         return;
     }
     
-    // 獲取編輯的值
-    const invoiceNumber = document.getElementById('invoiceNumber')?.value;
-    const invoiceDate = document.getElementById('invoiceDate')?.value;
-    const vendor = document.getElementById('vendor')?.value;
-    const totalAmount = document.getElementById('totalAmount')?.value;
-    
-    // 更新 currentDocument
-    currentDocument.processedData = {
-        ...currentDocument.processedData,
-        invoiceNumber: invoiceNumber,
-        date: invoiceDate,
-        vendor: vendor,
-        total: parseFloat(totalAmount.replace(/[^0-9.-]+/g, '')) || 0
-    };
-    
-    // 保存到 Firebase
-    await saveDocumentChanges();
-}
-
-// 手動保存所有更改（從頂部按鈕調用）
-async function saveAllChanges() {
-    console.log('💾 保存所有更改...');
+    console.log('💾 自動保存所有更改...');
     
     if (!currentDocument) {
-        alert('無法保存：未找到當前文檔');
         return;
     }
     
@@ -596,7 +608,18 @@ async function saveAllChanges() {
     // 保存到 Firebase
     await saveDocumentChanges();
     
-    alert('✅ 保存成功！');
+    // 顯示 Saved 指示器
+    showSavedIndicator();
+}
+
+// 自動保存發票詳情（觸發自動保存）
+async function autoSaveInvoiceDetails() {
+    markAsChanged();
+}
+
+// 手動保存所有更改（保留以防其他地方調用）
+async function saveAllChanges() {
+    await autoSaveAllChanges();
 }
 
 async function saveDocumentChanges() {
