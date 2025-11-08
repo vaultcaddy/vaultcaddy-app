@@ -161,10 +161,6 @@
             <div style="padding: 1rem; border-bottom: 1px solid #e5e7eb;">
                 <div style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem;">Credits: <span id="user-credits">--</span></div>
                 <div id="user-email" style="font-size: 0.875rem; color: #6b7280;">載入中...</div>
-                <div style="margin-top: 0.5rem; display: flex; align-items: center; gap: 0.25rem; color: #667eea; font-size: 0.875rem;">
-                    <i class="fas fa-shield-alt"></i>
-                    <span>Firebase 帳戶</span>
-                </div>
             </div>
             <div style="padding: 0.5rem;">
                 <a href="account.html" class="user-menu-item" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; cursor: pointer; border-radius: 6px; transition: background 0.2s; text-decoration: none; color: #1f2937;">

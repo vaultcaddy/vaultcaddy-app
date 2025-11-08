@@ -316,42 +316,42 @@ async function displayPDFPreview() {
 }
 
 // ============================================
-// 圖片控制函數
+// 圖片控制函數 - 全局可訪問
 // ============================================
 
-function zoomIn() {
+window.zoomIn = function() {
     if (window.currentZoom < 200) {
         window.currentZoom += 25;
         updateImageTransform();
     }
-}
+};
 
-function zoomOut() {
+window.zoomOut = function() {
     if (window.currentZoom > 25) {
         window.currentZoom -= 25;
         updateImageTransform();
     }
-}
+};
 
-function rotateLeft() {
+window.rotateLeft = function() {
     window.currentRotation -= 90;
     updateImageTransform();
-}
+};
 
-function rotateRight() {
+window.rotateRight = function() {
     window.currentRotation += 90;
     updateImageTransform();
-}
+};
 
-function previousPage() {
+window.previousPage = function() {
     // 暫時禁用，因為目前只支持單頁
     console.log('上一頁功能暫未實現');
-}
+};
 
-function nextPage() {
+window.nextPage = function() {
     // 暫時禁用，因為目前只支持單頁
     console.log('下一頁功能暫未實現');
-}
+};
 
 function updateImageTransform() {
     const container = document.getElementById('image-container');

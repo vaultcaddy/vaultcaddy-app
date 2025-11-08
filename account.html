@@ -307,8 +307,14 @@
                     <div class="avatar-section">
                         <div class="avatar" id="user-avatar">U</div>
                         <div class="avatar-actions">
-                            <button class="link-button">上傳新頭像</button>
-                            <button class="link-button" style="color: #6b7280;">移除頭像</button>
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                <div style="font-weight: 600; color: #1f2937; font-size: 0.875rem;">目前計劃</div>
+                                <div id="user-plan" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; font-weight: 600; font-size: 0.875rem;">
+                                    <i class="fas fa-crown"></i>
+                                    <span>Basic Plan</span>
+                                </div>
+                                <a href="index.html#pricing" style="color: #667eea; font-size: 0.875rem; text-decoration: none; font-weight: 500;">升級計劃 →</a>
+                            </div>
                         </div>
                     </div>
                     
@@ -470,6 +476,9 @@
                 avatar.style.backgroundImage = 'none';
             }
             
+            // 載入用戶計劃
+            loadUserPlan();
+            
             // 載入偏好設定
             const savedLanguage = localStorage.getItem('userLanguage') || 'zh-TW';
             const savedTimezone = localStorage.getItem('userTimezone') || 'Asia/Taipei';
@@ -483,65 +492,38 @@
             document.getElementById('marketing-emails').checked = marketingEmails;
         }
         
-        // 上傳頭像
-        function uploadAvatar() {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/*';
+        // 載入用戶計劃
+        function loadUserPlan() {
+            // 從 localStorage 或 Firestore 獲取用戶計劃
+            const savedPlan = localStorage.getItem('userPlan') || 'Basic';
+            const planElement = document.getElementById('user-plan');
             
-            input.onchange = async (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                
-                // 檢查文件大小（最大 2MB）
-                if (file.size > 2 * 1024 * 1024) {
-                    alert('圖片大小不能超過 2MB');
-                    return;
+            // 根據計劃類型設置不同的樣式和圖標
+            const planConfig = {
+                'Basic': {
+                    name: 'Basic Plan',
+                    icon: 'fa-star',
+                    gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                },
+                'Pro': {
+                    name: 'Pro Plan',
+                    icon: 'fa-crown',
+                    gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
+                },
+                'Business': {
+                    name: 'Business Plan',
+                    icon: 'fa-gem',
+                    gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
                 }
-                
-                // 讀取圖片並轉換為 base64
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    const base64Image = event.target.result;
-                    
-                    // 保存到 localStorage
-                    localStorage.setItem('userAvatar', base64Image);
-                    
-                    // 更新頭像顯示
-                    const avatar = document.getElementById('user-avatar');
-                    avatar.style.backgroundImage = `url(${base64Image})`;
-                    avatar.style.backgroundSize = 'cover';
-                    avatar.style.backgroundPosition = 'center';
-                    avatar.textContent = '';
-                    
-                    // 觸發 storage 事件以同步其他頁面
-                    window.dispatchEvent(new Event('storage'));
-                    
-                    alert('頭像已更新');
-                };
-                
-                reader.readAsDataURL(file);
             };
             
-            input.click();
-        }
-        
-        // 移除頭像
-        function removeAvatar() {
-            const confirmed = confirm('確定要移除頭像嗎？');
-            if (!confirmed) return;
+            const config = planConfig[savedPlan] || planConfig['Basic'];
             
-            // 從 localStorage 移除
-            localStorage.removeItem('userAvatar');
-            
-            // 重新載入用戶資料以顯示默認頭像
-            const user = window.simpleAuth.currentUser;
-            loadUserData(user);
-            
-            // 觸發 storage 事件以同步其他頁面
-            window.dispatchEvent(new Event('storage'));
-            
-            alert('頭像已移除');
+            planElement.innerHTML = `
+                <i class="fas ${config.icon}"></i>
+                <span>${config.name}</span>
+            `;
+            planElement.style.background = config.gradient;
         }
         
         // 儲存個人資料
