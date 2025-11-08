@@ -10,8 +10,8 @@ const translations = {
         'nav_login': 'Log in →',
         
         // Hero區域
-        'hero_title': 'Process Any Financial Documents with AI<br>Bank Statements, Invoices, Receipts All-in-One',
-        'hero_subtitle': 'Industry-leading AI document converter designed for accountants and bookkeepers. Extract data from PDF bank statements, invoices, receipts, and more.',
+        'hero_title': 'Process Financial Documents in <span class="gradient-text">10-30 Seconds</span><br>Let AI Handle the Tedious Work, You Focus on Growth',
+        'hero_subtitle': 'Auto-convert bank statements, invoices, receipts to Excel/CSV/QuickBooks format<br><strong>98% Accuracy</strong> • <strong>Save 90% Time</strong> • <strong>Zero Human Errors</strong>',
         'upload_title': 'Select Document Type and Upload Files',
         'select_model': 'Choose Conversion Mode',
         'model_bank_title': 'Bank Statement Converter',
@@ -244,8 +244,8 @@ const translations = {
         'nav_login': '登入 →',
         
         // Hero區域
-        'hero_title': '使用AI處理任何財務文檔<br>銀行對帳單、發票、收據一站搞定',
-        'hero_subtitle': '業界領先的AI文檔轉換器，為會計師和記帳員設計。從PDF銀行對帳單、發票、收據等文檔中提取數據。',
+        'hero_title': '<span class="gradient-text">10-30 秒</span>完成財務文檔處理<br>讓 AI 處理繁瑣工作，您專注業務成長',
+        'hero_subtitle': '自動轉換銀行對帳單、發票、收據為 Excel/CSV/QuickBooks 格式<br><strong>準確率 98%</strong> • <strong>節省 90% 時間</strong> • <strong>零人為錯誤</strong>',
         'upload_title': '選擇文檔類型並上傳文件',
         'select_model': '選擇轉換模式',
         'model_bank_title': '銀行對帳單轉換器',

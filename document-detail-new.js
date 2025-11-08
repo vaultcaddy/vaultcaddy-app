@@ -245,12 +245,62 @@ async function displayPDFPreview() {
     
     if (imageUrl) {
         pdfViewer.innerHTML = `
-            <div class="pdf-page" style="transform: scale(${zoomLevel / 100}); transition: transform 0.2s; transform-origin: top center;">
-                <img src="${imageUrl}" alt="Document Preview" 
-                     style="max-width: 100%; height: auto; display: block; border-radius: 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"
-                     onerror="console.error('圖片載入失敗:', '${imageUrl}'); this.parentElement.innerHTML='<div style=\\'padding: 2rem; text-align: center; color: #6b7280;\\'>無法載入預覽<br><small style=\\'color: #9ca3af; font-size: 0.75rem; word-break: break-all;\\'>URL: ${imageUrl}</small></div>'">
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <!-- 圖片控制工具欄 -->
+                <div style="background: #2d3748; border-radius: 8px; padding: 0.75rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+                    <!-- 縮小 -->
+                    <button onclick="zoomOut()" style="background: transparent; border: none; color: white; cursor: pointer; padding: 0.5rem; border-radius: 4px; transition: background 0.2s;" onmouseover="this.style.background='#4a5568'" onmouseout="this.style.background='transparent'" title="縮小">
+                        <i class="fas fa-search-minus" style="font-size: 1.25rem;"></i>
+                    </button>
+                    
+                    <!-- 縮放比例顯示 -->
+                    <span style="color: white; font-size: 0.875rem; min-width: 60px; text-align: center; font-weight: 600;" id="zoom-display">100%</span>
+                    
+                    <!-- 放大 -->
+                    <button onclick="zoomIn()" style="background: transparent; border: none; color: white; cursor: pointer; padding: 0.5rem; border-radius: 4px; transition: background 0.2s;" onmouseover="this.style.background='#4a5568'" onmouseout="this.style.background='transparent'" title="放大">
+                        <i class="fas fa-search-plus" style="font-size: 1.25rem;"></i>
+                    </button>
+                    
+                    <div style="width: 1px; height: 24px; background: #4a5568; margin: 0 0.25rem;"></div>
+                    
+                    <!-- 向左旋轉 -->
+                    <button onclick="rotateLeft()" style="background: transparent; border: none; color: white; cursor: pointer; padding: 0.5rem; border-radius: 4px; transition: background 0.2s;" onmouseover="this.style.background='#4a5568'" onmouseout="this.style.background='transparent'" title="向左旋轉">
+                        <i class="fas fa-undo" style="font-size: 1.25rem;"></i>
+                    </button>
+                    
+                    <!-- 向右旋轉 -->
+                    <button onclick="rotateRight()" style="background: transparent; border: none; color: white; cursor: pointer; padding: 0.5rem; border-radius: 4px; transition: background 0.2s;" onmouseover="this.style.background='#4a5568'" onmouseout="this.style.background='transparent'" title="向右旋轉">
+                        <i class="fas fa-redo" style="font-size: 1.25rem;"></i>
+                    </button>
+                    
+                    <div style="width: 1px; height: 24px; background: #4a5568; margin: 0 0.25rem;"></div>
+                    
+                    <!-- 上一頁 -->
+                    <button onclick="previousPage()" style="background: transparent; border: none; color: white; cursor: pointer; padding: 0.5rem; border-radius: 4px; transition: background 0.2s;" onmouseover="this.style.background='#4a5568'" onmouseout="this.style.background='transparent'" title="上一頁" disabled>
+                        <i class="fas fa-chevron-left" style="font-size: 1.25rem;"></i>
+                    </button>
+                    
+                    <!-- 頁數顯示 -->
+                    <span style="color: white; font-size: 0.875rem; min-width: 80px; text-align: center;" id="page-display">1 of 1</span>
+                    
+                    <!-- 下一頁 -->
+                    <button onclick="nextPage()" style="background: transparent; border: none; color: white; cursor: pointer; padding: 0.5rem; border-radius: 4px; transition: background 0.2s;" onmouseover="this.style.background='#4a5568'" onmouseout="this.style.background='transparent'" title="下一頁" disabled>
+                        <i class="fas fa-chevron-right" style="font-size: 1.25rem;"></i>
+                    </button>
+                </div>
+                
+                <!-- 圖片顯示區域 -->
+                <div class="pdf-page" id="image-container" style="transform: scale(${zoomLevel / 100}) rotate(0deg); transition: transform 0.3s; transform-origin: center center;">
+                    <img src="${imageUrl}" alt="Document Preview" 
+                         style="max-width: 100%; height: auto; display: block; border-radius: 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"
+                         onerror="console.error('圖片載入失敗:', '${imageUrl}'); this.parentElement.innerHTML='<div style=\\'padding: 2rem; text-align: center; color: #6b7280;\\'>無法載入預覽<br><small style=\\'color: #9ca3af; font-size: 0.75rem; word-break: break-all;\\'>URL: ${imageUrl}</small></div>'">
+                </div>
             </div>
         `;
+        
+        // 初始化控制變量
+        window.currentZoom = 100;
+        window.currentRotation = 0;
     } else {
         pdfViewer.innerHTML = `
             <div style="padding: 2rem; text-align: center; color: #6b7280;">
@@ -260,6 +310,57 @@ async function displayPDFPreview() {
                 ${currentDocument.name ? `<br><small style="color: #9ca3af; font-size: 0.75rem;">文件名: ${currentDocument.name}</small>` : ''}
             </div>
         `;
+    }
+}
+
+// ============================================
+// 圖片控制函數
+// ============================================
+
+function zoomIn() {
+    if (window.currentZoom < 200) {
+        window.currentZoom += 25;
+        updateImageTransform();
+    }
+}
+
+function zoomOut() {
+    if (window.currentZoom > 25) {
+        window.currentZoom -= 25;
+        updateImageTransform();
+    }
+}
+
+function rotateLeft() {
+    window.currentRotation -= 90;
+    updateImageTransform();
+}
+
+function rotateRight() {
+    window.currentRotation += 90;
+    updateImageTransform();
+}
+
+function previousPage() {
+    // 暫時禁用，因為目前只支持單頁
+    console.log('上一頁功能暫未實現');
+}
+
+function nextPage() {
+    // 暫時禁用，因為目前只支持單頁
+    console.log('下一頁功能暫未實現');
+}
+
+function updateImageTransform() {
+    const container = document.getElementById('image-container');
+    const zoomDisplay = document.getElementById('zoom-display');
+    
+    if (container) {
+        container.style.transform = `scale(${window.currentZoom / 100}) rotate(${window.currentRotation}deg)`;
+    }
+    
+    if (zoomDisplay) {
+        zoomDisplay.textContent = `${window.currentZoom}%`;
     }
 }
 
