@@ -155,8 +155,11 @@ async function displayPDFPreview() {
     console.log('📄 文檔對象完整內容:', JSON.stringify(currentDocument, null, 2));
     console.log('📄 文檔對象所有鍵:', Object.keys(currentDocument));
     
-    // 簡化版：直接從 Firebase Storage 獲取圖片 URL
+    // 增強版：從多個來源獲取圖片 URL
     let imageUrl = null;
+    
+    console.log('🔍 開始載入文檔預覽...');
+    console.log('📄 文檔對象:', JSON.stringify(currentDocument, null, 2));
     
     // 方法1：嘗試從文檔對象中的 URL 字段
     imageUrl = currentDocument.imageUrl || 
@@ -173,6 +176,21 @@ async function displayPDFPreview() {
             const userId = window.simpleAuth?.currentUser?.uid || firebase.auth().currentUser?.uid;
             const projectId = currentDocument.projectId;
             const fileName = currentDocument.fileName || currentDocument.name;
+            
+            if (!userId) {
+                console.error('❌ 無法獲取用戶 ID');
+                throw new Error('用戶未登入');
+            }
+            
+            if (!projectId) {
+                console.error('❌ 無法獲取項目 ID');
+                throw new Error('項目 ID 不存在');
+            }
+            
+            if (!fileName) {
+                console.error('❌ 無法獲取文件名');
+                throw new Error('文件名不存在');
+            }
             
             console.log('📂 Storage 參數:', { userId, projectId, fileName });
             
@@ -206,16 +224,24 @@ async function displayPDFPreview() {
                 console.log('💡 文件名:', fileName);
                 console.log('💡 項目ID:', projectId);
                 console.log('💡 用戶ID:', userId);
+                console.log('💡 文檔完整對象:', currentDocument);
             }
         } catch (error) {
             console.error('❌ 從 Storage 獲取失敗:', error.code, error.message);
+            console.error('❌ 錯誤詳情:', error);
         }
     }
     
     console.log('🖼️ 最終圖片 URL:', imageUrl);
-    console.log('⚠️ 如果圖片 URL 為空，請檢查 Firebase Console Storage 中的實際文件路徑');
-    console.log('📝 文檔名稱:', currentDocument.name || currentDocument.fileName);
-    console.log('📂 項目ID:', currentDocument.projectId);
+    if (!imageUrl) {
+        console.log('⚠️ 圖片 URL 為空，可能的原因：');
+        console.log('   1. 文檔對象中沒有保存 imageUrl/downloadURL');
+        console.log('   2. Firebase Storage 中找不到文件');
+        console.log('   3. 文件路徑不匹配');
+        console.log('📝 文檔名稱:', currentDocument.name || currentDocument.fileName);
+        console.log('📂 項目ID:', currentDocument.projectId);
+        console.log('👤 用戶ID:', window.simpleAuth?.currentUser?.uid || firebase.auth().currentUser?.uid);
+    }
     
     if (imageUrl) {
         pdfViewer.innerHTML = `
