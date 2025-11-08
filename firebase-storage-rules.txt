@@ -1,0 +1,48 @@
+// Firebase Storage 安全規則
+// 複製此內容到 Firebase Console → Storage → Rules
+
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // 允許已登入用戶讀取和寫入自己的文檔
+    match /documents/{userId}/{projectId}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // 向後兼容：允許其他可能的路徑
+    match /users/{userId}/projects/{projectId}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    match /projects/{projectId}/documents/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+    
+    // 允許讀取項目級別的文件
+    match /{projectId}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+    
+    // 允許讀取根級別的文件（向後兼容）
+    match /{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+  }
+}
+
+// 📝 使用說明：
+// 1. 打開 Firebase Console (https://console.firebase.google.com)
+// 2. 選擇您的項目
+// 3. 左側菜單選擇 "Storage"
+// 4. 點擊頂部的 "Rules" 標籤
+// 5. 將上面的規則複製並粘貼到編輯器中
+// 6. 點擊 "Publish" 發布規則
+//
+// ⚠️ 注意：這些規則允許已登入用戶訪問文件
+// 如果需要更嚴格的權限控制，請根據需求調整
+
