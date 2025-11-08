@@ -245,9 +245,9 @@ async function displayPDFPreview() {
     
     if (imageUrl) {
         pdfViewer.innerHTML = `
-            <div style="display: flex; flex-direction: column; align-items: center;">
-                <!-- 圖片控制工具欄 -->
-                <div style="background: #2d3748; border-radius: 8px; padding: 0.75rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+            <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
+                <!-- 圖片控制工具欄 - 固定在頂部 -->
+                <div style="background: #2d3748; border-radius: 8px; padding: 0.75rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.2); position: sticky; top: 1rem; z-index: 100;">
                     <!-- 縮小 -->
                     <button onclick="zoomOut()" style="background: transparent; border: none; color: white; cursor: pointer; padding: 0.5rem; border-radius: 4px; transition: background 0.2s;" onmouseover="this.style.background='#4a5568'" onmouseout="this.style.background='transparent'" title="縮小">
                         <i class="fas fa-search-minus" style="font-size: 1.25rem;"></i>
@@ -289,11 +289,13 @@ async function displayPDFPreview() {
                     </button>
                 </div>
                 
-                <!-- 圖片顯示區域 -->
-                <div class="pdf-page" id="image-container" style="transform: scale(${zoomLevel / 100}) rotate(0deg); transition: transform 0.3s; transform-origin: center center;">
-                    <img src="${imageUrl}" alt="Document Preview" 
-                         style="max-width: 100%; height: auto; display: block; border-radius: 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"
-                         onerror="console.error('圖片載入失敗:', '${imageUrl}'); this.parentElement.innerHTML='<div style=\\'padding: 2rem; text-align: center; color: #6b7280;\\'>無法載入預覽<br><small style=\\'color: #9ca3af; font-size: 0.75rem; word-break: break-all;\\'>URL: ${imageUrl}</small></div>'">
+                <!-- 圖片顯示容器 - 使用 overflow 防止溢出 -->
+                <div style="width: 100%; overflow: auto; display: flex; justify-content: center; align-items: center; min-height: 400px;">
+                    <div class="pdf-page" id="image-container" style="transform: scale(1) rotate(0deg); transition: transform 0.3s; transform-origin: center center; display: inline-block;">
+                        <img src="${imageUrl}" alt="Document Preview" 
+                             style="max-width: 100%; height: auto; display: block; border-radius: 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"
+                             onerror="console.error('圖片載入失敗:', '${imageUrl}'); this.parentElement.innerHTML='<div style=\\'padding: 2rem; text-align: center; color: #6b7280;\\'>無法載入預覽<br><small style=\\'color: #9ca3af; font-size: 0.75rem; word-break: break-all;\\'>URL: ${imageUrl}</small></div>'">
+                    </div>
                 </div>
             </div>
         `;
