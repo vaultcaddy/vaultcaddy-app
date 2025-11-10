@@ -236,68 +236,25 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ============================================
-// 3. 左側欄滾動條和搜索功能
+// 3. 左側欄滾動條功能（已移除搜索功能）
 // ============================================
 
 /**
- * 初始化左側欄搜索功能
+ * 初始化左側欄滾動條
  */
-function initSidebarSearch() {
-    // 為左側欄項目列表添加搜索輸入框
+function initSidebarScroll() {
     const sidebar = document.querySelector('.sidebar');
     if (!sidebar) return;
-    
-    // 查找或創建搜索輸入框
-    let searchInput = sidebar.querySelector('.sidebar-search-input');
-    if (!searchInput) {
-        const searchContainer = sidebar.querySelector('.search-container');
-        if (searchContainer) {
-            searchInput = searchContainer.querySelector('input');
-            if (searchInput) {
-                searchInput.classList.add('sidebar-search-input');
-                searchInput.addEventListener('input', filterSidebarProjects);
-            }
-        }
-    }
     
     // 為項目列表容器添加滾動條樣式
     const projectList = sidebar.querySelector('.project-list');
     if (projectList) {
-        projectList.style.maxHeight = 'calc(100vh - 400px)';
+        projectList.style.maxHeight = 'calc(100vh - 300px)';
         projectList.style.overflowY = 'auto';
         projectList.style.overflowX = 'hidden';
     }
     
-    console.log('✅ 左側欄搜索功能已初始化');
-}
-
-/**
- * 過濾左側欄項目（項目文件夾）
- */
-function filterSidebarProjects(e) {
-    const searchTerm = e.target.value.toLowerCase().trim();
-    
-    // 查找所有項目項目（帶有 data-project-id 的元素）
-    const projectItems = document.querySelectorAll('.sidebar [data-project-id]');
-    
-    console.log(`🔍 搜索項目: "${searchTerm}", 找到 ${projectItems.length} 個項目`);
-    
-    if (!searchTerm) {
-        // 如果搜索框為空，顯示所有項目
-        projectItems.forEach(item => {
-            item.style.display = '';
-        });
-        return;
-    }
-    
-    projectItems.forEach(item => {
-        const projectName = item.textContent.toLowerCase();
-        if (projectName.includes(searchTerm)) {
-            item.style.display = '';
-        } else {
-            item.style.display = 'none';
-        }
-    });
+    console.log('✅ 左側欄滾動條已初始化');
 }
 
 // ============================================
@@ -553,7 +510,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 延遲初始化以確保 DOM 完全加載
     setTimeout(() => {
-        initSidebarSearch();
+        initSidebarScroll();
         initDocumentFilter();
         initPaginationControls();
         initResponsiveScroll();
