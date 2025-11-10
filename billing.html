@@ -525,6 +525,9 @@
             console.log('✅ Billing頁面立即初始化完成');
         })();
     </script>
+    
+    <!-- Stripe Manager -->
+    <script src="stripe-manager.js"></script>
 </head>
 <body class="auth-checking">
     <!-- 🔒 Auth 加載動畫 -->
@@ -954,11 +957,13 @@
 
         // 購買 Credits
         function purchaseCredits(credits, price) {
-            console.log(`Purchasing ${credits} credits for $${price}`);
+            console.log(`購買 ${credits} credits，價格 $${price}`);
             
-            // 顯示確認對話框
-            if (confirm(`確認購買 ${credits} Credits，價格 $${price} USD？`)) {
-                initializeStripePayment(credits, price);
+            // 使用 StripeManager 處理購買
+            if (window.StripeManager) {
+                window.StripeManager.purchaseCredits(credits);
+            } else {
+                alert('Stripe 管理器未載入，請刷新頁面重試');
             }
         }
 
