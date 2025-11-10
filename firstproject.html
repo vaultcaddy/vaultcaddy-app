@@ -1666,7 +1666,8 @@
         }
         
         // ==================== 渲染文檔表格 ====================
-        function renderDocuments() {
+        // 暴露為全局函數，供 firstproject-enhancements.js 使用
+        window.renderDocuments = function renderDocuments() {
             const tbody = document.getElementById('team-project-tbody');
             
             if (!tbody) {
@@ -1674,8 +1675,11 @@
                 return;
             }
             
+            // 使用過濾後的文檔（支持搜索功能）
+            const docsToRender = window.filteredDocuments || allDocuments;
+            
             // 複製並排序文檔
-            const sortedDocs = [...allDocuments].sort((a, b) => {
+            const sortedDocs = [...docsToRender].sort((a, b) => {
                 let aVal, bVal;
                 
                 switch (currentSortColumn) {
@@ -1726,8 +1730,30 @@
                 }
             });
             
+            // 支持分頁（如果有分頁參數）
+            const currentPage = window.currentPage || 1;
+            const rowsPerPage = window.rowsPerPage || sortedDocs.length;
+            const startIndex = (currentPage - 1) * rowsPerPage;
+            const endIndex = startIndex + rowsPerPage;
+            const pageDocuments = sortedDocs.slice(startIndex, endIndex);
+            
+            // 如果沒有文檔，顯示空狀態
+            if (pageDocuments.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 4rem 2rem;">
+                            <div style="color: #6b7280;">
+                                <i class="fas fa-file-alt" style="font-size: 3rem; margin-bottom: 1rem; color: #d1d5db;"></i>
+                                <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem; color: #374151;">No results.</h3>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
             // 渲染 HTML
-            tbody.innerHTML = sortedDocs.map(doc => {
+            tbody.innerHTML = pageDocuments.map(doc => {
                 const isProcessing = doc.status === 'processing';
                 const isFailed = doc.status === 'failed';
                 const data = doc.processedData || {};

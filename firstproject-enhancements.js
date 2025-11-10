@@ -310,8 +310,10 @@ function filterDocuments(e) {
     // 清除所有選中狀態
     window.selectedDocuments.clear();
     
-    // 重新渲染表格
-    renderDocumentTable();
+    // 重新渲染表格（使用 firstproject.html 中的函數）
+    if (typeof window.renderDocuments === 'function') {
+        window.renderDocuments();
+    }
     updatePaginationControls();
     updateSelectedCount();
 }
@@ -337,8 +339,10 @@ function initPaginationControls() {
             // 清除選中狀態
             window.selectedDocuments.clear();
             
-            // 重新渲染
-            renderDocumentTable();
+            // 重新渲染（使用 firstproject.html 中的函數）
+            if (typeof window.renderDocuments === 'function') {
+                window.renderDocuments();
+            }
             updatePaginationControls();
             updateSelectedCount();
         });
@@ -372,7 +376,11 @@ window.goToPage = function(page) {
     if (page < 1 || page > totalPages) return;
     
     window.currentPage = page;
-    renderDocumentTable();
+    
+    // 使用 firstproject.html 中的函數
+    if (typeof window.renderDocuments === 'function') {
+        window.renderDocuments();
+    }
     updatePaginationControls();
     
     console.log(`📄 跳轉到第 ${page} 頁`);
@@ -413,79 +421,9 @@ function updatePaginationControls() {
     }
 }
 
-/**
- * 渲染文檔表格
- */
-function renderDocumentTable() {
-    const tbody = document.getElementById('team-project-tbody');
-    if (!tbody) return;
-    
-    // 計算當前頁的文檔
-    const startIndex = (window.currentPage - 1) * window.rowsPerPage;
-    const endIndex = startIndex + window.rowsPerPage;
-    const pageDocuments = window.filteredDocuments.slice(startIndex, endIndex);
-    
-    if (pageDocuments.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="9" style="text-align: center; padding: 4rem 2rem;">
-                    <div style="color: #6b7280;">
-                        <i class="fas fa-file-alt" style="font-size: 3rem; margin-bottom: 1rem; color: #d1d5db;"></i>
-                        <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem; color: #374151;">No results.</h3>
-                    </div>
-                </td>
-            </tr>
-        `;
-        return;
-    }
-    
-    // 渲染文檔行
-    tbody.innerHTML = pageDocuments.map(doc => {
-        // 從 processedData 中獲取解析後的數據
-        const data = doc.processedData || {};
-        const vendor = data.vendor || data.source || '-';
-        const amount = data.amount || data.total || '-';
-        const date = data.date || '-';
-        const type = doc.type || doc.documentType || '發票';
-        
-        return `
-        <tr style="border-bottom: 1px solid #e5e7eb; transition: background 0.2s;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='white'">
-            <td style="padding: 1rem;">
-                <input type="checkbox" data-doc-id="${doc.id}" ${window.selectedDocuments.has(doc.id) ? 'checked' : ''} onchange="toggleDocumentSelection('${doc.id}')">
-            </td>
-            <td style="padding: 1rem;">
-                <a href="document-detail.html?project=${doc.projectId}&id=${doc.id}" style="color: #3b82f6; text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
-                    <i class="fas fa-file-pdf" style="color: #ef4444;"></i>
-                    <span>${doc.fileName || 'Untitled'}</span>
-                </a>
-            </td>
-            <td style="padding: 1rem;">
-                <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.75rem; background: #dbeafe; color: #1e40af; border-radius: 12px; font-size: 0.875rem;">
-                    <i class="fas fa-file-invoice"></i>
-                    <span>${type}</span>
-                </span>
-            </td>
-            <td style="padding: 1rem; color: #374151;">${vendor}</td>
-            <td style="padding: 1rem; text-align: right; color: #374151; font-weight: 600;">${amount === '-' ? '-' : '$' + amount}</td>
-            <td style="padding: 1rem; color: #374151;">${date}</td>
-            <td style="padding: 1rem;">
-                <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.75rem; background: #d1fae5; color: #065f46; border-radius: 12px; font-size: 0.875rem;">
-                    ${doc.status === 'completed' ? '已完成' : doc.status === 'processing' ? '處理中' : '待處理'}
-                </span>
-            </td>
-            <td style="padding: 1rem; color: #6b7280; font-size: 0.875rem;">${doc.uploadDate || new Date(doc.createdAt).toLocaleDateString('zh-TW')}</td>
-            <td style="padding: 1rem; text-align: center;">
-                <button onclick="deleteDocument('${doc.id}')" style="background: transparent; border: none; color: #6b7280; cursor: pointer; padding: 0.5rem; border-radius: 4px; transition: all 0.2s;" onmouseover="this.style.background='#fee2e2'; this.style.color='#dc2626'" onmouseout="this.style.background='transparent'; this.style.color='#6b7280'">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </td>
-        </tr>
-        `;
-    }).join('');
-    
-    // 更新全選複選框狀態
-    updateSelectAllCheckbox();
-}
+// 注意：renderDocumentTable() 函數已移除
+// 現在統一使用 firstproject.html 中的 renderDocuments() 函數
+// 這樣可以確保分頁、搜索和初始加載都使用相同的渲染邏輯
 
 // ============================================
 // 7. 響應式設計改為滾動條
