@@ -159,25 +159,25 @@
         
         dropdownMenu.innerHTML = `
             <div style="padding: 1rem; border-bottom: 1px solid #e5e7eb;">
-                <div style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem;">Credits: <span id="user-credits">--</span></div>
+                <div style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem;">積分: <span id="user-credits">--</span></div>
                 <div id="user-email" style="font-size: 0.875rem; color: #6b7280;">載入中...</div>
             </div>
             <div style="padding: 0.5rem;">
                 <a href="account.html" class="user-menu-item" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; cursor: pointer; border-radius: 6px; transition: background 0.2s; text-decoration: none; color: #1f2937;">
                     <i class="fas fa-user" style="width: 16px; color: #6b7280;"></i>
-                    <span>Account</span>
+                    <span>帳戶</span>
                     <span style="margin-left: auto; color: #9ca3af; font-size: 0.875rem;">⌘A</span>
                 </a>
                 <a href="billing.html" class="user-menu-item" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; cursor: pointer; border-radius: 6px; transition: background 0.2s; text-decoration: none; color: #1f2937;">
                     <i class="fas fa-credit-card" style="width: 16px; color: #6b7280;"></i>
-                    <span>Billing</span>
+                    <span>計費</span>
                     <span style="margin-left: auto; color: #9ca3af; font-size: 0.875rem;">⌘B</span>
                 </a>
             </div>
             <div style="padding: 0.5rem; border-top: 1px solid #e5e7eb;">
                 <div id="logout-btn" class="user-menu-item" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; cursor: pointer; border-radius: 6px; transition: background 0.2s; color: #dc2626;">
                     <i class="fas fa-sign-out-alt" style="width: 16px;"></i>
-                    <span>Log out</span>
+                    <span>登出</span>
                     <span style="margin-left: auto; color: #9ca3af; font-size: 0.875rem;">⌘Q</span>
                 </div>
             </div>

@@ -27,14 +27,16 @@ window.allDocuments = []; // 所有文檔列表
 // ============================================
 
 /**
- * 切換全選/取消全選
+ * 切換全選/取消全選（只選擇當前頁顯示的文檔）
  */
 window.toggleSelectAll = function() {
     const selectAllCheckbox = document.getElementById('select-all-checkbox');
     const isChecked = selectAllCheckbox.checked;
     
-    // 獲取當前頁面的所有文檔複選框
+    // 獲取當前頁面顯示的所有文檔複選框
     const documentCheckboxes = document.querySelectorAll('#team-project-tbody input[type="checkbox"][data-doc-id]');
+    
+    console.log(`📋 當前頁顯示 ${documentCheckboxes.length} 個文檔`);
     
     documentCheckboxes.forEach(checkbox => {
         checkbox.checked = isChecked;
@@ -48,7 +50,7 @@ window.toggleSelectAll = function() {
     });
     
     updateSelectedCount();
-    console.log(`✅ ${isChecked ? '全選' : '取消全選'}: ${window.selectedDocuments.size} 個文檔`);
+    console.log(`✅ ${isChecked ? '全選當前頁' : '取消全選當前頁'}: ${window.selectedDocuments.size} 個文檔已選中`);
 };
 
 /**
@@ -165,6 +167,9 @@ async function saveProjectName() {
             // 更新 Firestore 中的項目名稱
             await window.simpleDataManager.updateProject(projectId, { name: newName });
             console.log('✅ 項目名稱已更新:', newName);
+            
+            // 更新左側欄中的項目名稱
+            updateSidebarProjectName(projectId, newName);
         }
         
         // 退出編輯模式
@@ -180,6 +185,33 @@ async function saveProjectName() {
     } catch (error) {
         console.error('❌ 保存項目名稱失敗:', error);
         alert('保存失敗，請重試');
+    }
+}
+
+/**
+ * 更新左側欄中的項目名稱
+ */
+function updateSidebarProjectName(projectId, newName) {
+    const projectItem = document.querySelector(`.sidebar [data-project-id="${projectId}"]`);
+    if (projectItem) {
+        // 查找項目名稱的文本節點（通常在 span 或直接在元素中）
+        const nameElement = projectItem.querySelector('.project-name') || projectItem;
+        
+        // 保留圖標，只更新文本
+        const icon = nameElement.querySelector('i');
+        if (icon) {
+            nameElement.innerHTML = '';
+            nameElement.appendChild(icon);
+            nameElement.appendChild(document.createTextNode(' ' + newName));
+        } else {
+            // 如果沒有圖標，直接更新文本
+            const textNode = Array.from(nameElement.childNodes).find(node => node.nodeType === Node.TEXT_NODE);
+            if (textNode) {
+                textNode.textContent = ' ' + newName;
+            }
+        }
+        
+        console.log('✅ 左側欄項目名稱已更新:', newName);
     }
 }
 
@@ -240,16 +272,28 @@ function initSidebarSearch() {
 }
 
 /**
- * 過濾左側欄項目
+ * 過濾左側欄項目（項目文件夾）
  */
 function filterSidebarProjects(e) {
-    const searchTerm = e.target.value.toLowerCase();
-    const projectItems = document.querySelectorAll('.sidebar .project-item');
+    const searchTerm = e.target.value.toLowerCase().trim();
+    
+    // 查找所有項目項目（帶有 data-project-id 的元素）
+    const projectItems = document.querySelectorAll('.sidebar [data-project-id]');
+    
+    console.log(`🔍 搜索項目: "${searchTerm}", 找到 ${projectItems.length} 個項目`);
+    
+    if (!searchTerm) {
+        // 如果搜索框為空，顯示所有項目
+        projectItems.forEach(item => {
+            item.style.display = '';
+        });
+        return;
+    }
     
     projectItems.forEach(item => {
         const projectName = item.textContent.toLowerCase();
         if (projectName.includes(searchTerm)) {
-            item.style.display = 'flex';
+            item.style.display = '';
         } else {
             item.style.display = 'none';
         }
@@ -275,26 +319,31 @@ function initDocumentFilter() {
  * 過濾文檔
  */
 function filterDocuments(e) {
-    const searchTerm = e.target.value.toLowerCase();
+    const searchTerm = e.target.value.toLowerCase().trim();
     
+    // 如果搜索框為空，恢復所有文檔
     if (!searchTerm) {
         window.filteredDocuments = [...window.allDocuments];
+        console.log('🔄 恢復所有文檔:', window.allDocuments.length);
     } else {
         window.filteredDocuments = window.allDocuments.filter(doc => {
             const name = (doc.name || doc.fileName || '').toLowerCase();
             const vendor = (doc.vendor || doc.source || '').toLowerCase();
             return name.includes(searchTerm) || vendor.includes(searchTerm);
         });
+        console.log(`🔍 過濾結果: ${window.filteredDocuments.length} / ${window.allDocuments.length} 個文檔`);
     }
     
     // 重置到第一頁
     window.currentPage = 1;
     
+    // 清除所有選中狀態
+    window.selectedDocuments.clear();
+    
     // 重新渲染表格
     renderDocumentTable();
     updatePaginationControls();
-    
-    console.log(`🔍 過濾結果: ${window.filteredDocuments.length} / ${window.allDocuments.length} 個文檔`);
+    updateSelectedCount();
 }
 
 // ============================================
@@ -311,8 +360,17 @@ function initPaginationControls() {
         rowsPerPageSelect.addEventListener('change', (e) => {
             window.rowsPerPage = parseInt(e.target.value);
             window.currentPage = 1;
+            
+            console.log(`📄 切換每頁顯示數: ${window.rowsPerPage}`);
+            console.log(`📊 當前文檔總數: ${window.filteredDocuments.length}`);
+            
+            // 清除選中狀態
+            window.selectedDocuments.clear();
+            
+            // 重新渲染
             renderDocumentTable();
             updatePaginationControls();
+            updateSelectedCount();
         });
     }
     
@@ -327,7 +385,7 @@ function initPaginationControls() {
         paginationButtons[2].onclick = () => goToPage(window.currentPage + 1);
         // >> 末頁
         paginationButtons[3].onclick = () => {
-            const totalPages = Math.ceil(window.filteredDocuments.length / window.rowsPerPage);
+            const totalPages = Math.ceil(window.filteredDocuments.length / window.rowsPerPage) || 1;
             goToPage(totalPages);
         };
     }
