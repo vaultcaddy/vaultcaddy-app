@@ -541,10 +541,17 @@
                 console.error('獲取用戶計劃失敗:', error);
             }
             
-            // 如果 Firestore 沒有，檢查 localStorage
+            // 如果 Firestore 沒有活躍訂閱，清除 localStorage 中的錯誤數據
             if (savedPlan === 'Free') {
-                savedPlan = localStorage.getItem('userPlan') || 'Free';
+                const localPlan = localStorage.getItem('userPlan');
+                if (localPlan && localPlan !== 'Free') {
+                    console.warn('⚠️ localStorage 中有計劃但 Firestore 沒有活躍訂閱，清除 localStorage');
+                    localStorage.removeItem('userPlan');
+                    localStorage.removeItem('userPlanPeriod');
+                }
             }
+            
+            console.log('📋 用戶計劃:', savedPlan);
             
             // 根據計劃類型設置不同的樣式和圖標
             const planConfig = {
@@ -596,9 +603,47 @@
                     'Business': { monthly: 2000, yearly: 24000 } // 修正為 2000/月
                 };
                 
-                // 獲取當前計劃
-                const currentPlan = localStorage.getItem('userPlan') || 'Free';
-                const planPeriod = localStorage.getItem('userPlanPeriod') || 'monthly';
+                // 獲取當前計劃（優先從 Firestore，然後 localStorage）
+                let currentPlan = 'Free';
+                let planPeriod = 'monthly';
+                
+                // 從 Firestore 獲取實際訂閱狀態
+                if (window.simpleAuth && window.simpleAuth.currentUser) {
+                    try {
+                        const userId = window.simpleAuth.currentUser.uid;
+                        const userDoc = await firebase.firestore()
+                            .collection('users')
+                            .doc(userId)
+                            .get();
+                        
+                        if (userDoc.exists) {
+                            const userData = userDoc.data();
+                            
+                            // 檢查是否有活躍訂閱
+                            if (userData.subscription && userData.subscription.status === 'active') {
+                                currentPlan = userData.subscription.planType || 'Free';
+                                planPeriod = userData.subscription.period || 'monthly';
+                                console.log('✅ 從 Firestore 獲取計劃:', currentPlan, planPeriod);
+                            } else {
+                                console.log('⚠️ Firestore 中沒有活躍訂閱，使用 Free Plan');
+                            }
+                        }
+                    } catch (error) {
+                        console.error('❌ 從 Firestore 獲取計劃失敗:', error);
+                    }
+                }
+                
+                // 如果 Firestore 沒有活躍訂閱，檢查 localStorage（但不信任它）
+                if (currentPlan === 'Free') {
+                    const localPlan = localStorage.getItem('userPlan');
+                    if (localPlan && localPlan !== 'Free') {
+                        console.warn('⚠️ localStorage 中有計劃但 Firestore 沒有，清除 localStorage');
+                        localStorage.removeItem('userPlan');
+                        localStorage.removeItem('userPlanPeriod');
+                    }
+                }
+                
+                console.log('📊 最終使用計劃:', currentPlan, planPeriod);
                 
                 // 獲取計劃的 Credits 額度
                 const totalCredits = planCredits[currentPlan][planPeriod] || 0;
