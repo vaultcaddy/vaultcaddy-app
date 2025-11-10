@@ -289,20 +289,24 @@ async function displayPDFPreview() {
                     </button>
                 </div>
                 
-                <!-- 圖片顯示容器 - 使用 overflow 防止溢出 -->
-                <div style="width: 100%; overflow: auto; display: flex; justify-content: center; align-items: center; min-height: 400px;">
-                    <div class="pdf-page" id="image-container" style="transform: scale(1) rotate(0deg); transition: transform 0.3s; transform-origin: center center; display: inline-block;">
-                        <img src="${imageUrl}" alt="Document Preview" 
-                             style="max-width: 100%; height: auto; display: block; border-radius: 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"
-                             onerror="console.error('圖片載入失敗:', '${imageUrl}'); this.parentElement.innerHTML='<div style=\\'padding: 2rem; text-align: center; color: #6b7280;\\'>無法載入預覽<br><small style=\\'color: #9ca3af; font-size: 0.75rem; word-break: break-all;\\'>URL: ${imageUrl}</small></div>'">
-                    </div>
+            <!-- 圖片顯示容器 - 支持拖拽滑動 -->
+            <div id="image-scroll-container" style="width: 100%; overflow: auto; display: flex; justify-content: center; align-items: center; min-height: 400px; cursor: grab; position: relative;">
+                <div class="pdf-page" id="image-container" style="transform: scale(1) rotate(0deg); transition: transform 0.3s; transform-origin: center center; display: inline-block;">
+                    <img src="${imageUrl}" alt="Document Preview" 
+                         style="max-width: 100%; height: auto; display: block; border-radius: 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); user-select: none;"
+                         onerror="console.error('圖片載入失敗:', '${imageUrl}'); this.parentElement.innerHTML='<div style=\\'padding: 2rem; text-align: center; color: #6b7280;\\'>無法載入預覽<br><small style=\\'color: #9ca3af; font-size: 0.75rem; word-break: break-all;\\'>URL: ${imageUrl}</small></div>'"
+                         draggable="false">
                 </div>
+            </div>
             </div>
         `;
         
         // 初始化控制變量
         window.currentZoom = 100;
         window.currentRotation = 0;
+        
+        // 初始化拖拽滑動功能
+        setTimeout(() => initImageDragScroll(), 100);
     } else {
         pdfViewer.innerHTML = `
             <div style="padding: 2rem; text-align: center; color: #6b7280;">
@@ -313,6 +317,86 @@ async function displayPDFPreview() {
             </div>
         `;
     }
+}
+
+// ============================================
+// 圖片拖拽滑動功能
+// ============================================
+
+function initImageDragScroll() {
+    const scrollContainer = document.getElementById('image-scroll-container');
+    if (!scrollContainer) {
+        console.log('⚠️ 未找到圖片滾動容器');
+        return;
+    }
+    
+    let isDragging = false;
+    let startX, startY;
+    let scrollLeft, scrollTop;
+    
+    // 鼠標按下
+    scrollContainer.addEventListener('mousedown', (e) => {
+        // 只在放大時啟用拖拽（縮放比例 > 100%）
+        if (window.currentZoom <= 100) return;
+        
+        isDragging = true;
+        scrollContainer.style.cursor = 'grabbing';
+        
+        startX = e.pageX - scrollContainer.offsetLeft;
+        startY = e.pageY - scrollContainer.offsetTop;
+        scrollLeft = scrollContainer.scrollLeft;
+        scrollTop = scrollContainer.scrollTop;
+        
+        // 禁用過渡動畫以獲得更流暢的拖拽體驗
+        const imageContainer = document.getElementById('image-container');
+        if (imageContainer) {
+            imageContainer.style.transition = 'none';
+        }
+    });
+    
+    // 鼠標移動
+    scrollContainer.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        
+        e.preventDefault();
+        
+        const x = e.pageX - scrollContainer.offsetLeft;
+        const y = e.pageY - scrollContainer.offsetTop;
+        
+        const walkX = (x - startX) * 1.5; // 拖拽速度倍數
+        const walkY = (y - startY) * 1.5;
+        
+        scrollContainer.scrollLeft = scrollLeft - walkX;
+        scrollContainer.scrollTop = scrollTop - walkY;
+    });
+    
+    // 鼠標釋放
+    scrollContainer.addEventListener('mouseup', () => {
+        isDragging = false;
+        scrollContainer.style.cursor = window.currentZoom > 100 ? 'grab' : 'default';
+        
+        // 恢復過渡動畫
+        const imageContainer = document.getElementById('image-container');
+        if (imageContainer) {
+            imageContainer.style.transition = 'transform 0.3s';
+        }
+    });
+    
+    // 鼠標離開容器
+    scrollContainer.addEventListener('mouseleave', () => {
+        if (isDragging) {
+            isDragging = false;
+            scrollContainer.style.cursor = window.currentZoom > 100 ? 'grab' : 'default';
+            
+            // 恢復過渡動畫
+            const imageContainer = document.getElementById('image-container');
+            if (imageContainer) {
+                imageContainer.style.transition = 'transform 0.3s';
+            }
+        }
+    });
+    
+    console.log('✅ 圖片拖拽滑動功能已初始化');
 }
 
 // ============================================
@@ -356,6 +440,7 @@ window.nextPage = function() {
 function updateImageTransform() {
     const container = document.getElementById('image-container');
     const zoomDisplay = document.getElementById('zoom-display');
+    const scrollContainer = document.getElementById('image-scroll-container');
     
     if (container) {
         container.style.transform = `scale(${window.currentZoom / 100}) rotate(${window.currentRotation}deg)`;
@@ -363,6 +448,11 @@ function updateImageTransform() {
     
     if (zoomDisplay) {
         zoomDisplay.textContent = `${window.currentZoom}%`;
+    }
+    
+    // 更新游標樣式
+    if (scrollContainer) {
+        scrollContainer.style.cursor = window.currentZoom > 100 ? 'grab' : 'default';
     }
 }
 
