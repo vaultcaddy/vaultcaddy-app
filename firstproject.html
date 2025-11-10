@@ -2174,10 +2174,181 @@
             }
         };
         
-        window.exportDocuments = function(format) {
-            console.log('導出格式:', format);
-            alert('導出功能開發中');
+        window.exportDocuments = async function(format) {
+            console.log('📤 開始導出:', format);
+            
+            try {
+                // 獲取所有已完成的文檔
+                const completedDocs = allDocuments.filter(doc => doc.status === 'completed' && doc.processedData);
+                
+                if (completedDocs.length === 0) {
+                    alert('沒有可導出的文檔。請確保至少有一個文檔已完成處理。');
+                    return;
+                }
+                
+                let exportContent = '';
+                let fileName = '';
+                let mimeType = '';
+                
+                switch(format) {
+                    case 'csv':
+                        exportContent = generateCSV(completedDocs);
+                        fileName = `vaultcaddy_export_${new Date().toISOString().split('T')[0]}.csv`;
+                        mimeType = 'text/csv;charset=utf-8;';
+                        break;
+                    case 'iif':
+                        exportContent = generateIIF(completedDocs);
+                        fileName = `vaultcaddy_export_${new Date().toISOString().split('T')[0]}.iif`;
+                        mimeType = 'text/plain;charset=utf-8;';
+                        break;
+                    case 'qbo':
+                        exportContent = generateQBO(completedDocs);
+                        fileName = `vaultcaddy_export_${new Date().toISOString().split('T')[0]}.qbo`;
+                        mimeType = 'application/vnd.intu.qbo;charset=utf-8;';
+                        break;
+                    default:
+                        alert('不支持的導出格式');
+                        return;
+                }
+                
+                // 下載文件
+                const blob = new Blob([exportContent], { type: mimeType });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = fileName;
+                link.click();
+                
+                // 隱藏下拉菜單
+                toggleExportMenu();
+                
+                console.log('✅ 導出成功:', fileName);
+                
+            } catch (error) {
+                console.error('❌ 導出失敗:', error);
+                alert('導出失敗: ' + error.message);
+            }
         };
+        
+        // 生成 CSV 格式
+        function generateCSV(docs) {
+            const headers = ['日期', '供應商/來源', '類型', '金額', '幣別', '狀態', '備註'];
+            const rows = [headers.join(',')];
+            
+            docs.forEach(doc => {
+                const data = doc.processedData;
+                const row = [
+                    data.date || '',
+                    `"${(data.vendor || data.source || '').replace(/"/g, '""')}"`,
+                    data.type || doc.type || '',
+                    data.amount || data.total || '',
+                    data.currency || 'HKD',
+                    doc.status || '',
+                    `"${(data.notes || '').replace(/"/g, '""')}"`
+                ];
+                rows.push(row.join(','));
+            });
+            
+            return rows.join('\n');
+        }
+        
+        // 生成 IIF 格式（QuickBooks Desktop）
+        function generateIIF(docs) {
+            let iif = '!TRNS\tTRNSID\tTRNSTYPE\tDATE\tACCNT\tNAME\tAMOUNT\tMEMO\n';
+            iif += '!SPL\tSPLID\tTRNSTYPE\tDATE\tACCNT\tAMOUNT\tMEMO\n';
+            iif += '!ENDTRNS\n';
+            
+            docs.forEach((doc, index) => {
+                const data = doc.processedData;
+                const trnsId = `TRNS-${index + 1}`;
+                const date = data.date ? new Date(data.date).toLocaleDateString('en-US') : new Date().toLocaleDateString('en-US');
+                const vendor = data.vendor || data.source || 'Unknown';
+                const amount = data.amount || data.total || '0.00';
+                const memo = data.notes || doc.fileName || '';
+                const type = data.type || doc.type || 'GENERAL JOURNAL';
+                
+                // Transaction header
+                iif += `TRNS\t${trnsId}\t${type}\t${date}\tAccounts Payable\t${vendor}\t${amount}\t${memo}\n`;
+                // Split line
+                iif += `SPL\t${trnsId}\t${type}\t${date}\tExpenses\t-${amount}\t${memo}\n`;
+                iif += 'ENDTRNS\n';
+            });
+            
+            return iif;
+        }
+        
+        // 生成 QBO 格式（QuickBooks Online）
+        function generateQBO(docs) {
+            const now = new Date();
+            const dtserver = now.toISOString().replace(/[-:]/g, '').split('.')[0];
+            
+            let qbo = 'OFXHEADER:100\n';
+            qbo += 'DATA:OFXSGML\n';
+            qbo += 'VERSION:102\n';
+            qbo += 'SECURITY:NONE\n';
+            qbo += 'ENCODING:USASCII\n';
+            qbo += 'CHARSET:1252\n';
+            qbo += 'COMPRESSION:NONE\n';
+            qbo += 'OLDFILEUID:NONE\n';
+            qbo += 'NEWFILEUID:NONE\n\n';
+            qbo += '<OFX>\n';
+            qbo += '<SIGNONMSGSRSV1>\n';
+            qbo += '<SONRS>\n';
+            qbo += '<STATUS>\n';
+            qbo += '<CODE>0</CODE>\n';
+            qbo += '<SEVERITY>INFO</SEVERITY>\n';
+            qbo += '</STATUS>\n';
+            qbo += `<DTSERVER>${dtserver}</DTSERVER>\n`;
+            qbo += '<LANGUAGE>ENG</LANGUAGE>\n';
+            qbo += '</SONRS>\n';
+            qbo += '</SIGNONMSGSRSV1>\n';
+            qbo += '<BANKMSGSRSV1>\n';
+            qbo += '<STMTTRNRS>\n';
+            qbo += '<TRNUID>1</TRNUID>\n';
+            qbo += '<STATUS>\n';
+            qbo += '<CODE>0</CODE>\n';
+            qbo += '<SEVERITY>INFO</SEVERITY>\n';
+            qbo += '</STATUS>\n';
+            qbo += '<STMTRS>\n';
+            qbo += '<CURDEF>HKD</CURDEF>\n';
+            qbo += '<BANKACCTFROM>\n';
+            qbo += '<BANKID>000000000</BANKID>\n';
+            qbo += '<ACCTID>123456789</ACCTID>\n';
+            qbo += '<ACCTTYPE>CHECKING</ACCTTYPE>\n';
+            qbo += '</BANKACCTFROM>\n';
+            qbo += '<BANKTRANLIST>\n';
+            qbo += `<DTSTART>${dtserver}</DTSTART>\n`;
+            qbo += `<DTEND>${dtserver}</DTEND>\n`;
+            
+            docs.forEach((doc, index) => {
+                const data = doc.processedData;
+                const fitid = `${now.getTime()}${index}`;
+                const dtposted = data.date ? new Date(data.date).toISOString().replace(/[-:]/g, '').split('.')[0] : dtserver;
+                const trnamt = data.amount || data.total || '0.00';
+                const name = data.vendor || data.source || 'Unknown';
+                const memo = data.notes || doc.fileName || '';
+                
+                qbo += '<STMTTRN>\n';
+                qbo += '<TRNTYPE>OTHER</TRNTYPE>\n';
+                qbo += `<DTPOSTED>${dtposted}</DTPOSTED>\n`;
+                qbo += `<TRNAMT>${trnamt}</TRNAMT>\n`;
+                qbo += `<FITID>${fitid}</FITID>\n`;
+                qbo += `<NAME>${name}</NAME>\n`;
+                qbo += `<MEMO>${memo}</MEMO>\n`;
+                qbo += '</STMTTRN>\n';
+            });
+            
+            qbo += '</BANKTRANLIST>\n';
+            qbo += '<LEDGERBAL>\n';
+            qbo += '<BALAMT>0.00</BALAMT>\n';
+            qbo += `<DTASOF>${dtserver}</DTASOF>\n`;
+            qbo += '</LEDGERBAL>\n';
+            qbo += '</STMTRS>\n';
+            qbo += '</STMTTRNRS>\n';
+            qbo += '</BANKMSGSRSV1>\n';
+            qbo += '</OFX>\n';
+            
+            return qbo;
+        }
         
         window.toggleSelectAll = function() {
             console.log('全選功能待實現');
