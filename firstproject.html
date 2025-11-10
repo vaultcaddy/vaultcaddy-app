@@ -1998,7 +1998,7 @@
                 }
                 
                 // 後台處理 AI
-                processFileWithAI(file, docId).catch(err => {
+                processFileWithAI(file, docId, pages).catch(err => {
                     console.error('❌ AI 處理失敗:', err);
                 });
                 
@@ -2056,7 +2056,7 @@
                 await loadDocuments();
                 
                 // 6. 後台處理 AI
-                processFileWithAI(file, docId).catch(err => {
+                processFileWithAI(file, docId, pages).catch(err => {
                     console.error('❌ AI 處理失敗:', err);
                 });
                 
@@ -2097,9 +2097,9 @@
             return 1;
         }
         
-        async function processFileWithAI(file, docId) {
+        async function processFileWithAI(file, docId, pages = 1) {
             try {
-                console.log('🤖 開始 AI 處理:', file.name);
+                console.log('🤖 開始 AI 處理:', file.name, `(${pages} 頁)`);
                 
                 if (!window.HybridVisionDeepSeekProcessor) {
                     throw new Error('AI 處理器未載入');
@@ -2120,6 +2120,17 @@
                 
             } catch (error) {
                 console.error('❌ AI 處理失敗:', error);
+                
+                // 退回 Credits
+                if (window.creditsManager && pages > 0) {
+                    try {
+                        await window.creditsManager.refundCredits(pages);
+                        console.log(`✅ 已退回 ${pages} Credits`);
+                    } catch (refundError) {
+                        console.error('❌ 退回 Credits 失敗:', refundError);
+                    }
+                }
+                
                 await window.simpleDataManager.updateDocument(currentProjectId, docId, {
                     status: 'failed',
                     error: error.message

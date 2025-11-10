@@ -251,6 +251,60 @@
     };
     
     /**
+     * 退回 Credits（處理失敗時）
+     * @param {number} pages - 要退回的頁數
+     * @returns {boolean} - 是否成功
+     */
+    window.creditsManager.refundCredits = async function(pages) {
+        try {
+            if (!window.simpleAuth || !window.simpleAuth.isLoggedIn()) {
+                console.error('❌ 用戶未登入');
+                return false;
+            }
+            
+            const user = window.simpleAuth.getCurrentUser();
+            if (!user || !user.uid) {
+                console.error('❌ 無法獲取用戶信息');
+                return false;
+            }
+            
+            const db = firebase.firestore();
+            const userRef = db.collection('users').doc(user.uid);
+            
+            // 使用事務確保原子性
+            await db.runTransaction(async (transaction) => {
+                const userDoc = await transaction.get(userRef);
+                
+                if (!userDoc.exists) {
+                    throw new Error('用戶文檔不存在');
+                }
+                
+                const currentCredits = userDoc.data().credits || 0;
+                const newCredits = currentCredits + pages;
+                
+                transaction.update(userRef, { credits: newCredits });
+                
+                // 記錄退款歷史
+                const historyRef = db.collection('users').doc(user.uid).collection('creditsHistory').doc();
+                transaction.set(historyRef, {
+                    type: 'refund',
+                    amount: pages,
+                    reason: 'processing_failed',
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    balanceAfter: newCredits
+                });
+                
+                console.log(`✅ Credits 已退回: ${pages} 頁，新餘額: ${newCredits}`);
+            });
+            
+            return true;
+        } catch (error) {
+            console.error('❌ 退回 Credits 失敗:', error);
+            return false;
+        }
+    };
+    
+    /**
      * 獲取當前 Credits
      */
     window.creditsManager.getCurrentCredits = function() {
