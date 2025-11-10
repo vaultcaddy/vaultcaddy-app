@@ -311,7 +311,7 @@
                                     <i class="fas fa-crown"></i>
                                     <span>Basic Plan</span>
                                 </div>
-                                <a href="index.html#pricing" style="color: #667eea; font-size: 0.875rem; text-decoration: none; font-weight: 500;">升級計劃 →</a>
+                                <a href="billing.html#subscription-plans" style="color: #667eea; font-size: 0.875rem; text-decoration: none; font-weight: 500;">升級計劃 →</a>
                             </div>
                         </div>
                     </div>
@@ -335,10 +335,10 @@
                         
                         <!-- 使用說明 -->
                         <div style="padding: 0.75rem; background: #f9fafb; border-radius: 8px; margin-bottom: 1rem;">
-                            <div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem;">Included-Request Usage</div>
-                            <div style="font-size: 0.875rem; color: #1f2937;">Usage included in your plan.</div>
+                            <div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem;">Credits 使用情況</div>
+                            <div style="font-size: 0.875rem; color: #1f2937;">每處理 1 頁文檔消耗 1 個 Credit。</div>
                             <div style="font-size: 0.75rem; color: #9ca3af; margin-top: 0.25rem;">
-                                Resets <span id="credits-reset-date">2025年11月4日</span> ⓘ
+                                重置日期：<span id="credits-reset-date">2025年11月4日</span> ⓘ
                             </div>
                         </div>
                         
@@ -347,7 +347,7 @@
                             <a href="billing.html" style="flex: 1; text-align: center; padding: 0.625rem 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; font-weight: 600; font-size: 0.875rem; text-decoration: none; transition: opacity 0.2s;">
                                 購買 Credits
                             </a>
-                            <a href="billing.html" style="flex: 1; text-align: center; padding: 0.625rem 1rem; border: 1px solid #d1d5db; color: #374151; border-radius: 8px; font-weight: 600; font-size: 0.875rem; text-decoration: none; transition: border-color 0.2s;">
+                            <a href="#purchase-history" onclick="document.getElementById('purchase-history').scrollIntoView({behavior: 'smooth'}); return false;" style="flex: 1; text-align: center; padding: 0.625rem 1rem; border: 1px solid #d1d5db; color: #374151; border-radius: 8px; font-weight: 600; font-size: 0.875rem; text-decoration: none; transition: border-color 0.2s; cursor: pointer;">
                                 查看記錄
                             </a>
                         </div>
@@ -421,32 +421,39 @@
                     </div>
                 </div>
 
-                <!-- 通知設定 -->
-                <div class="settings-section">
-                    <h2 class="section-title">通知設定</h2>
+                <!-- 購買記錄 -->
+                <div class="settings-section" id="purchase-history">
+                    <h2 class="section-title">購買記錄</h2>
                     
-                    <div class="form-group">
-                        <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
-                            <input type="checkbox" id="email-notifications" checked style="width: 18px; height: 18px; cursor: pointer;">
-                            <div>
-                                <div class="form-label" style="margin: 0;">電子郵件通知</div>
-                                <p class="form-description" style="margin: 0;">接收有關帳戶活動的電子郵件</p>
-                            </div>
-                        </label>
+                    <div style="margin-bottom: 1.5rem;">
+                        <select id="history-month-filter" onchange="filterCreditsHistory()" style="padding: 0.5rem 1rem; border: 1px solid #d1d5db; border-radius: 6px; background: white; cursor: pointer; font-size: 0.875rem;">
+                            <option value="all">所有記錄</option>
+                            <option value="2025-11">2025年11月</option>
+                            <option value="2025-10">2025年10月</option>
+                        </select>
                     </div>
-                    
-                    <div class="form-group">
-                        <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
-                            <input type="checkbox" id="marketing-emails" style="width: 18px; height: 18px; cursor: pointer;">
-                            <div>
-                                <div class="form-label" style="margin: 0;">行銷郵件</div>
-                                <p class="form-description" style="margin: 0;">接收產品更新和特別優惠</p>
-                            </div>
-                        </label>
-                    </div>
-                    
-                    <div class="button-group">
-                        <button class="btn btn-primary" onclick="saveNotifications()">儲存通知設定</button>
+
+                    <div style="overflow-x: auto; background: white; border-radius: 8px; border: 1px solid #e5e7eb;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead style="background: #f9fafb;">
+                                <tr>
+                                    <th style="text-align: left; padding: 1rem; font-weight: 600; color: #6b7280; font-size: 0.875rem; border-bottom: 2px solid #e5e7eb;">日期</th>
+                                    <th style="text-align: left; padding: 1rem; font-weight: 600; color: #6b7280; font-size: 0.875rem; border-bottom: 2px solid #e5e7eb;">描述</th>
+                                    <th style="text-align: center; padding: 1rem; font-weight: 600; color: #6b7280; font-size: 0.875rem; border-bottom: 2px solid #e5e7eb;">類型</th>
+                                    <th style="text-align: right; padding: 1rem; font-weight: 600; color: #6b7280; font-size: 0.875rem; border-bottom: 2px solid #e5e7eb;">Credits</th>
+                                    <th style="text-align: right; padding: 1rem; font-weight: 600; color: #6b7280; font-size: 0.875rem; border-bottom: 2px solid #e5e7eb;">餘額</th>
+                                </tr>
+                            </thead>
+                            <tbody id="credits-history-tbody">
+                                <!-- 動態載入記錄 -->
+                                <tr>
+                                    <td colspan="5" style="text-align: center; padding: 3rem; color: #9ca3af;">
+                                        <i class="fas fa-history" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                                        <div>載入記錄中...</div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
@@ -525,16 +532,52 @@
             const marketingEmails = localStorage.getItem('marketingEmails') !== 'false';
             document.getElementById('email-notifications').checked = emailNotifications;
             document.getElementById('marketing-emails').checked = marketingEmails;
+            
+            // 載入購買記錄
+            loadCreditsHistory();
         }
         
         // 載入用戶計劃
-        function loadUserPlan() {
-            // 從 localStorage 或 Firestore 獲取用戶計劃
-            const savedPlan = localStorage.getItem('userPlan') || 'Basic';
+        async function loadUserPlan() {
             const planElement = document.getElementById('user-plan');
+            
+            // 檢查是否有購買記錄或訂閱
+            let savedPlan = 'Free'; // 默認為 Free Plan
+            
+            try {
+                // 從 Firestore 檢查是否有活躍訂閱
+                if (window.simpleAuth && window.simpleAuth.currentUser) {
+                    const userId = window.simpleAuth.currentUser.uid;
+                    const userDoc = await firebase.firestore()
+                        .collection('users')
+                        .doc(userId)
+                        .get();
+                    
+                    if (userDoc.exists) {
+                        const userData = userDoc.data();
+                        
+                        // 檢查訂閱狀態
+                        if (userData.subscription && userData.subscription.status === 'active') {
+                            savedPlan = userData.subscription.planType || 'Free';
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('獲取用戶計劃失敗:', error);
+            }
+            
+            // 如果 Firestore 沒有，檢查 localStorage
+            if (savedPlan === 'Free') {
+                savedPlan = localStorage.getItem('userPlan') || 'Free';
+            }
             
             // 根據計劃類型設置不同的樣式和圖標
             const planConfig = {
+                'Free': {
+                    name: 'Free Plan',
+                    icon: 'fa-gift',
+                    gradient: 'linear-gradient(135deg, #9ca3af 0%, #6b7280 100%)'
+                },
                 'Basic': {
                     name: 'Basic Plan',
                     icon: 'fa-star',
@@ -552,13 +595,16 @@
                 }
             };
             
-            const config = planConfig[savedPlan] || planConfig['Basic'];
+            const config = planConfig[savedPlan] || planConfig['Free'];
             
             planElement.innerHTML = `
                 <i class="fas ${config.icon}"></i>
                 <span>${config.name}</span>
             `;
             planElement.style.background = config.gradient;
+            
+            // 保存到 localStorage
+            localStorage.setItem('userPlan', savedPlan);
             
             // 載入 Credits 使用情況
             loadCreditsUsage();
@@ -748,6 +794,135 @@
             localStorage.setItem('marketingEmails', marketingEmails);
             
             alert('通知設定已儲存');
+        }
+        
+        // 載入 Credits 歷史記錄
+        async function loadCreditsHistory() {
+            const tbody = document.getElementById('credits-history-tbody');
+            
+            try {
+                // 檢查是否有登入用戶
+                if (!window.simpleAuth || !window.simpleAuth.currentUser) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 2rem; color: #9ca3af;">
+                                請先登入以查看記錄
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                const userId = window.simpleAuth.currentUser.uid;
+                
+                // 從 Firestore 獲取 Credits 歷史記錄
+                const historySnapshot = await firebase.firestore()
+                    .collection('users')
+                    .doc(userId)
+                    .collection('creditsHistory')
+                    .orderBy('createdAt', 'desc')
+                    .limit(50)
+                    .get();
+                
+                if (historySnapshot.empty) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 2rem; color: #9ca3af;">
+                                <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+                                <div>暫無記錄</div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                // 渲染記錄
+                const rows = [];
+                historySnapshot.forEach(doc => {
+                    const record = doc.data();
+                    const date = record.createdAt ? 
+                        record.createdAt.toDate().toLocaleDateString('zh-TW', { 
+                            year: 'numeric', 
+                            month: '2-digit', 
+                            day: '2-digit' 
+                        }) : '--';
+                    
+                    // 確定類型和描述
+                    let type, typeColor, description, sign;
+                    
+                    if (record.type === 'add') {
+                        type = '增加';
+                        typeColor = '#10b981';
+                        sign = '+';
+                        
+                        if (record.metadata?.source === 'subscription') {
+                            description = `訂閱計劃 - ${record.metadata.planType?.toUpperCase() || 'N/A'}`;
+                        } else if (record.metadata?.source === 'purchase') {
+                            description = record.metadata.productName || '購買 Credits';
+                        } else {
+                            description = '添加 Credits';
+                        }
+                    } else if (record.type === 'deduct') {
+                        type = '使用';
+                        typeColor = '#ef4444';
+                        sign = '-';
+                        description = record.metadata?.projectName || '文檔處理';
+                    } else if (record.type === 'reset') {
+                        type = '重置';
+                        typeColor = '#6b7280';
+                        sign = '';
+                        description = `每月重置 - ${record.metadata?.planType?.toUpperCase() || 'N/A'}`;
+                    } else {
+                        type = '其他';
+                        typeColor = '#9ca3af';
+                        sign = '';
+                        description = '其他操作';
+                    }
+                    
+                    rows.push(`
+                        <tr style="border-bottom: 1px solid #e5e7eb;">
+                            <td style="padding: 1rem; color: #6b7280; font-size: 0.875rem;">${date}</td>
+                            <td style="padding: 1rem; color: #1f2937;">${description}</td>
+                            <td style="padding: 1rem; text-align: center;">
+                                <span style="display: inline-flex; padding: 0.25rem 0.75rem; background: ${typeColor}15; color: ${typeColor}; border-radius: 12px; font-size: 0.875rem; font-weight: 500;">
+                                    ${type}
+                                </span>
+                            </td>
+                            <td style="padding: 1rem; text-align: right; font-weight: 600; color: ${typeColor};">
+                                ${sign}${record.amount || 0}
+                            </td>
+                            <td style="padding: 1rem; text-align: right; color: #1f2937; font-weight: 500;">
+                                ${record.after || 0}
+                            </td>
+                        </tr>
+                    `);
+                });
+                
+                tbody.innerHTML = rows.join('');
+                
+                console.log(`✅ 載入了 ${rows.length} 條 Credits 歷史記錄`);
+                
+            } catch (error) {
+                console.error('載入 Credits 歷史記錄失敗:', error);
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 2rem; color: #ef4444;">
+                            <i class="fas fa-exclamation-circle" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                            <div>載入記錄失敗</div>
+                            <div style="font-size: 0.875rem; margin-top: 0.5rem; color: #9ca3af;">${error.message}</div>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+        
+        // 按月份過濾記錄
+        function filterCreditsHistory() {
+            const filter = document.getElementById('history-month-filter').value;
+            console.log('過濾記錄:', filter);
+            
+            // 重新載入記錄（這裡可以添加過濾邏輯）
+            loadCreditsHistory();
         }
         
         // 刪除帳戶
