@@ -159,7 +159,7 @@
         
         dropdownMenu.innerHTML = `
             <div style="padding: 1rem; border-bottom: 1px solid #e5e7eb;">
-                <div style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem;">積分: <span id="user-credits">--</span></div>
+                <div style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem;">Credits: <span id="user-credits">--</span></div>
                 <div id="user-email" style="font-size: 0.875rem; color: #6b7280;">載入中...</div>
             </div>
             <div style="padding: 0.5rem;">

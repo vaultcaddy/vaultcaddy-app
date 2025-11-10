@@ -603,17 +603,8 @@
                 // 獲取計劃的 Credits 額度
                 const totalCredits = planCredits[currentPlan][planPeriod] || 0;
                 
-                // 如果是 Free Plan，隱藏 Credits 使用卡片
-                if (currentPlan === 'Free' || totalCredits === 0) {
-                    const creditsCard = document.getElementById('credits-usage-card');
-                    if (creditsCard) {
-                        creditsCard.style.display = 'none';
-                    }
-                    return;
-                }
-                
-                // 從 Firebase 獲取當前 Credits（如果有的話）
-                let usedCredits = totalCredits; // 預設顯示滿額
+                // 從 Firebase 獲取當前 Credits
+                let currentCredits = 0;
                 
                 if (window.simpleAuth && window.simpleAuth.currentUser) {
                     try {
@@ -625,7 +616,7 @@
                         
                         if (userDoc.exists) {
                             const userData = userDoc.data();
-                            usedCredits = userData.credits || 0;
+                            currentCredits = userData.credits || 0;
                             
                             // 如果有訂閱信息，獲取重置日期
                             if (userData.subscription && userData.subscription.currentPeriodEnd) {
@@ -654,21 +645,32 @@
                     }
                 }
                 
-                // 計算使用百分比
-                const percentage = (usedCredits / totalCredits) * 100;
-                
-                // 更新 UI
-                document.getElementById('credits-used-text').textContent = usedCredits;
-                document.getElementById('credits-total-text').textContent = totalCredits;
-                document.getElementById('credits-progress-bar').style.width = percentage + '%';
-                
-                // 如果 Credits 不足 20%，改變進度條顏色
-                if (percentage < 20) {
-                    document.getElementById('credits-progress-bar').style.background = 
-                        'linear-gradient(90deg, #ef4444 0%, #dc2626 100%)';
+                // 根據計劃類型顯示 Credits
+                if (currentPlan === 'Free') {
+                    // Free Plan: 只顯示剩餘 Credits（一次性）
+                    document.getElementById('credits-used-text').textContent = currentCredits;
+                    document.getElementById('credits-total-text').parentElement.style.display = 'none'; // 隱藏 "/ 200" 部分
+                    document.getElementById('credits-progress-bar').style.width = '0%'; // 不顯示進度條
+                    document.getElementById('credits-reset-date').parentElement.innerHTML = '<div style="font-size: 0.875rem; color: #1f2937;">一次性 Credits，用完即止。</div>';
+                    console.log(`✅ Free Plan Credits 載入完成: ${currentCredits} (一次性)`);
+                } else {
+                    // 付費計劃: 顯示 "X / 200" 格式
+                    document.getElementById('credits-used-text').textContent = currentCredits;
+                    document.getElementById('credits-total-text').parentElement.style.display = ''; // 顯示 "/ 200" 部分
+                    document.getElementById('credits-total-text').textContent = totalCredits;
+                    
+                    // 計算使用百分比
+                    const percentage = totalCredits > 0 ? (currentCredits / totalCredits) * 100 : 0;
+                    document.getElementById('credits-progress-bar').style.width = percentage + '%';
+                    
+                    // 如果 Credits 不足 20%，改變進度條顏色
+                    if (percentage < 20) {
+                        document.getElementById('credits-progress-bar').style.background = 
+                            'linear-gradient(90deg, #ef4444 0%, #dc2626 100%)';
+                    }
+                    
+                    console.log(`✅ Credits 載入完成: ${currentCredits} / ${totalCredits} (${percentage.toFixed(1)}%)`);
                 }
-                
-                console.log(`✅ Credits 載入完成: ${usedCredits} / ${totalCredits} (${percentage.toFixed(1)}%)`);
                 
             } catch (error) {
                 console.error('載入 Credits 使用情況失敗:', error);
