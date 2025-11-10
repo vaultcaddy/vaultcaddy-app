@@ -590,10 +590,10 @@
             try {
                 // 計劃對應的 Credits 額度
                 const planCredits = {
-                    'Free': { monthly: 0, yearly: 0 },
+                    'Free': { monthly: 10, yearly: 10 }, // Free Plan 有 10 個一次性 Credits
                     'Basic': { monthly: 200, yearly: 2400 },
                     'Pro': { monthly: 500, yearly: 6000 },
-                    'Business': { monthly: 1200, yearly: 14400 }
+                    'Business': { monthly: 2000, yearly: 24000 } // 修正為 2000/月
                 };
                 
                 // 獲取當前計劃
@@ -646,31 +646,39 @@
                 }
                 
                 // 根據計劃類型顯示 Credits
-                if (currentPlan === 'Free') {
-                    // Free Plan: 只顯示剩餘 Credits（一次性）
-                    document.getElementById('credits-used-text').textContent = currentCredits;
-                    document.getElementById('credits-total-text').parentElement.style.display = 'none'; // 隱藏 "/ 200" 部分
-                    document.getElementById('credits-progress-bar').style.width = '0%'; // 不顯示進度條
-                    document.getElementById('credits-reset-date').parentElement.innerHTML = '<div style="font-size: 0.875rem; color: #1f2937;">一次性 Credits，用完即止。</div>';
-                    console.log(`✅ Free Plan Credits 載入完成: ${currentCredits} (一次性)`);
+                // 所有計劃都顯示 "X / 總額" 格式
+                document.getElementById('credits-used-text').textContent = currentCredits;
+                document.getElementById('credits-total-text').parentElement.style.display = ''; // 顯示 "/ X" 部分
+                document.getElementById('credits-total-text').textContent = totalCredits;
+                
+                // 計算使用百分比
+                const percentage = totalCredits > 0 ? (currentCredits / totalCredits) * 100 : 0;
+                document.getElementById('credits-progress-bar').style.width = percentage + '%';
+                
+                // 如果 Credits 不足 20%，改變進度條顏色
+                if (percentage < 20) {
+                    document.getElementById('credits-progress-bar').style.background = 
+                        'linear-gradient(90deg, #ef4444 0%, #dc2626 100%)';
                 } else {
-                    // 付費計劃: 顯示 "X / 200" 格式
-                    document.getElementById('credits-used-text').textContent = currentCredits;
-                    document.getElementById('credits-total-text').parentElement.style.display = ''; // 顯示 "/ 200" 部分
-                    document.getElementById('credits-total-text').textContent = totalCredits;
-                    
-                    // 計算使用百分比
-                    const percentage = totalCredits > 0 ? (currentCredits / totalCredits) * 100 : 0;
-                    document.getElementById('credits-progress-bar').style.width = percentage + '%';
-                    
-                    // 如果 Credits 不足 20%，改變進度條顏色
-                    if (percentage < 20) {
-                        document.getElementById('credits-progress-bar').style.background = 
-                            'linear-gradient(90deg, #ef4444 0%, #dc2626 100%)';
-                    }
-                    
-                    console.log(`✅ Credits 載入完成: ${currentCredits} / ${totalCredits} (${percentage.toFixed(1)}%)`);
+                    // 重置為默認顏色
+                    document.getElementById('credits-progress-bar').style.background = 
+                        'linear-gradient(90deg, #667eea 0%, #764ba2 100%)';
                 }
+                
+                // 更新重置日期說明
+                if (currentPlan === 'Free') {
+                    // Free Plan 顯示一次性說明
+                    const resetDateElement = document.getElementById('credits-reset-date');
+                    if (resetDateElement && resetDateElement.parentElement) {
+                        resetDateElement.parentElement.innerHTML = '<div style="font-size: 0.75rem; color: #9ca3af; margin-top: 0.25rem;">一次性 Credits，用完即止。</div>';
+                    }
+                } else {
+                    // 付費計劃顯示重置日期
+                    // 重置日期已經在上面的代碼中設置
+                }
+                
+                console.log(`✅ Credits 載入完成: ${currentCredits} / ${totalCredits} (${percentage.toFixed(1)}%)`);
+
                 
             } catch (error) {
                 console.error('載入 Credits 使用情況失敗:', error);

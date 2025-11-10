@@ -440,7 +440,15 @@ function renderDocumentTable() {
     }
     
     // 渲染文檔行
-    tbody.innerHTML = pageDocuments.map(doc => `
+    tbody.innerHTML = pageDocuments.map(doc => {
+        // 從 processedData 中獲取解析後的數據
+        const data = doc.processedData || {};
+        const vendor = data.vendor || data.source || '-';
+        const amount = data.amount || data.total || '-';
+        const date = data.date || '-';
+        const type = doc.type || doc.documentType || '發票';
+        
+        return `
         <tr style="border-bottom: 1px solid #e5e7eb; transition: background 0.2s;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='white'">
             <td style="padding: 1rem;">
                 <input type="checkbox" data-doc-id="${doc.id}" ${window.selectedDocuments.has(doc.id) ? 'checked' : ''} onchange="toggleDocumentSelection('${doc.id}')">
@@ -448,18 +456,18 @@ function renderDocumentTable() {
             <td style="padding: 1rem;">
                 <a href="document-detail.html?project=${doc.projectId}&id=${doc.id}" style="color: #3b82f6; text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
                     <i class="fas fa-file-pdf" style="color: #ef4444;"></i>
-                    <span>${doc.name || doc.fileName || 'Untitled'}</span>
+                    <span>${doc.fileName || 'Untitled'}</span>
                 </a>
             </td>
             <td style="padding: 1rem;">
                 <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.75rem; background: #dbeafe; color: #1e40af; border-radius: 12px; font-size: 0.875rem;">
                     <i class="fas fa-file-invoice"></i>
-                    <span>${doc.documentType || '發票'}</span>
+                    <span>${type}</span>
                 </span>
             </td>
-            <td style="padding: 1rem; color: #374151;">${doc.vendor || doc.source || '-'}</td>
-            <td style="padding: 1rem; text-align: right; color: #374151; font-weight: 600;">$${doc.amount || '0.00'}</td>
-            <td style="padding: 1rem; color: #374151;">${doc.date || '-'}</td>
+            <td style="padding: 1rem; color: #374151;">${vendor}</td>
+            <td style="padding: 1rem; text-align: right; color: #374151; font-weight: 600;">${amount === '-' ? '-' : '$' + amount}</td>
+            <td style="padding: 1rem; color: #374151;">${date}</td>
             <td style="padding: 1rem;">
                 <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.75rem; background: #d1fae5; color: #065f46; border-radius: 12px; font-size: 0.875rem;">
                     ${doc.status === 'completed' ? '已完成' : doc.status === 'processing' ? '處理中' : '待處理'}
@@ -472,7 +480,8 @@ function renderDocumentTable() {
                 </button>
             </td>
         </tr>
-    `).join('');
+        `;
+    }).join('');
     
     // 更新全選複選框狀態
     updateSelectAllCheckbox();
