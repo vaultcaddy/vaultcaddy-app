@@ -317,6 +317,7 @@ function initDocumentFilter() {
 
 /**
  * 過濾文檔
+ * 搜索所有可見列的內容：文檔名稱、類型、供應商/來源、金額、日期、狀態
  */
 function filterDocuments(e) {
     const searchTerm = e.target.value.toLowerCase().trim();
@@ -327,11 +328,23 @@ function filterDocuments(e) {
         console.log('🔄 恢復所有文檔:', window.allDocuments.length);
     } else {
         window.filteredDocuments = window.allDocuments.filter(doc => {
+            // 搜索所有可能的字段
             const name = (doc.name || doc.fileName || '').toLowerCase();
+            const type = (doc.type || '').toLowerCase();
             const vendor = (doc.vendor || doc.source || '').toLowerCase();
-            return name.includes(searchTerm) || vendor.includes(searchTerm);
+            const amount = (doc.amount || doc.total || '').toString().toLowerCase();
+            const date = (doc.date || '').toString().toLowerCase();
+            const status = (doc.status || '').toLowerCase();
+            
+            // 檢查是否有任何字段包含搜索詞
+            return name.includes(searchTerm) || 
+                   type.includes(searchTerm) || 
+                   vendor.includes(searchTerm) || 
+                   amount.includes(searchTerm) || 
+                   date.includes(searchTerm) || 
+                   status.includes(searchTerm);
         });
-        console.log(`🔍 過濾結果: ${window.filteredDocuments.length} / ${window.allDocuments.length} 個文檔`);
+        console.log(`🔍 過濾結果: ${window.filteredDocuments.length} / ${window.allDocuments.length} 個文檔 (搜索: "${searchTerm}")`);
     }
     
     // 重置到第一頁
