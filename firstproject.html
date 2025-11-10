@@ -1866,8 +1866,46 @@
                 // 渲染文檔表格
                 renderDocuments();
                 
+                // 自動處理 pending 狀態的文檔（背景處理）
+                resumePendingDocuments(documents);
+                
             } catch (error) {
                 console.error('❌ 載入文檔失敗:', error);
+            }
+        }
+        
+        /**
+         * 恢復處理中斷的文檔
+         * 當用戶重新訪問頁面時，自動繼續處理 pending 狀態的文檔
+         */
+        async function resumePendingDocuments(documents) {
+            const pendingDocs = documents.filter(doc => doc.status === 'processing');
+            
+            if (pendingDocs.length === 0) {
+                return;
+            }
+            
+            console.log(`🔄 發現 ${pendingDocs.length} 個待處理文檔，開始恢復處理...`);
+            
+            for (const doc of pendingDocs) {
+                try {
+                    // 從 Storage 下載文件
+                    const response = await fetch(doc.downloadURL);
+                    const blob = await response.blob();
+                    const file = new File([blob], doc.fileName, { type: blob.type });
+                    
+                    const pages = doc.pages || 1;
+                    
+                    console.log(`🔄 恢復處理: ${doc.fileName} (${pages} 頁)`);
+                    
+                    // 繼續 AI 處理
+                    processFileWithAI(file, doc.id, pages).catch(err => {
+                        console.error('❌ 恢復處理失敗:', err);
+                    });
+                    
+                } catch (error) {
+                    console.error(`❌ 恢復文檔 ${doc.fileName} 失敗:`, error);
+                }
             }
         }
         
