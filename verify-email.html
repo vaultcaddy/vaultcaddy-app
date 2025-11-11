@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>驗證您的電子郵件 - VaultCaddy</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .verify-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 90%;
+            padding: 3rem;
+            text-align: center;
+        }
+        .verify-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem;
+            font-size: 2.5rem;
+        }
+        h1 {
+            font-size: 1.8rem;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+        .email-display {
+            color: #7c3aed;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        .description {
+            color: #6b7280;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        .code-inputs {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+        .code-input {
+            width: 50px;
+            height: 60px;
+            font-size: 2rem;
+            text-align: center;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .code-input:focus {
+            outline: none;
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        }
+        .verify-button {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-bottom: 1rem;
+        }
+        .verify-button:hover {
+            transform: translateY(-2px);
+        }
+        .verify-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .timer {
+            color: #6b7280;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+        .resend-button {
+            background: none;
+            border: none;
+            color: #7c3aed;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-decoration: underline;
+        }
+        .resend-button:disabled {
+            color: #9ca3af;
+            cursor: not-allowed;
+            text-decoration: none;
+        }
+        .error-message {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        .success-message {
+            background: #d1fae5;
+            color: #059669;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="verify-container">
+        <div class="verify-icon">📧</div>
+        <h1>驗證您的電子郵件</h1>
+        <div class="email-display" id="emailDisplay"></div>
+        <p class="description">
+            我們已經發送一個 6 位數驗證碼到您的郵箱。<br>
+            請輸入驗證碼以完成註冊。
+        </p>
+
+        <div class="error-message" id="errorMessage"></div>
+        <div class="success-message" id="successMessage"></div>
+
+        <div class="code-inputs">
+            <input type="text" class="code-input" maxlength="1" id="code1" autofocus>
+            <input type="text" class="code-input" maxlength="1" id="code2">
+            <input type="text" class="code-input" maxlength="1" id="code3">
+            <input type="text" class="code-input" maxlength="1" id="code4">
+            <input type="text" class="code-input" maxlength="1" id="code5">
+            <input type="text" class="code-input" maxlength="1" id="code6">
+        </div>
+
+        <button class="verify-button" id="verifyButton" onclick="verifyCode()">
+            驗證
+        </button>
+
+        <div class="timer" id="timer">驗證碼將在 <span id="countdown">10:00</span> 後過期</div>
+
+        <button class="resend-button" id="resendButton" onclick="resendCode()" disabled>
+            重新發送驗證碼
+        </button>
+
+        <p style="margin-top: 2rem; color: #6b7280; font-size: 0.9rem;">
+            沒有收到郵件？請檢查垃圾郵件資料夾
+        </p>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script>
+        const functions = firebase.functions();
+        let countdownInterval;
+        let resendCountdown = 60; // 60 秒後才能重新發送
+
+        // 從 URL 獲取 email
+        const urlParams = new URLSearchParams(window.location.search);
+        const userEmail = urlParams.get('email');
+
+        if (!userEmail) {
+            window.location.href = 'register.html';
+        }
+
+        document.getElementById('emailDisplay').textContent = userEmail;
+
+        // 自動聚焦和跳轉
+        const codeInputs = document.querySelectorAll('.code-input');
+        codeInputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                if (e.target.value.length === 1) {
+                    if (index < 5) {
+                        codeInputs[index + 1].focus();
+                    } else {
+                        // 自動驗證
+                        verifyCode();
+                    }
+                }
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                    codeInputs[index - 1].focus();
+                }
+            });
+
+            // 只允許數字
+            input.addEventListener('keypress', (e) => {
+                if (!/[0-9]/.test(e.key)) {
+                    e.preventDefault();
+                }
+            });
+        });
+
+        // 倒計時
+        function startCountdown() {
+            let timeLeft = 600; // 10 分鐘
+            countdownInterval = setInterval(() => {
+                timeLeft--;
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                document.getElementById('countdown').textContent = 
+                    `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    showError('驗證碼已過期，請重新發送');
+                    document.getElementById('resendButton').disabled = false;
+                }
+            }, 1000);
+        }
+
+        // 重新發送倒計時
+        function startResendCountdown() {
+            resendCountdown = 60;
+            const resendButton = document.getElementById('resendButton');
+            resendButton.disabled = true;
+            
+            const interval = setInterval(() => {
+                resendCountdown--;
+                resendButton.textContent = `重新發送驗證碼 (${resendCountdown}s)`;
+                
+                if (resendCountdown <= 0) {
+                    clearInterval(interval);
+                    resendButton.disabled = false;
+                    resendButton.textContent = '重新發送驗證碼';
+                }
+            }, 1000);
+        }
+
+        // 驗證碼
+        async function verifyCode() {
+            const code = Array.from(codeInputs).map(input => input.value).join('');
+            
+            if (code.length !== 6) {
+                showError('請輸入完整的 6 位數驗證碼');
+                return;
+            }
+
+            const button = document.getElementById('verifyButton');
+            button.disabled = true;
+            button.innerHTML = '<span class="loading"></span>';
+
+            try {
+                const verifyCodeFunc = functions.httpsCallable('verifyCode');
+                const result = await verifyCodeFunc({ email: userEmail, code: code });
+
+                if (result.data.success) {
+                    showSuccess('驗證成功！正在跳轉...');
+                    clearInterval(countdownInterval);
+                    
+                    // 等待 1 秒後跳轉
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1000);
+                }
+            } catch (error) {
+                console.error('驗證失敗:', error);
+                let errorMsg = '驗證失敗，請重試';
+                
+                if (error.code === 'functions/invalid-argument') {
+                    errorMsg = '驗證碼錯誤，請重試';
+                } else if (error.code === 'functions/deadline-exceeded') {
+                    errorMsg = '驗證碼已過期，請重新發送';
+                    document.getElementById('resendButton').disabled = false;
+                } else if (error.code === 'functions/resource-exhausted') {
+                    errorMsg = '驗證失敗次數過多，請重新發送驗證碼';
+                    document.getElementById('resendButton').disabled = false;
+                } else if (error.message) {
+                    errorMsg = error.message;
+                }
+                
+                showError(errorMsg);
+                button.disabled = false;
+                button.textContent = '驗證';
+                
+                // 清空輸入
+                codeInputs.forEach(input => input.value = '');
+                codeInputs[0].focus();
+            }
+        }
+
+        // 重新發送驗證碼
+        async function resendCode() {
+            const button = document.getElementById('resendButton');
+            button.disabled = true;
+            button.textContent = '發送中...';
+
+            try {
+                const sendCodeFunc = functions.httpsCallable('sendVerificationCode');
+                const result = await sendCodeFunc({ email: userEmail });
+
+                if (result.data.success) {
+                    showSuccess('驗證碼已重新發送到您的郵箱');
+                    
+                    // 重新開始倒計時
+                    clearInterval(countdownInterval);
+                    startCountdown();
+                    startResendCountdown();
+                    
+                    // 清空輸入
+                    codeInputs.forEach(input => input.value = '');
+                    codeInputs[0].focus();
+                }
+            } catch (error) {
+                console.error('重新發送失敗:', error);
+                showError('發送失敗，請稍後重試');
+                button.disabled = false;
+                button.textContent = '重新發送驗證碼';
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            const successDiv = document.getElementById('successMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            successDiv.style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            errorDiv.style.display = 'none';
+        }
+
+        // 開始倒計時
+        startCountdown();
+        startResendCountdown();
+    </script>
+</body>
+</html>
+
