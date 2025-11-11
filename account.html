@@ -489,18 +489,28 @@
             const avatar = document.getElementById('user-avatar');
             const savedAvatar = localStorage.getItem('userAvatar');
             
-            if (savedAvatar) {
-                // 如果有保存的頭像圖片
-                avatar.style.backgroundImage = `url(${savedAvatar})`;
-                avatar.style.backgroundSize = 'cover';
-                avatar.style.backgroundPosition = 'center';
-                avatar.textContent = '';
-            } else if (user.displayName) {
-                avatar.textContent = user.displayName.charAt(0).toUpperCase();
+            // 統一使用註冊名稱顯示（如 Google 的做法）
+            let avatarText = '';
+            
+            if (user.displayName) {
+                // 使用註冊名稱的首字母（支持中英文）
+                const names = user.displayName.trim().split(' ');
+                if (names.length >= 2) {
+                    // 如果有多個名字（如 "John Doe"），取首字母組合
+                    avatarText = names[0].charAt(0).toUpperCase() + names[names.length - 1].charAt(0).toUpperCase();
+                } else {
+                    // 如果只有一個名字，取前兩個字符
+                    avatarText = user.displayName.substring(0, 2).toUpperCase();
+                }
+            } else if (user.email) {
+                // 如果沒有 displayName，使用 email 首字母
+                avatarText = user.email.charAt(0).toUpperCase();
+            }
+            
+            if (avatarText) {
+                avatar.textContent = avatarText;
                 avatar.style.backgroundImage = 'none';
-            } else {
-                avatar.textContent = user.email.charAt(0).toUpperCase();
-                avatar.style.backgroundImage = 'none';
+                localStorage.setItem('userAvatar', avatarText);
             }
             
             // 載入用戶計劃

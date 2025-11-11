@@ -336,12 +336,32 @@
                 user = window.firebase.auth().currentUser;
             }
             
-            if (user && user.email) {
-                const firstLetter = user.email.charAt(0).toUpperCase();
+            if (user) {
                 const avatarEl = document.getElementById('user-avatar');
-                if (avatarEl && !localStorage.getItem('userAvatar')) {
-                    avatarEl.textContent = firstLetter;
-                    localStorage.setItem('userAvatar', firstLetter);
+                if (avatarEl) {
+                    // 優先使用 displayName，如果沒有則使用 email 首字母
+                    let avatarText = '';
+                    
+                    if (user.displayName) {
+                        // 使用註冊名稱的首字母（支持中英文）
+                        const names = user.displayName.trim().split(' ');
+                        if (names.length >= 2) {
+                            // 如果有多個名字（如 "John Doe"），取首字母組合
+                            avatarText = names[0].charAt(0).toUpperCase() + names[names.length - 1].charAt(0).toUpperCase();
+                        } else {
+                            // 如果只有一個名字，取前兩個字符
+                            avatarText = user.displayName.substring(0, 2).toUpperCase();
+                        }
+                    } else if (user.email) {
+                        // 如果沒有 displayName，使用 email 首字母
+                        avatarText = user.email.charAt(0).toUpperCase();
+                    }
+                    
+                    if (avatarText) {
+                        avatarEl.textContent = avatarText;
+                        localStorage.setItem('userAvatar', avatarText);
+                        localStorage.setItem('userDisplayName', user.displayName || user.email);
+                    }
                 }
             }
         } catch (error) {
