@@ -47,7 +47,8 @@
             
             if (userDoc.exists) {
                 const userData = userDoc.data();
-                const credits = userData.credits || 0;
+                // 支持兩種欄位名稱：currentCredits 優先，然後是 credits
+                const credits = userData.currentCredits || userData.credits || 0;
                 
                 window.creditsManager.currentCredits = credits;
                 window.creditsManager.isLoaded = true;
@@ -137,7 +138,8 @@
         db.collection('users').doc(user.uid).onSnapshot((doc) => {
             if (doc.exists) {
                 const userData = doc.data();
-                const credits = userData.credits || 0;
+                // 支持兩種欄位名稱：currentCredits 優先，然後是 credits
+                const credits = userData.currentCredits || userData.credits || 0;
                 
                 window.creditsManager.currentCredits = credits;
                 updateCreditsDisplay(credits);
@@ -231,16 +233,37 @@
                     throw new Error('用戶文檔不存在');
                 }
                 
-                const currentCredits = userDoc.data().credits || 0;
+                const userData = userDoc.data();
+                // 支持兩種欄位名稱：credits 和 currentCredits
+                const currentCredits = userData.currentCredits || userData.credits || 0;
                 
                 if (currentCredits < pages) {
                     throw new Error('Credits 不足');
                 }
                 
                 const newCredits = currentCredits - pages;
-                transaction.update(userRef, { credits: newCredits });
+                
+                // 同時更新兩個欄位以確保兼容性
+                transaction.update(userRef, { 
+                    credits: newCredits,
+                    currentCredits: newCredits,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                // 記錄使用歷史
+                const historyRef = db.collection('users').doc(user.uid).collection('creditsHistory').doc();
+                transaction.set(historyRef, {
+                    type: 'deduction',
+                    amount: -pages,
+                    description: `處理文檔，使用 ${pages} Credits`,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    balanceAfter: newCredits
+                });
                 
                 console.log(`✅ Credits 已扣除: ${pages} 頁，剩餘: ${newCredits}`);
+                
+                // 更新本地狀態
+                window.creditsManager.currentCredits = newCredits;
             });
             
             return true;
@@ -279,10 +302,17 @@
                     throw new Error('用戶文檔不存在');
                 }
                 
-                const currentCredits = userDoc.data().credits || 0;
+                const userData = userDoc.data();
+                // 支持兩種欄位名稱：credits 和 currentCredits
+                const currentCredits = userData.currentCredits || userData.credits || 0;
                 const newCredits = currentCredits + pages;
                 
-                transaction.update(userRef, { credits: newCredits });
+                // 同時更新兩個欄位以確保兼容性
+                transaction.update(userRef, { 
+                    credits: newCredits,
+                    currentCredits: newCredits,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
                 
                 // 記錄退款歷史
                 const historyRef = db.collection('users').doc(user.uid).collection('creditsHistory').doc();
@@ -290,11 +320,15 @@
                     type: 'refund',
                     amount: pages,
                     reason: 'processing_failed',
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    description: `處理失敗，退回 ${pages} Credits`,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                     balanceAfter: newCredits
                 });
                 
                 console.log(`✅ Credits 已退回: ${pages} 頁，新餘額: ${newCredits}`);
+                
+                // 更新本地狀態
+                window.creditsManager.currentCredits = newCredits;
             });
             
             return true;
