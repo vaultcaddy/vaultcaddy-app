@@ -21,6 +21,7 @@ window.rowsPerPage = 10;
 window.totalDocuments = 0;
 window.filteredDocuments = []; // 過濾後的文檔列表
 window.allDocuments = []; // 所有文檔列表
+window.lastSelectedIndex = -1; // 記錄最後選中的索引，用於 Shift 多選
 
 // ============================================
 // 1. 文檔列表全選功能
@@ -55,13 +56,42 @@ window.toggleSelectAll = function() {
 
 /**
  * 切換單個文檔的選中狀態
+ * @param {string} docId - 文檔ID
+ * @param {Event} event - 點擊事件（用於檢測 Shift 鍵）
  */
-window.toggleDocumentSelection = function(docId) {
-    if (window.selectedDocuments.has(docId)) {
-        window.selectedDocuments.delete(docId);
+window.toggleDocumentSelection = function(docId, event) {
+    // 獲取當前頁面所有文檔的複選框
+    const checkboxes = Array.from(document.querySelectorAll('#team-project-tbody input[type="checkbox"][data-doc-id]'));
+    const currentIndex = checkboxes.findIndex(cb => cb.getAttribute('data-doc-id') === docId);
+    
+    // 如果按住 Shift 鍵且之前有選中的項目
+    if (event && event.shiftKey && window.lastSelectedIndex !== -1 && currentIndex !== -1) {
+        // 確定選擇範圍
+        const start = Math.min(window.lastSelectedIndex, currentIndex);
+        const end = Math.max(window.lastSelectedIndex, currentIndex);
+        
+        console.log(`🔄 Shift 多選: 從索引 ${start} 到 ${end}`);
+        
+        // 選中範圍內的所有項目
+        for (let i = start; i <= end; i++) {
+            const checkbox = checkboxes[i];
+            if (checkbox) {
+                checkbox.checked = true;
+                const id = checkbox.getAttribute('data-doc-id');
+                window.selectedDocuments.add(id);
+            }
+        }
     } else {
-        window.selectedDocuments.add(docId);
+        // 正常的單選邏輯
+        if (window.selectedDocuments.has(docId)) {
+            window.selectedDocuments.delete(docId);
+        } else {
+            window.selectedDocuments.add(docId);
+        }
     }
+    
+    // 更新最後選中的索引
+    window.lastSelectedIndex = currentIndex;
     
     // 更新全選複選框狀態
     updateSelectAllCheckbox();
