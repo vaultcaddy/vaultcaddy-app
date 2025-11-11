@@ -6,14 +6,25 @@
  * 2. 處理 Stripe 付款回調
  * 3. 管理訂閱計劃
  * 4. Credits 過期管理
+ * 5. Email 驗證碼發送和驗證
  */
 
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const stripe = require('stripe')(functions.config().stripe.secret_key);
+const nodemailer = require('nodemailer');
 
 admin.initializeApp();
 const db = admin.firestore();
+
+// 配置 Email 發送器（使用 Gmail）
+const transporter = nodemailer.createTransporter({
+    service: 'gmail',
+    auth: {
+        user: functions.config().email.user,
+        pass: functions.config().email.password
+    }
+});
 
 // ============================================
 // 1. 處理 Stripe Webhook（付款成功後自動添加 Credits）
@@ -408,5 +419,207 @@ exports.getCreditsHistory = functions.https.onCall(async (data, context) => {
     return { history };
 });
 
-console.log('✅ Firebase Cloud Functions 已載入');
+// ============================================
+// 6. Email 驗證功能
+// ============================================
+
+/**
+ * 生成 6 位數驗證碼
+ */
+function generateVerificationCode() {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+/**
+ * 發送驗證碼到用戶 email
+ */
+exports.sendVerificationCode = functions.https.onCall(async (data, context) => {
+    const { email, displayName } = data;
+    
+    if (!email) {
+        throw new functions.https.HttpsError('invalid-argument', 'Email is required');
+    }
+    
+    try {
+        // 生成驗證碼
+        const verificationCode = generateVerificationCode();
+        const expiresAt = admin.firestore.Timestamp.fromDate(
+            new Date(Date.now() + 10 * 60 * 1000) // 10 分鐘後過期
+        );
+        
+        // 保存驗證碼到 Firestore
+        await db.collection('verificationCodes').doc(email).set({
+            code: verificationCode,
+            email: email,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            expiresAt: expiresAt,
+            verified: false,
+            attempts: 0
+        });
+        
+        // 發送 email
+        const mailOptions = {
+            from: `VaultCaddy <${functions.config().email.user}>`,
+            to: email,
+            subject: '歡迎註冊 VaultCaddy - 驗證您的電子郵件',
+            html: `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+                        .content { background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }
+                        .code-box { background: white; border: 2px solid #667eea; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0; }
+                        .code { font-size: 32px; font-weight: bold; color: #667eea; letter-spacing: 5px; }
+                        .button { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+                        .footer { text-align: center; color: #6b7280; font-size: 14px; margin-top: 30px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>🎉 歡迎加入 VaultCaddy！</h1>
+                        </div>
+                        <div class="content">
+                            <p>親愛的 ${displayName || '用戶'}，</p>
+                            
+                            <p>感謝您註冊 VaultCaddy！我們很高興您選擇使用我們的 AI 文檔處理服務。</p>
+                            
+                            <p>請使用以下驗證碼完成註冊：</p>
+                            
+                            <div class="code-box">
+                                <div class="code">${verificationCode}</div>
+                                <p style="color: #6b7280; margin-top: 10px;">驗證碼將在 10 分鐘後過期</p>
+                            </div>
+                            
+                            <h3>🚀 VaultCaddy 能為您做什麼？</h3>
+                            <ul>
+                                <li><strong>AI 自動提取：</strong>從發票和收據自動提取數據</li>
+                                <li><strong>QuickBooks 整合：</strong>一鍵導出到會計軟件</li>
+                                <li><strong>多語言支持：</strong>支持繁體中文、英文等 8 種語言</li>
+                                <li><strong>雲端安全存儲：</strong>所有數據加密保護</li>
+                                <li><strong>免費試用：</strong>10 個免費 Credits（可處理 10 頁文檔）</li>
+                            </ul>
+                            
+                            <p style="text-align: center;">
+                                <a href="https://vaultcaddy.com/verify-email.html" class="button">立即驗證</a>
+                            </p>
+                            
+                            <p><strong>需要幫助？</strong></p>
+                            <p>如果您有任何問題，請隨時聯繫我們的支援團隊。</p>
+                        </div>
+                        <div class="footer">
+                            <p>此郵件由 VaultCaddy 自動發送，請勿直接回覆。</p>
+                            <p>© 2025 VaultCaddy. All rights reserved.</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `
+        };
+        
+        await transporter.sendMail(mailOptions);
+        
+        console.log(`✅ 驗證碼已發送到 ${email}`);
+        return { success: true, message: '驗證碼已發送到您的郵箱' };
+        
+    } catch (error) {
+        console.error('❌ 發送驗證碼失敗:', error);
+        throw new functions.https.HttpsError('internal', '發送驗證碼失敗，請稍後重試');
+    }
+});
+
+/**
+ * 驗證用戶輸入的驗證碼
+ */
+exports.verifyCode = functions.https.onCall(async (data, context) => {
+    const { email, code } = data;
+    
+    if (!email || !code) {
+        throw new functions.https.HttpsError('invalid-argument', 'Email and code are required');
+    }
+    
+    try {
+        const docRef = db.collection('verificationCodes').doc(email);
+        const doc = await docRef.get();
+        
+        if (!doc.exists) {
+            throw new functions.https.HttpsError('not-found', '驗證碼不存在或已過期');
+        }
+        
+        const data = doc.data();
+        
+        // 檢查是否已驗證
+        if (data.verified) {
+            throw new functions.https.HttpsError('already-exists', '此驗證碼已被使用');
+        }
+        
+        // 檢查是否過期
+        if (data.expiresAt.toDate() < new Date()) {
+            await docRef.delete();
+            throw new functions.https.HttpsError('deadline-exceeded', '驗證碼已過期，請重新獲取');
+        }
+        
+        // 檢查嘗試次數
+        if (data.attempts >= 5) {
+            await docRef.delete();
+            throw new functions.https.HttpsError('resource-exhausted', '驗證失敗次數過多，請重新獲取驗證碼');
+        }
+        
+        // 驗證碼是否正確
+        if (data.code !== code) {
+            await docRef.update({
+                attempts: admin.firestore.FieldValue.increment(1)
+            });
+            throw new functions.https.HttpsError('invalid-argument', '驗證碼錯誤，請重試');
+        }
+        
+        // 驗證成功
+        await docRef.update({
+            verified: true,
+            verifiedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        
+        console.log(`✅ Email 驗證成功: ${email}`);
+        return { success: true, message: '驗證成功！' };
+        
+    } catch (error) {
+        console.error('❌ 驗證失敗:', error);
+        throw error;
+    }
+});
+
+/**
+ * 檢查 email 是否已驗證
+ */
+exports.checkEmailVerified = functions.https.onCall(async (data, context) => {
+    const { email } = data;
+    
+    if (!email) {
+        throw new functions.https.HttpsError('invalid-argument', 'Email is required');
+    }
+    
+    try {
+        const doc = await db.collection('verificationCodes').doc(email).get();
+        
+        if (!doc.exists) {
+            return { verified: false };
+        }
+        
+        const data = doc.data();
+        return { 
+            verified: data.verified || false,
+            verifiedAt: data.verifiedAt?.toDate()?.toISOString()
+        };
+        
+    } catch (error) {
+        console.error('❌ 檢查驗證狀態失敗:', error);
+        throw new functions.https.HttpsError('internal', '檢查驗證狀態失敗');
+    }
+});
+
+console.log('✅ Firebase Cloud Functions 已載入（包含 Email 驗證功能）');
 
