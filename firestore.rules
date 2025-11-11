@@ -1,0 +1,40 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 用戶文檔規則
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null && request.auth.uid == userId;
+      
+      // Credits 歷史記錄
+      match /creditsHistory/{historyId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow write: if request.auth != null && request.auth.uid == userId;
+      }
+      
+      // 用戶項目
+      match /projects/{projectId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow write: if request.auth != null && request.auth.uid == userId;
+        
+        // 項目文檔
+        match /documents/{documentId} {
+          allow read: if request.auth != null && request.auth.uid == userId;
+          allow write: if request.auth != null && request.auth.uid == userId;
+        }
+      }
+    }
+    
+    // 項目文檔規則（備用路徑）
+    match /projects/{projectId}/documents/{documentId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+    
+    // 驗證碼規則
+    match /verificationCodes/{email} {
+      allow read: if request.auth != null;
+      allow write: if true; // 允許註冊時寫入
+    }
+  }
+}

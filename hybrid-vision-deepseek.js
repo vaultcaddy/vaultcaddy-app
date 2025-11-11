@@ -246,40 +246,60 @@ class HybridVisionDeepSeekProcessor {
 5. 提取所有表格中的商品項目（每一行都是一個 item）`;
             
             case 'receipt':
-                return baseInstruction + `你正在分析一張香港收據。這是會計軟件的核心數據。
+                return baseInstruction + `你正在分析一張收據。這是財務管理的核心數據。
+
+**用戶需求角度 - 收據分類目的：**
+收據用於記錄日常開支、報銷和個人財務管理。用戶需要：
+1. 知道在哪裡買了什麼（商家、日期、項目）
+2. 花了多少錢（價格、總額）
+3. 方便分類和報稅（日期、分類、稅額）
 
 **CRITICAL - 必須提取的欄位：**
-1. **收據號碼（receipt_number）**: 單號、收據號、No.
-2. **商家名稱（merchant）**: 店名、公司名稱（頂部最顯眼）
-3. **總額（total）**: 最終金額（最下方）
-4. **付款方式（payment_method）**: CASH、CARD、現金、信用卡等
+1. **商家名稱（merchant）**: 店名、公司名稱（頂部最顯眼，用於分類）
+2. **日期（date）**: 交易日期（用於對帳和報稅）
+3. **項目（items）**: 購買的每一項商品/服務（明細）
+4. **價格（prices）**: 每項的單價和總價
+5. **總額（total）**: 最終支付金額（最重要）
 
 返回這個 JSON 結構：
 
 {
   "confidence": 0-100,
-  "receipt_number": "必須 - 收據號碼",
-  "date": "YYYY-MM-DD",
-  "time": "HH:MM:SS",
+  "document_type": "receipt",
+  "receipt_number": "收據號碼（如果有）",
+  "date": "必須 - YYYY-MM-DD",
+  "time": "HH:MM:SS（如果有）",
   "merchant": "必須 - 商家名稱",
-  "merchant_address": "字符串",
-  "merchant_phone": "字符串",
-  "customer": "客戶名稱（如果有）",
+  "merchant_address": "商家地址",
+  "merchant_phone": "商家電話",
+  "merchant_tax_id": "商家稅號（如果有）",
   "items": [
     {
-      "description": "完整商品描述",
+      "description": "必須 - 商品/服務描述",
       "quantity": 數字,
       "unit_price": 數字,
-      "amount": 數字
+      "amount": 數字,
+      "category": "自動分類（食品/交通/辦公/其他）"
     }
   ],
   "subtotal": 數字,
   "discount": 數字,
+  "service_charge": 數字,
   "tax": 數字,
+  "tax_rate": "稅率（如果有）",
   "total": 必須 - 總金額數字,
-  "payment_method": "必須 - CASH/CARD/其他",
-  "currency": "HKD"
-}`;
+  "payment_method": "付款方式（CASH/CARD/電子支付等）",
+  "card_last_4_digits": "卡號後4位（如果有）",
+  "currency": "HKD/CNY/USD等",
+  "notes": "其他重要信息"
+}
+
+**提取策略：**
+1. 商家名稱通常在頂部（最大或最顯眼的文字）
+2. 日期格式可能多樣（DD/MM/YYYY、YYYY-MM-DD等）
+3. 項目明細通常是表格形式（商品名 - 數量 - 單價 - 小計）
+4. 總額通常在底部（Total、合計、總計等關鍵字）
+5. 自動分類項目以便後續財務分析`;
             
             case 'bank-statement':
                 return baseInstruction + `你正在分析一張香港銀行對帳單。這是會計對帳的核心數據。
@@ -324,8 +344,82 @@ class HybridVisionDeepSeekProcessor {
 3. 計算總支出和總收入
 4. 確保所有金額為正確的數字格式`;
             
+            case 'general':
             default:
-                return baseInstruction + `提取所有可見數據。`;
+                return baseInstruction + `你正在分析一張通用文檔。用戶需要提取文本、表格和其他數據。
+
+**用戶需求角度 - 通用文檔處理目的：**
+通用文檔可能包含合同、報告、表單、證明文件等。用戶需要：
+1. 提取所有文本內容（方便搜索和存檔）
+2. 識別表格數據（結構化信息）
+3. 提取關鍵信息（日期、金額、名稱、編號）
+4. 保留文檔結構（標題、段落、列表）
+
+**CRITICAL - 必須提取的內容：**
+1. **文檔標題（title）**: 文檔頂部的主標題
+2. **文檔類型（document_type）**: 自動識別（合同/報告/表單/證明/其他）
+3. **關鍵日期（dates）**: 所有日期（簽署日期、有效期等）
+4. **關鍵人物/實體（entities）**: 人名、公司名、地址
+5. **金額（amounts）**: 所有金額和數字
+6. **全文內容（full_text）**: 完整的文本內容
+7. **表格數據（tables）**: 所有表格（如果有）
+
+返回這個 JSON 結構：
+
+{
+  "confidence": 0-100,
+  "document_type": "自動識別文檔類型",
+  "title": "文檔標題",
+  "document_number": "文檔編號（如果有）",
+  "dates": [
+    {
+      "label": "日期類型（簽署日期/有效期/到期日等）",
+      "value": "YYYY-MM-DD"
+    }
+  ],
+  "entities": {
+    "people": ["人名列表"],
+    "organizations": ["公司/機構名稱列表"],
+    "addresses": ["地址列表"],
+    "emails": ["電子郵件列表"],
+    "phones": ["電話號碼列表"]
+  },
+  "amounts": [
+    {
+      "label": "金額描述",
+      "value": 數字,
+      "currency": "貨幣"
+    }
+  ],
+  "tables": [
+    {
+      "title": "表格標題",
+      "headers": ["列標題1", "列標題2", "..."],
+      "rows": [
+        ["值1", "值2", "..."],
+        ["值1", "值2", "..."]
+      ]
+    }
+  ],
+  "full_text": "完整的文本內容（保留段落結構）",
+  "sections": [
+    {
+      "heading": "章節標題",
+      "content": "章節內容"
+    }
+  ],
+  "key_terms": ["重要術語或關鍵詞"],
+  "language": "文檔語言（中文/英文/其他）",
+  "summary": "文檔摘要（1-2句話）"
+}
+
+**提取策略：**
+1. 識別文檔結構（標題、章節、段落）
+2. 使用正則表達式識別日期（多種格式）
+3. 識別實體（人名通常有稱謂、公司名通常有「有限公司」等）
+4. 提取表格（識別行列結構）
+5. 識別金額（數字 + 貨幣符號或貨幣單位）
+6. 生成簡短摘要幫助用戶快速理解文檔內容`;
         }
     }
     
