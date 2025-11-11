@@ -285,21 +285,31 @@ function filterDocuments(e) {
         console.log('🔄 恢復所有文檔:', window.allDocuments.length);
     } else {
         window.filteredDocuments = window.allDocuments.filter(doc => {
+            // 從 processedData 中獲取數據
+            const data = doc.processedData || {};
+            
             // 搜索所有可能的字段
             const name = (doc.name || doc.fileName || '').toLowerCase();
-            const type = (doc.type || '').toLowerCase();
-            const vendor = (doc.vendor || doc.source || '').toLowerCase();
-            const amount = (doc.amount || doc.total || '').toString().toLowerCase();
-            const date = (doc.date || '').toString().toLowerCase();
+            const type = (doc.type || doc.documentType || '').toLowerCase();
+            const vendor = (data.vendor || data.source || data.supplier || data.merchantName || '').toLowerCase();
+            const amount = (data.amount || data.total || data.totalAmount || '').toString().toLowerCase();
+            const date = (data.date || data.invoiceDate || data.transactionDate || '').toString().toLowerCase();
             const status = (doc.status || '').toLowerCase();
             
             // 檢查是否有任何字段包含搜索詞
-            return name.includes(searchTerm) || 
+            const matches = name.includes(searchTerm) || 
                    type.includes(searchTerm) || 
                    vendor.includes(searchTerm) || 
                    amount.includes(searchTerm) || 
                    date.includes(searchTerm) || 
                    status.includes(searchTerm);
+            
+            // 調試日誌
+            if (searchTerm === 'hw' || searchTerm === '海') {
+                console.log(`🔍 文檔: ${name}, 供應商: ${vendor}, 匹配: ${matches}`);
+            }
+            
+            return matches;
         });
         console.log(`🔍 過濾結果: ${window.filteredDocuments.length} / ${window.allDocuments.length} 個文檔 (搜索: "${searchTerm}")`);
     }
