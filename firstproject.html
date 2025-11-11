@@ -2306,19 +2306,70 @@
         
         // 生成 CSV 格式
         function generateCSV(docs) {
-            const headers = ['日期', '供應商/來源', '類型', '金額', '幣別', '狀態', '備註'];
+            // 增強的 CSV 標題 - 包含所有重要字段
+            const headers = [
+                '文檔名稱',
+                '文檔類型',
+                '發票號碼',
+                '日期',
+                '供應商/來源',
+                '供應商地址',
+                '供應商電話',
+                '供應商電郵',
+                '客戶名稱',
+                '客戶地址',
+                '項目明細',
+                '小計',
+                '稅額',
+                '稅率',
+                '總金額',
+                '幣別',
+                '付款條款',
+                '付款方式',
+                '銀行賬號',
+                '備註',
+                '狀態',
+                '上傳日期'
+            ];
             const rows = [headers.join(',')];
             
             docs.forEach(doc => {
-                const data = doc.processedData;
+                const data = doc.processedData || {};
+                
+                // 提取項目明細
+                let itemsDetails = '';
+                if (data.items && Array.isArray(data.items)) {
+                    itemsDetails = data.items.map(item => {
+                        return `${item.description || item.name || ''} x${item.quantity || 1} @ $${item.unitPrice || item.price || 0}`;
+                    }).join('; ');
+                }
+                
+                // 格式化日期
+                const uploadDate = doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleDateString('zh-TW') : '';
+                
                 const row = [
-                    data.date || '',
-                    `"${(data.vendor || data.source || '').replace(/"/g, '""')}"`,
-                    data.type || doc.type || '',
-                    data.amount || data.total || '',
+                    `"${(doc.fileName || doc.name || '').replace(/"/g, '""')}"`,
+                    data.documentType || doc.type || '',
+                    data.invoiceNumber || data.receiptNumber || data.documentNumber || '',
+                    data.invoiceDate || data.transactionDate || data.date || '',
+                    `"${(data.vendor || data.supplier || data.merchantName || data.source || '').replace(/"/g, '""')}"`,
+                    `"${(data.vendorAddress || data.supplierAddress || '').replace(/"/g, '""')}"`,
+                    data.vendorPhone || data.supplierPhone || '',
+                    data.vendorEmail || data.supplierEmail || '',
+                    `"${(data.customerName || data.billTo || '').replace(/"/g, '""')}"`,
+                    `"${(data.customerAddress || data.billToAddress || '').replace(/"/g, '""')}"`,
+                    `"${itemsDetails.replace(/"/g, '""')}"`,
+                    data.subtotal || data.subTotal || '',
+                    data.tax || data.taxAmount || '',
+                    data.taxRate || '',
+                    data.totalAmount || data.total || data.amount || '',
                     data.currency || 'HKD',
+                    `"${(data.paymentTerms || '').replace(/"/g, '""')}"`,
+                    data.paymentMethod || '',
+                    data.bankAccount || data.accountNumber || '',
+                    `"${(data.notes || data.memo || '').replace(/"/g, '""')}"`,
                     doc.status || '',
-                    `"${(data.notes || '').replace(/"/g, '""')}"`
+                    uploadDate
                 ];
                 rows.push(row.join(','));
             });
@@ -2328,23 +2379,61 @@
         
         // 生成 IIF 格式（QuickBooks Desktop）
         function generateIIF(docs) {
-            let iif = '!TRNS\tTRNSID\tTRNSTYPE\tDATE\tACCNT\tNAME\tAMOUNT\tMEMO\n';
-            iif += '!SPL\tSPLID\tTRNSTYPE\tDATE\tACCNT\tAMOUNT\tMEMO\n';
+            // IIF 格式標題 - 包含發票和項目信息
+            let iif = '!TRNS\tTRNSID\tTRNSTYPE\tDATE\tACCNT\tNAME\tAMOUNT\tDOCNUM\tMEMO\n';
+            iif += '!SPL\tSPLID\tTRNSTYPE\tDATE\tACCNT\tAMOUNT\tDOCNUM\tMEMO\tTAXABLE\n';
             iif += '!ENDTRNS\n';
             
             docs.forEach((doc, index) => {
-                const data = doc.processedData;
+                const data = doc.processedData || {};
                 const trnsId = `TRNS-${index + 1}`;
-                const date = data.date ? new Date(data.date).toLocaleDateString('en-US') : new Date().toLocaleDateString('en-US');
-                const vendor = data.vendor || data.source || 'Unknown';
-                const amount = data.amount || data.total || '0.00';
-                const memo = data.notes || doc.fileName || '';
-                const type = data.type || doc.type || 'GENERAL JOURNAL';
                 
-                // Transaction header
-                iif += `TRNS\t${trnsId}\t${type}\t${date}\tAccounts Payable\t${vendor}\t${amount}\t${memo}\n`;
-                // Split line
-                iif += `SPL\t${trnsId}\t${type}\t${date}\tExpenses\t-${amount}\t${memo}\n`;
+                // 格式化日期為 MM/DD/YYYY
+                let date = new Date().toLocaleDateString('en-US');
+                if (data.invoiceDate || data.transactionDate || data.date) {
+                    const dateStr = data.invoiceDate || data.transactionDate || data.date;
+                    date = new Date(dateStr).toLocaleDateString('en-US');
+                }
+                
+                const vendor = data.vendor || data.supplier || data.merchantName || data.source || 'Unknown Vendor';
+                const totalAmount = data.totalAmount || data.total || data.amount || '0.00';
+                const subtotal = data.subtotal || data.subTotal || totalAmount;
+                const taxAmount = data.tax || data.taxAmount || '0.00';
+                const invoiceNumber = data.invoiceNumber || data.receiptNumber || data.documentNumber || `INV-${index + 1}`;
+                
+                // 構建備註
+                let memo = data.notes || data.memo || doc.fileName || '';
+                if (data.items && Array.isArray(data.items) && data.items.length > 0) {
+                    const itemsSummary = data.items.map(item => item.description || item.name).join(', ');
+                    memo = itemsSummary.substring(0, 100); // 限制長度
+                }
+                
+                const transactionType = data.documentType === 'invoice' ? 'BILL' : 'GENERAL JOURNAL';
+                
+                // Transaction header - 應付賬款
+                iif += `TRNS\t${trnsId}\t${transactionType}\t${date}\tAccounts Payable\t${vendor}\t${totalAmount}\t${invoiceNumber}\t${memo}\n`;
+                
+                // Split lines - 費用明細
+                if (data.items && Array.isArray(data.items) && data.items.length > 0) {
+                    // 如果有項目明細，為每個項目創建一行
+                    data.items.forEach((item, itemIndex) => {
+                        const itemAmount = item.total || (item.quantity * item.unitPrice) || item.price || '0.00';
+                        const itemMemo = item.description || item.name || `Item ${itemIndex + 1}`;
+                        iif += `SPL\t${trnsId}-${itemIndex}\t${transactionType}\t${date}\tExpenses\t-${itemAmount}\t${invoiceNumber}\t${itemMemo}\tN\n`;
+                    });
+                    
+                    // 如果有稅額，添加稅額行
+                    if (parseFloat(taxAmount) > 0) {
+                        iif += `SPL\t${trnsId}-TAX\t${transactionType}\t${date}\tTax Expense\t-${taxAmount}\t${invoiceNumber}\tTax\tY\n`;
+                    }
+                } else {
+                    // 沒有項目明細，使用總金額
+                    iif += `SPL\t${trnsId}\t${transactionType}\t${date}\tExpenses\t-${subtotal}\t${invoiceNumber}\t${memo}\tN\n`;
+                    if (parseFloat(taxAmount) > 0) {
+                        iif += `SPL\t${trnsId}-TAX\t${transactionType}\t${date}\tTax Expense\t-${taxAmount}\t${invoiceNumber}\tTax\tY\n`;
+                    }
+                }
+                
                 iif += 'ENDTRNS\n';
             });
             
@@ -2395,20 +2484,51 @@
             qbo += `<DTEND>${dtserver}</DTEND>\n`;
             
             docs.forEach((doc, index) => {
-                const data = doc.processedData;
+                const data = doc.processedData || {};
                 const fitid = `${now.getTime()}${index}`;
-                const dtposted = data.date ? new Date(data.date).toISOString().replace(/[-:]/g, '').split('.')[0] : dtserver;
-                const trnamt = data.amount || data.total || '0.00';
-                const name = data.vendor || data.source || 'Unknown';
-                const memo = data.notes || doc.fileName || '';
+                
+                // 格式化日期為 YYYYMMDDHHMMSS
+                let dtposted = dtserver;
+                if (data.invoiceDate || data.transactionDate || data.date) {
+                    const dateStr = data.invoiceDate || data.transactionDate || data.date;
+                    dtposted = new Date(dateStr).toISOString().replace(/[-:]/g, '').split('.')[0];
+                }
+                
+                const trnamt = -(parseFloat(data.totalAmount || data.total || data.amount || '0.00')); // 負數表示支出
+                const name = data.vendor || data.supplier || data.merchantName || data.source || 'Unknown Vendor';
+                const invoiceNumber = data.invoiceNumber || data.receiptNumber || data.documentNumber || '';
+                
+                // 構建備註 - 包含發票號碼和項目信息
+                let memo = '';
+                if (invoiceNumber) {
+                    memo += `Invoice: ${invoiceNumber}`;
+                }
+                if (data.items && Array.isArray(data.items) && data.items.length > 0) {
+                    const itemsSummary = data.items.map(item => item.description || item.name).join(', ');
+                    memo += (memo ? ' | ' : '') + itemsSummary.substring(0, 100);
+                }
+                if (!memo) {
+                    memo = data.notes || data.memo || doc.fileName || '';
+                }
+                
+                // 確定交易類型
+                let trntype = 'OTHER';
+                if (data.documentType === 'invoice') {
+                    trntype = 'DEBIT'; // 發票通常是支出
+                } else if (data.documentType === 'receipt') {
+                    trntype = 'POS'; // 收據可能是 POS 交易
+                }
                 
                 qbo += '<STMTTRN>\n';
-                qbo += '<TRNTYPE>OTHER</TRNTYPE>\n';
+                qbo += `<TRNTYPE>${trntype}</TRNTYPE>\n`;
                 qbo += `<DTPOSTED>${dtposted}</DTPOSTED>\n`;
-                qbo += `<TRNAMT>${trnamt}</TRNAMT>\n`;
+                qbo += `<TRNAMT>${trnamt.toFixed(2)}</TRNAMT>\n`;
                 qbo += `<FITID>${fitid}</FITID>\n`;
                 qbo += `<NAME>${name}</NAME>\n`;
                 qbo += `<MEMO>${memo}</MEMO>\n`;
+                if (invoiceNumber) {
+                    qbo += `<CHECKNUM>${invoiceNumber}</CHECKNUM>\n`;
+                }
                 qbo += '</STMTTRN>\n';
             });
             
