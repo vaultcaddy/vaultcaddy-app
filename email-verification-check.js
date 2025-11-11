@@ -45,19 +45,19 @@ window.emailVerificationChecker = {
         const user = firebase.auth().currentUser;
         if (!user) return;
         
-        // 創建提示橫幅
+        // 創建提示橫幅（放在頂部欄下方）
         const notice = document.createElement('div');
         notice.id = 'email-verification-notice';
         notice.style.cssText = `
             position: fixed;
-            top: 0;
+            top: 60px;
             left: 0;
             right: 0;
             background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
             color: white;
             padding: 1rem;
             text-align: center;
-            z-index: 10000;
+            z-index: 999;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             animation: slideDown 0.3s ease-out;
         `;
@@ -101,8 +101,13 @@ window.emailVerificationChecker = {
         // 插入到頁面頂部
         document.body.insertBefore(notice, document.body.firstChild);
         
-        // 調整頁面內容位置（避免被橫幅遮擋）
-        document.body.style.paddingTop = '80px';
+        // 調整頁面內容位置（避免被橫幅遮擋，考慮頂部欄高度）
+        const mainContent = document.querySelector('main') || document.querySelector('.container') || document.body;
+        if (mainContent && mainContent !== document.body) {
+            mainContent.style.marginTop = '60px';
+        } else {
+            document.body.style.paddingTop = '120px'; // 60px (navbar) + 60px (notice)
+        }
     },
     
     /**
