@@ -18,6 +18,27 @@ fi
 echo "✅ Firebase CLI 已安裝"
 echo ""
 
+# 確認已登入
+echo "🔍 檢查 Firebase 登入狀態..."
+firebase projects:list > /dev/null 2>&1
+if [ $? -ne 0 ]; then
+    echo "❌ 未登入 Firebase"
+    echo "請先執行: firebase login"
+    exit 1
+fi
+echo "✅ 已登入 Firebase"
+echo ""
+
+# 選擇項目
+echo "📋 選擇 Firebase 項目..."
+firebase use vaultcaddy-production-cbbe2
+if [ $? -ne 0 ]; then
+    echo "❌ 無法選擇項目"
+    exit 1
+fi
+echo "✅ 項目已選擇"
+echo ""
+
 # 步驟 1：部署 Firestore 規則
 echo "📋 步驟 1/3：部署 Firestore 規則"
 echo "--------------------------------"
@@ -33,12 +54,18 @@ echo ""
 # 步驟 2：設置 Email 配置
 echo "📧 步驟 2/3：設置 Email 配置"
 echo "--------------------------------"
-echo "Gmail 地址: osclin2002@gmail.com"
-echo "應用專用密碼: vjslpwfvqaowyy za"
+echo "⚠️  請確保您已經為 vaultcaddy@gmail.com 創建了應用專用密碼"
+echo ""
+read -p "請輸入 vaultcaddy@gmail.com 的應用專用密碼（去掉空格）: " APP_PASSWORD
 echo ""
 
+if [ -z "$APP_PASSWORD" ]; then
+    echo "❌ 密碼不能為空"
+    exit 1
+fi
+
 # 設置 email.user
-firebase functions:config:set email.user="osclin2002@gmail.com"
+firebase functions:config:set email.user="vaultcaddy@gmail.com"
 if [ $? -eq 0 ]; then
     echo "✅ email.user 設置成功"
 else
@@ -46,8 +73,8 @@ else
     exit 1
 fi
 
-# 設置 email.password（去掉空格）
-firebase functions:config:set email.password="vjslpwfvqaowyy za"
+# 設置 email.password
+firebase functions:config:set email.password="$APP_PASSWORD"
 if [ $? -eq 0 ]; then
     echo "✅ email.password 設置成功"
 else
