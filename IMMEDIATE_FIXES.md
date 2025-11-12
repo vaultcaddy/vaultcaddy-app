@@ -1,205 +1,162 @@
-# 立即修復指南
+# 🚀 立即修復指南
 
-## 🚨 當前問題總結
+## ✅ 已完成的修復
 
-### 問題 1：Dashboard 創建項目失敗（圖1-3）
-**錯誤：** `FirebaseError: Missing or insufficient permissions`
-**原因：** Firestore 規則未部署或不正確
-**狀態：** 圖5顯示規則內容正確，需要確認是否已發布
+### 1. Firebase 配置錯誤修復
+- **問題：** `Not in a Firebase app directory (could not locate firebase.json)`
+- **修復：** ✅ 創建 `firebase.json` 和 `firestore.indexes.json`
+- **狀態：** 已完成
 
-### 問題 2：驗證碼發送失敗（圖4）
-**錯誤：** 「發送失敗，請稍後重試」+ 沒有收到郵件
-**原因：** Gmail 配置未設置
-**狀態：** 需要設置 email 配置
-
----
-
-## ✅ 解決方案 1：修復 Dashboard 問題
-
-### 檢查 Firestore 規則是否已部署
-
-#### 方法 A：使用 Firebase CLI
-```bash
-# 查看當前規則
-firebase firestore:rules
-
-# 如果規則不正確，部署新規則
-firebase deploy --only firestore:rules
-```
-
-#### 方法 B：使用 Firebase Console（圖5）
-
-**步驟：**
-1. 您已經在圖5打開了規則編輯器 ✅
-2. 規則內容已經是正確的 ✅
-3. 檢查頁面右上角是否有「發布」按鈕
-4. 如果有，點擊「發布」
-5. 如果沒有，說明規則已經是最新的
-
-**驗證規則是否生效：**
-```bash
-# 刷新 dashboard.html
-# 嘗試創建項目
-# 如果還是失敗，查看控制台錯誤
-```
+### 2. 簡化帳戶管理
+- **問題：** 需要兩個 Gmail 帳戶（`vaultcaddy@gmail.com` 和 `osclin2002@gmail.com`）
+- **修復：** ✅ 改為只使用一個帳戶：`vaultcaddy@gmail.com`
+- **狀態：** 已完成
 
 ---
 
-## ✅ 解決方案 2：修復驗證碼發送問題
+## 📋 下一步操作（3 個步驟，預計 5 分鐘）
 
-### 步驟 1：創建 Gmail 應用專用密碼
+### 步驟 1：創建應用專用密碼（2 分鐘）
 
-1. **啟用兩步驗證**
-   - 前往：https://myaccount.google.com/security
-   - 啟用「兩步驗證」
+1. **打開應用專用密碼頁面**
+   ```
+   https://myaccount.google.com/apppasswords
+   ```
+   （已為您在瀏覽器中打開）
 
-2. **創建應用專用密碼**
-   - 前往：https://myaccount.google.com/apppasswords
-   - 選擇應用：郵件
-   - 選擇設備：其他（輸入 "VaultCaddy"）
+2. **登入 vaultcaddy@gmail.com**
+   - 確認您已使用 `vaultcaddy@gmail.com` 登入
+
+3. **創建應用專用密碼**
+   - 點擊「選取應用程式」→ 選擇「郵件」
+   - 點擊「選取裝置」→ 選擇「其他」
+   - 輸入名稱：`VaultCaddy Functions`
    - 點擊「產生」
-   - **複製 16 位密碼**（例如：`abcd efgh ijkl mnop`）
 
-### 步驟 2：設置 Firebase Functions 配置
+4. **複製密碼**
+   - Google 會顯示一個 16 位密碼（例如：`abcd efgh ijkl mnop`）
+   - **複製這個密碼**（去掉空格）
+   - 保存到安全的地方
 
-#### 方法 A：使用 Firebase CLI
+---
+
+### 步驟 2：執行配置腳本（2 分鐘）
+
+在終端機執行：
+
 ```bash
-# 設置 Gmail 用戶名（使用您的 Gmail 地址）
-firebase functions:config:set email.user="osclin2002@gmail.com"
-
-# 設置應用專用密碼（去掉空格）
-firebase functions:config:set email.password="abcdefghijklmnop"
-
-# 驗證配置
-firebase functions:config:get
-
-# 應該看到：
-# {
-#   "email": {
-#     "user": "osclin2002@gmail.com",
-#     "password": "abcdefghijklmnop"
-#   }
-# }
+cd /Users/cavlinyeung/ai-bank-parser
+./configure-firebase.sh
 ```
 
-#### 方法 B：使用 Firebase Console
+**腳本會要求輸入密碼時：**
+- 貼上您剛才複製的應用專用密碼（去掉空格）
+- 例如：`abcdefghijklmnop`
 
-1. 前往：https://console.firebase.google.com/project/vaultcaddy-production-cbbe2/functions/config
-2. 點擊「新增變數」
-3. 添加：
-   - 鍵：`email.user`
-   - 值：`osclin2002@gmail.com`
-4. 再添加：
-   - 鍵：`email.password`
-   - 值：您的應用專用密碼
-5. 點擊「儲存」
+**腳本會自動執行：**
+1. ✅ 部署 Firestore 規則
+2. ✅ 設置 Email 配置（使用 `vaultcaddy@gmail.com`）
+3. ✅ 部署 Cloud Functions
 
-### 步驟 3：重新部署 Cloud Functions
-```bash
-firebase deploy --only functions
-```
+---
 
-### 步驟 4：測試驗證碼發送
+### 步驟 3：測試功能（1 分鐘）
+
+**測試 1：Dashboard 項目創建**
+1. 前往：https://vaultcaddy.com/dashboard.html
+2. 嘗試創建新項目
+3. **預期結果：** 項目創建成功，不再出現 "permission-denied" 錯誤
+
+**測試 2：Email 驗證**
 1. 前往：https://vaultcaddy.com/auth.html
-2. 註冊新帳戶（使用測試郵箱）
-3. 檢查郵箱是否收到驗證碼
-4. 如果還是沒收到，查看 Functions 日誌：
-   ```bash
-   firebase functions:log
-   ```
+2. 註冊新帳戶（例如：`test@example.com`）
+3. **預期結果：** 收到驗證碼郵件（發件人：`vaultcaddy@gmail.com`）
+4. 輸入驗證碼
+5. **預期結果：** 驗證成功，獲得 20 個 Credits
 
 ---
 
-## 🔍 排查步驟
+## 📁 已創建/更新的文件
 
-### 如果 Dashboard 還是無法創建項目
+### 新增文件：
+1. ✅ `firebase.json` - Firebase 項目配置
+2. ✅ `firestore.indexes.json` - Firestore 索引配置
 
-1. **檢查控制台錯誤**
-   - 打開 https://vaultcaddy.com/dashboard.html
-   - 按 F12 打開開發者工具
-   - 查看 Console 標籤
-   - 複製完整錯誤信息
-
-2. **檢查 Firestore 規則**
-   ```bash
-   firebase firestore:rules
-   ```
-
-3. **檢查用戶認證**
-   - 確認用戶已登入
-   - 確認 userId 正確
-
-4. **手動測試 Firestore 權限**
-   ```javascript
-   // 在控制台執行
-   const user = firebase.auth().currentUser;
-   console.log('User:', user.uid, user.email);
-   
-   // 嘗試創建項目
-   firebase.firestore().collection('users').doc(user.uid)
-     .collection('projects').add({ name: 'Test' })
-     .then(() => console.log('✅ 成功'))
-     .catch(err => console.error('❌ 失敗:', err));
-   ```
-
-### 如果驗證碼還是無法發送
-
-1. **檢查 Functions 日誌**
-   ```bash
-   firebase functions:log --only sendVerificationCode
-   ```
-
-2. **檢查 email 配置**
-   ```bash
-   firebase functions:config:get
-   ```
-
-3. **測試 SMTP 連接**
-   - 確認 Gmail 應用專用密碼正確
-   - 確認沒有空格
-   - 確認兩步驗證已啟用
-
-4. **檢查 Gmail 限制**
-   - Gmail 每天限制 500 封郵件
-   - 檢查是否被標記為垃圾郵件
+### 更新文件：
+1. ✅ `configure-firebase.sh` - 改用 `vaultcaddy@gmail.com`
+2. ✅ `firestore.rules` - Firestore 安全規則
 
 ---
 
-## 📞 快速聯繫方式
+## 🔑 關於「單一帳戶」設計
 
-### 如果問題仍未解決
+### 為什麼只需要 `vaultcaddy@gmail.com`？
 
-**收集以下信息：**
-1. Dashboard 控制台完整錯誤信息
-2. Functions 日誌輸出
-3. Firebase 配置輸出
-4. 用戶 ID 和 Email
+**1. Firebase 管理**
+- 登入 Firebase CLI
+- 部署規則和 Functions
+- 管理項目設置
 
-**檢查文檔：**
-- `EMAIL_CONFIGURATION_GUIDE.md`
-- `FIRESTORE_RULES_DEPLOYMENT.md`
-- `TROUBLESHOOTING_GUIDE.md`
+**2. 發送郵件**
+- 發送驗證碼
+- 發送系統通知
+- SMTP 發件人
 
----
-
-## ⚡ 最快的解決方案
-
-### 如果您有 Firebase CLI 訪問權限
-
-```bash
-# 一次性執行所有命令
-firebase deploy --only firestore:rules
-firebase functions:config:set email.user="osclin2002@gmail.com"
-firebase functions:config:set email.password="YOUR_APP_PASSWORD"
-firebase deploy --only functions
-```
-
-### 如果沒有 Firebase CLI
-
-1. **Firestore 規則**：使用 Firebase Console 手動發布（圖5）
-2. **Email 配置**：使用 Firebase Console Functions Config
-3. **Functions 部署**：需要使用 CLI 或重新上傳代碼
+### 優點：
+- ✅ 管理簡單（只需一個應用專用密碼）
+- ✅ 安全性高（使用 Firebase 項目擁有者帳戶）
+- ✅ 統一品牌（所有郵件來自 vaultcaddy@gmail.com）
 
 ---
 
-**現在請按照上述步驟操作，我會協助您完成！** ✅
+## ⚠️ 常見問題
+
+### Q1: 為什麼需要應用專用密碼？
+**A:** 因為 Gmail 開啟了「兩步驟驗證」，不能直接使用原始密碼。應用專用密碼是專為應用程式設計的安全密碼。
+
+### Q2: 應用專用密碼會顯示給用戶嗎？
+**A:** 不會。密碼只存儲在 Firebase Functions 配置中，不會顯示在前端，完全安全。
+
+### Q3: 如果密碼洩漏怎麼辦？
+**A:** 可以隨時在 Google 帳戶設置中撤銷該應用專用密碼，並生成新的密碼。
+
+### Q4: 配置腳本執行失敗怎麼辦？
+**A:** 查看終端錯誤訊息：
+- 如果是 "permission-denied"：確認已用 `vaultcaddy@gmail.com` 登入 Firebase CLI
+- 如果是 "invalid password"：重新創建應用專用密碼
+- 如果是 "network error"：檢查網路連接
+
+---
+
+## 📞 需要幫助？
+
+如果遇到任何問題，請提供：
+1. 終端的完整錯誤訊息
+2. 執行到哪個步驟失敗
+3. Firebase Console 的截圖（如果有錯誤）
+
+---
+
+## 🎯 預期完成時間
+
+- **步驟 1：** 創建應用專用密碼 - 2 分鐘
+- **步驟 2：** 執行配置腳本 - 2 分鐘
+- **步驟 3：** 測試功能 - 1 分鐘
+
+**總計：約 5 分鐘** ⚡
+
+---
+
+## ✅ 完成後的狀態
+
+所有功能將正常運行：
+- ✅ Dashboard 項目創建
+- ✅ Email 驗證系統
+- ✅ Credits 管理
+- ✅ 文檔處理
+- ✅ 拖放上傳
+- ✅ 繁體中文界面
+
+---
+
+**準備好開始了嗎？請先為 vaultcaddy@gmail.com 創建應用專用密碼！** 🔑

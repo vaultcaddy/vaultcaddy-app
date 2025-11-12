@@ -11,28 +11,45 @@
 
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
-const stripe = require('stripe')(functions.config().stripe.secret_key);
+// Stripe 配置為可選（如果未設置則跳過 webhook 功能）
+const stripeConfig = functions.config().stripe;
+const stripe = stripeConfig ? require('stripe')(stripeConfig.secret_key) : null;
 const nodemailer = require('nodemailer');
 
 admin.initializeApp();
 const db = admin.firestore();
 
-// 配置 Email 發送器（使用 Gmail）
-const transporter = nodemailer.createTransporter({
-    service: 'gmail',
-    auth: {
-        user: functions.config().email.user,
-        pass: functions.config().email.password
+// 配置 Email 發送器（使用 Gmail）- 延遲初始化
+let transporter = null;
+function getTransporter() {
+    if (!transporter) {
+        const emailConfig = functions.config().email;
+        if (emailConfig && emailConfig.user && emailConfig.password) {
+            transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: emailConfig.user,
+                    pass: emailConfig.password
+                }
+            });
+        }
     }
-});
+    return transporter;
+}
 
 // ============================================
 // 1. 處理 Stripe Webhook（付款成功後自動添加 Credits）
 // ============================================
 
 exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
+    // 檢查 Stripe 是否已配置
+    if (!stripe || !stripeConfig) {
+        console.error('❌ Stripe 未配置');
+        return res.status(503).send('Stripe not configured');
+    }
+    
     const sig = req.headers['stripe-signature'];
-    const endpointSecret = functions.config().stripe.webhook_secret;
+    const endpointSecret = stripeConfig.webhook_secret;
     
     let event;
     
@@ -521,7 +538,12 @@ exports.sendVerificationCode = functions.https.onCall(async (data, context) => {
             `
         };
         
-        await transporter.sendMail(mailOptions);
+        const emailTransporter = getTransporter();
+        if (!emailTransporter) {
+            throw new functions.https.HttpsError('unavailable', 'Email service not configured');
+        }
+        
+        await emailTransporter.sendMail(mailOptions);
         
         console.log(`✅ 驗證碼已發送到 ${email}`);
         return { success: true, message: '驗證碼已發送到您的郵箱' };
