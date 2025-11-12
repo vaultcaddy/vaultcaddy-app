@@ -68,11 +68,17 @@
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
     
+    <!-- Firebase Functions SDK -->
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-functions-compat.js"></script>
+    
     <!-- Firebase 配置和數據管理器 - defer 確保按順序執行 -->
     <script defer src="firebase-config.js?v=20251105-force-init"></script>
     <!-- 🔥 新的簡化系統 - defer 確保 Firebase 初始化後才執行 -->
     <script defer src="simple-auth.js?v=20251105-force-init"></script>
     <script defer src="simple-data-manager.js?v=20251105-force-init"></script>
+    
+    <!-- Email 驗證檢查 -->
+    <script defer src="email-verification-check.js"></script>
     
     <!-- 導航欄交互功能 -->
     <script defer src="navbar-interactions.js?v=20251108"></script>
@@ -767,6 +773,31 @@
                 console.error('❌ SimpleDataManager 初始化超時');
             }
         }, 15000);
+        
+        // ==================== Email 驗證檢查 ====================
+        (async function initEmailVerification() {
+            try {
+                // 等待 Firebase 和驗證檢查器初始化
+                await new Promise((resolve) => {
+                    const checkReady = setInterval(() => {
+                        if (window.emailVerificationChecker && firebase.auth) {
+                            clearInterval(checkReady);
+                            resolve();
+                        }
+                    }, 100);
+                    
+                    setTimeout(() => {
+                        clearInterval(checkReady);
+                        resolve();
+                    }, 10000);
+                });
+                
+                // 檢查驗證狀態並顯示提示（不阻擋功能）
+                await checkEmailVerification({ showNotice: true, blockPage: false });
+            } catch (error) {
+                console.error('❌ Email 驗證檢查失敗:', error);
+            }
+        })();
     </script>
 </body>
 </html>

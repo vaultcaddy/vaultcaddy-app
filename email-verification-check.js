@@ -64,9 +64,8 @@ window.emailVerificationChecker = {
         
         notice.innerHTML = `
             <div style="max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap;">
-                <span style="font-size: 1.5rem;">⚠️</span>
-                <span style="font-weight: 600;">您的電子郵件尚未驗證</span>
-                <span style="opacity: 0.9;">請先驗證您的 email 才能使用完整功能</span>
+                <span style="font-size: 1.5rem;">🎁</span>
+                <span style="font-weight: 600;">立即驗證您的 email 即送 20 Credits 試用！</span>
                 <button onclick="emailVerificationChecker.goToVerification()" style="
                     background: white;
                     color: #ef4444;
@@ -132,13 +131,13 @@ window.emailVerificationChecker = {
      * 主檢查函數（在頁面載入時調用）
      * @param {Object} options 配置選項
      * @param {boolean} options.showNotice 是否顯示提示橫幅（默認 true）
-     * @param {boolean} options.blockPage 是否阻止頁面使用（默認 false）
+     * @param {boolean} options.blockPage 是否阻止頁面使用（默認 false，已廢棄）
      * @returns {Promise<boolean>} 是否已驗證
      */
     async init(options = {}) {
         const {
             showNotice = true,
-            blockPage = false
+            blockPage = false  // 已廢棄，不再阻擋功能
         } = options;
         
         try {
@@ -160,16 +159,13 @@ window.emailVerificationChecker = {
             const isVerified = await this.checkVerification();
             
             if (!isVerified) {
-                console.log('⚠️ Email 未驗證');
+                console.log('🎁 Email 未驗證，顯示獎勵提示');
                 
                 if (showNotice) {
                     this.showUnverifiedNotice();
                 }
                 
-                if (blockPage) {
-                    // 阻止頁面功能
-                    this.blockAllFeatures();
-                }
+                // 不再阻擋功能，只要有足夠 Credits 即可使用
                 
                 return false;
             } else {
@@ -179,6 +175,7 @@ window.emailVerificationChecker = {
             
         } catch (error) {
             console.error('❌ Email 驗證檢查失敗:', error);
+            // 發生錯誤時也不阻擋功能
             return false;
         }
     },
