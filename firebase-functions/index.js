@@ -583,8 +583,55 @@ exports.verifyCode = functions.https.onCall(async (data, context) => {
             verifiedAt: admin.firestore.FieldValue.serverTimestamp()
         });
         
+        // 🎁 驗證成功後贈送 20 個 Credits
+        try {
+            // 查找用戶
+            const usersSnapshot = await db.collection('users').where('email', '==', email).limit(1).get();
+            
+            if (!usersSnapshot.empty) {
+                const userDoc = usersSnapshot.docs[0];
+                const userId = userDoc.id;
+                const userRef = db.collection('users').doc(userId);
+                
+                // 使用事務添加 Credits
+                await db.runTransaction(async (transaction) => {
+                    const user = await transaction.get(userRef);
+                    
+                    if (user.exists) {
+                        const currentCredits = user.data().currentCredits || user.data().credits || 0;
+                        const newCredits = currentCredits + 20;
+                        
+                        // 更新 Credits
+                        transaction.update(userRef, {
+                            credits: newCredits,
+                            currentCredits: newCredits,
+                            emailVerified: true,
+                            emailVerifiedAt: admin.firestore.FieldValue.serverTimestamp(),
+                            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                        });
+                        
+                        // 記錄 Credits 歷史
+                        const historyRef = db.collection('users').doc(userId).collection('creditsHistory').doc();
+                        transaction.set(historyRef, {
+                            type: 'bonus',
+                            amount: 20,
+                            reason: 'email_verification',
+                            description: '完成 Email 驗證獎勵',
+                            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                            balanceAfter: newCredits
+                        });
+                        
+                        console.log(`🎁 已贈送 20 Credits 給用戶: ${email}`);
+                    }
+                });
+            }
+        } catch (creditsError) {
+            console.error('❌ 贈送 Credits 失敗:', creditsError);
+            // 不拋出錯誤，因為驗證已經成功
+        }
+        
         console.log(`✅ Email 驗證成功: ${email}`);
-        return { success: true, message: '驗證成功！' };
+        return { success: true, message: '驗證成功！已贈送 20 個 Credits' };
         
     } catch (error) {
         console.error('❌ 驗證失敗:', error);

@@ -127,12 +127,14 @@ class SimpleDataManager {
             if (userDoc.exists) {
                 return userDoc.data().credits || 0;
             } else {
-                // 創建用戶文檔
+                // 創建用戶文檔（初始 0 Credits，驗證後贈送 20）
                 await this.db.collection('users').doc(userId).set({
-                    credits: 10, // 預設 10 個 credits
+                    credits: 0,
+                    currentCredits: 0,
+                    emailVerified: false,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                return 10;
+                return 0;
             }
         } catch (error) {
             console.error('❌ 獲取用戶 Credits 失敗:', error);
