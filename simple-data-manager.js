@@ -168,10 +168,11 @@ class SimpleDataManager {
             console.log('📂 getProjects() 開始執行...');
             const userId = this.getUserId();
             console.log('   userId:', userId);
-            console.log('   準備查詢 Firestore collection: projects');
+            console.log('   準備查詢 Firestore collection: users/{userId}/projects');
             
-            const snapshot = await this.db.collection('projects')
-                .where('userId', '==', userId)
+            const snapshot = await this.db.collection('users')
+                .doc(userId)
+                .collection('projects')
                 .get();
             
             console.log('   ✅ Firestore 查詢完成');
@@ -223,12 +224,14 @@ class SimpleDataManager {
             }
             
             const projectData = {
-                userId,
                 name,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             };
             
-            const docRef = await this.db.collection('projects').add(projectData);
+            const docRef = await this.db.collection('users')
+                .doc(userId)
+                .collection('projects')
+                .add(projectData);
             console.log('✅ 項目已創建:', docRef.id);
             
             return {
@@ -245,10 +248,15 @@ class SimpleDataManager {
     // 更新項目
     async updateProject(projectId, updates) {
         try {
-            await this.db.collection('projects').doc(projectId).update({
-                ...updates,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
+            const userId = this.getUserId();
+            await this.db.collection('users')
+                .doc(userId)
+                .collection('projects')
+                .doc(projectId)
+                .update({
+                    ...updates,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
             console.log('✅ 項目已更新:', projectId);
         } catch (error) {
             console.error('❌ 更新項目失敗:', error);
@@ -259,6 +267,8 @@ class SimpleDataManager {
     // 刪除項目
     async deleteProject(projectId) {
         try {
+            const userId = this.getUserId();
+            
             // 刪除項目下的所有文檔
             const documents = await this.getDocuments(projectId);
             for (const doc of documents) {
@@ -266,7 +276,11 @@ class SimpleDataManager {
             }
             
             // 刪除項目
-            await this.db.collection('projects').doc(projectId).delete();
+            await this.db.collection('users')
+                .doc(userId)
+                .collection('projects')
+                .doc(projectId)
+                .delete();
             console.log('✅ 項目已刪除:', projectId);
             
         } catch (error) {
@@ -282,8 +296,12 @@ class SimpleDataManager {
     // 獲取項目的所有文檔
     async getDocuments(projectId) {
         try {
-            const snapshot = await this.db.collection('documents')
-                .where('projectId', '==', projectId)
+            const userId = this.getUserId();
+            const snapshot = await this.db.collection('users')
+                .doc(userId)
+                .collection('projects')
+                .doc(projectId)
+                .collection('documents')
                 .get();
             
             // 在客戶端排序，避免需要 Firebase 複合索引
@@ -310,7 +328,14 @@ class SimpleDataManager {
     // ✅ 獲取單個文檔
     async getDocument(projectId, documentId) {
         try {
-            const docRef = await this.db.collection('documents').doc(documentId).get();
+            const userId = this.getUserId();
+            const docRef = await this.db.collection('users')
+                .doc(userId)
+                .collection('projects')
+                .doc(projectId)
+                .collection('documents')
+                .doc(documentId)
+                .get();
             
             if (!docRef.exists) {
                 console.warn('⚠️ 文檔不存在:', documentId);
@@ -334,13 +359,18 @@ class SimpleDataManager {
     // 創建文檔
     async createDocument(projectId, documentData) {
         try {
+            const userId = this.getUserId();
             const data = {
-                projectId,
                 ...documentData,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             };
             
-            const docRef = await this.db.collection('documents').add(data);
+            const docRef = await this.db.collection('users')
+                .doc(userId)
+                .collection('projects')
+                .doc(projectId)
+                .collection('documents')
+                .add(data);
             console.log('✅ 文檔已創建:', docRef.id);
             
             // 返回文檔 ID（字符串）
@@ -355,10 +385,17 @@ class SimpleDataManager {
     // 更新文檔
     async updateDocument(projectId, documentId, updates) {
         try {
-            await this.db.collection('documents').doc(documentId).update({
-                ...updates,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
+            const userId = this.getUserId();
+            await this.db.collection('users')
+                .doc(userId)
+                .collection('projects')
+                .doc(projectId)
+                .collection('documents')
+                .doc(documentId)
+                .update({
+                    ...updates,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
             console.log('✅ 文檔已更新:', documentId);
         } catch (error) {
             console.error('❌ 更新文檔失敗:', error);
@@ -369,8 +406,16 @@ class SimpleDataManager {
     // 刪除文檔
     async deleteDocument(projectId, documentId) {
         try {
+            const userId = this.getUserId();
+            const docRef = this.db.collection('users')
+                .doc(userId)
+                .collection('projects')
+                .doc(projectId)
+                .collection('documents')
+                .doc(documentId);
+            
             // 獲取文檔信息
-            const doc = await this.db.collection('documents').doc(documentId).get();
+            const doc = await docRef.get();
             
             // 刪除 Storage 中的文件
             if (doc.exists && doc.data().fileUrl) {
@@ -384,7 +429,7 @@ class SimpleDataManager {
             }
             
             // 刪除 Firestore 文檔
-            await this.db.collection('documents').doc(documentId).delete();
+            await docRef.delete();
             console.log('✅ 文檔已刪除:', documentId);
             
         } catch (error) {
