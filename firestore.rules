@@ -25,22 +25,15 @@ service cloud.firestore {
       }
     }
     
-    // 舊路徑項目規則（向後兼容，暫時保留以顯示舊數據）
-    match /projects/{projectId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
-      
-      // 舊路徑文檔規則
-      match /documents/{documentId} {
-        allow read: if request.auth != null;
-        allow write: if request.auth != null;
-      }
-    }
-    
     // 驗證碼規則
     match /verificationCodes/{email} {
       allow read: if request.auth != null;
       allow write: if true; // 允許註冊時寫入
     }
+    
+    // 🔒 安全說明：
+    // 所有項目和文檔都必須在 users/{userId} 路徑下
+    // 這確保每個用戶只能訪問自己的數據
+    // 路徑結構：users/{userId}/projects/{projectId}/documents/{documentId}
   }
 }

@@ -168,63 +168,37 @@ class SimpleDataManager {
             console.log('📂 getProjects() 開始執行...');
             const userId = this.getUserId();
             console.log('   userId:', userId);
+            console.log('   準備查詢 Firestore: users/{userId}/projects');
             
-            // 查詢新路徑：users/{userId}/projects
-            console.log('   查詢新路徑: users/{userId}/projects');
-            const newSnapshot = await this.db.collection('users')
+            // 只查詢新路徑：users/{userId}/projects
+            const snapshot = await this.db.collection('users')
                 .doc(userId)
                 .collection('projects')
                 .get();
             
-            console.log('   ✅ 新路徑查詢完成，找到:', newSnapshot.size, '個項目');
+            console.log('   ✅ Firestore 查詢完成');
+            console.log('   找到:', snapshot.size, '個項目');
             
-            // 同時查詢舊路徑：projects（向後兼容）
-            console.log('   查詢舊路徑: projects');
-            const oldSnapshot = await this.db.collection('projects')
-                .where('userId', '==', userId)
-                .get();
-            
-            console.log('   ✅ 舊路徑查詢完成，找到:', oldSnapshot.size, '個項目');
-            
-            // 合併兩個結果
-            const allProjects = [];
-            
-            // 添加新路徑項目
-            newSnapshot.docs.forEach(doc => {
-                allProjects.push({
-                    id: doc.id,
-                    ...doc.data(),
-                    _source: 'new' // 標記來源
-                });
-            });
-            
-            // 添加舊路徑項目（避免重複）
-            oldSnapshot.docs.forEach(doc => {
-                // 檢查是否已經存在（可能已遷移）
-                if (!allProjects.find(p => p.id === doc.id)) {
-                    allProjects.push({
-                        id: doc.id,
-                        ...doc.data(),
-                        _source: 'old' // 標記來源
-                    });
-                }
-            });
+            if (snapshot.empty) {
+                console.warn('   ⚠️ 沒有找到任何項目');
+                console.warn('   請檢查：');
+                console.warn('   1. 是否已創建項目？');
+                console.warn('   2. userId 是否正確:', userId);
+                console.warn('   3. Firestore 規則是否允許讀取');
+            }
             
             // 在客戶端排序（避免需要 Firestore 索引）
-            const projects = allProjects.sort((a, b) => {
+            const projects = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            })).sort((a, b) => {
                 // 按創建時間降序排序（最新的在前）
                 const timeA = a.createdAt?.toMillis?.() || 0;
                 const timeB = b.createdAt?.toMillis?.() || 0;
                 return timeB - timeA;
             });
             
-            console.log(`✅ 總共獲取 ${projects.length} 個項目 (新路徑: ${newSnapshot.size}, 舊路徑: ${oldSnapshot.size})`);
-            
-            // 如果有舊路徑項目，提醒用戶
-            if (oldSnapshot.size > 0) {
-                console.warn('⚠️ 發現', oldSnapshot.size, '個舊路徑項目，建議遷移到新路徑');
-            }
-            
+            console.log(`✅ 獲取 ${projects.length} 個項目`);
             return projects;
             
         } catch (error) {
