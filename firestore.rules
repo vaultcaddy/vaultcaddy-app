@@ -25,10 +25,16 @@ service cloud.firestore {
       }
     }
     
-    // 項目文檔規則（備用路徑）
-    match /projects/{projectId}/documents/{documentId} {
+    // 舊路徑項目規則（向後兼容，暫時保留以顯示舊數據）
+    match /projects/{projectId} {
       allow read: if request.auth != null;
       allow write: if request.auth != null;
+      
+      // 舊路徑文檔規則
+      match /documents/{documentId} {
+        allow read: if request.auth != null;
+        allow write: if request.auth != null;
+      }
     }
     
     // 驗證碼規則
