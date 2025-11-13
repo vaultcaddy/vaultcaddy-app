@@ -2287,11 +2287,31 @@
             console.log('📤 開始導出:', format);
             
             try {
-                // 獲取所有已完成的文檔
-                const completedDocs = allDocuments.filter(doc => doc.status === 'completed' && doc.processedData);
+                // 檢查是否有勾選的文檔
+                const selectedDocs = Array.from(window.selectedDocuments || new Set());
                 
-                if (completedDocs.length === 0) {
-                    alert('沒有可導出的文檔。請確保至少有一個文檔已完成處理。');
+                let docsToExport;
+                
+                if (selectedDocs.length > 0) {
+                    // 如果有勾選，只導出已勾選且已完成的文檔
+                    docsToExport = allDocuments.filter(doc => 
+                        selectedDocs.includes(doc.id) && 
+                        doc.status === 'completed' && 
+                        doc.processedData
+                    );
+                    console.log(`📋 導出 ${docsToExport.length} 個已勾選的文檔`);
+                } else {
+                    // 如果沒有勾選，導出所有已完成的文檔
+                    docsToExport = allDocuments.filter(doc => doc.status === 'completed' && doc.processedData);
+                    console.log(`📋 導出所有 ${docsToExport.length} 個已完成的文檔`);
+                }
+                
+                if (docsToExport.length === 0) {
+                    if (selectedDocs.length > 0) {
+                        alert('所選文檔中沒有已完成處理的文檔。\n請確保所選文檔已完成處理。');
+                    } else {
+                        alert('沒有可導出的文檔。\n請先勾選要導出的文檔，或確保至少有一個文檔已完成處理。');
+                    }
                     return;
                 }
                 
@@ -2301,17 +2321,24 @@
                 
                 switch(format) {
                     case 'csv':
-                        exportContent = generateCSV(completedDocs);
+                        // 使用優化版 ExportOptimizer（如果可用）
+                        if (window.ExportOptimizer) {
+                            exportContent = ExportOptimizer.generateCSV(docsToExport);
+                            console.log('✅ 使用優化版 CSV 導出');
+                        } else {
+                            exportContent = generateCSV(docsToExport);
+                            console.log('⚠️ 使用舊版 CSV 導出');
+                        }
                         fileName = `vaultcaddy_export_${new Date().toISOString().split('T')[0]}.csv`;
                         mimeType = 'text/csv;charset=utf-8;';
                         break;
                     case 'iif':
-                        exportContent = generateIIF(completedDocs);
+                        exportContent = generateIIF(docsToExport);
                         fileName = `vaultcaddy_export_${new Date().toISOString().split('T')[0]}.iif`;
                         mimeType = 'text/plain;charset=utf-8;';
                         break;
                     case 'qbo':
-                        exportContent = generateQBO(completedDocs);
+                        exportContent = generateQBO(docsToExport);
                         fileName = `vaultcaddy_export_${new Date().toISOString().split('T')[0]}.qbo`;
                         mimeType = 'application/vnd.intu.qbo;charset=utf-8;';
                         break;
@@ -2604,5 +2631,8 @@
             }
         })();
     </script>
+    
+    <!-- CSV 導出優化模塊 -->
+    <script src="export-optimizer.js"></script>
 </body>
 </html>
