@@ -98,8 +98,54 @@ class BatchUploadProcessor {
                     });
                 }
                 
-                // 使用 Google Smart Processor 處理文件
-                const result = await window.googleSmartProcessor.processDocument(file, documentType);
+                // ✅ 如果是 PDF，先轉換為圖片
+                let filesToProcess = [file];
+                if (window.pdfToImageConverter && window.pdfToImageConverter.isPDF(file)) {
+                    console.log(`📄 檢測到 PDF 文件，開始轉換為圖片...`);
+                    
+                    if (onProgress) {
+                        onProgress({
+                            fileName: file.name,
+                            status: 'processing',
+                            progress: 15,
+                            message: 'PDF 轉換中...'
+                        });
+                    }
+                    
+                    try {
+                        const imageFiles = await window.pdfToImageConverter.convertPDFToImages(file);
+                        console.log(`✅ PDF 轉換完成，生成 ${imageFiles.length} 張圖片`);
+                        filesToProcess = imageFiles;
+                        
+                        if (onProgress) {
+                            onProgress({
+                                fileName: file.name,
+                                status: 'processing',
+                                progress: 20,
+                                message: `已轉換 ${imageFiles.length} 頁，AI 處理中...`
+                            });
+                        }
+                    } catch (pdfError) {
+                        console.error('❌ PDF 轉換失敗:', pdfError);
+                        throw new Error(`PDF 轉換失敗: ${pdfError.message}`);
+                    }
+                }
+                
+                // 使用 Hybrid Processor 處理文件（支持 PDF 轉換後的多張圖片）
+                let result;
+                if (filesToProcess.length === 1) {
+                    // 單個文件
+                    result = await window.hybridProcessor.processDocument(filesToProcess[0], documentType);
+                } else {
+                    // 多個文件（PDF 轉換後的多頁）
+                    console.log(`📄 處理 PDF 的 ${filesToProcess.length} 頁...`);
+                    
+                    // 處理第一頁（通常包含最重要的信息）
+                    result = await window.hybridProcessor.processDocument(filesToProcess[0], documentType);
+                    
+                    // TODO: 未來可以處理多頁並合併數據
+                    console.log(`ℹ️ 目前只處理第一頁，其他頁面將在未來版本支持`);
+                }
                 
                 if (!result || !result.success) {
                     throw new Error('AI 處理失敗');
