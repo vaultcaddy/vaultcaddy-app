@@ -225,7 +225,8 @@
                 } else if (window.firebase && window.firebase.auth) {
                     await window.firebase.auth().signOut();
                 }
-                window.location.href = 'index.html';
+                // 登出後跳轉到登入/註冊頁面
+                window.location.href = 'auth.html';
             } catch (error) {
                 console.error('❌ 登出失敗:', error);
                 alert('登出失敗，請重試');

@@ -35,7 +35,7 @@ gcloud init
 
 ```bash
 cd /Users/cavlinyeung/ai-bank-parser
-gsutil cors set cors.json gs://vaultcaddy-production-cbbe2.appspot.com
+gsutil cors set cors.json gs://vaultcaddy-production-cbbe2.firebasestorage.app
 ```
 
 **預期輸出：**
@@ -46,7 +46,7 @@ Setting CORS on gs://vaultcaddy-production-cbbe2.appspot.com/...
 ### 步驟 4：驗證 CORS 設置
 
 ```bash
-gsutil cors get gs://vaultcaddy-production-cbbe2.appspot.com
+gsutil cors get gs://vaultcaddy-production-cbbe2.firebasestorage.app
 ```
 
 **預期輸出：**
@@ -79,10 +79,10 @@ gcloud init
 cd /Users/cavlinyeung/ai-bank-parser
 
 # 4. 設置 CORS
-gsutil cors set cors.json gs://vaultcaddy-production-cbbe2.appspot.com
+gsutil cors set cors.json gs://vaultcaddy-production-cbbe2.firebasestorage.app
 
 # 5. 驗證設置
-gsutil cors get gs://vaultcaddy-production-cbbe2.appspot.com
+gsutil cors get gs://vaultcaddy-production-cbbe2.firebasestorage.app
 
 echo "✅ CORS 設置完成！"
 ```
@@ -149,7 +149,7 @@ gcloud config list
 gcloud projects get-iam-policy vaultcaddy-production-cbbe2
 
 # 嘗試設置 CORS（詳細輸出）
-gsutil -D cors set cors.json gs://vaultcaddy-production-cbbe2.appspot.com
+gsutil -D cors set cors.json gs://vaultcaddy-production-cbbe2.firebasestorage.app
 ```
 
 我會根據錯誤信息提供解決方案！🚀
