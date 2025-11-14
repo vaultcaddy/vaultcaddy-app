@@ -442,7 +442,7 @@ class ExportOptimizer {
             '編號',
             '日期',
             '時間',
-            '供應商/商家',
+            '供應商/來源/銀行',
             '供應商地址',
             '供應商電話',
             '供應商電郵',
@@ -486,7 +486,7 @@ class ExportOptimizer {
                         data.date || data.invoice_date || data.invoiceDate || '',
                         // 時間（收據才有）
                         data.time || '',
-                        // 供應商/商家（統一欄位）
+                        // 供應商/來源/銀行（統一欄位）
                         `"${this.escape(data.supplier || data.vendor || data.merchant_name || data.merchantName)}"`,
                         // 供應商地址
                         `"${this.escape(data.supplier_address || data.vendorAddress || data.merchant_address || data.merchantAddress)}"`,

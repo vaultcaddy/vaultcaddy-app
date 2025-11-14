@@ -52,13 +52,18 @@ class HybridVisionDeepSeekProcessor {
             // 移除開頭和結尾空白
             .trim();
         
+        // 🎯 優化：銀行對帳單保留更多內容（交易記錄較多）
+        const maxLength = this.documentType === 'statement' || this.documentType === 'bank_statements' 
+            ? 5000  // 銀行對帳單：5000 字符
+            : 3000; // 其他文檔：3000 字符
+        
         // 限制最大長度（防止超長文本）
-        if (cleaned.length > 3000) {
-            console.warn('⚠️ OCR 文本過長，截斷到 3000 字符');
-            cleaned = cleaned.slice(0, 3000) + '...';
+        if (cleaned.length > maxLength) {
+            console.warn(`⚠️ OCR 文本過長，截斷到 ${maxLength} 字符 (類型: ${this.documentType})`);
+            cleaned = cleaned.slice(0, maxLength) + '...';
         }
         
-        console.log(`📊 OCR 清理: ${rawText.length} → ${cleaned.length} 字符 (節省 ${Math.round((1 - cleaned.length/rawText.length) * 100)}%)`);
+        console.log(`📊 OCR 清理: ${rawText.length} → ${cleaned.length} 字符 (節省 ${Math.round((1 - cleaned.length/rawText.length) * 100)}%) [${this.documentType}]`);
         
         return cleaned;
     }
@@ -102,9 +107,30 @@ class HybridVisionDeepSeekProcessor {
         const fields = {
             invoice: '{inv_no,date,supplier,customer,total,tax,items:[{desc,qty,price}]}',
             receipt: '{merchant,date,total,tax,items:[{desc,price}],payment}',
-            statement: '{bank,period,balance,txs:[{date,desc,amt,bal}]}',
+            // 優化銀行對帳單提示詞（更詳細）
+            statement: `{
+bank:"bank name",
+account:"account number",
+account_name:"account holder",
+period:"MM/DD/YYYY to MM/DD/YYYY",
+opening_balance:number,
+closing_balance:number,
+transactions:[{
+date:"MM/DD/YYYY",
+description:"transaction description",
+type:"debit or credit",
+amount:number,
+balance:number
+}]
+}
+Important: Extract ALL transactions. Include opening/closing balance. Format dates as shown.`,
             general: '{type,title,date,entities,amounts,summary}'
         };
+        
+        // 銀行對帳單特殊處理
+        if (documentType === 'statement' || documentType === 'bank_statements') {
+            return `${base}\n\nBank Statement Extraction:\n${fields.statement}`;
+        }
         
         return `${base}\nSchema: ${fields[documentType] || fields.general}`;
     }

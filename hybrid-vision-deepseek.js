@@ -301,48 +301,56 @@ class HybridVisionDeepSeekProcessor {
 4. 總額通常在底部（Total、合計、總計等關鍵字）
 5. 自動分類項目以便後續財務分析`;
             
+            case 'bank_statements':
             case 'bank-statement':
+            case 'statement':
                 return baseInstruction + `你正在分析一張香港銀行對帳單。這是會計對帳的核心數據。
 
+**用戶需求角度 - 銀行對帳單分類目的：**
+銀行對帳單用於財務對帳、現金流管理和審計。用戶需要：
+1. 知道期初和期末餘額（核對資金）
+2. 每筆交易的詳細記錄（日期、描述、金額、餘額）
+3. 交易總額統計（收入、支出）
+4. 賬戶基本信息（銀行、戶名、賬號）
+
 **CRITICAL - 必須提取的欄位：**
-1. **交易記錄（transactions）**: 每一筆交易都要提取
-2. **交易日期（date）**: 每筆交易的日期
-3. **交易金額（amount）**: 每筆交易的金額（正數=收入，負數=支出）
-4. **交易描述（description）**: 交易對手方或用途
+1. **銀行名稱（bank_name）**: 銀行標識（頂部 logo 或名稱）
+2. **賬戶號碼（account_number）**: 賬戶標識
+3. **對帳單期間（statement_period）**: from 到 to 日期
+4. **期初/期末餘額（opening_balance/closing_balance）**: 核心金額
+5. **交易記錄（transactions）**: 每一筆交易都要提取
 
 返回這個 JSON 結構：
 
 {
   "confidence": 0-100,
-  "bank_name": "銀行名稱",
-  "account_holder": "戶主名稱",
-  "account_number": "賬戶號碼（部分遮蔽也可）",
-  "statement_period": {
-    "from": "YYYY-MM-DD",
-    "to": "YYYY-MM-DD"
-  },
+  "bank_name": "必須 - 銀行名稱（如：恆生銀行、HANG SENG BANK）",
+  "account_holder": "戶主名稱（如：MR YEUNG CAVLIN）",
+  "account_number": "必須 - 賬戶號碼（如：766-452064-882）",
+  "statement_period": "必須 - MM/DD/YYYY to MM/DD/YYYY（如：02/01/2025 to 03/22/2025）",
   "opening_balance": 數字,
-  "closing_balance": 數字,
+  "closing_balance": 必須 - 數字,
   "transactions": [
     {
-      "date": "必須 - YYYY-MM-DD",
-      "description": "必須 - 交易描述/對手方",
-      "reference": "參考號碼（如果有）",
-      "debit": 數字或0（支出）,
-      "credit": 數字或0（收入）,
+      "date": "必須 - MM/DD/YYYY",
+      "description": "必須 - 交易描述/對手方（如：CREDIT INTEREST、B/F BALANCE、POON H** K***）",
+      "type": "debit 或 credit",
+      "amount": 數字（正數表示交易金額）,
       "balance": 數字（餘額）
     }
   ],
-  "total_debit": 數字,
-  "total_credit": 數字,
   "currency": "HKD"
 }
 
 **提取策略：**
-1. 識別表格結構（通常有：日期、描述、支出、收入、餘額列）
-2. 逐行提取每筆交易
-3. 計算總支出和總收入
-4. 確保所有金額為正確的數字格式`;
+1. 從頂部提取銀行名稱和賬戶信息
+2. 識別對帳單期間（通常在 Statement Date 或 Statement Period）
+3. 找到 opening balance（期初餘額）和 closing balance（期末餘額）
+4. 識別交易表格結構（通常有：Date、Transaction Details、Withdrawal、Deposit、Balance列）
+5. 逐行提取每筆交易（日期、描述、金額、餘額）
+6. 確保所有金額為正確的數字格式
+7. **重要**：提取所有交易，不要遺漏任何一筆`;
+            
             
             case 'general':
             default:
