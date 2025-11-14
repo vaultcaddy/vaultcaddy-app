@@ -505,9 +505,6 @@ class VaultCaddyNavbar {
             // 重置用戶狀態
             this.resetUserState();
             
-            // 重新渲染導航欄（顯示「登入」按鈕）
-            this.render();
-            
             // 觸發狀態更新事件
             window.dispatchEvent(new CustomEvent('userStateChanged'));
             window.dispatchEvent(new CustomEvent('vaultcaddy:auth:logout'));
@@ -515,7 +512,12 @@ class VaultCaddyNavbar {
             // 顯示登出成功消息
             this.showNotification('已成功登出', 'success');
             
-            console.log('✅ 登出完成，導航欄已更新為「登入」按鈕');
+            // 延遲跳轉讓用戶看到消息
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 1000);
+            
+            console.log('✅ 登出完成，即將跳轉到首頁');
             
         } catch (error) {
             console.error('❌ 登出失敗:', error);

@@ -1,28 +1,9 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    match /documents/{userId}/{projectId}/{fileName} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == userId;
-    }
-    
-    match /users/{userId}/projects/{projectId}/{fileName} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == userId;
-    }
-    
-    match /projects/{projectId}/documents/{fileName} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
-    }
-    
-    match /{projectId}/{fileName} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
-    }
-    
-    match /{fileName} {
-      allow read: if request.auth != null;
+    // 允許 Vision API 公開讀取（用於 AI 處理）
+    match /{allPaths=**} {
+      allow read: if request.auth != null || request.auth == null;
       allow write: if request.auth != null;
     }
   }
