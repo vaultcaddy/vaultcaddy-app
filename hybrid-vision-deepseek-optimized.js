@@ -217,7 +217,7 @@ Important: Extract ALL transactions. Include opening/closing balance. Format dat
         const requestBody = {
             requests: [{
                 image: { content: base64Data },
-                features: [{ type: 'TEXT_DETECTION', maxResults: 1 }]
+                features: [{ type: 'DOCUMENT_TEXT_DETECTION', maxResults: 1 }]
             }]
         };
         
@@ -233,13 +233,21 @@ Important: Extract ALL transactions. Include opening/closing balance. Format dat
         
         const data = await response.json();
         
+        console.log('📊 Vision API 回應:', {
+            hasError: !!data.responses[0].error,
+            hasFullText: !!data.responses[0].fullTextAnnotation,
+            textLength: data.responses[0].fullTextAnnotation?.text?.length || 0
+        });
+        
         if (data.responses[0].error) {
-            throw new Error(`Vision API 錯誤: ${data.responses[0].error.message}`);
+            console.error('❌ Vision API 詳細錯誤:', JSON.stringify(data.responses[0].error, null, 2));
+            throw new Error(`Vision API 錯誤: ${data.responses[0].error.message || JSON.stringify(data.responses[0].error)}`);
         }
         
         const fullText = data.responses[0].fullTextAnnotation?.text || '';
         
         if (!fullText) {
+            console.error('❌ Vision API 未提取到文本，完整回應:', JSON.stringify(data, null, 2));
             throw new Error('Vision API 未能提取任何文本');
         }
         
