@@ -275,7 +275,7 @@
     
     /**
      * 初始化用戶頭像
-     * 改為顯示 V 字 Logo
+     * 從 account.html 頁面同步頭像
      */
     function initUserAvatar() {
         const avatarEl = document.getElementById('user-avatar');
@@ -284,21 +284,23 @@
             return;
         }
         
-        // 使用 V 字 Logo（SVG）
-        avatarEl.innerHTML = `
-            <svg width="100%" height="100%" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                    <linearGradient id="avatarLogoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stop-color="#3b82f6"/>
-                        <stop offset="50%" stop-color="#8b5cf6"/>
-                        <stop offset="100%" stop-color="#d946ef"/>
-                    </linearGradient>
-                </defs>
-                <path d="M8 6 L20 28 L32 6 L28 6 L20 20 L12 6 Z" fill="url(#avatarLogoGradient)" stroke="none"/>
-            </svg>
-        `;
-        avatarEl.style.background = 'white';
-        avatarEl.style.padding = '4px';
+        // 從 localStorage 載入頭像
+        const savedAvatar = localStorage.getItem('userAvatar');
+        if (savedAvatar) {
+            // 如果是圖片 URL
+            if (savedAvatar.startsWith('http') || savedAvatar.startsWith('data:')) {
+                avatarEl.style.backgroundImage = `url(${savedAvatar})`;
+                avatarEl.style.backgroundSize = 'cover';
+                avatarEl.style.backgroundPosition = 'center';
+                avatarEl.textContent = '';
+            } else {
+                // 如果是文字（首字母）
+                avatarEl.textContent = savedAvatar;
+            }
+        } else {
+            // 嘗試從用戶郵箱獲取首字母
+            updateAvatarFromUser();
+        }
         
         // 監聽 storage 事件，當 account.html 更新頭像時同步
         window.addEventListener('storage', function(e) {
