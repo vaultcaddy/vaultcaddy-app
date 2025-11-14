@@ -99,7 +99,7 @@ class VaultCaddyNavbar {
     }
     
     /**
-     * 渲染導航欄
+     * 渲染導航欄（統一使用靜態導航欄的樣式）
      */
     render() {
         // 支持兩種 ID：navbar-placeholder（舊版）和 navbar-root（新版）
@@ -111,11 +111,32 @@ class VaultCaddyNavbar {
         
         console.log('✅ 找到導航欄容器:', navbarPlaceholder.id);
         
-        // 創建完整的導航欄結構
+        // ✅ 使用與 index.html 靜態導航欄完全一致的樣式
         const navbarHTML = `
-            <nav class="navbar">
-                <div class="nav-container">
-                    ${this.getNavbarHTML()}
+            <nav class="vaultcaddy-navbar" id="main-navbar" style="position: fixed; top: 0; left: 0; right: 0; height: 60px; background: #ffffff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; z-index: 1000; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <a href="index.html" style="display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: #1f2937; font-weight: 600; font-size: 1.125rem;">
+                        <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.25rem;">
+                            V
+                        </div>
+                        <div>
+                            <div>VaultCaddy</div>
+                            <div style="font-size: 0.75rem; color: #6b7280; font-weight: 400; text-transform: uppercase; letter-spacing: 0.05em;">AI DOCUMENT PROCESSING</div>
+                        </div>
+                    </a>
+                </div>
+                <div style="display: flex; align-items: center; gap: 2rem;">
+                    <div style="display: flex; align-items: center; gap: 2rem;">
+                        <a href="index.html#features" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">功能</a>
+                        <a href="index.html#pricing" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">價格</a>
+                        <a href="dashboard.html" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">儀表板</a>
+                    </div>
+                    <div id="language-selector" style="position: relative; display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; cursor: pointer; border-radius: 6px; transition: background 0.2s;">
+                        <i class="fas fa-language"></i>
+                        <span id="current-language">繁體中文</span>
+                        <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
+                    </div>
+                    ${this.getUserSection()}
                 </div>
             </nav>
         `;
@@ -352,12 +373,12 @@ class VaultCaddyNavbar {
                 </div>
             `;
         } else {
+            // ✅ 未登入：顯示「登入 →」按鈕（與圖1靜態導航欄樣式一致）
             return `
-                <div class="auth-buttons" style="display: flex; align-items: center; gap: 1rem;">
-                    <div id="google-signin-button" class="google-signin-container"></div>
-                    <button class="nav-link login-btn traditional" data-translate="nav_login" onclick="window.vaultcaddyNavbar.handleLogin()">
+                <div id="user-menu" style="position: relative; display: flex; align-items: center; gap: 0.75rem;">
+                    <a href="auth.html" style="display: inline-flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.625rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; font-size: 0.9375rem; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
                         登入 →
-                    </button>
+                    </a>
                 </div>
             `;
         }

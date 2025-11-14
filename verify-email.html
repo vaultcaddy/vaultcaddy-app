@@ -327,10 +327,13 @@
             button.textContent = '發送中...';
 
             try {
+                console.log('📧 開始重新發送驗證碼:', userEmail);
                 const sendCodeFunc = functions.httpsCallable('sendVerificationCode');
-                const result = await sendCodeFunc({ email: userEmail });
+                const result = await sendCodeFunc({ email: userEmail, displayName: userEmail.split('@')[0] });
+                console.log('✅ sendVerificationCode 結果:', result);
 
-                if (result.data.success) {
+                if (result && result.data && result.data.success) {
+                    console.log('✅ 驗證碼已成功發送');
                     showSuccess('驗證碼已重新發送到您的郵箱');
                     
                     // 重新開始倒計時
@@ -341,10 +344,27 @@
                     // 清空輸入
                     codeInputs.forEach(input => input.value = '');
                     codeInputs[0].focus();
+                } else {
+                    console.error('❌ 發送失敗，result.data:', result?.data);
+                    showError('發送失敗：未收到成功響應');
+                    button.disabled = false;
+                    button.textContent = '重新發送驗證碼';
                 }
             } catch (error) {
-                console.error('重新發送失敗:', error);
-                showError('發送失敗，請稍後重試');
+                console.error('❌ 重新發送失敗:', error);
+                console.error('❌ 錯誤代碼:', error.code);
+                console.error('❌ 錯誤消息:', error.message);
+                console.error('❌ 完整錯誤:', JSON.stringify(error, null, 2));
+                
+                let errorMsg = '發送失敗，請稍後重試';
+                if (error.code) {
+                    errorMsg += ` (${error.code})`;
+                }
+                if (error.message) {
+                    errorMsg = error.message;
+                }
+                
+                showError(errorMsg);
                 button.disabled = false;
                 button.textContent = '重新發送驗證碼';
             }
