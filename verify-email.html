@@ -109,12 +109,13 @@
             text-decoration: none;
         }
         .error-message {
-            background: #fee2e2;
+            background: transparent;
             color: #dc2626;
             padding: 0.75rem;
             border-radius: 8px;
             margin-bottom: 1rem;
             display: none;
+            font-weight: 600;
         }
         .success-message {
             background: #d1fae5;
@@ -240,19 +241,25 @@
             }, 1000);
         }
 
-        // 重新發送倒計時（改為 1 分鐘）
+        // 重新發送倒計時（改為 1 分鐘，紅色倒數文字）
         function startResendCountdown() {
             resendCountdown = 60; // 1 分鐘
+            const errorMessage = document.getElementById('errorMessage');
             const resendButton = document.getElementById('resendButton');
             resendButton.disabled = true;
+            resendButton.style.display = 'none'; // 隱藏按鈕
+            
+            errorMessage.style.display = 'block';
             
             const interval = setInterval(() => {
                 resendCountdown--;
-                resendButton.textContent = `重新發送驗證碼 (${resendCountdown}s)`;
+                errorMessage.textContent = `${resendCountdown} 秒後可重新發送`;
                 
                 if (resendCountdown <= 0) {
                     clearInterval(interval);
+                    errorMessage.style.display = 'none';
                     resendButton.disabled = false;
+                    resendButton.style.display = 'inline-block';
                     resendButton.textContent = '重新發送驗證碼';
                 }
             }, 1000);
