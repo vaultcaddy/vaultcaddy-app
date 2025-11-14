@@ -98,15 +98,40 @@ class HybridVisionDeepSeekProcessor {
         });
         
         if (!response.ok) {
-            throw new Error(`Vision API 錯誤: ${response.status}`);
+            const errorText = await response.text();
+            console.error('❌ Vision API HTTP 錯誤:', {
+                status: response.status,
+                statusText: response.statusText,
+                body: errorText
+            });
+            throw new Error(`Vision API 錯誤: ${response.status} - ${response.statusText}`);
         }
         
         const data = await response.json();
+        console.log('📡 Vision API 完整響應:', JSON.stringify(data, null, 2));
         
-        if (data.responses && data.responses[0] && data.responses[0].fullTextAnnotation) {
-            return data.responses[0].fullTextAnnotation.text;
+        if (data.responses && data.responses[0]) {
+            const firstResponse = data.responses[0];
+            console.log('📋 First Response:', JSON.stringify(firstResponse, null, 2));
+            
+            // 檢查是否有錯誤
+            if (firstResponse.error) {
+                console.error('❌ Vision API 返回錯誤:', firstResponse.error);
+                throw new Error(`Vision API 錯誤: ${firstResponse.error.message || JSON.stringify(firstResponse.error)}`);
+            }
+            
+            // 檢查是否有文本結果
+            if (firstResponse.fullTextAnnotation) {
+                console.log('✅ 成功提取文本，長度:', firstResponse.fullTextAnnotation.text.length);
+                return firstResponse.fullTextAnnotation.text;
+            } else {
+                console.error('❌ Vision API 響應中沒有 fullTextAnnotation');
+                console.error('可用的鍵:', Object.keys(firstResponse));
+                throw new Error(`Vision API 未能提取文本。響應鍵: ${Object.keys(firstResponse).join(', ')}`);
+            }
         } else {
-            throw new Error('Vision API 未能提取文本');
+            console.error('❌ Vision API 響應格式錯誤:', data);
+            throw new Error('Vision API 響應格式錯誤：缺少 responses 數組');
         }
     }
     
