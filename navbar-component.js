@@ -482,21 +482,19 @@ class VaultCaddyNavbar {
         try {
             console.log('🚪 開始登出流程...');
             
-            // 優先使用 Firebase Auth 登出
-            if (window.authHandler && window.authHandler.isLoggedIn()) {
+            // 使用 SimpleAuth 登出
+            if (window.simpleAuth && window.simpleAuth.isLoggedIn()) {
+                console.log('🔐 使用 SimpleAuth 登出');
+                await window.simpleAuth.logout();
+            }
+            
+            // 使用 Firebase Auth 登出
+            if (window.firebase && window.firebase.auth) {
                 console.log('🔐 使用 Firebase Auth 登出');
-                await window.authHandler.logout();
-                // authHandler.logout() 會自動重定向到 login.html，所以這裡不需要再處理
-                return;
+                await window.firebase.auth().signOut();
             }
             
-            // 如果是舊的 Google 用戶，使用 Google 登出
-            if (window.googleAuth && window.googleAuth.isLoggedIn()) {
-                console.log('🔐 使用 Google Auth 登出');
-                await window.googleAuth.signOut();
-            }
-            
-            // 清理 LocalStorage（向後兼容）
+            // 清理 LocalStorage
             console.log('🧹 清理 LocalStorage...');
             localStorage.removeItem('vaultcaddy_token');
             localStorage.removeItem('vaultcaddy_user');
@@ -504,17 +502,20 @@ class VaultCaddyNavbar {
             localStorage.removeItem('userLoggedIn');
             localStorage.removeItem('userCredits');
             
-            // 觸發狀態更新
+            // 重置用戶狀態
+            this.resetUserState();
+            
+            // 重新渲染導航欄（顯示「登入」按鈕）
+            this.render();
+            
+            // 觸發狀態更新事件
             window.dispatchEvent(new CustomEvent('userStateChanged'));
             window.dispatchEvent(new CustomEvent('vaultcaddy:auth:logout'));
             
             // 顯示登出成功消息
             this.showNotification('已成功登出', 'success');
             
-            // 延遲跳轉讓用戶看到消息
-            setTimeout(() => {
-                window.location.href = 'login.html';
-            }, 1000);
+            console.log('✅ 登出完成，導航欄已更新為「登入」按鈕');
             
         } catch (error) {
             console.error('❌ 登出失敗:', error);

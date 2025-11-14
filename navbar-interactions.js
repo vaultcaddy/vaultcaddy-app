@@ -220,13 +220,25 @@
         const logoutBtn = dropdownMenu.querySelector('#logout-btn');
         logoutBtn.addEventListener('click', async function() {
             try {
-                if (window.simpleAuth && typeof window.simpleAuth.logout === 'function') {
-                    await window.simpleAuth.logout();
-                } else if (window.firebase && window.firebase.auth) {
-                    await window.firebase.auth().signOut();
+                // 使用 navbar-component.js 的 logout 方法（會自動重新渲染）
+                if (window.vaultcaddyNavbar && typeof window.vaultcaddyNavbar.logout === 'function') {
+                    await window.vaultcaddyNavbar.logout();
+                } else {
+                    // 後備方案：直接登出
+                    if (window.simpleAuth && typeof window.simpleAuth.logout === 'function') {
+                        await window.simpleAuth.logout();
+                    } else if (window.firebase && window.firebase.auth) {
+                        await window.firebase.auth().signOut();
+                    }
+                    
+                    // 清理 localStorage
+                    localStorage.removeItem('vaultcaddy_token');
+                    localStorage.removeItem('vaultcaddy_user');
+                    localStorage.removeItem('vaultcaddy_credits');
+                    
+                    // 刷新頁面以更新導航欄
+                    window.location.reload();
                 }
-                // 登出後跳轉到登入/註冊頁面
-                window.location.href = 'auth.html';
             } catch (error) {
                 console.error('❌ 登出失敗:', error);
                 alert('登出失敗，請重試');
