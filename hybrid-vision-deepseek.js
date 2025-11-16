@@ -50,9 +50,14 @@ class HybridVisionDeepSeekProcessor {
             
             console.log(`✅ OCR 完成，提取了 ${ocrText.length} 字符`);
             
+            // ========== 步驟 1.5：智能過濾無用文本 ==========
+            console.log('🔍 步驟 1.5：過濾無用文本...');
+            const filteredText = this.filterRelevantText(ocrText, documentType);
+            console.log(`✅ 過濾完成：${ocrText.length} → ${filteredText.length} 字符（減少 ${Math.round((1 - filteredText.length / ocrText.length) * 100)}%）`);
+            
             // ========== 步驟 2：DeepSeek Chat 分析 ==========
             console.log('🧠 步驟 2：使用 DeepSeek Chat 分析文本...');
-            const extractedData = await this.analyzeTextWithDeepSeek(ocrText, documentType);
+            const extractedData = await this.analyzeTextWithDeepSeek(filteredText, documentType);
             
             const processingTime = Date.now() - startTime;
             console.log(`✅ 混合處理完成，總耗時: ${processingTime}ms`);
@@ -133,6 +138,155 @@ class HybridVisionDeepSeekProcessor {
             console.error('❌ Vision API 響應格式錯誤:', data);
             throw new Error('Vision API 響應格式錯誤：缺少 responses 數組');
         }
+    }
+    
+    /**
+     * 步驟 1.5：智能過濾無用文本
+     * 
+     * 策略：
+     * 1. 移除銀行對帳單的免責聲明、條款、法律文字
+     * 2. 保留關鍵信息：賬戶信息、交易記錄、金額、日期
+     * 3. 大幅減少發送給 DeepSeek 的文本量
+     */
+    filterRelevantText(text, documentType) {
+        console.log('🔍 開始過濾文本...');
+        
+        // 如果是銀行對帳單，使用特殊過濾邏輯
+        if (documentType === 'bank_statement') {
+            return this.filterBankStatementText(text);
+        }
+        
+        // 發票和收據使用通用過濾
+        return this.filterInvoiceText(text);
+    }
+    
+    /**
+     * 過濾銀行對帳單文本
+     */
+    filterBankStatementText(text) {
+        console.log('🏦 過濾銀行對帳單文本...');
+        
+        // ✅ 1. 分割成行
+        const lines = text.split('\n');
+        const relevantLines = [];
+        
+        // ✅ 2. 定義要保留的關鍵詞（賬戶信息、交易記錄）
+        const keepKeywords = [
+            // 賬戶信息
+            'Account', 'Branch', 'Bank', 'Statement', 'Date', 'Balance',
+            '賬戶', '分行', '銀行', '對帳單', '日期', '餘額', '結餘',
+            
+            // 交易記錄
+            'Transaction', 'Deposit', 'Withdrawal', 'Transfer', 'Payment',
+            '交易', '存款', '取款', '轉賬', '付款', '收款',
+            
+            // 金額和日期模式
+            'HKD', 'USD', 'CNY', 'Total', 'Amount',
+            '港幣', '美元', '人民幣', '總額', '金額',
+            
+            // 常見商戶名稱
+            'VISA', 'MASTERCARD', 'CHEQUE', 'ATM', 'POS', 'CASH',
+            'TRANSFER', 'INTEREST', 'FEE', 'CHARGE'
+        ];
+        
+        // ✅ 3. 定義要刪除的無用詞（免責聲明、法律文字）
+        const skipKeywords = [
+            // 法律和免責聲明
+            'Terms and Conditions', 'Please note', 'important notice', 
+            'legal', 'disclaimer', 'privacy', 'security',
+            '條款', '細則', '請注意', '重要通知', '法律', '免責', '私隱', '保安',
+            
+            // 長段落的提示文字
+            'For enquiries', 'Please contact', 'customer service',
+            '查詢', '請聯絡', '客戶服務', '如有疑問',
+            
+            // 廣告和宣傳
+            'promotion', 'offer', 'reward', 'bonus',
+            '推廣', '優惠', '獎賞', '紅利',
+            
+            // 超長的說明文字
+            'The financial reminder', 'credit card', 'before the statement date',
+            '財務提示', '信用卡', '到期日前'
+        ];
+        
+        // ✅ 4. 逐行過濾
+        for (let line of lines) {
+            const trimmedLine = line.trim();
+            
+            // 跳過空行
+            if (trimmedLine.length === 0) continue;
+            
+            // 跳過太長的行（通常是免責聲明）
+            if (trimmedLine.length > 200) {
+                console.log(`  ⏭️ 跳過超長行（${trimmedLine.length} 字符）`);
+                continue;
+            }
+            
+            // 檢查是否包含要跳過的關鍵詞
+            const shouldSkip = skipKeywords.some(keyword => 
+                trimmedLine.toLowerCase().includes(keyword.toLowerCase())
+            );
+            
+            if (shouldSkip) {
+                console.log(`  ⏭️ 跳過無用行: ${trimmedLine.substring(0, 50)}...`);
+                continue;
+            }
+            
+            // 檢查是否包含要保留的關鍵詞
+            const shouldKeep = keepKeywords.some(keyword => 
+                trimmedLine.toLowerCase().includes(keyword.toLowerCase())
+            );
+            
+            // 檢查是否包含日期模式 (DD/MM/YYYY 或 DD-MM-YYYY)
+            const hasDate = /\d{1,2}[-\/]\d{1,2}[-\/]\d{2,4}/.test(trimmedLine);
+            
+            // 檢查是否包含金額模式 (數字 + 小數點)
+            const hasAmount = /\d+[,.]?\d*/.test(trimmedLine);
+            
+            // 如果包含關鍵詞、日期或金額，則保留
+            if (shouldKeep || hasDate || hasAmount) {
+                relevantLines.push(trimmedLine);
+            }
+        }
+        
+        const filteredText = relevantLines.join('\n');
+        console.log(`✅ 銀行對帳單過濾完成：保留 ${relevantLines.length} 行`);
+        
+        return filteredText;
+    }
+    
+    /**
+     * 過濾發票/收據文本
+     */
+    filterInvoiceText(text) {
+        console.log('🧾 過濾發票/收據文本...');
+        
+        // 發票通常不需要太多過濾，但可以移除頁尾的條款
+        const lines = text.split('\n');
+        const relevantLines = [];
+        
+        const skipKeywords = [
+            'Terms and Conditions', 'Privacy Policy', 'legal notice',
+            '條款', '細則', '私隱政策', '法律通知'
+        ];
+        
+        for (let line of lines) {
+            const trimmedLine = line.trim();
+            
+            if (trimmedLine.length === 0) continue;
+            if (trimmedLine.length > 300) continue; // 跳過超長行
+            
+            const shouldSkip = skipKeywords.some(keyword => 
+                trimmedLine.toLowerCase().includes(keyword.toLowerCase())
+            );
+            
+            if (!shouldSkip) {
+                relevantLines.push(trimmedLine);
+            }
+        }
+        
+        console.log(`✅ 發票/收據過濾完成：保留 ${relevantLines.length} 行`);
+        return relevantLines.join('\n');
     }
     
     /**
