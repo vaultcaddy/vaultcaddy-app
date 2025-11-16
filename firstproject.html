@@ -2084,34 +2084,61 @@
             try {
                 console.log('📤 上傳文件:', file.name, `(${pages} 頁)`);
                 
-                // 上傳文件到 Storage
-                const downloadURL = await window.simpleDataManager.uploadFile(currentProjectId, file);
-                console.log('✅ 文件已上傳到 Storage:', downloadURL);
+                // ✅ 如果是 PDF，先轉換為圖片（與 uploadFile 函數保持一致）
+                let filesToProcess = [file];
+                let isPDFConverted = false;
+                
+                if (window.pdfToImageConverter && window.pdfToImageConverter.isPDF(file)) {
+                    try {
+                        console.log('📄 檢測到 PDF 文件，開始轉換為圖片...');
+                        const imageFiles = await window.pdfToImageConverter.convertPDFToImages(file);
+                        console.log(`✅ PDF 轉換完成，生成 ${imageFiles.length} 張圖片`);
+                        filesToProcess = imageFiles;
+                        isPDFConverted = true;
+                        console.log(`📄 將處理所有 ${imageFiles.length} 頁`);
+                    } catch (pdfError) {
+                        console.error('❌ PDF 轉換失敗:', pdfError);
+                        alert(`PDF 轉換失敗: ${pdfError.message}\n\n請確認文件是否有效。`);
+                        return;
+                    }
+                }
+                
+                // 上傳所有文件到 Storage
+                console.log(`📤 開始上傳 ${filesToProcess.length} 個文件...`);
+                const uploadPromises = filesToProcess.map(f => 
+                    window.simpleDataManager.uploadFile(currentProjectId, f)
+                );
+                const imageUrls = await Promise.all(uploadPromises);
+                console.log(`✅ ${imageUrls.length} 個文件已上傳到 Storage`);
                 
                 const docData = {
                     name: file.name,
                     fileName: file.name,
                     fileSize: file.size,
-                    fileType: file.type,
+                    fileType: filesToProcess[0].type,
                     documentType: selectedDocumentType,
                     status: 'processing',
                     createdAt: new Date().toISOString(),
-                    pages: pages,
-                    imageUrl: downloadURL,
-                    downloadURL: downloadURL,
-                    url: downloadURL
+                    pages: filesToProcess.length,
+                    imageUrl: imageUrls[0],
+                    imageUrls: imageUrls, // ✅ 所有頁面
+                    downloadURL: imageUrls[0],
+                    url: imageUrls[0],
+                    originalFileType: file.type,
+                    isPDFConverted: isPDFConverted
                 };
                 
                 const docId = await window.simpleDataManager.createDocument(currentProjectId, docData);
                 console.log('✅ 文檔記錄已創建:', docId);
                 
-                // 扣除 Credits
+                // 扣除 Credits（按實際頁數）
                 if (window.creditsManager) {
-                    await window.creditsManager.deductCredits(pages);
+                    await window.creditsManager.deductCredits(filesToProcess.length);
+                    console.log(`💰 已扣除 ${filesToProcess.length} Credits`);
                 }
                 
-                // 後台處理 AI
-                processFileWithAI(file, docId, pages).catch(err => {
+                // 後台處理 AI（處理所有頁面）
+                processMultiPageFileWithAI(filesToProcess, docId, selectedDocumentType).catch(err => {
                     console.error('❌ AI 處理失敗:', err);
                 });
                 
