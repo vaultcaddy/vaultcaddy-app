@@ -712,29 +712,38 @@ function displayBankStatementContent(data) {
     const openingBalance = data.openingBalance || data.opening_balance || data.startBalance || 0;
     const closingBalance = data.closingBalance || data.closing_balance || data.endBalance || data.finalBalance || 0;
     
-    // 帳戶詳情
+    // ✅ 帳戶詳情（可編輯）
     detailsSection.innerHTML = `
         <div class="bank-details-card">
             <h3 class="card-title" style="margin-bottom: 1.5rem;">
                 <i class="fas fa-university" style="color: #10b981; margin-right: 0.5rem;"></i>
                 帳戶信息
+                <span style="font-size: 0.875rem; color: #6b7280; font-weight: normal; margin-left: 0.5rem;">(可編輯)</span>
             </h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
-                <div>
-                    <label style="display: block; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">銀行名稱</label>
-                    <div style="padding: 0.5rem; background: #f9fafb; border-radius: 6px; font-size: 0.9rem;">${bankName}</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">銀行名稱</label>
+                    <input type="text" id="bankName" value="${bankName}" 
+                           onchange="autoSaveBankStatementDetails()"
+                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
                 </div>
-                <div>
-                    <label style="display: block; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">帳戶號碼</label>
-                    <div style="padding: 0.5rem; background: #f9fafb; border-radius: 6px; font-size: 0.9rem;">${accountNumber}</div>
+                <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">帳戶號碼</label>
+                    <input type="text" id="accountNumber" value="${accountNumber}" 
+                           onchange="autoSaveBankStatementDetails()"
+                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
                 </div>
-                <div>
-                    <label style="display: block; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">對帳單日期</label>
-                    <div style="padding: 0.5rem; background: #f9fafb; border-radius: 6px; font-size: 0.9rem;">${statementDate}</div>
+                <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">對帳單日期</label>
+                    <input type="date" id="statementDate" value="${statementDate}" 
+                           onchange="autoSaveBankStatementDetails()"
+                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
                 </div>
-                <div>
-                    <label style="display: block; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">期末餘額</label>
-                    <div style="padding: 0.5rem; background: #f9fafb; border-radius: 6px; font-size: 0.9rem; font-weight: 600; color: #10b981;">${formatCurrency(closingBalance)}</div>
+                <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">期末餘額</label>
+                    <input type="text" id="closingBalance" value="${formatCurrency(closingBalance)}" 
+                           onchange="autoSaveBankStatementDetails()"
+                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; font-weight: 600; color: #10b981; background: white;">
                 </div>
             </div>
         </div>
@@ -839,6 +848,15 @@ function displayReceiptContent(data) {
         </div>
     `;
 }
+
+// ============================================
+// 自動保存快捷函數
+// ============================================
+
+// ✅ 銀行對帳單自動保存
+window.autoSaveBankStatementDetails = function() {
+    markAsChanged();
+};
 
 // ============================================
 // 通用內容顯示
@@ -978,6 +996,22 @@ async function autoSaveAllChanges() {
                 date: invoiceDate,
                 vendor: vendor,
                 total: parseFloat(totalAmount?.replace(/[^0-9.-]+/g, '')) || 0
+            };
+        }
+    } else if (docType === 'bank_statement' || docType === 'bank_statements') {
+        // ✅ 如果是銀行對帳單，獲取帳戶詳情
+        const bankName = document.getElementById('bankName')?.value;
+        const accountNumber = document.getElementById('accountNumber')?.value;
+        const statementDate = document.getElementById('statementDate')?.value;
+        const closingBalance = document.getElementById('closingBalance')?.value;
+        
+        if (bankName || accountNumber || statementDate || closingBalance) {
+            currentDocument.processedData = {
+                ...currentDocument.processedData,
+                bankName: bankName,
+                accountNumber: accountNumber,
+                statementDate: statementDate,
+                closingBalance: parseFloat(closingBalance?.replace(/[^0-9.-]+/g, '')) || 0
             };
         }
     }
