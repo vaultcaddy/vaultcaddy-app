@@ -2070,11 +2070,10 @@
             closeAIUploadModal();
             
             // 4. 逐個上傳文件（Credits 已經在前面檢查過了）
+            // ✅ 每個文件上傳後都會自動調用 loadDocuments()，所以這裡不需要再調用
             for (let { file, pages } of filePages) {
                 await uploadFileDirect(file, pages);
             }
-            
-            await loadDocuments();
         }
         
         /**
@@ -2130,6 +2129,9 @@
                 
                 const docId = await window.simpleDataManager.createDocument(currentProjectId, docData);
                 console.log('✅ 文檔記錄已創建:', docId);
+                
+                // ✅ 立即重新載入文檔列表，顯示新上傳的文件
+                await loadDocuments();
                 
                 // 扣除 Credits（按實際頁數）
                 if (window.creditsManager) {

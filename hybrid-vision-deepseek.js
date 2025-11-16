@@ -136,42 +136,86 @@ class HybridVisionDeepSeekProcessor {
     }
     
     /**
-     * 步驟 2：使用 DeepSeek Chat 分析文本
+     * 步驟 2：使用 DeepSeek Chat 分析文本（帶重試機制）
      */
     async analyzeTextWithDeepSeek(text, documentType) {
         // 生成 Prompt
         const systemPrompt = this.generateSystemPrompt(documentType);
         const userPrompt = `請分析以下 OCR 提取的文本，並提取所有資料。\n\n文本內容：\n${text}`;
         
-        // 調用 DeepSeek API
-        const response = await fetch(this.deepseekWorkerUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                model: this.deepseekModel,
-                messages: [
-                    {
-                        role: 'system',
-                        content: systemPrompt
+        // ✅ 重試機制（最多 3 次）
+        let lastError;
+        for (let attempt = 1; attempt <= 3; attempt++) {
+            try {
+                console.log(`🔄 DeepSeek API 請求（第 ${attempt} 次嘗試）...`);
+                
+                // 調用 DeepSeek API（添加超時控制）
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 秒超時
+                
+                const response = await fetch(this.deepseekWorkerUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
                     },
-                    {
-                        role: 'user',
-                        content: userPrompt
+                    body: JSON.stringify({
+                        model: this.deepseekModel,
+                        messages: [
+                            {
+                                role: 'system',
+                                content: systemPrompt
+                            },
+                            {
+                                role: 'user',
+                                content: userPrompt
+                            }
+                        ],
+                        temperature: 0.1,
+                        max_tokens: 4096
+                    }),
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    let errorData;
+                    try {
+                        errorData = JSON.parse(errorText);
+                    } catch {
+                        errorData = { message: errorText };
                     }
-                ],
-                temperature: 0.1,
-                max_tokens: 4096
-            })
-        });
-        
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(`DeepSeek API 錯誤: ${response.status} - ${JSON.stringify(errorData)}`);
+                    throw new Error(`DeepSeek API 錯誤: ${response.status} - ${JSON.stringify(errorData)}`);
+                }
+                
+                const data = await response.json();
+                console.log(`✅ DeepSeek API 請求成功（第 ${attempt} 次嘗試）`);
+                
+                // 成功，返回數據
+                return await this.parseDeepSeekResponse(data, documentType);
+                
+            } catch (error) {
+                lastError = error;
+                console.error(`❌ DeepSeek API 請求失敗（第 ${attempt} 次嘗試）:`, error.message);
+                
+                // 如果是最後一次嘗試，拋出錯誤
+                if (attempt === 3) {
+                    throw new Error(`DeepSeek API 請求失敗（已重試 3 次）: ${error.message}`);
+                }
+                
+                // 等待後重試（指數退避）
+                const waitTime = attempt * 2000; // 2 秒、4 秒
+                console.log(`⏳ 等待 ${waitTime / 1000} 秒後重試...`);
+                await new Promise(resolve => setTimeout(resolve, waitTime));
+            }
         }
-        
-        const data = await response.json();
+    }
+    
+    /**
+     * 解析 DeepSeek 響應
+     */
+    async parseDeepSeekResponse(data, documentType) {
         
         // 提取 AI 回應
         const aiResponse = data.choices[0].message.content;
