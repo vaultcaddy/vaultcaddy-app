@@ -161,98 +161,196 @@ class HybridVisionDeepSeekProcessor {
     }
     
     /**
-     * 過濾銀行對帳單文本
+     * 過濾銀行對帳單文本（區段提取版本）
+     * 
+     * 策略：只保留關鍵區段
+     * 1. Account Number + Statement Date（賬戶信息）
+     * 2. TRANSACTION HISTORY（交易記錄）
+     * 3. Net Position / Total Relationship Balance（淨額摘要）
      */
     filterBankStatementText(text) {
-        console.log('🏦 過濾銀行對帳單文本...');
+        console.log('🏦 過濾銀行對帳單文本（區段提取）...');
         
-        // ✅ 1. 分割成行
         const lines = text.split('\n');
         const relevantLines = [];
         
-        // ✅ 2. 定義要保留的關鍵詞（賬戶信息、交易記錄）
-        const keepKeywords = [
-            // 賬戶信息
-            'Account', 'Branch', 'Bank', 'Statement', 'Date', 'Balance',
-            '賬戶', '分行', '銀行', '對帳單', '日期', '餘額', '結餘',
-            
-            // 交易記錄
-            'Transaction', 'Deposit', 'Withdrawal', 'Transfer', 'Payment',
-            '交易', '存款', '取款', '轉賬', '付款', '收款',
-            
-            // 金額和日期模式
-            'HKD', 'USD', 'CNY', 'Total', 'Amount',
-            '港幣', '美元', '人民幣', '總額', '金額',
-            
-            // 常見商戶名稱
-            'VISA', 'MASTERCARD', 'CHEQUE', 'ATM', 'POS', 'CASH',
-            'TRANSFER', 'INTEREST', 'FEE', 'CHARGE'
-        ];
+        // ✅ 階段 1：提取賬戶基本信息
+        console.log('📋 階段 1：提取賬戶信息...');
+        let accountInfo = this.extractAccountInfo(lines);
+        if (accountInfo) {
+            relevantLines.push(accountInfo);
+            console.log(`  ✅ 找到賬戶信息：${accountInfo.substring(0, 50)}...`);
+        }
         
-        // ✅ 3. 定義要刪除的無用詞（免責聲明、法律文字）
-        const skipKeywords = [
-            // 法律和免責聲明
-            'Terms and Conditions', 'Please note', 'important notice', 
-            'legal', 'disclaimer', 'privacy', 'security',
-            '條款', '細則', '請注意', '重要通知', '法律', '免責', '私隱', '保安',
-            
-            // 長段落的提示文字
-            'For enquiries', 'Please contact', 'customer service',
-            '查詢', '請聯絡', '客戶服務', '如有疑問',
-            
-            // 廣告和宣傳
-            'promotion', 'offer', 'reward', 'bonus',
-            '推廣', '優惠', '獎賞', '紅利',
-            
-            // 超長的說明文字
-            'The financial reminder', 'credit card', 'before the statement date',
-            '財務提示', '信用卡', '到期日前'
-        ];
+        // ✅ 階段 2：提取交易記錄區段（最重要）
+        console.log('📋 階段 2：提取交易記錄區段...');
+        let transactionSection = this.extractTransactionSection(lines);
+        if (transactionSection) {
+            relevantLines.push(transactionSection);
+            const txLines = transactionSection.split('\n').length;
+            console.log(`  ✅ 找到交易記錄：${txLines} 行`);
+        }
         
-        // ✅ 4. 逐行過濾
-        for (let line of lines) {
-            const trimmedLine = line.trim();
+        // ✅ 階段 3：提取淨額摘要
+        console.log('📋 階段 3：提取淨額摘要...');
+        let summarySection = this.extractSummarySection(lines);
+        if (summarySection) {
+            relevantLines.push(summarySection);
+            console.log(`  ✅ 找到淨額摘要`);
+        }
+        
+        const filteredText = relevantLines.join('\n\n');
+        console.log(`✅ 銀行對帳單過濾完成：${text.length} → ${filteredText.length} 字符（減少 ${Math.round((1 - filteredText.length / text.length) * 100)}%）`);
+        
+        return filteredText;
+    }
+    
+    /**
+     * 提取賬戶信息（Account Number, Statement Date）
+     */
+    extractAccountInfo(lines) {
+        const accountLines = [];
+        
+        for (let i = 0; i < Math.min(50, lines.length); i++) {
+            const line = lines[i].trim();
             
-            // 跳過空行
-            if (trimmedLine.length === 0) continue;
-            
-            // 跳過太長的行（通常是免責聲明）
-            if (trimmedLine.length > 200) {
-                console.log(`  ⏭️ 跳過超長行（${trimmedLine.length} 字符）`);
-                continue;
+            // 查找賬戶號碼
+            if (/account\s*number|賬戶號碼|帳號|户口號碼/i.test(line)) {
+                accountLines.push(line);
+                // 可能在下一行
+                if (i + 1 < lines.length) {
+                    accountLines.push(lines[i + 1].trim());
+                }
             }
             
-            // 檢查是否包含要跳過的關鍵詞
-            const shouldSkip = skipKeywords.some(keyword => 
-                trimmedLine.toLowerCase().includes(keyword.toLowerCase())
-            );
-            
-            if (shouldSkip) {
-                console.log(`  ⏭️ 跳過無用行: ${trimmedLine.substring(0, 50)}...`);
-                continue;
+            // 查找對帳單日期
+            if (/statement\s*date|對帳單日期|結單日期|日期/i.test(line)) {
+                accountLines.push(line);
+                if (i + 1 < lines.length) {
+                    accountLines.push(lines[i + 1].trim());
+                }
             }
             
-            // 檢查是否包含要保留的關鍵詞
-            const shouldKeep = keepKeywords.some(keyword => 
-                trimmedLine.toLowerCase().includes(keyword.toLowerCase())
-            );
-            
-            // 檢查是否包含日期模式 (DD/MM/YYYY 或 DD-MM-YYYY)
-            const hasDate = /\d{1,2}[-\/]\d{1,2}[-\/]\d{2,4}/.test(trimmedLine);
-            
-            // 檢查是否包含金額模式 (數字 + 小數點)
-            const hasAmount = /\d+[,.]?\d*/.test(trimmedLine);
-            
-            // 如果包含關鍵詞、日期或金額，則保留
-            if (shouldKeep || hasDate || hasAmount) {
-                relevantLines.push(trimmedLine);
+            // 查找銀行名稱
+            if (/hang\s*seng|hsbc|bank\s*of\s*china|standard\s*chartered|恒生|滙豐|中國銀行|渣打/i.test(line)) {
+                accountLines.push(line);
             }
         }
         
-        const filteredText = relevantLines.join('\n');
-        console.log(`✅ 銀行對帳單過濾完成：保留 ${relevantLines.length} 行`);
+        return accountLines.length > 0 ? accountLines.join('\n') : null;
+    }
+    
+    /**
+     * 提取交易記錄區段（TRANSACTION HISTORY）
+     */
+    extractTransactionSection(lines) {
+        const transactionLines = [];
+        let inTransactionSection = false;
+        let startIndex = -1;
         
-        return filteredText;
+        // ✅ 1. 查找交易記錄開始標記
+        const startMarkers = [
+            'TRANSACTION HISTORY',
+            '交易記錄',
+            '進支記錄',
+            'Transaction Details',
+            'ACCOUNT SUMMARY',
+            '賬戶摘要'
+        ];
+        
+        // ✅ 2. 查找交易記錄結束標記
+        const endMarkers = [
+            'FINANCIAL REMINDER',
+            '財務提示',
+            'Please note',
+            'Terms and Conditions',
+            'For enquiries',
+            '請注意',
+            '條款',
+            '查詢'
+        ];
+        
+        // 查找開始位置
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            
+            if (startMarkers.some(marker => line.includes(marker))) {
+                console.log(`  🎯 找到交易記錄開始標記: ${line}`);
+                startIndex = i;
+                inTransactionSection = true;
+                transactionLines.push(line); // 保留標題
+                break;
+            }
+        }
+        
+        // 如果找到開始標記，繼續提取
+        if (startIndex >= 0) {
+            for (let i = startIndex + 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                
+                // 檢查是否到達結束標記
+                if (endMarkers.some(marker => line.includes(marker))) {
+                    console.log(`  🛑 遇到結束標記，停止提取: ${line.substring(0, 30)}...`);
+                    break;
+                }
+                
+                // 跳過空行
+                if (line.length === 0) continue;
+                
+                // 跳過超長行（通常是免責聲明）
+                if (line.length > 250) {
+                    console.log(`  ⏭️ 跳過超長行（${line.length} 字符）`);
+                    continue;
+                }
+                
+                // 保留這一行
+                transactionLines.push(line);
+                
+                // 安全限制：最多保留 200 行交易記錄
+                if (transactionLines.length >= 200) {
+                    console.log(`  ⚠️ 達到 200 行限制，停止提取`);
+                    break;
+                }
+            }
+        }
+        
+        return transactionLines.length > 0 ? transactionLines.join('\n') : null;
+    }
+    
+    /**
+     * 提取淨額摘要（Net Position, Total Balance）
+     */
+    extractSummarySection(lines) {
+        const summaryLines = [];
+        
+        const summaryKeywords = [
+            'Net Position',
+            'Total Relationship Balance',
+            'Account Net Position',
+            '淨額',
+            '總結餘',
+            '綜合結餘',
+            'FINANCIAL POSITION',
+            '財務狀況'
+        ];
+        
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            
+            // 查找摘要關鍵詞
+            if (summaryKeywords.some(keyword => line.includes(keyword))) {
+                // 保留這一行及後續 5 行
+                for (let j = i; j < Math.min(i + 6, lines.length); j++) {
+                    const summaryLine = lines[j].trim();
+                    if (summaryLine.length > 0 && summaryLine.length < 200) {
+                        summaryLines.push(summaryLine);
+                    }
+                }
+                break; // 只提取一次
+            }
+        }
+        
+        return summaryLines.length > 0 ? summaryLines.join('\n') : null;
     }
     
     /**
