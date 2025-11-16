@@ -700,9 +700,17 @@ function displayInvoiceContent(data) {
 
 function displayBankStatementContent(data) {
     console.log('🏦 顯示銀行對帳單內容');
+    console.log('📊 原始數據:', JSON.stringify(data, null, 2));
     
     const detailsSection = document.getElementById('documentDetailsSection');
     const dataSection = document.getElementById('documentDataSection');
+    
+    // ✅ 提取帳戶信息（支持多種字段名稱）
+    const bankName = data.bankName || data.bank_name || data.bank || '—';
+    const accountNumber = data.accountNumber || data.account_number || data.accountNo || '—';
+    const statementDate = data.statementDate || data.statement_date || data.date || '—';
+    const openingBalance = data.openingBalance || data.opening_balance || data.startBalance || 0;
+    const closingBalance = data.closingBalance || data.closing_balance || data.endBalance || data.finalBalance || 0;
     
     // 帳戶詳情
     detailsSection.innerHTML = `
@@ -713,20 +721,20 @@ function displayBankStatementContent(data) {
             </h3>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
                 <div>
-                    <label style="display: block; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">帳戶名稱</label>
-                    <div style="padding: 0.5rem; background: #f9fafb; border-radius: 6px; font-size: 0.9rem;">${data.accountName || '—'}</div>
+                    <label style="display: block; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">銀行名稱</label>
+                    <div style="padding: 0.5rem; background: #f9fafb; border-radius: 6px; font-size: 0.9rem;">${bankName}</div>
                 </div>
                 <div>
                     <label style="display: block; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">帳戶號碼</label>
-                    <div style="padding: 0.5rem; background: #f9fafb; border-radius: 6px; font-size: 0.9rem;">${data.accountNumber || '—'}</div>
+                    <div style="padding: 0.5rem; background: #f9fafb; border-radius: 6px; font-size: 0.9rem;">${accountNumber}</div>
                 </div>
                 <div>
-                    <label style="display: block; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">期初餘額</label>
-                    <div style="padding: 0.5rem; background: #f9fafb; border-radius: 6px; font-size: 0.9rem; font-weight: 600;">${formatCurrency(data.openingBalance || 0)}</div>
+                    <label style="display: block; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">對帳單日期</label>
+                    <div style="padding: 0.5rem; background: #f9fafb; border-radius: 6px; font-size: 0.9rem;">${statementDate}</div>
                 </div>
                 <div>
                     <label style="display: block; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">期末餘額</label>
-                    <div style="padding: 0.5rem; background: #f9fafb; border-radius: 6px; font-size: 0.9rem; font-weight: 600;">${formatCurrency(data.closingBalance || 0)}</div>
+                    <div style="padding: 0.5rem; background: #f9fafb; border-radius: 6px; font-size: 0.9rem; font-weight: 600; color: #10b981;">${formatCurrency(closingBalance)}</div>
                 </div>
             </div>
         </div>

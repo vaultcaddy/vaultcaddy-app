@@ -1794,12 +1794,21 @@
                     // 提取關鍵數據（根據文檔類型）
                     let vendor, amount, amountDisplay, date;
                     
-                    if (doc.type === 'bank_statements') {
+                    // ✅ 修復：支持 bank_statement 和 bank_statements
+                    const docType = doc.documentType || doc.type || '';
+                    if (docType === 'bank_statement' || docType === 'bank_statements') {
                         // 銀行對帳單：顯示銀行名稱、期末餘額、對帳單期間
-                        vendor = data.bank_name || data.bank || data.bankName || '-';
-                        amount = data.closing_balance || data.closingBalance || data.balance;
+                        vendor = data.bankName || data.bank_name || data.bank || '-';
+                        
+                        // ✅ 提取期末餘額（支持多種格式）
+                        amount = data.closingBalance || data.closing_balance || data.balance || 
+                                 data.endBalance || data.finalBalance;
+                        
                         amountDisplay = amount ? `$${parseFloat(amount).toLocaleString('zh-TW', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '-';
-                        date = data.statement_period || data.period || data.statementPeriod || '-';
+                        
+                        // ✅ 提取對帳單日期
+                        date = data.statementDate || data.statement_date || data.date || 
+                               data.statementPeriod || data.statement_period || data.period || '-';
                     } else {
                         // 發票/收據/一般文檔：顯示供應商、總金額、日期
                         vendor = data.vendor || data.supplier || data.merchantName || data.source || '-';
