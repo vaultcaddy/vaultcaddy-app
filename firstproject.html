@@ -2327,45 +2327,69 @@
         // ✅ 多頁 PDF 處理函數
         async function processMultiPageFileWithAI(files, docId, documentType) {
             try {
-                console.log(`🤖 開始多頁 AI 處理: ${files.length} 頁`);
+                console.log(`🤖 開始多頁 AI 處理: ${files.length} 頁（方案 B：批量 OCR + 單次 DeepSeek）`);
                 
                 if (!window.HybridVisionDeepSeekProcessor) {
                     throw new Error('AI 處理器未載入');
                 }
                 
                 const processor = new window.HybridVisionDeepSeekProcessor();
-                const allResults = [];
                 
-                // 處理每一頁
-                for (let i = 0; i < files.length; i++) {
-                    console.log(`📄 處理第 ${i + 1}/${files.length} 頁...`);
-                    const result = await processor.processDocument(files[i], documentType);
-                    allResults.push(result);
+                // ✅ 方案 B：使用批量處理方法（批量 OCR + 單次 DeepSeek）
+                if (files.length > 1) {
+                    console.log(`📚 使用批量處理模式（${files.length} 頁）`);
                     
-                    // 更新進度
+                    // 更新狀態為處理中
                     await window.simpleDataManager.updateDocument(currentProjectId, docId, {
                         status: 'processing',
-                        processingProgress: Math.round(((i + 1) / files.length) * 100)
+                        processingProgress: 10
                     });
+                    
+                    // 批量處理所有頁面
+                    const result = await processor.processMultiPageDocument(files, documentType);
+                    
+                    // 更新為已完成
+                    await window.simpleDataManager.updateDocument(currentProjectId, docId, {
+                        status: 'completed',
+                        processedData: result.extractedData,
+                        rawText: result.rawText,
+                        confidence: result.confidence,
+                        processingTime: result.processingTime,
+                        processor: result.processor,
+                        pageCount: result.pageCount,
+                        processingProgress: 100
+                    });
+                    
+                    console.log('✅ 批量處理完成');
+                    
+                } else {
+                    // 單頁文檔，使用原有邏輯
+                    console.log(`📄 使用單頁處理模式`);
+                    
+                    await window.simpleDataManager.updateDocument(currentProjectId, docId, {
+                        status: 'processing',
+                        processingProgress: 50
+                    });
+                    
+                    const result = await processor.processDocument(files[0], documentType);
+                    
+                    await window.simpleDataManager.updateDocument(currentProjectId, docId, {
+                        status: 'completed',
+                        processedData: result.extractedData,
+                        rawText: result.rawText,
+                        confidence: result.confidence,
+                        processingTime: result.processingTime,
+                        processor: result.processor,
+                        processingProgress: 100
+                    });
+                    
+                    console.log('✅ 單頁處理完成');
                 }
                 
-                console.log(`✅ ${files.length} 頁 AI 處理完成，開始合併結果...`);
-                
-                // 合併多頁結果
-                const mergedData = mergeMultiPageResults(allResults, documentType);
-                
-                await window.simpleDataManager.updateDocument(currentProjectId, docId, {
-                    status: 'completed',
-                    processedData: mergedData,
-                    pageResults: allResults, // 保存每頁的詳細結果
-                    processingProgress: 100
-                });
-                
-                console.log('✅ 多頁文檔狀態已更新');
                 await loadDocuments();
                 
             } catch (error) {
-                console.error('❌ 多頁 AI 處理失敗:', error);
+                console.error('❌ AI 處理失敗:', error);
                 
                 // ✅ 退回 Credits（防止重複退回）
                 if (window.creditsManager && files.length > 0 && !refundedDocuments.has(docId)) {
