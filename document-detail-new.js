@@ -143,6 +143,10 @@ async function loadDocument() {
 // PDF 預覽函數
 // ============================================
 
+// ✅ 全局變量：多頁支持
+window.currentPageIndex = 0;
+window.pageImages = [];
+
 async function displayPDFPreview() {
     console.log('📄 顯示 PDF 預覽');
     const pdfViewer = document.getElementById('pdfViewer');
@@ -154,6 +158,15 @@ async function displayPDFPreview() {
     
     console.log('📄 文檔對象完整內容:', JSON.stringify(currentDocument, null, 2));
     console.log('📄 文檔對象所有鍵:', Object.keys(currentDocument));
+    
+    // ✅ 檢查是否有多頁（imageUrls 數組）
+    if (currentDocument.imageUrls && Array.isArray(currentDocument.imageUrls) && currentDocument.imageUrls.length > 0) {
+        console.log(`📚 檢測到多頁文檔：${currentDocument.imageUrls.length} 頁`);
+        window.pageImages = currentDocument.imageUrls;
+        window.currentPageIndex = 0;
+        renderMultiPageDocument();
+        return;
+    }
     
     // 增強版：從多個來源獲取圖片 URL
     let imageUrl = null;
@@ -318,6 +331,101 @@ async function displayPDFPreview() {
         `;
     }
 }
+
+// ============================================
+// 多頁文檔渲染和導航
+// ============================================
+
+function renderMultiPageDocument() {
+    const pdfViewer = document.getElementById('pdfViewer');
+    const currentPage = window.currentPageIndex + 1;
+    const totalPages = window.pageImages.length;
+    const currentImageUrl = window.pageImages[window.currentPageIndex];
+    
+    console.log(`📖 渲染第 ${currentPage}/${totalPages} 頁`);
+    
+    pdfViewer.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
+            <!-- 圖片控制工具欄 - 固定在頂部 -->
+            <div style="background: #2d3748; border-radius: 8px; padding: 0.75rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.2); position: sticky; top: 1rem; z-index: 100;">
+                <!-- 縮小 -->
+                <button onclick="zoomOut()" style="background: transparent; border: none; color: white; cursor: pointer; padding: 0.5rem; border-radius: 4px; transition: background 0.2s;" onmouseover="this.style.background='#4a5568'" onmouseout="this.style.background='transparent'" title="縮小">
+                    <i class="fas fa-search-minus" style="font-size: 1.25rem;"></i>
+                </button>
+                
+                <!-- 縮放比例顯示 -->
+                <span style="color: white; font-size: 0.875rem; min-width: 60px; text-align: center; font-weight: 600;" id="zoom-display">100%</span>
+                
+                <!-- 放大 -->
+                <button onclick="zoomIn()" style="background: transparent; border: none; color: white; cursor: pointer; padding: 0.5rem; border-radius: 4px; transition: background 0.2s;" onmouseover="this.style.background='#4a5568'" onmouseout="this.style.background='transparent'" title="放大">
+                    <i class="fas fa-search-plus" style="font-size: 1.25rem;"></i>
+                </button>
+                
+                <div style="width: 1px; height: 24px; background: #4a5568; margin: 0 0.25rem;"></div>
+                
+                <!-- 向左旋轉 -->
+                <button onclick="rotateLeft()" style="background: transparent; border: none; color: white; cursor: pointer; padding: 0.5rem; border-radius: 4px; transition: background 0.2s;" onmouseover="this.style.background='#4a5568'" onmouseout="this.style.background='transparent'" title="向左旋轉">
+                    <i class="fas fa-undo" style="font-size: 1.25rem;"></i>
+                </button>
+                
+                <!-- 向右旋轉 -->
+                <button onclick="rotateRight()" style="background: transparent; border: none; color: white; cursor: pointer; padding: 0.5rem; border-radius: 4px; transition: background 0.2s;" onmouseover="this.style.background='#4a5568'" onmouseout="this.style.background='transparent'" title="向右旋轉">
+                    <i class="fas fa-redo" style="font-size: 1.25rem;"></i>
+                </button>
+                
+                <div style="width: 1px; height: 24px; background: #4a5568; margin: 0 0.25rem;"></div>
+                
+                <!-- 上一頁 -->
+                <button onclick="previousPage()" id="prevPageBtn" style="background: transparent; border: none; color: white; cursor: pointer; padding: 0.5rem; border-radius: 4px; transition: background 0.2s; ${currentPage === 1 ? 'opacity: 0.3; cursor: not-allowed;' : ''}" ${currentPage === 1 ? 'disabled' : ''} onmouseover="if(!this.disabled) this.style.background='#4a5568'" onmouseout="this.style.background='transparent'" title="上一頁">
+                    <i class="fas fa-chevron-left" style="font-size: 1.25rem;"></i>
+                </button>
+                
+                <!-- 頁數顯示 -->
+                <span style="color: white; font-size: 0.875rem; min-width: 80px; text-align: center;" id="page-display">${currentPage} of ${totalPages}</span>
+                
+                <!-- 下一頁 -->
+                <button onclick="nextPage()" id="nextPageBtn" style="background: transparent; border: none; color: white; cursor: pointer; padding: 0.5rem; border-radius: 4px; transition: background 0.2s; ${currentPage === totalPages ? 'opacity: 0.3; cursor: not-allowed;' : ''}" ${currentPage === totalPages ? 'disabled' : ''} onmouseover="if(!this.disabled) this.style.background='#4a5568'" onmouseout="this.style.background='transparent'" title="下一頁">
+                    <i class="fas fa-chevron-right" style="font-size: 1.25rem;"></i>
+                </button>
+            </div>
+            
+            <!-- 圖片顯示容器 - 支持拖拽滑動 -->
+            <div id="image-scroll-container" style="width: 100%; overflow: auto; display: flex; justify-content: center; align-items: center; min-height: 400px; cursor: grab; position: relative;">
+                <div class="pdf-page" id="image-container" style="transform: scale(1) rotate(0deg); transition: transform 0.3s; transform-origin: center center; display: inline-block;">
+                    <img src="${currentImageUrl}" alt="Document Preview - Page ${currentPage}" 
+                         style="max-width: 100%; height: auto; display: block; border-radius: 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); user-select: none;"
+                         onerror="console.error('圖片載入失敗:', '${currentImageUrl}'); this.parentElement.innerHTML='<div style=\\'padding: 2rem; text-align: center; color: #6b7280;\\'>無法載入第 ${currentPage} 頁</div>'"
+                         draggable="false">
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // 初始化控制變量
+    window.currentZoom = 100;
+    window.currentRotation = 0;
+    
+    // 初始化拖拽滑動功能
+    setTimeout(() => initImageDragScroll(), 100);
+}
+
+// 上一頁
+window.previousPage = function() {
+    if (window.currentPageIndex > 0) {
+        window.currentPageIndex--;
+        console.log(`⬅️ 上一頁: ${window.currentPageIndex + 1}/${window.pageImages.length}`);
+        renderMultiPageDocument();
+    }
+};
+
+// 下一頁
+window.nextPage = function() {
+    if (window.currentPageIndex < window.pageImages.length - 1) {
+        window.currentPageIndex++;
+        console.log(`➡️ 下一頁: ${window.currentPageIndex + 1}/${window.pageImages.length}`);
+        renderMultiPageDocument();
+    }
+};
 
 // ============================================
 // 圖片拖拽滑動功能
