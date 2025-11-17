@@ -850,21 +850,41 @@ function displayBankStatementContent(data) {
     let transactionsHTML = '';
     transactions.forEach((tx, index) => {
         const amount = parseFloat(tx.amount || 0);
-        const amountClass = amount >= 0 ? 'amount-positive' : 'amount-negative';
+        const balance = parseFloat(tx.balance || 0);
+        
+        // ✅ 判斷交易類型（根據金額正負）
+        const isIncome = amount >= 0;
+        const amountSign = isIncome ? '+' : '-';
+        const amountColor = isIncome ? '#10b981' : '#ef4444';
+        const amountValue = Math.abs(amount);
+        
+        // ✅ 優化描述顯示（保留完整名稱）
+        const description = tx.description || tx.details || tx.memo || '—';
         
         transactionsHTML += `
-            <tr>
+            <tr data-index="${index}">
                 <td class="checkbox-cell"><input type="checkbox"></td>
-                <td>${tx.date || '—'}</td>
-                <td>${tx.description || '—'}</td>
-                <td class="amount-cell ${amountClass}">${formatCurrency(amount)}</td>
-                <td class="amount-cell">${formatCurrency(tx.balance || 0)}</td>
-                <td class="action-cell">
-                    <div class="action-btns">
-                        <button class="icon-btn"><i class="fas fa-edit"></i></button>
-                        <button class="icon-btn delete"><i class="fas fa-trash"></i></button>
+                <td contenteditable="true" class="editable-cell" data-field="date" style="min-width: 100px;">${tx.date || '—'}</td>
+                <td contenteditable="true" class="editable-cell" data-field="description" style="min-width: 200px;">${description}</td>
+                <td class="amount-cell" style="position: relative;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <button onclick="toggleTransactionType(${index})" 
+                                style="background: ${isIncome ? '#10b981' : '#ef4444'}; color: white; border: none; border-radius: 4px; padding: 0.25rem 0.5rem; cursor: pointer; font-weight: 600; font-size: 0.875rem; transition: all 0.2s;"
+                                onmouseover="this.style.opacity='0.8'" 
+                                onmouseout="this.style.opacity='1'"
+                                title="點擊切換收入/支出">
+                            ${amountSign}
+                        </button>
+                        <input type="text" 
+                               value="${amountValue.toFixed(2)}" 
+                               class="editable-amount" 
+                               data-index="${index}"
+                               data-field="amount"
+                               style="border: 1px solid #e5e7eb; border-radius: 4px; padding: 0.25rem 0.5rem; text-align: right; color: ${amountColor}; font-weight: 600; width: 100px;"
+                               onchange="updateTransactionAmount(${index}, this.value, ${isIncome})">
                     </div>
                 </td>
+                <td contenteditable="true" class="editable-cell" data-field="balance" style="text-align: right; font-weight: 600; color: #3b82f6;">${formatCurrency(balance)}</td>
             </tr>
         `;
     });
@@ -888,15 +908,17 @@ function displayBankStatementContent(data) {
                         <th>描述</th>
                         <th>金額</th>
                         <th>餘額</th>
-                        <th class="action-cell">操作</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${transactionsHTML || '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: #6b7280;">無交易記錄</td></tr>'}
+                    ${transactionsHTML || '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: #6b7280;">無交易記錄</td></tr>'}
                 </tbody>
             </table>
         </div>
     `;
+    
+    // ✅ 設置交易記錄編輯監聽器
+    setTimeout(() => setupTransactionEditListeners(), 100);
 }
 
 // ============================================
@@ -1371,6 +1393,91 @@ function exportToQBO(data) {
     qbo += `</QBXML>`;
     
     return qbo;
+}
+
+// ============================================
+// 交易記錄編輯函數
+// ============================================
+
+// ✅ 切換交易類型（+/-）
+function toggleTransactionType(index) {
+    console.log(`🔄 切換交易 ${index} 的類型`);
+    
+    if (!currentDocument || !currentDocument.processedData || !currentDocument.processedData.transactions) {
+        console.error('❌ 無法找到交易數據');
+        return;
+    }
+    
+    const transaction = currentDocument.processedData.transactions[index];
+    if (!transaction) {
+        console.error(`❌ 找不到交易 ${index}`);
+        return;
+    }
+    
+    // 切換金額正負
+    transaction.amount = -parseFloat(transaction.amount || 0);
+    
+    // 更新 UI
+    displayDocumentContent();
+    
+    // 標記為有未保存更改
+    markAsChanged();
+}
+
+// ✅ 更新交易金額
+function updateTransactionAmount(index, value, wasIncome) {
+    console.log(`💰 更新交易 ${index} 的金額: ${value}`);
+    
+    if (!currentDocument || !currentDocument.processedData || !currentDocument.processedData.transactions) {
+        console.error('❌ 無法找到交易數據');
+        return;
+    }
+    
+    const transaction = currentDocument.processedData.transactions[index];
+    if (!transaction) {
+        console.error(`❌ 找不到交易 ${index}`);
+        return;
+    }
+    
+    // 解析金額並保持正負符號
+    const numValue = parseFloat(value) || 0;
+    transaction.amount = wasIncome ? numValue : -numValue;
+    
+    // 標記為有未保存更改
+    markAsChanged();
+}
+
+// ✅ 監聽可編輯單元格的變化
+function setupTransactionEditListeners() {
+    document.querySelectorAll('.editable-cell').forEach(cell => {
+        cell.addEventListener('blur', function() {
+            const row = this.closest('tr');
+            const index = parseInt(row.dataset.index);
+            const field = this.dataset.field;
+            const value = this.textContent.trim();
+            
+            if (!currentDocument || !currentDocument.processedData || !currentDocument.processedData.transactions) {
+                return;
+            }
+            
+            const transaction = currentDocument.processedData.transactions[index];
+            if (!transaction) {
+                return;
+            }
+            
+            // 更新對應欄位
+            if (field === 'date') {
+                transaction.date = value;
+            } else if (field === 'description') {
+                transaction.description = value;
+            } else if (field === 'balance') {
+                transaction.balance = parseFloat(value.replace(/[^0-9.-]+/g, '')) || 0;
+            }
+            
+            // 標記為有未保存更改
+            markAsChanged();
+        });
+    });
 }
 
 // ============================================
