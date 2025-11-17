@@ -705,12 +705,61 @@ function displayBankStatementContent(data) {
     const detailsSection = document.getElementById('documentDetailsSection');
     const dataSection = document.getElementById('documentDataSection');
     
-    // ✅ 提取帳戶信息（支持多種字段名稱）
-    const bankName = data.bankName || data.bank_name || data.bank || '—';
-    const accountNumber = data.accountNumber || data.account_number || data.accountNo || '—';
-    const statementDate = data.statementDate || data.statement_date || data.date || '—';
-    const openingBalance = data.openingBalance || data.opening_balance || data.startBalance || 0;
-    const closingBalance = data.closingBalance || data.closing_balance || data.endBalance || data.finalBalance || 0;
+    // ✅ 提取帳戶信息（支持多種字段名稱 + 增強 Fallback）
+    const bankName = data.bankName || 
+                     data.bank_name || 
+                     data.bank || 
+                     data.bankname ||
+                     '—';
+    
+    const accountNumber = data.accountNumber || 
+                          data.account_number || 
+                          data.accountNo || 
+                          data.account_no ||
+                          data.accountnum ||
+                          '—';
+    
+    // ✅ 提取對帳單日期（優先使用 statementDate，否則從 statement_period 提取）
+    let statementDate = data.statementDate || 
+                        data.statement_date || 
+                        data.date ||
+                        data.statementdate ||
+                        '';
+    
+    // 如果沒有單獨的日期，從 statement_period 提取結束日期
+    if (!statementDate && (data.statementPeriod || data.statement_period)) {
+        const period = data.statementPeriod || data.statement_period;
+        const match = period.match(/to\s+(\d{2}\/\d{2}\/\d{4})/);
+        if (match) {
+            // 轉換 MM/DD/YYYY 為 YYYY-MM-DD
+            const [month, day, year] = match[1].split('/');
+            statementDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        }
+    }
+    
+    if (!statementDate) statementDate = '—';
+    
+    const openingBalance = data.openingBalance || 
+                           data.opening_balance || 
+                           data.startBalance || 
+                           data.start_balance ||
+                           0;
+    
+    const closingBalance = data.closingBalance || 
+                           data.closing_balance || 
+                           data.endBalance || 
+                           data.end_balance ||
+                           data.finalBalance ||
+                           data.final_balance ||
+                           0;
+    
+    // ✅ 調試日誌
+    console.log('🔍 提取的數據:');
+    console.log('   銀行名稱:', bankName);
+    console.log('   帳戶號碼:', accountNumber);
+    console.log('   對帳單日期:', statementDate);
+    console.log('   期初餘額:', openingBalance);
+    console.log('   期末餘額:', closingBalance);
     
     // ✅ 帳戶詳情（可編輯）
     detailsSection.innerHTML = `
@@ -749,8 +798,14 @@ function displayBankStatementContent(data) {
         </div>
     `;
     
-    // 交易列表
-    const transactions = data.transactions || currentDocument.transactions || [];
+    // ✅ 交易列表（支持多種字段名稱）
+    const transactions = data.transactions || 
+                         data.transaction || 
+                         data.items ||
+                         currentDocument.transactions || 
+                         [];
+    
+    console.log('   交易數量:', transactions.length);
     
     let transactionsHTML = '';
     transactions.forEach((tx, index) => {

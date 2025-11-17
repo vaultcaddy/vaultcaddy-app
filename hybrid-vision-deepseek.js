@@ -717,19 +717,20 @@ class HybridVisionDeepSeekProcessor {
 4. **期初/期末餘額（opening_balance/closing_balance）**: 核心金額
 5. **交易記錄（transactions）**: 每一筆交易都要提取（跨所有頁面）
 
-返回這個 JSON 結構：
+返回這個 JSON 結構（✅ 使用 camelCase 字段名）：
 
 {
   "confidence": 0-100,
-  "bank_name": "必須 - 銀行名稱（如：恆生銀行、HANG SENG BANK）",
-  "account_holder": "戶主名稱（如：MR YEUNG CAVLIN）",
-  "account_number": "必須 - 賬戶號碼（如：766-452064-882）",
-  "statement_period": "必須 - MM/DD/YYYY to MM/DD/YYYY（如：02/01/2025 to 03/22/2025）",
-  "opening_balance": 數字,
-  "closing_balance": 必須 - 數字,
+  "bankName": "必須 - 銀行名稱（如：恆生銀行、HANG SENG BANK）",
+  "accountHolder": "戶主名稱（如：MR YEUNG CAVLIN）",
+  "accountNumber": "必須 - 賬戶號碼（如：766-452064-882）",
+  "statementDate": "必須 - 對帳單日期 YYYY-MM-DD（如：2025-03-22，從 statement period 提取結束日期）",
+  "statementPeriod": "對帳單期間（如：02/01/2025 to 03/22/2025）",
+  "openingBalance": 數字,
+  "closingBalance": 必須 - 數字,
   "transactions": [
     {
-      "date": "必須 - MM/DD/YYYY",
+      "date": "必須 - YYYY-MM-DD（統一日期格式）",
       "description": "必須 - 交易描述/對手方（如：CREDIT INTEREST、B/F BALANCE、POON H** K***）",
       "type": "debit 或 credit",
       "amount": 數字（正數表示交易金額）,
