@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepSeek API 測試工具</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1f2937;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border-left: 4px solid #3b82f6;
+        }
+        .test-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 15px;
+        }
+        .test-description {
+            color: #6b7280;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .result.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+        .result.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+        .result.info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #3b82f6;
+        }
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 0.6s linear infinite;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 DeepSeek API 診斷工具</h1>
+
+        <!-- 測試 1：Worker 健康檢查 -->
+        <div class="test-section">
+            <div class="test-title">測試 1：Cloudflare Worker 健康檢查</div>
+            <div class="test-description">
+                檢查 Worker 是否正確部署並支持 <code>deepseek-reasoner</code> 模型
+            </div>
+            <button onclick="testWorkerHealth()" id="test1-btn">開始測試</button>
+            <div id="test1-result"></div>
+        </div>
+
+        <!-- 測試 2：直接測試 DeepSeek API -->
+        <div class="test-section">
+            <div class="test-title">測試 2：直接測試 DeepSeek API Key</div>
+            <div class="test-description">
+                直接調用 DeepSeek API，驗證 API Key 是否有效<br>
+                <strong>API Key:</strong> <code>sk-d0edd459796441c1905439794123867</code>
+            </div>
+            <button onclick="testDeepSeekAPI()" id="test2-btn">開始測試</button>
+            <div id="test2-result"></div>
+        </div>
+
+        <!-- 測試 3：通過 Worker 調用 DeepSeek -->
+        <div class="test-section">
+            <div class="test-title">測試 3：通過 Worker 調用 DeepSeek API</div>
+            <div class="test-description">
+                模擬實際應用的調用流程，測試完整鏈路
+            </div>
+            <button onclick="testWorkerProxy()" id="test3-btn">開始測試</button>
+            <div id="test3-result"></div>
+        </div>
+
+        <!-- 測試 4：測試 deepseek-reasoner 模型 -->
+        <div class="test-section">
+            <div class="test-title">測試 4：測試 deepseek-reasoner 模型</div>
+            <div class="test-description">
+                測試 <code>deepseek-reasoner</code> 模型的調用和輸出
+            </div>
+            <button onclick="testReasonerModel()" id="test4-btn">開始測試</button>
+            <div id="test4-result"></div>
+        </div>
+    </div>
+
+    <script>
+        const WORKER_URL = 'https://deepseek-proxy.vaultcaddy.workers.dev';
+        const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
+        const API_KEY = 'sk-d0edd459796441c1905439794123867';
+
+        // 測試 1：Worker 健康檢查
+        async function testWorkerHealth() {
+            const btn = document.getElementById('test1-btn');
+            const result = document.getElementById('test1-result');
+            
+            btn.disabled = true;
+            btn.innerHTML = '測試中<span class="loading"></span>';
+            result.innerHTML = '<div class="result info">⏳ 正在測試...</div>';
+
+            try {
+                const response = await fetch(WORKER_URL, {
+                    method: 'GET'
+                });
+
+                const data = await response.json();
+                
+                if (data.status === 'ok' && data.supported_models.includes('deepseek-reasoner')) {
+                    result.innerHTML = `<div class="result success">✅ Worker 健康檢查通過！
+
+狀態: ${data.status}
+版本: ${data.version}
+支持的模型: ${data.supported_models.join(', ')}
+最大超時: ${data.max_timeout}
+更新日期: ${data.updated}
+
+🎉 Worker 已正確部署並支持 deepseek-reasoner！</div>`;
+                } else {
+                    result.innerHTML = `<div class="result error">❌ Worker 部署有問題
+
+響應內容:
+${JSON.stringify(data, null, 2)}
+
+問題：未找到 deepseek-reasoner 模型支持</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="result error">❌ Worker 健康檢查失敗
+
+錯誤: ${error.message}
+
+可能原因：
+1. Worker 未部署
+2. Worker URL 不正確
+3. 網絡連接問題</div>`;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '重新測試';
+            }
+        }
+
+        // 測試 2：直接測試 DeepSeek API
+        async function testDeepSeekAPI() {
+            const btn = document.getElementById('test2-btn');
+            const result = document.getElementById('test2-result');
+            
+            btn.disabled = true;
+            btn.innerHTML = '測試中<span class="loading"></span>';
+            result.innerHTML = '<div class="result info">⏳ 正在調用 DeepSeek API...</div>';
+
+            try {
+                const response = await fetch(DEEPSEEK_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: 'deepseek-reasoner',
+                        messages: [
+                            {role: 'system', content: '你是測試助手'},
+                            {role: 'user', content: '回答：1+1=?'}
+                        ],
+                        max_tokens: 100
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.choices) {
+                    result.innerHTML = `<div class="result success">✅ API Key 有效！
+
+模型: ${data.model}
+AI 回答: ${data.choices[0].message.content}
+
+輸入 tokens: ${data.usage.prompt_tokens}
+輸出 tokens: ${data.usage.completion_tokens}
+總計 tokens: ${data.usage.total_tokens}
+
+🎉 DeepSeek API 調用成功！</div>`;
+                } else {
+                    result.innerHTML = `<div class="result error">❌ API Key 無效或調用失敗
+
+HTTP 狀態: ${response.status}
+錯誤內容:
+${JSON.stringify(data, null, 2)}
+
+解決方案：
+1. 檢查 API Key 是否正確
+2. 確認 API Key 沒有過期
+3. 確認帳戶有餘額</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="result error">❌ DeepSeek API 調用失敗
+
+錯誤: ${error.message}
+
+可能原因：
+1. API Key 無效
+2. 網絡連接問題
+3. CORS 問題</div>`;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '重新測試';
+            }
+        }
+
+        // 測試 3：通過 Worker 調用
+        async function testWorkerProxy() {
+            const btn = document.getElementById('test3-btn');
+            const result = document.getElementById('test3-result');
+            
+            btn.disabled = true;
+            btn.innerHTML = '測試中<span class="loading"></span>';
+            result.innerHTML = '<div class="result info">⏳ 正在通過 Worker 調用...</div>';
+
+            try {
+                const response = await fetch(WORKER_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: 'deepseek-reasoner',
+                        messages: [
+                            {role: 'system', content: '你是測試助手'},
+                            {role: 'user', content: '回答：2+2=?'}
+                        ],
+                        max_tokens: 100
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.choices) {
+                    result.innerHTML = `<div class="result success">✅ Worker 代理調用成功！
+
+模型: ${data.model}
+AI 回答: ${data.choices[0].message.content}
+
+輸入 tokens: ${data.usage.prompt_tokens}
+輸出 tokens: ${data.usage.completion_tokens}
+總計 tokens: ${data.usage.total_tokens}
+
+🎉 完整鏈路測試通過！</div>`;
+                } else {
+                    result.innerHTML = `<div class="result error">❌ Worker 代理調用失敗
+
+HTTP 狀態: ${response.status}
+錯誤內容:
+${JSON.stringify(data, null, 2)}
+
+可能原因：
+1. Worker 中的 API Key 不正確
+2. Worker 代碼有問題
+3. DeepSeek API 返回錯誤</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="result error">❌ Worker 代理調用失敗
+
+錯誤: ${error.message}
+
+可能原因：
+1. Worker 未正確部署
+2. 網絡連接問題
+3. Worker 超時</div>`;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '重新測試';
+            }
+        }
+
+        // 測試 4：測試 reasoner 模型
+        async function testReasonerModel() {
+            const btn = document.getElementById('test4-btn');
+            const result = document.getElementById('test4-result');
+            
+            btn.disabled = true;
+            btn.innerHTML = '測試中<span class="loading"></span>';
+            result.innerHTML = '<div class="result info">⏳ 正在測試 reasoner 模型...</div>';
+
+            try {
+                const response = await fetch(WORKER_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: 'deepseek-reasoner',
+                        messages: [
+                            {role: 'system', content: '你是會計AI助手'},
+                            {role: 'user', content: '解釋什麼是銀行對帳單？'}
+                        ],
+                        max_tokens: 8192
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.choices) {
+                    const answer = data.choices[0].message.content;
+                    result.innerHTML = `<div class="result success">✅ Reasoner 模型測試成功！
+
+模型: ${data.model}
+AI 回答: ${answer.substring(0, 200)}${answer.length > 200 ? '...' : ''}
+
+輸入 tokens: ${data.usage.prompt_tokens}
+輸出 tokens: ${data.usage.completion_tokens}
+總計 tokens: ${data.usage.total_tokens}
+
+max_tokens 設置: 8192
+
+🎉 Reasoner 模型工作正常，可以處理長輸出！</div>`;
+                } else {
+                    result.innerHTML = `<div class="result error">❌ Reasoner 模型測試失敗
+
+HTTP 狀態: ${response.status}
+錯誤內容:
+${JSON.stringify(data, null, 2)}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="result error">❌ Reasoner 模型測試失敗
+
+錯誤: ${error.message}</div>`;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '重新測試';
+            }
+        }
+
+        // 頁面載入時的提示
+        console.log('🔍 DeepSeek API 診斷工具已載入');
+        console.log('📝 請依次執行 4 個測試');
+        console.log('');
+        console.log('測試 1：檢查 Worker 是否部署');
+        console.log('測試 2：檢查 API Key 是否有效');
+        console.log('測試 3：檢查完整鏈路是否正常');
+        console.log('測試 4：檢查 reasoner 模型是否工作');
+    </script>
+</body>
+</html>
+
