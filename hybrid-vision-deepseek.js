@@ -267,90 +267,10 @@ class HybridVisionDeepSeekProcessor {
      * 原因：不同銀行格式差異太大，無法用固定邏輯過濾
      */
     filterBankStatementText(text) {
-        console.log('🏦 過濾銀行對帳單文本（激進版本 - 解決超時問題）...');
+        console.log('🏦 過濾銀行對帳單文本（簡化版本 - 只移除空白內容）...');
         
         const lines = text.split('\n');
         const relevantLines = [];
-        
-        // ✅ 更激進的過濾策略：移除更多無用內容
-        const skipPatterns = [
-            // 頁碼和頁眉頁腳
-            /Page \d+ of \d+/i,
-            /第 \d+ 頁/,
-            /^\d+$/,                               // 單獨的數字（頁碼）
-            
-            // 免責聲明和法律文字
-            /Please note that/i,
-            /This financial reminder/i,
-            /請注意/,
-            /財務提示/,
-            /For details/i,
-            /Terms and Conditions/i,
-            /Privacy Policy/i,
-            /Disclaimer/i,
-            /免責聲明/,
-            /條款/,
-            /私隱政策/,
-            /Statement of Account/i,
-            /Important Notice/i,
-            /重要通知/,
-            /客戶服務/,
-            /Customer Service/i,
-            /24-Hour/i,
-            
-            // 文檔 ID 和編號
-            /^[A-Z]{2}\s*[A-Z0-9]{9}$/,
-            /Document (ID|Number)/i,
-            /文件編號/,
-            
-            // 網址和聯繫方式
-            /www\./,
-            /http/,
-            /\.com/i,
-            /\.hk/i,
-            /@/,                                   // 電郵地址
-            /\d{4}-\d{4}/,                         // 電話號碼（如：2233-4455）
-            /\d{8}/,                               // 8位電話號碼
-            
-            // 銀行標題和重複標題
-            /^HSBC/i,
-            /^Hong Kong$/i,
-            /^Bank$/i,
-            /^Limited$/i,
-            /^Company$/i,
-            /銀行$/,
-            /有限公司$/,
-            
-            // 只有符號或特殊字符的行
-            /^[\s\-_=\.]+$/,                       // 只有空格、橫線、下劃線的行
-            /^[*#@]+$/,                            // 只有特殊符號的行
-            
-            // 常見的無用詞語（單獨出現）
-            /^(For|To|From|Date|Time|Amount|Total)$/i,
-            /^(致|由|日期|時間|金額|總計)$/
-        ];
-        
-        // ✅ 保留的關鍵字（有這些關鍵字的行一定保留）
-        const keepPatterns = [
-            /Account (Number|No\.)/i,              // 帳戶號碼
-            /帳戶號碼/,
-            /Statement (Date|Period)/i,            // 對帳單日期
-            /對帳單日期/,
-            /Opening Balance/i,                    // 開始餘額
-            /Closing Balance/i,                    // 結束餘額
-            /期初餘額/,
-            /期末餘額/,
-            /Transaction/i,                        // 交易
-            /交易/,
-            /Debit|Credit/i,                       // 借貸
-            /借|貸/,
-            /\d{2}\/\d{2}\/\d{4}/,                 // 日期格式
-            /\d{4}-\d{2}-\d{2}/,                   // 日期格式
-            /\$[\d,]+\.\d{2}/,                     // 金額格式
-            /HKD|USD|CNY/i,                        // 貨幣
-            /Net Position/i,                       // 淨額
-            /淨額/
-        ];
         
         for (let line of lines) {
             const trimmed = line.trim();
@@ -358,42 +278,10 @@ class HybridVisionDeepSeekProcessor {
             // ❌ 跳過空行
             if (trimmed.length === 0) continue;
             
-            // ❌ 跳過只有 1-2 個字符的行（通常是無用的標點或符號）
-            if (trimmed.length < 3) continue;
+            // ❌ 跳過只有空格、製表符的行
+            if (/^\s+$/.test(line)) continue;
             
-            // ✅ 如果匹配關鍵字，直接保留
-            const shouldKeep = keepPatterns.some(pattern => pattern.test(trimmed));
-            if (shouldKeep) {
-                relevantLines.push(line);
-                continue;
-            }
-            
-            // ❌ 跳過超長行（通常是免責聲明或條款，超過 200 字符）
-            if (trimmed.length > 200) {
-                console.log(`  ⏭️ 跳過超長行（${trimmed.length} 字符）: ${trimmed.substring(0, 40)}...`);
-                continue;
-            }
-            
-            // ❌ 跳過匹配無用模式的行
-            const shouldSkip = skipPatterns.some(pattern => pattern.test(trimmed));
-            if (shouldSkip) {
-                console.log(`  ⏭️ 跳過無用行: ${trimmed.substring(0, 40)}...`);
-                continue;
-            }
-            
-            // ❌ 跳過只有數字和符號的行（如：===== 或 12345）
-            if (/^[\d\s\-_=\.,]+$/.test(trimmed)) {
-                console.log(`  ⏭️ 跳過數字/符號行: ${trimmed.substring(0, 40)}...`);
-                continue;
-            }
-            
-            // ❌ 跳過只有英文單詞（沒有數字）的短行（如：Balance Total Header）
-            if (trimmed.length < 30 && /^[A-Za-z\s]+$/.test(trimmed)) {
-                console.log(`  ⏭️ 跳過純文字短行: ${trimmed}`);
-                continue;
-            }
-            
-            // ✅ 保留這一行
+            // ✅ 保留所有有內容的行
             relevantLines.push(line);
         }
         
@@ -401,11 +289,7 @@ class HybridVisionDeepSeekProcessor {
         const reductionPercent = Math.round((1 - filteredText.length / text.length) * 100);
         console.log(`✅ 銀行對帳單過濾完成：${text.length} → ${filteredText.length} 字符（減少 ${reductionPercent}%）`);
         console.log(`   保留 ${relevantLines.length} 行（原始 ${lines.length} 行）`);
-        
-        // ✅ 如果過濾效果不好（減少 < 20%），警告用戶
-        if (reductionPercent < 20) {
-            console.warn(`⚠️ 過濾效果不佳（只減少 ${reductionPercent}%），可能導致 DeepSeek 超時`);
-        }
+        console.log(`   📝 策略：只移除空白行，保留所有實際內容`);
         
         return filteredText;
     }
