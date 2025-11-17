@@ -689,43 +689,88 @@ class HybridVisionDeepSeekProcessor {
      */
     cleanBankStatementData(data) {
         console.log('   🧹 清理銀行對帳單數據...');
+        console.log('   📝 原始數據類型:', typeof data);
+        console.log('   📝 原始數據鍵:', data ? Object.keys(data) : 'null');
         
         if (!data) {
             console.error('   ❌ 數據為空，無法清理');
             return null;
         }
         
-        // ✅ 處理嵌套數組（DeepSeek 可能返回 [[tx1, tx2], [tx3, tx4]]）
-        let transactions = data.transactions || [];
+        // ✅ 處理 transactions 字段的各種情況
+        let transactions = [];
         
-        // 如果是嵌套數組，展平它
+        // 情況 1：data.transactions 是數組
+        if (Array.isArray(data.transactions)) {
+            console.log('   ✅ transactions 是數組');
+            transactions = data.transactions;
+        }
+        // 情況 2：data.transaction 是數組（單數）
+        else if (Array.isArray(data.transaction)) {
+            console.warn('   ⚠️ 字段名是 transaction（單數），正在轉換...');
+            transactions = data.transaction;
+        }
+        // 情況 3：data.transactions 是對象
+        else if (data.transactions && typeof data.transactions === 'object') {
+            console.warn('   ⚠️ transactions 是對象，正在提取...');
+            // 嘗試從對象中提取數組
+            if (Array.isArray(data.transactions.items)) {
+                transactions = data.transactions.items;
+            } else if (Array.isArray(data.transactions.list)) {
+                transactions = data.transactions.list;
+            } else {
+                console.error('   ❌ transactions 對象中找不到數組');
+                console.error('   📝 transactions 對象鍵:', Object.keys(data.transactions));
+            }
+        }
+        // 情況 4：完全沒有 transactions 字段
+        else {
+            console.warn('   ⚠️ 找不到 transactions 字段');
+            console.warn('   📝 可用字段:', Object.keys(data));
+        }
+        
+        console.log(`   📊 原始交易數量：${transactions.length}`);
+        
+        // ✅ 如果是嵌套數組，展平它
         if (transactions.length > 0 && Array.isArray(transactions[0])) {
             console.warn('   ⚠️ 檢測到嵌套數組，正在展平...');
+            console.warn('   📝 第一個元素:', transactions[0]);
             transactions = transactions.flat();
             console.log(`   ✅ 展平完成：${transactions.length} 筆交易`);
         }
         
-        // 清理交易記錄
+        // ✅ 清理交易記錄
         transactions = transactions.map((tx, index) => {
-            // ✅ 確保 tx 是對象，不是數組
+            // 確保 tx 是對象，不是數組
             if (Array.isArray(tx)) {
-                console.warn(`   ⚠️ 交易 ${index + 1} 是數組，取第一個元素:`, tx);
+                console.warn(`   ⚠️ 交易 ${index + 1} 是數組，取第一個元素:`, JSON.stringify(tx).substring(0, 100));
                 tx = tx[0] || {};
             }
             
-            // ✅ 確保 tx 是對象
+            // 確保 tx 是對象
             if (typeof tx !== 'object' || tx === null) {
                 console.warn(`   ⚠️ 交易 ${index + 1} 不是對象，跳過:`, tx);
                 return null;
             }
             
-            return {
+            // ✅ 確保沒有嵌套對象或數組
+            const cleanTx = {
                 date: String(tx.date || ''),
                 description: String(tx.description || ''),
                 type: String(tx.type || ''),
                 amount: parseFloat(tx.amount) || 0,
                 balance: parseFloat(tx.balance) || 0
             };
+            
+            // ✅ 檢查清理後的交易是否有嵌套
+            Object.keys(cleanTx).forEach(key => {
+                if (typeof cleanTx[key] === 'object' && cleanTx[key] !== null) {
+                    console.warn(`   ⚠️ 交易 ${index + 1} 的 ${key} 是對象，轉為字符串`);
+                    cleanTx[key] = JSON.stringify(cleanTx[key]);
+                }
+            });
+            
+            return cleanTx;
         }).filter(tx => tx !== null); // 移除無效交易
         
         // 清理整個對象
@@ -742,6 +787,20 @@ class HybridVisionDeepSeekProcessor {
         };
         
         console.log(`   ✅ 數據清理完成：${cleanData.transactions.length} 筆交易`);
+        
+        // ✅ 最終檢查：確保沒有嵌套數組或對象
+        if (cleanData.transactions.length > 0) {
+            const firstTx = cleanData.transactions[0];
+            console.log('   🔍 最終檢查第一筆交易:', JSON.stringify(firstTx));
+            
+            // 檢查是否有嵌套
+            Object.keys(firstTx).forEach(key => {
+                if (typeof firstTx[key] === 'object' && firstTx[key] !== null) {
+                    console.error(`   ❌ 警告：第一筆交易的 ${key} 仍然是對象！`);
+                }
+            });
+        }
+        
         return cleanData;
     }
     
