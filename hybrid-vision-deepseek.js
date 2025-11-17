@@ -114,22 +114,30 @@ class HybridVisionDeepSeekProcessor {
                 console.log(`  📄 第 ${index + 1} 頁: ${text.length} 字符`);
             });
             
-            // ========== 步驟 2：智能分段 DeepSeek 分析 ==========
-            console.log(`🧠 步驟 2：智能分段 DeepSeek 分析（適應 10+ 頁 PDF）...`);
-            console.log(`   策略：每 7000 字符分段（留 1000 字符給輸出）`);
-            
-            // ✅ 合併所有 OCR 文本
+            // ========== 步驟 2：合併所有 OCR 文本 ==========
             const allText = ocrTexts.join('\n\n=== 下一頁 ===\n\n');
-            console.log(`📝 合併所有頁面：總計 ${allText.length} 字符`);
+            console.log(`📝 步驟 2：合併所有頁面：總計 ${allText.length} 字符`);
             
-            // ✅ 智能分段（每 7000 字符，不強行分割句子）
-            const chunks = this.intelligentChunking(allText, 7000);
+            // ========== 步驟 3：提取核心上下文 ==========
+            console.log(`📋 步驟 3：提取核心上下文（帳戶信息）...`);
+            const coreContext = this.extractCoreContext(allText, documentType);
+            
+            // ========== 步驟 4：智能分段（重疊 + 上下文）==========
+            console.log(`🧠 步驟 4：智能分段 DeepSeek 分析（適應 10+ 頁 PDF）...`);
+            console.log(`   策略：重疊分段 + 核心上下文`);
+            console.log(`   - 每段最大：7000 字符`);
+            console.log(`   - 重疊大小：500 字符`);
+            console.log(`   - 核心上下文：${coreContext.length} 字符`);
+            
+            // ✅ 智能分段（重疊 + 核心上下文）
+            const chunks = this.intelligentChunkingWithOverlap(allText, 7000, 500, coreContext);
             console.log(`✂️ 智能分段完成：${chunks.length} 段`);
             chunks.forEach((chunk, i) => {
                 console.log(`   📄 第 ${i + 1} 段: ${chunk.length} 字符`);
             });
             
-            // ✅ 逐段 DeepSeek 分析
+            // ========== 步驟 5：逐段 DeepSeek 分析 ==========
+            console.log(`🤖 步驟 5：逐段 DeepSeek 分析...`);
             const pageResults = [];
             for (let i = 0; i < chunks.length; i++) {
                 const chunk = chunks[i];
@@ -146,8 +154,8 @@ class HybridVisionDeepSeekProcessor {
                 }
             }
             
-            // ========== 步驟 3：智能合併結果 ==========
-            console.log('🔄 步驟 3：智能合併 DeepSeek 結果...');
+            // ========== 步驟 6：智能合併結果（去重）==========
+            console.log('🔄 步驟 6：智能合併 DeepSeek 結果（去重重疊部分）...');
             const extractedData = this.mergeChunkedResults(pageResults.filter(r => r !== null), documentType);
             
             const processingTime = Date.now() - startTime;
@@ -480,51 +488,153 @@ class HybridVisionDeepSeekProcessor {
     }
     
     /**
-     * 智能分段（不強行分割句子）
+     * 提取核心上下文（帳戶信息）
      * @param {string} text - 完整文本
-     * @param {number} maxChunkSize - 每段最大字符數（默認 7000）
-     * @returns {Array<string>} - 分段後的文本數組
+     * @returns {string} - 核心上下文字符串
      */
-    intelligentChunking(text, maxChunkSize = 7000) {
-        console.log(`✂️ 開始智能分段（最大 ${maxChunkSize} 字符/段）...`);
+    extractCoreContext(text, documentType) {
+        console.log('📋 提取核心上下文（帳戶信息）...');
         
-        const chunks = [];
-        let currentChunk = '';
-        
-        // 按行分割
-        const lines = text.split('\n');
-        
-        for (const line of lines) {
-            // 如果添加這一行後超過限制
-            if (currentChunk.length + line.length + 1 > maxChunkSize) {
-                // 如果當前段不為空，保存它
-                if (currentChunk.length > 0) {
-                    chunks.push(currentChunk.trim());
-                    console.log(`   ✅ 創建段 ${chunks.length}: ${currentChunk.length} 字符`);
-                    currentChunk = '';
-                }
-                
-                // 如果單行本身就超過限制，強行分割（但這很少見）
-                if (line.length > maxChunkSize) {
-                    console.warn(`   ⚠️ 單行過長（${line.length} 字符），強行分割`);
-                    for (let i = 0; i < line.length; i += maxChunkSize) {
-                        chunks.push(line.substring(i, i + maxChunkSize));
-                    }
-                    continue;
-                }
-            }
-            
-            // 添加這一行到當前段
-            currentChunk += (currentChunk ? '\n' : '') + line;
+        if (documentType !== 'bank_statement') {
+            return ''; // 只有銀行對帳單需要核心上下文
         }
         
-        // 保存最後一段
-        if (currentChunk.length > 0) {
-            chunks.push(currentChunk.trim());
-            console.log(`   ✅ 創建段 ${chunks.length}: ${currentChunk.length} 字符`);
+        const lines = text.split('\n').slice(0, 100); // 只檢查前 100 行
+        const coreLines = [];
+        const seen = new Set(); // 避免重複
+        
+        for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed || seen.has(trimmed)) continue;
+            
+            // 提取銀行名稱
+            if (/BANK|銀行|BANKING|HSBC|恆生|中銀|匯豐/i.test(trimmed) && trimmed.length < 100) {
+                coreLines.push(trimmed);
+                seen.add(trimmed);
+            }
+            // 提取帳戶號碼
+            else if (/ACCOUNT.*NO|帳戶.*號碼|A\/C.*NO|戶口.*號碼|ACCOUNT.*NUMBER/i.test(trimmed) && trimmed.length < 100) {
+                coreLines.push(trimmed);
+                seen.add(trimmed);
+            }
+            // 提取包含數字的帳戶行（可能是帳戶號碼）
+            else if (/^\d{3,}[-\s]\d{3,}[-\s]\d{3,}/.test(trimmed)) {
+                coreLines.push('Account: ' + trimmed);
+                seen.add(trimmed);
+            }
+            // 提取用戶名稱
+            else if (/(MR |MS |MRS |DR |MISS |^NAME:)/i.test(trimmed) && trimmed.length < 100) {
+                coreLines.push(trimmed);
+                seen.add(trimmed);
+            }
+            // 提取對帳單期間
+            else if (/(STATEMENT.*PERIOD|對帳單.*期間|PERIOD|期間)/i.test(trimmed) && /\d{2}\/\d{2}\/\d{4}/.test(trimmed)) {
+                coreLines.push(trimmed);
+                seen.add(trimmed);
+            }
+            
+            // 最多提取 8 行核心信息
+            if (coreLines.length >= 8) break;
+        }
+        
+        const coreContext = coreLines.join('\n');
+        console.log(`✅ 核心上下文提取完成：${coreContext.length} 字符（${coreLines.length} 行）`);
+        console.log(`📝 核心上下文內容:\n${coreContext}`);
+        
+        return coreContext;
+    }
+    
+    /**
+     * 智能分段（重疊分段 + 核心上下文）
+     * @param {string} text - 完整文本
+     * @param {number} maxChunkSize - 每段最大字符數（默認 7000）
+     * @param {number} overlapSize - 重疊字符數（默認 500）
+     * @param {string} coreContext - 核心上下文（每段都包含）
+     * @returns {Array<string>} - 分段後的文本數組
+     */
+    intelligentChunkingWithOverlap(text, maxChunkSize = 7000, overlapSize = 500, coreContext = '') {
+        console.log(`✂️ 開始智能分段（重疊分段 + 核心上下文）...`);
+        console.log(`   最大段大小：${maxChunkSize} 字符`);
+        console.log(`   重疊大小：${overlapSize} 字符`);
+        console.log(`   核心上下文：${coreContext.length} 字符`);
+        
+        const chunks = [];
+        const lines = text.split('\n');
+        
+        // 計算每段實際可用空間（扣除核心上下文）
+        const actualMaxSize = coreContext ? maxChunkSize - coreContext.length - 4 : maxChunkSize; // 4 = "\n\n" 分隔符
+        
+        let start = 0;
+        let chunkLines = [];
+        let currentSize = 0;
+        
+        while (start < lines.length) {
+            chunkLines = [];
+            currentSize = 0;
+            
+            // 收集當前段的行
+            for (let i = start; i < lines.length; i++) {
+                const line = lines[i];
+                const lineSize = line.length + 1; // +1 for newline
+                
+                // 如果添加這一行會超過限制
+                if (currentSize + lineSize > actualMaxSize && chunkLines.length > 0) {
+                    break;
+                }
+                
+                chunkLines.push(line);
+                currentSize += lineSize;
+            }
+            
+            // 如果沒有收集到任何行（單行太長），強行添加一行
+            if (chunkLines.length === 0 && start < lines.length) {
+                chunkLines.push(lines[start]);
+                currentSize = lines[start].length;
+            }
+            
+            // 創建這一段（核心上下文 + 實際內容）
+            const chunkContent = chunkLines.join('\n').trim();
+            const chunk = coreContext 
+                ? `${coreContext}\n\n=== 對帳單內容 ===\n\n${chunkContent}`
+                : chunkContent;
+            
+            chunks.push(chunk);
+            console.log(`   ✅ 創建段 ${chunks.length}: ${chunk.length} 字符（內容 ${chunkContent.length} + 上下文 ${coreContext.length}）`);
+            
+            // 計算下一段的起點（重疊）
+            if (overlapSize > 0 && chunkLines.length > 0) {
+                // 從當前段末尾往回找 overlapSize 字符的起點
+                let overlapChars = 0;
+                let overlapLines = 0;
+                
+                for (let i = chunkLines.length - 1; i >= 0; i--) {
+                    overlapChars += chunkLines[i].length + 1;
+                    overlapLines++;
+                    
+                    if (overlapChars >= overlapSize) {
+                        break;
+                    }
+                }
+                
+                // 下一段從重疊點開始
+                start = start + chunkLines.length - overlapLines;
+                
+                if (overlapLines > 0) {
+                    console.log(`   🔗 重疊：${overlapLines} 行（約 ${overlapChars} 字符）`);
+                }
+            } else {
+                start = start + chunkLines.length;
+            }
+            
+            // 如果已經到達末尾，跳出
+            if (start >= lines.length) {
+                break;
+            }
         }
         
         console.log(`✂️ 智能分段完成：${chunks.length} 段（原始 ${text.length} 字符）`);
+        console.log(`   策略：每段包含核心上下文 + 重疊 ${overlapSize} 字符`);
+        
         return chunks;
     }
     
@@ -559,7 +669,9 @@ class HybridVisionDeepSeekProcessor {
                 currency: firstPage.currency || 'HKD'
             };
             
-            // ✅ 合併所有交易記錄（去除 B/F 和 C/F BALANCE）
+            // ✅ 合併所有交易記錄（去除 B/F、C/F 和重複交易）
+            const seenTransactions = new Set(); // 用於去重
+            
             for (const result of results) {
                 if (result.transactions && Array.isArray(result.transactions)) {
                     for (const tx of result.transactions) {
@@ -569,7 +681,16 @@ class HybridVisionDeepSeekProcessor {
                             !tx.description.includes('C/F BALANCE') &&
                             !tx.description.includes('BF BALANCE') &&
                             !tx.description.includes('CF BALANCE')) {
-                            merged.transactions.push(tx);
+                            
+                            // ✅ 去重：使用日期 + 描述 + 金額作為唯一標識
+                            const txKey = `${tx.date}|${tx.description}|${tx.amount}`;
+                            
+                            if (!seenTransactions.has(txKey)) {
+                                merged.transactions.push(tx);
+                                seenTransactions.add(txKey);
+                            } else {
+                                console.log(`   🔗 跳過重複交易：${tx.date} ${tx.description} ${tx.amount}`);
+                            }
                         } else if (tx.description && tx.description.includes('B/F BALANCE')) {
                             // B/F BALANCE 是開始餘額
                             console.log(`   📝 檢測到 B/F BALANCE: ${tx.balance || tx.amount}`);
