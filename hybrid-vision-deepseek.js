@@ -168,15 +168,41 @@ class HybridVisionDeepSeekProcessor {
             
             // ========== 步驟 6：智能合併結果（去重）==========
             console.log('🔄 步驟 6：智能合併 DeepSeek 結果（去重重疊部分）...');
+            
+            // ✅ 添加詳細的處理結果統計
+            const successCount = pageResults.filter(r => r !== null).length;
+            const failureCount = pageResults.filter(r => r === null).length;
+            
+            console.log(`📊 DeepSeek 處理結果統計：`);
+            console.log(`   總段數：${pageResults.length}`);
+            console.log(`   成功段數：${successCount}`);
+            console.log(`   失敗段數：${failureCount}`);
+            
+            // ✅ 檢查是否所有段都失敗
+            if (successCount === 0) {
+                console.error('❌ 所有段的 DeepSeek 分析都失敗了！');
+                console.error('   可能原因：');
+                console.error('   1. 文本太長或太複雜');
+                console.error('   2. DeepSeek API 超時（180 秒）');
+                console.error('   3. 網絡不穩定');
+                throw new Error('所有段的 DeepSeek 分析都失敗了，無法提取數據');
+            }
+            
             const extractedData = this.mergeChunkedResults(pageResults.filter(r => r !== null), documentType);
+            
+            // ✅ 檢查合併結果是否為空
+            if (!extractedData) {
+                console.error('❌ 合併結果為空！');
+                throw new Error('合併 DeepSeek 結果失敗，提取的數據為空');
+            }
             
             const processingTime = Date.now() - startTime;
             console.log(`✅ 混合處理完成，總耗時: ${processingTime}ms`);
             console.log(`📊 性能統計：`);
             console.log(`   - 頁數: ${files.length}`);
             console.log(`   - OCR 調用: ${files.length} 次（並行）`);
-            console.log(`   - DeepSeek 調用: ${files.length} 次（逐頁，智能過濾）`);
-            console.log(`   - 成功頁數: ${pageResults.filter(r => r !== null).length}`);
+            console.log(`   - DeepSeek 調用: ${pageResults.length} 次`);
+            console.log(`   - 成功段數: ${successCount}`);
             console.log(`   - 總交易數: ${extractedData.transactions?.length || 0}`);
             
             return {
@@ -194,6 +220,20 @@ class HybridVisionDeepSeekProcessor {
             console.error('❌ 批量處理失敗:', error);
             throw error;
         }
+    }
+    
+    /**
+     * 輔助函數：檢查是否為銀行對帳單
+     */
+    isBankStatement(documentType) {
+        const bankStatementTypes = [
+            'bank_statement',
+            'bank-statement', 
+            'bank_statements',
+            'statement',
+            'statements'
+        ];
+        return bankStatementTypes.includes(documentType?.toLowerCase());
     }
     
     /**
@@ -286,7 +326,7 @@ class HybridVisionDeepSeekProcessor {
         console.log('🔍 開始過濾文本...');
         
         // 如果是銀行對帳單，使用特殊過濾邏輯
-        if (documentType === 'bank_statement') {
+        if (this.isBankStatement(documentType)) {
             return this.filterBankStatementText(text);
         }
         
@@ -416,7 +456,7 @@ class HybridVisionDeepSeekProcessor {
                 
                 // 調用 DeepSeek API（添加超時控制）
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 120000); // ✅ 120 秒超時（給 reasoner 更多時間，避免複雜對帳單超時）
+                const timeoutId = setTimeout(() => controller.abort(), 180000); // ✅ 180 秒超時（3 分鐘，支持複雜銀行對帳單）
                 
                 // ✅ 不限制 max_tokens（讓 DeepSeek 自由輸出完整 JSON）
                 // 原因：
@@ -475,7 +515,7 @@ class HybridVisionDeepSeekProcessor {
                 
                 // ✅ 對於超時錯誤，不要重試（因為重試也會超時）
                 if (error.name === 'AbortError' || error.message.includes('aborted')) {
-                    console.error(`⏰ DeepSeek API 超時（120 秒），不再重試`);
+                    console.error(`⏰ DeepSeek API 超時（180 秒），不再重試`);
                     console.error(`   建議：文本可能太長或太複雜，需要分段處理`);
                     throw new Error(`DeepSeek API 超時: 文本長度 ${text.length} 字符超過處理能力`);
                 }
@@ -645,25 +685,48 @@ class HybridVisionDeepSeekProcessor {
     }
     
     /**
-     * 清理銀行對帳單數據（確保 Firestore 兼容）
+     * 清理銀行對帳單數據（確保 Firestore 兼容，處理嵌套數組）
      */
     cleanBankStatementData(data) {
         console.log('   🧹 清理銀行對帳單數據...');
         
-        if (!data) return null;
+        if (!data) {
+            console.error('   ❌ 數據為空，無法清理');
+            return null;
+        }
+        
+        // ✅ 處理嵌套數組（DeepSeek 可能返回 [[tx1, tx2], [tx3, tx4]]）
+        let transactions = data.transactions || [];
+        
+        // 如果是嵌套數組，展平它
+        if (transactions.length > 0 && Array.isArray(transactions[0])) {
+            console.warn('   ⚠️ 檢測到嵌套數組，正在展平...');
+            transactions = transactions.flat();
+            console.log(`   ✅ 展平完成：${transactions.length} 筆交易`);
+        }
         
         // 清理交易記錄
-        if (data.transactions && Array.isArray(data.transactions)) {
-            data.transactions = data.transactions.map(tx => ({
+        transactions = transactions.map((tx, index) => {
+            // ✅ 確保 tx 是對象，不是數組
+            if (Array.isArray(tx)) {
+                console.warn(`   ⚠️ 交易 ${index + 1} 是數組，取第一個元素:`, tx);
+                tx = tx[0] || {};
+            }
+            
+            // ✅ 確保 tx 是對象
+            if (typeof tx !== 'object' || tx === null) {
+                console.warn(`   ⚠️ 交易 ${index + 1} 不是對象，跳過:`, tx);
+                return null;
+            }
+            
+            return {
                 date: String(tx.date || ''),
                 description: String(tx.description || ''),
                 type: String(tx.type || ''),
                 amount: parseFloat(tx.amount) || 0,
                 balance: parseFloat(tx.balance) || 0
-            }));
-        } else {
-            data.transactions = [];
-        }
+            };
+        }).filter(tx => tx !== null); // 移除無效交易
         
         // 清理整個對象
         const cleanData = {
@@ -675,7 +738,7 @@ class HybridVisionDeepSeekProcessor {
             openingBalance: parseFloat(data.openingBalance) || 0,
             closingBalance: parseFloat(data.closingBalance) || 0,
             currency: String(data.currency || 'HKD'),
-            transactions: data.transactions
+            transactions: transactions
         };
         
         console.log(`   ✅ 數據清理完成：${cleanData.transactions.length} 筆交易`);
@@ -705,7 +768,7 @@ class HybridVisionDeepSeekProcessor {
             }
             
             // ✅ 對於銀行對帳單，即使只有 1 段也要清理數據
-            if (documentType === 'bank_statement' && result.transactions) {
+            if (this.isBankStatement(documentType) && result.transactions) {
                 return this.cleanBankStatementData(result);
             }
             
@@ -713,7 +776,7 @@ class HybridVisionDeepSeekProcessor {
         }
         
         // 銀行對帳單：智能合併交易記錄
-        if (documentType === 'bank_statement') {
+        if (this.isBankStatement(documentType)) {
             console.log('   智能合併銀行對帳單數據...');
             
             // ✅ 檢查第 1 頁和最後 1 頁是否有效
@@ -920,7 +983,7 @@ class HybridVisionDeepSeekProcessor {
         console.log('🔧 嘗試修復被截斷的 JSON...');
         console.log(`   原始長度: ${json.length} 字符`);
         
-        if (documentType === 'bank_statement') {
+        if (this.isBankStatement(documentType)) {
             // 1. 找到最後一個完整的交易
             const lastTransactionEnd = json.lastIndexOf('"}');
             
@@ -977,7 +1040,7 @@ class HybridVisionDeepSeekProcessor {
     extractPartialData(json, documentType) {
         console.log('⚠️ 提取部分數據（最後手段）...');
         
-        if (documentType === 'bank_statement') {
+        if (this.isBankStatement(documentType)) {
             try {
                 // 使用正則提取關鍵信息
                 const bankName = (json.match(/"bankName":\s*"([^"]+)"/) || [])[1] || '';
