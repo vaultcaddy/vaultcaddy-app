@@ -267,10 +267,23 @@ class HybridVisionDeepSeekProcessor {
      * 原因：不同銀行格式差異太大，無法用固定邏輯過濾
      */
     filterBankStatementText(text) {
-        console.log('🏦 過濾銀行對帳單文本（平衡版本 - 移除明顯無用內容）...');
+        console.log('🏦 過濾銀行對帳單文本（增強版本 - 只保留核心信息）...');
         
         const lines = text.split('\n');
         const relevantLines = [];
+        
+        // 關鍵詞：帳戶信息、餘額、交易
+        const keywordPatterns = [
+            /bank|銀行|account|帳戶|戶口/i,
+            /balance|餘額|結餘|Balance/i,
+            /statement|對帳單|月結單/i,
+            /transaction|交易|deposit|withdrawal|存款|取款|轉帳/i,
+            /date|日期|period|期間/i,
+            /opening|closing|期初|期末|開始|結束/i,
+            /\d{1,3}(,\d{3})*\.\d{2}/,  // 金額格式（如：1,234.56）
+            /^\d{2}\/\d{2}\/\d{4}$/,    // 日期格式（MM/DD/YYYY）
+            /^\d{4}-\d{2}-\d{2}$/       // 日期格式（YYYY-MM-DD）
+        ];
         
         for (let line of lines) {
             const trimmed = line.trim();
@@ -278,49 +291,35 @@ class HybridVisionDeepSeekProcessor {
             // ❌ 跳過空行
             if (trimmed.length === 0) continue;
             
-            // ❌ 跳過只有空格、製表符的行
-            if (/^\s+$/.test(line)) continue;
-            
-            // ❌ 跳過超長行（> 300 字符，通常是免責聲明或條款）
-            if (trimmed.length > 300) {
-                console.log(`  ⏭️ 跳過超長行（${trimmed.length} 字符）: ${trimmed.substring(0, 40)}...`);
+            // ❌ 跳過超長行（> 200 字符，通常是免責聲明）
+            if (trimmed.length > 200) {
                 continue;
             }
             
-            // ❌ 跳過網址（明顯無用）
-            if (/www\.|http|\.com|\.hk|\.cn/.test(trimmed)) {
-                console.log(`  ⏭️ 跳過網址: ${trimmed.substring(0, 40)}...`);
+            // ❌ 跳過明顯無用的內容
+            if (/www\.|http|\.com|\.hk|@|Page \d+ of|第 \d+ 頁|^\d+$/i.test(trimmed)) {
                 continue;
             }
             
-            // ❌ 跳過電郵地址（明顯無用）
-            if (/@/.test(trimmed) && trimmed.length < 100) {
-                console.log(`  ⏭️ 跳過電郵: ${trimmed.substring(0, 40)}...`);
+            // ✅ 保留包含關鍵詞的行
+            const hasKeyword = keywordPatterns.some(pattern => pattern.test(trimmed));
+            if (hasKeyword) {
+                relevantLines.push(line);
                 continue;
             }
             
-            // ❌ 跳過頁碼（明顯無用）
-            if (/Page \d+ of \d+/i.test(trimmed) || /第 \d+ 頁/.test(trimmed) || /^\d+$/.test(trimmed)) {
-                console.log(`  ⏭️ 跳過頁碼: ${trimmed}`);
-                continue;
+            // ✅ 保留包含數字的短行（可能是交易或餘額）
+            if (trimmed.length < 100 && /\d/.test(trimmed)) {
+                relevantLines.push(line);
             }
-            
-            // ❌ 跳過電話號碼行（單獨一行只有電話號碼）
-            if (/^\d{8}$/.test(trimmed) || /^\d{4}-\d{4}$/.test(trimmed)) {
-                console.log(`  ⏭️ 跳過電話: ${trimmed}`);
-                continue;
-            }
-            
-            // ✅ 保留所有其他內容（交易記錄、餘額、帳戶信息等）
-            relevantLines.push(line);
         }
         
         const filteredText = relevantLines.join('\n');
         const reductionPercent = Math.round((1 - filteredText.length / text.length) * 100);
         console.log(`✅ 銀行對帳單過濾完成：${text.length} → ${filteredText.length} 字符（減少 ${reductionPercent}%）`);
         console.log(`   保留 ${relevantLines.length} 行（原始 ${lines.length} 行）`);
-        console.log(`   📝 策略：移除空白、超長行、網址、電郵、頁碼`);
-        console.log(`   ✅ 保留：所有交易記錄、餘額、帳戶信息`);
+        console.log(`   📝 策略：只保留包含關鍵詞或數字的行`);
+        console.log(`   ✅ 目標：< 2000 字符，適合單次 DeepSeek 調用`);
         
         return filteredText;
     }
@@ -364,42 +363,15 @@ class HybridVisionDeepSeekProcessor {
      * 步驟 2：使用 DeepSeek Chat 分析文本（帶重試機制）
      */
     async analyzeTextWithDeepSeek(text, documentType) {
-        // ✅ 檢查文本長度，如果過長則分段處理
-        const MAX_CHUNK_SIZE = 2000; // 每段最大字符數
+        // ✅ 檢查文本長度（警告，但不分段）
+        const MAX_RECOMMENDED_SIZE = 2000;
         
-        if (text.length > MAX_CHUNK_SIZE) {
-            console.log(`📝 文本過長（${text.length} 字符），開始分段處理...`);
-            
-            // 計算分段數
-            const numChunks = Math.ceil(text.length / MAX_CHUNK_SIZE);
-            console.log(`   將分為 ${numChunks} 段處理（每段 ≤ ${MAX_CHUNK_SIZE} 字符）`);
-            
-            // 分段處理
-            const results = [];
-            for (let i = 0; i < numChunks; i++) {
-                const start = i * MAX_CHUNK_SIZE;
-                const end = Math.min(start + MAX_CHUNK_SIZE, text.length);
-                const chunk = text.substring(start, end);
-                
-                console.log(`   📄 處理第 ${i + 1}/${numChunks} 段（${chunk.length} 字符）...`);
-                
-                // 遞歸調用自己處理每一段
-                const result = await this.analyzeTextWithDeepSeek(chunk, documentType);
-                results.push(result);
-                
-                console.log(`   ✅ 第 ${i + 1}/${numChunks} 段處理完成`);
-            }
-            
-            // 合併結果
-            console.log(`🔄 合併 ${numChunks} 段結果...`);
-            const mergedResult = this.mergeChunkedResults(results, documentType);
-            console.log(`✅ 分段處理完成，已合併結果`);
-            
-            return mergedResult;
+        if (text.length > MAX_RECOMMENDED_SIZE) {
+            console.warn(`⚠️ 文本較長（${text.length} 字符 > ${MAX_RECOMMENDED_SIZE}），建議增強過濾`);
+            console.warn(`   當前將直接處理，DeepSeek 可能需要更長時間`);
         }
         
-        // ✅ 文本長度正常，直接處理
-        console.log(`📝 文本長度正常（${text.length} 字符），直接處理`);
+        console.log(`📝 開始 DeepSeek 分析（文本長度：${text.length} 字符）`);
         
         // 生成 Prompt
         const systemPrompt = this.generateSystemPrompt(documentType);
