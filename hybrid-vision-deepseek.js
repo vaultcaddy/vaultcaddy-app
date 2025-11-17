@@ -267,7 +267,7 @@ class HybridVisionDeepSeekProcessor {
      * 原因：不同銀行格式差異太大，無法用固定邏輯過濾
      */
     filterBankStatementText(text) {
-        console.log('🏦 過濾銀行對帳單文本（簡化版本 - 只移除空白內容）...');
+        console.log('🏦 過濾銀行對帳單文本（平衡版本 - 移除明顯無用內容）...');
         
         const lines = text.split('\n');
         const relevantLines = [];
@@ -281,7 +281,37 @@ class HybridVisionDeepSeekProcessor {
             // ❌ 跳過只有空格、製表符的行
             if (/^\s+$/.test(line)) continue;
             
-            // ✅ 保留所有有內容的行
+            // ❌ 跳過超長行（> 300 字符，通常是免責聲明或條款）
+            if (trimmed.length > 300) {
+                console.log(`  ⏭️ 跳過超長行（${trimmed.length} 字符）: ${trimmed.substring(0, 40)}...`);
+                continue;
+            }
+            
+            // ❌ 跳過網址（明顯無用）
+            if (/www\.|http|\.com|\.hk|\.cn/.test(trimmed)) {
+                console.log(`  ⏭️ 跳過網址: ${trimmed.substring(0, 40)}...`);
+                continue;
+            }
+            
+            // ❌ 跳過電郵地址（明顯無用）
+            if (/@/.test(trimmed) && trimmed.length < 100) {
+                console.log(`  ⏭️ 跳過電郵: ${trimmed.substring(0, 40)}...`);
+                continue;
+            }
+            
+            // ❌ 跳過頁碼（明顯無用）
+            if (/Page \d+ of \d+/i.test(trimmed) || /第 \d+ 頁/.test(trimmed) || /^\d+$/.test(trimmed)) {
+                console.log(`  ⏭️ 跳過頁碼: ${trimmed}`);
+                continue;
+            }
+            
+            // ❌ 跳過電話號碼行（單獨一行只有電話號碼）
+            if (/^\d{8}$/.test(trimmed) || /^\d{4}-\d{4}$/.test(trimmed)) {
+                console.log(`  ⏭️ 跳過電話: ${trimmed}`);
+                continue;
+            }
+            
+            // ✅ 保留所有其他內容（交易記錄、餘額、帳戶信息等）
             relevantLines.push(line);
         }
         
@@ -289,7 +319,8 @@ class HybridVisionDeepSeekProcessor {
         const reductionPercent = Math.round((1 - filteredText.length / text.length) * 100);
         console.log(`✅ 銀行對帳單過濾完成：${text.length} → ${filteredText.length} 字符（減少 ${reductionPercent}%）`);
         console.log(`   保留 ${relevantLines.length} 行（原始 ${lines.length} 行）`);
-        console.log(`   📝 策略：只移除空白行，保留所有實際內容`);
+        console.log(`   📝 策略：移除空白、超長行、網址、電郵、頁碼`);
+        console.log(`   ✅ 保留：所有交易記錄、餘額、帳戶信息`);
         
         return filteredText;
     }

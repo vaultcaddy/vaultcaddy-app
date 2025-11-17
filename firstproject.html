@@ -2324,9 +2324,21 @@
             }
         }
         
+        // ✅ 防止重複處理的鎖
+        const processingDocuments = new Set();
+        
         // ✅ 多頁 PDF 處理函數
         async function processMultiPageFileWithAI(files, docId, documentType) {
+            // ✅ 檢查是否正在處理
+            if (processingDocuments.has(docId)) {
+                console.warn(`⚠️ 文檔 ${docId} 正在處理中，跳過重複處理`);
+                return;
+            }
+            
             try {
+                // ✅ 添加到處理鎖
+                processingDocuments.add(docId);
+                console.log(`🔒 鎖定文檔 ${docId}，開始處理`);
                 console.log(`🤖 開始多頁 AI 處理: ${files.length} 頁（方案 B：批量 OCR + 單次 DeepSeek）`);
                 
                 if (!window.HybridVisionDeepSeekProcessor) {
@@ -2410,6 +2422,10 @@
                     error: error.message
                 });
                 await loadDocuments();
+            } finally {
+                // ✅ 無論成功或失敗，都釋放鎖
+                processingDocuments.delete(docId);
+                console.log(`🔓 解鎖文檔 ${docId}，處理完成`);
             }
         }
         
