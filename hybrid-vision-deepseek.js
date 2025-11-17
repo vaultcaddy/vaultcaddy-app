@@ -415,6 +415,18 @@ class HybridVisionDeepSeekProcessor {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 120000); // ✅ 120 秒超時（給 reasoner 更多時間，避免複雜對帳單超時）
                 
+                // ✅ 根據文檔類型動態設置 max_tokens（關鍵優化！）
+                // 輸出長度直接影響處理時間：
+                // - 500 tokens: 6 秒
+                // - 2000 tokens: 30 秒
+                // - 4096 tokens: > 120 秒（超時）
+                const maxTokens = documentType === 'bank_statement' ? 2000 :  // 銀行對帳單（50 筆交易）
+                                 documentType === 'invoice' ? 1000 :          // 發票（10 行項目）
+                                 documentType === 'receipt' ? 1000 :          // 收據
+                                 1500;                                        // 通用文檔
+                
+                console.log(`📊 max_tokens 設置: ${maxTokens}（文檔類型: ${documentType}）`);
+                
                 const response = await fetch(this.deepseekWorkerUrl, {
                     method: 'POST',
                     headers: {
@@ -433,7 +445,7 @@ class HybridVisionDeepSeekProcessor {
                             }
                         ],
                         temperature: 0.1,
-                        max_tokens: 4096 // ✅ deepseek-chat 最大 4K tokens（足夠處理大部分文檔）
+                        max_tokens: maxTokens // ✅ 動態設置（關鍵優化！）
                     }),
                     signal: controller.signal
                 });
