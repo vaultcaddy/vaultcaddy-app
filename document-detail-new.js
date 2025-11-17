@@ -753,15 +753,30 @@ function displayBankStatementContent(data) {
                            data.final_balance ||
                            0;
     
+    // ✅ 新增欄位：帳戶持有人、對帳單期間、貨幣
+    const accountHolder = data.accountHolder ||
+                          data.account_holder ||
+                          data.holder ||
+                          '—';
+    
+    const statementPeriod = data.statementPeriod ||
+                            data.statement_period ||
+                            '';
+    
+    const currency = data.currency || 'HKD';
+    
     // ✅ 調試日誌
     console.log('🔍 提取的數據:');
     console.log('   銀行名稱:', bankName);
     console.log('   帳戶號碼:', accountNumber);
+    console.log('   帳戶持有人:', accountHolder);
     console.log('   對帳單日期:', statementDate);
+    console.log('   對帳單期間:', statementPeriod);
     console.log('   期初餘額:', openingBalance);
     console.log('   期末餘額:', closingBalance);
+    console.log('   貨幣:', currency);
     
-    // ✅ 帳戶詳情（可編輯）
+    // ✅ 帳戶詳情（可編輯）- 新增：帳戶持有人、對帳單期間、期初餘額、貨幣
     detailsSection.innerHTML = `
         <div class="bank-details-card">
             <h3 class="card-title" style="margin-bottom: 1.5rem;">
@@ -783,10 +798,35 @@ function displayBankStatementContent(data) {
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">帳戶持有人</label>
+                    <input type="text" id="accountHolder" value="${accountHolder}" 
+                           onchange="autoSaveBankStatementDetails()"
+                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
+                </div>
+                <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">貨幣</label>
+                    <input type="text" id="currency" value="${currency}" 
+                           onchange="autoSaveBankStatementDetails()"
+                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
+                </div>
+                <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">對帳單期間</label>
+                    <input type="text" id="statementPeriod" value="${statementPeriod}" 
+                           onchange="autoSaveBankStatementDetails()"
+                           placeholder="例如：2025-02-22 to 2025-03-22"
+                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
+                </div>
+                <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
                     <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">對帳單日期</label>
                     <input type="date" id="statementDate" value="${statementDate}" 
                            onchange="autoSaveBankStatementDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
+                </div>
+                <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">期初餘額</label>
+                    <input type="text" id="openingBalance" value="${formatCurrency(openingBalance)}" 
+                           onchange="autoSaveBankStatementDetails()"
+                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; font-weight: 600; color: #3b82f6; background: white;">
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
                     <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">期末餘額</label>
@@ -1054,18 +1094,26 @@ async function autoSaveAllChanges() {
             };
         }
     } else if (docType === 'bank_statement' || docType === 'bank_statements') {
-        // ✅ 如果是銀行對帳單，獲取帳戶詳情
+        // ✅ 如果是銀行對帳單，獲取帳戶詳情（包括新增欄位）
         const bankName = document.getElementById('bankName')?.value;
         const accountNumber = document.getElementById('accountNumber')?.value;
+        const accountHolder = document.getElementById('accountHolder')?.value;
+        const currency = document.getElementById('currency')?.value;
+        const statementPeriod = document.getElementById('statementPeriod')?.value;
         const statementDate = document.getElementById('statementDate')?.value;
+        const openingBalance = document.getElementById('openingBalance')?.value;
         const closingBalance = document.getElementById('closingBalance')?.value;
         
-        if (bankName || accountNumber || statementDate || closingBalance) {
+        if (bankName || accountNumber || accountHolder || statementDate || closingBalance) {
             currentDocument.processedData = {
                 ...currentDocument.processedData,
                 bankName: bankName,
                 accountNumber: accountNumber,
+                accountHolder: accountHolder,
+                currency: currency,
+                statementPeriod: statementPeriod,
                 statementDate: statementDate,
+                openingBalance: parseFloat(openingBalance?.replace(/[^0-9.-]+/g, '')) || 0,
                 closingBalance: parseFloat(closingBalance?.replace(/[^0-9.-]+/g, '')) || 0
             };
         }
