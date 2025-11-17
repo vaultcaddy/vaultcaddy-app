@@ -198,6 +198,19 @@ class HybridVisionDeepSeekProcessor {
             
             const processingTime = Date.now() - startTime;
             console.log(`✅ 混合處理完成，總耗時: ${processingTime}ms`);
+            
+            // ✅ 詳細診斷日誌
+            console.log(`🔍 提取的數據診斷：`);
+            console.log(`   - 數據類型: ${typeof extractedData}`);
+            console.log(`   - 數據鍵: ${extractedData ? Object.keys(extractedData).join(', ') : 'null'}`);
+            console.log(`   - transactions 字段: ${extractedData.transactions ? '存在' : '不存在'}`);
+            console.log(`   - transactions 類型: ${typeof extractedData.transactions}`);
+            console.log(`   - transactions 長度: ${extractedData.transactions?.length || 0}`);
+            
+            if (extractedData.transactions && extractedData.transactions.length > 0) {
+                console.log(`   - 第一筆交易:`, JSON.stringify(extractedData.transactions[0]));
+            }
+            
             console.log(`📊 性能統計：`);
             console.log(`   - 頁數: ${files.length}`);
             console.log(`   - OCR 調用: ${files.length} 次（並行）`);
