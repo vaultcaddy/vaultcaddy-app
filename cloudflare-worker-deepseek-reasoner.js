@@ -81,9 +81,9 @@ async function handlePost(request) {
         
         const controller = new AbortController();
         const timeoutId = setTimeout(() => {
-            console.error('⏰ Worker 超時（60 秒）');
+            console.error('⏰ Worker 超時（120 秒）');
             controller.abort();
-        }, 60000); // ✅ 60 秒超時（與前端一致）
+        }, 120000); // ✅ 120 秒超時（與前端一致，避免複雜對帳單超時）
         
         const deepseekResponse = await fetch(DEEPSEEK_API_URL, {
             method: 'POST',
@@ -196,10 +196,10 @@ export default {
         if (request.method === 'GET') {
             return new Response(JSON.stringify({
                 status: 'ok',
-                version: '2.0.0',
+                version: '2.1.0',
                 supported_models: SUPPORTED_MODELS,
-                max_timeout: '60 seconds',
-                updated: '2025-11-16'
+                max_timeout: '120 seconds',
+                updated: '2025-11-17'
             }), {
                 status: 200,
                 headers: {
