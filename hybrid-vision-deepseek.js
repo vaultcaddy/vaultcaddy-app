@@ -1285,8 +1285,9 @@ class HybridVisionDeepSeekProcessor {
 4. 總額通常在底部（Total、合計、總計等關鍵字）
 5. 自動分類項目以便後續財務分析`;
             
-            case 'bank_statements':
-            case 'bank-statement':
+            case 'bank_statement':      // ← 單數，下劃線（主要格式）
+            case 'bank_statements':     // ← 複數
+            case 'bank-statement':      // ← 連字符
             case 'statement':
                 return baseInstruction + `你正在分析一張香港銀行對帳單。這是會計對帳的核心數據。
 
