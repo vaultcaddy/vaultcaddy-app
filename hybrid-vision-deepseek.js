@@ -418,19 +418,14 @@ class HybridVisionDeepSeekProcessor {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 120000); // ✅ 120 秒超時（給 reasoner 更多時間，避免複雜對帳單超時）
                 
-                // ✅ 根據文檔類型動態設置 max_tokens
-                // 用戶觀點：10 頁 2 分鐘可接受，成本 cover，不需要過度限制
-                // 實測數據：
-                // - max_tokens: 500 → 6 秒
-                // - max_tokens: 4000 → 30 秒（可接受）
-                // 策略：允許更大輸出，讓用戶體驗更好
-                const maxTokens = documentType === 'bank_statement' ? 8000 :  // 銀行對帳單（最大 8K，支持大量交易）
-                                 documentType === 'invoice' ? 4000 :          // 發票（支持多行項目）
-                                 documentType === 'receipt' ? 4000 :          // 收據
-                                 4000;                                        // 通用文檔
-                
-                console.log(`📊 max_tokens 設置: ${maxTokens}（文檔類型: ${documentType}）`);
-                console.log(`   策略：允許更大輸出，用戶 2 分鐘等待可接受`);
+                // ✅ 不限制 max_tokens（讓 DeepSeek 自由輸出完整 JSON）
+                // 原因：
+                // 1. max_tokens 限制會導致 JSON 被截斷
+                // 2. 用戶願意等待（10 頁 2 分鐘可接受）
+                // 3. 成本可控（用戶付費 cover）
+                // 策略：不設置 max_tokens，讓 DeepSeek 輸出完整數據
+                console.log(`📊 max_tokens 設置: 無限制（讓 DeepSeek 輸出完整 JSON）`);
+                console.log(`   策略：避免 JSON 被截斷，確保數據完整性`);
                 
                 const response = await fetch(this.deepseekWorkerUrl, {
                     method: 'POST',
@@ -449,8 +444,8 @@ class HybridVisionDeepSeekProcessor {
                                 content: userPrompt
                             }
                         ],
-                        temperature: 0.1,
-                        max_tokens: maxTokens // ✅ 動態設置（關鍵優化！）
+                        temperature: 0.1
+                        // ✅ 不設置 max_tokens，讓 DeepSeek 輸出完整 JSON
                     }),
                     signal: controller.signal
                 });
@@ -721,9 +716,22 @@ class HybridVisionDeepSeekProcessor {
         if (documentType === 'bank_statement') {
             console.log('   智能合併銀行對帳單數據...');
             
-            // ✅ 從第 1 頁提取帳戶信息和開始餘額
+            // ✅ 檢查第 1 頁和最後 1 頁是否有效
             const firstPage = results[0];
             const lastPage = results[results.length - 1];
+            
+            if (!firstPage) {
+                console.error('❌ 第 1 段結果為空，無法合併');
+                return null;
+            }
+            
+            if (!lastPage) {
+                console.error('❌ 最後 1 段結果為空，無法合併');
+                return null;
+            }
+            
+            console.log(`   第 1 段數據: bankName=${firstPage.bankName}, accountNumber=${firstPage.accountNumber}`);
+            console.log(`   最後 1 段數據: closingBalance=${lastPage.closingBalance}`);
             
             const merged = {
                 bankName: firstPage.bankName || '',
@@ -812,7 +820,7 @@ class HybridVisionDeepSeekProcessor {
     }
     
     /**
-     * 解析 DeepSeek 響應
+     * 解析 DeepSeek 響應（增強版：添加 JSON 修復邏輯）
      */
     async parseDeepSeekResponse(data, documentType) {
         
@@ -820,28 +828,200 @@ class HybridVisionDeepSeekProcessor {
         const aiResponse = data.choices[0].message.content;
         console.log('🤖 DeepSeek 回應長度:', aiResponse.length, '字符');
         
+        // ✅ 顯示原始回應（前後 500 字符，用於調試）
+        console.log('📝 DeepSeek 原始回應（前 500 字符）:');
+        console.log(aiResponse.substring(0, 500));
+        console.log('📝 DeepSeek 原始回應（後 500 字符）:');
+        console.log(aiResponse.substring(Math.max(0, aiResponse.length - 500)));
+        
         // 解析 JSON
         let parsedData;
+        let parseAttempt = 0;
+        
         try {
-            // 嘗試直接解析
+            // ✅ 嘗試 1：直接解析
+            parseAttempt = 1;
+            console.log('🔄 嘗試 1：直接解析 JSON...');
             parsedData = JSON.parse(aiResponse);
+            console.log('✅ 直接解析成功！');
         } catch (parseError) {
-            // 嘗試清理後解析（移除 markdown 代碼塊）
-            const cleaned = aiResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+            console.warn(`⚠️ 嘗試 1 失敗: ${parseError.message}`);
+            
             try {
+                // ✅ 嘗試 2：清理後解析（移除 markdown 代碼塊）
+                parseAttempt = 2;
+                console.log('🔄 嘗試 2：清理 markdown 後解析...');
+                const cleaned = aiResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
                 parsedData = JSON.parse(cleaned);
+                console.log('✅ 清理後解析成功！');
             } catch (secondError) {
-                // 如果還是失敗，嘗試提取 JSON 對象
-                const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
-                if (jsonMatch) {
-                    parsedData = JSON.parse(jsonMatch[0]);
-                } else {
-                    throw new Error(`無法解析 DeepSeek 回應為 JSON: ${cleaned.substring(0, 200)}`);
+                console.warn(`⚠️ 嘗試 2 失敗: ${secondError.message}`);
+                
+                try {
+                    // ✅ 嘗試 3：提取 JSON 對象
+                    parseAttempt = 3;
+                    console.log('🔄 嘗試 3：提取 JSON 對象...');
+                    const cleaned = aiResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+                    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+                    if (jsonMatch) {
+                        parsedData = JSON.parse(jsonMatch[0]);
+                        console.log('✅ 提取 JSON 對象成功！');
+                    } else {
+                        throw new Error('找不到 JSON 對象');
+                    }
+                } catch (thirdError) {
+                    console.warn(`⚠️ 嘗試 3 失敗: ${thirdError.message}`);
+                    
+                    // ✅ 嘗試 4：修復被截斷的 JSON
+                    parseAttempt = 4;
+                    console.log('🔄 嘗試 4：修復被截斷的 JSON...');
+                    const cleaned = aiResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+                    const fixed = this.fixTruncatedJSON(cleaned, documentType);
+                    
+                    try {
+                        parsedData = JSON.parse(fixed);
+                        console.log('✅ JSON 修復成功！');
+                        console.warn('⚠️ 注意：數據可能不完整（JSON 被截斷後修復）');
+                    } catch (fourthError) {
+                        console.error(`❌ 嘗試 4 失敗: ${fourthError.message}`);
+                        
+                        // ✅ 嘗試 5：提取部分數據（最後手段）
+                        parseAttempt = 5;
+                        console.log('🔄 嘗試 5：提取部分數據（最後手段）...');
+                        parsedData = this.extractPartialData(cleaned, documentType);
+                        
+                        if (parsedData) {
+                            console.log('⚠️ 使用部分數據（可能不完整）');
+                        } else {
+                            // ✅ 顯示錯誤位置附近的內容
+                            const errorPos = parseInt(fourthError.message.match(/position (\d+)/)?.[1] || 0);
+                            if (errorPos > 0) {
+                                const start = Math.max(0, errorPos - 100);
+                                const end = Math.min(cleaned.length, errorPos + 100);
+                                console.error('❌ 錯誤位置附近內容:');
+                                console.error(cleaned.substring(start, end));
+                            }
+                            
+                            throw new Error(`無法解析 DeepSeek 回應為 JSON（已嘗試 5 種方法）: ${cleaned.substring(0, 200)}`);
+                        }
+                    }
                 }
             }
         }
         
+        console.log(`✅ JSON 解析完成（使用方法 ${parseAttempt}）`);
         return parsedData;
+    }
+    
+    /**
+     * 修復被截斷的 JSON
+     */
+    fixTruncatedJSON(json, documentType) {
+        console.log('🔧 嘗試修復被截斷的 JSON...');
+        console.log(`   原始長度: ${json.length} 字符`);
+        
+        if (documentType === 'bank_statement') {
+            // 1. 找到最後一個完整的交易
+            const lastTransactionEnd = json.lastIndexOf('"}');
+            
+            if (lastTransactionEnd === -1) {
+                console.error('❌ 找不到任何完整的交易');
+                return json;
+            }
+            
+            // 2. 截斷到最後一個完整交易
+            let fixed = json.substring(0, lastTransactionEnd + 2);
+            
+            // 3. 計算缺失的括號
+            const openBraces = (fixed.match(/\{/g) || []).length;
+            const closeBraces = (fixed.match(/\}/g) || []).length;
+            const openBrackets = (fixed.match(/\[/g) || []).length;
+            const closeBrackets = (fixed.match(/\]/g) || []).length;
+            
+            console.log(`   括號統計: { ${openBraces} vs } ${closeBraces}, [ ${openBrackets} vs ] ${closeBrackets}`);
+            
+            // 4. 補全缺失的括號
+            // 先補全 ]（交易數組）
+            for (let i = 0; i < openBrackets - closeBrackets; i++) {
+                fixed += '\n  ]';
+                console.log('   補全 ]');
+            }
+            
+            // 再補全 }（對象）
+            for (let i = 0; i < openBraces - closeBraces; i++) {
+                fixed += '\n}';
+                console.log('   補全 }');
+            }
+            
+            console.log(`✅ JSON 修復完成`);
+            console.log(`   修復後長度: ${fixed.length} 字符`);
+            
+            return fixed;
+        }
+        
+        // 其他文檔類型：簡單修復
+        let fixed = json;
+        const openBraces = (fixed.match(/\{/g) || []).length;
+        const closeBraces = (fixed.match(/\}/g) || []).length;
+        
+        for (let i = 0; i < openBraces - closeBraces; i++) {
+            fixed += '\n}';
+        }
+        
+        return fixed;
+    }
+    
+    /**
+     * 提取部分數據（最後手段）
+     */
+    extractPartialData(json, documentType) {
+        console.log('⚠️ 提取部分數據（最後手段）...');
+        
+        if (documentType === 'bank_statement') {
+            try {
+                // 使用正則提取關鍵信息
+                const bankName = (json.match(/"bankName":\s*"([^"]+)"/) || [])[1] || '';
+                const accountNumber = (json.match(/"accountNumber":\s*"([^"]+)"/) || [])[1] || '';
+                const closingBalance = parseFloat((json.match(/"closingBalance":\s*([\d.]+)/) || [])[1] || 0);
+                const openingBalance = parseFloat((json.match(/"openingBalance":\s*([\d.]+)/) || [])[1] || 0);
+                
+                // 提取所有完整的交易
+                const transactionPattern = /\{\s*"date":\s*"([^"]+)",\s*"description":\s*"([^"]+)",\s*"type":\s*"([^"]+)",\s*"amount":\s*([\d.-]+),\s*"balance":\s*([\d.-]+)\s*\}/g;
+                const transactionMatches = json.matchAll(transactionPattern);
+                
+                const transactions = [];
+                for (const match of transactionMatches) {
+                    transactions.push({
+                        date: match[1],
+                        description: match[2],
+                        type: match[3],
+                        amount: parseFloat(match[4]),
+                        balance: parseFloat(match[5])
+                    });
+                }
+                
+                console.log(`✅ 提取了部分數據：`);
+                console.log(`   銀行名稱: ${bankName}`);
+                console.log(`   帳戶號碼: ${accountNumber}`);
+                console.log(`   交易數量: ${transactions.length}`);
+                
+                return {
+                    bankName,
+                    accountNumber,
+                    openingBalance,
+                    closingBalance,
+                    transactions,
+                    confidence: 50,  // ⚠️ 低置信度
+                    warning: '數據可能不完整（JSON 被截斷，已提取部分數據）'
+                };
+            } catch (error) {
+                console.error('❌ 提取部分數據失敗:', error.message);
+                return null;
+            }
+        }
+        
+        // 其他文檔類型
+        return null;
     }
     
     /**
