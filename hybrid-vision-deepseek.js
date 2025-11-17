@@ -96,11 +96,11 @@ class HybridVisionDeepSeekProcessor {
      */
     async processMultiPageDocument(files, documentType = 'invoice') {
         const startTime = Date.now();
-        console.log(`\n🚀 批量處理器開始處理: ${files.length} 頁 (${documentType})`);
+        console.log(`\n🚀 混合處理器開始處理: ${files.length} 頁 (${documentType})`);
         
         try {
             // ========== 步驟 1：批量 OCR 所有頁面（並行處理）==========
-            console.log(`📸 步驟 1：批量 OCR ${files.length} 頁...`);
+            console.log(`📸 步驟 1：批量 OCR ${files.length} 頁（並行處理，更快）...`);
             const ocrPromises = files.map((file, index) => {
                 console.log(`  📄 啟動 OCR 第 ${index + 1} 頁: ${file.name}`);
                 return this.extractTextWithVision(file);
@@ -114,31 +114,38 @@ class HybridVisionDeepSeekProcessor {
                 console.log(`  📄 第 ${index + 1} 頁: ${text.length} 字符`);
             });
             
-            // ========== 步驟 2：過濾每頁的無用文本 ==========
-            console.log(`🔍 步驟 2：過濾 ${files.length} 頁的無用文本...`);
-            const filteredTexts = ocrTexts.map((text, index) => {
-                const filtered = this.filterRelevantText(text, documentType);
-                console.log(`  ✅ 第 ${index + 1} 頁: ${text.length} → ${filtered.length} 字符（減少 ${Math.round((1 - filtered.length / text.length) * 100)}%）`);
-                return filtered;
-            });
+            // ========== 步驟 2：逐頁 DeepSeek 分析（智能提取）==========
+            console.log(`🧠 步驟 2：逐頁 DeepSeek 分析（讓 AI 智能過濾）...`);
+            console.log(`   原因：自建過濾不適用所有銀行格式，DeepSeek 更智能`);
             
-            // ========== 步驟 3：合併所有頁面的文本 ==========
-            console.log('📋 步驟 3：合併所有頁面的文本...');
-            const combinedText = this.combineMultiPageText(filteredTexts, documentType);
-            console.log(`✅ 合併完成：總計 ${combinedText.length} 字符`);
+            const pageResults = [];
+            for (let i = 0; i < ocrTexts.length; i++) {
+                const text = ocrTexts[i];
+                console.log(`  🔍 分析第 ${i + 1}/${files.length} 頁（${text.length} 字符）...`);
+                
+                try {
+                    const result = await this.analyzeTextWithDeepSeek(text, documentType);
+                    pageResults.push(result);
+                    console.log(`  ✅ 第 ${i + 1}/${files.length} 頁分析完成`);
+                } catch (error) {
+                    console.error(`  ❌ 第 ${i + 1} 頁分析失敗:`, error.message);
+                    // 繼續處理其他頁面
+                    pageResults.push(null);
+                }
+            }
             
-            // ========== 步驟 4：單次 DeepSeek 調用 ==========
-            console.log('🧠 步驟 4：使用 DeepSeek Chat 分析合併文本（單次調用）...');
-            const extractedData = await this.analyzeTextWithDeepSeek(combinedText, documentType);
+            // ========== 步驟 3：智能合併結果 ==========
+            console.log('🔄 步驟 3：智能合併 DeepSeek 結果...');
+            const extractedData = this.mergeChunkedResults(pageResults.filter(r => r !== null), documentType);
             
             const processingTime = Date.now() - startTime;
-            console.log(`✅ 批量處理完成，總耗時: ${processingTime}ms`);
+            console.log(`✅ 混合處理完成，總耗時: ${processingTime}ms`);
             console.log(`📊 性能統計：`);
             console.log(`   - 頁數: ${files.length}`);
-            console.log(`   - OCR 調用: ${files.length} 次`);
-            console.log(`   - DeepSeek 調用: 1 次`);
-            console.log(`   - 總字符數: ${combinedText.length}`);
-            console.log(`   - 平均每頁: ${Math.round(combinedText.length / files.length)} 字符`);
+            console.log(`   - OCR 調用: ${files.length} 次（並行）`);
+            console.log(`   - DeepSeek 調用: ${files.length} 次（逐頁，智能過濾）`);
+            console.log(`   - 成功頁數: ${pageResults.filter(r => r !== null).length}`);
+            console.log(`   - 總交易數: ${extractedData.transactions?.length || 0}`);
             
             return {
                 success: true,
@@ -387,17 +394,18 @@ class HybridVisionDeepSeekProcessor {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 120000); // ✅ 120 秒超時（給 reasoner 更多時間，避免複雜對帳單超時）
                 
-                // ✅ 根據文檔類型動態設置 max_tokens（關鍵優化！）
-                // 輸出長度直接影響處理時間：
-                // - 500 tokens: 6 秒
-                // - 2000 tokens: 30 秒
-                // - 4096 tokens: > 120 秒（超時）
-                const maxTokens = documentType === 'bank_statement' ? 2000 :  // 銀行對帳單（50 筆交易）
-                                 documentType === 'invoice' ? 1000 :          // 發票（10 行項目）
-                                 documentType === 'receipt' ? 1000 :          // 收據
-                                 1500;                                        // 通用文檔
+                // ✅ 根據文檔類型動態設置 max_tokens
+                // 實測數據（用戶提供）：
+                // - 500 tokens: 6 秒 ✅
+                // - 2521 字符（單頁）: 6 秒 ✅
+                // 結論：DeepSeek 可以處理更長的輸入/輸出
+                const maxTokens = documentType === 'bank_statement' ? 4000 :  // 銀行對帳單（提高到 4000，適應單頁 2500 字符）
+                                 documentType === 'invoice' ? 2000 :          // 發票
+                                 documentType === 'receipt' ? 2000 :          // 收據
+                                 2000;                                        // 通用文檔
                 
                 console.log(`📊 max_tokens 設置: ${maxTokens}（文檔類型: ${documentType}）`);
+                console.log(`   原因：實測顯示 2500 字符也能在 6 秒內完成`);
                 
                 const response = await fetch(this.deepseekWorkerUrl, {
                     method: 'POST',
@@ -462,34 +470,64 @@ class HybridVisionDeepSeekProcessor {
      * 合併分段處理的結果
      */
     mergeChunkedResults(results, documentType) {
-        console.log(`🔄 開始合併 ${results.length} 段結果（文檔類型：${documentType}）...`);
+        console.log(`🔄 開始合併 ${results.length} 頁結果（文檔類型：${documentType}）...`);
         
         if (results.length === 1) {
-            console.log('   只有 1 段，直接返回');
+            console.log('   只有 1 頁，直接返回');
             return results[0];
         }
         
-        // 銀行對帳單：合併交易記錄
+        // 銀行對帳單：智能合併交易記錄
         if (documentType === 'bank_statement') {
-            console.log('   合併銀行對帳單數據...');
+            console.log('   智能合併銀行對帳單數據...');
+            
+            // ✅ 從第 1 頁提取帳戶信息和開始餘額
+            const firstPage = results[0];
+            const lastPage = results[results.length - 1];
             
             const merged = {
-                bankName: results[0].bankName || '',
-                accountNumber: results[0].accountNumber || '',
-                statementDate: results[0].statementDate || '',
-                openingBalance: results[0].openingBalance || 0,
-                closingBalance: results[results.length - 1].closingBalance || 0,
-                transactions: []
+                bankName: firstPage.bankName || '',
+                accountHolder: firstPage.accountHolder || '',
+                accountNumber: firstPage.accountNumber || '',
+                statementDate: firstPage.statementDate || lastPage.statementDate || '',
+                statementPeriod: firstPage.statementPeriod || '',
+                openingBalance: firstPage.openingBalance || 0,  // 第 1 頁的 B/F BALANCE
+                closingBalance: lastPage.closingBalance || 0,   // 最後 1 頁的 C/F BALANCE
+                transactions: [],
+                currency: firstPage.currency || 'HKD'
             };
             
-            // 合併所有交易記錄
+            // ✅ 合併所有交易記錄（去除 B/F 和 C/F BALANCE）
             for (const result of results) {
                 if (result.transactions && Array.isArray(result.transactions)) {
-                    merged.transactions.push(...result.transactions);
+                    for (const tx of result.transactions) {
+                        // 跳過 B/F BALANCE 和 C/F BALANCE（這些是餘額，不是真實交易）
+                        if (tx.description && 
+                            !tx.description.includes('B/F BALANCE') && 
+                            !tx.description.includes('C/F BALANCE') &&
+                            !tx.description.includes('BF BALANCE') &&
+                            !tx.description.includes('CF BALANCE')) {
+                            merged.transactions.push(tx);
+                        } else if (tx.description && tx.description.includes('B/F BALANCE')) {
+                            // B/F BALANCE 是開始餘額
+                            console.log(`   📝 檢測到 B/F BALANCE: ${tx.balance || tx.amount}`);
+                            if (!merged.openingBalance && (tx.balance || tx.amount)) {
+                                merged.openingBalance = parseFloat(tx.balance || tx.amount);
+                            }
+                        } else if (tx.description && tx.description.includes('C/F BALANCE')) {
+                            // C/F BALANCE 是結束餘額
+                            console.log(`   📝 檢測到 C/F BALANCE: ${tx.balance || tx.amount}`);
+                            if (!merged.closingBalance && (tx.balance || tx.amount)) {
+                                merged.closingBalance = parseFloat(tx.balance || tx.amount);
+                            }
+                        }
+                    }
                 }
             }
             
             console.log(`   ✅ 合併完成：${merged.transactions.length} 筆交易`);
+            console.log(`   📊 開始餘額（B/F）: ${merged.openingBalance}`);
+            console.log(`   📊 結束餘額（C/F）: ${merged.closingBalance}`);
             return merged;
         }
         
