@@ -768,7 +768,8 @@ class HybridVisionDeepSeekProcessor {
             }
             
             // ✅ 對於銀行對帳單，即使只有 1 段也要清理數據
-            if (this.isBankStatement(documentType) && result.transactions) {
+            if (this.isBankStatement(documentType)) {
+                console.log('   這是銀行對帳單，調用 cleanBankStatementData');
                 return this.cleanBankStatementData(result);
             }
             
