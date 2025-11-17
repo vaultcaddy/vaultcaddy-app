@@ -364,6 +364,43 @@ class HybridVisionDeepSeekProcessor {
      * 步驟 2：使用 DeepSeek Chat 分析文本（帶重試機制）
      */
     async analyzeTextWithDeepSeek(text, documentType) {
+        // ✅ 檢查文本長度，如果過長則分段處理
+        const MAX_CHUNK_SIZE = 2000; // 每段最大字符數
+        
+        if (text.length > MAX_CHUNK_SIZE) {
+            console.log(`📝 文本過長（${text.length} 字符），開始分段處理...`);
+            
+            // 計算分段數
+            const numChunks = Math.ceil(text.length / MAX_CHUNK_SIZE);
+            console.log(`   將分為 ${numChunks} 段處理（每段 ≤ ${MAX_CHUNK_SIZE} 字符）`);
+            
+            // 分段處理
+            const results = [];
+            for (let i = 0; i < numChunks; i++) {
+                const start = i * MAX_CHUNK_SIZE;
+                const end = Math.min(start + MAX_CHUNK_SIZE, text.length);
+                const chunk = text.substring(start, end);
+                
+                console.log(`   📄 處理第 ${i + 1}/${numChunks} 段（${chunk.length} 字符）...`);
+                
+                // 遞歸調用自己處理每一段
+                const result = await this.analyzeTextWithDeepSeek(chunk, documentType);
+                results.push(result);
+                
+                console.log(`   ✅ 第 ${i + 1}/${numChunks} 段處理完成`);
+            }
+            
+            // 合併結果
+            console.log(`🔄 合併 ${numChunks} 段結果...`);
+            const mergedResult = this.mergeChunkedResults(results, documentType);
+            console.log(`✅ 分段處理完成，已合併結果`);
+            
+            return mergedResult;
+        }
+        
+        // ✅ 文本長度正常，直接處理
+        console.log(`📝 文本長度正常（${text.length} 字符），直接處理`);
+        
         // 生成 Prompt
         const systemPrompt = this.generateSystemPrompt(documentType);
         const userPrompt = `請分析以下 OCR 提取的文本，並提取所有資料。\n\n文本內容：\n${text}`;
@@ -435,6 +472,55 @@ class HybridVisionDeepSeekProcessor {
                 await new Promise(resolve => setTimeout(resolve, waitTime));
             }
         }
+    }
+    
+    /**
+     * 合併分段處理的結果
+     */
+    mergeChunkedResults(results, documentType) {
+        console.log(`🔄 開始合併 ${results.length} 段結果（文檔類型：${documentType}）...`);
+        
+        if (results.length === 1) {
+            console.log('   只有 1 段，直接返回');
+            return results[0];
+        }
+        
+        // 銀行對帳單：合併交易記錄
+        if (documentType === 'bank_statement') {
+            console.log('   合併銀行對帳單數據...');
+            
+            const merged = {
+                bankName: results[0].bankName || '',
+                accountNumber: results[0].accountNumber || '',
+                statementDate: results[0].statementDate || '',
+                openingBalance: results[0].openingBalance || 0,
+                closingBalance: results[results.length - 1].closingBalance || 0,
+                transactions: []
+            };
+            
+            // 合併所有交易記錄
+            for (const result of results) {
+                if (result.transactions && Array.isArray(result.transactions)) {
+                    merged.transactions.push(...result.transactions);
+                }
+            }
+            
+            console.log(`   ✅ 合併完成：${merged.transactions.length} 筆交易`);
+            return merged;
+        }
+        
+        // 發票/收據：只取第一段（通常所有信息在第一段）
+        if (documentType === 'invoice' || documentType === 'receipt') {
+            console.log('   發票/收據：取第一段數據');
+            return results[0];
+        }
+        
+        // 通用文檔：合併所有文本
+        console.log('   通用文檔：合併所有內容');
+        return {
+            content: results.map(r => r.content || '').join('\n\n'),
+            confidence: Math.min(...results.map(r => r.confidence || 0))
+        };
     }
     
     /**
