@@ -118,23 +118,35 @@ class HybridVisionDeepSeekProcessor {
             const allText = ocrTexts.join('\n\n=== 下一頁 ===\n\n');
             console.log(`📝 步驟 2：合併所有頁面：總計 ${allText.length} 字符`);
             
-            // ========== 步驟 3：提取核心上下文 ==========
-            console.log(`📋 步驟 3：提取核心上下文（帳戶信息）...`);
-            const coreContext = this.extractCoreContext(allText, documentType);
+            // ========== 步驟 3：判斷是否需要分段 ==========
+            let chunks;
+            let coreContext = '';
             
-            // ========== 步驟 4：智能分段（重疊 + 上下文）==========
-            console.log(`🧠 步驟 4：智能分段 DeepSeek 分析（適應 10+ 頁 PDF）...`);
-            console.log(`   策略：重疊分段 + 核心上下文`);
-            console.log(`   - 每段最大：7000 字符`);
-            console.log(`   - 重疊大小：500 字符`);
-            console.log(`   - 核心上下文：${coreContext.length} 字符`);
-            
-            // ✅ 智能分段（重疊 + 核心上下文）
-            const chunks = this.intelligentChunkingWithOverlap(allText, 7000, 500, coreContext);
-            console.log(`✂️ 智能分段完成：${chunks.length} 段`);
-            chunks.forEach((chunk, i) => {
-                console.log(`   📄 第 ${i + 1} 段: ${chunk.length} 字符`);
-            });
+            if (allText.length <= 7000) {
+                // ✅ 文本不超過 7000 字符，不需要分段
+                console.log(`✅ 文本長度 ${allText.length} 字符，不超過 7000，不需要分段`);
+                chunks = [allText];
+            } else {
+                // ❌ 文本超過 7000 字符，需要智能分段
+                console.log(`⚠️ 文本長度 ${allText.length} 字符，超過 7000，需要智能分段`);
+                
+                // 提取核心上下文
+                console.log(`📋 步驟 3：提取核心上下文（帳戶信息）...`);
+                coreContext = this.extractCoreContext(allText, documentType);
+                
+                // 智能分段（重疊 + 上下文）
+                console.log(`🧠 步驟 4：智能分段 DeepSeek 分析（適應 10+ 頁 PDF）...`);
+                console.log(`   策略：重疊分段 + 核心上下文`);
+                console.log(`   - 每段最大：7000 字符`);
+                console.log(`   - 重疊大小：500 字符`);
+                console.log(`   - 核心上下文：${coreContext.length} 字符`);
+                
+                chunks = this.intelligentChunkingWithOverlap(allText, 7000, 500, coreContext);
+                console.log(`✂️ 智能分段完成：${chunks.length} 段`);
+                chunks.forEach((chunk, i) => {
+                    console.log(`   📄 第 ${i + 1} 段: ${chunk.length} 字符`);
+                });
+            }
             
             // ========== 步驟 5：逐段 DeepSeek 分析 ==========
             console.log(`🤖 步驟 5：逐段 DeepSeek 分析...`);
@@ -713,21 +725,61 @@ class HybridVisionDeepSeekProcessor {
             console.log(`   📊 結束餘額（C/F）: ${merged.closingBalance}`);
             
             // ✅ 確保所有交易都是純對象（Firestore 不支持嵌套數組）
-            merged.transactions = merged.transactions.map(tx => ({
-                date: tx.date || '',
-                description: tx.description || '',
-                type: tx.type || '',
-                amount: parseFloat(tx.amount) || 0,
-                balance: parseFloat(tx.balance) || 0
-            }));
+            merged.transactions = merged.transactions.map(tx => {
+                // 只保留基本類型，移除任何可能的嵌套結構
+                const cleanTx = {
+                    date: String(tx.date || ''),
+                    description: String(tx.description || ''),
+                    type: String(tx.type || ''),
+                    amount: parseFloat(tx.amount) || 0,
+                    balance: parseFloat(tx.balance) || 0
+                };
+                
+                // 確保沒有 undefined 或 null
+                Object.keys(cleanTx).forEach(key => {
+                    if (cleanTx[key] === undefined || cleanTx[key] === null) {
+                        cleanTx[key] = key === 'amount' || key === 'balance' ? 0 : '';
+                    }
+                });
+                
+                return cleanTx;
+            });
             
-            return merged;
+            // ✅ 清理整個 merged 對象，確保所有值都是基本類型
+            const cleanMerged = {
+                bankName: String(merged.bankName || ''),
+                accountHolder: String(merged.accountHolder || ''),
+                accountNumber: String(merged.accountNumber || ''),
+                statementDate: String(merged.statementDate || ''),
+                statementPeriod: String(merged.statementPeriod || ''),
+                openingBalance: parseFloat(merged.openingBalance) || 0,
+                closingBalance: parseFloat(merged.closingBalance) || 0,
+                currency: String(merged.currency || 'HKD'),
+                transactions: merged.transactions
+            };
+            
+            console.log(`   ✅ 數據清理完成，確保 Firestore 兼容`);
+            
+            return cleanMerged;
         }
         
         // 發票/收據：只取第一段（通常所有信息在第一段）
         if (documentType === 'invoice' || documentType === 'receipt') {
             console.log('   發票/收據：取第一段數據');
-            return results[0];
+            const data = results[0];
+            
+            // ✅ 清理數據，確保 Firestore 兼容
+            if (data && data.items && Array.isArray(data.items)) {
+                data.items = data.items.map(item => ({
+                    description: String(item.description || ''),
+                    quantity: parseFloat(item.quantity) || 0,
+                    unitPrice: parseFloat(item.unitPrice) || 0,
+                    amount: parseFloat(item.amount) || 0
+                }));
+            }
+            
+            console.log(`   ✅ 數據清理完成，確保 Firestore 兼容`);
+            return data;
         }
         
         // 通用文檔：合併所有文本
