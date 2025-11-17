@@ -402,14 +402,6 @@ class HybridVisionDeepSeekProcessor {
      * 步驟 2：使用 DeepSeek Chat 分析文本（帶重試機制）
      */
     async analyzeTextWithDeepSeek(text, documentType) {
-        // ✅ 檢查文本長度（警告，但不分段）
-        const MAX_RECOMMENDED_SIZE = 2000;
-        
-        if (text.length > MAX_RECOMMENDED_SIZE) {
-            console.warn(`⚠️ 文本較長（${text.length} 字符 > ${MAX_RECOMMENDED_SIZE}），建議增強過濾`);
-            console.warn(`   當前將直接處理，DeepSeek 可能需要更長時間`);
-        }
-        
         console.log(`📝 開始 DeepSeek 分析（文本長度：${text.length} 字符）`);
         
         // 生成 Prompt
@@ -486,12 +478,19 @@ class HybridVisionDeepSeekProcessor {
                 lastError = error;
                 console.error(`❌ DeepSeek API 請求失敗（第 ${attempt} 次嘗試）:`, error.message);
                 
+                // ✅ 對於超時錯誤，不要重試（因為重試也會超時）
+                if (error.name === 'AbortError' || error.message.includes('aborted')) {
+                    console.error(`⏰ DeepSeek API 超時（120 秒），不再重試`);
+                    console.error(`   建議：文本可能太長或太複雜，需要分段處理`);
+                    throw new Error(`DeepSeek API 超時: 文本長度 ${text.length} 字符超過處理能力`);
+                }
+                
                 // 如果是最後一次嘗試，拋出錯誤
                 if (attempt === 3) {
                     throw new Error(`DeepSeek API 請求失敗（已重試 3 次）: ${error.message}`);
                 }
                 
-                // 等待後重試（指數退避）
+                // 等待後重試（指數退避）- 只重試網絡錯誤
                 const waitTime = attempt * 2000; // 2 秒、4 秒
                 console.log(`⏳ 等待 ${waitTime / 1000} 秒後重試...`);
                 await new Promise(resolve => setTimeout(resolve, waitTime));
@@ -651,14 +650,71 @@ class HybridVisionDeepSeekProcessor {
     }
     
     /**
+     * 清理銀行對帳單數據（確保 Firestore 兼容）
+     */
+    cleanBankStatementData(data) {
+        console.log('   🧹 清理銀行對帳單數據...');
+        
+        if (!data) return null;
+        
+        // 清理交易記錄
+        if (data.transactions && Array.isArray(data.transactions)) {
+            data.transactions = data.transactions.map(tx => ({
+                date: String(tx.date || ''),
+                description: String(tx.description || ''),
+                type: String(tx.type || ''),
+                amount: parseFloat(tx.amount) || 0,
+                balance: parseFloat(tx.balance) || 0
+            }));
+        } else {
+            data.transactions = [];
+        }
+        
+        // 清理整個對象
+        const cleanData = {
+            bankName: String(data.bankName || ''),
+            accountHolder: String(data.accountHolder || ''),
+            accountNumber: String(data.accountNumber || ''),
+            statementDate: String(data.statementDate || ''),
+            statementPeriod: String(data.statementPeriod || ''),
+            openingBalance: parseFloat(data.openingBalance) || 0,
+            closingBalance: parseFloat(data.closingBalance) || 0,
+            currency: String(data.currency || 'HKD'),
+            transactions: data.transactions
+        };
+        
+        console.log(`   ✅ 數據清理完成：${cleanData.transactions.length} 筆交易`);
+        return cleanData;
+    }
+    
+    /**
      * 合併分段處理的結果
      */
     mergeChunkedResults(results, documentType) {
-        console.log(`🔄 開始合併 ${results.length} 頁結果（文檔類型：${documentType}）...`);
+        console.log(`🔄 開始合併 ${results.length} 段結果（文檔類型：${documentType}）...`);
+        
+        // ✅ 檢查 results 是否為空或無效
+        if (!results || results.length === 0) {
+            console.error('❌ 沒有有效的結果可以合併');
+            return null;
+        }
         
         if (results.length === 1) {
-            console.log('   只有 1 頁，直接返回');
-            return results[0];
+            console.log('   只有 1 段，直接返回');
+            const result = results[0];
+            
+            // ✅ 確保返回的數據是有效的
+            if (!result) {
+                console.error('❌ 第 1 段結果為空');
+                return null;
+            }
+            
+            // ✅ 對於銀行對帳單，即使只有 1 段也要清理數據
+            if (documentType === 'bank_statement' && result.transactions) {
+                return this.cleanBankStatementData(result);
+            }
+            
+            return result;
         }
         
         // 銀行對帳單：智能合併交易記錄
@@ -724,43 +780,8 @@ class HybridVisionDeepSeekProcessor {
             console.log(`   📊 開始餘額（B/F）: ${merged.openingBalance}`);
             console.log(`   📊 結束餘額（C/F）: ${merged.closingBalance}`);
             
-            // ✅ 確保所有交易都是純對象（Firestore 不支持嵌套數組）
-            merged.transactions = merged.transactions.map(tx => {
-                // 只保留基本類型，移除任何可能的嵌套結構
-                const cleanTx = {
-                    date: String(tx.date || ''),
-                    description: String(tx.description || ''),
-                    type: String(tx.type || ''),
-                    amount: parseFloat(tx.amount) || 0,
-                    balance: parseFloat(tx.balance) || 0
-                };
-                
-                // 確保沒有 undefined 或 null
-                Object.keys(cleanTx).forEach(key => {
-                    if (cleanTx[key] === undefined || cleanTx[key] === null) {
-                        cleanTx[key] = key === 'amount' || key === 'balance' ? 0 : '';
-                    }
-                });
-                
-                return cleanTx;
-            });
-            
-            // ✅ 清理整個 merged 對象，確保所有值都是基本類型
-            const cleanMerged = {
-                bankName: String(merged.bankName || ''),
-                accountHolder: String(merged.accountHolder || ''),
-                accountNumber: String(merged.accountNumber || ''),
-                statementDate: String(merged.statementDate || ''),
-                statementPeriod: String(merged.statementPeriod || ''),
-                openingBalance: parseFloat(merged.openingBalance) || 0,
-                closingBalance: parseFloat(merged.closingBalance) || 0,
-                currency: String(merged.currency || 'HKD'),
-                transactions: merged.transactions
-            };
-            
-            console.log(`   ✅ 數據清理完成，確保 Firestore 兼容`);
-            
-            return cleanMerged;
+            // ✅ 使用統一的清理函數
+            return this.cleanBankStatementData(merged);
         }
         
         // 發票/收據：只取第一段（通常所有信息在第一段）
