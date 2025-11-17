@@ -114,22 +114,34 @@ class HybridVisionDeepSeekProcessor {
                 console.log(`  📄 第 ${index + 1} 頁: ${text.length} 字符`);
             });
             
-            // ========== 步驟 2：逐頁 DeepSeek 分析（智能提取）==========
-            console.log(`🧠 步驟 2：逐頁 DeepSeek 分析（讓 AI 智能過濾）...`);
-            console.log(`   原因：自建過濾不適用所有銀行格式，DeepSeek 更智能`);
+            // ========== 步驟 2：智能分段 DeepSeek 分析 ==========
+            console.log(`🧠 步驟 2：智能分段 DeepSeek 分析（適應 10+ 頁 PDF）...`);
+            console.log(`   策略：每 7000 字符分段（留 1000 字符給輸出）`);
             
+            // ✅ 合併所有 OCR 文本
+            const allText = ocrTexts.join('\n\n=== 下一頁 ===\n\n');
+            console.log(`📝 合併所有頁面：總計 ${allText.length} 字符`);
+            
+            // ✅ 智能分段（每 7000 字符，不強行分割句子）
+            const chunks = this.intelligentChunking(allText, 7000);
+            console.log(`✂️ 智能分段完成：${chunks.length} 段`);
+            chunks.forEach((chunk, i) => {
+                console.log(`   📄 第 ${i + 1} 段: ${chunk.length} 字符`);
+            });
+            
+            // ✅ 逐段 DeepSeek 分析
             const pageResults = [];
-            for (let i = 0; i < ocrTexts.length; i++) {
-                const text = ocrTexts[i];
-                console.log(`  🔍 分析第 ${i + 1}/${files.length} 頁（${text.length} 字符）...`);
+            for (let i = 0; i < chunks.length; i++) {
+                const chunk = chunks[i];
+                console.log(`  🔍 分析第 ${i + 1}/${chunks.length} 段（${chunk.length} 字符）...`);
                 
                 try {
-                    const result = await this.analyzeTextWithDeepSeek(text, documentType);
+                    const result = await this.analyzeTextWithDeepSeek(chunk, documentType);
                     pageResults.push(result);
-                    console.log(`  ✅ 第 ${i + 1}/${files.length} 頁分析完成`);
+                    console.log(`  ✅ 第 ${i + 1}/${chunks.length} 段分析完成`);
                 } catch (error) {
-                    console.error(`  ❌ 第 ${i + 1} 頁分析失敗:`, error.message);
-                    // 繼續處理其他頁面
+                    console.error(`  ❌ 第 ${i + 1} 段分析失敗:`, error.message);
+                    // 繼續處理其他段
                     pageResults.push(null);
                 }
             }
@@ -468,6 +480,55 @@ class HybridVisionDeepSeekProcessor {
     }
     
     /**
+     * 智能分段（不強行分割句子）
+     * @param {string} text - 完整文本
+     * @param {number} maxChunkSize - 每段最大字符數（默認 7000）
+     * @returns {Array<string>} - 分段後的文本數組
+     */
+    intelligentChunking(text, maxChunkSize = 7000) {
+        console.log(`✂️ 開始智能分段（最大 ${maxChunkSize} 字符/段）...`);
+        
+        const chunks = [];
+        let currentChunk = '';
+        
+        // 按行分割
+        const lines = text.split('\n');
+        
+        for (const line of lines) {
+            // 如果添加這一行後超過限制
+            if (currentChunk.length + line.length + 1 > maxChunkSize) {
+                // 如果當前段不為空，保存它
+                if (currentChunk.length > 0) {
+                    chunks.push(currentChunk.trim());
+                    console.log(`   ✅ 創建段 ${chunks.length}: ${currentChunk.length} 字符`);
+                    currentChunk = '';
+                }
+                
+                // 如果單行本身就超過限制，強行分割（但這很少見）
+                if (line.length > maxChunkSize) {
+                    console.warn(`   ⚠️ 單行過長（${line.length} 字符），強行分割`);
+                    for (let i = 0; i < line.length; i += maxChunkSize) {
+                        chunks.push(line.substring(i, i + maxChunkSize));
+                    }
+                    continue;
+                }
+            }
+            
+            // 添加這一行到當前段
+            currentChunk += (currentChunk ? '\n' : '') + line;
+        }
+        
+        // 保存最後一段
+        if (currentChunk.length > 0) {
+            chunks.push(currentChunk.trim());
+            console.log(`   ✅ 創建段 ${chunks.length}: ${currentChunk.length} 字符`);
+        }
+        
+        console.log(`✂️ 智能分段完成：${chunks.length} 段（原始 ${text.length} 字符）`);
+        return chunks;
+    }
+    
+    /**
      * 合併分段處理的結果
      */
     mergeChunkedResults(results, documentType) {
@@ -529,6 +590,16 @@ class HybridVisionDeepSeekProcessor {
             console.log(`   ✅ 合併完成：${merged.transactions.length} 筆交易`);
             console.log(`   📊 開始餘額（B/F）: ${merged.openingBalance}`);
             console.log(`   📊 結束餘額（C/F）: ${merged.closingBalance}`);
+            
+            // ✅ 確保所有交易都是純對象（Firestore 不支持嵌套數組）
+            merged.transactions = merged.transactions.map(tx => ({
+                date: tx.date || '',
+                description: tx.description || '',
+                type: tx.type || '',
+                amount: parseFloat(tx.amount) || 0,
+                balance: parseFloat(tx.balance) || 0
+            }));
+            
             return merged;
         }
         
