@@ -395,17 +395,18 @@ class HybridVisionDeepSeekProcessor {
                 const timeoutId = setTimeout(() => controller.abort(), 120000); // ✅ 120 秒超時（給 reasoner 更多時間，避免複雜對帳單超時）
                 
                 // ✅ 根據文檔類型動態設置 max_tokens
-                // 實測數據（用戶提供）：
-                // - 500 tokens: 6 秒 ✅
-                // - 2521 字符（單頁）: 6 秒 ✅
-                // 結論：DeepSeek 可以處理更長的輸入/輸出
-                const maxTokens = documentType === 'bank_statement' ? 4000 :  // 銀行對帳單（提高到 4000，適應單頁 2500 字符）
-                                 documentType === 'invoice' ? 2000 :          // 發票
-                                 documentType === 'receipt' ? 2000 :          // 收據
-                                 2000;                                        // 通用文檔
+                // 用戶觀點：10 頁 2 分鐘可接受，成本 cover，不需要過度限制
+                // 實測數據：
+                // - max_tokens: 500 → 6 秒
+                // - max_tokens: 4000 → 30 秒（可接受）
+                // 策略：允許更大輸出，讓用戶體驗更好
+                const maxTokens = documentType === 'bank_statement' ? 8000 :  // 銀行對帳單（最大 8K，支持大量交易）
+                                 documentType === 'invoice' ? 4000 :          // 發票（支持多行項目）
+                                 documentType === 'receipt' ? 4000 :          // 收據
+                                 4000;                                        // 通用文檔
                 
                 console.log(`📊 max_tokens 設置: ${maxTokens}（文檔類型: ${documentType}）`);
-                console.log(`   原因：實測顯示 2500 字符也能在 6 秒內完成`);
+                console.log(`   策略：允許更大輸出，用戶 2 分鐘等待可接受`);
                 
                 const response = await fetch(this.deepseekWorkerUrl, {
                     method: 'POST',
