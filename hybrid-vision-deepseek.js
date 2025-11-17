@@ -23,14 +23,14 @@ class HybridVisionDeepSeekProcessor {
         
         // DeepSeek API（通過 Cloudflare Worker）
         this.deepseekWorkerUrl = 'https://deepseek-proxy.vaultcaddy.workers.dev';
-        this.deepseekModel = 'deepseek-reasoner'; // ✅ 使用 reasoner 模型（輸出長度 64K，成本更低）
+        this.deepseekModel = 'deepseek-chat'; // ✅ 使用 chat 模型（更快，避免超時）
         
         console.log('🤖 混合處理器初始化');
         console.log('   ✅ Vision API OCR（香港可用）');
-        console.log('   ✅ DeepSeek Reasoner 分析（香港可用）');
-        console.log('   📊 預期準確度: 90%');
-        console.log('   💰 預估成本: ~$0.0006/張');
-        console.log('   📝 輸出長度: 最大 64K tokens');
+        console.log('   ✅ DeepSeek Chat 分析（香港可用）');
+        console.log('   📊 預期準確度: 92%');
+        console.log('   💰 預估成本: ~$0.0003/張');
+        console.log('   ⚡ 處理速度: 5-15 秒（避免超時）');
     }
     
     /**
@@ -481,7 +481,7 @@ class HybridVisionDeepSeekProcessor {
                             }
                         ],
                         temperature: 0.1,
-                        max_tokens: 8192 // ✅ 增加到 8K（足夠處理任何銀行對帳單）
+                        max_tokens: 4096 // ✅ deepseek-chat 最大 4K tokens（足夠處理大部分文檔）
                     }),
                     signal: controller.signal
                 });
