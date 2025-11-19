@@ -188,7 +188,7 @@ class VaultCaddySidebar {
         return `
             <!-- 搜索欄 -->
             <div style="margin-bottom: 1.5rem;">
-                <input type="text" placeholder="篩選文檔名稱..." style="width: 100%; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 0.875rem; color: #6b7280;">
+                <input type="text" id="project-search-input" placeholder="篩選文檔名稱..." style="width: 100%; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 0.875rem; color: #6b7280;" oninput="window.filterProjects && window.filterProjects(this.value)">
             </div>
             
             <!-- Project 區塊 -->
@@ -241,6 +241,26 @@ class VaultCaddySidebar {
                 console.log('側邊欄導航到:', href);
             }
         });
+        
+        // ✅ 設置全域篩選函數
+        window.filterProjects = (searchTerm) => {
+            console.log('🔍 篩選項目:', searchTerm);
+            const projectItems = document.querySelectorAll('.project-item');
+            const lowerSearchTerm = searchTerm.toLowerCase().trim();
+            
+            let visibleCount = 0;
+            projectItems.forEach(item => {
+                const projectName = item.textContent.toLowerCase();
+                if (lowerSearchTerm === '' || projectName.includes(lowerSearchTerm)) {
+                    item.style.display = 'flex';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            
+            console.log(`✅ 顯示 ${visibleCount}/${projectItems.length} 個項目`);
+        };
         
         console.log('側邊欄事件已綁定');
     }

@@ -110,11 +110,50 @@
         </div>
     </nav>
     
-    <!-- ✅ index.html 保留靜態導航欄，不使用動態導航欄 -->
+    <!-- ✅ index.html 動態更新用戶狀態 -->
     <script>
-        // ✅ index.html 使用靜態導航欄，保持文字 "U" 頭像
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('✅ index.html 使用靜態導航欄');
+            console.log('✅ index.html 初始化');
+            
+            // 等待 Firebase 和 simpleAuth 加載
+            function updateUserMenu() {
+                const userMenu = document.getElementById('user-menu');
+                if (!userMenu) return;
+                
+                try {
+                    const isLoggedIn = window.simpleAuth && window.simpleAuth.isLoggedIn();
+                    
+                    if (isLoggedIn) {
+                        // ✅ 已登入：顯示 U 頭像
+                        userMenu.innerHTML = `
+                            <div onclick="window.location.href='account.html'" style="cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+                                <div style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">U</div>
+                            </div>
+                        `;
+                        console.log('✅ 用戶已登入，顯示 U 頭像');
+                    } else {
+                        // ✅ 未登入：顯示登入按鈕
+                        userMenu.innerHTML = `
+                            <button onclick="window.location.href='auth.html'" style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.875rem;" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">登入</button>
+                        `;
+                        console.log('✅ 用戶未登入，顯示登入按鈕');
+                    }
+                } catch (e) {
+                    console.log('❌ 無法更新用戶菜單:', e);
+                }
+            }
+            
+            // 立即嘗試更新
+            updateUserMenu();
+            
+            // 監聽 Firebase 和 Auth 事件
+            window.addEventListener('firebase-ready', updateUserMenu);
+            window.addEventListener('user-logged-in', updateUserMenu);
+            window.addEventListener('user-logged-out', updateUserMenu);
+            
+            // 延遲再次檢查（以防事件已經觸發）
+            setTimeout(updateUserMenu, 1000);
+            setTimeout(updateUserMenu, 2000);
         });
     </script>
     
