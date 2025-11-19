@@ -1304,29 +1304,38 @@ class HybridVisionDeepSeekProcessor {
 4. 賬戶基本信息（銀行、戶名、賬號）
 
 **CRITICAL - 必須提取的欄位：**
-1. **銀行名稱（bank_name）**: 銀行標識（頂部 logo 或名稱）
-2. **賬戶號碼（account_number）**: 賬戶標識
-3. **對帳單期間（statement_period）**: from 到 to 日期
-4. **期初/期末餘額（opening_balance/closing_balance）**: 核心金額
-5. **交易記錄（transactions）**: 每一筆交易都要提取（跨所有頁面）
+1. **銀行名稱（bankName）**: 銀行標識（頂部 logo 或名稱，如：HANG SENG BANK、恆生銀行）
+2. **帳戶持有人（accountHolder）**: 戶主名稱（通常在地址上方，如：MR YEUNG CAVLIN、MR CHAN TAI MAN）
+3. **賬戶號碼（accountNumber）**: 賬戶標識（如：766-452064-882、Account Number: 7xxxxxxx）
+4. **對帳單日期（statementDate）**: Statement Date（如：22 Mar 2025 → 2025-03-22）
+5. **對帳單期間（statementPeriod）**: 完整期間（如：22 Feb 2025 to 22 Mar 2025）
+6. **期初餘額（openingBalance）**: B/F BALANCE 或 Opening Balance（在 FINANCIAL POSITION 或交易表格第一行）
+7. **期末餘額（closingBalance）**: C/F BALANCE 或 Closing Balance（在 FINANCIAL POSITION 或交易表格最後一行）
+8. **交易記錄（transactions）**: 每一筆交易都要提取（跨所有頁面）
+
+**特別注意 - 如何找到這些欄位：**
+- **accountHolder**: 在 PDF 第 1 頁左上角，地址上方的名字（如：MR YEUNG CAVLIN）
+- **statementPeriod**: 在 Statement Date 附近，可能是「22 Feb 2025 to 22 Mar 2025」格式
+- **openingBalance**: 在 FINANCIAL POSITION 表格中的 "Integrated Account" 或交易表格第一行的 "B/F BALANCE"
+- **closingBalance**: 在 FINANCIAL POSITION 表格中的 "Total" 或交易表格最後一行的 "C/F BALANCE"
 
 返回這個 JSON 結構（✅ 使用 camelCase 字段名）：
 
 {
   "confidence": 0-100,
-  "bankName": "必須 - 銀行名稱（如：恆生銀行、HANG SENG BANK）",
-  "accountHolder": "戶主名稱（如：MR YEUNG CAVLIN）",
+  "bankName": "必須 - 銀行名稱（如：HANG SENG BANK、恆生銀行）",
+  "accountHolder": "必須 - 戶主名稱（如：MR YEUNG CAVLIN，在地址上方）",
   "accountNumber": "必須 - 賬戶號碼（如：766-452064-882）",
-  "statementDate": "必須 - 對帳單日期 YYYY-MM-DD（如：2025-03-22，從 statement period 提取結束日期）",
-  "statementPeriod": "對帳單期間（如：02/01/2025 to 03/22/2025）",
-  "openingBalance": 數字,
-  "closingBalance": 必須 - 數字,
+  "statementDate": "必須 - 對帳單日期 YYYY-MM-DD（如：2025-03-22）",
+  "statementPeriod": "必須 - 對帳單期間（如：22 Feb 2025 to 22 Mar 2025 或 2025-02-22 to 2025-03-22）",
+  "openingBalance": 必須 - 數字（期初餘額，從 B/F BALANCE 或 Opening Balance 提取）,
+  "closingBalance": 必須 - 數字（期末餘額，從 C/F BALANCE 或 Closing Balance 提取）,
   "transactions": [
     {
-      "date": "必須 - YYYY-MM-DD（統一日期格式）",
-      "description": "必須 - 交易描述/對手方（如：CREDIT INTEREST、B/F BALANCE、POON H** K***）",
+      "date": "必須 - YYYY-MM-DD（統一日期格式，如：2025-03-08）",
+      "description": "必須 - 完整交易描述（如：CREDIT INTEREST、POON H** K*** HD1253082573403108MAR、4006-1210-0627-0086 N31098558858(10MAR25) TUG COMPANY LIMITED）",
       "type": "debit 或 credit",
-      "amount": 數字（正數表示交易金額）,
+      "amount": 數字（正數表示交易金額，支出為負數）,
       "balance": 數字（餘額）
     }
   ],

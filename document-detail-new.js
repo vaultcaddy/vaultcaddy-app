@@ -409,8 +409,8 @@ function renderMultiPageDocument() {
     setTimeout(() => initImageDragScroll(), 100);
 }
 
-// 上一頁
-window.previousPage = function() {
+// 上一頁（兩個函數名都支持）
+window.previousPage = window.prevPage = function() {
     if (window.currentPageIndex > 0) {
         window.currentPageIndex--;
         console.log(`⬅️ 上一頁: ${window.currentPageIndex + 1}/${window.pageImages.length}`);
@@ -1202,26 +1202,7 @@ function resetZoom() {
     displayPDFPreview();
 }
 
-function previousPage() {
-    if (currentPageNumber > 1) {
-        currentPageNumber--;
-        updatePageDisplay();
-    }
-}
-
-function nextPage() {
-    if (currentPageNumber < totalPagesCount) {
-        currentPageNumber++;
-        updatePageDisplay();
-    }
-}
-
-function updatePageDisplay() {
-    document.getElementById('currentPage').textContent = currentPageNumber;
-    document.getElementById('totalPages').textContent = totalPagesCount;
-    document.getElementById('prevPageBtn').disabled = currentPageNumber === 1;
-    document.getElementById('nextPageBtn').disabled = currentPageNumber === totalPagesCount;
-}
+// ✅ 頁面導航函數已移至上方（window.prevPage 和 window.nextPage）
 
 // ============================================
 // 導出功能
