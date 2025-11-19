@@ -1370,9 +1370,10 @@
                         </div>
                         <p style="color: #6b7280; font-size: 1rem; margin: 0;">Manage and view your documents</p>
                     </div>
-                    <button onclick="confirmDeleteProject()" style="background: #ef4444; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
+                    <button onclick="deleteSelectedDocuments()" id="delete-selected-btn" disabled style="background: #ef4444; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500; opacity: 0.5;">
                         <i class="fas fa-trash"></i>
                         <span>Delete</span>
+                        <span id="delete-count" style="background: rgba(255,255,255,0.2); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; display: none;"></span>
                     </button>
                 </header>
 
@@ -2583,6 +2584,66 @@
                 alert('刪除失敗: ' + error.message);
             }
         }
+        
+        // ==================== 複選框功能 ====================
+        window.toggleSelectAll = function() {
+            const selectAllCheckbox = document.getElementById('select-all-checkbox');
+            const documentCheckboxes = document.querySelectorAll('.document-checkbox');
+            
+            documentCheckboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+            
+            updateDeleteButton();
+        };
+        
+        function updateDeleteButton() {
+            const selectedCheckboxes = document.querySelectorAll('.document-checkbox:checked');
+            const deleteBtn = document.getElementById('delete-selected-btn');
+            const deleteCount = document.getElementById('delete-count');
+            
+            if (selectedCheckboxes.length > 0) {
+                deleteBtn.disabled = false;
+                deleteBtn.style.opacity = '1';
+                deleteBtn.style.cursor = 'pointer';
+                deleteCount.style.display = 'inline-block';
+                deleteCount.textContent = selectedCheckboxes.length;
+            } else {
+                deleteBtn.disabled = true;
+                deleteBtn.style.opacity = '0.5';
+                deleteBtn.style.cursor = 'not-allowed';
+                deleteCount.style.display = 'none';
+            }
+        }
+        
+        window.deleteSelectedDocuments = async function() {
+            const selectedCheckboxes = document.querySelectorAll('.document-checkbox:checked');
+            if (selectedCheckboxes.length === 0) {
+                alert('請先選擇要刪除的文檔');
+                return;
+            }
+            
+            const count = selectedCheckboxes.length;
+            if (!confirm(`確定要刪除 ${count} 個文檔嗎？此操作無法復原。`)) {
+                return;
+            }
+            
+            try {
+                const deletePromises = [];
+                selectedCheckboxes.forEach(checkbox => {
+                    const docId = checkbox.dataset.docId;
+                    deletePromises.push(window.simpleDataManager.deleteDocument(currentProjectId, docId));
+                });
+                
+                await Promise.all(deletePromises);
+                console.log(`✅ 已刪除 ${count} 個文檔`);
+                alert(`成功刪除 ${count} 個文檔`);
+                await loadDocuments();
+            } catch (error) {
+                console.error('❌ 刪除失敗:', error);
+                alert('刪除失敗: ' + error.message);
+            }
+        };
         
         window.confirmDeleteProject = function() {
             if (!confirm('確定要刪除整個項目嗎？')) return;
