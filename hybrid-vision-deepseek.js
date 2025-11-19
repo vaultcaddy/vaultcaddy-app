@@ -1325,57 +1325,113 @@ class HybridVisionDeepSeekProcessor {
             case 'bank_statements':     // ← 複數
             case 'bank-statement':      // ← 連字符
             case 'statement':
-                return baseInstruction + `你正在分析一張香港銀行對帳單。這是會計對帳的核心數據。
+                return baseInstruction + `你正在分析一張銀行對帳單（Bank Statement）。這是會計對帳的核心數據。
 
-**重要提示：**
-- 這份文本可能來自多頁 PDF，已經合併處理
-- 文本中可能包含「=== 第 X 頁 ===」標記，請忽略這些標記
-- 提取所有頁面的交易記錄，不要遺漏任何一筆
+**🌍 世界各地銀行通用提示：**
+- ✅ 這可能是**任何國家/地區**的銀行（香港、中國、台灣、美國、歐洲、澳洲等）
+- ✅ **不同銀行的欄位名稱可能不同**，你需要靈活識別（見下方「欄位名稱變體」）
+- ✅ **保持開放思維**：如果看到類似的信息，就提取它，不要因為名稱不完全匹配就跳過
+- ✅ **優先提取交易記錄**：即使其他欄位不完整，也必須提取所有交易
+- ✅ 文本可能來自多頁 PDF，包含「=== 第 X 頁 ===」標記（請忽略）
 
-**用戶需求角度 - 銀行對帳單分類目的：**
-銀行對帳單用於財務對帳、現金流管理和審計。用戶需要：
-1. 知道期初和期末餘額（核對資金）
-2. 每筆交易的詳細記錄（日期、描述、金額、餘額）
-3. 交易總額統計（收入、支出）
-4. 賬戶基本信息（銀行、戶名、賬號）
+**🎯 8 個核心欄位（按優先級）：**
 
-**CRITICAL - 必須提取的欄位：**
-1. **銀行名稱（bankName）**: 銀行標識（頂部 logo 或名稱，如：HANG SENG BANK、恆生銀行）
-2. **帳戶持有人（accountHolder）**: 戶主名稱（通常在地址上方，如：MR YEUNG CAVLIN、MR CHAN TAI MAN）
-3. **賬戶號碼（accountNumber）**: 賬戶標識（如：766-452064-882、Account Number: 7xxxxxxx）
-4. **對帳單日期（statementDate）**: Statement Date（如：22 Mar 2025 → 2025-03-22）
-5. **對帳單期間（statementPeriod）**: 完整期間（如：22 Feb 2025 to 22 Mar 2025）
-6. **期初餘額（openingBalance）**: B/F BALANCE 或 Opening Balance（在 FINANCIAL POSITION 或交易表格第一行）
-7. **期末餘額（closingBalance）**: C/F BALANCE 或 Closing Balance（在 FINANCIAL POSITION 或交易表格最後一行）
-8. **交易記錄（transactions）**: 每一筆交易都要提取（跨所有頁面）
+### 1️⃣ **transactions（交易記錄）** - 最重要！必須提取！
+   **可能的表格標題**：
+   - Transaction History / Transactions / Transaction Details
+   - 交易記錄 / 交易明細 / 交易流水 / Activity
+   
+   **提取策略**：
+   - ✅ 找到表格結構（Date、Description、Amount、Balance 列）
+   - ✅ **逐行提取每一筆交易**（跨所有頁面）
+   - ✅ 即使只有部分欄位，也要提取
+   
+   **判斷交易類型**（收入 vs 支出）：
+   - 如果有 Deposit/Credit 和 Withdrawal/Debit 兩列 → 根據金額所在列判斷
+   - 如果只有一個 Amount 列 → 根據符號判斷（正數 = credit，負數 = debit）
 
-**特別注意 - 如何找到這些欄位：**
-- **accountHolder**: 在 PDF 第 1 頁左上角，地址上方的名字（如：MR YEUNG CAVLIN）
-- **statementPeriod**: 在 Statement Date 附近，可能是「22 Feb 2025 to 22 Mar 2025」格式
-- **openingBalance**: 在 FINANCIAL POSITION 表格中的 "Integrated Account" 或交易表格第一行的 "B/F BALANCE"
-- **closingBalance**: 在 FINANCIAL POSITION 表格中的 "Total" 或交易表格最後一行的 "C/F BALANCE"
+### 2️⃣ **closingBalance（期末餘額）** - 第二重要！
+   **可能的名稱**：
+   - Closing Balance / Final Balance / Ending Balance / Balance C/F
+   - 期末餘額 / 結餘 / C/F BALANCE / Total / Current Balance
+   
+   **位置**：交易表格最後一行 或 FINANCIAL POSITION 表格
 
-返回這個 JSON 結構（✅ 使用 camelCase 字段名）：
+### 3️⃣ **bankName（銀行名稱）**
+   **可能的名稱**：
+   - HANG SENG BANK / 恆生銀行 / HSBC / Bank of China
+   - Bank of America / Citibank / Chase / Wells Fargo
+   
+   **位置**：頁面頂部（logo 或最大文字）
+
+### 4️⃣ **accountNumber（賬戶號碼）**
+   **可能的名稱**：
+   - Account Number / Account No / A/C No / 賬戶號碼 / 戶口號碼
+   
+   **格式範例**：
+   - 香港：766-452064-882、123-4-567890
+   - 中國：6222 0000 0000 0000
+   - 美國：123456789
+   
+   **位置**：頁面頂部或地址區域附近
+
+### 5️⃣ **accountHolder（帳戶持有人）**
+   **可能的名稱**：
+   - Account Holder / Customer Name / Name / 帳戶持有人 / 戶主
+   
+   **格式範例**：
+   - MR YEUNG CALVIN / MS CHAN / 楊先生 / 陳太
+   
+   **位置**：地址區域的第一行或上方（通常有 MR/MS/MRS/DR 前綴）
+
+### 6️⃣ **statementDate（對帳單日期）**
+   **可能的名稱**：
+   - Statement Date / Date / Issue Date / 對帳單日期 / 結單日期
+   
+   **格式**：統一轉換為 YYYY-MM-DD
+
+### 7️⃣ **statementPeriod（對帳單期間）**
+   **可能的名稱**：
+   - Statement Period / Period / From...To / 對帳單期間 / 期間
+   
+   **格式範例**：
+   - 22 Feb 2025 to 22 Mar 2025
+   - 2025-02-22 to 2025-03-22
+
+### 8️⃣ **openingBalance（期初餘額）**
+   **可能的名稱**：
+   - Opening Balance / Beginning Balance / Balance B/F / Previous Balance
+   - 期初餘額 / 上期結餘 / B/F BALANCE
+   
+   **位置**：交易表格第一行 或 FINANCIAL POSITION 表格
+
+**🔧 關鍵提取策略：**
+1. **優先提取交易記錄**（最重要）
+2. 靈活識別欄位名稱（不要固定匹配）
+3. 如果某個欄位找不到，設為 null，**但繼續提取其他欄位**
+4. **不要因為一個欄位找不到就放棄整個提取**
+
+**📦 返回 JSON 結構：**
 
 {
   "confidence": 0-100,
-  "bankName": "必須 - 銀行名稱（如：HANG SENG BANK、恆生銀行）",
-  "accountHolder": "必須 - 戶主名稱（如：MR YEUNG CAVLIN，在地址上方）",
-  "accountNumber": "必須 - 賬戶號碼（如：766-452064-882）",
-  "statementDate": "必須 - 對帳單日期 YYYY-MM-DD（如：2025-03-22）",
-  "statementPeriod": "必須 - 對帳單期間（如：22 Feb 2025 to 22 Mar 2025 或 2025-02-22 to 2025-03-22）",
-  "openingBalance": 必須 - 數字（期初餘額，從 B/F BALANCE 或 Opening Balance 提取）,
-  "closingBalance": 必須 - 數字（期末餘額，從 C/F BALANCE 或 Closing Balance 提取）,
+  "bankName": "銀行名稱 或 null",
+  "accountHolder": "戶主名稱 或 null",
+  "accountNumber": "賬戶號碼 或 null",
+  "statementDate": "對帳單日期 YYYY-MM-DD 或 null",
+  "statementPeriod": "對帳單期間 或 null",
+  "openingBalance": 數字 或 0,
+  "closingBalance": 數字 或 0,
   "transactions": [
     {
-      "date": "必須 - YYYY-MM-DD（統一日期格式，如：2025-03-08）",
-      "description": "必須 - 完整交易描述（如：CREDIT INTEREST、POON H** K*** HD1253082573403108MAR、4006-1210-0627-0086 N31098558858(10MAR25) TUG COMPANY LIMITED）",
-      "type": "debit 或 credit（✅ 重要：根據 Deposit/Withdrawal 列判斷，不要只看描述）",
-      "amount": 數字（✅ 重要：Deposit 列的金額為正數，Withdrawal 列的金額為負數）,
-      "balance": 數字（餘額）
+      "date": "YYYY-MM-DD",
+      "description": "完整交易描述",
+      "type": "debit 或 credit",
+      "amount": 數字（Deposit 列為正數，Withdrawal 列為負數）,
+      "balance": 數字
     }
   ],
-  "currency": "HKD"
+  "currency": "HKD/USD/CNY/EUR 等 或 null"
 }
 
 /**
