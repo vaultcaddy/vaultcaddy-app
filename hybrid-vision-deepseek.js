@@ -1402,45 +1402,30 @@ class HybridVisionDeepSeekProcessor {
   "currency": "HKD"
 }
 
-**✅ CRITICAL - 如何正確判斷交易類型（Deposit vs Withdrawal）：**
-
-銀行對帳單通常有 3 列：
-1. **Deposit 列（存入/存款）**：如果這一列有金額，則 type = "credit"，amount = 正數
-2. **Withdrawal 列（支出/取款）**：如果這一列有金額，則 type = "debit"，amount = 負數
-3. **Balance 列（餘額）**：交易後的餘額
-
-**重要規則：**
-- ❌ 不要根據描述（如「通知支賬」、「通知入賬」）判斷類型
-- ✅ 根據金額所在的列（Deposit 或 Withdrawal）判斷類型
-- ✅ Deposit 列有金額 → type = "credit"，amount = 正數（收入）
-- ✅ Withdrawal 列有金額 → type = "debit"，amount = 負數（支出）
-
-**示例：**
-```
-Date       Transaction Details              Deposit    Withdrawal   Balance
-14 Mar     INSTALMENT LOAN REPAYMENT       3,900.00                36,512.80
-           通知入賬 分期付款
-```
-→ type = "credit"（因為金額在 Deposit 列）
-→ amount = 3900（正數）
-
-```
-Date       Transaction Details              Deposit    Withdrawal   Balance
-10 Mar     TUG COMPANY LIMITED                          21,226.59   58,079.00
-           通知支賬
-```
-→ type = "debit"（因為金額在 Withdrawal 列）
-→ amount = -21226.59（負數）
-
-**提取策略：**
-1. 從頂部提取銀行名稱和賬戶信息（通常在第 1 頁）
-2. 識別對帳單期間（通常在 Statement Date 或 Statement Period）
-3. 找到 opening balance（期初餘額）和 closing balance（期末餘額）
-4. 識別交易表格結構（通常有：Date、Transaction Details、Withdrawal、Deposit、Balance列）
-5. **逐行提取所有頁面的每筆交易**（日期、描述、金額、餘額）
-6. 確保所有金額為正確的數字格式
-7. **重要**：提取所有交易，不要遺漏任何一筆（即使分散在多頁）
-8. 忽略「=== 第 X 頁 ===」標記，這只是分頁標識`;
+/**
+ * ✅ CRITICAL - 如何正確判斷交易類型（Deposit vs Withdrawal）：
+ * 
+ * 銀行對帳單通常有 3 列：
+ * 1. Deposit 列（存入/存款）：如果這一列有金額，則 type = "credit"，amount = 正數
+ * 2. Withdrawal 列（支出/取款）：如果這一列有金額，則 type = "debit"，amount = 負數
+ * 3. Balance 列（餘額）：交易後的餘額
+ * 
+ * 重要規則：
+ * - ❌ 不要根據描述（如「通知支賬」、「通知入賬」）判斷類型
+ * - ✅ 根據金額所在的列（Deposit 或 Withdrawal）判斷類型
+ * - ✅ Deposit 列有金額 → type = "credit"，amount = 正數（收入）
+ * - ✅ Withdrawal 列有金額 → type = "debit"，amount = 負數（支出）
+ * 
+ * 提取策略：
+ * 1. 從頂部提取銀行名稱和賬戶信息（通常在第 1 頁）
+ * 2. 識別對帳單期間（通常在 Statement Date 或 Statement Period）
+ * 3. 找到 opening balance（期初餘額）和 closing balance（期末餘額）
+ * 4. 識別交易表格結構（通常有：Date、Transaction Details、Withdrawal、Deposit、Balance列）
+ * 5. 逐行提取所有頁面的每筆交易（日期、描述、金額、餘額）
+ * 6. 確保所有金額為正確的數字格式
+ * 7. 重要：提取所有交易，不要遺漏任何一筆（即使分散在多頁）
+ * 8. 忽略「=== 第 X 頁 ===」標記，這只是分頁標識
+ */`;
             
             
             case 'general':
