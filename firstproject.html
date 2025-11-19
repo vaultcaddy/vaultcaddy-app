@@ -1817,7 +1817,7 @@
                     
                     return `
                         <tr onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='transparent'">
-                            <td style="padding: 1rem;"><input type="checkbox" data-doc-id="${doc.id}" ${window.selectedDocuments && window.selectedDocuments.has(doc.id) ? 'checked' : ''} onclick="event.stopPropagation(); toggleDocumentSelection('${doc.id}', event);"></td>
+                            <td style="padding: 1rem;"><input type="checkbox" class="document-checkbox" data-doc-id="${doc.id}" onchange="updateDeleteButton()"></td>
                             
                             <!-- 文檔名稱 -->
                             <td style="padding: 1rem;">
@@ -2659,6 +2659,45 @@
             console.log('編輯項目名稱功能待實現');
         };
         
+        // ==================== 創建項目模態框 ====================
+        window.openCreateProjectModal = function() {
+            const modal = document.getElementById('createProjectModal');
+            const input = document.getElementById('newProjectName');
+            modal.style.display = 'flex';
+            input.value = '';
+            input.focus();
+        };
+        
+        window.closeCreateProjectModal = function() {
+            const modal = document.getElementById('createProjectModal');
+            modal.style.display = 'none';
+        };
+        
+        window.createNewProject = async function() {
+            const input = document.getElementById('newProjectName');
+            const projectName = input.value.trim();
+            
+            if (!projectName) {
+                alert('請輸入項目名稱');
+                return;
+            }
+            
+            try {
+                const newProject = await window.simpleDataManager.createProject(projectName);
+                console.log('✅ 項目已創建:', newProject.id);
+                window.closeCreateProjectModal();
+                
+                // 觸發側邊欄重新渲染
+                window.dispatchEvent(new Event('projectCreated'));
+                
+                // 跳轉到新項目
+                window.location.href = `firstproject.html?project=${newProject.id}`;
+            } catch (error) {
+                console.error('❌ 創建項目失敗:', error);
+                alert('創建項目失敗: ' + error.message);
+            }
+        };
+        
         window.toggleExportMenu = function() {
             const menu = document.getElementById('exportMenu');
             if (menu) {
@@ -3017,5 +3056,36 @@
     
     <!-- CSV 導出優化模塊 -->
     <script src="export-optimizer.js"></script>
+    
+    <!-- 創建項目模態框 -->
+    <div id="createProjectModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 12px; padding: 2rem; width: 90%; max-width: 500px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
+            <h2 style="font-size: 1.5rem; font-weight: 600; color: #1f2937; margin: 0 0 1rem 0;">創建新項目</h2>
+            <p style="color: #6b7280; font-size: 0.875rem; margin: 0 0 1.5rem 0;">輸入項目名稱以創建新的文檔項目</p>
+            
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem;">項目名稱</label>
+                <input 
+                    type="text" 
+                    id="newProjectName" 
+                    placeholder="例如：2025年1月發票"
+                    style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem; color: #1f2937; box-sizing: border-box;"
+                    onkeypress="if(event.key==='Enter') createNewProject()">
+            </div>
+            
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button 
+                    onclick="closeCreateProjectModal()" 
+                    style="background: #ffffff; border: 1px solid #d1d5db; color: #374151; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500;">
+                    取消
+                </button>
+                <button 
+                    onclick="createNewProject()" 
+                    style="background: #3b82f6; border: none; color: white; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500;">
+                    創建
+                </button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
