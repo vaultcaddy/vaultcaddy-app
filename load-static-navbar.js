@@ -190,8 +190,8 @@
                         <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
                     </div>
                     
-                    <div class="navbar-user" id="navbar-user-section" onclick="handleUserClick()">
-                        <div class="navbar-avatar" id="navbar-avatar-letter">U</div>
+                    <div class="navbar-user" id="navbar-user-section">
+                        <!-- 動態內容：未登入顯示「登入」按鈕，登入後顯示 U 頭像 -->
                     </div>
                 </div>
             </nav>
@@ -219,38 +219,42 @@
         console.log('✅ 統一靜態導航欄已加載');
     }
     
-    // 處理用戶點擊事件
-    window.handleUserClick = function() {
-        if (window.simpleAuth && window.simpleAuth.isLoggedIn()) {
-            window.location.href = 'account.html';
-        } else {
-            window.location.href = 'auth.html';
-        }
-    };
-    
     function updateUserSection() {
         try {
             const userSection = document.getElementById('navbar-user-section');
-            const avatarLetter = document.getElementById('navbar-avatar-letter');
             
-            if (!userSection || !avatarLetter) {
+            if (!userSection) {
                 console.log('❌ 找不到用戶區域元素');
                 return;
             }
             
-            if (window.simpleAuth && window.simpleAuth.isLoggedIn()) {
-                // 已登入：顯示頭像字母 "U"
-                const user = window.simpleAuth.getCurrentUser();
-                avatarLetter.textContent = 'U';
-                avatarLetter.style.display = 'flex';
+            // 檢查用戶登入狀態
+            const isLoggedIn = window.simpleAuth && window.simpleAuth.isLoggedIn();
+            
+            if (isLoggedIn) {
+                // ✅ 已登入：顯示頭像 "U"
+                userSection.innerHTML = `
+                    <div onclick="window.location.href='account.html'" style="cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+                        <div style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">U</div>
+                    </div>
+                `;
                 console.log('✅ 用戶已登入，顯示頭像 U');
             } else {
-                // 未登入：將頭像區域改為「登入」按鈕
-                userSection.innerHTML = '<button style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background=\'#7c3aed\'" onmouseout="this.style.background=\'#8b5cf6\'">登入</button>';
+                // ✅ 未登入：顯示「登入」按鈕
+                userSection.innerHTML = `
+                    <button onclick="window.location.href='auth.html'" style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.875rem;" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">登入</button>
+                `;
                 console.log('✅ 用戶未登入，顯示登入按鈕');
             }
         } catch (e) {
             console.log('❌ 無法更新用戶區域:', e);
+            // 默認顯示登入按鈕
+            const userSection = document.getElementById('navbar-user-section');
+            if (userSection) {
+                userSection.innerHTML = `
+                    <button onclick="window.location.href='auth.html'" style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.875rem;">登入</button>
+                `;
+            }
         }
     }
     
