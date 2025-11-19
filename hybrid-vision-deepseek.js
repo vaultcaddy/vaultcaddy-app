@@ -391,34 +391,21 @@ class HybridVisionDeepSeekProcessor {
     }
     
     /**
-     * 過濾銀行對帳單文本（簡化版本 - 方案 B）
+     * 過濾銀行對帳單文本（最小過濾版本）
      * 
-     * 策略：只移除明顯無用的內容
-     * 1. 移除空行
-     * 2. 移除超長行（免責聲明、條款）
-     * 3. 移除常見的無用內容（頁碼、免責聲明關鍵字）
-     * 4. 保留所有其他內容（賬戶信息、交易記錄、餘額）
+     * 策略：只移除空白和明顯無用的內容，保留所有可能有用的數據
+     * 1. ✅ 移除空行（完全空白）
+     * 2. ✅ 移除明顯的頁碼、URL、電子郵件
+     * 3. ✅ 移除超長免責聲明（> 500 字符）
+     * 4. ✅ 保留所有其他內容（包括帳戶信息、交易記錄、餘額、持有人、日期等）
      * 
-     * 原因：不同銀行格式差異太大，無法用固定邏輯過濾
+     * 原因：DeepSeek AI 足夠聰明，能自動識別和提取有用信息
      */
     filterBankStatementText(text) {
-        console.log('🏦 過濾銀行對帳單文本（增強版本 - 只保留核心信息）...');
+        console.log('🏦 過濾銀行對帳單文本（最小過濾版本 - 只移除空白和明顯無用內容）...');
         
         const lines = text.split('\n');
         const relevantLines = [];
-        
-        // 關鍵詞：帳戶信息、餘額、交易
-        const keywordPatterns = [
-            /bank|銀行|account|帳戶|戶口/i,
-            /balance|餘額|結餘|Balance/i,
-            /statement|對帳單|月結單/i,
-            /transaction|交易|deposit|withdrawal|存款|取款|轉帳/i,
-            /date|日期|period|期間/i,
-            /opening|closing|期初|期末|開始|結束/i,
-            /\d{1,3}(,\d{3})*\.\d{2}/,  // 金額格式（如：1,234.56）
-            /^\d{2}\/\d{2}\/\d{4}$/,    // 日期格式（MM/DD/YYYY）
-            /^\d{4}-\d{2}-\d{2}$/       // 日期格式（YYYY-MM-DD）
-        ];
         
         for (let line of lines) {
             const trimmed = line.trim();
@@ -426,71 +413,60 @@ class HybridVisionDeepSeekProcessor {
             // ❌ 跳過空行
             if (trimmed.length === 0) continue;
             
-            // ❌ 跳過超長行（> 200 字符，通常是免責聲明）
-            if (trimmed.length > 200) {
+            // ❌ 跳過超長免責聲明（> 500 字符）
+            if (trimmed.length > 500) {
+                console.log(`   ⚠️ 跳過超長行（${trimmed.length} 字符）: ${trimmed.substring(0, 50)}...`);
                 continue;
             }
             
-            // ❌ 跳過明顯無用的內容
-            if (/www\.|http|\.com|\.hk|@|Page \d+ of|第 \d+ 頁|^\d+$/i.test(trimmed)) {
+            // ❌ 跳過明顯無用的內容（URL、電子郵件、純數字頁碼）
+            if (/^(www\.|http|https:\/\/|mailto:|@.*\.com|Page \d+ of \d+|第 \d+ 頁|\d+\/\d+)$/i.test(trimmed)) {
                 continue;
             }
             
-            // ✅ 保留包含關鍵詞的行
-            const hasKeyword = keywordPatterns.some(pattern => pattern.test(trimmed));
-            if (hasKeyword) {
-                relevantLines.push(line);
-                continue;
-            }
-            
-            // ✅ 保留包含數字的短行（可能是交易或餘額）
-            if (trimmed.length < 100 && /\d/.test(trimmed)) {
-                relevantLines.push(line);
-            }
+            // ✅ 保留所有其他內容
+            relevantLines.push(line);
         }
         
         const filteredText = relevantLines.join('\n');
         const reductionPercent = Math.round((1 - filteredText.length / text.length) * 100);
         console.log(`✅ 銀行對帳單過濾完成：${text.length} → ${filteredText.length} 字符（減少 ${reductionPercent}%）`);
         console.log(`   保留 ${relevantLines.length} 行（原始 ${lines.length} 行）`);
-        console.log(`   📝 策略：只保留包含關鍵詞或數字的行`);
-        console.log(`   ✅ 目標：< 2000 字符，適合單次 DeepSeek 調用`);
+        console.log(`   📝 策略：最小過濾，只移除空白和明顯無用內容`);
+        console.log(`   ✅ 優勢：保留所有可能有用的數據，讓 AI 智能提取`);
         
         return filteredText;
     }
     
     
     /**
-     * 過濾發票/收據文本
+     * 過濾發票/收據文本（最小過濾版本）
      */
     filterInvoiceText(text) {
-        console.log('🧾 過濾發票/收據文本...');
+        console.log('🧾 過濾發票/收據文本（最小過濾版本）...');
         
-        // 發票通常不需要太多過濾，但可以移除頁尾的條款
         const lines = text.split('\n');
         const relevantLines = [];
         
-        const skipKeywords = [
-            'Terms and Conditions', 'Privacy Policy', 'legal notice',
-            '條款', '細則', '私隱政策', '法律通知'
-        ];
-        
         for (let line of lines) {
-            const trimmedLine = line.trim();
+            const trimmed = line.trim();
             
-            if (trimmedLine.length === 0) continue;
-            if (trimmedLine.length > 300) continue; // 跳過超長行
+            // ❌ 跳過空行
+            if (trimmed.length === 0) continue;
             
-            const shouldSkip = skipKeywords.some(keyword => 
-                trimmedLine.toLowerCase().includes(keyword.toLowerCase())
-            );
+            // ❌ 跳過超長免責聲明（> 500 字符）
+            if (trimmed.length > 500) continue;
             
-            if (!shouldSkip) {
-                relevantLines.push(trimmedLine);
+            // ❌ 跳過明顯無用的內容（URL、電子郵件）
+            if (/^(www\.|http|https:\/\/|mailto:|@.*\.com)$/i.test(trimmed)) {
+                continue;
             }
+            
+            // ✅ 保留所有其他內容
+            relevantLines.push(trimmed);
         }
         
-        console.log(`✅ 發票/收據過濾完成：保留 ${relevantLines.length} 行`);
+        console.log(`✅ 發票/收據過濾完成：保留 ${relevantLines.length} 行（最小過濾）`);
         return relevantLines.join('\n');
     }
     
