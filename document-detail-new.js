@@ -836,7 +836,27 @@ function displayBankStatementContent(data) {
                 </div>
             </div>
         </div>
+        
+        <!-- ✅ 其他賬戶（可展開/摺疊）-->
+        <div class="bank-details-card" style="margin-top: 1rem;" id="otherAccountsCard">
+            <div style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;" onclick="toggleOtherAccounts()">
+                <h3 class="card-title" style="margin: 0;">
+                    <i class="fas fa-credit-card" style="color: #8b5cf6; margin-right: 0.5rem;"></i>
+                    其他賬戶
+                    <span style="font-size: 0.875rem; color: #6b7280; font-weight: normal; margin-left: 0.5rem;" id="otherAccountsCount">(0)</span>
+                </h3>
+                <i class="fas fa-chevron-down" id="otherAccountsChevron" style="color: #6b7280; transition: transform 0.3s;"></i>
+            </div>
+            <div id="otherAccountsContent" style="display: none; margin-top: 1rem;">
+                <div style="color: #6b7280; text-align: center; padding: 2rem;">
+                    暫無其他賬戶信息
+                </div>
+            </div>
+        </div>
     `;
+    
+    // ✅ 提取其他賬戶信息（從 DeepSeek 數據中）
+    extractOtherAccounts(data);
     
     // ✅ 交易列表（支持多種字段名稱）
     const transactions = data.transactions || 
@@ -1459,6 +1479,139 @@ function setupTransactionEditListeners() {
             markAsChanged();
         });
     });
+}
+
+// ============================================
+// 其他賬戶功能
+// ============================================
+
+// ✅ 切換其他賬戶顯示
+function toggleOtherAccounts() {
+    const content = document.getElementById('otherAccountsContent');
+    const chevron = document.getElementById('otherAccountsChevron');
+    
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        chevron.style.transform = 'rotate(180deg)';
+    } else {
+        content.style.display = 'none';
+        chevron.style.transform = 'rotate(0deg)';
+    }
+}
+
+// ✅ 提取其他賬戶信息（從 ACCOUNT SUMMARY）
+function extractOtherAccounts(data) {
+    console.log('🔍 提取其他賬戶信息...');
+    
+    // 從 DeepSeek 數據中提取其他賬戶
+    const otherAccounts = data.otherAccounts || data.creditServices || data.linkedAccounts || [];
+    const cardAccounts = data.cardAccounts || data.cards || [];
+    
+    const content = document.getElementById('otherAccountsContent');
+    const countSpan = document.getElementById('otherAccountsCount');
+    
+    if (otherAccounts.length === 0 && cardAccounts.length === 0) {
+        console.log('   ℹ️ 沒有找到其他賬戶信息');
+        countSpan.textContent = '(0)';
+        content.innerHTML = '<div style="color: #6b7280; text-align: center; padding: 2rem;">暫無其他賬戶信息</div>';
+        return;
+    }
+    
+    let accountsHTML = '';
+    let totalCount = 0;
+    
+    // ✅ 信貸服務（個人貸款、按揭等）
+    if (otherAccounts.length > 0) {
+        accountsHTML += `
+            <div style="margin-bottom: 1rem;">
+                <h4 style="font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.75rem;">
+                    <i class="fas fa-hand-holding-usd" style="color: #f59e0b; margin-right: 0.5rem;"></i>
+                    信貸服務
+                </h4>
+                <div style="display: grid; gap: 0.75rem;">
+        `;
+        
+        otherAccounts.forEach(account => {
+            totalCount++;
+            const accountType = account.type || account.accountType || '個人貸款';
+            const accountNumber = account.accountNumber || account.number || '—';
+            const balance = parseFloat(account.balance || 0);
+            const balanceColor = balance < 0 ? '#ef4444' : '#10b981';
+            
+            accountsHTML += `
+                <div style="background: #fef3c7; padding: 1rem; border-radius: 8px; border: 1px solid #fbbf24;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: 600; color: #78350f;">${accountType}</div>
+                            <div style="font-size: 0.875rem; color: #92400e; margin-top: 0.25rem;">
+                                ${accountNumber.length > 12 ? accountNumber.slice(-12) : accountNumber}
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 0.875rem; color: #92400e;">餘額</div>
+                            <div style="font-weight: 600; font-size: 1.125rem; color: ${balanceColor};">
+                                ${formatCurrency(balance)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        accountsHTML += `
+                </div>
+            </div>
+        `;
+    }
+    
+    // ✅ 信用卡
+    if (cardAccounts.length > 0) {
+        accountsHTML += `
+            <div style="margin-bottom: 1rem;">
+                <h4 style="font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.75rem;">
+                    <i class="fas fa-credit-card" style="color: #8b5cf6; margin-right: 0.5rem;"></i>
+                    信用卡
+                </h4>
+                <div style="display: grid; gap: 0.75rem;">
+        `;
+        
+        cardAccounts.forEach(card => {
+            totalCount++;
+            const cardType = card.type || card.cardType || 'VISA';
+            const cardNumber = card.cardNumber || card.number || '—';
+            const balance = parseFloat(card.balance || 0);
+            const balanceColor = balance < 0 ? '#ef4444' : '#10b981';
+            
+            accountsHTML += `
+                <div style="background: #ede9fe; padding: 1rem; border-radius: 8px; border: 1px solid #a78bfa;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: 600; color: #5b21b6;">${cardType}</div>
+                            <div style="font-size: 0.875rem; color: #6b21a8; margin-top: 0.25rem;">
+                                **** **** **** ${cardNumber.slice(-4)}
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 0.875rem; color: #6b21a8;">欠款</div>
+                            <div style="font-weight: 600; font-size: 1.125rem; color: ${balanceColor};">
+                                ${formatCurrency(balance)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        accountsHTML += `
+                </div>
+            </div>
+        `;
+    }
+    
+    content.innerHTML = accountsHTML;
+    countSpan.textContent = `(${totalCount})`;
+    
+    console.log(`   ✅ 找到 ${totalCount} 個其他賬戶`);
 }
 
 // ============================================

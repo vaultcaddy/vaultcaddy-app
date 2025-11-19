@@ -1350,13 +1350,43 @@ class HybridVisionDeepSeekProcessor {
     {
       "date": "必須 - YYYY-MM-DD（統一日期格式，如：2025-03-08）",
       "description": "必須 - 完整交易描述（如：CREDIT INTEREST、POON H** K*** HD1253082573403108MAR、4006-1210-0627-0086 N31098558858(10MAR25) TUG COMPANY LIMITED）",
-      "type": "debit 或 credit",
-      "amount": 數字（正數表示交易金額，支出為負數）,
+      "type": "debit 或 credit（✅ 重要：根據 Deposit/Withdrawal 列判斷，不要只看描述）",
+      "amount": 數字（✅ 重要：Deposit 列的金額為正數，Withdrawal 列的金額為負數）,
       "balance": 數字（餘額）
     }
   ],
   "currency": "HKD"
 }
+
+**✅ CRITICAL - 如何正確判斷交易類型（Deposit vs Withdrawal）：**
+
+銀行對帳單通常有 3 列：
+1. **Deposit 列（存入/存款）**：如果這一列有金額，則 type = "credit"，amount = 正數
+2. **Withdrawal 列（支出/取款）**：如果這一列有金額，則 type = "debit"，amount = 負數
+3. **Balance 列（餘額）**：交易後的餘額
+
+**重要規則：**
+- ❌ 不要根據描述（如「通知支賬」、「通知入賬」）判斷類型
+- ✅ 根據金額所在的列（Deposit 或 Withdrawal）判斷類型
+- ✅ Deposit 列有金額 → type = "credit"，amount = 正數（收入）
+- ✅ Withdrawal 列有金額 → type = "debit"，amount = 負數（支出）
+
+**示例：**
+```
+Date       Transaction Details              Deposit    Withdrawal   Balance
+14 Mar     INSTALMENT LOAN REPAYMENT       3,900.00                36,512.80
+           通知入賬 分期付款
+```
+→ type = "credit"（因為金額在 Deposit 列）
+→ amount = 3900（正數）
+
+```
+Date       Transaction Details              Deposit    Withdrawal   Balance
+10 Mar     TUG COMPANY LIMITED                          21,226.59   58,079.00
+           通知支賬
+```
+→ type = "debit"（因為金額在 Withdrawal 列）
+→ amount = -21226.59（負數）
 
 **提取策略：**
 1. 從頂部提取銀行名稱和賬戶信息（通常在第 1 頁）
