@@ -884,8 +884,18 @@ class HybridVisionDeepSeekProcessor {
             // ✅ 合併所有交易記錄（去除 B/F、C/F 和重複交易）
             const seenTransactions = new Set(); // 用於去重
             
-            for (const result of results) {
+            console.log(`   🔍 開始合併交易記錄...`);
+            for (let i = 0; i < results.length; i++) {
+                const result = results[i];
+                console.log(`   📄 第 ${i + 1} 段：`);
+                console.log(`      - transactions 字段: ${result.transactions ? '存在' : '不存在'}`);
+                console.log(`      - transactions 類型: ${typeof result.transactions}`);
+                console.log(`      - transactions 是數組: ${Array.isArray(result.transactions)}`);
+                console.log(`      - transactions 長度: ${result.transactions?.length || 0}`);
+                
                 if (result.transactions && Array.isArray(result.transactions)) {
+                    console.log(`      - 第 ${i + 1} 段有 ${result.transactions.length} 筆交易`);
+                    
                     for (const tx of result.transactions) {
                         // 跳過 B/F BALANCE 和 C/F BALANCE（這些是餘額，不是真實交易）
                         if (tx.description && 
@@ -916,6 +926,12 @@ class HybridVisionDeepSeekProcessor {
                                 merged.closingBalance = parseFloat(tx.balance || tx.amount);
                             }
                         }
+                    }
+                } else {
+                    console.warn(`      ⚠️ 第 ${i + 1} 段沒有有效的 transactions 數組`);
+                    if (result.transactions) {
+                        console.warn(`         實際類型: ${typeof result.transactions}`);
+                        console.warn(`         實際值: ${JSON.stringify(result.transactions).substring(0, 200)}`);
                     }
                 }
             }
