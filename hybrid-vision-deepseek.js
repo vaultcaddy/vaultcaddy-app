@@ -121,10 +121,11 @@ class HybridVisionDeepSeekProcessor {
             // ========== 步驟 3：判斷是否需要分段 ==========
             let chunks;
             let coreContext = '';
+            let needsRetryWithChunking = false;
             
             if (allText.length <= 7000) {
-                // ✅ 文本不超過 7000 字符，不需要分段
-                console.log(`✅ 文本長度 ${allText.length} 字符，不超過 7000，不需要分段`);
+                // ✅ 文本不超過 7000 字符，先嘗試不分段
+                console.log(`✅ 文本長度 ${allText.length} 字符，不超過 7000，先嘗試不分段處理`);
                 chunks = [allText];
             } else {
                 // ❌ 文本超過 7000 字符，需要智能分段
@@ -157,12 +158,54 @@ class HybridVisionDeepSeekProcessor {
                 
                 try {
                     const result = await this.analyzeTextWithDeepSeek(chunk, documentType);
+                    
+                    // ✅ 檢查是否返回 null（超時觸發分段）
+                    if (result === null && chunks.length === 1) {
+                        console.warn(`⚠️ DeepSeek 超時，且當前未分段，將自動啟用智能分段重試...`);
+                        needsRetryWithChunking = true;
+                        break; // 跳出循環，準備重試
+                    }
+                    
                     pageResults.push(result);
                     console.log(`  ✅ 第 ${i + 1}/${chunks.length} 段分析完成`);
                 } catch (error) {
                     console.error(`  ❌ 第 ${i + 1} 段分析失敗:`, error.message);
                     // 繼續處理其他段
                     pageResults.push(null);
+                }
+            }
+            
+            // ========== 步驟 5.5：如果超時且未分段，自動重試分段處理 ==========
+            if (needsRetryWithChunking) {
+                console.warn(`🔄 自動啟動智能分段重試...`);
+                console.warn(`   原文本長度: ${allText.length} 字符`);
+                
+                // 提取核心上下文（如果還沒有）
+                if (!coreContext) {
+                    console.log(`📋 提取核心上下文...`);
+                    coreContext = this.extractCoreContext(allText, documentType);
+                }
+                
+                // 使用更小的分段大小以避免再次超時
+                const smallerChunkSize = 5000; // 減少到 5000 字符
+                console.log(`✂️ 使用較小分段（${smallerChunkSize} 字符）...`);
+                chunks = this.intelligentChunkingWithOverlap(allText, smallerChunkSize, 500, coreContext);
+                console.log(`✂️ 重新分段完成：${chunks.length} 段`);
+                
+                // 重新處理所有分段
+                pageResults.length = 0; // 清空之前的結果
+                for (let i = 0; i < chunks.length; i++) {
+                    const chunk = chunks[i];
+                    console.log(`  🔍 重試分析第 ${i + 1}/${chunks.length} 段（${chunk.length} 字符）...`);
+                    
+                    try {
+                        const result = await this.analyzeTextWithDeepSeek(chunk, documentType);
+                        pageResults.push(result);
+                        console.log(`  ✅ 第 ${i + 1}/${chunks.length} 段重試完成`);
+                    } catch (error) {
+                        console.error(`  ❌ 第 ${i + 1} 段重試失敗:`, error.message);
+                        pageResults.push(null);
+                    }
                 }
             }
             
@@ -469,7 +512,7 @@ class HybridVisionDeepSeekProcessor {
                 
                 // 調用 DeepSeek API（添加超時控制）
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 180000); // ✅ 180 秒超時（3 分鐘，支持複雜銀行對帳單）
+                const timeoutId = setTimeout(() => controller.abort(), 240000); // ✅ 240 秒超時（4 分鐘，支持大型銀行對帳單）
                 
                 // ✅ 不限制 max_tokens（讓 DeepSeek 自由輸出完整 JSON）
                 // 原因：
@@ -526,11 +569,12 @@ class HybridVisionDeepSeekProcessor {
                 lastError = error;
                 console.error(`❌ DeepSeek API 請求失敗（第 ${attempt} 次嘗試）:`, error.message);
                 
-                // ✅ 對於超時錯誤，不要重試（因為重試也會超時）
+                // ✅ 對於超時錯誤，返回 null 以觸發分段處理
                 if (error.name === 'AbortError' || error.message.includes('aborted')) {
-                    console.error(`⏰ DeepSeek API 超時（180 秒），不再重試`);
-                    console.error(`   建議：文本可能太長或太複雜，需要分段處理`);
-                    throw new Error(`DeepSeek API 超時: 文本長度 ${text.length} 字符超過處理能力`);
+                    console.warn(`⏰ DeepSeek API 超時（240 秒），將自動觸發智能分段處理`);
+                    console.warn(`   文本長度: ${text.length} 字符`);
+                    console.warn(`   📌 返回 null 以啟動分段邏輯...`);
+                    return null; // ✅ 返回 null 而非拋出錯誤，讓 processMultiPageDocument 處理
                 }
                 
                 // 如果是最後一次嘗試，拋出錯誤
