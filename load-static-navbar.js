@@ -190,7 +190,7 @@
                         <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
                     </div>
                     
-                    <div class="navbar-user" onclick="window.location.href='account.html'">
+                    <div class="navbar-user" id="navbar-user-section" onclick="handleUserClick()">
                         <div class="navbar-avatar" id="navbar-avatar-letter">U</div>
                     </div>
                 </div>
@@ -213,29 +213,50 @@
             console.log('✅ 導航欄已插入到 body 開頭');
         }
         
-        // 更新用戶頭像
-        updateUserAvatar();
+        // 更新用戶頭像和按鈕
+        updateUserSection();
         
         console.log('✅ 統一靜態導航欄已加載');
     }
     
-    function updateUserAvatar() {
+    // 處理用戶點擊事件
+    window.handleUserClick = function() {
+        if (window.simpleAuth && window.simpleAuth.isLoggedIn()) {
+            window.location.href = 'account.html';
+        } else {
+            window.location.href = 'auth.html';
+        }
+    };
+    
+    function updateUserSection() {
         try {
+            const userSection = document.getElementById('navbar-user-section');
+            const avatarLetter = document.getElementById('navbar-avatar-letter');
+            
+            if (!userSection || !avatarLetter) {
+                console.log('❌ 找不到用戶區域元素');
+                return;
+            }
+            
             if (window.simpleAuth && window.simpleAuth.isLoggedIn()) {
+                // 已登入：顯示頭像字母 "U"
                 const user = window.simpleAuth.getCurrentUser();
-                const avatarLetter = document.getElementById('navbar-avatar-letter');
-                if (avatarLetter && user) {
-                    const letter = (user.email || user.displayName || 'U')[0].toUpperCase();
-                    avatarLetter.textContent = letter;
-                }
+                avatarLetter.textContent = 'U';
+                avatarLetter.style.display = 'flex';
+                console.log('✅ 用戶已登入，顯示頭像 U');
+            } else {
+                // 未登入：將頭像區域改為「登入」按鈕
+                userSection.innerHTML = '<button style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background=\'#7c3aed\'" onmouseout="this.style.background=\'#8b5cf6\'">登入</button>';
+                console.log('✅ 用戶未登入，顯示登入按鈕');
             }
         } catch (e) {
-            console.log('無法更新頭像:', e);
+            console.log('❌ 無法更新用戶區域:', e);
         }
     }
     
-    // 監聽用戶登入狀態變化
-    window.addEventListener('firebase-ready', updateUserAvatar);
-    window.addEventListener('user-logged-in', updateUserAvatar);
+    // 監聽用戶登入/登出狀態變化
+    window.addEventListener('firebase-ready', updateUserSection);
+    window.addEventListener('user-logged-in', updateUserSection);
+    window.addEventListener('user-logged-out', updateUserSection);
 })();
 
