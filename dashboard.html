@@ -530,12 +530,13 @@
                         <th>Name</th>
                         <th>Last modified</th>
                         <th>Created</th>
+                        <th style="width: 80px; text-align: center;">操作</th>
                     </tr>
                 </thead>
                 <tbody id="projects-tbody">
                     <!-- 項目列表將在這裡動態生成 -->
                     <tr>
-                        <td colspan="3">
+                        <td colspan="4">
                             <div class="empty-state">
                                 <i class="fas fa-folder-open"></i>
                                 <h3>No projects yet</h3>
@@ -572,6 +573,51 @@
             <div class="modal-footer">
                 <button class="btn-cancel" onclick="closeCreateProjectModal()">Cancel</button>
                 <button class="btn-create" id="createBtn" onclick="createProject()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 刪除項目模態框 -->
+    <div id="deleteProjectModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 12px; padding: 2rem; width: 90%; max-width: 500px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
+            <div style="display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1.5rem;">
+                <div style="width: 48px; height: 48px; border-radius: 50%; background: #fee2e2; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <i class="fas fa-exclamation-triangle" style="color: #ef4444; font-size: 1.5rem;"></i>
+                </div>
+                <div style="flex: 1;">
+                    <h2 style="font-size: 1.25rem; font-weight: 600; color: #1f2937; margin: 0 0 0.5rem 0;">刪除項目</h2>
+                    <p style="color: #6b7280; font-size: 0.875rem; margin: 0;">
+                        是否刪除文件夾 '<span id="deleteProjectName" style="font-weight: 600; color: #1f2937;"></span>'？<br>
+                        刪除後無法復原文件夾及當中內容。
+                    </p>
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem;">
+                    請輸入項目名稱以確認刪除
+                </label>
+                <input 
+                    type="text" 
+                    id="deleteProjectConfirmInput" 
+                    placeholder="輸入項目名稱"
+                    style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem; color: #1f2937; box-sizing: border-box;"
+                    oninput="validateDeleteInput()">
+            </div>
+            
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button 
+                    onclick="closeDeleteProjectModal()" 
+                    style="background: #ffffff; border: 1px solid #d1d5db; color: #374151; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500;">
+                    取消
+                </button>
+                <button 
+                    id="confirmDeleteBtn"
+                    onclick="confirmDeleteProject()" 
+                    disabled
+                    style="background: #ef4444; border: none; color: white; padding: 0.5rem 1rem; border-radius: 6px; cursor: not-allowed; font-size: 0.875rem; font-weight: 500; opacity: 0.5;">
+                    是
+                </button>
             </div>
         </div>
     </div>
@@ -659,7 +705,7 @@
             if (projects.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="3">
+                        <td colspan="4">
                             <div class="empty-state">
                                 <i class="fas fa-folder-open"></i>
                                 <h3>No projects yet</h3>
@@ -672,7 +718,7 @@
             }
             
             tbody.innerHTML = projects.map(project => `
-                <tr onclick="window.location.href='firstproject.html?project=${project.id}'">
+                <tr onclick="window.location.href='firstproject.html?project=${project.id}'" style="cursor: pointer;">
                     <td>
                         <div class="project-name">
                             <div class="project-thumbnail">
@@ -688,6 +734,16 @@
                     </td>
                     <td class="date-cell">${formatDate(project.lastModified)}</td>
                     <td class="date-cell">${formatDate(project.created)}</td>
+                    <td style="text-align: center;">
+                        <button 
+                            onclick="event.stopPropagation(); showDeleteProjectModal('${project.id}', '${project.name.replace(/'/g, "\\'")}')" 
+                            style="background: none; border: none; color: #9ca3af; cursor: pointer; padding: 0.5rem; border-radius: 4px; transition: all 0.2s;"
+                            onmouseover="this.style.color='#ef4444'; this.style.backgroundColor='#fee2e2'"
+                            onmouseout="this.style.color='#9ca3af'; this.style.backgroundColor='transparent'"
+                            title="刪除項目">
+                            <i class="fas fa-trash" style="font-size: 1rem;"></i>
+                        </button>
+                    </td>
                 </tr>
             `).join('');
         }
@@ -708,6 +764,68 @@
                 return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
             } else {
                 return 'Today';
+            }
+        }
+
+        // ==================== 刪除項目模態框 ====================
+        let projectToDelete = null;
+
+        function showDeleteProjectModal(projectId, projectName) {
+            projectToDelete = { id: projectId, name: projectName };
+            const modal = document.getElementById('deleteProjectModal');
+            const nameDisplay = document.getElementById('deleteProjectName');
+            const confirmInput = document.getElementById('deleteProjectConfirmInput');
+            const confirmBtn = document.getElementById('confirmDeleteBtn');
+            
+            nameDisplay.textContent = projectName;
+            confirmInput.value = '';
+            confirmBtn.disabled = true;
+            modal.style.display = 'flex';
+            
+            setTimeout(() => confirmInput.focus(), 100);
+        }
+
+        function closeDeleteProjectModal() {
+            const modal = document.getElementById('deleteProjectModal');
+            modal.style.display = 'none';
+            projectToDelete = null;
+        }
+
+        function validateDeleteInput() {
+            const confirmInput = document.getElementById('deleteProjectConfirmInput');
+            const confirmBtn = document.getElementById('confirmDeleteBtn');
+            
+            if (projectToDelete && confirmInput.value === projectToDelete.name) {
+                confirmBtn.disabled = false;
+                confirmBtn.style.opacity = '1';
+                confirmBtn.style.cursor = 'pointer';
+            } else {
+                confirmBtn.disabled = true;
+                confirmBtn.style.opacity = '0.5';
+                confirmBtn.style.cursor = 'not-allowed';
+            }
+        }
+
+        async function confirmDeleteProject() {
+            if (!projectToDelete) return;
+            
+            try {
+                await window.simpleDataManager.deleteProject(projectToDelete.id);
+                console.log('✅ 項目已刪除:', projectToDelete.name);
+                
+                // 觸發側邊欄更新
+                window.dispatchEvent(new Event('projectDeleted'));
+                
+                // 關閉模態框
+                closeDeleteProjectModal();
+                
+                // 重新加載項目列表
+                loadProjects();
+                
+                alert('項目已成功刪除');
+            } catch (error) {
+                console.error('❌ 刪除項目失敗:', error);
+                alert('刪除項目失敗: ' + error.message);
             }
         }
 
