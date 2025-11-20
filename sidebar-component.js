@@ -188,7 +188,7 @@ class VaultCaddySidebar {
         return `
             <!-- 搜索欄 -->
             <div style="margin-bottom: 1.5rem;">
-                <input type="text" id="project-search-input" placeholder="篩選文檔名稱..." style="width: 100%; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 0.875rem; color: #6b7280;" oninput="window.filterProjects && window.filterProjects(this.value)">
+                <input type="text" id="project-search-input" placeholder="篩選文檔名稱..." style="width: 100%; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 0.875rem; color: #6b7280;" oninput="if(window.filterProjects){console.log('🔍 觸發搜尋:', this.value); window.filterProjects(this.value);}else{console.error('❌ window.filterProjects 未定義');}">
             </div>
             
             <!-- Project 區塊 -->
@@ -242,36 +242,55 @@ class VaultCaddySidebar {
             }
         });
         
-        // ✅ 設置全域篩選函數（修復：確保只篩選項目名稱，不包括其他內容）
+        // ✅ 設置全域篩選函數（增強版：確保正確工作）
         window.filterProjects = (searchTerm) => {
-            console.log('🔍 篩選項目:', searchTerm);
+            console.log('🔍 篩選項目開始 ====================================');
+            console.log('   搜尋詞:', searchTerm);
+            
             const projectItems = document.querySelectorAll('.project-item');
+            console.log('   找到項目數:', projectItems.length);
+            
+            if (projectItems.length === 0) {
+                console.error('❌ 沒有找到任何 .project-item 元素！');
+                console.log('   當前 DOM 中的所有 class 包含 project 的元素:');
+                document.querySelectorAll('[class*="project"]').forEach(el => {
+                    console.log('     -', el.className, el.textContent.substring(0, 50));
+                });
+                return;
+            }
+            
             const lowerSearchTerm = searchTerm.toLowerCase().trim();
             
             let visibleCount = 0;
-            projectItems.forEach(item => {
-                // ✅ 只提取項目名稱（不包括圖標等其他內容）
-                const projectNameElement = item.querySelector('span:not(.fas)'); // 排除 icon 元素
-                const projectName = projectNameElement ? projectNameElement.textContent.toLowerCase().trim() : item.textContent.toLowerCase().trim();
+            projectItems.forEach((item, index) => {
+                // ✅ 嘗試多種方式提取項目名稱
+                let projectName = '';
                 
-                console.log(`   檢查項目: "${projectName}" vs 搜尋詞: "${lowerSearchTerm}"`);
+                // 方法1：查找不是圖標的 span
+                const textSpan = item.querySelector('span:not(.fas):not(.fa)');
+                if (textSpan) {
+                    projectName = textSpan.textContent.toLowerCase().trim();
+                } else {
+                    // 方法2：直接取 textContent 並移除圖標
+                    projectName = item.textContent.replace(/[\uf000-\uf8ff]/g, '').toLowerCase().trim();
+                }
                 
-                if (lowerSearchTerm === '' || projectName.includes(lowerSearchTerm)) {
+                console.log(`   [${index}] 項目: "${projectName}" | 搜尋: "${lowerSearchTerm}"`);
+                
+                const shouldShow = lowerSearchTerm === '' || projectName.includes(lowerSearchTerm);
+                
+                if (shouldShow) {
                     item.style.display = 'flex';
                     visibleCount++;
-                    console.log(`     ✅ 顯示: ${projectName}`);
+                    console.log(`       ✅ 顯示`);
                 } else {
                     item.style.display = 'none';
-                    console.log(`     ❌ 隱藏: ${projectName}`);
+                    console.log(`       ❌ 隱藏`);
                 }
             });
             
-            console.log(`✅ 顯示 ${visibleCount}/${projectItems.length} 個項目`);
-            
-            // ✅ 如果沒有匹配項，顯示提示
-            if (visibleCount === 0 && lowerSearchTerm !== '') {
-                console.log('⚠️ 沒有找到匹配的項目');
-            }
+            console.log(`✅ 篩選完成: 顯示 ${visibleCount}/${projectItems.length} 個項目`);
+            console.log('🔍 篩選項目結束 ====================================');
         };
         
         console.log('側邊欄事件已綁定');

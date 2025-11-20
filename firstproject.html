@@ -1444,8 +1444,8 @@
                                     <span>供應商/來源/銀行</span>
                                     <i class="fas fa-sort sort-icon" data-column="vendor" style="margin-left: 0.5rem; color: #9ca3af;"></i>
                                 </th>
-                                <!-- 金額列 -->
-                                <th onclick="sortTable('amount')" style="text-align: right; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; cursor: pointer; user-select: none;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+                                <!-- 金額列（拉寬以容納2行顯示）-->
+                                <th onclick="sortTable('amount')" style="text-align: right; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; cursor: pointer; user-select: none; min-width: 150px;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
                                     <span>金額</span>
                                     <i class="fas fa-sort sort-icon" data-column="amount" style="margin-left: 0.5rem; color: #9ca3af;"></i>
                                 </th>
@@ -1794,12 +1794,12 @@
                         const accountHolder = data.accountHolder || data.account_holder || '';
                         const accountNumber = data.accountNumber || data.account_number || '';
                         
-                        // ✅ 組合顯示格式（圖5樣式）
-                        const vendorParts = [];
-                        if (bankName) vendorParts.push(bankName);
-                        if (accountHolder) vendorParts.push(accountHolder);
-                        if (accountNumber) vendorParts.push(accountNumber);
-                        vendor = vendorParts.length > 0 ? vendorParts.join(' • ') : '-';
+                        // ✅ 組合顯示格式（3行顯示）
+                        const vendorLines = [];
+                        if (bankName) vendorLines.push(bankName);
+                        if (accountHolder) vendorLines.push(accountHolder);
+                        if (accountNumber) vendorLines.push(accountNumber);
+                        vendor = vendorLines.length > 0 ? vendorLines.join('<br>') : '-';
                         
                         // ✅ 提取期初和期末餘額
                         const openingBalance = data.openingBalance || data.opening_balance || 0;
@@ -1857,12 +1857,12 @@
                             
                             <!-- 供應商/來源/銀行 -->
                             <td style="padding: 1rem;">
-                                <span style="color: #374151;">${vendor}</span>
+                                <div style="color: #374151; line-height: 1.6;">${vendor}</div>
                             </td>
                             
                             <!-- 金額 -->
-                            <td style="padding: 1rem; text-align: right;">
-                                <div style="font-weight: 600; color: #059669; font-size: 0.875rem; line-height: 1.5;">${amountDisplay}</div>
+                            <td style="padding: 1rem; text-align: right; min-width: 150px;">
+                                <div style="font-weight: 600; color: #059669; font-size: 0.875rem; line-height: 1.6; white-space: nowrap;">${amountDisplay}</div>
                             </td>
                             
                             <!-- 日期 -->
