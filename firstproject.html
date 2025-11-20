@@ -1223,7 +1223,34 @@
     
     <!-- ✅ 統一導航欄容器 -->
     <!-- 統一靜態導航欄 -->
-    <!-- ✅ 導航欄由 load-static-navbar.js 動態生成 -->
+    <nav class="vaultcaddy-navbar" id="main-navbar" style="position: fixed; top: 0; left: 0; right: 0; height: 60px; background: #ffffff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; z-index: 1000; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <a href="index.html" style="display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: #1f2937; font-weight: 600; font-size: 1.125rem;">
+                <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.25rem;">
+                    V
+                </div>
+                <div>
+                    <div>VaultCaddy</div>
+                    <div style="font-size: 0.75rem; color: #6b7280; font-weight: 400; text-transform: uppercase; letter-spacing: 0.05em;">AI DOCUMENT PROCESSING</div>
+                </div>
+            </a>
+        </div>
+        <div style="display: flex; align-items: center; gap: 2rem;">
+            <div style="display: flex; align-items: center; gap: 2rem;">
+                <a href="index.html#features" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">功能</a>
+                <a href="index.html#pricing" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">價格</a>
+                <a href="dashboard.html" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">儀表板</a>
+            </div>
+            <div id="language-dropdown" style="position: relative; display: flex; align-items: center; gap: 0.5rem; color: #6b7280; font-size: 0.875rem; cursor: pointer; padding: 0.5rem 0.75rem; border-radius: 6px; transition: background 0.2s;">
+                <i class="fas fa-language"></i>
+                <span id="current-language">繁體中文</span>
+                <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
+            </div>
+            <div id="user-menu" style="position: relative; display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;">
+                <div id="user-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">U</div>
+            </div>
+        </div>
+    </nav>
     
     <!-- AI 上傳模態框 - 放在 body 最前面確保立即載入 -->
     <div id="aiUploadModal" class="ai-upload-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 10000; align-items: center; justify-content: center;">
@@ -1363,39 +1390,15 @@
                                 <span>Export</span>
                                 <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
                             </button>
-                            <div id="exportMenu" class="export-menu" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 0.5rem; background: white; border: 1px solid #e5e7eb; border-radius: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-width: 250px; z-index: 1000;">
+                            <div id="exportMenu" class="export-menu" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 0.5rem; background: white; border: 1px solid #e5e7eb; border-radius: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-width: 200px; z-index: 1000;">
                                 <div style="padding: 0.5rem 0;">
-                                    <!-- 標準 CSV -->
                                     <button onclick="exportDocuments('csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
                                         <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
                                         <div>
-                                            <div style="font-weight: 500;">標準 CSV</div>
-                                            <div style="font-size: 0.75rem; color: #6b7280;">通用格式（銀行對帳單）</div>
+                                            <div style="font-weight: 500;">CSV</div>
+                                            <div style="font-size: 0.75rem; color: #6b7280;">通用格式</div>
                                         </div>
                                     </button>
-                                    
-                                    <!-- Xero CSV -->
-                                    <button onclick="exportDocuments('xero')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                                        <i class="fas fa-file-csv" style="color: #1976d2; width: 20px;"></i>
-                                        <div>
-                                            <div style="font-weight: 500;">Xero CSV</div>
-                                            <div style="font-size: 0.75rem; color: #6b7280;">Xero 會計軟件</div>
-                                        </div>
-                                    </button>
-                                    
-                                    <!-- QuickBooks CSV -->
-                                    <button onclick="exportDocuments('quickbooks-csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                                        <i class="fas fa-file-csv" style="color: #2ca01c; width: 20px;"></i>
-                                        <div>
-                                            <div style="font-weight: 500;">QuickBooks CSV</div>
-                                            <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks 會計軟件</div>
-                                        </div>
-                                    </button>
-                                    
-                                    <!-- 分隔線 -->
-                                    <div style="border-top: 1px solid #e5e7eb; margin: 0.5rem 0;"></div>
-                                    
-                                    <!-- IIF (QuickBooks Desktop) -->
                                     <button onclick="exportDocuments('iif')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
                                         <i class="fas fa-file-alt" style="color: #3b82f6; width: 20px;"></i>
                                         <div>
@@ -1403,8 +1406,6 @@
                                             <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Desktop</div>
                                         </div>
                                     </button>
-                                    
-                                    <!-- QBO (QuickBooks Online) -->
                                     <button onclick="exportDocuments('qbo')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
                                         <i class="fas fa-cloud" style="color: #8b5cf6; width: 20px;"></i>
                                         <div>
@@ -1442,8 +1443,8 @@
                                     <span>類型</span>
                                     <i class="fas fa-sort sort-icon" data-column="type" style="margin-left: 0.5rem; color: #9ca3af;"></i>
                                 </th>
-                                <!-- 供應商/來源/銀行列（固定寬度）-->
-                                <th onclick="sortTable('vendor')" style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; cursor: pointer; user-select: none; width: 280px; min-width: 280px;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+                                <!-- 供應商/來源/銀行列 -->
+                                <th onclick="sortTable('vendor')" style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; cursor: pointer; user-select: none;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
                                     <span>供應商/來源/銀行</span>
                                     <i class="fas fa-sort sort-icon" data-column="vendor" style="margin-left: 0.5rem; color: #9ca3af;"></i>
                                 </th>
@@ -1452,8 +1453,8 @@
                                     <span>金額</span>
                                     <i class="fas fa-sort sort-icon" data-column="amount" style="margin-left: 0.5rem; color: #9ca3af;"></i>
                                 </th>
-                                <!-- 日期列（固定寬度）-->
-                                <th onclick="sortTable('date')" style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; cursor: pointer; user-select: none; width: 220px; min-width: 220px;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+                                <!-- 日期列 -->
+                                <th onclick="sortTable('date')" style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; cursor: pointer; user-select: none;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
                                     <span>日期</span>
                                     <i class="fas fa-sort sort-icon" data-column="date" style="margin-left: 0.5rem; color: #9ca3af;"></i>
                                 </th>
@@ -1858,8 +1859,8 @@
                                 </div>
                             </td>
                             
-                            <!-- 供應商/來源/銀行（固定寬度）-->
-                            <td style="padding: 1rem; width: 280px; min-width: 280px;">
+                            <!-- 供應商/來源/銀行 -->
+                            <td style="padding: 1rem;">
                                 <div style="color: #374151; line-height: 1.6;">${vendor}</div>
                             </td>
                             
@@ -1868,8 +1869,8 @@
                                 <div style="font-weight: 600; color: #059669; font-size: 0.875rem; line-height: 1.6; white-space: nowrap;">${amountDisplay}</div>
                             </td>
                             
-                            <!-- 日期（固定寬度）-->
-                            <td style="padding: 1rem; width: 220px; min-width: 220px;">
+                            <!-- 日期 -->
+                            <td style="padding: 1rem;">
                                 <span style="color: #374151;">${date}</span>
                             </td>
                             
@@ -2766,43 +2767,17 @@
                 
                 switch(format) {
                     case 'csv':
-                        // 標準 CSV - 銀行對帳單格式（圖1）
-                        if (window.exportBankStatements) {
-                            window.exportBankStatements(docsToExport, 'standard');
-                            toggleExportMenu();
-                            return;
+                        // 使用優化版 ExportOptimizer（如果可用）
+                        if (window.ExportOptimizer) {
+                            exportContent = ExportOptimizer.generateCSV(docsToExport);
+                            console.log('✅ 使用優化版 CSV 導出');
                         } else {
-                            // 回退到舊版 CSV
                             exportContent = generateCSV(docsToExport);
-                            fileName = `vaultcaddy_export_${new Date().toISOString().split('T')[0]}.csv`;
-                            mimeType = 'text/csv;charset=utf-8;';
+                            console.log('⚠️ 使用舊版 CSV 導出');
                         }
+                        fileName = `vaultcaddy_export_${new Date().toISOString().split('T')[0]}.csv`;
+                        mimeType = 'text/csv;charset=utf-8;';
                         break;
-                    
-                    case 'xero':
-                        // Xero CSV 格式（圖3）
-                        if (window.exportBankStatements) {
-                            window.exportBankStatements(docsToExport, 'xero');
-                            toggleExportMenu();
-                            return;
-                        } else {
-                            alert('Xero 導出功能未載入');
-                            return;
-                        }
-                        break;
-                    
-                    case 'quickbooks-csv':
-                        // QuickBooks CSV 格式（圖4）
-                        if (window.exportBankStatements) {
-                            window.exportBankStatements(docsToExport, 'quickbooks');
-                            toggleExportMenu();
-                            return;
-                        } else {
-                            alert('QuickBooks CSV 導出功能未載入');
-                            return;
-                        }
-                        break;
-                    
                     case 'iif':
                         exportContent = generateIIF(docsToExport);
                         fileName = `vaultcaddy_export_${new Date().toISOString().split('T')[0]}.iif`;
