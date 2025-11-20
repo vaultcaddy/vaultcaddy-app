@@ -232,25 +232,15 @@
             const isLoggedIn = window.simpleAuth && window.simpleAuth.isLoggedIn();
             
             if (isLoggedIn) {
-                // ✅ 已登入：顯示用戶名稱首字母（圖4、圖5需求）
-                const currentUser = window.simpleAuth.getCurrentUser();
-                let userInitial = 'U'; // 默認值
+                // ✅ 已登入：使用統一的 UserProfileManager
+                const userInitial = window.userProfileManager ? 
+                    window.userProfileManager.getUserInitial() : 'U';
                 
-                if (currentUser) {
-                    // 優先使用 displayName，其次使用 email
-                    const displayName = currentUser.displayName || currentUser.email || '';
-                    console.log('👤 用戶資料:', { displayName, email: currentUser.email });
-                    
-                    if (displayName) {
-                        // 提取首字母（支持中英文）
-                        userInitial = displayName.charAt(0).toUpperCase();
-                        console.log(`✅ 提取用戶首字母: "${userInitial}" (來源: "${displayName}")`);
-                    }
-                }
+                console.log(`👤 用戶首字母: "${userInitial}"`);
                 
                 userSection.innerHTML = `
                     <div onclick="window.location.href='account.html'" style="cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
-                        <div style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">${userInitial}</div>
+                        <div class="navbar-user" data-user-avatar style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">${userInitial}</div>
                     </div>
                 `;
                 console.log(`✅ 用戶已登入，顯示頭像 "${userInitial}"`);
@@ -277,5 +267,7 @@
     window.addEventListener('firebase-ready', updateUserSection);
     window.addEventListener('user-logged-in', updateUserSection);
     window.addEventListener('user-logged-out', updateUserSection);
+    window.addEventListener('user-profile-loaded', updateUserSection);
+    window.addEventListener('user-profile-updated', updateUserSection);
 })();
 
