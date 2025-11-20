@@ -224,7 +224,8 @@
             const userSection = document.getElementById('navbar-user-section');
             
             if (!userSection) {
-                console.log('❌ 找不到用戶區域元素');
+                console.log('❌ 找不到用戶區域元素，100ms 後重試');
+                setTimeout(updateUserSection, 100);
                 return;
             }
             
@@ -232,9 +233,32 @@
             const isLoggedIn = window.simpleAuth && window.simpleAuth.isLoggedIn();
             
             if (isLoggedIn) {
+                // ✅ 等待 UserProfileManager 初始化
+                if (!window.userProfileManager) {
+                    console.log('⏳ 等待 UserProfileManager 初始化，100ms 後重試');
+                    setTimeout(updateUserSection, 100);
+                    return;
+                }
+                
                 // ✅ 已登入：使用統一的 UserProfileManager
-                const userInitial = window.userProfileManager ? 
-                    window.userProfileManager.getUserInitial() : 'U';
+                const userInitial = window.userProfileManager.getUserInitial();
+                
+                // ✅ 如果仍然是默認值，再等待一下
+                if (userInitial === 'U' || userInitial === '') {
+                    const profile = window.userProfileManager.getUserProfile();
+                    console.log('⏳ 當前用戶資料:', profile);
+                    
+                    // 如果有 displayName 或 email，說明資料已載入
+                    if (profile && (profile.displayName || profile.email)) {
+                        // 資料已載入，但首字母還是 'U'，說明用戶名就是 'U' 開頭
+                        console.log(`👤 用戶首字母: "${userInitial}" (確認)`);
+                    } else {
+                        // 資料還沒載入，等待
+                        console.log('⏳ 用戶資料尚未載入，100ms 後重試');
+                        setTimeout(updateUserSection, 100);
+                        return;
+                    }
+                }
                 
                 console.log(`👤 用戶首字母: "${userInitial}"`);
                 
