@@ -108,13 +108,25 @@ window.emailVerificationChecker = {
             document.body.style.paddingTop = '120px'; // 60px (navbar) + 60px (notice)
         }
         
-        // ✅ 調整左側欄位置（圖2修復）
-        const sidebar = document.querySelector('.sidebar') || document.querySelector('aside.sidebar');
-        if (sidebar) {
-            console.log('✅ 調整左側欄向下留位');
-            sidebar.style.top = '120px'; // 60px (navbar) + 60px (notice)
-            sidebar.style.height = 'calc(100vh - 120px)';
-        }
+        // ✅ 調整左側欄位置（圖2、圖5修復）
+        const adjustSidebar = () => {
+            const sidebar = document.querySelector('.sidebar') || document.querySelector('aside.sidebar');
+            if (sidebar) {
+                console.log('✅ 調整左側欄向下留位');
+                sidebar.style.top = '120px'; // 60px (navbar) + 60px (notice)
+                sidebar.style.height = 'calc(100vh - 120px)';
+            } else {
+                console.log('⚠️ 找不到左側欄元素，將在 500ms 後重試');
+                setTimeout(adjustSidebar, 500);
+            }
+        };
+        
+        // 立即嘗試調整
+        adjustSidebar();
+        
+        // 如果側邊欄還沒載入，等待一下再試
+        setTimeout(adjustSidebar, 100);
+        setTimeout(adjustSidebar, 300);
     },
     
     /**
