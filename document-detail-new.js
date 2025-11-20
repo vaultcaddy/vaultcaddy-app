@@ -14,10 +14,12 @@ let zoomLevel = 100;
 let autoSaveTimeout = null;
 let hasUnsavedChanges = false;
 
-// 交易記錄分頁變量
+// 交易記錄分頁變量（圖3需求）
 let currentTransactionPage = 1;
 let transactionsPerPage = 10;
 let totalTransactions = 0;
+
+console.log('✅ 交易記錄分頁變量已初始化:', { currentTransactionPage, transactionsPerPage });
 
 // ============================================
 // 初始化函數
@@ -1440,21 +1442,37 @@ function exportToQBO(data) {
 // ============================================
 
 /**
- * 切換交易記錄頁面
+ * 切換交易記錄頁面（圖3需求）
  */
 window.changeTransactionPage = function(newPage) {
+    console.log('🔄 changeTransactionPage 被調用:', { 
+        newPage, 
+        currentTransactionPage, 
+        totalTransactions, 
+        transactionsPerPage 
+    });
+    
     const totalPages = Math.ceil(totalTransactions / transactionsPerPage);
     
     if (newPage < 1 || newPage > totalPages) {
+        console.warn(`⚠️ 頁碼超出範圍: ${newPage} (有效範圍: 1-${totalPages})`);
         return; // 超出範圍，不處理
     }
     
     currentTransactionPage = newPage;
-    console.log(`📄 切換到交易記錄第 ${newPage} 頁（共 ${totalPages} 頁）`);
+    console.log(`✅ 切換到交易記錄第 ${newPage} 頁（共 ${totalPages} 頁）`);
     
     // 重新渲染交易記錄
     if (currentDocument && currentDocument.processedData) {
         displayBankStatementContent(currentDocument.processedData);
+        
+        // ✅ 滾動到交易記錄頂部
+        const transactionsSection = document.querySelector('.transactions-section');
+        if (transactionsSection) {
+            transactionsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    } else {
+        console.error('❌ 無法重新渲染：currentDocument 或 processedData 不存在');
     }
 };
 

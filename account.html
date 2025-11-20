@@ -310,7 +310,40 @@
                     <h2 class="section-title">個人資料</h2>
                     
                     <div class="avatar-section">
-                        <div class="avatar" id="user-avatar">U</div>
+                        <div class="avatar" id="user-avatar">
+                            <script>
+                                // ✅ 動態更新用戶頭像首字母（圖4、圖5需求）
+                                (function() {
+                                    const avatarElement = document.getElementById('user-avatar');
+                                    
+                                    // 等待用戶登入
+                                    const updateAvatar = () => {
+                                        if (window.simpleAuth && window.simpleAuth.currentUser) {
+                                            const user = window.simpleAuth.currentUser;
+                                            const displayName = user.displayName || user.email || '';
+                                            const userInitial = displayName.charAt(0).toUpperCase() || 'U';
+                                            
+                                            console.log('✅ 更新個人資料頭像:', { displayName, userInitial });
+                                            avatarElement.textContent = userInitial;
+                                        } else {
+                                            avatarElement.textContent = 'U';
+                                        }
+                                    };
+                                    
+                                    // 立即嘗試更新
+                                    updateAvatar();
+                                    
+                                    // 監聽用戶登入事件
+                                    window.addEventListener('firebase-ready', updateAvatar);
+                                    window.addEventListener('user-logged-in', updateAvatar);
+                                    
+                                    // 如果 SimpleAuth 已經載入，再次嘗試
+                                    setTimeout(updateAvatar, 500);
+                                    setTimeout(updateAvatar, 1000);
+                                })();
+                            </script>
+                            U
+                        </div>
                         <div class="avatar-actions">
                             <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                                 <div style="font-weight: 600; color: #1f2937; font-size: 0.875rem;">目前計劃</div>
@@ -432,13 +465,12 @@
                                     <th style="text-align: left; padding: 1rem; font-weight: 600; color: #6b7280; font-size: 0.875rem; border-bottom: 2px solid #e5e7eb;">描述</th>
                                     <th style="text-align: center; padding: 1rem; font-weight: 600; color: #6b7280; font-size: 0.875rem; border-bottom: 2px solid #e5e7eb;">類型</th>
                                     <th style="text-align: right; padding: 1rem; font-weight: 600; color: #6b7280; font-size: 0.875rem; border-bottom: 2px solid #e5e7eb;">Credits</th>
-                                    <th style="text-align: right; padding: 1rem; font-weight: 600; color: #6b7280; font-size: 0.875rem; border-bottom: 2px solid #e5e7eb;">餘額</th>
                                 </tr>
                             </thead>
                             <tbody id="credits-history-tbody">
                                 <!-- 動態載入記錄 -->
                                 <tr>
-                                    <td colspan="5" style="text-align: center; padding: 3rem; color: #9ca3af;">
+                                    <td colspan="4" style="text-align: center; padding: 3rem; color: #9ca3af;">
                                         <i class="fas fa-history" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
                                         <div>載入記錄中...</div>
                                     </td>
@@ -824,7 +856,7 @@
                 if (!window.simpleAuth || !window.simpleAuth.currentUser) {
                     tbody.innerHTML = `
                         <tr>
-                            <td colspan="5" style="text-align: center; padding: 2rem; color: #9ca3af;">
+                            <td colspan="4" style="text-align: center; padding: 2rem; color: #9ca3af;">
                                 請先登入以查看記錄
                             </td>
                         </tr>
@@ -846,7 +878,7 @@
                 if (historySnapshot.empty) {
                     tbody.innerHTML = `
                         <tr>
-                            <td colspan="5" style="text-align: center; padding: 2rem; color: #9ca3af;">
+                            <td colspan="4" style="text-align: center; padding: 2rem; color: #9ca3af;">
                                 <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5;"></i>
                                 <div>暫無記錄</div>
                             </td>
@@ -910,9 +942,6 @@
                             <td style="padding: 1rem; text-align: right; font-weight: 600; color: ${typeColor};">
                                 ${sign}${record.amount || 0}
                             </td>
-                            <td style="padding: 1rem; text-align: right; color: #1f2937; font-weight: 500;">
-                                ${record.after || 0}
-                            </td>
                         </tr>
                     `);
                 });
@@ -925,7 +954,7 @@
                 console.error('載入 Credits 歷史記錄失敗:', error);
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="5" style="text-align: center; padding: 2rem; color: #ef4444;">
+                        <td colspan="4" style="text-align: center; padding: 2rem; color: #ef4444;">
                             <i class="fas fa-exclamation-circle" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
                             <div>載入記錄失敗</div>
                             <div style="font-size: 0.875rem; margin-top: 0.5rem; color: #9ca3af;">${error.message}</div>

@@ -107,6 +107,14 @@ window.emailVerificationChecker = {
         } else {
             document.body.style.paddingTop = '120px'; // 60px (navbar) + 60px (notice)
         }
+        
+        // ✅ 調整左側欄位置（圖2修復）
+        const sidebar = document.querySelector('.sidebar') || document.querySelector('aside.sidebar');
+        if (sidebar) {
+            console.log('✅ 調整左側欄向下留位');
+            sidebar.style.top = '120px'; // 60px (navbar) + 60px (notice)
+            sidebar.style.height = 'calc(100vh - 120px)';
+        }
     },
     
     /**
