@@ -54,6 +54,9 @@
     <script src="navbar-component.js?v=20251106-final-fix"></script>
     <script src="sidebar-component.js?v=20251106-final-fix"></script>
     
+    <!-- ✅ 銀行對帳單導出模塊 -->
+    <script src="bank-statement-export.js"></script>
+    
     <!-- ✅ Firebase SDK（CDN 版本）-->
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
@@ -1360,15 +1363,39 @@
                                 <span>Export</span>
                                 <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
                             </button>
-                            <div id="exportMenu" class="export-menu" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 0.5rem; background: white; border: 1px solid #e5e7eb; border-radius: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-width: 200px; z-index: 1000;">
+                            <div id="exportMenu" class="export-menu" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 0.5rem; background: white; border: 1px solid #e5e7eb; border-radius: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-width: 250px; z-index: 1000;">
                                 <div style="padding: 0.5rem 0;">
+                                    <!-- 標準 CSV -->
                                     <button onclick="exportDocuments('csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
                                         <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
                                         <div>
-                                            <div style="font-weight: 500;">CSV</div>
-                                            <div style="font-size: 0.75rem; color: #6b7280;">通用格式</div>
+                                            <div style="font-weight: 500;">標準 CSV</div>
+                                            <div style="font-size: 0.75rem; color: #6b7280;">通用格式（銀行對帳單）</div>
                                         </div>
                                     </button>
+                                    
+                                    <!-- Xero CSV -->
+                                    <button onclick="exportDocuments('xero')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                                        <i class="fas fa-file-csv" style="color: #1976d2; width: 20px;"></i>
+                                        <div>
+                                            <div style="font-weight: 500;">Xero CSV</div>
+                                            <div style="font-size: 0.75rem; color: #6b7280;">Xero 會計軟件</div>
+                                        </div>
+                                    </button>
+                                    
+                                    <!-- QuickBooks CSV -->
+                                    <button onclick="exportDocuments('quickbooks-csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                                        <i class="fas fa-file-csv" style="color: #2ca01c; width: 20px;"></i>
+                                        <div>
+                                            <div style="font-weight: 500;">QuickBooks CSV</div>
+                                            <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks 會計軟件</div>
+                                        </div>
+                                    </button>
+                                    
+                                    <!-- 分隔線 -->
+                                    <div style="border-top: 1px solid #e5e7eb; margin: 0.5rem 0;"></div>
+                                    
+                                    <!-- IIF (QuickBooks Desktop) -->
                                     <button onclick="exportDocuments('iif')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
                                         <i class="fas fa-file-alt" style="color: #3b82f6; width: 20px;"></i>
                                         <div>
@@ -1376,6 +1403,8 @@
                                             <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Desktop</div>
                                         </div>
                                     </button>
+                                    
+                                    <!-- QBO (QuickBooks Online) -->
                                     <button onclick="exportDocuments('qbo')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
                                         <i class="fas fa-cloud" style="color: #8b5cf6; width: 20px;"></i>
                                         <div>
@@ -2737,17 +2766,43 @@
                 
                 switch(format) {
                     case 'csv':
-                        // 使用優化版 ExportOptimizer（如果可用）
-                        if (window.ExportOptimizer) {
-                            exportContent = ExportOptimizer.generateCSV(docsToExport);
-                            console.log('✅ 使用優化版 CSV 導出');
+                        // 標準 CSV - 銀行對帳單格式（圖1）
+                        if (window.exportBankStatements) {
+                            window.exportBankStatements(docsToExport, 'standard');
+                            toggleExportMenu();
+                            return;
                         } else {
+                            // 回退到舊版 CSV
                             exportContent = generateCSV(docsToExport);
-                            console.log('⚠️ 使用舊版 CSV 導出');
+                            fileName = `vaultcaddy_export_${new Date().toISOString().split('T')[0]}.csv`;
+                            mimeType = 'text/csv;charset=utf-8;';
                         }
-                        fileName = `vaultcaddy_export_${new Date().toISOString().split('T')[0]}.csv`;
-                        mimeType = 'text/csv;charset=utf-8;';
                         break;
+                    
+                    case 'xero':
+                        // Xero CSV 格式（圖3）
+                        if (window.exportBankStatements) {
+                            window.exportBankStatements(docsToExport, 'xero');
+                            toggleExportMenu();
+                            return;
+                        } else {
+                            alert('Xero 導出功能未載入');
+                            return;
+                        }
+                        break;
+                    
+                    case 'quickbooks-csv':
+                        // QuickBooks CSV 格式（圖4）
+                        if (window.exportBankStatements) {
+                            window.exportBankStatements(docsToExport, 'quickbooks');
+                            toggleExportMenu();
+                            return;
+                        } else {
+                            alert('QuickBooks CSV 導出功能未載入');
+                            return;
+                        }
+                        break;
+                    
                     case 'iif':
                         exportContent = generateIIF(docsToExport);
                         fileName = `vaultcaddy_export_${new Date().toISOString().split('T')[0]}.iif`;
