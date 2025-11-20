@@ -178,9 +178,9 @@ class VaultCaddySidebar {
         const projectsHTML = projects.map(project => {
             const isActive = currentProjectId === project.id;
             return `
-            <div onclick="window.location.href='firstproject.html?project=${project.id}'" style="display: flex; align-items: center; padding: 0.5rem; color: ${isActive ? '#2563eb' : '#6b7280'}; cursor: pointer; border-radius: 4px; transition: background 0.2s; margin-bottom: 0.25rem; ${isActive ? 'background: #eff6ff; border-left: 3px solid #2563eb; margin-left: -1.5rem; padding-left: calc(0.5rem + 1.5rem - 3px);' : ''}">
+            <div class="project-item" onclick="window.location.href='firstproject.html?project=${project.id}'" style="display: flex; align-items: center; padding: 0.5rem; color: ${isActive ? '#2563eb' : '#6b7280'}; cursor: pointer; border-radius: 4px; transition: background 0.2s; margin-bottom: 0.25rem; ${isActive ? 'background: #eff6ff; border-left: 3px solid #2563eb; margin-left: -1.5rem; padding-left: calc(0.5rem + 1.5rem - 3px);' : ''}">
                 <i class="fas fa-folder" style="margin-right: 0.5rem; font-size: 1rem;"></i>
-                <span style="font-size: 0.875rem;">${project.name}</span>
+                <span class="project-name" style="font-size: 0.875rem;">${project.name}</span>
             </div>
         `;
         }).join('');
