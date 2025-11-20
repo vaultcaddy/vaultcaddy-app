@@ -14,6 +14,11 @@ let zoomLevel = 100;
 let autoSaveTimeout = null;
 let hasUnsavedChanges = false;
 
+// 交易記錄分頁變量
+let currentTransactionPage = 1;
+let transactionsPerPage = 10;
+let totalTransactions = 0;
+
 // ============================================
 // 初始化函數
 // ============================================
@@ -867,8 +872,18 @@ function displayBankStatementContent(data) {
     
     console.log('   交易數量:', transactions.length);
     
+    // ✅ 設置全局變量用於分頁
+    totalTransactions = transactions.length;
+    const totalPages = Math.ceil(totalTransactions / transactionsPerPage);
+    
+    // ✅ 計算當前頁的交易記錄
+    const startIndex = (currentTransactionPage - 1) * transactionsPerPage;
+    const endIndex = Math.min(startIndex + transactionsPerPage, totalTransactions);
+    const currentPageTransactions = transactions.slice(startIndex, endIndex);
+    
     let transactionsHTML = '';
-    transactions.forEach((tx, index) => {
+    currentPageTransactions.forEach((tx, pageIndex) => {
+        const actualIndex = startIndex + pageIndex; // 實際在完整數組中的索引
         const amount = parseFloat(tx.amount || 0);
         const balance = parseFloat(tx.balance || 0);
         
@@ -882,13 +897,13 @@ function displayBankStatementContent(data) {
         const description = tx.description || tx.details || tx.memo || '—';
         
         transactionsHTML += `
-            <tr data-index="${index}">
+            <tr data-index="${actualIndex}">
                 <td class="checkbox-cell"><input type="checkbox"></td>
                 <td contenteditable="true" class="editable-cell" data-field="date" style="min-width: 100px;">${tx.date || '—'}</td>
                 <td contenteditable="true" class="editable-cell" data-field="description" style="min-width: 200px;">${description}</td>
                 <td class="amount-cell" style="position: relative;">
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
-                        <button onclick="toggleTransactionType(${index})" 
+                        <button onclick="toggleTransactionType(${actualIndex})" 
                                 style="background: ${isIncome ? '#10b981' : '#ef4444'}; color: white; border: none; border-radius: 4px; padding: 0.25rem 0.5rem; cursor: pointer; font-weight: 600; font-size: 0.875rem; transition: all 0.2s;"
                                 onmouseover="this.style.opacity='0.8'" 
                                 onmouseout="this.style.opacity='1'"
@@ -898,16 +913,39 @@ function displayBankStatementContent(data) {
                         <input type="text" 
                                value="${amountValue.toFixed(2)}" 
                                class="editable-amount" 
-                               data-index="${index}"
+                               data-index="${actualIndex}"
                                data-field="amount"
                                style="border: 1px solid #e5e7eb; border-radius: 4px; padding: 0.25rem 0.5rem; text-align: right; color: ${amountColor}; font-weight: 600; width: 100px;"
-                               onchange="updateTransactionAmount(${index}, this.value, ${isIncome})">
+                               onchange="updateTransactionAmount(${actualIndex}, this.value, ${isIncome})">
                     </div>
                 </td>
                 <td contenteditable="true" class="editable-cell" data-field="balance" style="text-align: right; font-weight: 600; color: #3b82f6;">${formatCurrency(balance)}</td>
             </tr>
         `;
     });
+    
+    // ✅ 分頁控制器 HTML
+    const paginationHTML = totalPages > 1 ? `
+        <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 1rem; padding: 1rem; border-top: 1px solid #e5e7eb;">
+            <button onclick="changeTransactionPage(${currentTransactionPage - 1})" 
+                    ${currentTransactionPage === 1 ? 'disabled' : ''}
+                    style="background: #f3f4f6; border: 1px solid #d1d5db; color: #374151; padding: 0.5rem 1rem; border-radius: 6px; cursor: ${currentTransactionPage === 1 ? 'not-allowed' : 'pointer'}; opacity: ${currentTransactionPage === 1 ? '0.5' : '1'}; transition: all 0.2s;"
+                    onmouseover="if(${currentTransactionPage !== 1}) this.style.background='#e5e7eb'"
+                    onmouseout="this.style.background='#f3f4f6'">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <span style="color: #6b7280; font-size: 0.875rem; font-weight: 500;">
+                ${currentTransactionPage} of ${totalPages}
+            </span>
+            <button onclick="changeTransactionPage(${currentTransactionPage + 1})" 
+                    ${currentTransactionPage === totalPages ? 'disabled' : ''}
+                    style="background: #f3f4f6; border: 1px solid #d1d5db; color: #374151; padding: 0.5rem 1rem; border-radius: 6px; cursor: ${currentTransactionPage === totalPages ? 'not-allowed' : 'pointer'}; opacity: ${currentTransactionPage === totalPages ? '0.5' : '1'}; transition: all 0.2s;"
+                    onmouseover="if(${currentTransactionPage !== totalPages}) this.style.background='#e5e7eb'"
+                    onmouseout="this.style.background='#f3f4f6'">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    ` : '';
     
     dataSection.innerHTML = `
         <div class="transactions-section">
@@ -918,7 +956,7 @@ function displayBankStatementContent(data) {
                 </h3>
             </div>
             <div class="transactions-info">
-                共 ${transactions.length} 筆交易
+                共 ${transactions.length} 筆交易（顯示第 ${startIndex + 1}-${endIndex} 筆）
             </div>
             <table class="transactions-table">
                 <thead>
@@ -934,6 +972,7 @@ function displayBankStatementContent(data) {
                     ${transactionsHTML || '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: #6b7280;">無交易記錄</td></tr>'}
                 </tbody>
             </table>
+            ${paginationHTML}
         </div>
     `;
     
@@ -1395,6 +1434,29 @@ function exportToQBO(data) {
     
     return qbo;
 }
+
+// ============================================
+// 交易記錄分頁函數
+// ============================================
+
+/**
+ * 切換交易記錄頁面
+ */
+window.changeTransactionPage = function(newPage) {
+    const totalPages = Math.ceil(totalTransactions / transactionsPerPage);
+    
+    if (newPage < 1 || newPage > totalPages) {
+        return; // 超出範圍，不處理
+    }
+    
+    currentTransactionPage = newPage;
+    console.log(`📄 切換到交易記錄第 ${newPage} 頁（共 ${totalPages} 頁）`);
+    
+    // 重新渲染交易記錄
+    if (currentDocument && currentDocument.processedData) {
+        displayBankStatementContent(currentDocument.processedData);
+    }
+};
 
 // ============================================
 // 交易記錄編輯函數
