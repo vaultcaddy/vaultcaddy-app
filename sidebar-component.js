@@ -242,7 +242,7 @@ class VaultCaddySidebar {
             }
         });
         
-        // ✅ 設置全域篩選函數
+        // ✅ 設置全域篩選函數（修復：確保只篩選項目名稱，不包括其他內容）
         window.filterProjects = (searchTerm) => {
             console.log('🔍 篩選項目:', searchTerm);
             const projectItems = document.querySelectorAll('.project-item');
@@ -250,16 +250,28 @@ class VaultCaddySidebar {
             
             let visibleCount = 0;
             projectItems.forEach(item => {
-                const projectName = item.textContent.toLowerCase();
+                // ✅ 只提取項目名稱（不包括圖標等其他內容）
+                const projectNameElement = item.querySelector('span:not(.fas)'); // 排除 icon 元素
+                const projectName = projectNameElement ? projectNameElement.textContent.toLowerCase().trim() : item.textContent.toLowerCase().trim();
+                
+                console.log(`   檢查項目: "${projectName}" vs 搜尋詞: "${lowerSearchTerm}"`);
+                
                 if (lowerSearchTerm === '' || projectName.includes(lowerSearchTerm)) {
                     item.style.display = 'flex';
                     visibleCount++;
+                    console.log(`     ✅ 顯示: ${projectName}`);
                 } else {
                     item.style.display = 'none';
+                    console.log(`     ❌ 隱藏: ${projectName}`);
                 }
             });
             
             console.log(`✅ 顯示 ${visibleCount}/${projectItems.length} 個項目`);
+            
+            // ✅ 如果沒有匹配項，顯示提示
+            if (visibleCount === 0 && lowerSearchTerm !== '') {
+                console.log('⚠️ 沒有找到匹配的項目');
+            }
         };
         
         console.log('側邊欄事件已綁定');

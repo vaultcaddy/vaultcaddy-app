@@ -1789,18 +1789,44 @@
                     // ✅ 修復：支持 bank_statement 和 bank_statements
                     const docType = doc.documentType || doc.type || '';
                     if (docType === 'bank_statement' || docType === 'bank_statements') {
-                        // 銀行對帳單：顯示銀行名稱、期末餘額、對帳單期間
-                        vendor = data.bankName || data.bank_name || data.bank || '-';
+                        // 銀行對帳單：顯示銀行名稱 + 持有人 + 帳號、結餘、對帳單期間
+                        const bankName = data.bankName || data.bank_name || data.bank || '';
+                        const accountHolder = data.accountHolder || data.account_holder || '';
+                        const accountNumber = data.accountNumber || data.account_number || '';
                         
-                        // ✅ 提取期末餘額（支持多種格式）
-                        amount = data.closingBalance || data.closing_balance || data.balance || 
-                                 data.endBalance || data.finalBalance;
+                        // ✅ 組合顯示格式（圖5樣式）
+                        const vendorParts = [];
+                        if (bankName) vendorParts.push(bankName);
+                        if (accountHolder) vendorParts.push(accountHolder);
+                        if (accountNumber) vendorParts.push(accountNumber);
+                        vendor = vendorParts.length > 0 ? vendorParts.join(' • ') : '-';
                         
-                        amountDisplay = amount ? `$${parseFloat(amount).toLocaleString('zh-TW', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '-';
+                        // ✅ 提取期初和期末餘額
+                        const openingBalance = data.openingBalance || data.opening_balance || 0;
+                        const closingBalance = data.closingBalance || data.closing_balance || data.balance || 
+                                 data.endBalance || data.finalBalance || 0;
                         
-                        // ✅ 提取對帳單日期
-                        date = data.statementDate || data.statement_date || data.date || 
-                               data.statementPeriod || data.statement_period || data.period || '-';
+                        // ✅ 顯示格式：Start: $X,XXX.XX | End: $Y,YYY.YY
+                        amountDisplay = `Start: $${parseFloat(openingBalance).toLocaleString('zh-TW', {minimumFractionDigits: 2, maximumFractionDigits: 2})}<br>End: $${parseFloat(closingBalance).toLocaleString('zh-TW', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                        
+                        // ✅ 提取對帳單期間並轉換格式（22 Feb 2025 to 22 Mar 2025）
+                        let statementPeriod = data.statementPeriod || data.statement_period || data.period || '';
+                        if (statementPeriod && statementPeriod.includes('to')) {
+                            // 如果是 "2025-02-22 to 2025-03-22" 格式，轉換為 "22 Feb 2025 to 22 Mar 2025"
+                            const parts = statementPeriod.split(' to ');
+                            if (parts.length === 2) {
+                                const startDate = new Date(parts[0]);
+                                const endDate = new Date(parts[1]);
+                                if (!isNaN(startDate) && !isNaN(endDate)) {
+                                    const formatDate = (d) => {
+                                        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                        return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+                                    };
+                                    statementPeriod = `${formatDate(startDate)} to ${formatDate(endDate)}`;
+                                }
+                            }
+                        }
+                        date = statementPeriod || data.statementDate || data.statement_date || data.date || '-';
                     } else {
                         // 發票/收據/一般文檔：顯示供應商、總金額、日期
                         vendor = data.vendor || data.supplier || data.merchantName || data.source || '-';
@@ -1836,7 +1862,7 @@
                             
                             <!-- 金額 -->
                             <td style="padding: 1rem; text-align: right;">
-                                <span style="font-weight: 600; color: #059669; font-size: 0.9375rem;">${amountDisplay}</span>
+                                <div style="font-weight: 600; color: #059669; font-size: 0.875rem; line-height: 1.5;">${amountDisplay}</div>
                             </td>
                             
                             <!-- 日期 -->
