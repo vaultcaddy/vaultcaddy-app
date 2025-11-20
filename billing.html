@@ -51,6 +51,9 @@
     <!-- 導航欄交互功能 -->
     <script defer src="navbar-interactions.js?v=20251108"></script>
     
+    <!-- ✅ 語言管理器（必須在導航欄之前載入）-->
+    <script src="language-manager.js?v=20251120"></script>
+    
     <!-- ✅ 統一導航欄系統：靜態 HTML + navbar-component.js -->
     <script src="navbar-component.js?v=20251120-unified"></script>
     <script src="sidebar-component.js?v=20251107-rebuild"></script>
@@ -774,61 +777,61 @@
             const yearlyBtn = document.querySelector('[data-plan="yearly"]');
             const isYearly = yearlyBtn && yearlyBtn.classList.contains('active');
             
+            // ✅ 新定價方案（2025-11-20 更新）
+            // 月費: HKD $78/月，包含 100 Credits
+            // 年費: HKD $62/月（$744/年），包含 1,200 Credits
+            
             // Stripe Payment Links 映射
             const stripeLinks = {
-                'basic': {
-                    monthly: 'https://buy.stripe.com/bJe7sM9LKctka9obwCf7i01',
-                    yearly: 'https://buy.stripe.com/5kQ3cw0ba64WbdseIOf7i02'
-                },
-                'pro': {
-                    monthly: 'https://buy.stripe.com/aFa3cwga8alc1CSeIOf7i03',
-                    yearly: 'https://buy.stripe.com/3cI14o1fe2SK0yO306f7i04'
-                },
-                'business': {
-                    monthly: 'https://buy.stripe.com/8x200k7DC8d45T87gmf7i05',
-                    yearly: 'https://buy.stripe.com/14A5kEaPOfFw6XccAGf7i06'
-                }
+                'monthly': 'https://buy.stripe.com/test_REPLACE_WITH_YOUR_MONTHLY_LINK',  // TODO: 創建新的 Stripe Payment Link
+                'yearly': 'https://buy.stripe.com/test_REPLACE_WITH_YOUR_YEARLY_LINK'     // TODO: 創建新的 Stripe Payment Link
             };
             
-            // Credits 映射 - 根據方案和時間週期
+            // Credits 映射 - 根據時間週期
             const creditsMap = {
-                'basic': {
-                    monthly: { credits: 200, duration: '1個月' },
-                    yearly: { credits: 2400, duration: '12個月' }
+                'monthly': { 
+                    credits: 100, 
+                    duration: '1個月',
+                    price: 'HKD $78',
+                    displayPrice: 'HKD $78/月'
                 },
-                'pro': {
-                    monthly: { credits: 500, duration: '1個月' },
-                    yearly: { credits: 6000, duration: '12個月' }
-                },
-                'business': {
-                    monthly: { credits: 1200, duration: '1個月' },
-                    yearly: { credits: 14400, duration: '12個月' }
+                'yearly': { 
+                    credits: 1200, 
+                    duration: '12個月',
+                    price: 'HKD $744',
+                    displayPrice: 'HKD $62/月 (年付 $744)'
                 }
             };
             
-            const period = isYearly ? 'yearly' : 'monthly';
-            const paymentLink = stripeLinks[planType]?.[period];
-            const creditsInfo = creditsMap[planType]?.[period];
+            const paymentLink = stripeLinks[planType];
+            const creditsInfo = creditsMap[planType];
             
-            if (!paymentLink) {
-                alert(`找不到 ${planType} 方案的 ${period} 支付連結`);
+            if (!paymentLink || paymentLink.includes('REPLACE_WITH_YOUR')) {
+                console.error('⚠️ Payment link 尚未配置');
+                alert('付費功能正在設置中，請稍後再試或聯繫客服。\n\n提示：管理員需要在 Stripe 創建新的 Payment Links。');
                 return;
             }
             
             console.log('=== 訂閱詳細信息 ===');
-            console.log('方案類型:', planType);
-            console.log('計費週期:', isYearly ? '年費' : '月費');
+            console.log('計費週期:', planType === 'yearly' ? '年費' : '月費');
             console.log('Credits:', creditsInfo.credits);
             console.log('有效期:', creditsInfo.duration);
+            console.log('價格:', creditsInfo.displayPrice);
             console.log('支付連結:', paymentLink);
             
             // 顯示確認訊息
-            const confirmMessage = `確認訂閱 ${planType.toUpperCase()} 方案 (${isYearly ? '年費' : '月費'})？
+            const confirmMessage = `確認訂閱 VaultCaddy Pro (${planType === 'yearly' ? '年費' : '月費'})？
 
 您將獲得：
 • ${creditsInfo.credits} Credits
 • 有效期：${creditsInfo.duration}
-• ${creditsInfo.duration}後自動刪除未使用的 Credits
+• 超出後每頁 HKD $0.5
+• 批次處理無限制文件
+• Excel/CSV 匯出
+• QuickBooks 整合
+• 8 種語言支援
+
+總價：${creditsInfo.displayPrice}
 
 點擊確認後將前往安全支付頁面。`;
             
@@ -840,10 +843,11 @@
                 
                 // 設置訂閱元數據到本地存儲
                 localStorage.setItem('pendingSubscription', JSON.stringify({
-                    planType: planType,
-                    period: period,
+                    planType: 'pro',  // 統一為 Pro 方案
+                    period: planType,  // monthly 或 yearly
                     credits: creditsInfo.credits,
                     duration: creditsInfo.duration,
+                    price: creditsInfo.price,
                     timestamp: new Date().toISOString()
                 }));
                 

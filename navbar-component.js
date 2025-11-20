@@ -712,12 +712,14 @@ class VaultCaddyNavbar {
         // 重新渲染導航欄以更新語言顯示
         this.render();
         
-        // 更新頁面語言 - 使用統一的語言管理器
+        // ✅ 使用新的 LanguageManager
+        const normalizedLangCode = langCode === 'zh-tw' ? 'zh' : langCode;
+        
         if (window.languageManager) {
-            window.languageManager.currentLanguage = langCode;
-            window.languageManager.loadLanguage(langCode);
+            console.log('✅ 使用 LanguageManager 切換語言');
+            window.languageManager.setLanguage(normalizedLangCode);
         } else {
-            // 如果 languageManager 不存在，手動更新翻譯
+            console.warn('⚠️ LanguageManager 未載入，手動更新翻譯');
             this.updatePageTranslations(langCode);
         }
         
@@ -727,7 +729,10 @@ class VaultCaddyNavbar {
         }, 100);
         
         // 顯示通知
-        this.showNotification(`語言已切換為 ${this.getLanguageName(langCode)}`);
+        const langName = this.getLanguageName(langCode);
+        this.showNotification(
+            normalizedLangCode === 'zh' ? `語言已切換為 ${langName}` : `Language changed to ${langName}`
+        );
     }
     
     /**
