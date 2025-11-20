@@ -1,118 +1,212 @@
-# Email 驗證功能實施指南
+# Email 驗證功能設置指南
 
-## 已完成的工作
+## 📧 問題說明（圖1）
+用戶註冊時，Email 驗證碼無法發送。這是因為 Firebase Functions 需要部署並配置 Email 服務。
 
-### 1. Firebase Cloud Functions
-✅ 已添加 3 個 Cloud Functions：
-- `sendVerificationCode` - 發送驗證碼到用戶 email
-- `verifyCode` - 驗證用戶輸入的驗證碼
-- `checkEmailVerified` - 檢查 email 是否已驗證
+## ✅ 代碼狀態
+Email 驗證的所有代碼已經實現：
+- **前端**: `verify-email.html` - 驗證頁面
+- **前端**: `email-verification-check.js` - 驗證檢查模組
+- **後端**: `firebase-functions/index.js` - Firebase Cloud Functions
 
-✅ 已添加 nodemailer 依賴到 package.json
+## 🔧 需要完成的設置
 
-### 2. 驗證碼功能特點
-- 6 位數隨機驗證碼
-- 10 分鐘過期時間
-- 最多 5 次驗證嘗試
-- 防止重複使用
-- 精美的 HTML email 模板
+### 1. 配置 Gmail SMTP (推薦)
 
-### 3. Email 模板內容
-- 歡迎訊息
-- 驗證碼顯示
-- VaultCaddy 功能介紹
-- 立即驗證按鈕
-- 專業的設計
+Firebase Functions 使用 Gmail SMTP 發送驗證碼。需要：
 
-## 待完成的工作
+#### a) 創建 Gmail App Password
+1. 訪問 [Google Account Security](https://myaccount.google.com/security)
+2. 開啟「2-Step Verification」（兩步驟驗證）
+3. 在「App passwords」中創建新密碼
+4. 選擇「Mail」和「Other (Custom name)」-> 輸入「VaultCaddy」
+5. 複製生成的 16 位密碼（例如：`abcd efgh ijkl mnop`）
 
-### 1. 創建驗證頁面
-需要創建 `verify-email.html` 頁面：
-- 輸入驗證碼的表單
-- 倒計時顯示（10 分鐘）
-- 重新發送驗證碼按鈕
-- 驗證成功後跳轉
-
-### 2. 修改註冊流程
-需要修改 `register.html`：
-- 註冊成功後不直接登入
-- 調用 `sendVerificationCode` Cloud Function
-- 跳轉到驗證頁面
-
-### 3. 添加驗證檢查
-需要在主要功能頁面添加檢查：
-- `firstproject.html` - 上傳文件前檢查
-- `account.html` - 進入頁面時檢查
-- 未驗證用戶顯示提示訊息
-
-### 4. 配置 Firebase
-需要設置 Firebase Config：
+#### b) 配置 Firebase Functions
 ```bash
-firebase functions:config:set email.user="your-email@gmail.com"
-firebase functions:config:set email.password="your-app-password"
+# 設置 Email 配置
+firebase functions:config:set email.user="your-gmail@gmail.com" email.password="your-app-password"
+
+# 查看當前配置
+firebase functions:config:get
 ```
 
-### 5. 部署 Cloud Functions
+### 2. 部署 Firebase Functions
+
 ```bash
+# 進入 functions 目錄
 cd firebase-functions
+
+# 安裝依賴（如果尚未安裝）
 npm install
+
+# 部署到 Firebase
+firebase deploy --only functions:sendVerificationCode,functions:verifyCode,functions:checkEmailVerified
+
+# 或部署所有 Functions
 firebase deploy --only functions
 ```
 
-## 使用流程
+### 3. 驗證部署
 
-### 用戶註冊流程：
-1. 用戶在 `register.html` 填寫資料
-2. 點擊註冊按鈕
-3. Firebase Auth 創建用戶
-4. 調用 `sendVerificationCode` 發送驗證碼
-5. 跳轉到 `verify-email.html`
-6. 用戶輸入驗證碼
-7. 調用 `verifyCode` 驗證
-8. 驗證成功後跳轉到 dashboard
+部署成功後，在 Firebase Console 中：
+1. 前往 **Functions** 標籤
+2. 確認以下 Functions 已部署：
+   - `sendVerificationCode` - 發送驗證碼
+   - `verifyCode` - 驗證驗證碼
+   - `checkEmailVerified` - 檢查驗證狀態
 
-### 驗證檢查流程：
-1. 用戶嘗試使用功能
-2. 檢查 email 是否已驗證
-3. 未驗證：顯示提示，跳轉到驗證頁面
-4. 已驗證：正常使用功能
+### 4. 測試 Email 發送
 
-## 安全考慮
+```bash
+# 使用 Firebase CLI 測試
+firebase functions:shell
 
-- ✅ 驗證碼 10 分鐘過期
-- ✅ 最多 5 次驗證嘗試
-- ✅ 防止驗證碼重複使用
-- ✅ 使用 Firebase Auth 保護 API
-- ✅ Email 使用 Gmail App Password
+# 在 shell 中執行
+sendVerificationCode({email: "test@example.com", displayName: "Test User"})
+```
 
-## 下一步
+## 📋 完整的 Email 發送流程
 
-1. 創建 `verify-email.html` 頁面
-2. 修改 `register.html` 註冊流程
-3. 添加驗證檢查到主要頁面
-4. 配置 Firebase email 設置
-5. 部署和測試
+### 1. 註冊時（`auth.html`）
+```javascript
+// 用戶註冊成功後自動發送驗證碼
+const sendCodeFunc = functions.httpsCallable('sendVerificationCode');
+const result = await sendCodeFunc({ 
+    email: userEmail, 
+    displayName: userName 
+});
+```
 
-## 注意事項
+### 2. 驗證頁面（`verify-email.html`）
+```javascript
+// 用戶輸入驗證碼後
+const verifyFunc = functions.httpsCallable('verifyCode');
+const result = await verifyFunc({ 
+    email: userEmail, 
+    code: verificationCode 
+});
 
-### Gmail App Password 設置：
-1. 登入 Google 帳戶
-2. 前往「安全性」設置
-3. 啟用「兩步驟驗證」
-4. 生成「應用程式密碼」
-5. 使用該密碼配置 Firebase
+// 驗證成功後發放 20 Credits
+```
 
-### 測試建議：
-1. 先在本地測試 Cloud Functions
-2. 使用 Firebase Emulator
-3. 測試各種錯誤情況
-4. 確認 email 正確發送
-5. 測試驗證碼過期和重試
+### 3. 檢查驗證狀態（`email-verification-check.js`）
+```javascript
+// 在 dashboard 等頁面檢查
+const checkFunc = functions.httpsCallable('checkEmailVerified');
+const result = await checkFunc({ email: userEmail });
 
-## 預期效果
+if (!result.data.verified) {
+    // 顯示「立即驗證您的 email 即送 20 Credits 試用！」橫幅
+}
+```
 
-- ✅ 提升帳戶安全性
-- ✅ 防止垃圾註冊
-- ✅ 確保 email 有效性
-- ✅ 專業的用戶體驗
-- ✅ 符合行業標準
+## 🎁 驗證獎勵
+
+驗證成功後，用戶會自動獲得：
+- ✅ **20 個免費 Credits**
+- ✅ **可處理 20 頁文檔**
+- ✅ **移除驗證提示橫幅**
+
+## 🚨 故障排除
+
+### 問題 1: Email 未發送
+**症狀**: 用戶點擊「發送驗證碼」後沒有收到 Email
+
+**檢查**:
+1. 確認 Firebase Functions 已部署：`firebase functions:list`
+2. 確認 Email 配置：`firebase functions:config:get`
+3. 查看 Functions 日誌：`firebase functions:log`
+
+### 問題 2: Gmail SMTP 錯誤
+**症狀**: `Username and Password not accepted`
+
+**解決**:
+1. 確認已開啟 Gmail 兩步驟驗證
+2. 使用 App Password，不是 Gmail 密碼
+3. App Password 移除空格：`abcdefghijklmnop`
+
+### 問題 3: Functions 配置丟失
+**症狀**: 部署後 Email 配置消失
+
+**解決**:
+```bash
+# 重新設置配置
+firebase functions:config:set email.user="your-gmail@gmail.com" email.password="your-app-password"
+
+# 部署
+firebase deploy --only functions
+```
+
+## 📊 監控和日誌
+
+### 查看 Functions 執行日誌
+```bash
+# 實時日誌
+firebase functions:log
+
+# 查看特定 Function
+firebase functions:log sendVerificationCode
+```
+
+### Firebase Console
+1. 前往 [Firebase Console](https://console.firebase.google.com)
+2. 選擇項目
+3. **Functions** -> 選擇 Function -> **Logs**
+
+## 🔒 安全最佳實踐
+
+1. **不要** 在代碼中硬編碼 Email 密碼
+2. **使用** Firebase Functions Config 或 Secret Manager
+3. **定期** 更換 Gmail App Password
+4. **監控** Functions 執行次數，防止濫用
+5. **設置** Firebase Functions 配額限制
+
+## 📝 相關文件
+
+- **前端代碼**: 
+  - `verify-email.html` - 驗證頁面
+  - `email-verification-check.js` - 驗證檢查
+  - `auth.html` - 註冊頁面
+
+- **後端代碼**:
+  - `firebase-functions/index.js` (行 453-555) - `sendVerificationCode`
+  - `firebase-functions/index.js` (行 557-600) - `verifyCode`
+  - `firebase-functions/index.js` (行 602-650) - `checkEmailVerified`
+
+## 🎯 快速開始命令
+
+```bash
+# 1. 配置 Email
+firebase functions:config:set email.user="your-gmail@gmail.com" email.password="your-app-password"
+
+# 2. 部署 Functions
+cd firebase-functions
+npm install
+firebase deploy --only functions
+
+# 3. 測試
+# 訪問 https://vaultcaddy.com/auth.html
+# 註冊新用戶
+# 檢查 Email 收件箱
+```
+
+## ✅ 完成檢查清單
+
+- [ ] Gmail App Password 已創建
+- [ ] Firebase Functions Config 已設置
+- [ ] Firebase Functions 已部署
+- [ ] 測試發送驗證碼成功
+- [ ] 測試驗證驗證碼成功
+- [ ] 測試驗證獎勵（20 Credits）發放成功
+- [ ] 驗證橫幅正確顯示/隱藏
+
+---
+
+## 📞 需要協助？
+
+如果遇到問題，請：
+1. 檢查 Firebase Functions 日誌：`firebase functions:log`
+2. 查看 Browser Console 錯誤（F12）
+3. 確認 Email 配置：`firebase functions:config:get`
+4. 查閱 [Firebase Functions 文檔](https://firebase.google.com/docs/functions)
