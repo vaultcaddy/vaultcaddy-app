@@ -1,6 +1,33 @@
 /**
- * 銀行對帳單導出模塊
- * 支持多種會計軟件格式
+ * ============================================
+ * 📊 VaultCaddy 銀行對帳單導出模塊
+ * ============================================
+ * 
+ * 支持多種會計軟件格式：
+ * 
+ * 1️⃣ 標準 CSV - 完整的銀行對帳單格式
+ *    - 包含所有欄位（客戶名稱、帳戶號碼、銀行名稱等）
+ *    - 每筆交易單獨一行
+ *    - 適合需要詳細信息的用戶
+ * 
+ * 2️⃣ Xero CSV（官方最小格式）
+ *    - 格式：Date (DD/MM/YYYY), Description, Amount
+ *    - 金額：正數 = 收入，負數 = 支出
+ *    - 符合 Xero Bank Statement Import 官方要求
+ *    - 100% 兼容所有 Xero 版本
+ * 
+ * 3️⃣ QuickBooks CSV（官方最小格式）
+ *    - 格式：Date (MM/DD/YYYY), Description, Amount
+ *    - 金額：正數 = 收入，負數 = 支出
+ *    - 符合 QuickBooks Online 官方要求
+ *    - 100% 兼容 QuickBooks Online
+ * 
+ * 📝 註：Xero 和 QuickBooks 格式使用官方最小格式
+ *    - 優點：100% 兼容，不會有導入錯誤
+ *    - 缺點：缺少額外信息（Payee, Reference 等）
+ *    - 用戶可以在導入後手動補充額外信息
+ * 
+ * ============================================
  */
 
 // ==================== 標準 CSV 格式（圖1）====================
@@ -144,87 +171,16 @@ function generateBankStatementCSV(docs) {
     return rows.join('\n');
 }
 
-// ==================== Xero CSV 格式（圖3）====================
+// ==================== Xero CSV 格式（官方最小格式）====================
 /**
- * 生成 Xero CSV
- * 格式參考：圖3 - Xero 導出格式
+ * 生成 Xero CSV（官方最小格式）
+ * 官方文檔：Xero Bank Statement Import 最小要求
+ * 字段：Date (DD/MM/YYYY), Description, Amount
  */
 function generateXeroCSV(docs) {
-    console.log('📊 生成 Xero CSV');
+    console.log('📊 生成 Xero CSV（官方最小格式）');
     
-    // Xero CSV 標題（與圖3一致）
-    const headers = [
-        'Date',
-        'Amount',
-        'Payee',
-        'Description',
-        'Reference',
-        'Check Number'
-    ];
-    
-    const rows = [headers.join(',')];
-    
-    docs.forEach(doc => {
-        const data = doc.processedData || {};
-        
-        // 只處理銀行對帳單
-        const docType = (doc.documentType || doc.type || '').toLowerCase();
-        if (!docType.includes('bank') && !docType.includes('statement')) {
-            return;
-        }
-        
-        // 提取交易記錄
-        const transactions = data.transactions || data.transaction || [];
-        
-        if (!Array.isArray(transactions) || transactions.length === 0) {
-            return;
-        }
-        
-        // 為每筆交易生成一行
-        transactions.forEach(tx => {
-            const txDate = formatDateForXero(tx.date || tx.transactionDate || '');
-            const amount = parseFloat(tx.amount || 0).toFixed(2);
-            
-            // Payee（收款人/付款對象）- 從描述中提取
-            let payee = '';
-            const description = tx.description || '';
-            
-            // 提取常見的收款人格式
-            // 例如: "POON H** K***" 或 "TUG COMPANY LIMITED"
-            const payeeMatch = description.match(/([A-Z][A-Z\s\*]+(?:LIMITED|LTD|COMPANY|CO\.)?)/);
-            if (payeeMatch) {
-                payee = payeeMatch[1].trim();
-            }
-            
-            const txDescription = tx.description || tx.desc || '';
-            const reference = tx.reference || tx.ref || '';
-            const checkNumber = tx.checkNumber || tx.check_number || '';
-            
-            const row = [
-                txDate,
-                amount,
-                escapeCSV(payee),
-                escapeCSV(txDescription),
-                escapeCSV(reference),
-                escapeCSV(checkNumber)
-            ];
-            
-            rows.push(row.join(','));
-        });
-    });
-    
-    return rows.join('\n');
-}
-
-// ==================== QuickBooks CSV 格式（圖4）====================
-/**
- * 生成 QuickBooks CSV
- * 格式參考：圖4 - QuickBooks 導出格式
- */
-function generateQuickBooksCSV(docs) {
-    console.log('📊 生成 QuickBooks CSV');
-    
-    // QuickBooks CSV 標題（與圖4一致）
+    // Xero 官方最小格式：只需要 3 個字段
     const headers = [
         'Date',
         'Description',
@@ -251,14 +207,89 @@ function generateQuickBooksCSV(docs) {
         
         // 為每筆交易生成一行
         transactions.forEach(tx => {
-            const txDate = formatDateForQuickBooks(tx.date || tx.transactionDate || '');
+            // Xero 要求日期格式為 DD/MM/YYYY
+            const txDate = formatDateForXero(tx.date || tx.transactionDate || '');
             const txDescription = tx.description || tx.desc || '';
-            const amount = parseFloat(tx.amount || 0).toFixed(2);
+            
+            // Xero 金額格式：正數 = 收入，負數 = 支出
+            let amount = parseFloat(tx.amount || 0);
+            const type = (tx.type || '').toLowerCase();
+            
+            // 確保金額符號正確
+            if (type.includes('debit') || type.includes('withdrawal') || type.includes('支出')) {
+                amount = -Math.abs(amount); // 支出為負數
+            } else if (type.includes('credit') || type.includes('deposit') || type.includes('收入') || type.includes('入賬')) {
+                amount = Math.abs(amount); // 收入為正數
+            }
             
             const row = [
                 txDate,
                 escapeCSV(txDescription),
-                amount
+                amount.toFixed(2)
+            ];
+            
+            rows.push(row.join(','));
+        });
+    });
+    
+    return rows.join('\n');
+}
+
+// ==================== QuickBooks CSV 格式（官方最小格式）====================
+/**
+ * 生成 QuickBooks CSV（官方最小格式）
+ * 官方文檔：QuickBooks Online Bank Transactions Import
+ * 字段：Date (MM/DD/YYYY), Description, Amount
+ */
+function generateQuickBooksCSV(docs) {
+    console.log('📊 生成 QuickBooks CSV（官方最小格式）');
+    
+    // QuickBooks 官方最小格式：只需要 3 個字段
+    const headers = [
+        'Date',
+        'Description',
+        'Amount'
+    ];
+    
+    const rows = [headers.join(',')];
+    
+    docs.forEach(doc => {
+        const data = doc.processedData || {};
+        
+        // 只處理銀行對帳單
+        const docType = (doc.documentType || doc.type || '').toLowerCase();
+        if (!docType.includes('bank') && !docType.includes('statement')) {
+            return;
+        }
+        
+        // 提取交易記錄
+        const transactions = data.transactions || data.transaction || [];
+        
+        if (!Array.isArray(transactions) || transactions.length === 0) {
+            return;
+        }
+        
+        // 為每筆交易生成一行
+        transactions.forEach(tx => {
+            // QuickBooks 要求日期格式為 MM/DD/YYYY
+            const txDate = formatDateForQuickBooks(tx.date || tx.transactionDate || '');
+            const txDescription = tx.description || tx.desc || '';
+            
+            // QuickBooks 金額格式：正數 = 收入，負數 = 支出
+            let amount = parseFloat(tx.amount || 0);
+            const type = (tx.type || '').toLowerCase();
+            
+            // 確保金額符號正確
+            if (type.includes('debit') || type.includes('withdrawal') || type.includes('支出')) {
+                amount = -Math.abs(amount); // 支出為負數
+            } else if (type.includes('credit') || type.includes('deposit') || type.includes('收入') || type.includes('入賬')) {
+                amount = Math.abs(amount); // 收入為正數
+            }
+            
+            const row = [
+                txDate,
+                escapeCSV(txDescription),
+                amount.toFixed(2)
             ];
             
             rows.push(row.join(','));
@@ -291,7 +322,7 @@ function formatDate(dateStr) {
 }
 
 /**
- * 格式化日期為 MM/DD/YYYY（Xero）
+ * 格式化日期為 DD/MM/YYYY（Xero 官方格式）
  */
 function formatDateForXero(dateStr) {
     if (!dateStr) return '';
@@ -300,11 +331,12 @@ function formatDateForXero(dateStr) {
         const date = new Date(dateStr);
         if (isNaN(date.getTime())) return dateStr;
         
-        const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
         const year = date.getFullYear();
         
-        return `${month}/${day}/${year}`;
+        // Xero 官方要求：DD/MM/YYYY
+        return `${day}/${month}/${year}`;
     } catch (e) {
         return dateStr;
     }
@@ -365,10 +397,25 @@ function downloadCSV(content, filename) {
     URL.revokeObjectURL(url);
 }
 
-// ==================== 導出主函數 ====================
+// ==================== 導出到全局命名空間 ====================
 
 /**
- * 導出銀行對帳單（多種格式）
+ * 將導出函數綁定到全局命名空間
+ * 供 firstproject.html 的 exportDocuments 函數調用
+ */
+window.BankStatementExport = {
+    generateBankStatementCSV: generateBankStatementCSV,
+    generateXeroCSV: generateXeroCSV,
+    generateQuickBooksCSV: generateQuickBooksCSV,
+    formatDate: formatDate,
+    formatDateForXero: formatDateForXero,
+    formatDateForQuickBooks: formatDateForQuickBooks,
+    escapeCSV: escapeCSV,
+    downloadCSV: downloadCSV
+};
+
+/**
+ * 向後兼容：保留舊的導出主函數
  * @param {Array} docs - 文檔列表
  * @param {String} format - 導出格式 ('standard', 'xero', 'quickbooks')
  */
@@ -415,4 +462,7 @@ window.exportBankStatements = function(docs, format = 'standard') {
 };
 
 console.log('✅ 銀行對帳單導出模塊已載入');
+console.log('   可用方法: window.BankStatementExport.generateBankStatementCSV()');
+console.log('   可用方法: window.BankStatementExport.generateXeroCSV()');
+console.log('   可用方法: window.BankStatementExport.generateQuickBooksCSV()');
 

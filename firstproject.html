@@ -1390,15 +1390,53 @@
                                 <span>Export</span>
                                 <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
                             </button>
-                            <div id="exportMenu" class="export-menu" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 0.5rem; background: white; border: 1px solid #e5e7eb; border-radius: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-width: 200px; z-index: 1000;">
+                            <div id="exportMenu" class="export-menu" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 0.5rem; background: white; border: 1px solid #e5e7eb; border-radius: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-width: 250px; z-index: 1000;">
                                 <div style="padding: 0.5rem 0;">
+                                    <!-- 通用格式 -->
                                     <button onclick="exportDocuments('csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
                                         <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
                                         <div>
-                                            <div style="font-weight: 500;">CSV</div>
-                                            <div style="font-size: 0.75rem; color: #6b7280;">通用格式</div>
+                                            <div style="font-weight: 500;">CSV（通用）</div>
+                                            <div style="font-size: 0.75rem; color: #6b7280;">所有文檔類型</div>
                                         </div>
                                     </button>
+                                    
+                                    <!-- 分隔線 -->
+                                    <div style="height: 1px; background: #e5e7eb; margin: 0.5rem 0;"></div>
+                                    
+                                    <!-- 銀行對帳單專用格式 -->
+                                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">銀行對帳單</div>
+                                    
+                                    <button onclick="exportDocuments('bank_statement_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                                        <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
+                                        <div>
+                                            <div style="font-weight: 500;">標準 CSV</div>
+                                            <div style="font-size: 0.75rem; color: #6b7280;">完整欄位格式</div>
+                                        </div>
+                                    </button>
+                                    
+                                    <button onclick="exportDocuments('xero_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                                        <i class="fas fa-file-csv" style="color: #2563eb; width: 20px;"></i>
+                                        <div>
+                                            <div style="font-weight: 500;">Xero CSV</div>
+                                            <div style="font-size: 0.75rem; color: #6b7280;">官方最小格式</div>
+                                        </div>
+                                    </button>
+                                    
+                                    <button onclick="exportDocuments('quickbooks_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                                        <i class="fas fa-file-csv" style="color: #059669; width: 20px;"></i>
+                                        <div>
+                                            <div style="font-weight: 500;">QuickBooks CSV</div>
+                                            <div style="font-size: 0.75rem; color: #6b7280;">官方最小格式</div>
+                                        </div>
+                                    </button>
+                                    
+                                    <!-- 分隔線 -->
+                                    <div style="height: 1px; background: #e5e7eb; margin: 0.5rem 0;"></div>
+                                    
+                                    <!-- QuickBooks 專用格式 -->
+                                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">QuickBooks</div>
+                                    
                                     <button onclick="exportDocuments('iif')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
                                         <i class="fas fa-file-alt" style="color: #3b82f6; width: 20px;"></i>
                                         <div>
@@ -1406,6 +1444,7 @@
                                             <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Desktop</div>
                                         </div>
                                     </button>
+                                    
                                     <button onclick="exportDocuments('qbo')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
                                         <i class="fas fa-cloud" style="color: #8b5cf6; width: 20px;"></i>
                                         <div>
@@ -2778,6 +2817,46 @@
                         fileName = `vaultcaddy_export_${new Date().toISOString().split('T')[0]}.csv`;
                         mimeType = 'text/csv;charset=utf-8;';
                         break;
+                    
+                    case 'bank_statement_csv':
+                        // 標準銀行對帳單 CSV（完整欄位）
+                        if (window.BankStatementExport) {
+                            exportContent = window.BankStatementExport.generateBankStatementCSV(docsToExport);
+                            fileName = `BankStatement_${new Date().toISOString().split('T')[0]}.csv`;
+                            mimeType = 'text/csv;charset=utf-8;';
+                            console.log('✅ 標準銀行對帳單 CSV 導出');
+                        } else {
+                            alert('銀行對帳單導出模塊未載入，請刷新頁面後重試');
+                            return;
+                        }
+                        break;
+                    
+                    case 'xero_csv':
+                        // Xero CSV（官方最小格式）
+                        if (window.BankStatementExport) {
+                            exportContent = window.BankStatementExport.generateXeroCSV(docsToExport);
+                            fileName = `BankStatement_${new Date().toISOString().split('T')[0]}_Xero.csv`;
+                            mimeType = 'text/csv;charset=utf-8;';
+                            console.log('✅ Xero CSV 導出（官方最小格式）');
+                        } else {
+                            alert('銀行對帳單導出模塊未載入，請刷新頁面後重試');
+                            return;
+                        }
+                        break;
+                    
+                    case 'quickbooks_csv':
+                        // QuickBooks CSV（官方最小格式）
+                        if (window.BankStatementExport) {
+                            exportContent = window.BankStatementExport.generateQuickBooksCSV(docsToExport);
+                            fileName = `BankStatement_${new Date().toISOString().split('T')[0]}_QuickBooks.csv`;
+                            mimeType = 'text/csv;charset=utf-8;';
+                            console.log('✅ QuickBooks CSV 導出（官方最小格式）');
+                        } else {
+                            alert('銀行對帳單導出模塊未載入，請刷新頁面後重試');
+                            return;
+                        }
+                        break;
+                    
                     case 'iif':
                         exportContent = generateIIF(docsToExport);
                         fileName = `vaultcaddy_export_${new Date().toISOString().split('T')[0]}.iif`;
