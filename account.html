@@ -425,9 +425,9 @@
                         </select>
                     </div>
 
-                    <div style="overflow-x: auto; background: white; border-radius: 8px; border: 1px solid #e5e7eb;">
+                    <div style="overflow-x: auto; max-height: 600px; overflow-y: auto; background: white; border-radius: 8px; border: 1px solid #e5e7eb;">
                         <table style="width: 100%; border-collapse: collapse;">
-                            <thead style="background: #f9fafb;">
+                            <thead style="background: #f9fafb; position: sticky; top: 0; z-index: 10;">
                                 <tr>
                                     <th style="text-align: left; padding: 1rem; font-weight: 600; color: #6b7280; font-size: 0.875rem; border-bottom: 2px solid #e5e7eb;">日期</th>
                                     <th style="text-align: left; padding: 1rem; font-weight: 600; color: #6b7280; font-size: 0.875rem; border-bottom: 2px solid #e5e7eb;">描述</th>
@@ -834,13 +834,13 @@
                 
                 const userId = window.simpleAuth.currentUser.uid;
                 
-                // 從 Firestore 獲取 Credits 歷史記錄
+                // 從 Firestore 獲取 Credits 歷史記錄（最多顯示10個）
                 const historySnapshot = await firebase.firestore()
                     .collection('users')
                     .doc(userId)
                     .collection('creditsHistory')
                     .orderBy('createdAt', 'desc')
-                    .limit(50)
+                    .limit(10)
                     .get();
                 
                 if (historySnapshot.empty) {
