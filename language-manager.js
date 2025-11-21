@@ -340,6 +340,140 @@
         'email.verify_button': {
             'zh': '立即驗證',
             'en': 'Verify Now'
+        },
+        
+        // 演示動畫
+        'demo.invoice_title': {
+            'zh': '🧾 智能發票處理',
+            'en': '🧾 Smart Invoice Processing'
+        },
+        'demo.invoice_scanning': {
+            'zh': '📄 發票掃描中...',
+            'en': '📄 Scanning invoice...'
+        },
+        'demo.total': {
+            'zh': '總計:',
+            'en': 'Total:'
+        },
+        'demo.ai_analyzing': {
+            'zh': '🤖 AI 分析中...',
+            'en': '🤖 AI analyzing...'
+        },
+        'demo.auto_extract': {
+            'zh': '✅ 自動擷取完成',
+            'en': '✅ Auto-extraction complete'
+        },
+        'demo.upload_quickbooks': {
+            'zh': '📊 已上傳至QuickBooks',
+            'en': '📊 Uploaded to QuickBooks'
+        },
+        'demo.bank_title': {
+            'zh': '🏦 銀行對賬單分析',
+            'en': '🏦 Bank Statement Analysis'
+        },
+        'demo.bank_analyzing': {
+            'zh': '🏛️ 對賬單分析中...',
+            'en': '🏛️ Analyzing statement...'
+        },
+        'demo.analysis_complete': {
+            'zh': '已分析完成',
+            'en': 'Analysis complete'
+        },
+        'demo.auto_categorize': {
+            'zh': '✅ 收支自動分類',
+            'en': '✅ Auto-categorized'
+        },
+        'demo.save_time': {
+            'zh': '📈 節省90%輸入時間',
+            'en': '📈 Save 90% input time'
+        },
+        
+        // 優勢展示
+        'benefits.accurate': {
+            'zh': '數據準確度大幅提升',
+            'en': 'Greatly improved data accuracy'
+        },
+        'benefits.integrate': {
+            'zh': '與主流會計軟件無縫對接，工作流程更順暢',
+            'en': 'Seamless integration with mainstream accounting software'
+        },
+        'benefits.save_time': {
+            'zh': '節省90%時間，專注業務發展',
+            'en': 'Save 90% time, focus on business growth'
+        },
+        
+        // 功能展示
+        'features.invoice_title': {
+            'zh': '功能一：智能發票收據處理',
+            'en': 'Feature 1: Smart Invoice & Receipt Processing'
+        },
+        'features.ocr': {
+            'zh': 'OCR技術',
+            'en': 'OCR Technology'
+        },
+        'features.ocr_desc': {
+            'zh': '準確擷取發票與收據資料',
+            'en': 'Accurately extract invoice and receipt data'
+        },
+        'features.auto_classify': {
+            'zh': '自動分類記錄',
+            'en': 'Auto-classification'
+        },
+        'features.auto_classify_desc': {
+            'zh': '智能歸類交易項目',
+            'en': 'Smart categorization of transactions'
+        },
+        'features.realtime_sync': {
+            'zh': '即時同步更新',
+            'en': 'Real-time sync'
+        },
+        'features.realtime_sync_desc': {
+            'zh': '數據實時同步至系統',
+            'en': 'Data synced in real-time'
+        },
+        'features.efficient': {
+            'zh': '大幅提升效率',
+            'en': 'Greatly improved efficiency'
+        },
+        'features.efficient_desc': {
+            'zh': '減少90%人手操作時間',
+            'en': 'Reduce 90% manual operation time'
+        },
+        'features.bank_title': {
+            'zh': '功能二：銀行月結單/對賬單智能分析',
+            'en': 'Feature 2: Smart Bank Statement Analysis'
+        },
+        'features.extract_transactions': {
+            'zh': '自動提取交易記錄',
+            'en': 'Auto-extract transactions'
+        },
+        'features.extract_transactions_desc': {
+            'zh': '精準識別收入支出明細',
+            'en': 'Accurately identify income and expenses'
+        },
+        'features.analyze_income': {
+            'zh': '分析收入來源',
+            'en': 'Analyze income sources'
+        },
+        'features.analyze_income_desc': {
+            'zh': '自動分類營業收入項目',
+            'en': 'Auto-categorize revenue items'
+        },
+        'features.categorize_expenses': {
+            'zh': '費用支出歸類',
+            'en': 'Categorize expenses'
+        },
+        'features.categorize_expenses_desc': {
+            'zh': '智能識別各項營運開支',
+            'en': 'Smart identification of operating costs'
+        },
+        'features.export': {
+            'zh': '轉賬記錄整理',
+            'en': 'Export transaction records'
+        },
+        'features.export_desc': {
+            'zh': '導出到Quickbook online，Xero online，MYOB等常用會計軟件',
+            'en': 'Export to QuickBooks, Xero, MYOB and other accounting software'
         }
     };
 
