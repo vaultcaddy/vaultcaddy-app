@@ -1270,7 +1270,7 @@ function resetZoom() {
 // ============================================
 
 function toggleExportMenu(event) {
-    event.stopPropagation();
+    if (event) event.stopPropagation();
     const menu = document.getElementById('exportMenu');
     menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
 }
@@ -1300,6 +1300,63 @@ async function exportDocument(format) {
         switch (format) {
             case 'csv':
                 content = exportToCSV(data);
+                mimeType = 'text/csv';
+                fileExtension = 'csv';
+                break;
+            
+            case 'bank_statement_csv':
+                // 標準銀行對帳單 CSV
+                if (window.BankStatementExport) {
+                    content = window.BankStatementExport.generateBankStatementCSV([currentDocument]);
+                } else {
+                    content = exportToCSV(data);
+                }
+                mimeType = 'text/csv';
+                fileExtension = 'csv';
+                break;
+            
+            case 'xero_csv':
+                // Xero CSV 格式
+                if (window.BankStatementExport) {
+                    content = window.BankStatementExport.generateXeroCSV([currentDocument]);
+                } else {
+                    alert('Xero 導出模塊未載入');
+                    return;
+                }
+                mimeType = 'text/csv';
+                fileExtension = 'csv';
+                break;
+            
+            case 'quickbooks_csv':
+                // QuickBooks CSV 格式
+                if (window.BankStatementExport) {
+                    content = window.BankStatementExport.generateQuickBooksCSV([currentDocument]);
+                } else {
+                    alert('QuickBooks 導出模塊未載入');
+                    return;
+                }
+                mimeType = 'text/csv';
+                fileExtension = 'csv';
+                break;
+            
+            case 'invoice_summary_csv':
+                // 發票標準 CSV（總數）
+                if (window.InvoiceExport) {
+                    content = window.InvoiceExport.generateStandardInvoiceCSV([currentDocument]);
+                } else {
+                    content = exportToCSV(data);
+                }
+                mimeType = 'text/csv';
+                fileExtension = 'csv';
+                break;
+            
+            case 'invoice_detailed_csv':
+                // 發票完整交易數據 CSV
+                if (window.InvoiceExport) {
+                    content = window.InvoiceExport.generateDetailedInvoiceCSV([currentDocument]);
+                } else {
+                    content = exportToCSV(data);
+                }
                 mimeType = 'text/csv';
                 fileExtension = 'csv';
                 break;
