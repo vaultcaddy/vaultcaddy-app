@@ -542,15 +542,7 @@ window.rotateRight = function() {
     updateImageTransform();
 };
 
-window.previousPage = function() {
-    // 暫時禁用，因為目前只支持單頁
-    console.log('上一頁功能暫未實現');
-};
-
-window.nextPage = function() {
-    // 暫時禁用，因為目前只支持單頁
-    console.log('下一頁功能暫未實現');
-};
+// ✅ 翻頁功能已在上方實現（lines 420-435），此處刪除重複定義
 
 function updateImageTransform() {
     const container = document.getElementById('image-container');
