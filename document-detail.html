@@ -141,7 +141,7 @@
             background: #ffffff;
             border-bottom: 1px solid #e5e7eb;
             padding: 1rem 2rem;
-            padding-top: 20pt; /* ✅ 調整 Back to dashboard 與導航欄的距離為 20pt */
+            padding-top: 10pt; /* ✅ 圖7優化：調整 Back to dashboard 與導航欄的距離為 10pt */
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -258,6 +258,102 @@
             width: 100%;
             display: block;
             border-radius: 4px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .pdf-page img:hover {
+            transform: scale(1.02);
+        }
+        
+        /* PDF 放大模態框 */
+        .pdf-modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.95);
+            overflow: auto;
+        }
+        
+        .pdf-modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .pdf-modal-content {
+            position: relative;
+            max-width: 95%;
+            max-height: 95vh;
+            overflow: auto;
+        }
+        
+        .pdf-modal-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .pdf-modal-close {
+            position: fixed;
+            top: 20px;
+            right: 40px;
+            color: white;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 10001;
+            background: rgba(0, 0, 0, 0.5);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+        }
+        
+        .pdf-modal-close:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+        
+        .pdf-modal-controls {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px 25px;
+            border-radius: 50px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            z-index: 10001;
+        }
+        
+        .pdf-modal-btn {
+            background: white;
+            color: #1f2937;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .pdf-modal-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .pdf-modal-info {
+            color: white;
+            font-weight: 600;
         }
         
         /* 右側數據面板 */
@@ -791,10 +887,135 @@
         </div>
     </div>
     
+    <!-- PDF 放大模態框 -->
+    <div id="pdfModal" class="pdf-modal">
+        <span class="pdf-modal-close" onclick="closePdfModal()">&times;</span>
+        <div class="pdf-modal-content">
+            <img id="pdfModalImage" class="pdf-modal-image" src="" alt="PDF 放大檢視">
+        </div>
+        <div class="pdf-modal-controls">
+            <button class="pdf-modal-btn" onclick="previousModalPage()">
+                <i class="fas fa-chevron-left"></i> 上一頁
+            </button>
+            <span class="pdf-modal-info">
+                <span id="modalCurrentPage">1</span> / <span id="modalTotalPages">1</span>
+            </button>
+            <button class="pdf-modal-btn" onclick="nextModalPage()">
+                下一頁 <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+    
     <!-- Export 模塊 -->
     <script src="bank-statement-export.js"></script>
     <script src="invoice-export.js"></script>
     
     <script src="document-detail-new.js?v=20251107-rewrite"></script>
+    
+    <!-- PDF 放大查看功能 -->
+    <script>
+        let modalCurrentPageIndex = 0;
+        let modalPdfPages = [];
+        
+        // 初始化 PDF 放大功能
+        function initPdfZoom() {
+            // 獲取所有 PDF 頁面圖片
+            const pdfImages = document.querySelectorAll('.pdf-page img');
+            modalPdfPages = Array.from(pdfImages);
+            
+            // 為每個圖片添加點擊事件
+            pdfImages.forEach((img, index) => {
+                img.addEventListener('click', function() {
+                    openPdfModal(index);
+                });
+            });
+        }
+        
+        // 打開模態框
+        function openPdfModal(pageIndex) {
+            const modal = document.getElementById('pdfModal');
+            const modalImage = document.getElementById('pdfModalImage');
+            
+            if (modalPdfPages.length === 0) return;
+            
+            modalCurrentPageIndex = pageIndex;
+            modalImage.src = modalPdfPages[pageIndex].src;
+            modal.classList.add('active');
+            
+            updateModalPageInfo();
+            
+            // 防止背景滾動
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // 關閉模態框
+        function closePdfModal() {
+            const modal = document.getElementById('pdfModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+        
+        // 上一頁
+        function previousModalPage() {
+            if (modalCurrentPageIndex > 0) {
+                modalCurrentPageIndex--;
+                updateModalImage();
+            }
+        }
+        
+        // 下一頁
+        function nextModalPage() {
+            if (modalCurrentPageIndex < modalPdfPages.length - 1) {
+                modalCurrentPageIndex++;
+                updateModalImage();
+            }
+        }
+        
+        // 更新模態框圖片
+        function updateModalImage() {
+            const modalImage = document.getElementById('pdfModalImage');
+            modalImage.src = modalPdfPages[modalCurrentPageIndex].src;
+            updateModalPageInfo();
+        }
+        
+        // 更新頁碼信息
+        function updateModalPageInfo() {
+            document.getElementById('modalCurrentPage').textContent = modalCurrentPageIndex + 1;
+            document.getElementById('modalTotalPages').textContent = modalPdfPages.length;
+        }
+        
+        // 鍵盤導航
+        document.addEventListener('keydown', function(e) {
+            const modal = document.getElementById('pdfModal');
+            if (!modal.classList.contains('active')) return;
+            
+            if (e.key === 'Escape') {
+                closePdfModal();
+            } else if (e.key === 'ArrowLeft') {
+                previousModalPage();
+            } else if (e.key === 'ArrowRight') {
+                nextModalPage();
+            }
+        });
+        
+        // 點擊背景關閉
+        document.getElementById('pdfModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePdfModal();
+            }
+        });
+        
+        // 延遲初始化，等待 PDF 加載完成
+        setTimeout(() => {
+            initPdfZoom();
+        }, 2000);
+        
+        // 監聽 PDF 加載完成事件（如果有）
+        window.addEventListener('pdfLoaded', function() {
+            setTimeout(() => {
+                initPdfZoom();
+            }, 500);
+        });
+    </script>
 </body>
 </html>
