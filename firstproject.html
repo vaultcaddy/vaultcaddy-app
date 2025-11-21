@@ -56,6 +56,7 @@
     
     <!-- ✅ 銀行對帳單導出模塊 -->
     <script src="bank-statement-export.js"></script>
+    <script src="invoice-export.js"></script>
     
     <!-- ✅ Firebase SDK（CDN 版本）-->
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
@@ -1434,6 +1435,28 @@
                                     <!-- 分隔線 -->
                                     <div style="height: 1px; background: #e5e7eb; margin: 0.5rem 0;"></div>
                                     
+                                    <!-- 發票專用格式 -->
+                                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">發票</div>
+                                    
+                                    <button onclick="exportDocuments('invoice_summary_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                                        <i class="fas fa-file-csv" style="color: #f59e0b; width: 20px;"></i>
+                                        <div>
+                                            <div style="font-weight: 500;">標準 CSV（總數）</div>
+                                            <div style="font-size: 0.75rem; color: #6b7280;">快速對帳</div>
+                                        </div>
+                                    </button>
+                                    
+                                    <button onclick="exportDocuments('invoice_detailed_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                                        <i class="fas fa-file-csv" style="color: #f59e0b; width: 20px;"></i>
+                                        <div>
+                                            <div style="font-weight: 500;">完整交易數據 CSV</div>
+                                            <div style="font-size: 0.75rem; color: #6b7280;">詳細記錄</div>
+                                        </div>
+                                    </button>
+                                    
+                                    <!-- 分隔線 -->
+                                    <div style="height: 1px; background: #e5e7eb; margin: 0.5rem 0;"></div>
+                                    
                                     <!-- QuickBooks 專用格式 -->
                                     <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">QuickBooks</div>
                                     
@@ -2677,6 +2700,31 @@
                 deleteBtn.style.cursor = 'not-allowed';
                 deleteCount.style.display = 'none';
             }
+            
+            // ✅ 同時更新 Export 按鈕
+            updateExportButton();
+        }
+        
+        // ✅ 新增：更新 Export 按鈕顯示選中數量
+        function updateExportButton() {
+            const selectedCheckboxes = document.querySelectorAll('.document-checkbox:checked');
+            const selectedCount = selectedCheckboxes.length;
+            
+            // 查找 Export 按鈕（可能有多個，更新所有）
+            const exportButtons = document.querySelectorAll('[onclick*="toggleExportMenu"]');
+            
+            exportButtons.forEach(btn => {
+                const icon = btn.querySelector('i') || '';
+                const iconHTML = icon ? '<i class="fas fa-download"></i> ' : '';
+                
+                if (selectedCount > 0) {
+                    btn.innerHTML = `${iconHTML}Export ${selectedCount}`;
+                } else {
+                    btn.innerHTML = `${iconHTML}Export`;
+                }
+            });
+            
+            console.log(`📊 Export 按鈕已更新：${selectedCount > 0 ? `Export ${selectedCount}` : 'Export'}`);
         }
         
         window.deleteSelectedDocuments = async function() {
@@ -2853,6 +2901,32 @@
                             console.log('✅ QuickBooks CSV 導出（官方最小格式）');
                         } else {
                             alert('銀行對帳單導出模塊未載入，請刷新頁面後重試');
+                            return;
+                        }
+                        break;
+                    
+                    case 'invoice_summary_csv':
+                        // 發票總數 CSV（快速對帳）
+                        if (window.InvoiceExport) {
+                            exportContent = window.InvoiceExport.generateInvoiceSummaryCSV(docsToExport);
+                            fileName = `Invoice_Summary_${new Date().toISOString().split('T')[0]}.csv`;
+                            mimeType = 'text/csv;charset=utf-8;';
+                            console.log('✅ 發票總數 CSV 導出');
+                        } else {
+                            alert('發票導出模塊未載入，請刷新頁面後重試');
+                            return;
+                        }
+                        break;
+                    
+                    case 'invoice_detailed_csv':
+                        // 發票詳細交易數據 CSV（詳細記錄）
+                        if (window.InvoiceExport) {
+                            exportContent = window.InvoiceExport.generateInvoiceDetailedCSV(docsToExport);
+                            fileName = `Invoice_Detailed_${new Date().toISOString().split('T')[0]}.csv`;
+                            mimeType = 'text/csv;charset=utf-8;';
+                            console.log('✅ 發票詳細交易數據 CSV 導出');
+                        } else {
+                            alert('發票導出模塊未載入，請刷新頁面後重試');
                             return;
                         }
                         break;
