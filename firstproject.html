@@ -2816,6 +2816,57 @@
             }
         };
         
+        // ✅ 按類型導出文檔（內部輔助函數）
+        async function exportByType(docs, format) {
+            if (!docs || docs.length === 0) {
+                console.log('⚠️ 沒有文檔需要導出');
+                return;
+            }
+            
+            let exportContent = '';
+            let fileName = '';
+            const mimeType = 'text/csv;charset=utf-8;';
+            
+            switch(format) {
+                case 'bank_statement_csv':
+                    if (window.BankStatementExport) {
+                        exportContent = window.BankStatementExport.generateBankStatementCSV(docs);
+                        fileName = `BankStatement_${new Date().toISOString().split('T')[0]}.csv`;
+                    }
+                    break;
+                    
+                case 'invoice_summary_csv':
+                    if (window.InvoiceExport) {
+                        exportContent = window.InvoiceExport.generateInvoiceSummaryCSV(docs);
+                        fileName = `Invoice_${new Date().toISOString().split('T')[0]}.csv`;
+                    }
+                    break;
+                    
+                case 'general_csv':
+                    exportContent = generateCSV(docs);
+                    fileName = `General_${new Date().toISOString().split('T')[0]}.csv`;
+                    break;
+            }
+            
+            if (!exportContent) {
+                console.error('❌ 導出內容為空');
+                return;
+            }
+            
+            // 下載文件
+            const blob = new Blob(['\uFEFF' + exportContent], { type: mimeType });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            console.log(`✅ 已導出: ${fileName}`);
+        }
+        
         window.exportDocuments = async function(format) {
             console.log('📤 開始導出:', format);
             
@@ -2845,6 +2896,59 @@
                     } else {
                         alert('沒有可導出的文檔。\n請先勾選要導出的文檔，或確保至少有一個文檔已完成處理。');
                     }
+                    return;
+                }
+                
+                // ✅ 按類型分組文檔
+                const groupedDocs = {
+                    bank_statements: [],
+                    invoices: [],
+                    receipts: [],
+                    general: []
+                };
+                
+                docsToExport.forEach(doc => {
+                    const docType = (doc.documentType || '').toLowerCase();
+                    if (docType === 'bank_statement' || docType === 'bank_statements') {
+                        groupedDocs.bank_statements.push(doc);
+                    } else if (docType === 'invoice' || docType === 'invoices') {
+                        groupedDocs.invoices.push(doc);
+                    } else if (docType === 'receipt' || docType === 'receipts') {
+                        groupedDocs.receipts.push(doc);
+                    } else {
+                        groupedDocs.general.push(doc);
+                    }
+                });
+                
+                console.log('📊 文檔分組結果:', {
+                    bank_statements: groupedDocs.bank_statements.length,
+                    invoices: groupedDocs.invoices.length,
+                    receipts: groupedDocs.receipts.length,
+                    general: groupedDocs.general.length
+                });
+                
+                // ✅ 如果是 CSV（通用）格式，按類型分別導出
+                if (format === 'csv') {
+                    let exportedCount = 0;
+                    
+                    if (groupedDocs.bank_statements.length > 0) {
+                        await exportByType(groupedDocs.bank_statements, 'bank_statement_csv');
+                        exportedCount++;
+                    }
+                    
+                    if (groupedDocs.invoices.length > 0) {
+                        await exportByType(groupedDocs.invoices, 'invoice_summary_csv');
+                        exportedCount++;
+                    }
+                    
+                    if (groupedDocs.receipts.length > 0 || groupedDocs.general.length > 0) {
+                        const otherDocs = [...groupedDocs.receipts, ...groupedDocs.general];
+                        await exportByType(otherDocs, 'general_csv');
+                        exportedCount++;
+                    }
+                    
+                    toggleExportMenu();
+                    alert(`✅ 導出成功！\n共導出 ${exportedCount} 個 CSV 文件`);
                     return;
                 }
                 
