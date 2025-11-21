@@ -57,33 +57,107 @@
         },
 
         // 首頁 Hero Section
+        'hero.badge': {
+            'zh': '超過 200+ 企業信賴',
+            'en': 'Trusted by 200+ Businesses'
+        },
         'hero.title': {
-            'zh': 'AI 驅動的財務文件處理',
-            'en': 'AI-Powered Financial Document Processing'
+            'zh': '只需 HKD 0.5/頁 讓 AI 秒速幫你處理銀行對帳單',
+            'en': 'Just HKD 0.5/page AI Processes Bank Statements in Seconds'
         },
         'hero.subtitle': {
-            'zh': '香港市場性價比最高的 AI 銀行對帳單處理工具',
-            'en': 'Hong Kong\'s Most Cost-Effective AI Bank Statement Processing Tool'
-        },
-        'hero.slogan': {
-            'zh': '只需 HKD 0.5/頁，讓 AI 秒速幫你處理銀行對帳單',
-            'en': 'Process Bank Statements with AI at Just HKD 0.5/page'
+            'zh': '香港市場性價比最高的 AI 銀行對帳單處理工具 自動轉換為 Excel/CSV/QuickBooks 格式 • 準確率 98% • 節省 90% 時間',
+            'en': 'Hong Kong\'s Most Cost-Effective AI Bank Statement Processing Tool Auto-convert to Excel/CSV/QuickBooks • 98% Accuracy • Save 90% Time'
         },
         'hero.cta': {
             'zh': '免費開始',
             'en': 'Get Started Free'
         },
+        
+        // 上傳區塊
+        'upload.title': {
+            'zh': '選擇文檔類型並上傳文件',
+            'en': 'Select Document Type and Upload Files'
+        },
+        'upload.drag': {
+            'zh': '拖放PDF文件到這裡',
+            'en': 'Drag and drop PDF files here'
+        },
+        'upload.or': {
+            'zh': '或',
+            'en': 'or'
+        },
+        'upload.browse': {
+            'zh': '瀏覽',
+            'en': 'Browse'
+        },
+        
+        // 為什麼選擇我們
+        'why.title': {
+            'zh': '為什麼選擇 VaultCaddy？',
+            'en': 'Why Choose VaultCaddy?'
+        },
+        'why.speed_title': {
+            'zh': '⚡ 10 秒極速處理',
+            'en': '⚡ 10-Second Processing'
+        },
+        'why.speed_desc': {
+            'zh': '無需等待，立即完成銀行對帳單轉換',
+            'en': 'Instant conversion, no waiting'
+        },
+        'why.price_title': {
+            'zh': '💰 全港最低價',
+            'en': '💰 Lowest Price in HK'
+        },
+        'why.price_desc': {
+            'zh': 'HKD 0.5/頁，免費試用無需預約',
+            'en': 'HKD 0.5/page, free trial without appointment'
+        },
+        'why.local_title': {
+            'zh': '🎯 專為香港設計',
+            'en': '🎯 Designed for Hong Kong'
+        },
+        'why.local_desc': {
+            'zh': '支援匯豐、恆生、中銀等本地銀行格式',
+            'en': 'Supports HSBC, Hang Seng, BOC and other local banks'
+        },
+        'why.secure_title': {
+            'zh': '🔒 安全可靠',
+            'en': '🔒 Secure & Reliable'
+        },
+        'why.secure_desc': {
+            'zh': '銀行級加密，365天數據保留',
+            'en': 'Bank-level encryption, 365-day data retention'
+        },
+        
+        // 用戶下拉菜單
+        'dropdown.credits': {
+            'zh': 'Credits',
+            'en': 'Credits'
+        },
+        'dropdown.account': {
+            'zh': '帳戶',
+            'en': 'Account'
+        },
+        'dropdown.billing': {
+            'zh': '計費',
+            'en': 'Billing'
+        },
+        'dropdown.logout': {
+            'zh': '登出',
+            'en': 'Logout'
+        },
 
         // 定價頁面
-        'pricing.title': {
+        'pricing.badge': {
             'zh': '簡單透明的定價',
             'en': 'Simple, Transparent Pricing'
         },
-        'pricing.subtitle': {
+        'pricing.title': {
             'zh': '輕鬆處理銀行對帳單',
             'en': 'Convert Bank Statements with Confidence'
         },
-        'pricing.description': {
+        'pricing.subtitle': {
             'zh': '與數千家企業一起，節省財務數據錄入的時間。無隱藏費用，隨時取消。',
             'en': 'Join thousands of businesses saving hours on financial data entry. No hidden fees, cancel anytime.'
         },
