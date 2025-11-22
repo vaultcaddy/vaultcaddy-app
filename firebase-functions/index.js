@@ -540,17 +540,32 @@ exports.sendVerificationCode = functions.https.onCall(async (data, context) => {
         
         const emailTransporter = getTransporter();
         if (!emailTransporter) {
-            throw new functions.https.HttpsError('unavailable', 'Email service not configured');
+            console.error('❌ Email 服務未配置');
+            console.error('   請運行: firebase functions:config:set email.user="your-email@gmail.com" email.password="your-app-password"');
+            console.error('   然後重新部署: firebase deploy --only functions');
+            throw new functions.https.HttpsError('unavailable', 'Email 服務未配置，請聯繫管理員');
         }
         
+        console.log(`📧 準備發送驗證碼到: ${email}`);
         await emailTransporter.sendMail(mailOptions);
         
-        console.log(`✅ 驗證碼已發送到 ${email}`);
+        console.log(`✅ 驗證碼已成功發送到 ${email}`);
         return { success: true, message: '驗證碼已發送到您的郵箱' };
         
     } catch (error) {
         console.error('❌ 發送驗證碼失敗:', error);
-        throw new functions.https.HttpsError('internal', '發送驗證碼失敗，請稍後重試');
+        console.error('   錯誤類型:', error.name);
+        console.error('   錯誤消息:', error.message);
+        console.error('   錯誤堆疊:', error.stack);
+        
+        // 區分不同類型的錯誤
+        if (error.message && error.message.includes('Invalid login')) {
+            throw new functions.https.HttpsError('unauthenticated', 'Email 認證失敗，請聯繫管理員檢查 email 配置');
+        } else if (error.message && error.message.includes('unavailable')) {
+            throw new functions.https.HttpsError('unavailable', error.message);
+        } else {
+            throw new functions.https.HttpsError('internal', `發送驗證碼失敗: ${error.message || '請稍後重試'}`);
+        }
     }
 });
 
