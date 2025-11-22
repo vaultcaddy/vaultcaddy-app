@@ -769,22 +769,32 @@
             window.VaultCaddyNavbar.showNotification(`成功購買 ${credits} Credits！當前餘額：${newCredits} Credits`, 'success');
         }
 
-        // 統一的訂閱方案函數
+        // ✅ 統一的訂閱方案函數（2025-11-22 更新）
         function subscribeToPlan(planType) {
             console.log(`開始 ${planType} 方案訂閱流程`);
             
-            // 檢查是否為月費或年費
-            const yearlyBtn = document.querySelector('[data-plan="yearly"]');
-            const isYearly = yearlyBtn && yearlyBtn.classList.contains('active');
+            // 使用 StripeManager 處理訂閱
+            if (window.StripeManager && window.StripeManager.subscribeToPlan) {
+                window.StripeManager.subscribeToPlan(planType);
+            } else {
+                console.error('❌ StripeManager 未載入');
+                alert('系統初始化中，請稍後再試');
+            }
+            
+            return;
+            
+            // === 以下是舊邏輯（保留作為參考）===
             
             // ✅ 新定價方案（2025-11-20 更新）
-            // 月費: HKD $78/月，包含 100 Credits
-            // 年費: HKD $62/月（$744/年），包含 1,200 Credits
+            // 月費: HKD $78/月，包含 100 Credits + 超出後 HKD $0.5/頁
+            // 年費: HKD $62/月（$744/年），包含 1,200 Credits + 超出後 HKD $0.5/頁
             
-            // Stripe Payment Links 映射
-            const stripeLinks = {
-                'monthly': 'https://buy.stripe.com/test_REPLACE_WITH_YOUR_MONTHLY_LINK',  // TODO: 創建新的 Stripe Payment Link
-                'yearly': 'https://buy.stripe.com/test_REPLACE_WITH_YOUR_YEARLY_LINK'     // TODO: 創建新的 Stripe Payment Link
+            // ✅ Stripe 產品映射（2025-11-22 更新）
+            // 月費: prod_TSmKnHeaQVxZXC - HKD $78/月 + 使用量計費
+            // 年費: prod_TSsEWI5bv9pSkz - HKD $744/年 + 使用量計費
+            const stripeProductIds = {
+                'monthly': 'prod_TSmKnHeaQVxZXC',  // VaultCaddy 月費
+                'yearly': 'prod_TSsEWI5bv9pSkz'     // VaultCaddy 年費
             };
             
             // Credits 映射 - 根據時間週期

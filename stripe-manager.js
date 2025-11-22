@@ -30,8 +30,27 @@ window.StripeManager = {
             }
         },
         
-        // 訂閱計劃（Payment Links）
+        // ✅ 訂閱計劃（2025-11-22 更新）
         subscriptions: {
+            // 新的定價方案
+            monthly: {
+                productId: 'prod_TSmKnHeaQVxZXC',  // VaultCaddy 月費
+                price: 78,  // HKD
+                credits: 100,
+                period: 'monthly',
+                overage: 0.5,  // HKD $0.5/頁（超出後）
+                paymentLink: 'https://buy.stripe.com/test_YOUR_MONTHLY_LINK'  // TODO: 創建 Payment Link
+            },
+            yearly: {
+                productId: 'prod_TSsEWI5bv9pSkz',  // VaultCaddy 年費
+                price: 744,  // HKD (每月 $62)
+                credits: 1200,
+                period: 'yearly',
+                overage: 0.5,  // HKD $0.5/頁（超出後）
+                paymentLink: 'https://buy.stripe.com/test_YOUR_YEARLY_LINK'  // TODO: 創建 Payment Link
+            },
+            
+            // 舊方案（保留兼容性）
             basicMonthly: {
                 price: 22,
                 credits: 200,
@@ -237,6 +256,43 @@ window.StripeManager = {
                 );
             }
         }
+    },
+    
+    /**
+     * 追蹤使用量計費
+     * @param {number} pagesUsed - 使用的頁數
+     * @param {string} subscriptionId - Stripe 訂閱 ID
+     */
+    async trackUsageMetered(pagesUsed, subscriptionId) {
+        try {
+            // 呼叫後端 Cloud Function 報告使用量給 Stripe
+            const reportUsage = firebase.functions().httpsCallable('reportStripeUsage');
+            
+            const result = await reportUsage({
+                subscriptionId: subscriptionId,
+                quantity: pagesUsed,  // 超出免費額度的頁數
+                timestamp: Date.now()
+            });
+            
+            console.log('✅ 使用量已報告給 Stripe:', result.data);
+            return result.data;
+            
+        } catch (error) {
+            console.error('❌ 報告使用量失敗:', error);
+            throw error;
+        }
+    },
+    
+    /**
+     * 計算當月超出的頁數
+     * @param {number} totalPagesUsed - 當月總使用頁數
+     * @param {number} includedCredits - 包含的免費頁數
+     * @returns {number} 超出的頁數
+     */
+    calculateOverage(totalPagesUsed, includedCredits) {
+        const overage = Math.max(0, totalPagesUsed - includedCredits);
+        console.log(`📊 使用量計算: 總使用 ${totalPagesUsed} 頁，包含 ${includedCredits} 頁，超出 ${overage} 頁`);
+        return overage;
     },
     
     /**

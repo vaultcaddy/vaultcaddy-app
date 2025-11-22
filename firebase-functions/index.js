@@ -807,5 +807,172 @@ exports.triggerCleanup = functions.https.onCall(async (data, context) => {
     }
 });
 
-console.log('✅ Firebase Cloud Functions 已載入（包含 Email 驗證和數據清理功能）');
+// ============================================
+// 9. Stripe 使用量計費報告
+// ============================================
+
+/**
+ * 報告 Stripe 使用量（用於基於使用量的計費）
+ * 當用戶超出包含的免費額度時調用
+ */
+exports.reportStripeUsage = functions.https.onCall(async (data, context) => {
+    // 檢查 Stripe 是否已配置
+    if (!stripe || !stripeConfig) {
+        console.error('❌ Stripe 未配置');
+        throw new functions.https.HttpsError('failed-precondition', 'Stripe not configured');
+    }
+    
+    // 檢查用戶是否已登入
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', '需要登入');
+    }
+    
+    const userId = context.auth.uid;
+    const { subscriptionId, quantity, timestamp } = data;
+    
+    if (!subscriptionId || !quantity) {
+        throw new functions.https.HttpsError('invalid-argument', '缺少必要參數');
+    }
+    
+    try {
+        console.log(`📊 報告使用量: 用戶 ${userId}, 訂閱 ${subscriptionId}, 數量 ${quantity}`);
+        
+        // 獲取訂閱信息
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+        
+        // 找到使用量計費的訂閱項目
+        const usageBasedItem = subscription.items.data.find(item => 
+            item.price.billing_scheme === 'tiered' || 
+            item.price.recurring.usage_type === 'metered'
+        );
+        
+        if (!usageBasedItem) {
+            console.warn('⚠️ 訂閱中沒有使用量計費項目');
+            return { success: false, message: '訂閱中沒有使用量計費項目' };
+        }
+        
+        // 報告使用量給 Stripe
+        const usageRecord = await stripe.subscriptionItems.createUsageRecord(
+            usageBasedItem.id,
+            {
+                quantity: quantity,
+                timestamp: timestamp ? Math.floor(timestamp / 1000) : Math.floor(Date.now() / 1000),
+                action: 'increment'  // 累加使用量
+            }
+        );
+        
+        console.log('✅ 使用量已報告:', usageRecord);
+        
+        // 記錄到 Firestore
+        await db.collection('usageRecords').add({
+            userId: userId,
+            subscriptionId: subscriptionId,
+            subscriptionItemId: usageBasedItem.id,
+            quantity: quantity,
+            stripeUsageRecordId: usageRecord.id,
+            timestamp: admin.firestore.FieldValue.serverTimestamp()
+        });
+        
+        return { 
+            success: true, 
+            usageRecordId: usageRecord.id,
+            quantity: quantity
+        };
+        
+    } catch (error) {
+        console.error('❌ 報告使用量失敗:', error);
+        throw new functions.https.HttpsError('internal', error.message);
+    }
+});
+
+/**
+ * 定期檢查並報告超出的使用量（每天執行一次）
+ * 自動計算當月超出免費額度的頁數並報告給 Stripe
+ */
+exports.reportDailyUsage = functions.pubsub.schedule('0 0 * * *')  // 每天午夜執行
+    .timeZone('Asia/Hong_Kong')
+    .onRun(async (context) => {
+        // 檢查 Stripe 是否已配置
+        if (!stripe || !stripeConfig) {
+            console.error('❌ Stripe 未配置，跳過使用量報告');
+            return null;
+        }
+        
+        console.log('📊 開始每日使用量報告...');
+        
+        try {
+            // 獲取所有有活躍訂閱的用戶
+            const usersSnapshot = await db.collection('users')
+                .where('subscriptionStatus', '==', 'active')
+                .get();
+            
+            const now = new Date();
+            const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+            
+            for (const userDoc of usersSnapshot.docs) {
+                const userId = userDoc.id;
+                const userData = userDoc.data();
+                const subscriptionId = userData.stripeSubscriptionId;
+                
+                if (!subscriptionId) {
+                    continue;
+                }
+                
+                // 計算當月使用量
+                const usageSnapshot = await db.collection('users')
+                    .doc(userId)
+                    .collection('creditsHistory')
+                    .where('type', '==', 'deduct')
+                    .where('createdAt', '>=', monthStart)
+                    .get();
+                
+                let totalUsed = 0;
+                usageSnapshot.forEach(doc => {
+                    totalUsed += doc.data().amount || 0;
+                });
+                
+                // 獲取包含的免費額度
+                const includedCredits = userData.subscriptionPlan === 'monthly' ? 100 : 
+                                      userData.subscriptionPlan === 'yearly' ? 1200 : 0;
+                
+                // 計算超出的使用量
+                const overage = Math.max(0, totalUsed - includedCredits);
+                
+                if (overage > 0) {
+                    console.log(`📈 用戶 ${userId} 超出使用量: ${overage} 頁`);
+                    
+                    // 報告給 Stripe
+                    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+                    const usageBasedItem = subscription.items.data.find(item => 
+                        item.price.billing_scheme === 'tiered' || 
+                        item.price.recurring.usage_type === 'metered'
+                    );
+                    
+                    if (usageBasedItem) {
+                        await stripe.subscriptionItems.createUsageRecord(
+                            usageBasedItem.id,
+                            {
+                                quantity: overage,
+                                timestamp: Math.floor(Date.now() / 1000),
+                                action: 'set'  // 設置總使用量（非累加）
+                            }
+                        );
+                        
+                        console.log(`✅ 用戶 ${userId} 使用量已報告: ${overage} 頁`);
+                    }
+                } else {
+                    console.log(`✅ 用戶 ${userId} 未超出免費額度`);
+                }
+            }
+            
+            console.log('✅ 每日使用量報告完成');
+            return null;
+            
+        } catch (error) {
+            console.error('❌ 每日使用量報告失敗:', error);
+            return null;
+        }
+    });
+
+console.log('✅ Firebase Cloud Functions 已載入（包含 Email 驗證、數據清理和 Stripe 使用量計費功能）');
 
