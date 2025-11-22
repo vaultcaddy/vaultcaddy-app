@@ -197,9 +197,93 @@
         
         <!-- 統一靜態導航欄（直接在 HTML 中，不需要 JS 加載）-->
         
-        <!-- 導航欄交互功能 -->
-        <script defer src="navbar-component.js?v=20251114"></script>
-        <script defer src="navbar-interactions.js?v=20251108"></script>
+    <!-- 導航欄交互功能 -->
+    <script defer src="navbar-component.js?v=20251114"></script>
+    <script defer src="navbar-interactions.js?v=20251108"></script>
+    
+    <!-- 滑動動畫 CSS -->
+    <style>
+        /* 滑動動畫基礎設置 */
+        .fade-in-up {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        
+        .fade-in-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* 延遲動畫 */
+        .fade-in-up.delay-1 { transition-delay: 0.1s; }
+        .fade-in-up.delay-2 { transition-delay: 0.2s; }
+        .fade-in-up.delay-3 { transition-delay: 0.3s; }
+        .fade-in-up.delay-4 { transition-delay: 0.4s; }
+        
+        /* 從左滑入 */
+        .fade-in-left {
+            opacity: 0;
+            transform: translateX(-30px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        
+        .fade-in-left.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        /* 從右滑入 */
+        .fade-in-right {
+            opacity: 0;
+            transform: translateX(30px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        
+        .fade-in-right.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        /* 縮放動畫 */
+        .scale-in {
+            opacity: 0;
+            transform: scale(0.9);
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+        }
+        
+        .scale-in.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+    </style>
+    
+    <!-- 滑動動畫 JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 創建 Intersection Observer
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+            
+            const observer = new IntersectionObserver(function(entries) {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        // 一次性動畫，觀察後即停止
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+            
+            // 為所有需要動畫的元素添加觀察
+            setTimeout(() => {
+                const animatedElements = document.querySelectorAll('.fade-in-up, .fade-in-left, .fade-in-right, .scale-in');
+                animatedElements.forEach(el => observer.observe(el));
+            }, 100);
+        });
+    </script>
 </head>
 <body>
     <!-- 立即執行的頁面可見性腳本 -->
@@ -500,7 +584,7 @@
             <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 2rem;">
                 <!-- 標題 -->
                 <div style="text-align: center; margin-bottom: 4rem;">
-                    <p style="font-size: 0.875rem; font-weight: 700; color: #667eea; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem;">強大功能</p>
+                    <p class="fade-in-up" style="font-size: 0.875rem; font-weight: 700; color: #667eea; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem;">強大功能</p>
                     <h2 style="font-size: 3rem; font-weight: 800; color: #1f2937; margin-bottom: 1rem;">一站式 AI 文檔處理平台</h2>
                     <p style="font-size: 1.25rem; color: #6b7280;">支援發票、收據、銀行對賬單等多種財務文檔</p>
                 </div>
@@ -681,7 +765,7 @@
             <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 2rem;">
                 <!-- 標題 -->
                 <div style="text-align: center; margin-bottom: 4rem;">
-                    <p style="font-size: 0.875rem; font-weight: 700; color: #667eea; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem;">為什麼選擇 VaultCaddy</p>
+                    <p class="fade-in-up" style="font-size: 0.875rem; font-weight: 700; color: #667eea; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem;">為什麼選擇 VaultCaddy</p>
                     <h2 style="font-size: 3rem; font-weight: 800; color: #1f2937; margin-bottom: 1rem;">專為香港會計師打造</h2>
                     <p style="font-size: 1.25rem; color: #6b7280;">提升效率，降低成本，讓您專注於更有價值的工作</p>
                 </div>
@@ -689,7 +773,7 @@
                 <!-- 價值主張卡片 -->
                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem;">
                     <!-- 卡片 1 -->
-                    <div style="background: white; border-radius: 20px; padding: 2.5rem; box-shadow: 0 10px 40px rgba(0,0,0,0.08); border: 2px solid #e5e7eb; text-align: center; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-10px)'; this.style.boxShadow='0 20px 50px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 40px rgba(0,0,0,0.08)'">
+                    <div class="fade-in-up delay-1" style="background: white; border-radius: 20px; padding: 2.5rem; box-shadow: 0 10px 40px rgba(0,0,0,0.08); border: 2px solid #e5e7eb; text-align: center; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-10px)'; this.style.boxShadow='0 20px 50px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 40px rgba(0,0,0,0.08)'">
                         <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);">
                             <i class="fas fa-bolt" style="color: white; font-size: 2.5rem;"></i>
                         </div>
@@ -698,7 +782,7 @@
                     </div>
                     
                     <!-- 卡片 2 -->
-                    <div style="background: white; border-radius: 20px; padding: 2.5rem; box-shadow: 0 10px 40px rgba(0,0,0,0.08); border: 2px solid #e5e7eb; text-align: center; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-10px)'; this.style.boxShadow='0 20px 50px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 40px rgba(0,0,0,0.08)'">
+                    <div class="fade-in-up delay-2" style="background: white; border-radius: 20px; padding: 2.5rem; box-shadow: 0 10px 40px rgba(0,0,0,0.08); border: 2px solid #e5e7eb; text-align: center; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-10px)'; this.style.boxShadow='0 20px 50px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 40px rgba(0,0,0,0.08)'">
                         <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);">
                             <i class="fas fa-bullseye" style="color: white; font-size: 2.5rem;"></i>
                         </div>
@@ -707,7 +791,7 @@
                     </div>
                     
                     <!-- 卡片 3 -->
-                    <div style="background: white; border-radius: 20px; padding: 2.5rem; box-shadow: 0 10px 40px rgba(0,0,0,0.08); border: 2px solid #e5e7eb; text-align: center; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-10px)'; this.style.boxShadow='0 20px 50px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 40px rgba(0,0,0,0.08)'">
+                    <div class="fade-in-up delay-3" style="background: white; border-radius: 20px; padding: 2.5rem; box-shadow: 0 10px 40px rgba(0,0,0,0.08); border: 2px solid #e5e7eb; text-align: center; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-10px)'; this.style.boxShadow='0 20px 50px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 40px rgba(0,0,0,0.08)'">
                         <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; box-shadow: 0 10px 30px rgba(245, 158, 11, 0.3);">
                             <i class="fas fa-hand-holding-usd" style="color: white; font-size: 2.5rem;"></i>
                         </div>
@@ -1033,8 +1117,8 @@
             <div class="footer-content">
                 <div class="footer-logo">
                     <div class="logo-container">
-                        <div class="logo-icon">
-                            <i class="fas fa-file-contract"></i>
+                        <div class="logo-icon" style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.5rem;">
+                            V
                         </div>
                         <div class="logo-text">
                             <h3>VaultCaddy</h3>
@@ -1049,7 +1133,7 @@
                 </div>
             </div>
             <div class="footer-bottom">
-                <p data-translate="footer_copyright">© 2024 VaultCaddy Inc. 版權所有。</p>
+                <p data-translate="footer_copyright">© 2025 Made with vaultcaddy 版權所有</p>
             </div>
         </div>
     </footer>
