@@ -2647,13 +2647,20 @@
         
         // ==================== 複選框功能 ====================
         window.toggleSelectAll = function() {
+            console.log('🔵 toggleSelectAll 被調用');
+            
             const selectAllCheckbox = document.getElementById('select-all-checkbox');
             const documentCheckboxes = document.querySelectorAll('.document-checkbox');
+            
+            console.log(`📋 全選複選框狀態: ${selectAllCheckbox.checked}`);
+            console.log(`📋 找到 ${documentCheckboxes.length} 個文檔複選框`);
             
             // 設置所有複選框的狀態
             documentCheckboxes.forEach(checkbox => {
                 checkbox.checked = selectAllCheckbox.checked;
             });
+            
+            console.log(`✅ 已設置所有複選框為: ${selectAllCheckbox.checked}`);
             
             // 更新按鈕
             updateButtons();
@@ -2667,22 +2674,38 @@
             
             // 更新 Delete 按鈕
             const deleteBtn = document.getElementById('delete-selected-btn');
+            console.log(`🔍 Delete 按鈕存在: ${!!deleteBtn}`);
+            
             if (deleteBtn) {
                 const deleteSpan = deleteBtn.querySelector('span');
+                console.log(`🔍 Delete span 存在: ${!!deleteSpan}`);
+                
                 if (deleteSpan) {
-                    deleteSpan.textContent = selectedCount > 0 ? `Delete ${selectedCount}` : 'Delete';
+                    const newText = selectedCount > 0 ? `Delete ${selectedCount}` : 'Delete';
+                    deleteSpan.textContent = newText;
+                    console.log(`✅ Delete 按鈕文字已更新為: ${newText}`);
                 }
                 deleteBtn.disabled = selectedCount === 0;
                 deleteBtn.style.opacity = selectedCount > 0 ? '1' : '0.5';
+            } else {
+                console.error('❌ 找不到 Delete 按鈕！');
             }
             
             // 更新 Export 按鈕
             const exportBtn = document.querySelector('[onclick*="toggleExportMenu"]');
+            console.log(`🔍 Export 按鈕存在: ${!!exportBtn}`);
+            
             if (exportBtn) {
                 const exportSpan = exportBtn.querySelector('span');
+                console.log(`🔍 Export span 存在: ${!!exportSpan}`);
+                
                 if (exportSpan) {
-                    exportSpan.textContent = selectedCount > 0 ? `Export ${selectedCount}` : 'Export';
+                    const newText = selectedCount > 0 ? `Export ${selectedCount}` : 'Export';
+                    exportSpan.textContent = newText;
+                    console.log(`✅ Export 按鈕文字已更新為: ${newText}`);
                 }
+            } else {
+                console.error('❌ 找不到 Export 按鈕！');
             }
         }
         
