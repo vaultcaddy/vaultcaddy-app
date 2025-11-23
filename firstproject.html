@@ -1929,13 +1929,19 @@
                 // ✅ 渲染完成後，檢查全選狀態並更新按鈕
                 setTimeout(() => {
                     const selectAllCheckbox = document.getElementById('select-all-checkbox');
-                    if (selectAllCheckbox && selectAllCheckbox.checked) {
-                        // 如果全選複選框被選中，確保所有文檔複選框也被選中
+                    
+                    // 如果全選狀態是 true，重新應用全選
+                    if (isSelectAllActive && selectAllCheckbox) {
+                        console.log('🔄 重新應用全選狀態...');
+                        selectAllCheckbox.checked = true;
                         const documentCheckboxes = document.querySelectorAll('.document-checkbox');
                         documentCheckboxes.forEach(checkbox => {
                             checkbox.checked = true;
                         });
+                        console.log(`✅ 已全選 ${documentCheckboxes.length} 個文檔`);
                     }
+                    
+                    // 更新按鈕狀態
                     updateDeleteButton();
                 }, 100);
         }
@@ -2647,11 +2653,17 @@
         }
         
         // ==================== 複選框功能 ====================
+        // 全選狀態變量
+        let isSelectAllActive = false;
+        
         window.toggleSelectAll = function() {
             const selectAllCheckbox = document.getElementById('select-all-checkbox');
             const documentCheckboxes = document.querySelectorAll('.document-checkbox');
             
-            console.log(`📋 全選狀態: ${selectAllCheckbox.checked}, 找到 ${documentCheckboxes.length} 個複選框`);
+            // 保存全選狀態
+            isSelectAllActive = selectAllCheckbox.checked;
+            
+            console.log(`📋 全選狀態: ${isSelectAllActive}, 找到 ${documentCheckboxes.length} 個複選框`);
             
             documentCheckboxes.forEach(checkbox => {
                 checkbox.checked = selectAllCheckbox.checked;
