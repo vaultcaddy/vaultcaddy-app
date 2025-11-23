@@ -1931,13 +1931,11 @@
                     const documentCheckboxes = document.querySelectorAll('.document-checkbox');
                     
                     documentCheckboxes.forEach(checkbox => {
-                        checkbox.addEventListener('change', () => {
-                            updateDeleteButton();
-                        });
+                        checkbox.addEventListener('change', updateButtons);
                     });
                     
                     // 更新按鈕狀態
-                    updateDeleteButton();
+                    updateButtons();
                 }, 100);
         }
         
@@ -2652,85 +2650,42 @@
             const selectAllCheckbox = document.getElementById('select-all-checkbox');
             const documentCheckboxes = document.querySelectorAll('.document-checkbox');
             
-            console.log(`📋 全選: ${selectAllCheckbox.checked}, 找到 ${documentCheckboxes.length} 個複選框`);
-            
-            // 直接設置所有複選框的狀態
-            documentCheckboxes.forEach((checkbox, index) => {
+            // 設置所有複選框的狀態
+            documentCheckboxes.forEach(checkbox => {
                 checkbox.checked = selectAllCheckbox.checked;
             });
             
-            // 立即更新按鈕
-            const selectedCount = document.querySelectorAll('.document-checkbox:checked').length;
-            console.log(`✅ 選中 ${selectedCount} 個複選框`);
-            
-            updateDeleteButton();
+            // 更新按鈕
+            updateButtons();
         };
         
-        function updateDeleteButton() {
-            const selectedCheckboxes = document.querySelectorAll('.document-checkbox:checked');
+        // 統一更新按鈕的函數
+        function updateButtons() {
+            const selectedCount = document.querySelectorAll('.document-checkbox:checked').length;
+            
+            console.log(`📊 更新按鈕: ${selectedCount} 個文檔被選中`);
+            
+            // 更新 Delete 按鈕
             const deleteBtn = document.getElementById('delete-selected-btn');
-            const selectedCount = selectedCheckboxes.length;
-            
-            console.log(`🔄 updateDeleteButton: 選中 ${selectedCount} 個文檔`);
-            
-            if (!deleteBtn) {
-                console.error('❌ 找不到 delete-selected-btn 按鈕');
-                return;
+            if (deleteBtn) {
+                const deleteSpan = deleteBtn.querySelector('span');
+                if (deleteSpan) {
+                    deleteSpan.textContent = selectedCount > 0 ? `Delete ${selectedCount}` : 'Delete';
+                }
+                deleteBtn.disabled = selectedCount === 0;
+                deleteBtn.style.opacity = selectedCount > 0 ? '1' : '0.5';
             }
             
-            // 找到按鈕內的 <span> 元素
-            const span = deleteBtn.querySelector('span');
-            
-            if (selectedCount > 0) {
-                deleteBtn.disabled = false;
-                deleteBtn.style.opacity = '1';
-                deleteBtn.style.cursor = 'pointer';
-                // 只更新文字，不破壞 onclick
-                if (span) span.textContent = `Delete ${selectedCount}`;
-                console.log(`✅ Delete 按鈕已更新: Delete ${selectedCount}`);
-            } else {
-                deleteBtn.disabled = true;
-                deleteBtn.style.opacity = '0.5';
-                deleteBtn.style.cursor = 'not-allowed';
-                // 恢復原始文字
-                if (span) span.textContent = 'Delete';
-                console.log(`✅ Delete 按鈕已重置: Delete`);
+            // 更新 Export 按鈕
+            const exportBtn = document.querySelector('[onclick*="toggleExportMenu"]');
+            if (exportBtn) {
+                const exportSpan = exportBtn.querySelector('span');
+                if (exportSpan) {
+                    exportSpan.textContent = selectedCount > 0 ? `Export ${selectedCount}` : 'Export';
+                }
             }
-            
-            // ✅ 同時更新 Export 按鈕
-            updateExportButton();
         }
         
-        // ✅ 新增：更新 Export 按鈕顯示選中數量
-        function updateExportButton() {
-            const selectedCheckboxes = document.querySelectorAll('.document-checkbox:checked');
-            const selectedCount = selectedCheckboxes.length;
-            
-            // 查找 Export 按鈕（可能有多個，更新所有）
-            const exportButtons = document.querySelectorAll('[onclick*="toggleExportMenu"]');
-            
-            console.log(`🔄 updateExportButton: 選中 ${selectedCount} 個文檔，找到 ${exportButtons.length} 個 Export 按鈕`);
-            
-            if (exportButtons.length === 0) {
-                console.error('❌ 找不到 Export 按鈕');
-                return;
-            }
-            
-            exportButtons.forEach((btn, index) => {
-                // 找到按鈕內的 <span> 元素
-                const span = btn.querySelector('span');
-                
-                if (span) {
-                    if (selectedCount > 0) {
-                        span.textContent = `Export ${selectedCount}`;
-                        console.log(`✅ Export 按鈕 ${index + 1} 已更新: Export ${selectedCount}`);
-                    } else {
-                        span.textContent = 'Export';
-                        console.log(`✅ Export 按鈕 ${index + 1} 已重置: Export`);
-                    }
-                }
-            });
-        }
         
         window.deleteSelectedDocuments = async function() {
             const selectedCheckboxes = document.querySelectorAll('.document-checkbox:checked');
