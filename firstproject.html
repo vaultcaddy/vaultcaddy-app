@@ -2655,15 +2655,18 @@
             console.log(`📋 全選複選框狀態: ${selectAllCheckbox.checked}`);
             console.log(`📋 找到 ${documentCheckboxes.length} 個文檔複選框`);
             
-            // 設置所有複選框的狀態
-            documentCheckboxes.forEach(checkbox => {
-                checkbox.checked = selectAllCheckbox.checked;
+            // 🎯 新策略：模擬單點 - 觸發每個複選框的 change 事件
+            documentCheckboxes.forEach((checkbox, index) => {
+                if (checkbox.checked !== selectAllCheckbox.checked) {
+                    checkbox.checked = selectAllCheckbox.checked;
+                    // 觸發 change 事件，就像用戶點擊了一樣
+                    const event = new Event('change', { bubbles: true });
+                    checkbox.dispatchEvent(event);
+                    console.log(`✅ 複選框 ${index + 1} 已${selectAllCheckbox.checked ? '選中' : '取消'}`);
+                }
             });
             
-            console.log(`✅ 已設置所有複選框為: ${selectAllCheckbox.checked}`);
-            
-            // 更新按鈕
-            updateButtons();
+            console.log(`✅ 全選操作完成`);
         };
         
         // 統一更新按鈕的函數
