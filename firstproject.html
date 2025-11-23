@@ -1462,7 +1462,7 @@
                         <button onclick="deleteSelectedDocuments()" id="delete-selected-btn" disabled style="background: #ef4444; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500; opacity: 0.5;">
                             <i class="fas fa-trash"></i>
                             <span>Delete</span>
-                            <span id="delete-count" style="background: rgba(255,255,255,0.2); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; display: none;"></span>
+                            <span id="delete-count" style="display: none;"></span>
                         </button>
                     </div>
                 </header>
@@ -2648,19 +2648,26 @@
         function updateDeleteButton() {
             const selectedCheckboxes = document.querySelectorAll('.document-checkbox:checked');
             const deleteBtn = document.getElementById('delete-selected-btn');
-            const deleteCount = document.getElementById('delete-count');
+            const selectedCount = selectedCheckboxes.length;
             
-            if (selectedCheckboxes.length > 0) {
+            if (selectedCount > 0) {
                 deleteBtn.disabled = false;
                 deleteBtn.style.opacity = '1';
                 deleteBtn.style.cursor = 'pointer';
-                deleteCount.style.display = 'inline-block';
-                deleteCount.textContent = selectedCheckboxes.length;
+                // 更新按鈕文字，與 Export 格式一致
+                deleteBtn.innerHTML = `
+                    <i class="fas fa-trash"></i>
+                    <span>Delete ${selectedCount}</span>
+                `;
             } else {
                 deleteBtn.disabled = true;
                 deleteBtn.style.opacity = '0.5';
                 deleteBtn.style.cursor = 'not-allowed';
-                deleteCount.style.display = 'none';
+                // 恢復原始文字
+                deleteBtn.innerHTML = `
+                    <i class="fas fa-trash"></i>
+                    <span>Delete</span>
+                `;
             }
             
             // ✅ 同時更新 Export 按鈕
@@ -2676,13 +2683,18 @@
             const exportButtons = document.querySelectorAll('[onclick*="toggleExportMenu"]');
             
             exportButtons.forEach(btn => {
-                const icon = btn.querySelector('i') || '';
-                const iconHTML = icon ? '<i class="fas fa-download"></i> ' : '';
-                
                 if (selectedCount > 0) {
-                    btn.innerHTML = `${iconHTML}Export ${selectedCount}`;
+                    btn.innerHTML = `
+                        <i class="fas fa-download"></i>
+                        <span>Export ${selectedCount}</span>
+                        <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
+                    `;
                 } else {
-                    btn.innerHTML = `${iconHTML}Export`;
+                    btn.innerHTML = `
+                        <i class="fas fa-download"></i>
+                        <span>Export</span>
+                        <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
+                    `;
                 }
             });
             
