@@ -502,22 +502,9 @@
         <!-- 主要內容區域 -->
         <main class="main-content" style="display: block !important; visibility: visible !important;">
             <!-- 項目列表標題 -->
-            <div class="projects-header">
-                <div class="projects-title">
-                    <!-- Team project 標題已移除 -->
-                </div>
-                <div class="header-actions">
-                    <!-- All files 下拉菜單已移除 -->
-                    <button class="create-btn" onclick="openCreateProjectModal()">
-                        <i class="fas fa-plus"></i>
-                        <span>Create</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- 搜尋欄 -->
-            <div class="search-bar" style="margin-bottom: 1.5rem;">
-                <div style="position: relative; max-width: 500px;">
+            <div class="projects-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+                <!-- 搜尋欄 -->
+                <div style="position: relative; max-width: 500px; flex: 1;">
                     <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #9ca3af;"></i>
                     <input type="text" id="project-search" placeholder="搜尋項目..." style="
                         width: 100%;
@@ -527,6 +514,14 @@
                         font-size: 0.9375rem;
                         transition: all 0.2s;
                     " onkeyup="filterProjects(this.value)">
+                </div>
+                
+                <!-- Create 按鈕 -->
+                <div class="header-actions" style="margin-left: 1rem;">
+                    <button class="create-btn" onclick="openCreateProjectModal()">
+                        <i class="fas fa-plus"></i>
+                        <span>Create</span>
+                    </button>
                 </div>
             </div>
 
@@ -739,8 +734,8 @@
                             </div>
                         </div>
                     </td>
-                    <td class="date-cell">${formatDate(project.lastModified)}</td>
-                    <td class="date-cell">${formatDate(project.created)}</td>
+                    <td class="date-cell">${formatDate(project.updatedAt || project.lastModified || project.createdAt)}</td>
+                    <td class="date-cell">${formatDate(project.createdAt || project.created)}</td>
                     <td style="text-align: center;">
                         <button 
                             onclick="event.stopPropagation(); showDeleteProjectModal('${project.id}', '${project.name.replace(/'/g, "\\'")}')" 
@@ -756,22 +751,42 @@
         }
 
         // 格式化日期
-        function formatDate(dateString) {
-            if (!dateString) return '-';
+        function formatDate(dateValue) {
+            if (!dateValue) return '-';
             
-            const date = new Date(dateString);
-            const now = new Date();
-            const diffTime = Math.abs(now - date);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            const diffMonths = Math.floor(diffDays / 30);
+            let date;
             
-            if (diffMonths > 0) {
-                return `${diffMonths} month${diffMonths > 1 ? 's' : ''} ago`;
-            } else if (diffDays > 0) {
-                return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-            } else {
-                return 'Today';
+            // 處理 Firebase Timestamp 對象
+            if (typeof dateValue === 'object' && dateValue.seconds) {
+                date = new Date(dateValue.seconds * 1000);
+            } 
+            // 處理 Date 對象或字符串
+            else if (dateValue instanceof Date) {
+                date = dateValue;
             }
+            // 處理數字時間戳
+            else if (typeof dateValue === 'number') {
+                date = new Date(dateValue);
+            }
+            // 處理字符串
+            else if (typeof dateValue === 'string') {
+                date = new Date(dateValue);
+            }
+            else {
+                return '-';
+            }
+            
+            // 檢查日期是否有效
+            if (isNaN(date.getTime())) {
+                return '-';
+            }
+            
+            // 返回格式化的日期
+            return date.toLocaleDateString('zh-TW', { 
+                year: 'numeric', 
+                month: '2-digit', 
+                day: '2-digit' 
+            });
         }
 
         // ==================== 刪除項目模態框 ====================
