@@ -1926,8 +1926,18 @@
                     `;
                 }).join('');
                 
-                // ✅ 渲染完成後，更新按鈕狀態
-                updateDeleteButton();
+                // ✅ 渲染完成後，檢查全選狀態並更新按鈕
+                setTimeout(() => {
+                    const selectAllCheckbox = document.getElementById('select-all-checkbox');
+                    if (selectAllCheckbox && selectAllCheckbox.checked) {
+                        // 如果全選複選框被選中，確保所有文檔複選框也被選中
+                        const documentCheckboxes = document.querySelectorAll('.document-checkbox');
+                        documentCheckboxes.forEach(checkbox => {
+                            checkbox.checked = true;
+                        });
+                    }
+                    updateDeleteButton();
+                }, 100);
         }
         
         // ==================== 載入文檔 ====================
@@ -2641,17 +2651,28 @@
             const selectAllCheckbox = document.getElementById('select-all-checkbox');
             const documentCheckboxes = document.querySelectorAll('.document-checkbox');
             
+            console.log(`📋 全選狀態: ${selectAllCheckbox.checked}, 找到 ${documentCheckboxes.length} 個複選框`);
+            
             documentCheckboxes.forEach(checkbox => {
                 checkbox.checked = selectAllCheckbox.checked;
             });
             
             updateDeleteButton();
+            
+            console.log(`✅ 已更新按鈕狀態`);
         };
         
         function updateDeleteButton() {
             const selectedCheckboxes = document.querySelectorAll('.document-checkbox:checked');
             const deleteBtn = document.getElementById('delete-selected-btn');
             const selectedCount = selectedCheckboxes.length;
+            
+            console.log(`🔄 updateDeleteButton: 選中 ${selectedCount} 個文檔`);
+            
+            if (!deleteBtn) {
+                console.error('❌ 找不到 delete-selected-btn 按鈕');
+                return;
+            }
             
             if (selectedCount > 0) {
                 deleteBtn.disabled = false;
@@ -2662,6 +2683,7 @@
                     <i class="fas fa-trash"></i>
                     <span>Delete ${selectedCount}</span>
                 `;
+                console.log(`✅ Delete 按鈕已更新: Delete ${selectedCount}`);
             } else {
                 deleteBtn.disabled = true;
                 deleteBtn.style.opacity = '0.5';
@@ -2671,6 +2693,7 @@
                     <i class="fas fa-trash"></i>
                     <span>Delete</span>
                 `;
+                console.log(`✅ Delete 按鈕已重置: Delete`);
             }
             
             // ✅ 同時更新 Export 按鈕
@@ -2685,23 +2708,30 @@
             // 查找 Export 按鈕（可能有多個，更新所有）
             const exportButtons = document.querySelectorAll('[onclick*="toggleExportMenu"]');
             
-            exportButtons.forEach(btn => {
+            console.log(`🔄 updateExportButton: 選中 ${selectedCount} 個文檔，找到 ${exportButtons.length} 個 Export 按鈕`);
+            
+            if (exportButtons.length === 0) {
+                console.error('❌ 找不到 Export 按鈕');
+                return;
+            }
+            
+            exportButtons.forEach((btn, index) => {
                 if (selectedCount > 0) {
                     btn.innerHTML = `
                         <i class="fas fa-download"></i>
                         <span>Export ${selectedCount}</span>
                         <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
                     `;
+                    console.log(`✅ Export 按鈕 ${index + 1} 已更新: Export ${selectedCount}`);
                 } else {
                     btn.innerHTML = `
                         <i class="fas fa-download"></i>
                         <span>Export</span>
                         <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
                     `;
+                    console.log(`✅ Export 按鈕 ${index + 1} 已重置: Export`);
                 }
             });
-            
-            console.log(`📊 Export 按鈕已更新：${selectedCount > 0 ? `Export ${selectedCount}` : 'Export'}`);
         }
         
         window.deleteSelectedDocuments = async function() {
