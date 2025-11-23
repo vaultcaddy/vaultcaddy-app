@@ -1926,17 +1926,7 @@
                     `;
                 }).join('');
                 
-                // ✅ 渲染完成後，為複選框添加事件監聽器
-                setTimeout(() => {
-                    const documentCheckboxes = document.querySelectorAll('.document-checkbox');
-                    
-                    documentCheckboxes.forEach(checkbox => {
-                        checkbox.addEventListener('change', updateButtons);
-                    });
-                    
-                    // 更新按鈕狀態
-                    updateButtons();
-                }, 100);
+                // ✅ 輪詢機制會自動檢測複選框變化，無需手動添加事件監聽器
         }
         
         // ==================== 載入文檔 ====================
@@ -2646,69 +2636,56 @@
         }
         
         // ==================== 複選框功能 ====================
-        window.toggleSelectAll = function() {
-            console.log('🔵 toggleSelectAll 被調用');
-            
-            const selectAllCheckbox = document.getElementById('select-all-checkbox');
-            const documentCheckboxes = document.querySelectorAll('.document-checkbox');
-            
-            console.log(`📋 全選複選框狀態: ${selectAllCheckbox.checked}`);
-            console.log(`📋 找到 ${documentCheckboxes.length} 個文檔複選框`);
-            
-            // 🎯 直接更改所有複選框狀態
-            documentCheckboxes.forEach((checkbox, index) => {
-                checkbox.checked = selectAllCheckbox.checked;
-                console.log(`✅ 複選框 ${index + 1} 已${selectAllCheckbox.checked ? '選中' : '取消'}`);
-            });
-            
-            // 🎯 關鍵：直接調用 updateButtons() 更新按鈕狀態
-            updateButtons();
-            
-            console.log(`✅ 全選操作完成`);
-        };
+        // 🎯 方案：使用輪詢機制持續監控複選框狀態
+        let lastSelectedCount = 0;
         
         // 統一更新按鈕的函數
         function updateButtons() {
             const selectedCount = document.querySelectorAll('.document-checkbox:checked').length;
             
+            // 只有數量變化時才更新（避免不必要的 DOM 操作）
+            if (selectedCount === lastSelectedCount) {
+                return;
+            }
+            
+            lastSelectedCount = selectedCount;
             console.log(`📊 更新按鈕: ${selectedCount} 個文檔被選中`);
             
             // 更新 Delete 按鈕
             const deleteBtn = document.getElementById('delete-selected-btn');
-            console.log(`🔍 Delete 按鈕存在: ${!!deleteBtn}`);
-            
             if (deleteBtn) {
                 const deleteSpan = deleteBtn.querySelector('span');
-                console.log(`🔍 Delete span 存在: ${!!deleteSpan}`);
-                
                 if (deleteSpan) {
-                    const newText = selectedCount > 0 ? `Delete ${selectedCount}` : 'Delete';
-                    deleteSpan.textContent = newText;
-                    console.log(`✅ Delete 按鈕文字已更新為: ${newText}`);
+                    deleteSpan.textContent = selectedCount > 0 ? `Delete ${selectedCount}` : 'Delete';
                 }
                 deleteBtn.disabled = selectedCount === 0;
                 deleteBtn.style.opacity = selectedCount > 0 ? '1' : '0.5';
-            } else {
-                console.error('❌ 找不到 Delete 按鈕！');
             }
             
             // 更新 Export 按鈕
             const exportBtn = document.querySelector('[onclick*="toggleExportMenu"]');
-            console.log(`🔍 Export 按鈕存在: ${!!exportBtn}`);
-            
             if (exportBtn) {
                 const exportSpan = exportBtn.querySelector('span');
-                console.log(`🔍 Export span 存在: ${!!exportSpan}`);
-                
                 if (exportSpan) {
-                    const newText = selectedCount > 0 ? `Export ${selectedCount}` : 'Export';
-                    exportSpan.textContent = newText;
-                    console.log(`✅ Export 按鈕文字已更新為: ${newText}`);
+                    exportSpan.textContent = selectedCount > 0 ? `Export ${selectedCount}` : 'Export';
                 }
-            } else {
-                console.error('❌ 找不到 Export 按鈕！');
             }
         }
+        
+        // 🎯 啟動輪詢：每 100ms 檢查一次複選框狀態
+        setInterval(updateButtons, 100);
+        
+        window.toggleSelectAll = function() {
+            const selectAllCheckbox = document.getElementById('select-all-checkbox');
+            const documentCheckboxes = document.querySelectorAll('.document-checkbox');
+            
+            // 直接更改所有複選框狀態
+            documentCheckboxes.forEach((checkbox) => {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+            
+            // 輪詢會自動檢測到變化並更新按鈕
+        };
         
         
         window.deleteSelectedDocuments = async function() {
