@@ -108,20 +108,24 @@ window.emailVerificationChecker = {
             document.body.style.paddingTop = '120px'; // 60px (navbar) + 60px (notice)
         }
         
-        // ✅ 調整左側欄位置（使用 fixed positioning，不會被橫幅推下）
+        // ✅ 調整左側欄位置（當驗證 banner 出現時，sidebar 需要向下移動）
         const adjustSidebar = () => {
             const sidebar = document.querySelector('.sidebar') || document.querySelector('aside.sidebar');
             if (sidebar) {
-                console.log('✅ 左側欄已找到，使用 fixed positioning，位置不變');
-                // sidebar 使用 fixed positioning，top 保持在 60px (navbar 高度)
-                // 不需要額外調整，橫幅顯示時不會影響 sidebar 位置
+                // 驗證 banner 高度約 60px，sidebar 原本 top: 60px（navbar 高度）
+                // 需要調整為 top: 120px（navbar + banner）
+                sidebar.style.top = '120px';
+                sidebar.style.height = 'calc(100vh - 120px)';
+                console.log('✅ 左側欄位置已調整：top: 120px');
             } else {
                 console.log('⚠️ 找不到左側欄元素');
+                // 延遲重試
+                setTimeout(adjustSidebar, 100);
             }
         };
         
-        // 檢查左側欄
-        adjustSidebar();
+        // 檢查並調整左側欄（延遲執行確保 DOM 已載入）
+        setTimeout(adjustSidebar, 100);
     },
     
     /**
