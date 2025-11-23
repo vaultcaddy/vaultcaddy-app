@@ -2678,25 +2678,22 @@
                 return;
             }
             
+            // 找到按鈕內的 <span> 元素
+            const span = deleteBtn.querySelector('span');
+            
             if (selectedCount > 0) {
                 deleteBtn.disabled = false;
                 deleteBtn.style.opacity = '1';
                 deleteBtn.style.cursor = 'pointer';
-                // 更新按鈕文字，與 Export 格式一致
-                deleteBtn.innerHTML = `
-                    <i class="fas fa-trash"></i>
-                    <span>Delete ${selectedCount}</span>
-                `;
+                // 只更新文字，不破壞 onclick
+                if (span) span.textContent = `Delete ${selectedCount}`;
                 console.log(`✅ Delete 按鈕已更新: Delete ${selectedCount}`);
             } else {
                 deleteBtn.disabled = true;
                 deleteBtn.style.opacity = '0.5';
                 deleteBtn.style.cursor = 'not-allowed';
                 // 恢復原始文字
-                deleteBtn.innerHTML = `
-                    <i class="fas fa-trash"></i>
-                    <span>Delete</span>
-                `;
+                if (span) span.textContent = 'Delete';
                 console.log(`✅ Delete 按鈕已重置: Delete`);
             }
             
@@ -2720,20 +2717,17 @@
             }
             
             exportButtons.forEach((btn, index) => {
-                if (selectedCount > 0) {
-                    btn.innerHTML = `
-                        <i class="fas fa-download"></i>
-                        <span>Export ${selectedCount}</span>
-                        <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
-                    `;
-                    console.log(`✅ Export 按鈕 ${index + 1} 已更新: Export ${selectedCount}`);
-                } else {
-                    btn.innerHTML = `
-                        <i class="fas fa-download"></i>
-                        <span>Export</span>
-                        <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
-                    `;
-                    console.log(`✅ Export 按鈕 ${index + 1} 已重置: Export`);
+                // 找到按鈕內的 <span> 元素
+                const span = btn.querySelector('span');
+                
+                if (span) {
+                    if (selectedCount > 0) {
+                        span.textContent = `Export ${selectedCount}`;
+                        console.log(`✅ Export 按鈕 ${index + 1} 已更新: Export ${selectedCount}`);
+                    } else {
+                        span.textContent = 'Export';
+                        console.log(`✅ Export 按鈕 ${index + 1} 已重置: Export`);
+                    }
                 }
             });
         }
