@@ -1927,30 +1927,43 @@
                 }).join('');
                 
                 // ✅ 渲染完成後，添加事件監聽器並檢查全選狀態
-                setTimeout(() => {
-                    const selectAllCheckbox = document.getElementById('select-all-checkbox');
-                    const documentCheckboxes = document.querySelectorAll('.document-checkbox');
-                    
-                    // 為每個複選框添加事件監聽器
-                    documentCheckboxes.forEach(checkbox => {
-                        checkbox.addEventListener('change', () => {
+                // 使用更長的延遲確保 DOM 完全渲染
+                requestAnimationFrame(() => {
+                    setTimeout(() => {
+                        const selectAllCheckbox = document.getElementById('select-all-checkbox');
+                        const documentCheckboxes = document.querySelectorAll('.document-checkbox');
+                        
+                        console.log(`📋 渲染完成，找到 ${documentCheckboxes.length} 個複選框`);
+                        
+                        // 為每個複選框添加事件監聽器（只添加一次）
+                        documentCheckboxes.forEach((checkbox, index) => {
+                            // 移除舊的監聽器（如果有）
+                            const newCheckbox = checkbox.cloneNode(true);
+                            checkbox.parentNode.replaceChild(newCheckbox, checkbox);
+                            
+                            newCheckbox.addEventListener('change', () => {
+                                console.log(`複選框 ${index + 1} 狀態改變`);
+                                updateDeleteButton();
+                            });
+                        });
+                        
+                        // 如果全選狀態是 true，重新應用全選
+                        if (isSelectAllActive && selectAllCheckbox) {
+                            console.log('🔄 重新應用全選狀態...');
+                            selectAllCheckbox.checked = true;
+                            const updatedCheckboxes = document.querySelectorAll('.document-checkbox');
+                            updatedCheckboxes.forEach(checkbox => {
+                                checkbox.checked = true;
+                            });
+                            console.log(`✅ 已全選 ${updatedCheckboxes.length} 個文檔`);
+                        }
+                        
+                        // 最後更新按鈕狀態（只調用一次）
+                        setTimeout(() => {
                             updateDeleteButton();
-                        });
-                    });
-                    
-                    // 如果全選狀態是 true，重新應用全選（不觸發 change 事件）
-                    if (isSelectAllActive && selectAllCheckbox) {
-                        console.log('🔄 重新應用全選狀態...');
-                        selectAllCheckbox.checked = true;
-                        documentCheckboxes.forEach(checkbox => {
-                            checkbox.checked = true;
-                        });
-                        console.log(`✅ 已全選 ${documentCheckboxes.length} 個文檔`);
-                    }
-                    
-                    // 最後更新按鈕狀態（只調用一次）
-                    updateDeleteButton();
-                }, 100);
+                        }, 50);
+                    }, 150);
+                });
         }
         
         // ==================== 載入文檔 ====================

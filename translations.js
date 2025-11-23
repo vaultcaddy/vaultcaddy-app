@@ -279,7 +279,7 @@ const translations = {
         
         // 價格區域
         'pricing_title': '合理且實惠的價格',
-        'pricing_subtitle': '人人都能負擔得起',
+        'pricing_subtitle': '輕鬆處理銀行對帳單',
         'pricing_monthly': '月費',
         'pricing_yearly': '年費 (節省20%)',
         'plan_basic': '基礎方案',
