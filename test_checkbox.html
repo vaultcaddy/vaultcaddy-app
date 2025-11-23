@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test</title>
+</head>
+<body>
+    <input type="checkbox" id="select-all" onchange="toggleAll()"> Select All
+    <br>
+    <input type="checkbox" class="item"> Item 1
+    <br>
+    <input type="checkbox" class="item"> Item 2
+    <br>
+    <button id="btn">Action 0</button>
+    
+    <script>
+        // 模擬延遲添加事件監聽器
+        setTimeout(() => {
+            document.querySelectorAll('.item').forEach((cb, i) => {
+                cb.addEventListener('change', updateButton);
+                console.log(`事件監聽器已添加到 Item ${i + 1}`);
+            });
+            updateButton();
+        }, 100);
+        
+        function toggleAll() {
+            const checked = document.getElementById('select-all').checked;
+            console.log('toggleAll:', checked);
+            
+            document.querySelectorAll('.item').forEach((cb, i) => {
+                if (cb.checked !== checked) {
+                    cb.checked = checked;
+                    const event = new Event('change', { bubbles: true });
+                    cb.dispatchEvent(event);
+                    console.log(`觸發 Item ${i + 1} change 事件`);
+                }
+            });
+        }
+        
+        function updateButton() {
+            const count = document.querySelectorAll('.item:checked').length;
+            document.getElementById('btn').textContent = `Action ${count}`;
+            console.log('更新按鈕:', count);
+        }
+    </script>
+</body>
+</html>
