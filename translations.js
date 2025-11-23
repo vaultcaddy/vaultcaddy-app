@@ -101,7 +101,7 @@ const translations = {
         'footer_privacy': 'Privacy Policy',
         'footer_terms': 'Terms & Conditions',
         'footer_gdpr': 'GDPR',
-        'footer_copyright': '© 2024 Made with Nzoni APP. All Rights Reserved.',
+        'footer_copyright': '© 2025 Made with VaultCaddy 版權所有',
         
         // 上傳狀態
         'upload_processing': 'Processing...',
@@ -370,7 +370,7 @@ const translations = {
         'footer_privacy': '隱私政策',
         'footer_terms': '條款與條件',
         'footer_gdpr': 'GDPR',
-        'footer_copyright': '© 2024 Made with Nzoni APP. 版權所有。',
+        'footer_copyright': '© 2025 Made with VaultCaddy 版權所有',
         
         // 上傳狀態
         'upload_processing': '正在處理...',
