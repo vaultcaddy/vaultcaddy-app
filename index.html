@@ -196,7 +196,7 @@
         <script defer src="simple-data-manager.js?v=20251105-force-init"></script>
         
         <!-- 語言管理器（必須在導航欄之前載入）-->
-        <script defer src="language-manager.js?v=20251120"></script>
+        <script src="language-manager.js?v=20251125"></script>
         
         <!-- 統一靜態導航欄（直接在 HTML 中，不需要 JS 加載）-->
         
@@ -433,16 +433,21 @@
                 languageDropdown.addEventListener('click', function(event) {
                     event.stopPropagation();
                     
+                    // 確保 languageManager 已加載
+                    if (!window.languageManager) {
+                        console.error('❌ LanguageManager 尚未加載');
+                        alert('語言管理器正在加載中，請稍後再試');
+                        return;
+                    }
+                    
                     // 獲取當前語言
-                    const currentLang = window.languageManager ? window.languageManager.getCurrentLanguage() : 'zh';
+                    const currentLang = window.languageManager.getCurrentLanguage();
                     const newLang = currentLang === 'zh' ? 'en' : 'zh';
                     
                     console.log('🌐 切換語言:', currentLang, '→', newLang);
                     
                     // 更新語言
-                    if (window.languageManager) {
-                        window.languageManager.setLanguage(newLang);
-                    }
+                    window.languageManager.setLanguage(newLang);
                     
                     // 更新顯示
                     currentLanguageSpan.textContent = newLang === 'zh' ? '繁體中文' : 'English';
@@ -1153,21 +1158,18 @@
     <script>
         // 初始化語言管理
         document.addEventListener('DOMContentLoaded', function() {
-            // 初始化 Navbar（navbar-component.js 的 initNavbar() 會自動處理）
-            // window.VaultCaddyNavbar 會在 initNavbar() 中創建
+            // language-manager.js 已經自動創建了 window.languageManager
+            // 這裡只需要確認它已經存在
             
-            // 初始化語言管理器
-            if (window.LanguageManager) {
-                window.languageManager = new LanguageManager();
+            if (window.languageManager) {
+                console.log('✅ LanguageManager 已就緒，當前語言:', window.languageManager.getCurrentLanguage());
+            } else {
+                console.error('❌ LanguageManager 未能正確加載');
             }
             
             // 監聽語言變更事件
             window.addEventListener('languageChanged', function(e) {
                 console.log('Index: 語言已變更為', e.detail.language);
-                // 重新應用翻譯到頁面元素
-                if (window.languageManager) {
-                    window.languageManager.loadLanguage(e.detail.language);
-                }
             });
             
             console.log('✅ Index 頁面語言管理初始化完成');
