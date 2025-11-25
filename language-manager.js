@@ -173,6 +173,104 @@
             'zh': '一鍵匯出QuickBooks、Xero 等主流平台格式',
             'en': 'Export to QuickBooks, Xero and other platforms with one click'
         },
+        'features.bank_badge': {
+            'zh': '銀行對賬單智能分析',
+            'en': 'Smart Bank Statement Analysis'
+        },
+        'features.bank_title1': {
+            'zh': '自動識別收支類別',
+            'en': 'Auto-identify Income and Expenses'
+        },
+        'features.bank_title2': {
+            'zh': '即時生成財務報表',
+            'en': 'Generate Financial Reports Instantly'
+        },
+        'features.bank_category_title': {
+            'zh': '智能交易分類',
+            'en': 'Smart Transaction Classification'
+        },
+        'features.bank_category_desc': {
+            'zh': '自動識別收入、支出、轉賬類別並歸類',
+            'en': 'Auto-identify and categorize income, expenses, and transfers'
+        },
+        'features.bank_extract_title': {
+            'zh': '精準數據提取',
+            'en': 'Precise Data Extraction'
+        },
+        'features.bank_extract_desc': {
+            'zh': '準確擷取日期、對方賬戶、金額等關鍵資料',
+            'en': 'Accurately extract date, account, amount and other key data'
+        },
+        'features.bank_export_title': {
+            'zh': '多格式匯出',
+            'en': 'Multi-format Export'
+        },
+        'features.bank_export_desc': {
+            'zh': '支援匯出到 Excel、CSV、QuickBooks、Xero 等',
+            'en': 'Support export to Excel, CSV, QuickBooks, Xero and more'
+        },
+        
+        // 為什麼選擇 VaultCaddy
+        'why.badge': {
+            'zh': '為什麼選擇 VaultCaddy',
+            'en': 'WHY CHOOSE VAULTCADDY'
+        },
+        'why.title': {
+            'zh': '專為香港會計師打造',
+            'en': 'Designed for Hong Kong Accountants'
+        },
+        'why.subtitle': {
+            'zh': '提升效率，降低成本，讓您專注於更有價值的工作',
+            'en': 'Boost efficiency, reduce costs, and focus on more valuable work'
+        },
+        'why.speed_title': {
+            'zh': '極速處理',
+            'en': 'Lightning Fast'
+        },
+        'why.speed_desc1': {
+            'zh': '平均 10 秒完成一份文檔',
+            'en': 'Average 10 seconds per document'
+        },
+        'why.speed_desc2': {
+            'zh': '批量處理更快更省時',
+            'en': 'Batch processing saves even more time'
+        },
+        'why.speed_desc3': {
+            'zh': '節省 90% 人工輸入時間',
+            'en': 'Save 90% manual input time'
+        },
+        'why.accuracy_title': {
+            'zh': '超高準確率',
+            'en': 'Ultra High Accuracy'
+        },
+        'why.accuracy_desc1': {
+            'zh': 'AI 辨識準確率達 98%',
+            'en': '98% AI recognition accuracy'
+        },
+        'why.accuracy_desc2': {
+            'zh': '自動驗證和校正錯誤',
+            'en': 'Auto-verify and correct errors'
+        },
+        'why.accuracy_desc3': {
+            'zh': '大幅降低人為失誤風險',
+            'en': 'Greatly reduce human error risks'
+        },
+        'why.price_title': {
+            'zh': '性價比最高',
+            'en': 'Best Value'
+        },
+        'why.price_desc1': {
+            'zh': '每頁只需 HKD 0.5',
+            'en': 'Only HKD 0.5 per page'
+        },
+        'why.price_desc2': {
+            'zh': '無隱藏收費',
+            'en': 'No hidden fees'
+        },
+        'why.price_desc3': {
+            'zh': '用多少付多少最靈活',
+            'en': 'Pay as you go - most flexible'
+        },
         
         // 上傳區塊
         'upload.title': {
