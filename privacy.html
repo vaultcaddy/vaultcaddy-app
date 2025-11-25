@@ -108,11 +108,11 @@
     </style>
 </head>
 <body>
-    <!-- 導航欄 -->
+    <!-- ✅ 統一靜態導航欄（與 index.html 完全一致）-->
     <nav class="vaultcaddy-navbar" id="main-navbar" style="position: fixed; top: 0; left: 0; right: 0; height: 60px; background: #ffffff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; z-index: 1000; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);">
         <div style="display: flex; align-items: center; gap: 0.5rem;">
             <a href="index.html" style="display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: #1f2937; font-weight: 600; font-size: 1.125rem;">
-                <div style="width: 32px; height: 32px; background: #f9fafb; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.25rem;">
+                <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.25rem;">
                     V
                 </div>
                 <div>
@@ -142,6 +142,35 @@
     <div id="user-dropdown" style="display: none; position: fixed; top: 70px; right: 2rem; background: white; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); padding: 1rem; min-width: 220px; z-index: 2000; border: 1px solid #e5e7eb;">
         <div style="padding: 0.75rem; border-bottom: 1px solid #f3f4f6;">
             <div style="font-weight: 600; font-size: 1rem; color: #1f2937; margin-bottom: 0.25rem;"><span data-i18n="dropdown.credits">Credits</span>: <span id="dropdown-credits">0</span></div>
+            <div style="font-size: 0.875rem; color: #6b7280;" id="dropdown-email">user@example.com</div>
+        </div>
+        <div style="padding: 0.5rem 0;">
+            <a href="account.html" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; color: #374151; text-decoration: none; border-radius: 6px; transition: background 0.2s; font-size: 0.9375rem;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+                <span><i class="fas fa-user" style="margin-right: 0.75rem; color: #6b7280; width: 16px;"></i><span data-i18n="dropdown.account">帳戶</span></span>
+                <span style="color: #9ca3af; font-size: 0.875rem;">⌘A</span>
+            </a>
+            <a href="billing.html" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; color: #374151; text-decoration: none; border-radius: 6px; transition: background 0.2s; font-size: 0.9375rem;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+                <span><i class="fas fa-credit-card" style="margin-right: 0.75rem; color: #6b7280; width: 16px;"></i><span data-i18n="dropdown.billing">計費</span></span>
+                <span style="color: #9ca3af; font-size: 0.875rem;">⌘B</span>
+            </a>
+        </div>
+        <div style="border-top: 1px solid #f3f4f6; padding-top: 0.5rem;">
+            <button onclick="handleLogout()" style="width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; color: #ef4444; background: transparent; border: none; border-radius: 6px; cursor: pointer; transition: background 0.2s; font-size: 0.9375rem; text-align: left;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='transparent'">
+                <span><i class="fas fa-sign-out-alt" style="margin-right: 0.75rem; width: 16px;"></i><span data-i18n="dropdown.logout">登出</span></span>
+                <span style="color: #fca5a5; font-size: 0.875rem;">⌘Q</span>
+            </button>
+        </div>
+    </div>
+    
+    <!-- 語言下拉菜單 -->
+    <div id="language-menu" style="display: none; position: fixed; top: 70px; right: 200px; background: white; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); padding: 0.5rem; min-width: 150px; z-index: 2000; border: 1px solid #e5e7eb;">
+        <div onclick="changeLanguage('zh-TW')" style="padding: 0.75rem; color: #374151; cursor: pointer; border-radius: 6px; transition: background 0.2s; font-size: 0.9375rem;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+            繁體中文
+        </div>
+        <div onclick="changeLanguage('en')" style="padding: 0.75rem; color: #374151; cursor: pointer; border-radius: 6px; transition: background 0.2s; font-size: 0.9375rem;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+            English
+        </div>
+    </div>
 
     <!-- 主要內容 -->
     <main class="legal-content">
@@ -258,11 +287,11 @@
     <footer style="background: white; color: white; padding: 3rem 0; text-align: center;">
         <div style="max-width: 1200px; margin: 0 auto; padding: 0 2rem;">
             <div style="display: flex; align-items: center; justify-content: center; gap: 0.75rem; margin-bottom: 1.5rem;">
-                <div style="width: 32px; height: 32px; background: #f9fafb; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.25rem;">
+                <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.25rem;">
                     V
                 </div>
                 <div>
-                    <div style="font-weight: 600; font-size: 1.125rem;">VaultCaddy</div>
+                    <div style="font-weight: 600; font-size: 1.125rem; color: #1f2937;">VaultCaddy</div>
                     <div style="font-size: 0.75rem; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em;">AI DOCUMENT PROCESSING</div>
                 </div>
             </div>
@@ -273,5 +302,137 @@
             <p style="color: #6b7280; font-size: 0.875rem; margin: 0;">© 2025 Made with vaultcaddy 版權所有</p>
         </div>
     </footer>
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBXOCi0KkKk-vPDxud3THHaK3-pF-OdBhI",
+            authDomain: "vaultcaddy.firebaseapp.com",
+            projectId: "vaultcaddy",
+            storageBucket: "vaultcaddy.firebasestorage.app",
+            messagingSenderId: "1062360012800",
+            appId: "1:1062360012800:web:2e165c8e0e1d8e2e8f8f8f"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let userCredits = 0;
+        let userEmail = '';
+        let userDisplayName = '';
+
+        // 獲取用戶首字母
+        function getUserInitial() {
+            if (!userDisplayName || userDisplayName.trim() === '') {
+                return userEmail ? userEmail.charAt(0).toUpperCase() : 'U';
+            }
+            
+            const parts = userDisplayName.trim().split(/\s+/);
+            
+            if (parts.length >= 2) {
+                const firstInitial = parts[0].charAt(0).toUpperCase();
+                const lastInitial = parts[parts.length - 1].charAt(0).toUpperCase();
+                return firstInitial + lastInitial;
+            } else if (parts.length === 1) {
+                const name = parts[0];
+                if (name.length >= 2) {
+                    return name.substring(0, 2).toUpperCase();
+                } else {
+                    return name.charAt(0).toUpperCase();
+                }
+            }
+            
+            return 'U';
+        }
+
+        // 切換下拉菜單
+        function toggleDropdown() {
+            const dropdown = document.getElementById('user-dropdown');
+            if (dropdown.style.display === 'none') {
+                dropdown.style.display = 'block';
+                document.getElementById('dropdown-credits').textContent = userCredits.toLocaleString();
+                document.getElementById('dropdown-email').textContent = userEmail;
+            } else {
+                dropdown.style.display = 'none';
+            }
+        }
+
+        // 切換語言菜單
+        function toggleLanguageMenu() {
+            const menu = document.getElementById('language-menu');
+            if (menu.style.display === 'none') {
+                menu.style.display = 'block';
+            } else {
+                menu.style.display = 'none';
+            }
+        }
+
+        // 更改語言
+        window.changeLanguage = function(lang) {
+            localStorage.setItem('preferredLanguage', lang);
+            document.getElementById('current-language').textContent = lang === 'zh-TW' ? '繁體中文' : 'English';
+            document.getElementById('language-menu').style.display = 'none';
+        };
+
+        // 登出
+        window.handleLogout = async function() {
+            try {
+                await signOut(auth);
+                window.location.href = 'index.html';
+            } catch (error) {
+                console.error('登出失敗:', error);
+            }
+        };
+
+        // 監聽用戶狀態
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                userEmail = user.email;
+                userDisplayName = user.displayName || '';
+                
+                const userAvatar = document.getElementById('user-avatar');
+                if (userAvatar) {
+                    userAvatar.textContent = getUserInitial();
+                }
+                
+                try {
+                    const userDoc = await getDoc(doc(db, 'users', user.uid));
+                    if (userDoc.exists()) {
+                        userCredits = userDoc.data().credits || 0;
+                    }
+                } catch (error) {
+                    console.error('獲取用戶數據失敗:', error);
+                }
+            }
+        });
+
+        // 事件監聽器
+        document.getElementById('user-menu').addEventListener('click', toggleDropdown);
+        document.getElementById('language-dropdown').addEventListener('click', toggleLanguageMenu);
+
+        // 點擊外部關閉下拉菜單
+        document.addEventListener('click', function(event) {
+            const userMenu = document.getElementById('user-menu');
+            const userDropdown = document.getElementById('user-dropdown');
+            const langDropdown = document.getElementById('language-dropdown');
+            const langMenu = document.getElementById('language-menu');
+            
+            if (!userMenu.contains(event.target) && !userDropdown.contains(event.target)) {
+                userDropdown.style.display = 'none';
+            }
+            
+            if (!langDropdown.contains(event.target) && !langMenu.contains(event.target)) {
+                langMenu.style.display = 'none';
+            }
+        });
+    </script>
+    
+    <!-- 多語言支持 -->
+    <script src="translations.js"></script>
 </body>
 </html>
