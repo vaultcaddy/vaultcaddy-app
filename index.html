@@ -390,10 +390,21 @@
             }
             
             // 切換下拉菜單
-            function toggleDropdown() {
+            async function toggleDropdown() {
                 const dropdown = document.getElementById('user-dropdown');
                 if (dropdown.style.display === 'none') {
                     dropdown.style.display = 'block';
+                    
+                    // 🔥 即時從 SimpleDataManager 獲取最新 Credits
+                    if (window.simpleDataManager && window.simpleDataManager.initialized) {
+                        try {
+                            userCredits = await window.simpleDataManager.getUserCredits();
+                            console.log('✅ 即時獲取 Credits:', userCredits);
+                        } catch (error) {
+                            console.error('❌ 無法獲取 Credits:', error);
+                        }
+                    }
+                    
                     // 更新下拉菜單內容
                     document.getElementById('dropdown-credits').textContent = userCredits.toLocaleString();
                     document.getElementById('dropdown-email').textContent = userEmail;
@@ -468,17 +479,31 @@
                         userEmail = currentUser.email || '';
                         userDisplayName = currentUser.displayName || '';
                         
-                        // 從 Firestore 獲取 displayName 和 credits
+                        // 🔥 從 Firestore 獲取 displayName 和 credits
                         if (window.simpleDataManager && window.simpleDataManager.initialized) {
                             try {
                                 const userDoc = await window.simpleDataManager.getUserDocument();
                                 if (userDoc) {
                                     userDisplayName = userDoc.displayName || userDisplayName;
                                     userCredits = userDoc.credits || 0;
+                                    console.log('✅ index.html 獲取 Credits:', userCredits);
                                 }
                             } catch (error) {
                                 console.log('⚠️ 無法從 Firestore 獲取用戶資料:', error);
                             }
+                        } else {
+                            console.log('⏳ SimpleDataManager 尚未初始化，等待中...');
+                            // 延遲重試
+                            setTimeout(async () => {
+                                if (window.simpleDataManager && window.simpleDataManager.initialized) {
+                                    try {
+                                        userCredits = await window.simpleDataManager.getUserCredits();
+                                        console.log('✅ 延遲獲取 Credits:', userCredits);
+                                    } catch (error) {
+                                        console.error('❌ 延遲獲取失敗:', error);
+                                    }
+                                }
+                            }, 1000);
                         }
                         
                         const userInitial = getUserInitial();
