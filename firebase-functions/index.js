@@ -518,7 +518,7 @@ exports.sendVerificationCode = functions.https.onCall(async (data, context) => {
                                 <li><strong>QuickBooks 整合：</strong>一鍵導出到會計軟件</li>
                                 <li><strong>多語言支持：</strong>支持繁體中文、英文等 8 種語言</li>
                                 <li><strong>雲端安全存儲：</strong>所有數據加密保護</li>
-                                <li><strong>免費試用：</strong>10 個免費 Credits（可處理 10 頁文檔）</li>
+                                <li><strong>免費試用：</strong>20 個免費 Credits（可處理 20 頁文檔）</li>
                             </ul>
                             
                             <p style="text-align: center;">
