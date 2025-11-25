@@ -941,27 +941,32 @@
                 console.error('❌ Email 驗證檢查失敗:', error);
             }
         })();
-    </script>
-
-    // 項目搜尋功能
-    function filterProjects(searchTerm) {
-        const tbody = document.getElementById('projects-tbody');
-        const rows = tbody.getElementsByTagName('tr');
-        const term = searchTerm.toLowerCase().trim();
         
-        for (let row of rows) {
-            const nameCell = row.cells[0];
-            if (!nameCell) continue;
+        // ==================== 項目搜尋功能 ====================
+        function filterProjects(searchTerm) {
+            const tbody = document.getElementById('projects-tbody');
+            if (!tbody) return;
             
-            const projectName = nameCell.textContent.toLowerCase();
+            const rows = tbody.getElementsByTagName('tr');
+            const term = searchTerm.toLowerCase().trim();
             
-            if (projectName.includes(term)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
+            for (let row of rows) {
+                const nameCell = row.cells[0];
+                if (!nameCell) continue;
+                
+                const projectName = nameCell.textContent.toLowerCase();
+                
+                if (projectName.includes(term)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
             }
         }
-    }
+        
+        // 暴露到全局供搜尋框使用
+        window.filterProjects = filterProjects;
+    </script>
 
 </body>
 </html>
