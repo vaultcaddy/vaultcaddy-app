@@ -739,14 +739,26 @@
          */
         translatePage() {
             console.log('🔄 開始翻譯頁面...');
+            console.log('📍 當前語言:', this.currentLanguage);
             
             // 查找所有帶有 data-i18n 屬性的元素
             const elements = document.querySelectorAll('[data-i18n]');
             console.log(`📝 找到 ${elements.length} 個需要翻譯的元素`);
 
-            elements.forEach(element => {
+            let successCount = 0;
+            let failCount = 0;
+
+            elements.forEach((element, index) => {
                 const key = element.getAttribute('data-i18n');
                 const translation = this.translate(key);
+                const originalText = element.textContent;
+                
+                // 調試：顯示前 3 個翻譯
+                if (index < 3) {
+                    console.log(`🔍 [${index}] Key: ${key}`);
+                    console.log(`   原文: ${originalText}`);
+                    console.log(`   譯文: ${translation}`);
+                }
                 
                 // 如果元素是 input，更新 placeholder
                 if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
@@ -755,13 +767,22 @@
                     } else {
                         element.value = translation;
                     }
+                    successCount++;
                 } else {
                     // 否則更新 textContent
-                    element.textContent = translation;
+                    if (translation && translation !== key) {
+                        element.textContent = translation;
+                        successCount++;
+                    } else {
+                        failCount++;
+                        if (index < 3) {
+                            console.warn(`⚠️ 翻譯失敗: ${key}`);
+                        }
+                    }
                 }
             });
 
-            console.log('✅ 頁面翻譯完成');
+            console.log(`✅ 頁面翻譯完成 - 成功: ${successCount}, 失敗: ${failCount}`);
         }
 
         /**
