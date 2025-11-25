@@ -61,6 +61,30 @@
             'zh': '超過 200+ 企業信賴',
             'en': 'Trusted by 200+ Businesses'
         },
+        'hero.trust': {
+            'zh': '超過 200+ 企業信賴',
+            'en': 'Trusted by 200+ Businesses'
+        },
+        'hero.title1': {
+            'zh': '針對香港銀行對帳單處理',
+            'en': 'Hong Kong Bank Statement Processing'
+        },
+        'hero.title2': {
+            'zh': '只需',
+            'en': 'Only'
+        },
+        'hero.page': {
+            'zh': '頁',
+            'en': 'page'
+        },
+        'hero.subtitle1': {
+            'zh': '專為會計師及小型公司設計的 AI 文檔處理平台',
+            'en': 'AI Document Processing Platform Designed for Accountants and Small Businesses'
+        },
+        'hero.subtitle2': {
+            'zh': '自動轉換 Excel/CSV/QuickBooks/Xero • 準確率 98% • 節省 90% 時間',
+            'en': 'Auto-convert to Excel/CSV/QuickBooks/Xero • 98% Accuracy • Save 90% Time'
+        },
         'hero.title': {
             'zh': '只需 HKD 0.5/頁 讓 AI 秒速幫你處理銀行對帳單',
             'en': 'Just HKD 0.5/page AI Processes Bank Statements in Seconds'
@@ -72,6 +96,82 @@
         'hero.cta': {
             'zh': '免費開始',
             'en': 'Get Started Free'
+        },
+        'hero.cta_trial': {
+            'zh': '免費試用 20 頁',
+            'en': 'Free 20-Page Trial'
+        },
+        'hero.cta_pricing': {
+            'zh': '了解收費',
+            'en': 'View Pricing'
+        },
+        
+        // 統計數據
+        'stats.seconds': {
+            'zh': '秒',
+            'en': ' seconds'
+        },
+        'stats.time_desc': {
+            'zh': '平均處理時間',
+            'en': 'Average Processing Time'
+        },
+        'stats.accuracy': {
+            'zh': '數據準確率',
+            'en': 'Data Accuracy'
+        },
+        'stats.clients': {
+            'zh': '企業客戶',
+            'en': 'Business Clients'
+        },
+        
+        // 功能區塊
+        'features.badge': {
+            'zh': '強大功能',
+            'en': 'POWERFUL FEATURES'
+        },
+        'features.title': {
+            'zh': '一站式 AI 文檔處理平台',
+            'en': 'All-in-One AI Document Processing Platform'
+        },
+        'features.subtitle': {
+            'zh': '支援發票、收據、銀行對賬單等多種財務文檔',
+            'en': 'Supports invoices, receipts, bank statements and various financial documents'
+        },
+        'features.invoice_badge': {
+            'zh': '智能發票收據處理',
+            'en': 'Smart Invoice & Receipt Processing'
+        },
+        'features.invoice_title1': {
+            'zh': '自動提取發票數據',
+            'en': 'Auto Extract Invoice Data'
+        },
+        'features.invoice_title2': {
+            'zh': '秒速完成分類歸檔',
+            'en': 'Complete Classification in Seconds'
+        },
+        'features.ocr_title': {
+            'zh': 'OCR 光學辨識技術',
+            'en': 'OCR Recognition Technology'
+        },
+        'features.ocr_desc': {
+            'zh': '準確擷取商家、日期、金額、稅項等關鍵資料',
+            'en': 'Accurately extract merchant, date, amount, tax and other key data'
+        },
+        'features.classification_title': {
+            'zh': '智能分類歸檔',
+            'en': 'Smart Classification'
+        },
+        'features.classification_desc': {
+            'zh': '自動識別發票類型並歸類到對應會計科目',
+            'en': 'Auto-identify invoice types and categorize to accounting items'
+        },
+        'features.sync_title': {
+            'zh': '即時同步到會計軟件',
+            'en': 'Real-time Sync to Accounting Software'
+        },
+        'features.sync_desc': {
+            'zh': '一鍵匯出QuickBooks、Xero 等主流平台格式',
+            'en': 'Export to QuickBooks, Xero and other platforms with one click'
         },
         
         // 上傳區塊
