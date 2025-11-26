@@ -96,10 +96,10 @@ class PDFToImageConverter {
             const pdf = await loadingTask.promise;
             console.log(`✅ PDF 載入成功，共 ${pdf.numPages} 頁`);
             
-            // 轉換選項
-            const scale = options.scale || 2.0; // 2x 縮放以提高清晰度
+            // 轉換選項（提高縮放比例以增強 OCR 識別準確度）
+            const scale = options.scale || 3.0; // 3x 縮放以提高清晰度，減少 OCR 誤判
             const format = options.format || 'image/jpeg'; // JPG 格式
-            const quality = options.quality || 0.95; // 95% 質量
+            const quality = options.quality || 0.98; // 98% 質量，提高圖片清晰度
             
             // 轉換每一頁
             const imageFiles = [];
