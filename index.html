@@ -429,38 +429,76 @@
                 return 'U';
             }
             
-            // 漢堡菜單功能（全局函數）
-            window.openMobileSidebar = function() {
-                const sidebar = document.getElementById('mobile-sidebar');
-                const overlay = document.getElementById('mobile-sidebar-overlay');
-                if (sidebar && overlay) {
-                    sidebar.style.left = '0';
-                    overlay.style.display = 'block';
-                    document.body.style.overflow = 'hidden'; // 防止背景滾動
-                    console.log('✅ 側邊欄已打開');
+            // 🔥 漢堡菜單功能（立即執行，不等待 DOMContentLoaded）
+            (function() {
+                console.log('🔵 初始化漢堡菜單...');
+                
+                // 打開側邊欄
+                window.openMobileSidebar = function() {
+                    console.log('🔵 openMobileSidebar 被調用');
+                    const sidebar = document.getElementById('mobile-sidebar');
+                    const overlay = document.getElementById('mobile-sidebar-overlay');
+                    console.log('🔵 sidebar:', sidebar);
+                    console.log('🔵 overlay:', overlay);
+                    
+                    if (sidebar && overlay) {
+                        sidebar.style.left = '0';
+                        overlay.style.display = 'block';
+                        document.body.style.overflow = 'hidden';
+                        console.log('✅ 側邊欄已打開');
+                    } else {
+                        console.error('❌ 找不到側邊欄或遮罩元素');
+                    }
+                };
+                
+                // 關閉側邊欄
+                window.closeMobileSidebar = function() {
+                    console.log('🔵 closeMobileSidebar 被調用');
+                    const sidebar = document.getElementById('mobile-sidebar');
+                    const overlay = document.getElementById('mobile-sidebar-overlay');
+                    
+                    if (sidebar && overlay) {
+                        sidebar.style.left = '-100%';
+                        overlay.style.display = 'none';
+                        document.body.style.overflow = 'auto';
+                        console.log('✅ 側邊欄已關閉');
+                    }
+                };
+                
+                // 綁定按鈕（使用多種方式確保綁定成功）
+                function bindMenuButton() {
+                    const menuBtn = document.getElementById('mobile-menu-btn');
+                    console.log('🔵 menuBtn:', menuBtn);
+                    
+                    if (menuBtn) {
+                        // 移除舊的監聽器（如果有）
+                        menuBtn.removeEventListener('click', window.openMobileSidebar);
+                        // 添加新的監聽器
+                        menuBtn.addEventListener('click', function(e) {
+                            console.log('🔵 漢堡按鈕被點擊');
+                            e.preventDefault();
+                            e.stopPropagation();
+                            window.openMobileSidebar();
+                        });
+                        console.log('✅ 漢堡菜單按鈕已綁定');
+                    } else {
+                        console.error('❌ 找不到漢堡菜單按鈕');
+                    }
                 }
-            };
-            
-            window.closeMobileSidebar = function() {
-                const sidebar = document.getElementById('mobile-sidebar');
-                const overlay = document.getElementById('mobile-sidebar-overlay');
-                if (sidebar && overlay) {
-                    sidebar.style.left = '-100%';
-                    overlay.style.display = 'none';
-                    document.body.style.overflow = 'auto';
-                    console.log('✅ 側邊欄已關閉');
-                }
-            };
-            
-            // 綁定漢堡菜單按鈕
-            document.addEventListener('DOMContentLoaded', function() {
-                const menuBtn = document.getElementById('mobile-menu-btn');
-                if (menuBtn) {
-                    menuBtn.addEventListener('click', window.openMobileSidebar);
-                    console.log('✅ 漢堡菜單按鈕已綁定');
+                
+                // 立即嘗試綁定
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', bindMenuButton);
                 } else {
-                    console.error('❌ 找不到漢堡菜單按鈕');
+                    bindMenuButton();
                 }
+                
+                // 也在 window.onload 時再次嘗試
+                window.addEventListener('load', function() {
+                    console.log('🔵 window.onload - 再次檢查綁定');
+                    bindMenuButton();
+                });
+            })();
                 
                 // 手機版自動輪播（僅在手機版啟用）
                 if (window.innerWidth <= 768) {
@@ -1258,7 +1296,7 @@
         @media (max-width: 768px) {
             /* 導航欄 */
             .vaultcaddy-navbar {
-                padding: 0 1rem !important;
+                padding: 0 0.75rem !important;
             }
             
             /* 顯示漢堡菜單按鈕 */
@@ -1278,9 +1316,30 @@
             
             /* 用戶下拉菜單位置 */
             #user-dropdown {
-                right: 1rem !important;
-                left: 1rem !important;
+                right: 0.75rem !important;
+                left: 0.75rem !important;
                 min-width: auto !important;
+            }
+            
+            /* 🔥 通用：減少所有容器的左右內距 */
+            section > div,
+            .container,
+            section > div[style*="padding"],
+            div[style*="max-width: 1200px"] {
+                padding-left: 0.75rem !important;
+                padding-right: 0.75rem !important;
+            }
+            
+            /* 🔥 功能卡片內距 */
+            div[style*="border-radius: 24px"][style*="padding: 4rem"] {
+                padding: 1.5rem !important;
+            }
+            
+            /* 🔥 所有大內距的 div 都縮小 */
+            div[style*="padding: 2rem"],
+            div[style*="padding: 3rem"],
+            div[style*="padding: 4rem"] {
+                padding: 1.25rem !important;
             }
             
             /* Footer */
@@ -1302,25 +1361,30 @@
                 font-size: 1rem !important;
             }
             
-            /* 統計數據 - 保持橫向，縮小字體 */
-            section > div > div > div[style*="grid-template-columns: repeat(3, 1fr)"] {
+            /* 🔥 統計數據 - 保持橫向，縮小字體 */
+            div[style*="grid-template-columns: repeat(3, 1fr)"] {
                 grid-template-columns: repeat(3, 1fr) !important;
                 gap: 0.5rem !important;
-                margin-top: 2rem !important;
-                padding-top: 1.5rem !important;
+                margin-top: 1.5rem !important;
+                padding-top: 1rem !important;
             }
             
-            section > div > div > div[style*="grid-template-columns: repeat(3, 1fr)"] > div {
-                padding: 0 0.25rem !important;
+            /* 統計數據的數字 */
+            #stat-speed,
+            #stat-accuracy,
+            #stat-clients {
+                font-size: 1.5rem !important;
             }
             
-            section > div > div > div[style*="grid-template-columns: repeat(3, 1fr)"] > div > div:first-child {
-                font-size: 1.75rem !important;
+            /* 統計數據容器中的所有 div（數字） */
+            div[style*="grid-template-columns: repeat(3, 1fr)"] > div > div:first-child {
+                font-size: 1.5rem !important;
                 margin-bottom: 0.25rem !important;
             }
             
-            section > div > div > div[style*="grid-template-columns: repeat(3, 1fr)"] > div > div:last-child {
-                font-size: 0.75rem !important;
+            /* 統計數據容器中的所有 div（描述文字） */
+            div[style*="grid-template-columns: repeat(3, 1fr)"] > div > div:last-child {
+                font-size: 0.7rem !important;
             }
             
             /* 功能卡片 */
