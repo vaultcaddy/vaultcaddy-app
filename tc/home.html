@@ -571,7 +571,37 @@
                 }
             });
             
-            // 語言切換已改為頁面跳轉，無需 JavaScript
+            // 語言切換功能
+            const languageDropdown = document.getElementById('language-dropdown');
+            const currentLanguageSpan = document.getElementById('current-language');
+            
+            if (languageDropdown && currentLanguageSpan) {
+                languageDropdown.addEventListener('click', function(event) {
+                    event.stopPropagation();
+                    
+                    // 確保 languageManager 已加載
+                    if (!window.languageManager) {
+                        console.error('❌ LanguageManager 尚未加載');
+                        alert('語言管理器正在加載中，請稍後再試');
+                        return;
+                    }
+                    
+                    // 獲取當前語言
+                    const currentLang = window.languageManager.getCurrentLanguage();
+                    const newLang = currentLang === 'zh' ? 'en' : 'zh';
+                    
+                    console.log('🌐 切換語言:', currentLang, '→', newLang);
+                    
+                    // 更新語言
+                    window.languageManager.setLanguage(newLang);
+                    
+                    // 更新顯示
+                    currentLanguageSpan.textContent = newLang === 'zh' ? '繁體中文' : 'English';
+                    
+                    // 顯示通知
+                    console.log('✅ 語言已切換為:', newLang === 'zh' ? '繁體中文' : 'English');
+                });
+            }
             
             // 登出功能
             window.handleLogout = async function() {
