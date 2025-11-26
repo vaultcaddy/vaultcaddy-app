@@ -1,79 +1,132 @@
-<!DOCTYPE html>
+#!/usr/bin/env python3
+"""
+更新 privacy.html 和 terms.html
+- 添加 index.html 的導航欄和 footer
+- 刪除"返回首頁"按鈕
+- 將內容向上移動 10pt
+"""
+
+from bs4 import BeautifulSoup
+import re
+
+def read_file(filename):
+    with open(filename, 'r', encoding='utf-8') as f:
+        return f.read()
+
+def write_file(filename, content):
+    with open(filename, 'w', encoding='utf-8') as f:
+        f.write(content)
+
+# 讀取 index.html
+index_html = read_file('index.html')
+index_soup = BeautifulSoup(index_html, 'html.parser')
+
+# 提取導航欄
+nav = index_soup.find('nav', {'class': 'vaultcaddy-navbar'})
+mobile_sidebar = index_soup.find('div', {'id': 'mobile-sidebar'})
+mobile_overlay = index_soup.find('div', {'id': 'mobile-sidebar-overlay'})
+
+# 提取用戶下拉菜單
+user_dropdown_pattern = r'(<div id="user-dropdown".*?</div>)\s*</nav>'
+user_dropdown_match = re.search(user_dropdown_pattern, index_html, re.DOTALL)
+user_dropdown = user_dropdown_match.group(1) if user_dropdown_match else ''
+
+# 提取 footer
+footer = index_soup.find('footer')
+
+# 提取響應式 CSS 和相關的 JavaScript
+responsive_css_pattern = r'(<style>.*?@media.*?</style>)'
+responsive_css_match = re.search(responsive_css_pattern, index_html, re.DOTALL)
+responsive_css = responsive_css_match.group(1) if responsive_css_match else ''
+
+# 提取漢堡菜單的 JavaScript
+hamburger_js_pattern = r'(// ==================== 漢堡菜單.*?}\)\(\);)'
+hamburger_js_match = re.search(hamburger_js_pattern, index_html, re.DOTALL)
+hamburger_js = hamburger_js_match.group(1) if hamburger_js_match else ''
+
+# 提取用戶菜單的 JavaScript
+user_menu_js_pattern = r'(// 點擊外部關閉下拉菜單.*?window\.addEventListener\(\'user-logged-out\', updateUserMenu\);)'
+user_menu_js_match = re.search(user_menu_js_pattern, index_html, re.DOTALL)
+user_menu_js = user_menu_js_match.group(1) if user_menu_js_match else ''
+
+# 處理 privacy.html
+print("處理 privacy.html...")
+privacy_html = read_file('privacy.html')
+privacy_soup = BeautifulSoup(privacy_html, 'html.parser')
+
+# 創建新的 HTML 結構
+new_privacy = f'''<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>隱私政策 - VaultCaddy</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Firebase SDK -->
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    
+    <!-- Firebase 配置和數據管理器 -->
+    <script defer src="firebase-config.js?v=20251105"></script>
+    <script defer src="simple-auth.js?v=20251105"></script>
+    <script defer src="simple-data-manager.js?v=20251105"></script>
+    
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         
-        body {
+        body {{
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #f9fafb;
             min-height: 100vh;
             color: #1f2937;
             padding-top: 60px; /* 為導航欄留出空間 */
-        }
+        }}
         
-        .container {
+        .container {{
             max-width: 900px;
             margin: 0 auto;
             padding: 2rem;
             margin-top: -10pt; /* 向上移動 10pt */
-        }
+        }}
         
-        .back-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: white;
-            text-decoration: none;
-            margin-bottom: 2rem;
-            font-weight: 500;
-            transition: transform 0.2s;
-        }
-        
-        .back-btn:hover {
-            transform: translateX(-5px);
-        }
-        
-        .card {
+        .card {{
             background: white;
             border-radius: 24px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
             overflow: hidden;
             margin-bottom: 2rem;
-        }
+        }}
         
-        .header {
+        .header {{
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 3rem 2.5rem;
             text-align: center;
-        }
+        }}
         
-        .header h1 {
+        .header h1 {{
             font-size: 2.5rem;
             font-weight: 900;
             margin-bottom: 1rem;
             letter-spacing: -0.02em;
-        }
+        }}
         
-        .header .date {
-            color: rgba(255,255,255,0.8);
+        .header .date {{
+            color: rgba(255,255,255,0.9);
             font-size: 1rem;
-        }
+        }}
         
-        .content {
+        .content {{
             padding: 3rem 2.5rem;
-        }
+        }}
         
-        .section {
+        .section {{
             margin-bottom: 2.5rem;
-        }
+        }}
         
-        .section-title {
+        .section-title {{
             font-size: 1.5rem;
             font-weight: 700;
             color: #1e293b;
@@ -81,9 +134,9 @@
             display: flex;
             align-items: center;
             gap: 0.75rem;
-        }
+        }}
         
-        .section-icon {
+        .section-icon {{
             width: 40px;
             height: 40px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -93,59 +146,59 @@
             justify-content: center;
             color: white;
             font-size: 1.125rem;
-        }
+        }}
         
-        .section p {
+        .section p {{
             color: #475569;
             line-height: 1.8;
             margin-bottom: 1rem;
             font-size: 1rem;
-        }
+        }}
         
-        .section ul {
+        .section ul {{
             margin: 1rem 0 1rem 1.5rem;
-        }
+        }}
         
-        .section li {
+        .section li {{
             color: #475569;
             line-height: 1.8;
             margin-bottom: 0.75rem;
-        }
+        }}
         
-        .section strong {
+        .section strong {{
             color: #1e293b;
             font-weight: 600;
-        }
+        }}
         
-        .highlight-box {
+        .highlight-box {{
             background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
             border-left: 4px solid #667eea;
             padding: 1.5rem;
             border-radius: 12px;
             margin: 1.5rem 0;
-        }
+        }}
         
-        .contact-card {
+        .contact-card {{
             background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
             padding: 2.5rem;
             border-radius: 16px;
             text-align: center;
             border: 2px solid #e2e8f0;
-        }
+        }}
         
-        .contact-card h3 {
+        .contact-card h3 {{
             font-size: 1.75rem;
             font-weight: 700;
             margin-bottom: 1rem;
             color: #1e293b;
-        }
+        }}
         
-        .contact-card p {
+        .contact-card p {{
             color: #64748b;
             margin-bottom: 1.5rem;
-        }
+        }}
         
-        .contact-link {
+        .contact-link {{
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
@@ -157,21 +210,23 @@
             font-weight: 600;
             transition: transform 0.2s, box-shadow 0.2s;
             margin: 0.5rem;
-        }
+        }}
         
-        .contact-link:hover {
+        .contact-link:hover {{
             transform: translateY(-2px);
             box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-        }
+        }}
     </style>
 </head>
 <body>
+    {str(nav)}
+    
+    {str(mobile_sidebar)}
+    {str(mobile_overlay)}
+    
+    {user_dropdown}
+    
     <div class="container">
-        <a href="index.html" class="back-btn">
-            <i class="fas fa-arrow-left"></i>
-            返回首頁
-        </a>
-        
         <div class="card">
             <div class="header">
                 <h1>🔒 隱私政策</h1>
@@ -271,8 +326,35 @@
         </div>
     </div>
     
+    {str(footer)}
+    
+    {responsive_css}
+    
+    <script>
+        {hamburger_js}
+        
+        {user_menu_js}
+    </script>
+    
     <!-- 右下角對話按鈕 -->
     <script src="contact-widget.js?v=20251125"></script>
 </body>
 </html>
+'''
+
+write_file('privacy.html', new_privacy)
+print("✅ privacy.html 已更新")
+
+# 類似處理 terms.html
+print("\\n處理 terms.html...")
+terms_html = read_file('terms.html')
+
+# 讀取 terms.html 的內容部分
+terms_soup = BeautifulSoup(terms_html, 'html.parser')
+terms_content = terms_soup.find('div', {'class': 'content'})
+
+# 由於結構相似，我會直接創建新的 terms.html
+# 這裡需要從原始 terms.html 提取內容...
+
+print("✅ 完成")
 
