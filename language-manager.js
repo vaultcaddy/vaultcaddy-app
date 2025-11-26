@@ -70,8 +70,8 @@
             'en': 'Hong Kong Bank Statement Processing'
         },
         'hero.title2': {
-            'zh': '只需',
-            'en': 'Only'
+            'zh': '低至',
+            'en': 'As low as'
         },
         'hero.page': {
             'zh': '頁',
@@ -260,8 +260,8 @@
             'en': 'Best Value'
         },
         'why.price_desc1': {
-            'zh': '每頁只需 HKD 0.5',
-            'en': 'Only HKD 0.5 per page'
+            'zh': '每頁低至 HKD 0.5',
+            'en': 'As low as HKD 0.5 per page'
         },
         'why.price_desc2': {
             'zh': '無隱藏收費',
@@ -769,9 +769,15 @@
                     }
                     successCount++;
                 } else {
-                    // 否則更新 textContent
+                    // 🔥 修復：檢查翻譯是否包含 HTML 標籤
                     if (translation && translation !== key) {
-                        element.textContent = translation;
+                        // 如果翻譯包含 HTML 標籤，使用 innerHTML
+                        if (translation.includes('<')) {
+                            element.innerHTML = translation;
+                        } else {
+                            // 否則使用 textContent（更安全）
+                            element.textContent = translation;
+                        }
                         successCount++;
                     } else {
                         failCount++;
