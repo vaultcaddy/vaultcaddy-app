@@ -1356,7 +1356,18 @@
                                     <i class="fas fa-pen" style="font-size: 1.25rem;"></i>
                                 </button>
                             </div>
-                            <p style="color: #6b7280; font-size: 1rem; margin: 0;">Manage and view your documents</p>
+                            <!-- 搜尋欄 -->
+                            <div style="position: relative; max-width: 400px; margin-top: 0.5rem;">
+                                <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #9ca3af;"></i>
+                                <input type="text" id="document-search" placeholder="搜尋文檔..." style="
+                                    width: 100%;
+                                    padding: 0.625rem 1rem 0.625rem 2.75rem;
+                                    border: 1px solid #e5e7eb;
+                                    border-radius: 8px;
+                                    font-size: 0.875rem;
+                                    transition: all 0.2s;
+                                " onkeyup="filterDocuments(this.value)">
+                            </div>
                         </div>
                     </div>
                     
@@ -3292,6 +3303,38 @@
                 });
             }
         })();
+        
+        // ==================== 文檔搜尋功能 ====================
+        function filterDocuments(searchTerm) {
+            const tbody = document.getElementById('team-project-tbody');
+            if (!tbody) return;
+            
+            const rows = tbody.getElementsByTagName('tr');
+            const term = searchTerm.toLowerCase().trim();
+            
+            console.log(`🔍 搜尋文檔: "${term}"`);
+            
+            let visibleCount = 0;
+            for (let row of rows) {
+                // 搜尋所有列的內容
+                let rowText = '';
+                for (let cell of row.cells) {
+                    rowText += cell.textContent.toLowerCase() + ' ';
+                }
+                
+                if (rowText.includes(term)) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+            
+            console.log(`✅ 顯示 ${visibleCount} 個文檔`);
+        }
+        
+        // 暴露到全局供搜尋框使用
+        window.filterDocuments = filterDocuments;
     </script>
     
     <!-- CSV 導出優化模塊 -->
