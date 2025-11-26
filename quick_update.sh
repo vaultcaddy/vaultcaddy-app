@@ -1,0 +1,17 @@
+#!/bin/bash
+# 快速說明當前狀態
+echo "✅ 已完成的修改："
+echo "1. privacy.html 背景改為白色"
+echo "2. privacy.html 添加 padding-top: 60px"
+echo "3. privacy.html 向上移動 10pt"
+echo "4. privacy.html 標題改為紫色漸變"
+echo ""
+echo "⏳ 待完成："
+echo "1. 添加完整的導航欄"
+echo "2. 添加 footer"
+echo "3. 刪除'返回首頁'按鈕"
+echo "4. 添加所有必要的 JavaScript"
+echo ""
+echo "由於改動較大，建議："
+echo "- 完整重寫 privacy.html 和 terms.html"
+echo "- 或使用模板系統"
