@@ -152,7 +152,7 @@
           "name": "VaultCaddy 的收費是多少？",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "VaultCaddy 提供業界最低Pricing：每pageAs low as HKD 0.5。我們提供免費試用 20 page，讓您先體驗服務質量。月費計劃 HKD 78，包含 100 page處理額度。"
+            "text": "VaultCaddy 提供業界最低Pricing：每page只需 HKD 0.5。我們提供免費試用 20 page，讓您先體驗服務質量。月費計劃 HKD 78，包含 100 page處理額度。"
           }
         },
         {
@@ -206,6 +206,20 @@
     
     <!-- 滑動動畫 CSS -->
     <style>
+        /* 🔥 移除page面左右空白 */
+        body {
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        
+        /* 確保所有容器使用完整寬度 */
+        .container {
+            max-width: 100% !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+        
         /* 滑動動畫基礎設置 */
         .fade-in-up {
             opacity: 0;
@@ -322,10 +336,18 @@
                 <a href="index.html#pricing" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;" data-i18n="nav.pricing">Pricing</a>
                 <a href="dashboard.html" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;" data-i18n="nav.dashboard">Dashboard</a>
             </div>
-            <a href="../tc/home.html" style="display: flex; align-items: center; gap: 0.5rem; color: #6b7280; font-size: 0.875rem; text-decoration: none; padding: 0.5rem 0.75rem; border-radius: 6px; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+            <div id="language-dropdown" style="position: relative; display: flex; align-items: center; gap: 0.5rem; color: #6b7280; font-size: 0.875rem; cursor: pointer; padding: 0.5rem 0.75rem; border-radius: 6px; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
                 <i class="fas fa-language"></i>
-                <span>繁體中文</span>
-            </a>
+                <span id="current-language">English</span>
+                <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
+                
+                <!-- 語言選擇下拉菜單 -->
+                <div id="language-options" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 0.5rem; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 0.5rem; min-width: 150px; border: 1px solid #e5e7eb;">
+                    <a href="../tc/home.html" style="display: block; padding: 0.75rem 1rem; color: #374151; text-decoration: none; border-radius: 6px; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+                        🇭🇰 繁體中文
+                    </a>
+                </div>
+            </div>
             <div id="user-menu" style="position: relative; display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;">
                 <div id="user-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">U</div>
             </div>
@@ -571,37 +593,28 @@
                 }
             });
             
-            // 語言切換Features
-            const languageDropdown = document.getElementById('language-dropdown');
-            const currentLanguageSpan = document.getElementById('current-language');
-            
-            if (languageDropdown && currentLanguageSpan) {
-                languageDropdown.addEventListener('click', function(event) {
-                    event.stopPropagation();
+            // 語言下拉菜單切換
+            document.addEventListener('DOMContentLoaded', function() {
+                const languageDropdown = document.getElementById('language-dropdown');
+                const languageOptions = document.getElementById('language-options');
+                
+                if (languageDropdown && languageOptions) {
+                    languageDropdown.addEventListener('click', function(event) {
+                        event.stopPropagation();
+                        // 切換下拉菜單顯示
+                        const isVisible = languageOptions.style.display === 'block';
+                        languageOptions.style.display = isVisible ? 'none' : 'block';
+                        console.log('🌐 語言下拉菜單:', isVisible ? '關閉' : '打開');
+                    });
                     
-                    // 確保 languageManager 已加載
-                    if (!window.languageManager) {
-                        console.error('❌ LanguageManager 尚未加載');
-                        alert('語言管理器正在加載中，請稍後再試');
-                        return;
-                    }
-                    
-                    // 獲取當前語言
-                    const currentLang = window.languageManager.getCurrentLanguage();
-                    const newLang = currentLang === 'zh' ? 'en' : 'zh';
-                    
-                    console.log('🌐 切換語言:', currentLang, '→', newLang);
-                    
-                    // 更新語言
-                    window.languageManager.setLanguage(newLang);
-                    
-                    // 更新顯示
-                    currentLanguageSpan.textContent = newLang === 'zh' ? 'English' : 'English';
-                    
-                    // 顯示通知
-                    console.log('✅ 語言已切換為:', newLang === 'zh' ? 'English' : 'English');
-                });
-            }
+                    // 點擊page面其他地方關閉下拉菜單
+                    document.addEventListener('click', function() {
+                        if (languageOptions) {
+                            languageOptions.style.display = 'none';
+                        }
+                    });
+                }
+            });
             
             // LogoutFeatures
             window.handleLogout = async function() {
@@ -698,9 +711,9 @@
     
 
     <!-- 主要內容區域 -->
-    <main style="padding-top: 60px;">
+    <main style="margin-top: 60px;">
         <!-- 🎨 全新 Hero 區域 -->
-        <section style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 5rem 0; color: white; position: relative; overflow: hidden;">
+        <section style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 3.75rem 0; color: white; position: relative; overflow: hidden;">
             <!-- 背景裝飾 -->
             <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.1;">
                 <div style="position: absolute; top: 20%; left: 10%; width: 300px; height: 300px; background: white; border-radius: 50%; filter: blur(100px);"></div>
@@ -718,7 +731,7 @@
                     <!-- 主標題 -->
                     <h1 style="font-size: 4rem; font-weight: 900; line-height: 1.1; margin-bottom: 1.5rem; text-shadow: 0 4px 20px rgba(0,0,0,0.2);">
                         <span data-i18n="hero.title1">Targeted at Hong Kong Bank Statement Processing</span><br>
-                        <span data-i18n="hero.title2">As low as</span> <span style="background: linear-gradient(120deg, #ffd700, #ffed4e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 4.5rem;">HKD 0.5/<span data-i18n="hero.page">page</span></span>
+                        <span data-i18n="hero.title2">只需</span> <span style="background: linear-gradient(120deg, #ffd700, #ffed4e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 4.5rem;">HKD 0.5/<span data-i18n="hero.page">page</span></span>
                     </h1>
                     
                     <!-- 副標題 -->
@@ -975,7 +988,7 @@
                             <i class="fas fa-hand-holding-usd" style="color: white; font-size: 2.5rem;"></i>
                         </div>
                         <h3 style="font-size: 1.5rem; font-weight: 700; color: #1f2937; margin-bottom: 1rem;" data-i18n="why.price_title">Best Value</h3>
-                        <p style="color: #6b7280; line-height: 1.8; font-size: 1rem;"><span data-i18n="why.price_desc1">每pageAs low as <strong style="color: #f59e0b;">HKD 0.5</strong></span><br><span data-i18n="why.price_desc2">No hidden fees</span><br><span data-i18n="why.price_desc3">Pay as you go, most flexible</span></p>
+                        <p style="color: #6b7280; line-height: 1.8; font-size: 1rem;"><span data-i18n="why.price_desc1">每page只需 <strong style="color: #f59e0b;">HKD 0.5</strong></span><br><span data-i18n="why.price_desc2">No hidden fees</span><br><span data-i18n="why.price_desc3">Pay as you go, most flexible</span></p>
                     </div>
                 </div>
             </div>
