@@ -714,7 +714,9 @@
             console.log(`🌐 切換語言: ${this.currentLanguage} → ${language}`);
             this.currentLanguage = language;
             this.saveLanguage(language);
+            console.log('🔵 準備調用 translatePage()...');
             this.translatePage();
+            console.log('🔵 translatePage() 調用完成');
 
             // 發送語言變更事件
             window.dispatchEvent(new CustomEvent('languageChanged', {
@@ -738,8 +740,9 @@
          * 翻譯整個頁面
          */
         translatePage() {
-            console.log('🔄 開始翻譯頁面...');
+            console.log('🔄 ============ 開始翻譯頁面 ============');
             console.log('📍 當前語言:', this.currentLanguage);
+            console.log('📍 Translations 對象:', Object.keys(this.translations).length, '個 keys');
             
             // 查找所有帶有 data-i18n 屬性的元素
             const elements = document.querySelectorAll('[data-i18n]');
