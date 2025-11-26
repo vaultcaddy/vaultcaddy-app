@@ -336,17 +336,6 @@
     <!-- 手機側邊欄菜單 -->
     <div id="mobile-sidebar" style="position: fixed; top: 0; left: -100%; width: 280px; height: 100vh; background: white; z-index: 2000; transition: left 0.3s ease; box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto;">
         <div style="padding: 1.5rem;">
-            <!-- Logo -->
-            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 2rem;">
-                <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.5rem;">
-                    V
-                </div>
-                <div>
-                    <div style="font-weight: 600; font-size: 1.125rem; color: #1f2937;">VaultCaddy</div>
-                    <div style="font-size: 0.75rem; color: #6b7280; font-weight: 400; text-transform: uppercase; letter-spacing: 0.05em;">AI DOCUMENT PROCESSING</div>
-                </div>
-            </div>
-            
             <!-- 菜單項 -->
             <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                 <a href="index.html#features" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
@@ -440,28 +429,37 @@
                 return 'U';
             }
             
-            // 漢堡菜單功能
-            function openMobileSidebar() {
+            // 漢堡菜單功能（全局函數）
+            window.openMobileSidebar = function() {
                 const sidebar = document.getElementById('mobile-sidebar');
                 const overlay = document.getElementById('mobile-sidebar-overlay');
-                sidebar.style.left = '0';
-                overlay.style.display = 'block';
-                document.body.style.overflow = 'hidden'; // 防止背景滾動
-            }
+                if (sidebar && overlay) {
+                    sidebar.style.left = '0';
+                    overlay.style.display = 'block';
+                    document.body.style.overflow = 'hidden'; // 防止背景滾動
+                    console.log('✅ 側邊欄已打開');
+                }
+            };
             
             window.closeMobileSidebar = function() {
                 const sidebar = document.getElementById('mobile-sidebar');
                 const overlay = document.getElementById('mobile-sidebar-overlay');
-                sidebar.style.left = '-100%';
-                overlay.style.display = 'none';
-                document.body.style.overflow = 'auto';
+                if (sidebar && overlay) {
+                    sidebar.style.left = '-100%';
+                    overlay.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                    console.log('✅ 側邊欄已關閉');
+                }
             };
             
             // 綁定漢堡菜單按鈕
             document.addEventListener('DOMContentLoaded', function() {
                 const menuBtn = document.getElementById('mobile-menu-btn');
                 if (menuBtn) {
-                    menuBtn.addEventListener('click', openMobileSidebar);
+                    menuBtn.addEventListener('click', window.openMobileSidebar);
+                    console.log('✅ 漢堡菜單按鈕已綁定');
+                } else {
+                    console.error('❌ 找不到漢堡菜單按鈕');
                 }
                 
                 // 手機版自動輪播（僅在手機版啟用）
@@ -1304,10 +1302,25 @@
                 font-size: 1rem !important;
             }
             
-            /* 統計數據 */
+            /* 統計數據 - 保持橫向，縮小字體 */
             section > div > div > div[style*="grid-template-columns: repeat(3, 1fr)"] {
-                grid-template-columns: 1fr !important;
-                gap: 1.5rem !important;
+                grid-template-columns: repeat(3, 1fr) !important;
+                gap: 0.5rem !important;
+                margin-top: 2rem !important;
+                padding-top: 1.5rem !important;
+            }
+            
+            section > div > div > div[style*="grid-template-columns: repeat(3, 1fr)"] > div {
+                padding: 0 0.25rem !important;
+            }
+            
+            section > div > div > div[style*="grid-template-columns: repeat(3, 1fr)"] > div > div:first-child {
+                font-size: 1.75rem !important;
+                margin-bottom: 0.25rem !important;
+            }
+            
+            section > div > div > div[style*="grid-template-columns: repeat(3, 1fr)"] > div > div:last-child {
+                font-size: 0.75rem !important;
             }
             
             /* 功能卡片 */
@@ -1337,9 +1350,19 @@
                 justify-content: center !important;
             }
             
-            /* 容器內距 */
+            /* 容器內距 - 減少左右空白 */
             .container {
-                padding: 0 1rem !important;
+                padding: 0 0.75rem !important;
+            }
+            
+            /* 所有 section 的內距 */
+            section > div {
+                padding: 0 0.75rem !important;
+            }
+            
+            /* 卡片內距也縮小 */
+            section > div > div > div {
+                padding: 1.25rem !important;
             }
             
             /* Section 內距 - 減少以適應一頁顯示 */
