@@ -1932,15 +1932,15 @@
                 <header style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
                     <!-- 左側：標題和子標題 -->
                     <div style="display: flex; align-items: center; gap: 2rem;">
-                        <div>
-                            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
                                 <h1 id="team-project-title" contenteditable="false" style="font-size: 2rem; font-weight: 700; color: #1f2937; margin: 0; outline: none; border: 2px solid transparent; padding: 0.25rem 0; border-radius: 4px; transition: all 0.2s;">Project</h1>
                                 <button id="edit-project-name-btn" onclick="toggleProjectNameEdit()" style="background: transparent; border: none; cursor: pointer; color: #6b7280; padding: 0.5rem; border-radius: 4px; transition: all 0.2s;" title="編輯項目名稱">
                                     <i class="fas fa-pen" style="font-size: 1.25rem;"></i>
                                 </button>
                             </div>
-                            <!-- 搜尋欄 -->
-                            <div style="position: relative; max-width: 400px; margin-top: 0.5rem;">
+                            <!-- 搜尋欄移到右方 -->
+                            <div style="position: relative; max-width: 400px; flex: 1; min-width: 250px;">
                                 <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #9ca3af;"></i>
                                 <input type="text" id="document-search" placeholder="搜尋文檔..." style="
                                     width: 100%;
@@ -2123,6 +2123,19 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+                
+                <!-- 發票總計行 -->
+                <div id="invoice-summary" style="display: none; margin-top: 1rem; padding: 1rem 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; color: white;">
+                        <div style="font-size: 1.125rem; font-weight: 700;">
+                            <i class="fas fa-receipt" style="margin-right: 0.5rem;"></i>
+                            共 <span id="total-invoice-count">0</span> 張發票
+                        </div>
+                        <div style="font-size: 1.5rem; font-weight: 900;">
+                            $<span id="total-invoice-amount">0</span>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- 分頁控制 -->
@@ -2521,6 +2534,11 @@
                 }).join('');
                 
                 // ✅ 輪詢機制會自動檢測複選框變化，無需手動添加事件監聽器
+                
+                // ✅ 更新發票總計
+                setTimeout(() => {
+                    updateDocumentTotal();
+                }, 100);
         }
         
         // ==================== 載入文檔 ====================
@@ -3890,12 +3908,25 @@
         // ==================== 文檔搜尋功能 ====================
         function filterDocuments(searchTerm) {
             const tbody = document.getElementById('team-project-tbody');
-            if (!tbody) return;
+            if (!tbody) {
+                console.error('❌ 找不到表格 tbody');
+                return;
+            }
             
             const rows = tbody.getElementsByTagName('tr');
             const term = searchTerm.toLowerCase().trim();
             
-            console.log(`🔍 搜尋文檔: "${term}"`);
+            console.log(`🔍 搜尋文檔: "${term}", 總共 ${rows.length} 行`);
+            
+            // 如果搜尋欄是空的，顯示所有行
+            if (term === '') {
+                for (let row of rows) {
+                    row.style.display = '';
+                }
+                console.log(`✅ 顯示所有 ${rows.length} 個文檔`);
+                updateDocumentTotal(); // 更新總計
+                return;
+            }
             
             let visibleCount = 0;
             for (let row of rows) {
@@ -3913,11 +3944,67 @@
                 }
             }
             
-            console.log(`✅ 顯示 ${visibleCount} 個文檔`);
+            console.log(`✅ 顯示 ${visibleCount} 個文檔（搜尋: "${term}"）`);
+            updateDocumentTotal(); // 更新總計
         }
         
         // 暴露到全局供搜尋框使用
         window.filterDocuments = filterDocuments;
+        
+        // ==================== 計算發票總計 ====================
+        function updateDocumentTotal() {
+            const tbody = document.getElementById('team-project-tbody');
+            const summaryDiv = document.getElementById('invoice-summary');
+            
+            if (!tbody || !summaryDiv) {
+                console.log('⚠️ 找不到表格或總計元素');
+                return;
+            }
+            
+            const rows = tbody.getElementsByTagName('tr');
+            let invoiceCount = 0;
+            let totalAmount = 0;
+            
+            for (let row of rows) {
+                // 跳過隱藏的行（被搜尋過濾掉的）
+                if (row.style.display === 'none') continue;
+                
+                // 跳過 "No results" 行
+                if (row.querySelector('td[colspan]')) continue;
+                
+                // 檢查類型欄位是否為 "發票"
+                const typeCell = row.querySelector('.document-type-cell');
+                if (typeCell && typeCell.textContent.trim() === '發票') {
+                    invoiceCount++;
+                    
+                    // 提取金額
+                    const amountCell = row.querySelector('.document-amount-cell');
+                    if (amountCell) {
+                        const amountText = amountCell.textContent.trim();
+                        // 移除 $ 和逗號，轉換為數字
+                        const amount = parseFloat(amountText.replace(/[$,]/g, '')) || 0;
+                        totalAmount += amount;
+                    }
+                }
+            }
+            
+            // 更新顯示
+            if (invoiceCount > 0) {
+                document.getElementById('total-invoice-count').textContent = invoiceCount;
+                document.getElementById('total-invoice-amount').textContent = totalAmount.toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+                summaryDiv.style.display = 'block';
+            } else {
+                summaryDiv.style.display = 'none';
+            }
+            
+            console.log(`📊 發票統計: ${invoiceCount} 張, 總額: $${totalAmount.toFixed(2)}`);
+        }
+        
+        // 暴露到全局
+        window.updateDocumentTotal = updateDocumentTotal;
     </script>
     
     <!-- CSV 導出優化模塊 -->
