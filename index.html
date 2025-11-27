@@ -1543,9 +1543,117 @@
         });
     </script>
 
-</body>
-</html>
+    <!-- 🔥 漢堡菜單最終修復（確保在 DOM 加載後執行）-->
+    <script>
+        (function() {
+            console.log('🔥 漢堡菜單最終修復腳本開始執行');
+            
+            // 等待一小段時間確保 DOM 完全加載
+            function initHamburgerMenu() {
+                const menuBtn = document.getElementById('mobile-menu-btn');
+                
+                if (!menuBtn) {
+                    console.log('⏳ 漢堡菜單按鈕尚未加載，0.1秒後重試...');
+                    setTimeout(initHamburgerMenu, 100);
+                    return;
+                }
+                
+                console.log('✅ 找到漢堡菜單按鈕！');
+                console.log('📍 按鈕位置:', menuBtn.getBoundingClientRect());
+                console.log('📍 按鈕樣式:', window.getComputedStyle(menuBtn).display);
+                
+                // 強制設置按鈕可見性
+                menuBtn.style.cssText = `
+                    display: block !important;
+                    visibility: visible !important;
+                    opacity: 1 !important;
+                    pointer-events: auto !important;
+                    z-index: 1001 !important;
+                    position: relative !important;
+                    cursor: pointer !important;
+                    background: transparent !important;
+                    border: none !important;
+                    color: #1f2937 !important;
+                    padding: 0.5rem !important;
+                `;
+                
+                // 移除所有舊的事件監聽器（通過克隆節點）
+                const newMenuBtn = menuBtn.cloneNode(true);
+                menuBtn.parentNode.replaceChild(newMenuBtn, menuBtn);
+                
+                console.log('✅ 按鈕已克隆，移除舊事件監聽器');
+                
+                // 添加新的事件監聽器
+                let lastClick = 0;
+                
+                newMenuBtn.addEventListener('click', function(e) {
+                    const now = Date.now();
+                    if (now - lastClick < 300) {
+                        console.log('⚠️ 重複點擊，忽略');
+                        return;
+                    }
+                    lastClick = now;
+                    
+                    console.log('🔵 Click 事件觸發');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    if (typeof window.openMobileSidebar === 'function') {
+                        window.openMobileSidebar();
+                    } else {
+                        console.error('❌ openMobileSidebar 函數不存在');
+                    }
+                }, { passive: false, capture: true });
+                
+                newMenuBtn.addEventListener('touchstart', function(e) {
+                    console.log('🔵 Touchstart 事件觸發');
+                    e.stopPropagation();
+                }, { passive: true, capture: true });
+                
+                newMenuBtn.addEventListener('touchend', function(e) {
+                    const now = Date.now();
+                    if (now - lastClick < 300) {
+                        console.log('⚠️ 重複觸摸，忽略');
+                        return;
+                    }
+                    lastClick = now;
+                    
+                    console.log('🔵 Touchend 事件觸發');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    if (typeof window.openMobileSidebar === 'function') {
+                        window.openMobileSidebar();
+                    } else {
+                        console.error('❌ openMobileSidebar 函數不存在');
+                    }
+                }, { passive: false, capture: true });
+                
+                console.log('✅ 漢堡菜單事件監聽器已綁定（click + touchstart + touchend）');
+                
+                // 測試點擊
+                newMenuBtn.onclick = function(e) {
+                    console.log('🔵 Onclick 屬性觸發');
+                    e.preventDefault();
+                    if (typeof window.openMobileSidebar === 'function') {
+                        window.openMobileSidebar();
+                    }
+                };
+            }
+            
+            // 如果 DOM 已經加載完成，立即執行
+            if (document.readyState === 'complete' || document.readyState === 'interactive') {
+                setTimeout(initHamburgerMenu, 100);
+            } else {
+                // 否則等待 DOMContentLoaded
+                document.addEventListener('DOMContentLoaded', function() {
+                    setTimeout(initHamburgerMenu, 100);
+                });
+            }
+        })();
+    </script>
 
+</body>
 </html>
 
 
