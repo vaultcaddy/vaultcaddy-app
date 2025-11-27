@@ -458,29 +458,37 @@
                     }
                 };
                 
-                // 確保漢堡菜單按鈕綁定
+                // 確保漢堡菜單按鈕綁定（多重綁定策略）
                 const menuBtn = document.getElementById('mobile-menu-btn');
                 if (menuBtn) {
-                    // 移除舊的監聽器
-                    menuBtn.removeEventListener('click', window.openMobileSidebar);
-                    menuBtn.removeEventListener('touchstart', window.openMobileSidebar);
+                    console.log('✅ 找到漢堡菜單按鈕，開始綁定事件');
                     
-                    // 添加新的監聽器（支持點擊和觸摸）
-                    menuBtn.addEventListener('click', function(e) {
+                    // 創建統一的處理函數
+                    const handleMenuOpen = function(e) {
+                        console.log('🔵 菜單按鈕被觸發', e.type);
                         e.preventDefault();
                         e.stopPropagation();
-                        console.log('🔵 按鈕被點擊');
                         window.openMobileSidebar();
-                    });
+                    };
                     
-                    menuBtn.addEventListener('touchstart', function(e) {
+                    // 1. Click 事件（滑鼠和一般觸摸）
+                    menuBtn.addEventListener('click', handleMenuOpen, { passive: false });
+                    
+                    // 2. Touchend 事件（iOS Safari 更可靠）
+                    menuBtn.addEventListener('touchend', function(e) {
+                        console.log('🔵 菜單按鈕 touchend');
                         e.preventDefault();
                         e.stopPropagation();
-                        console.log('🔵 按鈕被觸摸');
                         window.openMobileSidebar();
-                    });
+                    }, { passive: false });
                     
-                    console.log('✅ 漢堡菜單功能已綁定');
+                    // 3. 直接在按鈕上設置 style 確保可見
+                    menuBtn.style.display = 'block';
+                    menuBtn.style.visibility = 'visible';
+                    menuBtn.style.pointerEvents = 'auto';
+                    menuBtn.style.zIndex = '1001';
+                    
+                    console.log('✅ 漢堡菜單功能已綁定（click + touchend）');
                 } else {
                     console.error('❌ 找不到漢堡菜單按鈕');
                 }
