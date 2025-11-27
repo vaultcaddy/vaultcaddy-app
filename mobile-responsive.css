@@ -81,6 +81,13 @@
     /* 主要內容區域 */
     main {
         padding-top: 56px !important; /* 配合手機版導航欄高度 */
+        margin-top: 0 !important; /* 移除頂部多餘空白 */
+    }
+    
+    /* Account.html 特定優化 */
+    body:has(main) {
+        padding-top: 0 !important;
+        margin-top: 0 !important;
     }
     
     .container,
@@ -214,6 +221,22 @@
     #pricing + div,
     section:has(#pricing) > div > div {
         grid-template-columns: 1fr !important;
+    }
+    
+    /* Billing.html 價格卡片垂直排列（年費在上，月費在下） */
+    body:has([href*="billing.html"]) section > div > div:has([style*="grid"]) {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    
+    /* 年費卡片（第二個）移到最上方 */
+    body:has([href*="billing.html"]) section > div > div > div:nth-child(2) {
+        order: -1 !important;
+    }
+    
+    /* 月費卡片（第一個）移到下方 */
+    body:has([href*="billing.html"]) section > div > div > div:nth-child(1) {
+        order: 1 !important;
     }
     
     /* ==================== 功能卡片 ==================== */
