@@ -321,13 +321,16 @@
                 <a href="dashboard.html" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">儀表板</a>
             </div>
             <div id="user-menu" style="position: relative; display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;">
-                <div id="user-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">U</div>
+                <!-- 初始狀態：顯示一個小的加載指示器，避免閃爍 -->
+                <div style="width: 32px; height: 32px; border-radius: 50%; background: #e5e7eb; display: flex; align-items: center; justify-content: center;">
+                    <div style="width: 16px; height: 16px; border: 2px solid #f3f3f3; border-top: 2px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                </div>
             </div>
         </div>
     </nav>
     
     <!-- 手機側邊欄菜單 -->
-    <div id="mobile-sidebar" style="position: fixed; top: 0; left: -100%; width: 280px; height: 100vh; background: white; z-index: 2000; transition: left 0.3s ease; box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto;">
+    <div id="mobile-sidebar" style="position: fixed; top: 0; left: -100%; width: 280px; height: 100vh; background: white; z-index: 2000; transition: left 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto; will-change: left;">
         <div style="padding: 1.5rem;">
             <!-- 菜單項 -->
             <div style="display: flex; flex-direction: column; gap: 0.5rem;">
@@ -359,7 +362,7 @@
     </div>
     
     <!-- 側邊欄遮罩 -->
-    <div id="mobile-sidebar-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; display: none;" onclick="closeMobileSidebar()"></div>
+    <div id="mobile-sidebar-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; display: none; transition: opacity 0.2s ease;"></div>
     
     <!-- 用戶下拉菜單 -->
     <div id="user-dropdown" style="display: none; position: fixed; top: 70px; right: 2rem; background: white; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); padding: 1rem; min-width: 220px; z-index: 2000; border: 1px solid #e5e7eb;">
@@ -643,6 +646,15 @@
             
             // 立即嘗試更新
             updateUserMenu();
+            
+            // 在 DOMContentLoaded 後再次更新
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    setTimeout(updateUserMenu, 100);
+                });
+            } else {
+                setTimeout(updateUserMenu, 100);
+            }
             
             // 監聽 Firebase 和 Auth 事件
             window.addEventListener('firebase-ready', updateUserMenu);
@@ -1547,50 +1559,78 @@
     <script>
         console.log('🔥 開始初始化漢堡菜單...');
         
+        // 打開側邊欄函數
+        function openSidebar() {
+            console.log('🔵 打開側邊欄');
+            const sidebar = document.getElementById('mobile-sidebar');
+            const overlay = document.getElementById('mobile-sidebar-overlay');
+            
+            if (sidebar && overlay) {
+                sidebar.style.left = '0';
+                overlay.style.display = 'block';
+                overlay.style.opacity = '1';
+                document.body.style.overflow = 'hidden';
+                console.log('✅ 側邊欄已打開');
+            }
+        }
+        
+        // 關閉側邊欄函數
+        function closeSidebar() {
+            console.log('🔵 關閉側邊欄');
+            const sidebar = document.getElementById('mobile-sidebar');
+            const overlay = document.getElementById('mobile-sidebar-overlay');
+            
+            if (sidebar && overlay) {
+                sidebar.style.left = '-100%';
+                overlay.style.opacity = '0';
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                }, 200); // 等待動畫完成
+                document.body.style.overflow = 'auto';
+                console.log('✅ 側邊欄已關閉');
+            }
+        }
+        
         // 超級簡單的初始化函數
         function simpleInitMenu() {
             const btn = document.getElementById('mobile-menu-btn');
+            const overlay = document.getElementById('mobile-sidebar-overlay');
             
-            if (!btn) {
-                console.log('⏳ 按鈕未找到，200ms後重試');
+            if (!btn || !overlay) {
+                console.log('⏳ 元素未找到，200ms後重試');
                 setTimeout(simpleInitMenu, 200);
                 return;
             }
             
-            console.log('✅ 找到按鈕！');
+            console.log('✅ 找到所有元素！');
             
-            // 簡單直接的點擊處理
+            // 按鈕點擊處理
             btn.addEventListener('click', function() {
                 console.log('🔵 按鈕被點擊！');
-                const sidebar = document.getElementById('mobile-sidebar');
-                const overlay = document.getElementById('mobile-sidebar-overlay');
-                
-                if (sidebar && overlay) {
-                    sidebar.style.left = '0';
-                    overlay.style.display = 'block';
-                    document.body.style.overflow = 'hidden';
-                    console.log('✅ 側邊欄已打開');
-                } else {
-                    console.error('❌ 找不到側邊欄元素');
-                }
+                openSidebar();
             });
             
             // 觸摸處理
             btn.addEventListener('touchend', function(e) {
                 e.preventDefault();
                 console.log('🔵 觸摸事件！');
-                const sidebar = document.getElementById('mobile-sidebar');
-                const overlay = document.getElementById('mobile-sidebar-overlay');
-                
-                if (sidebar && overlay) {
-                    sidebar.style.left = '0';
-                    overlay.style.display = 'block';
-                    document.body.style.overflow = 'hidden';
-                    console.log('✅ 側邊欄已打開（觸摸）');
-                }
+                openSidebar();
             });
             
-            console.log('✅ 事件監聽器已綁定');
+            // 遮罩點擊關閉
+            overlay.addEventListener('click', function() {
+                console.log('🔵 點擊遮罩關閉');
+                closeSidebar();
+            });
+            
+            // 遮罩觸摸關閉
+            overlay.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                console.log('🔵 觸摸遮罩關閉');
+                closeSidebar();
+            });
+            
+            console.log('✅ 所有事件監聽器已綁定');
         }
         
         // 立即嘗試初始化
@@ -1599,6 +1639,9 @@
         } else {
             setTimeout(simpleInitMenu, 100);
         }
+        
+        // 暴露函數供側邊欄內的連結使用
+        window.closeMobileSidebar = closeSidebar;
     </script>
 
 </body>
