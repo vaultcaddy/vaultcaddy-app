@@ -300,8 +300,8 @@
     <nav class="vaultcaddy-navbar" id="main-navbar" style="position: fixed; top: 0; left: 0; right: 0; height: 60px; background: #ffffff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; z-index: 1000; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);">
         <div style="display: flex; align-items: center; gap: 0.5rem;">
             <!-- 漢堡菜單按鈕（僅手機顯示）-->
-            <button id="mobile-menu-btn" onclick="openMobileSidebar()" style="display: none; background: none; border: none; cursor: pointer; padding: 0.5rem; color: #1f2937; font-size: 1.5rem;">
-                <i class="fas fa-bars"></i>
+            <button id="mobile-menu-btn" style="display: none; background: none; border: none; cursor: pointer; padding: 0.5rem; color: #1f2937; font-size: 1.5rem; -webkit-tap-highlight-color: rgba(0,0,0,0.1); touch-action: manipulation;">
+                <i class="fas fa-bars" style="pointer-events: none;"></i>
             </button>
             
             <a href="index.html" style="display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: #1f2937; font-weight: 600; font-size: 1.125rem;">
@@ -1543,114 +1543,62 @@
         });
     </script>
 
-    <!-- 🔥 漢堡菜單最終修復（確保在 DOM 加載後執行）-->
+    <!-- 🔥 漢堡菜單超級簡單修復方案 -->
     <script>
-        (function() {
-            console.log('🔥 漢堡菜單最終修復腳本開始執行');
+        console.log('🔥 開始初始化漢堡菜單...');
+        
+        // 超級簡單的初始化函數
+        function simpleInitMenu() {
+            const btn = document.getElementById('mobile-menu-btn');
             
-            // 等待一小段時間確保 DOM 完全加載
-            function initHamburgerMenu() {
-                const menuBtn = document.getElementById('mobile-menu-btn');
+            if (!btn) {
+                console.log('⏳ 按鈕未找到，200ms後重試');
+                setTimeout(simpleInitMenu, 200);
+                return;
+            }
+            
+            console.log('✅ 找到按鈕！');
+            
+            // 簡單直接的點擊處理
+            btn.addEventListener('click', function() {
+                console.log('🔵 按鈕被點擊！');
+                const sidebar = document.getElementById('mobile-sidebar');
+                const overlay = document.getElementById('mobile-sidebar-overlay');
                 
-                if (!menuBtn) {
-                    console.log('⏳ 漢堡菜單按鈕尚未加載，0.1秒後重試...');
-                    setTimeout(initHamburgerMenu, 100);
-                    return;
+                if (sidebar && overlay) {
+                    sidebar.style.left = '0';
+                    overlay.style.display = 'block';
+                    document.body.style.overflow = 'hidden';
+                    console.log('✅ 側邊欄已打開');
+                } else {
+                    console.error('❌ 找不到側邊欄元素');
                 }
-                
-                console.log('✅ 找到漢堡菜單按鈕！');
-                console.log('📍 按鈕位置:', menuBtn.getBoundingClientRect());
-                console.log('📍 按鈕樣式:', window.getComputedStyle(menuBtn).display);
-                
-                // 強制設置按鈕可見性
-                menuBtn.style.cssText = `
-                    display: block !important;
-                    visibility: visible !important;
-                    opacity: 1 !important;
-                    pointer-events: auto !important;
-                    z-index: 1001 !important;
-                    position: relative !important;
-                    cursor: pointer !important;
-                    background: transparent !important;
-                    border: none !important;
-                    color: #1f2937 !important;
-                    padding: 0.5rem !important;
-                `;
-                
-                // 移除所有舊的事件監聽器（通過克隆節點）
-                const newMenuBtn = menuBtn.cloneNode(true);
-                menuBtn.parentNode.replaceChild(newMenuBtn, menuBtn);
-                
-                console.log('✅ 按鈕已克隆，移除舊事件監聽器');
-                
-                // 添加新的事件監聽器
-                let lastClick = 0;
-                
-                newMenuBtn.addEventListener('click', function(e) {
-                    const now = Date.now();
-                    if (now - lastClick < 300) {
-                        console.log('⚠️ 重複點擊，忽略');
-                        return;
-                    }
-                    lastClick = now;
-                    
-                    console.log('🔵 Click 事件觸發');
-                    e.preventDefault();
-                    e.stopPropagation();
-                    
-                    if (typeof window.openMobileSidebar === 'function') {
-                        window.openMobileSidebar();
-                    } else {
-                        console.error('❌ openMobileSidebar 函數不存在');
-                    }
-                }, { passive: false, capture: true });
-                
-                newMenuBtn.addEventListener('touchstart', function(e) {
-                    console.log('🔵 Touchstart 事件觸發');
-                    e.stopPropagation();
-                }, { passive: true, capture: true });
-                
-                newMenuBtn.addEventListener('touchend', function(e) {
-                    const now = Date.now();
-                    if (now - lastClick < 300) {
-                        console.log('⚠️ 重複觸摸，忽略');
-                        return;
-                    }
-                    lastClick = now;
-                    
-                    console.log('🔵 Touchend 事件觸發');
-                    e.preventDefault();
-                    e.stopPropagation();
-                    
-                    if (typeof window.openMobileSidebar === 'function') {
-                        window.openMobileSidebar();
-                    } else {
-                        console.error('❌ openMobileSidebar 函數不存在');
-                    }
-                }, { passive: false, capture: true });
-                
-                console.log('✅ 漢堡菜單事件監聽器已綁定（click + touchstart + touchend）');
-                
-                // 測試點擊
-                newMenuBtn.onclick = function(e) {
-                    console.log('🔵 Onclick 屬性觸發');
-                    e.preventDefault();
-                    if (typeof window.openMobileSidebar === 'function') {
-                        window.openMobileSidebar();
-                    }
-                };
-            }
+            });
             
-            // 如果 DOM 已經加載完成，立即執行
-            if (document.readyState === 'complete' || document.readyState === 'interactive') {
-                setTimeout(initHamburgerMenu, 100);
-            } else {
-                // 否則等待 DOMContentLoaded
-                document.addEventListener('DOMContentLoaded', function() {
-                    setTimeout(initHamburgerMenu, 100);
-                });
-            }
-        })();
+            // 觸摸處理
+            btn.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                console.log('🔵 觸摸事件！');
+                const sidebar = document.getElementById('mobile-sidebar');
+                const overlay = document.getElementById('mobile-sidebar-overlay');
+                
+                if (sidebar && overlay) {
+                    sidebar.style.left = '0';
+                    overlay.style.display = 'block';
+                    document.body.style.overflow = 'hidden';
+                    console.log('✅ 側邊欄已打開（觸摸）');
+                }
+            });
+            
+            console.log('✅ 事件監聽器已綁定');
+        }
+        
+        // 立即嘗試初始化
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', simpleInitMenu);
+        } else {
+            setTimeout(simpleInitMenu, 100);
+        }
     </script>
 
 </body>
