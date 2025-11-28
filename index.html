@@ -330,7 +330,7 @@
     </nav>
     
     <!-- 手機側邊欄菜單 -->
-    <div id="mobile-sidebar" style="position: fixed; top: 0; left: -100%; width: 280px; height: 100vh; background: white; z-index: 2000; transition: left 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto; will-change: left;">
+    <div id="mobile-sidebar" style="position: fixed; top: 0; left: -100%; width: 280px; height: 100vh; background: white; z-index: 2000; transition: left 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto; will-change: left; transform: translateZ(0);">
         <div style="padding: 1.5rem;">
             <!-- 菜單項 -->
             <div style="display: flex; flex-direction: column; gap: 0.5rem;">
@@ -362,7 +362,7 @@
     </div>
     
     <!-- 側邊欄遮罩 -->
-    <div id="mobile-sidebar-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; display: none; transition: opacity 0.2s ease;"></div>
+    <div id="mobile-sidebar-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; display: none; transition: opacity 0.3s ease; opacity: 0;"></div>
     
     <!-- 用戶下拉菜單 -->
     <div id="user-dropdown" style="display: none; position: fixed; top: 70px; right: 2rem; background: white; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); padding: 1rem; min-width: 220px; z-index: 2000; border: 1px solid #e5e7eb;">
@@ -644,26 +644,39 @@
                 }
             }
             
-            // 立即嘗試更新
-            updateUserMenu();
+            // 積極的輪詢機制（確保 Firebase 加載後立即更新）
+            let updateAttempts = 0;
+            const maxAttempts = 20; // 最多嘗試 20 次
             
-            // 在 DOMContentLoaded 後再次更新
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', function() {
-                    setTimeout(updateUserMenu, 100);
-                });
-            } else {
-                setTimeout(updateUserMenu, 100);
+            function tryUpdateUserMenu() {
+                updateAttempts++;
+                console.log(`🔄 嘗試更新用戶菜單 (${updateAttempts}/${maxAttempts})`);
+                
+                if (window.simpleAuth && window.simpleAuth.initialized) {
+                    console.log('✅ SimpleAuth 已初始化，執行更新');
+                    updateUserMenu();
+                } else if (updateAttempts < maxAttempts) {
+                    console.log('⏳ SimpleAuth 尚未初始化，100ms 後重試');
+                    setTimeout(tryUpdateUserMenu, 100);
+                } else {
+                    console.log('⚠️ 達到最大嘗試次數，顯示登入按鈕');
+                    // 強制顯示登入按鈕
+                    const userMenu = document.getElementById('user-menu');
+                    if (userMenu) {
+                        userMenu.innerHTML = `
+                            <button onclick="window.location.href='auth.html'" style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.875rem;" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">登入</button>
+                        `;
+                    }
+                }
             }
+            
+            // 立即開始輪詢
+            tryUpdateUserMenu();
             
             // 監聽 Firebase 和 Auth 事件
             window.addEventListener('firebase-ready', updateUserMenu);
             window.addEventListener('user-logged-in', updateUserMenu);
             window.addEventListener('user-logged-out', updateUserMenu);
-            
-            // 延遲再次檢查（以防事件已經觸發）
-            setTimeout(updateUserMenu, 1000);
-            setTimeout(updateUserMenu, 2000);
             
             // 暴露 toggleDropdown 到全局
             window.toggleDropdown = toggleDropdown;
@@ -710,7 +723,7 @@
                         </a>
                         <a href="#pricing" style="display: inline-flex; align-items: center; gap: 0.75rem; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); color: white; padding: 1.25rem 2.5rem; border-radius: 12px; font-weight: 700; font-size: 1.125rem; text-decoration: none; border: 2px solid rgba(255, 255, 255, 0.3); transition: all 0.3s ease;">
                             <i class="fas fa-dollar-sign"></i>
-                            <span>無需預算</span>
+                            <span>無需預約</span>
                         </a>
                     </div>
                     
@@ -1585,7 +1598,7 @@
                 overlay.style.opacity = '0';
                 setTimeout(() => {
                     overlay.style.display = 'none';
-                }, 200); // 等待動畫完成
+                }, 300); // 等待動畫完成（與 CSS transition 一致）
                 document.body.style.overflow = 'auto';
                 console.log('✅ 側邊欄已關閉');
             }
