@@ -239,20 +239,51 @@
         grid-template-columns: 1fr !important;
     }
     
-    /* Billing.html 價格卡片垂直排列（年費在上，月費在下） */
+    /* ==================== billing.html 手機版卡片式顯示優化 ==================== */
+    
+    /* 價格卡片容器 */
     body:has([href*="billing.html"]) section > div > div:has([style*="grid"]) {
         display: flex !important;
         flex-direction: column !important;
+        gap: 1.5rem !important;
+        padding: 1rem !important;
     }
     
-    /* 年費卡片（第二個）移到最上方 */
+    /* 所有價格卡片基礎樣式 */
+    body:has([href*="billing.html"]) section > div > div > div {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        border-radius: 12px !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+        padding: 1.5rem !important;
+    }
+    
+    /* 年費卡片（第二個）移到最上方並高亮 */
     body:has([href*="billing.html"]) section > div > div > div:nth-child(2) {
         order: -1 !important;
+        border: 2px solid #667eea !important;
+        position: relative !important;
     }
     
     /* 月費卡片（第一個）移到下方 */
     body:has([href*="billing.html"]) section > div > div > div:nth-child(1) {
         order: 1 !important;
+    }
+    
+    /* 價格卡片內部優化 */
+    body:has([href*="billing.html"]) section > div > div > div h3 {
+        font-size: 1.25rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    body:has([href*="billing.html"]) section > div > div > div button,
+    body:has([href*="billing.html"]) section > div > div > div a[role="button"] {
+        width: 100% !important;
+        padding: 0.75rem !important;
+        border-radius: 8px !important;
+        font-size: 1rem !important;
+        margin-top: 1rem !important;
     }
     
     /* ==================== 功能卡片 ==================== */
@@ -320,12 +351,21 @@
         pointer-events: none !important; /* 確保點擊穿透到按鈕 */
     }
     
-    /* ==================== firstproject.html 和 dashboard.html 優化 ==================== */
+    /* ==================== 所有頁面主要內容區域調整 ==================== */
     
-    /* 主要內容區域調整 */
+    /* account.html, billing.html, firstproject.html, dashboard.html 內容距離導航欄 15pt */
+    body:has([href*="account.html"]) main,
+    body:has([href*="billing.html"]) main,
     body:has([href*="firstproject.html"]) main,
     body:has([href*="dashboard.html"]) main {
-        padding-top: 70px !important; /* 導航欄高度 56px + 間距 14px */
+        padding-top: calc(56px + 15pt) !important; /* 導航欄高度 56px + 間距 15pt */
+    }
+    
+    /* account.html 特定優化 */
+    body:has([href*="account.html"]) main > div:first-child,
+    body:has([href*="account.html"]) main h1 {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
     }
     
     /* 表格容器響應式 */
@@ -368,10 +408,12 @@
         justify-content: center !important;
     }
     
-    /* ==================== 移除導航欄和內容之間的空白 ==================== */
+    /* ==================== Index.html 移除導航欄和內容之間的空白 ==================== */
     
-    /* 移除 main 的額外 margin */
-    main {
+    /* index.html 的 main 無 padding-top */
+    body:has([href*="index.html"]) main,
+    body:not(:has([href*="account.html"], [href*="billing.html"], [href*="firstproject.html"], [href*="dashboard.html"], [href*="privacy.html"], [href*="terms.html"])) main {
+        padding-top: 56px !important; /* 只有導航欄高度，無間距 */
         margin-top: 0 !important;
     }
     
@@ -383,6 +425,55 @@
     /* 確保 Hero 區域緊貼導航欄 */
     section[style*="background: linear-gradient"] {
         margin-top: 0 !important;
+    }
+    
+    /* ==================== firstproject.html 手機版表格和排版優化 ==================== */
+    
+    /* 表格容器 */
+    body:has([href*="firstproject.html"]) table {
+        border-radius: 8px !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+    }
+    
+    /* 頁面頭部 */
+    body:has([href*="firstproject.html"]) header,
+    body:has([href*="firstproject.html"]) header > div {
+        padding: 0.5rem 1rem !important;
+    }
+    
+    /* 搜尋欄 */
+    body:has([href*="firstproject.html"]) #document-search {
+        font-size: 0.875rem !important;
+        padding: 0.5rem !important;
+        width: 100% !important;
+        max-width: none !important;
+    }
+    
+    /* 按鈕 */
+    body:has([href*="firstproject.html"]) button {
+        font-size: 0.875rem !important;
+        padding: 0.5rem 0.75rem !important;
+        white-space: nowrap !important;
+    }
+    
+    /* Export 和 Delete 按鈕並排 */
+    body:has([href*="firstproject.html"]) header > div:last-child {
+        display: flex !important;
+        gap: 0.5rem !important;
+        flex-wrap: wrap !important;
+    }
+    
+    /* Upload 按鈕全寬 */
+    body:has([href*="firstproject.html"]) button:has(span:contains("Upload")) {
+        width: 100% !important;
+    }
+    
+    /* 發票統計卡片 */
+    body:has([href*="firstproject.html"]) div[style*="background: linear-gradient(135deg, #667eea"] {
+        margin: 1rem !important;
+        padding: 1rem !important;
+        border-radius: 8px !important;
+        font-size: 0.875rem !important;
     }
 }
 

@@ -4055,5 +4055,94 @@
             </div>
         </div>
     </div>
+
+    <!-- 🔥 漢堡菜單超級簡單修復方案 -->
+    <script>
+        console.log('🔥 開始初始化漢堡菜單...');
+        
+        // 打開側邊欄函數
+        function openSidebar() {
+            console.log('🔵 打開側邊欄');
+            const sidebar = document.getElementById('mobile-sidebar');
+            const overlay = document.getElementById('mobile-sidebar-overlay');
+            
+            if (sidebar && overlay) {
+                sidebar.style.left = '0';
+                overlay.style.display = 'block';
+                overlay.style.opacity = '1';
+                document.body.style.overflow = 'hidden';
+                console.log('✅ 側邊欄已打開');
+            }
+        }
+        
+        // 關閉側邊欄函數
+        function closeSidebar() {
+            console.log('🔵 關閉側邊欄');
+            const sidebar = document.getElementById('mobile-sidebar');
+            const overlay = document.getElementById('mobile-sidebar-overlay');
+            
+            if (sidebar && overlay) {
+                sidebar.style.left = '-100%';
+                overlay.style.opacity = '0';
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                }, 300); // 等待動畫完成（與 CSS transition 一致）
+                document.body.style.overflow = 'auto';
+                console.log('✅ 側邊欄已關閉');
+            }
+        }
+        
+        // 超級簡單的初始化函數
+        function simpleInitMenu() {
+            const btn = document.getElementById('mobile-menu-btn');
+            const overlay = document.getElementById('mobile-sidebar-overlay');
+            
+            if (!btn || !overlay) {
+                console.log('⏳ 元素未找到，200ms後重試');
+                setTimeout(simpleInitMenu, 200);
+                return;
+            }
+            
+            console.log('✅ 找到所有元素！');
+            
+            // 按鈕點擊處理
+            btn.addEventListener('click', function() {
+                console.log('🔵 按鈕被點擊！');
+                openSidebar();
+            });
+            
+            // 觸摸處理
+            btn.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                console.log('🔵 觸摸事件！');
+                openSidebar();
+            });
+            
+            // 遮罩點擊關閉
+            overlay.addEventListener('click', function() {
+                console.log('🔵 點擊遮罩關閉');
+                closeSidebar();
+            });
+            
+            // 遮罩觸摸關閉
+            overlay.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                console.log('🔵 觸摸遮罩關閉');
+                closeSidebar();
+            });
+            
+            console.log('✅ 所有事件監聽器已綁定');
+        }
+        
+        // 立即嘗試初始化
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', simpleInitMenu);
+        } else {
+            setTimeout(simpleInitMenu, 100);
+        }
+        
+        // 暴露函數供側邊欄內的連結使用
+        window.closeMobileSidebar = closeSidebar;
+    </script>
 </body>
 </html>
