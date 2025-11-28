@@ -523,14 +523,14 @@
         scroll-snap-align: start !important;
     }
     
-    /* ==================== 使用者評價橫向滑動 ==================== */
+    /* ==================== 使用者評價單卡滑動（一次只顯示一個）==================== */
     
-    /* 評價容器 - 改為橫向滑動 */
+    /* 評價容器 - 單卡滑動 */
     .testimonials-container,
     section:has(h2:contains("VaultCaddy 使用者評價")) > div:last-child {
         display: flex !important;
         flex-direction: row !important;
-        gap: 1.5rem !important;
+        gap: 1rem !important;
         overflow-x: auto !important;
         scroll-snap-type: x mandatory !important;
         -webkit-overflow-scrolling: touch !important;
@@ -543,13 +543,13 @@
         display: none !important;
     }
     
-    /* 每個評價卡片 */
+    /* 每個評價卡片 - 佔滿整個螢幕寬度 */
     .testimonials-container > div,
     section:has(h2:contains("VaultCaddy 使用者評價")) > div:last-child > div {
-        min-width: 280px !important;
-        max-width: 280px !important;
+        min-width: calc(100vw - 3rem) !important; /* 螢幕寬度 - 左右 padding */
+        max-width: calc(100vw - 3rem) !important;
         flex-shrink: 0 !important;
-        scroll-snap-align: start !important;
+        scroll-snap-align: center !important; /* 置中對齊 */
     }
     
     /* ==================== 為什麼選擇 VaultCaddy 卡片美化 ==================== */
@@ -573,67 +573,89 @@
         text-align: center !important;
     }
     
-    /* 卡片圖標 */
-    section:has(h2:contains("為什麼選擇 VaultCaddy")) > div:last-child > div::before {
-        content: "" !important;
-        display: block !important;
-        width: 60px !important;
-        height: 60px !important;
-        margin: 0 auto 1rem auto !important;
-        border-radius: 12px !important;
+    /* ==================== Hero 區塊手機版排版 ==================== */
+    
+    /* Hero 區塊整體 */
+    main > section:first-child {
+        padding: 3rem 0 2rem 0 !important;
     }
     
-    /* 極速處理 - 綠色閃電 */
-    section:has(h2:contains("為什麼選擇 VaultCaddy")) > div:last-child > div:nth-child(1)::before,
-    section:has(h2:contains("專為香港會計師打造")) > div:last-child > div:nth-child(1)::before {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-        content: "⚡" !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
+    /* Hero 內容容器 */
+    main > section:first-child > div > div {
+        padding: 0 1rem !important;
+    }
+    
+    /* 超過 200+ 企業信賴標籤 - 保持在頂部 */
+    main > section:first-child div:has(> span:contains("超過 200+")) {
+        margin-bottom: 1.5rem !important;
+    }
+    
+    /* 主標題 */
+    main > section:first-child h1 {
+        font-size: 2rem !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    main > section:first-child h1 > span:last-child {
+        font-size: 2.5rem !important;
+    }
+    
+    /* 副標題 - 將「準確率 98% • 節省 90% 時間」分行 */
+    main > section:first-child > div > div > p {
+        font-size: 1rem !important;
+        margin-bottom: 1.5rem !important;
+    }
+    
+    /* CTA 按鈕組 - 縮小間距並上移 */
+    main > section:first-child > div > div > div:has(> a[href="firstproject.html"]) {
+        margin-top: 0.5rem !important;
+        gap: 0.75rem !important;
+    }
+    
+    main > section:first-child > div > div > div:has(> a[href="firstproject.html"]) > a {
+        padding: 1rem 1.5rem !important;
+        font-size: 1rem !important;
+    }
+    
+    /* 統計數據區塊 - 上移至按鈕下方 5pt */
+    main > section:first-child > div > div > div:last-child {
+        margin-top: 0.5rem !important; /* 5pt ≈ 0.3125rem，這裡用 0.5rem */
+        padding-top: 1.5rem !important;
+        gap: 1rem !important;
+    }
+    
+    /* 統計數據字體大小 */
+    main > section:first-child > div > div > div:last-child > div > div:first-child {
         font-size: 2rem !important;
     }
     
-    /* 超高準確率 - 藍色勾選 */
-    section:has(h2:contains("為什麼選擇 VaultCaddy")) > div:last-child > div:nth-child(2)::before,
-    section:has(h2:contains("專為香港會計師打造")) > div:last-child > div:nth-child(2)::before {
-        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
-        content: "✓" !important;
+    main > section:first-child > div > div > div:last-child > div > div:last-child {
+        font-size: 0.875rem !important;
+    }
+    
+    /* ==================== 為什麼選擇 VaultCaddy - 保留電腦版樣式 ==================== */
+    
+    /* 手機版不覆蓋卡片樣式，保留 logo 和顏色 */
+    section:has(h2:contains("為什麼選擇 VaultCaddy")) > div:last-child,
+    section:has(h2:contains("專為香港會計師打造")) > div:last-child {
         display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        font-size: 2rem !important;
-        color: white !important;
-        font-weight: bold !important;
+        flex-direction: column !important;
+        gap: 1.5rem !important;
+        padding: 0 1rem !important;
     }
     
-    /* 性價比最高 - 黃色錢幣 */
-    section:has(h2:contains("為什麼選擇 VaultCaddy")) > div:last-child > div:nth-child(3)::before,
-    section:has(h2:contains("專為香港會計師打造")) > div:last-child > div:nth-child(3)::before {
-        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
-        content: "💰" !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        font-size: 2rem !important;
+    /* 每個卡片保持原樣 */
+    section:has(h2:contains("為什麼選擇 VaultCaddy")) > div:last-child > div,
+    section:has(h2:contains("專為香港會計師打造")) > div:last-child > div {
+        /* 不覆蓋任何樣式，保留 HTML 中的 logo 和顏色 */
     }
     
-    /* 卡片標題 */
-    section:has(h2:contains("為什麼選擇 VaultCaddy")) > div:last-child > div > h3,
-    section:has(h2:contains("專為香港會計師打造")) > div:last-child > div > h3 {
-        font-size: 1.25rem !important;
-        font-weight: 700 !important;
-        color: #1f2937 !important;
-        margin-bottom: 0.75rem !important;
-    }
+    /* ==================== 學習中心 - 保留電腦版樣式 ==================== */
     
-    /* 卡片文字 */
-    section:has(h2:contains("為什麼選擇 VaultCaddy")) > div:last-child > div > p,
-    section:has(h2:contains("專為香港會計師打造")) > div:last-child > div > p {
-        color: #6b7280 !important;
-        font-size: 0.95rem !important;
-        line-height: 1.6 !important;
-        white-space: normal !important;
+    /* 學習中心卡片保持原樣，只調整容器 */
+    #learning-center-container > div,
+    #learning-center-container > a > div {
+        /* 不覆蓋任何樣式，保留 HTML 中的 logo */
     }
 }
 
