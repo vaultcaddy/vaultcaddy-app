@@ -651,22 +651,25 @@
             function tryUpdateUserMenu() {
                 updateAttempts++;
                 console.log(`🔄 嘗試更新用戶菜單 (${updateAttempts}/${maxAttempts})`);
+                console.log('   - window.simpleAuth:', window.simpleAuth);
+                console.log('   - window.simpleAuth.initialized:', window.simpleAuth?.initialized);
                 
-                if (window.simpleAuth && window.simpleAuth.initialized) {
+                // 檢查 SimpleAuth 是否已初始化（多種檢查方式）
+                const isInitialized = window.simpleAuth && (
+                    window.simpleAuth.initialized === true || 
+                    typeof window.simpleAuth.isLoggedIn === 'function'
+                );
+                
+                if (isInitialized) {
                     console.log('✅ SimpleAuth 已初始化，執行更新');
                     updateUserMenu();
                 } else if (updateAttempts < maxAttempts) {
                     console.log('⏳ SimpleAuth 尚未初始化，100ms 後重試');
                     setTimeout(tryUpdateUserMenu, 100);
                 } else {
-                    console.log('⚠️ 達到最大嘗試次數，顯示登入按鈕');
-                    // 強制顯示登入按鈕
-                    const userMenu = document.getElementById('user-menu');
-                    if (userMenu) {
-                        userMenu.innerHTML = `
-                            <button onclick="window.location.href='auth.html'" style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.875rem;" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">登入</button>
-                        `;
-                    }
+                    console.log('⚠️ 達到最大嘗試次數，強制執行 updateUserMenu');
+                    // 強制執行 updateUserMenu（可能會顯示登入按鈕）
+                    updateUserMenu();
                 }
             }
             
