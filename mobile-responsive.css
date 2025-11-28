@@ -241,12 +241,14 @@
     
     /* ==================== billing.html 手機版卡片式顯示優化 ==================== */
     
-    /* 價格卡片容器 */
-    body:has([href*="billing.html"]) section > div > div:has([style*="grid"]) {
+    /* 價格卡片容器 - 強制單欄顯示 */
+    body:has([href*="billing.html"]) section > div > div:has([style*="grid"]),
+    body:has([href*="billing.html"]) section > div > div {
         display: flex !important;
         flex-direction: column !important;
         gap: 1.5rem !important;
         padding: 1rem !important;
+        grid-template-columns: 1fr !important; /* 覆蓋 grid 布局 */
     }
     
     /* 所有價格卡片基礎樣式 */
@@ -435,10 +437,19 @@
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
     }
     
-    /* 頁面頭部 */
-    body:has([href*="firstproject.html"]) header,
-    body:has([href*="firstproject.html"]) header > div {
+    /* 頁面頭部重新佈局 */
+    body:has([href*="firstproject.html"]) header {
+        display: flex !important;
+        flex-direction: column !important;
         padding: 0.5rem 1rem !important;
+        gap: 0.75rem !important;
+    }
+    
+    /* 標題和編輯按鈕行 */
+    body:has([href*="firstproject.html"]) header > div:first-child {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.5rem !important;
     }
     
     /* 搜尋欄 */
@@ -449,23 +460,21 @@
         max-width: none !important;
     }
     
-    /* 按鈕 */
-    body:has([href*="firstproject.html"]) button {
-        font-size: 0.875rem !important;
-        padding: 0.5rem 0.75rem !important;
-        white-space: nowrap !important;
-    }
-    
-    /* Export 和 Delete 按鈕並排 */
+    /* 按鈕容器 - Upload, Export, Delete 橫向並排 */
     body:has([href*="firstproject.html"]) header > div:last-child {
         display: flex !important;
         gap: 0.5rem !important;
-        flex-wrap: wrap !important;
+        width: 100% !important;
+        flex-wrap: nowrap !important; /* 不換行 */
     }
     
-    /* Upload 按鈕全寬 */
-    body:has([href*="firstproject.html"]) button:has(span:contains("Upload")) {
-        width: 100% !important;
+    /* 所有按鈕統一大小 */
+    body:has([href*="firstproject.html"]) button {
+        flex: 1 !important; /* 平均分配空間 */
+        font-size: 0.75rem !important;
+        padding: 0.5rem 0.25rem !important;
+        white-space: nowrap !important;
+        min-width: 0 !important; /* 允許縮小 */
     }
     
     /* 發票統計卡片 */
@@ -474,6 +483,48 @@
         padding: 1rem !important;
         border-radius: 8px !important;
         font-size: 0.875rem !important;
+    }
+    
+    /* ==================== dashboard.html 左側欄切換按鈕 ==================== */
+    
+    /* 在標題右側添加箭頭按鈕 */
+    body:has([href*="dashboard.html"]) .projects-header h1::after {
+        content: "→" !important;
+        margin-left: 0.5rem !important;
+        cursor: pointer !important;
+        color: #667eea !important;
+        font-size: 1.5rem !important;
+    }
+    
+    /* ==================== 學習中心卡片統一大小 ==================== */
+    
+    /* 學習中心容器 */
+    #learning-center-container {
+        display: flex !important;
+        gap: 1rem !important;
+        overflow-x: auto !important;
+        scroll-snap-type: x mandatory !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding: 0 1rem !important;
+    }
+    
+    /* 所有學習中心卡片統一大小 */
+    #learning-center-container > div,
+    #learning-center-container > a {
+        min-width: 300px !important;
+        max-width: 300px !important;
+        flex-shrink: 0 !important;
+        scroll-snap-align: center !important;
+        background: white !important;
+        border-radius: 12px !important;
+        padding: 1.5rem !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    /* 準備好開始了嗎？卡片 */
+    section:has(h2:contains("準備好開始了嗎")) {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: white !important;
     }
 }
 

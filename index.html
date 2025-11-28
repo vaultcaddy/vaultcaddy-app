@@ -649,17 +649,38 @@
                 }
             }
             
-            // 簡單直接的調用（與 privacy.html 一致）
-            updateUserMenu();
+            // 🔥 強制立即執行（即使 simpleAuth 未初始化也要顯示登入按鈕）
+            function forceUpdateUserMenu() {
+                console.log('🔵 forceUpdateUserMenu() 被調用');
+                const userMenu = document.getElementById('user-menu');
+                if (!userMenu) return;
+                
+                // 如果 simpleAuth 未初始化或未登入，強制顯示登入按鈕
+                const isLoggedIn = window.simpleAuth && typeof window.simpleAuth.isLoggedIn === 'function' && window.simpleAuth.isLoggedIn();
+                
+                if (!isLoggedIn) {
+                    console.log('🔵 強制顯示登入按鈕');
+                    userMenu.innerHTML = `
+                        <button onclick="window.location.href='auth.html'" style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.875rem;" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">登入</button>
+                    `;
+                } else {
+                    // 已登入，調用正常的 updateUserMenu
+                    updateUserMenu();
+                }
+            }
             
-            // 延遲再次檢查（以防事件已經觸發）
+            // 立即執行
+            forceUpdateUserMenu();
+            
+            // 延遲再次檢查
+            setTimeout(forceUpdateUserMenu, 500);
             setTimeout(updateUserMenu, 1000);
             setTimeout(updateUserMenu, 2000);
             
             // 監聽 Firebase 和 Auth 事件
             window.addEventListener('firebase-ready', updateUserMenu);
             window.addEventListener('user-logged-in', updateUserMenu);
-            window.addEventListener('user-logged-out', updateUserMenu);
+            window.addEventListener('user-logged-out', forceUpdateUserMenu);
             
             // 暴露 toggleDropdown 到全局
             window.toggleDropdown = toggleDropdown;
