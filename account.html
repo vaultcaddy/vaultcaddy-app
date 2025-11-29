@@ -1618,6 +1618,37 @@
         
         // 暴露函數供側邊欄內的連結使用
         window.closeMobileSidebar = closeSidebar;
+        
+        // 更新個人資料頭像
+        async function updateProfileAvatar() {
+            const avatarElement = document.getElementById('user-avatar');
+            if (!avatarElement) return;
+            
+            try {
+                if (window.simpleDataManager && window.simpleDataManager.initialized) {
+                    const userDoc = await window.simpleDataManager.getUserDocument();
+                    const currentUser = window.simpleAuth ? window.simpleAuth.getCurrentUser() : null;
+                    
+                    if (userDoc || currentUser) {
+                        const displayName = userDoc?.displayName || currentUser?.displayName || currentUser?.email || '';
+                        const initial = displayName.charAt(0).toUpperCase() || 'U';
+                        
+                        avatarElement.textContent = initial;
+                        avatarElement.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                        
+                        console.log('✅ 個人資料頭像已更新:', initial);
+                    }
+                }
+            } catch (error) {
+                console.error('❌ 更新個人資料頭像失敗:', error);
+            }
+        }
+        
+        // 監聽認證狀態變化
+        window.addEventListener('auth-state-changed', updateProfileAvatar);
+        
+        // 初始更新
+        setTimeout(updateProfileAvatar, 1000);
     </script>
     <script src="load-unified-navbar.js?v=20251129"></script>
     <script src="load-unified-sidebar.js?v=20251129"></script>
