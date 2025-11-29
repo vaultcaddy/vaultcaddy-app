@@ -43,16 +43,29 @@
         
         // 載入項目列表
         async function loadProjects() {
+            console.log('🔵 loadProjects() 開始執行...');
+            const projectsList = document.getElementById('sidebar-projects-list');
+            
+            if (!projectsList) {
+                console.error('❌ 找不到 sidebar-projects-list 元素');
+                return;
+            }
+            
             try {
+                console.log('🔍 檢查 simpleDataManager...', {
+                    exists: !!window.simpleDataManager,
+                    initialized: window.simpleDataManager?.initialized
+                });
+                
                 if (window.simpleDataManager && window.simpleDataManager.initialized) {
+                    console.log('🔵 開始獲取項目...');
                     const projects = await window.simpleDataManager.getProjects();
-                    const projectsList = document.getElementById('sidebar-projects-list');
-                    
-                    if (!projectsList) return;
+                    console.log('🔵 獲取到的項目:', projects);
                     
                     if (projects && projects.length > 0) {
                         const urlParams = new URLSearchParams(window.location.search);
                         const currentProjectId = urlParams.get('project');
+                        console.log('🔵 當前項目 ID:', currentProjectId);
                         
                         projectsList.innerHTML = projects.map(project => {
                             const isActive = currentProjectId === project.id;
@@ -64,8 +77,9 @@
                             `;
                         }).join('');
                         
-                        console.log('✅ 項目列表已載入:', projects.length);
+                        console.log('✅ 項目列表已載入:', projects.length, '個項目');
                     } else {
+                        console.log('⚠️ 沒有找到項目');
                         projectsList.innerHTML = `
                             <div style="padding: 2rem 1rem; text-align: center; color: #9ca3af;">
                                 <i class="fas fa-folder-open" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5;"></i>
@@ -74,10 +88,19 @@
                         `;
                     }
                 } else {
-                    console.warn('⚠️ SimpleDataManager 未初始化');
+                    console.warn('⚠️ SimpleDataManager 未初始化，繼續等待...');
                 }
             } catch (error) {
                 console.error('❌ 載入項目列表失敗:', error);
+                console.error('   錯誤詳情:', error.stack);
+                
+                // 顯示錯誤狀態
+                projectsList.innerHTML = `
+                    <div style="padding: 2rem 1rem; text-align: center; color: #ef4444;">
+                        <i class="fas fa-exclamation-circle" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                        <div style="font-size: 0.875rem;">載入失敗</div>
+                    </div>
+                `;
             }
         }
         

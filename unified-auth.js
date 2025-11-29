@@ -76,6 +76,21 @@
                                 <div style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem;">${displayName}</div>
                                 <div style="font-size: 0.75rem; color: #6b7280;">Credits: ${credits}</div>
                             </div>
+                            <a href="/account.html" style="display: block; padding: 0.75rem 1rem; color: #374151; text-decoration: none; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+                                <i class="fas fa-user" style="margin-right: 0.5rem; color: #667eea;"></i>
+                                帳戶設定
+                            </a>
+                            <a href="/billing.html" style="display: block; padding: 0.75rem 1rem; color: #374151; text-decoration: none; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+                                <i class="fas fa-credit-card" style="margin-right: 0.5rem; color: #667eea;"></i>
+                                計費
+                            </a>
+                            <div style="border-top: 1px solid #e5e7eb; margin: 0.5rem 0;"></div>
+                            <a href="#" onclick="event.preventDefault(); handleLogout();" style="display: block; padding: 0.75rem 1rem; color: #ef4444; text-decoration: none; transition: background 0.2s;" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='transparent'">
+                                <i class="fas fa-sign-out-alt" style="margin-right: 0.5rem;"></i>
+                                登出
+                            </a>
+                        </div>
+                    </div>
                             <a href="/dashboard.html" style="display: block; padding: 0.75rem 1rem; color: #374151; text-decoration: none; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
                                 <i class="fas fa-th-large" style="margin-right: 0.5rem; color: #667eea;"></i>
                                 儀表板
