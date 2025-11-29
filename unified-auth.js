@@ -49,6 +49,7 @@
                 let credits = 0;
                 
                 // 嘗試從 Firestore 獲取更完整的用戶資訊
+                // 如果 SimpleDataManager 未就緒，等待它初始化
                 if (window.simpleDataManager && window.simpleDataManager.initialized) {
                     try {
                         const userDoc = await window.simpleDataManager.getUserDocument();
@@ -59,6 +60,19 @@
                         }
                     } catch (error) {
                         console.warn('⚠️ 無法從 Firestore 獲取用戶資訊:', error);
+                    }
+                } else {
+                    console.log('⏳ SimpleDataManager 未就緒，將使用預設值');
+                    // 監聽 SimpleDataManager 就緒事件，然後重新更新用戶菜單
+                    if (!window.simpleDataManager) {
+                        console.log('⚠️ SimpleDataManager 不存在');
+                    } else if (!window.simpleDataManager.initialized) {
+                        console.log('⏳ 等待 SimpleDataManager 初始化...');
+                        // 設置一個延遲重新載入，給 SimpleDataManager 時間初始化
+                        setTimeout(() => {
+                            console.log('🔄 SimpleDataManager 可能已就緒，重新更新用戶菜單...');
+                            updateUserMenu();
+                        }, 2000); // 2 秒後重試
                     }
                 }
                 
@@ -71,7 +85,7 @@
                         <div id="user-avatar" onclick="toggleDropdown()" style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; cursor: pointer; font-size: 1rem; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3); transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.4)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(102, 126, 234, 0.3)'">
                             ${initial}
                         </div>
-                        <div id="user-dropdown" style="display: none; position: absolute; top: 50px; right: 0; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); min-width: 200px; z-index: 1000; border: 1px solid #e5e7eb;">
+                        <div id="user-dropdown" style="display: none !important; position: absolute; top: 50px; right: 0; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); min-width: 200px; z-index: 1000; border: 1px solid #e5e7eb;">
                             <div style="padding: 1rem; border-bottom: 1px solid #e5e7eb;">
                                 <div style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem;">${user.email}</div>
                                 <div style="font-size: 0.75rem; color: #6b7280;">Credits: ${credits}</div>
