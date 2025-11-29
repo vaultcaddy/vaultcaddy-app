@@ -340,10 +340,25 @@
                     <i class="fas fa-dollar-sign" style="width: 20px; color: #667eea;"></i>
                     <span>價格</span>
                 </a>
-                <a href="dashboard.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
-                    <i class="fas fa-th-large" style="width: 20px; color: #667eea;"></i>
-                    <span>儀表板</span>
+                <a href="dashboard.html" id="mobile-dashboard-link" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; justify-content: space-between;" onclick="closeMobileSidebar()">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <i class="fas fa-th-large" style="width: 20px; color: #667eea;"></i>
+                        <span>儀表板</span>
+                    </div>
+                    <i id="dashboard-arrow" class="fas fa-chevron-right" style="color: #9ca3af; font-size: 0.875rem; transition: transform 0.3s;" onclick="event.preventDefault(); event.stopPropagation(); toggleProjectsList();"></i>
                 </a>
+                
+                <!-- 項目列表（折疊）-->
+                <div id="mobile-projects-list" style="display: none; padding-left: 2.5rem; margin-top: 0.5rem;">
+                    <div style="font-size: 0.75rem; color: #9ca3af; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em;">項目</div>
+                    <div id="projects-container" style="display: flex; flex-direction: column; gap: 0.25rem;">
+                        <!-- 動態加載項目 -->
+                        <div style="padding: 0.5rem; color: #6b7280; font-size: 0.875rem;">
+                            <i class="fas fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>
+                            載入中...
+                        </div>
+                    </div>
+                </div>
                 
                 <div style="height: 1px; background: #e5e7eb; margin: 1rem 0;"></div>
                 
@@ -681,6 +696,83 @@
             
             // 暴露 toggleDropdown 到全局
             window.toggleDropdown = toggleDropdown;
+            
+            // 切換項目列表
+            window.toggleProjectsList = async function() {
+                console.log('🔵 toggleProjectsList 被調用');
+                const projectsList = document.getElementById('mobile-projects-list');
+                const arrow = document.getElementById('dashboard-arrow');
+                
+                if (!projectsList) {
+                    console.error('❌ 找不到 mobile-projects-list');
+                    return;
+                }
+                
+                if (projectsList.style.display === 'none') {
+                    // 打開列表
+                    projectsList.style.display = 'block';
+                    arrow.style.transform = 'rotate(90deg)';
+                    
+                    // 載入項目列表
+                    await loadMobileProjectsList();
+                } else {
+                    // 關閉列表
+                    projectsList.style.display = 'none';
+                    arrow.style.transform = 'rotate(0deg)';
+                }
+            };
+            
+            // 載入項目列表
+            window.loadMobileProjectsList = async function() {
+                console.log('🔵 載入項目列表');
+                const container = document.getElementById('projects-container');
+                
+                if (!container) return;
+                
+                try {
+                    // 檢查是否已登入
+                    if (!window.simpleAuth || !window.simpleAuth.isLoggedIn()) {
+                        container.innerHTML = '<div style="padding: 0.5rem; color: #6b7280; font-size: 0.875rem;">請先登入</div>';
+                        return;
+                    }
+                    
+                    // 檢查 Firestore 是否可用
+                    if (!window.simpleDataManager || !window.simpleDataManager.initialized) {
+                        container.innerHTML = '<div style="padding: 0.5rem; color: #6b7280; font-size: 0.875rem;">載入中...</div>';
+                        return;
+                    }
+                    
+                    // 從 Firestore 獲取項目列表
+                    const user = window.simpleAuth.getCurrentUser();
+                    const db = firebase.firestore();
+                    const projectsSnapshot = await db.collection('users').doc(user.uid).collection('projects').get();
+                    
+                    if (projectsSnapshot.empty) {
+                        container.innerHTML = '<div style="padding: 0.5rem; color: #6b7280; font-size: 0.875rem;">暫無項目</div>';
+                        return;
+                    }
+                    
+                    // 顯示項目列表
+                    let html = '';
+                    projectsSnapshot.forEach(doc => {
+                        const project = doc.data();
+                        const projectName = project.name || '未命名項目';
+                        html += `
+                            <a href="firstproject.html?project=${doc.id}" style="padding: 0.5rem; color: #374151; text-decoration: none; border-radius: 6px; transition: background 0.2s; display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'" onclick="closeMobileSidebar()">
+                                <i class="fas fa-folder" style="color: #667eea; font-size: 0.75rem;"></i>
+                                <span>${projectName}</span>
+                            </a>
+                        `;
+                    });
+                    
+                    container.innerHTML = html;
+                    console.log('✅ 項目列表已載入');
+                    
+                } catch (error) {
+                    console.error('❌ 載入項目列表失敗:', error);
+                    container.innerHTML = '<div style="padding: 0.5rem; color: #ef4444; font-size: 0.875rem;">載入失敗</div>';
+                }
+            };
         });
     </script>
     
