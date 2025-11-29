@@ -670,18 +670,14 @@
                 }
             }
             
-            // 立即執行
-            forceUpdateUserMenu();
+            // 🔥 簡化邏輯：只在 auth-state-changed 事件時更新
+            window.addEventListener('auth-state-changed', (event) => {
+                console.log('🔔 收到 auth-state-changed 事件');
+                updateUserMenu();
+            });
             
-            // 延遲再次檢查
-            setTimeout(forceUpdateUserMenu, 500);
-            setTimeout(updateUserMenu, 1000);
-            setTimeout(updateUserMenu, 2000);
-            
-            // 監聽 Firebase 和 Auth 事件
-            window.addEventListener('firebase-ready', updateUserMenu);
-            window.addEventListener('user-logged-in', updateUserMenu);
-            window.addEventListener('user-logged-out', forceUpdateUserMenu);
+            // 立即執行一次（使用初始的登入按鈕）
+            // HTML 已經有登入按鈕，不需要額外處理
             
             // 暴露 toggleDropdown 到全局
             window.toggleDropdown = toggleDropdown;

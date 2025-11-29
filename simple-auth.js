@@ -34,28 +34,16 @@ class SimpleAuth {
             
             console.log('⏳ 等待第一次 Auth 狀態回調...');
             
-            // ✅ 等待第一次 onAuthStateChanged 回調
-            await new Promise((resolve) => {
-                const unsubscribe = this.auth.onAuthStateChanged((user) => {
-                    console.log('🔔 Auth 狀態回調觸發:', user ? `用戶: ${user.email}` : '未登入');
-                    this.currentUser = user;
-                    this.handleAuthStateChange(user);
-                    
-                    // 第一次回調後立即 resolve
-                    unsubscribe();
-                    resolve();
-                });
-                
-                // 超時保護（10 秒）
-                setTimeout(() => {
-                    console.warn('⚠️ Auth 狀態回調超時（10 秒）');
-                    unsubscribe();
-                    resolve();
-                }, 10000);
-            });
-            
-            // 繼續監聽後續的狀態變化
+            // ✅ 只設置一次 onAuthStateChanged 監聽器
+            let isFirstCall = true;
             this.auth.onAuthStateChanged((user) => {
+                if (isFirstCall) {
+                    console.log('🔔 Auth 初始狀態:', user ? `用戶: ${user.email}` : '未登入');
+                    isFirstCall = false;
+                } else {
+                    console.log('🔔 Auth 狀態變化:', user ? `用戶: ${user.email}` : '未登入');
+                }
+                
                 this.currentUser = user;
                 this.handleAuthStateChange(user);
             });
@@ -120,16 +108,24 @@ class SimpleAuth {
     
     // 用戶已登入
     onUserLoggedIn(user) {
-        console.log('✅ 用戶已登入:', user.email);
+        // 只在非 index.html 頁面打印日誌
+        const currentPage = this.getCurrentPage();
+        if (currentPage !== 'index.html' && currentPage !== '') {
+            console.log('✅ 用戶已登入:', user.email);
+        }
         
         // 如果在登入/註冊頁面，重定向到 dashboard
-        const currentPage = this.getCurrentPage();
         const authPages = ['auth.html', 'login.html', 'register.html'];
         
         if (authPages.includes(currentPage)) {
             console.log('🔄 重定向到 dashboard...');
             window.location.href = 'dashboard.html';
         }
+        
+        // 觸發自定義事件（只觸發一次）
+        window.dispatchEvent(new CustomEvent('user-logged-in', {
+            detail: { user }
+        }));
     }
     
     // 用戶未登入
