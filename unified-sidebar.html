@@ -182,12 +182,12 @@
         // 觸發側邊欄載入事件
         window.dispatchEvent(new Event('sidebar-loaded'));
         
-        // DOM 載入完成後初始化
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', init);
-        } else {
+        // 立即初始化（因為這個腳本是在 HTML 被插入後執行）
+        // 使用 setTimeout 確保 DOM 元素已經渲染
+        setTimeout(() => {
+            console.log('🔵 開始初始化側邊欄（延遲執行）');
             init();
-        }
+        }, 100);
         
         console.log('✅ Simple sidebar initialized');
         

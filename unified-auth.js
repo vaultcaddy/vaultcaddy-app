@@ -63,7 +63,7 @@
                 }
                 
                 // 獲取用戶名首字母
-                const initial = displayName ? displayName.charAt(0).toUpperCase() : 'U';
+                const initial = user.email ? user.email.charAt(0).toUpperCase() : 'U';
                 
                 // 顯示用戶頭像和下拉菜單
                 userMenu.innerHTML = `
@@ -73,7 +73,7 @@
                         </div>
                         <div id="user-dropdown" style="display: none; position: absolute; top: 50px; right: 0; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); min-width: 200px; z-index: 1000; border: 1px solid #e5e7eb;">
                             <div style="padding: 1rem; border-bottom: 1px solid #e5e7eb;">
-                                <div style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem;">${displayName}</div>
+                                <div style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem;">${user.email}</div>
                                 <div style="font-size: 0.75rem; color: #6b7280;">Credits: ${credits}</div>
                             </div>
                             <a href="/account.html" style="display: block; padding: 0.75rem 1rem; color: #374151; text-decoration: none; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
