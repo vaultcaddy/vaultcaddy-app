@@ -62,18 +62,23 @@
                         console.warn('⚠️ 無法從 Firestore 獲取用戶資訊:', error);
                     }
                 } else {
-                    console.log('⏳ SimpleDataManager 未就緒，將使用預設值');
-                    // 監聽 SimpleDataManager 就緒事件，然後重新更新用戶菜單
-                    if (!window.simpleDataManager) {
-                        console.log('⚠️ SimpleDataManager 不存在');
-                    } else if (!window.simpleDataManager.initialized) {
-                        console.log('⏳ 等待 SimpleDataManager 初始化...');
-                        // 設置一個延遲重新載入，給 SimpleDataManager 時間初始化
-                        setTimeout(() => {
-                            console.log('🔄 SimpleDataManager 可能已就緒，重新更新用戶菜單...');
-                            updateUserMenu();
-                        }, 2000); // 2 秒後重試
-                    }
+                    console.log('⏳ SimpleDataManager 未就緒，將使用預設值，並設置重試');
+                    // 設置多次重試，確保 Credits 能正確載入
+                    let retryCount = 0;
+                    const maxRetries = 5;
+                    const retryInterval = setInterval(async () => {
+                        retryCount++;
+                        console.log(`🔄 重試 ${retryCount}/${maxRetries}: 檢查 SimpleDataManager...`);
+                        
+                        if (window.simpleDataManager && window.simpleDataManager.initialized) {
+                            console.log('✅ SimpleDataManager 已就緒，重新載入用戶菜單');
+                            clearInterval(retryInterval);
+                            await updateUserMenu();
+                        } else if (retryCount >= maxRetries) {
+                            console.warn('⚠️ SimpleDataManager 初始化超時，停止重試');
+                            clearInterval(retryInterval);
+                        }
+                    }, 1000); // 每秒重試一次，最多 5 次
                 }
                 
                 // 獲取用戶名首字母
@@ -90,21 +95,6 @@
                                 <div style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem;">${user.email}</div>
                                 <div style="font-size: 0.75rem; color: #6b7280;">Credits: ${credits}</div>
                             </div>
-                            <a href="/account.html" style="display: block; padding: 0.75rem 1rem; color: #374151; text-decoration: none; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
-                                <i class="fas fa-user" style="margin-right: 0.5rem; color: #667eea;"></i>
-                                帳戶
-                            </a>
-                            <a href="/billing.html" style="display: block; padding: 0.75rem 1rem; color: #374151; text-decoration: none; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
-                                <i class="fas fa-credit-card" style="margin-right: 0.5rem; color: #667eea;"></i>
-                                計費
-                            </a>
-                            <div style="border-top: 1px solid #e5e7eb; margin: 0.5rem 0;"></div>
-                            <a href="#" onclick="event.preventDefault(); handleLogout();" style="display: block; padding: 0.75rem 1rem; color: #ef4444; text-decoration: none; transition: background 0.2s;" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='transparent'">
-                                <i class="fas fa-sign-out-alt" style="margin-right: 0.5rem;"></i>
-                                登出
-                            </a>
-                        </div>
-                    </div>
                             <a href="/account.html" style="display: block; padding: 0.75rem 1rem; color: #374151; text-decoration: none; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
                                 <i class="fas fa-user" style="margin-right: 0.5rem; color: #667eea;"></i>
                                 帳戶
