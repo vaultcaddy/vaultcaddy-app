@@ -92,7 +92,7 @@
                             </div>
                             <a href="/account.html" style="display: block; padding: 0.75rem 1rem; color: #374151; text-decoration: none; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
                                 <i class="fas fa-user" style="margin-right: 0.5rem; color: #667eea;"></i>
-                                帳戶設定
+                                帳戶
                             </a>
                             <a href="/billing.html" style="display: block; padding: 0.75rem 1rem; color: #374151; text-decoration: none; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
                                 <i class="fas fa-credit-card" style="margin-right: 0.5rem; color: #667eea;"></i>
@@ -105,13 +105,9 @@
                             </a>
                         </div>
                     </div>
-                            <a href="/dashboard.html" style="display: block; padding: 0.75rem 1rem; color: #374151; text-decoration: none; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
-                                <i class="fas fa-th-large" style="margin-right: 0.5rem; color: #667eea;"></i>
-                                儀表板
-                            </a>
                             <a href="/account.html" style="display: block; padding: 0.75rem 1rem; color: #374151; text-decoration: none; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
                                 <i class="fas fa-user" style="margin-right: 0.5rem; color: #667eea;"></i>
-                                帳戶設定
+                                帳戶
                             </a>
                             <a href="/billing.html" style="display: block; padding: 0.75rem 1rem; color: #374151; text-decoration: none; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
                                 <i class="fas fa-credit-card" style="margin-right: 0.5rem; color: #667eea;"></i>
