@@ -1,19 +1,199 @@
 <!-- ✅ 統一左側欄 - Dashboard/FirstProject/Account/Billing 共用 -->
-<!-- 目前為空設計，保留聯動架構，未來可隨時添加內容 -->
-<aside style="width: 280px; background: #ffffff; border-right: 1px solid #e5e7eb; padding: 0; position: fixed; left: 0; top: 60px; height: calc(100vh - 60px); overflow-y: auto; z-index: 100;">
-    <!-- 空白側邊欄 - 未來可在此添加內容 -->
+<aside id="unified-sidebar" style="width: 280px; background: #ffffff; border-right: 1px solid #e5e7eb; padding: 1.5rem; position: fixed; left: 0; top: 60px; height: calc(100vh - 60px); overflow-y: auto; z-index: 100; display: flex; flex-direction: column;">
+    
+    <!-- Credits 區塊 -->
+    <div id="sidebar-credits" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem; color: white;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+            <div style="font-size: 0.875rem; font-weight: 500; opacity: 0.9;">可用 Credits</div>
+            <i class="fas fa-coins" style="font-size: 1.25rem; opacity: 0.8;"></i>
+        </div>
+        <div id="credits-amount" style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">200</div>
+        <div id="credits-bar" style="background: rgba(255,255,255,0.3); border-radius: 9999px; height: 6px; overflow: hidden; margin-bottom: 0.5rem;">
+            <div id="credits-fill" style="width: 100%; height: 100%; background: white; border-radius: 9999px; transition: width 0.3s;"></div>
+        </div>
+        <div id="credits-text" style="font-size: 0.75rem; opacity: 0.9;">200 / 200 Credits</div>
+    </div>
+    
+    <!-- 搜索欄 -->
+    <div style="margin-bottom: 1.5rem;">
+        <input type="text" id="sidebar-project-search" placeholder="篩選項目..." style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 0.875rem; color: #374151; outline: none; transition: border 0.2s;" onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e5e7eb'">
+    </div>
+    
+    <!-- Project 區塊 -->
+    <div style="flex: 1; margin-bottom: 1.5rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+            <span style="font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Projects</span>
+            <button onclick="if(window.openCreateProjectModal) window.openCreateProjectModal()" style="background: none; border: none; color: #667eea; cursor: pointer; font-size: 1.25rem; padding: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 4px; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+        <div id="sidebar-projects-list">
+            <!-- 項目列表將動態載入 -->
+            <div style="padding: 2rem 1rem; text-align: center; color: #9ca3af;">
+                <i class="fas fa-folder-open" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+                <div style="font-size: 0.875rem;">載入中...</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 配置區塊 -->
+    <div style="border-top: 1px solid #e5e7eb; padding-top: 1rem;">
+        <div style="font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem;">設定</div>
+        <a href="/account.html" id="sidebar-link-account" class="sidebar-nav-link" style="display: flex; align-items: center; padding: 0.625rem 0.75rem; color: #4b5563; text-decoration: none; border-radius: 8px; transition: all 0.2s; margin-bottom: 0.25rem;" onmouseover="if(!this.classList.contains('active')) this.style.background='#f3f4f6'" onmouseout="if(!this.classList.contains('active')) this.style.background='transparent'">
+            <i class="fas fa-user-cog" style="margin-right: 0.75rem; font-size: 1rem; width: 20px;"></i>
+            <span style="font-size: 0.875rem; font-weight: 500;">帳戶</span>
+        </a>
+        <a href="/billing.html" id="sidebar-link-billing" class="sidebar-nav-link" style="display: flex; align-items: center; padding: 0.625rem 0.75rem; color: #4b5563; text-decoration: none; border-radius: 8px; transition: all 0.2s;" onmouseover="if(!this.classList.contains('active')) this.style.background='#f3f4f6'" onmouseout="if(!this.classList.contains('active')) this.style.background='transparent'">
+            <i class="fas fa-credit-card" style="margin-right: 0.75rem; font-size: 1rem; width: 20px;"></i>
+            <span style="font-size: 0.875rem; font-weight: 500;">計費</span>
+        </a>
+    </div>
 </aside>
 
 <script>
     (function() {
         'use strict';
         
-        console.log('🔵 unified-sidebar.html loaded (empty design)');
+        console.log('🔵 unified-sidebar.html loaded (with Credits)');
+        
+        // 更新 Credits 顯示
+        async function updateCredits() {
+            try {
+                if (window.simpleDataManager && window.simpleDataManager.initialized) {
+                    const userDoc = await window.simpleDataManager.getUserDocument();
+                    if (userDoc) {
+                        const credits = userDoc.credits || 0;
+                        const maxCredits = userDoc.maxCredits || 200;
+                        const percentage = (credits / maxCredits) * 100;
+                        
+                        document.getElementById('credits-amount').textContent = credits;
+                        document.getElementById('credits-text').textContent = `${credits} / ${maxCredits} Credits`;
+                        document.getElementById('credits-fill').style.width = `${percentage}%`;
+                        
+                        console.log('✅ Credits 已更新:', credits, '/', maxCredits);
+                    }
+                }
+            } catch (error) {
+                console.error('❌ 更新 Credits 失敗:', error);
+            }
+        }
+        
+        // 載入項目列表
+        async function loadProjects() {
+            try {
+                if (window.simpleDataManager && window.simpleDataManager.initialized) {
+                    const projects = await window.simpleDataManager.getUserProjects();
+                    const projectsList = document.getElementById('sidebar-projects-list');
+                    
+                    if (!projectsList) return;
+                    
+                    if (projects && projects.length > 0) {
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const currentProjectId = urlParams.get('project');
+                        
+                        projectsList.innerHTML = projects.map(project => {
+                            const isActive = currentProjectId === project.id;
+                            return `
+                                <a href="/firstproject.html?project=${project.id}" class="sidebar-project-item ${isActive ? 'active' : ''}" data-project-name="${project.name}" style="display: flex; align-items: center; padding: 0.625rem 0.75rem; color: ${isActive ? '#667eea' : '#4b5563'}; text-decoration: none; border-radius: 8px; transition: all 0.2s; margin-bottom: 0.25rem; ${isActive ? 'background: #eff6ff; font-weight: 600;' : ''}" onmouseover="if(!this.classList.contains('active')) this.style.background='#f3f4f6'" onmouseout="if(!this.classList.contains('active')) this.style.background='transparent'">
+                                    <i class="fas fa-folder" style="margin-right: 0.75rem; font-size: 1rem; width: 20px;"></i>
+                                    <span style="font-size: 0.875rem; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${project.name}</span>
+                                </a>
+                            `;
+                        }).join('');
+                        
+                        console.log('✅ 項目列表已載入:', projects.length);
+                    } else {
+                        projectsList.innerHTML = `
+                            <div style="padding: 2rem 1rem; text-align: center; color: #9ca3af;">
+                                <i class="fas fa-folder-open" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+                                <div style="font-size: 0.875rem;">沒有項目</div>
+                            </div>
+                        `;
+                    }
+                } else {
+                    console.warn('⚠️ SimpleDataManager 未初始化');
+                }
+            } catch (error) {
+                console.error('❌ 載入項目列表失敗:', error);
+            }
+        }
+        
+        // 搜索功能
+        const searchInput = document.getElementById('sidebar-project-search');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase().trim();
+                const projectItems = document.querySelectorAll('.sidebar-project-item');
+                
+                projectItems.forEach(item => {
+                    const projectName = item.getAttribute('data-project-name').toLowerCase();
+                    if (searchTerm === '' || projectName.includes(searchTerm)) {
+                        item.style.display = 'flex';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        }
+        
+        // 高亮當前頁面
+        function highlightCurrentPage() {
+            const currentPath = window.location.pathname;
+            const links = document.querySelectorAll('.sidebar-nav-link');
+            
+            links.forEach(link => {
+                if (link.href.includes(currentPath)) {
+                    link.classList.add('active');
+                    link.style.background = '#eff6ff';
+                    link.style.color = '#667eea';
+                    link.style.fontWeight = '600';
+                }
+            });
+        }
+        
+        // 初始化
+        async function init() {
+            // 等待 SimpleDataManager 就緒
+            let attempts = 0;
+            const maxAttempts = 50; // 5 秒
+            
+            while (attempts < maxAttempts) {
+                if (window.simpleDataManager && window.simpleDataManager.initialized) {
+                    console.log('✅ SimpleDataManager 已就緒');
+                    await updateCredits();
+                    await loadProjects();
+                    highlightCurrentPage();
+                    
+                    // 監聽項目變化
+                    window.addEventListener('projectCreated', loadProjects);
+                    window.addEventListener('projectDeleted', loadProjects);
+                    window.addEventListener('auth-state-changed', () => {
+                        updateCredits();
+                        loadProjects();
+                    });
+                    
+                    break;
+                }
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
+            if (attempts >= maxAttempts) {
+                console.warn('⚠️ SimpleDataManager 初始化超時');
+            }
+        }
         
         // 觸發側邊欄載入事件
         window.dispatchEvent(new Event('sidebar-loaded'));
         
-        console.log('✅ Empty sidebar initialized');
+        // DOM 載入完成後初始化
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+        
+        console.log('✅ Sidebar with Credits initialized');
         
     })();
 </script>
