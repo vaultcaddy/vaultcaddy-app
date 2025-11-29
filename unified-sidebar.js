@@ -26,7 +26,7 @@
         const isBillingPage = currentPath.includes('billing.html');
         
         sidebar.innerHTML = `
-            <div style="padding: 1.5rem; padding-top: calc(1.5rem + 10pt);">
+            <div style="display: flex; flex-direction: column; height: 100%; padding: 1.5rem; padding-top: calc(1.5rem + 10pt);">
                 
                 <!-- 搜索欄 -->
                 <div style="margin-bottom: 1.5rem;">
@@ -34,7 +34,7 @@
                 </div>
                 
                 <!-- Project 區塊 -->
-                <div style="margin-bottom: 1.5rem;">
+                <div style="flex: 1; margin-bottom: 1.5rem; overflow-y: auto;">
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
                         <span style="font-size: 0.875rem; font-weight: 500; color: #6b7280;">project</span>
                         <button onclick="if(window.openCreateProjectModal) window.openCreateProjectModal()" style="background: none; border: none; color: #6b7280; cursor: pointer; font-size: 1.25rem; padding: 0; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;">+</button>

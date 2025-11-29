@@ -56,6 +56,11 @@
                         if (userDoc) {
                             displayName = userDoc.displayName || displayName;
                             credits = userDoc.credits || 0;
+                            console.log('📊 Credits 數據:', { 
+                                fromFirestore: userDoc.credits, 
+                                finalValue: credits,
+                                userDocKeys: Object.keys(userDoc)
+                            });
                             console.log('✅ 從 Firestore 獲取用戶資訊:', { displayName, credits });
                         }
                     } catch (error) {
@@ -82,7 +87,7 @@
                 }
                 
                 // 獲取用戶名首字母
-                const initial = user.email ? user.email.charAt(0).toUpperCase() : 'U';
+                const initial = (user.email && user.email.length > 0) ? user.email.substring(0, 2).toUpperCase() : 'U'; : 'U';
                 
                 // 顯示用戶頭像和下拉菜單
                 userMenu.innerHTML = `
