@@ -26,7 +26,7 @@
         const isBillingPage = currentPath.includes('billing.html');
         
         sidebar.innerHTML = `
-            <div style="padding: 1.5rem; padding-top: calc(1.5rem + 10pt);">
+            <div style="display: flex; flex-direction: column; height: 100%; padding: 1.5rem; padding-top: calc(1.5rem + 10pt);">
                 
                 <!-- 搜索欄 -->
                 <div style="margin-bottom: 1.5rem;">
@@ -34,7 +34,7 @@
                 </div>
                 
                 <!-- Project 區塊 -->
-                <div style="margin-bottom: 1.5rem;">
+                <div style="flex: 1; margin-bottom: 1.5rem; overflow-y: auto;">
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
                         <span style="font-size: 0.875rem; font-weight: 500; color: #6b7280;">project</span>
                         <button onclick="if(window.openCreateProjectModal) window.openCreateProjectModal()" style="background: none; border: none; color: #6b7280; cursor: pointer; font-size: 1.25rem; padding: 0; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;">+</button>
@@ -81,30 +81,19 @@
         }
         
         try {
-            // 等待 SimpleDataManager 就緒
-            let attempts = 0;
-            const maxAttempts = 50;
-            
-            while (attempts < maxAttempts) {
-                if (window.simpleDataManager && window.simpleDataManager.initialized) {
-                    console.log('✅ SimpleDataManager 已就緒');
-                    break;
-                }
-                console.log(`⏳ 等待 SimpleDataManager... 嘗試 ${attempts + 1}/${maxAttempts}`);
-                await new Promise(resolve => setTimeout(resolve, 100));
-                attempts++;
-            }
-            
-            if (attempts === maxAttempts) {
-                console.error('❌ SimpleDataManager 初始化超時');
+            // 檢查 SimpleDataManager 是否就緒（不再輪詢等待）
+            if (!window.simpleDataManager || !window.simpleDataManager.initialized) {
+                console.warn('⚠️ SimpleDataManager 未就緒');
                 projectsList.innerHTML = `
-                    <div style="padding: 2rem 1rem; text-align: center; color: #ef4444;">
-                        <i class="fas fa-exclamation-circle" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5;"></i>
-                        <div style="font-size: 0.875rem;">載入失敗</div>
+                    <div style="padding: 2rem 1rem; text-align: center; color: #9ca3af;">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+                        <div style="font-size: 0.875rem;">載入中...</div>
                     </div>
                 `;
                 return;
             }
+            
+            console.log('✅ SimpleDataManager 已就緒');
             
             // 獲取項目列表
             const projects = await window.simpleDataManager.getProjects();
@@ -184,8 +173,16 @@
         // 先渲染 HTML
         renderSidebar();
         
-        // 再載入項目
-        await loadProjects();
+        // 等待 app-ready 再載入項目
+        if (window.simpleDataManager && window.simpleDataManager.initialized) {
+            await loadProjects();
+        } else {
+            console.log('⏳ 等待 app-ready 事件...');
+            window.addEventListener('app-ready', async () => {
+                console.log('✅ 收到 app-ready 事件，載入項目');
+                await loadProjects();
+            }, { once: true });
+        }
         
         // 監聽項目變化
         window.addEventListener('projectCreated', loadProjects);
