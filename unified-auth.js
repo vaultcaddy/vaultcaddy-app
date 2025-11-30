@@ -67,23 +67,12 @@
                         console.warn('⚠️ 無法從 Firestore 獲取用戶資訊:', error);
                     }
                 } else {
-                    console.log('⏳ SimpleDataManager 未就緒，將使用預設值，並設置重試');
-                    // 設置多次重試，確保 Credits 能正確載入
-                    let retryCount = 0;
-                    const maxRetries = 5;
-                    const retryInterval = setInterval(async () => {
-                        retryCount++;
-                        console.log(`🔄 重試 ${retryCount}/${maxRetries}: 檢查 SimpleDataManager...`);
-                        
-                        if (window.simpleDataManager && window.simpleDataManager.initialized) {
-                            console.log('✅ SimpleDataManager 已就緒，重新載入用戶菜單');
-                            clearInterval(retryInterval);
-                            await updateUserMenu();
-                        } else if (retryCount >= maxRetries) {
-                            console.warn('⚠️ SimpleDataManager 初始化超時，停止重試');
-                            clearInterval(retryInterval);
-                        }
-                    }, 1000); // 每秒重試一次，最多 5 次
+                    console.log('⏳ SimpleDataManager 未就緒，等待 app-ready 事件');
+                    // 不再使用輪詢，改用事件監聽
+                    window.addEventListener('app-ready', async () => {
+                        console.log('✅ 收到 app-ready 事件，重新載入用戶菜單');
+                        await updateUserMenu();
+                    }, { once: true });
                 }
                 
                 // 獲取用戶名首字母
