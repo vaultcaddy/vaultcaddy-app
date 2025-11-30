@@ -710,15 +710,15 @@
                     </h1>
                     
                     <!-- 信任標籤（移到標題下方） -->
-                    <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 9999px; padding: 0.5rem 1.5rem; margin-bottom: 2rem;">
+                    <div id="trust-badge" style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 9999px; padding: 0.5rem 1.5rem; margin-bottom: 2rem;">
                         <i class="fas fa-star" style="color: #fbbf24;"></i>
                         <span style="font-weight: 600; font-size: 0.875rem;">超過 200+ 企業信賴</span>
                     </div>
                     
                     <!-- 副標題 -->
-                    <p style="font-size: 1.5rem; opacity: 0.95; margin-bottom: 3rem; line-height: 1.6;">
+                    <p id="hero-subtitle" style="font-size: 1.5rem; opacity: 0.95; margin-bottom: 3rem; line-height: 1.6;">
                         <span>專為會計師及小型公司設計的 AI 文檔處理平台</span><br>
-                        <strong><span>自動轉換 Excel/CSV/QuickBooks/Xero • 準確率 98% • 節省 90% 時間</span></strong>
+                        <strong><span id="subtitle-line1">自動轉換 Excel/CSV/QuickBooks/Xero</span><br><span id="subtitle-line2">• 準確率 98% • 節省 90% 時間</span></strong>
                     </p>
                     
                     <!-- CTA 按鈕組（向上移10pt） -->
@@ -1355,13 +1355,7 @@
                 font-size: 1rem !important;
             }
             
-            /* 🔥 統計數據 - 保持橫向，縮小字體 */
-            div[style*="grid-template-columns: repeat(3, 1fr)"] {
-                grid-template-columns: repeat(3, 1fr) !important;
-                gap: 0.5rem !important;
-                margin-top: 1.5rem !important;
-                padding-top: 1rem !important;
-            }
+            /* 🔥 統計數據 - 保持橫向，縮小字體（被下方規則覆蓋） */
             
             /* 統計數據的數字 */
             #stat-speed,
@@ -1524,10 +1518,10 @@
                 padding: 1rem 0.5rem !important; /* 左右極小 */
             }
             
-            /* 🔥 白色卡片左右內距極小，讓卡片更寬 */
+            /* 🔥 白色卡片左右內距 - 恢復正常寬度 */
             .fade-in-right > div,
             .fade-in-left > div {
-                padding: 1rem 0.5rem !important; /* 覆蓋 2rem */
+                padding: 1.5rem !important; /* 恢復正常內距 */
                 max-width: 100% !important;
                 width: 100% !important;
             }
@@ -1535,7 +1529,7 @@
             /* 🔥 白色卡片內部的灰色背景區域 */
             .fade-in-right > div > div,
             .fade-in-left > div > div {
-                padding: 1rem 0.75rem !important; /* 覆蓋 1.5rem */
+                padding: 1.5rem !important; /* 恢復正常內距 */
                 width: 100% !important;
                 max-width: 100% !important;
             }
@@ -1546,6 +1540,35 @@
             }
             .fade-in-left * {
                 max-width: 100% !important;
+            }
+            
+            /* 🔥 Hero 區域：信任標籤置中 */
+            #trust-badge {
+                display: flex !important;
+                justify-content: center !important;
+                margin-left: auto !important;
+                margin-right: auto !important;
+            }
+            
+            /* 🔥 Hero 區域：副標題分行顯示 */
+            #hero-subtitle {
+                text-align: center !important;
+            }
+            
+            #subtitle-line1,
+            #subtitle-line2 {
+                display: block !important;
+            }
+            
+            /* 🔥 CTA 按鈕向上移 10pt */
+            section > div > div > div[style*="display: flex; gap: 1rem; justify-content: center"] {
+                margin-top: -10pt !important;
+            }
+            
+            /* 🔥 統計數據向上移 20pt */
+            div[style*="grid-template-columns: repeat(3, 1fr)"] {
+                margin-top: -20pt !important;
+                padding-top: 1rem !important;
             }
             
             /* 🔥 確保藍色標籤保持圓角膠囊形狀 */
@@ -1588,10 +1611,6 @@
                 transition: none !important;
             }
             
-            /* 調整 CTA 按鈕向上移（只在手機版） */
-            section > div > div > div[style*="display: flex; gap: 1rem; justify-content: center"] {
-                margin-top: -10pt !important;
-            }
         }
         
         /* 小屏幕手機優化 (iPhone SE 等) */
