@@ -3426,20 +3426,6 @@
                             <div style="font-size: 0.75rem; color: #6b7280;">完整欄位格式</div>
                         </div>
                     </button>
-                    <button onclick="exportDocuments('xero_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                        <i class="fas fa-file-csv" style="color: #3b82f6; width: 20px;"></i>
-                        <div>
-                            <div style="font-weight: 500;">Xero CSV</div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">官方最小格式</div>
-                        </div>
-                    </button>
-                    <button onclick="exportDocuments('quickbooks_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                        <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
-                        <div>
-                            <div style="font-weight: 500;">QuickBooks CSV</div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">官方最小格式</div>
-                        </div>
-                    </button>
                 `;
             }
             
@@ -3464,9 +3450,33 @@
                 `;
             }
             
-            // QuickBooks 選項（如果有任何文檔）
+            // 其他選項（Xero、QuickBooks）
             menuHTML += `
-                <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">QUICKBOOKS</div>
+                <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">其他</div>
+            `;
+            
+            // 如果有銀行對帳單，顯示 Xero 和 QuickBooks CSV
+            if (hasBankStatement) {
+                menuHTML += `
+                    <button onclick="exportDocuments('xero_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-csv" style="color: #3b82f6; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">Xero CSV</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">官方最小格式</div>
+                        </div>
+                    </button>
+                    <button onclick="exportDocuments('quickbooks_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">QuickBooks CSV</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">官方最小格式</div>
+                        </div>
+                    </button>
+                `;
+            }
+            
+            // IIF 和 QBO（始終顯示）
+            menuHTML += `
                 <button onclick="exportDocuments('iif')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
                     <i class="fas fa-file-alt" style="color: #3b82f6; width: 20px;"></i>
                     <div>
