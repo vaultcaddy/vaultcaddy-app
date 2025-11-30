@@ -8,14 +8,14 @@
     <title>如何將 PDF 銀行對帳單轉換成 Excel？2025 最新完整教學 | VaultCaddy</title>
     
     <!-- Meta 描述 - 吸引點擊 -->
-    <meta name="description" content="詳細教學如何將 PDF 銀行對帳單快速轉換成 Excel 格式。使用 AI 技術自動提取交易數據，支援所有銀行格式。免費試用，3 分鐘完成轉換！">
+    <meta name="description" content="詳細教學如何將 PDF 銀行對帳單快速轉換成 Excel 格式。使用 AI 技術自動提取交易數據，支援所有銀行格式。免費試用，平均 10 秒處理轉換！">
     
     <!-- 關鍵字 -->
     <meta name="keywords" content="PDF轉Excel,銀行對帳單轉換,PDF bank statement to Excel,對帳單處理,銀行交易數據提取,會計自動化,財務報表轉換">
     
     <!-- Open Graph -->
     <meta property="og:title" content="如何將 PDF 銀行對帳單轉換成 Excel？完整教學">
-    <meta property="og:description" content="AI 自動轉換 PDF 銀行對帳單到 Excel，支援所有銀行格式，3 分鐘完成！">
+    <meta property="og:description" content="AI 自動轉換 PDF 銀行對帳單到 Excel，支援所有銀行格式，平均 10 秒處理！">
     <meta property="og:type" content="article">
     <meta property="og:url" content="https://vaultcaddy.com/blog/how-to-convert-pdf-bank-statement-to-excel">
     <meta property="og:image" content="https://vaultcaddy.com/images/blog/pdf-to-excel-guide.jpg">
@@ -59,6 +59,7 @@
     <script defer src="../firebase-config.js?v=20251107"></script>
     <script defer src="../simple-auth.js?v=20251107"></script>
     <script defer src="../simple-data-manager.js?v=20251107"></script>
+    <script defer src="../unified-auth.js?v=20251129"></script>
     <script src="../load-static-navbar.js?v=20251107-unified"></script>
     <!-- <script src="../navbar-component.js?v=20251107-rebuild"></script> -->
     
@@ -129,6 +130,47 @@
             background: #eff6ff;
             color: #3b82f6;
             font-weight: 600;
+        }
+        
+        /* 側邊欄導航樣式 */
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: #6b7280;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+        
+        .sidebar-link:hover {
+            background: #f3f4f6;
+            color: #667eea;
+        }
+        
+        .sidebar-link.active {
+            background: #eff6ff;
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .sidebar-link i {
+            width: 20px;
+            text-align: center;
+            color: #667eea;
+            font-size: 1rem;
+        }
+        
+        .sidebar-link span {
+            flex: 1;
         }
         
         /* 主內容區域 */
@@ -338,82 +380,15 @@
     </style>
 </head>
 <body>
+    <!-- 統一導航欄容器 -->
+    <div id="navbar-container"></div>
+    <div id="sidebar-container"></div>
+
     <!-- 統一靜態導航欄 -->
-    <nav class="vaultcaddy-navbar" style="position: fixed; top: 0; left: 0; right: 0; height: 60px; background: #ffffff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; z-index: 1000; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);">
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <a href="../index.html" style="display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: #1f2937; font-weight: 600; font-size: 1.125rem;">
-                <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1rem;">V</div>
-                <div>
-                    <div>VaultCaddy</div>
-                    <div style="font-size: 0.75rem; color: #6b7280; font-weight: 400; text-transform: uppercase; letter-spacing: 0.05em;">AI DOCUMENT PROCESSING</div>
-                </div>
-            </a>
-        </div>
-        <div style="display: flex; align-items: center; gap: 2rem;">
-            <div style="display: flex; align-items: center; gap: 2rem;">
-                <a href="../index.html#features" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500;">功能</a>
-                <a href="../billing.html" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500;">價格</a>
-                <a href="../index.html#pricing" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500;">儀表板</a>
-            </div>
-            <div style="display: flex; align-items: center; gap: 0.5rem; color: #6b7280; font-size: 0.875rem; cursor: pointer; padding: 0.5rem 0.75rem; border-radius: 6px;">
-                <i class="fas fa-globe"></i>
-                <span>繁體中文</span>
-                <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
-            </div>
-            <div style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.5rem; border-radius: 8px;" onclick="window.location.href='../account.html'">
-                <div style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">U</div>
-            </div>
-        </div>
-    </nav>
-    
     <!-- 頁面主容器 -->
     <div class="page-wrapper">
         <!-- 左側欄 - 文章導航 -->
-        <aside class="blog-sidebar">
-            <h3><i class="fas fa-book" style="color: #8b5cf6; margin-right: 0.5rem;"></i>文章導航</h3>
-            <ul class="article-list">
-                <li>
-                    <a href="how-to-convert-pdf-bank-statement-to-excel.html" class="active">
-                        <i class="fas fa-file-invoice-dollar" style="margin-right: 0.5rem;"></i>
-                        PDF 銀行對帳單轉 Excel
-                    </a>
-                </li>
-                <li>
-                    <a href="ai-invoice-processing-guide.html">
-                        <i class="fas fa-receipt" style="margin-right: 0.5rem;"></i>
-                        AI 發票處理完整指南
-                    </a>
-                </li>
-                <li>
-                    <a href="best-pdf-to-excel-converter.html">
-                        <i class="fas fa-star" style="margin-right: 0.5rem;"></i>
-                        最佳 PDF 轉 Excel 工具
-                    </a>
-                </li>
-                <li>
-                    <a href="ocr-technology-for-accountants.html">
-                        <i class="fas fa-robot" style="margin-right: 0.5rem;"></i>
-                        會計師的 OCR 技術指南
-                    </a>
-                </li>
-                <li>
-                    <a href="automate-financial-documents.html">
-                        <i class="fas fa-cogs" style="margin-right: 0.5rem;"></i>
-                        自動化財務文檔處理
-                    </a>
-                </li>
-            </ul>
-            
-            <div style="margin-top: 2rem; padding: 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; color: white;">
-                <h4 style="margin: 0 0 0.5rem 0; font-size: 1rem;">💡 需要幫助？</h4>
-                <p style="margin: 0 0 1rem 0; font-size: 0.875rem; opacity: 0.9;">立即試用 VaultCaddy，體驗 AI 文檔處理的強大功能</p>
-                <a href="../index.html#upload" style="display: inline-block; background: white; color: #667eea; padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.875rem;">
-                    <i class="fas fa-rocket" style="margin-right: 0.5rem;"></i>
-                    開始使用
-                </a>
-            </div>
-        </aside>
-        
+                <!-- 左側欄 -->
         <!-- 主內容區域 -->
         <div class="blog-container">
             <!-- 麵包屑導航 - SEO 友好 -->
@@ -485,7 +460,7 @@
             <div class="highlight-box" style="background: #f0fdf4; border-left-color: #10b981;">
                 <p><strong>✨ 優點：</strong></p>
                 <ul>
-                    <li>⚡ 速度快：3 分鐘內完成</li>
+                    <li>⚡ 速度快：平均 10 秒處理</li>
                     <li>🎯 準確度高：AI 識別準確率 98%+</li>
                     <li>🌍 支援多種銀行：香港、台灣、中國、新加坡等</li>
                     <li>📊 自動分類：收入/支出自動分類</li>
@@ -495,7 +470,7 @@
             
             <div class="cta-box">
                 <h3>🚀 立即免費試用 VaultCaddy</h3>
-                <p>每天免費轉換 3 頁，無需信用卡</p>
+                <p>每天免費試用 20 頁，無需信用卡</p>
                 <a href="https://vaultcaddy.com" class="cta-button">開始免費轉換 →</a>
             </div>
             
@@ -632,7 +607,7 @@
             
             <h2>結論</h2>
             
-            <p>將 PDF 銀行對帳單轉換成 Excel 不再是一件困難的事。使用 AI 自動化工具，您可以在 3 分鐘內完成轉換，準確率高達 98%，大大節省時間和精力。</p>
+            <p>將 PDF 銀行對帳單轉換成 Excel 不再是一件困難的事。使用 AI 自動化工具，您可以在 平均 10 秒處理轉換，準確率高達 98%，大大節省時間和精力。</p>
             
             <p><strong>我們的建議：</strong></p>
             <ul>
@@ -644,7 +619,7 @@
             
             <div class="cta-box">
                 <h3>🎁 限時優惠</h3>
-                <p>現在註冊，免費獲得 200 頁轉換額度！</p>
+                <p>現在註冊，免費試用 20 頁轉換額度！</p>
                 <p style="font-size: 0.9rem; margin-top: 1rem;">無需信用卡，立即開始使用</p>
                 <a href="https://vaultcaddy.com" class="cta-button">免費註冊 VaultCaddy →</a>
             </div>
@@ -676,6 +651,8 @@
             }
         });
     </script>
+    <script src="../load-unified-navbar.js?v=20251129"></script>
+    <script src="../load-unified-sidebar.js?v=20251129"></script>
 </body>
 </html>
 

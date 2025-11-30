@@ -9,6 +9,16 @@
         .auth-loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; align-items: center; justify-content: center; z-index: 9999; visibility: visible !important; }
         body.auth-ready .auth-loading { display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    
+    /* 確保用戶下拉菜單初始隱藏 */
+    #user-dropdown {
+        display: none !important;
+    }
+    
+    #user-dropdown[style*="display: block"] {
+        display: block !important;
+    }
+    
     </style>
     <script>
         document.documentElement.classList.add('auth-checking');
@@ -32,7 +42,10 @@
     <script src="translations.js"></script>
     
     <!-- Firebase SDK -->
-    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+        <!-- ✅ 統一初始化管理器 -->
+    <script defer src="init-manager.js?v=20251130"></script>
+
+<script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
@@ -44,6 +57,7 @@
     <script defer src="simple-auth.js?v=20251105-force-init"></script>
     <script defer src="user-profile-manager.js?v=20251120"></script>
     <script defer src="simple-data-manager.js?v=20251105-force-init"></script>
+    <script defer src="unified-auth.js?v=20251129"></script>
     
     <!-- Email 驗證檢查 -->
     <script defer src="email-verification-check.js"></script>
@@ -55,8 +69,6 @@
     <script src="language-manager.js?v=20251120"></script>
     
     <!-- ✅ 統一導航欄系統：靜態 HTML + navbar-component.js -->
-    <script src="navbar-component.js?v=20251120-unified"></script>
-    <script src="sidebar-component.js?v=20251107-rebuild"></script>
     <style>
         body {
             background: #ffffff;
@@ -813,6 +825,58 @@
     <link rel="stylesheet" href="mobile-responsive.css">
 </head>
 <body class="auth-checking">
+    <!-- ✅ 統一靜態導航欄 -->
+    <nav class="vaultcaddy-navbar" id="main-navbar" style="position: fixed; top: 0; left: 0; right: 0; height: 60px; background: #ffffff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; z-index: 1000; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <!-- 漢堡菜單按鈕（僅手機顯示）-->
+            <button id="mobile-menu-btn" style="display: none; background: none; border: none; cursor: pointer; padding: 0.5rem; color: #1f2937; font-size: 1.5rem; -webkit-tap-highlight-color: rgba(0,0,0,0.1); touch-action: manipulation;">
+                <i class="fas fa-bars" style="pointer-events: none;"></i>
+            </button>
+            
+            <a href="/index.html" style="display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: #1f2937; font-weight: 600; font-size: 1.125rem;">
+                <div class="desktop-logo" style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.25rem;">
+                    V
+                </div>
+                <div class="desktop-logo-text">
+                    <div>VaultCaddy</div>
+                    <div style="font-size: 0.75rem; color: #6b7280; font-weight: 400; text-transform: uppercase; letter-spacing: 0.05em;">AI DOCUMENT PROCESSING</div>
+                </div>
+            </a>
+        </div>
+        <div style="display: flex; align-items: center; gap: 2rem;">
+            <div style="display: flex; align-items: center; gap: 2rem;">
+                <a href="/index.html#features" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">功能</a>
+                <a href="/index.html#pricing" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">價格</a>
+                <a href="/dashboard.html" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">儀表板</a>
+            </div>
+            <div id="user-menu" style="position: relative; display: flex; align-items: center; gap: 0.75rem;">
+                <!-- 初始狀態：登入按鈕 -->
+                <button onclick="window.location.href='/auth.html'" style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.875rem;" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">登入</button>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- 手機側邊欄菜單 -->
+    <div id="mobile-sidebar-overlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; opacity: 0; transition: opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);"></div>
+    <div id="mobile-sidebar" style="display: none; position: fixed; top: 0; left: 0; height: 100%; width: 280px; max-width: 80%; background: #ffffff; z-index: 1001; box-shadow: 2px 0 10px rgba(0,0,0,0.1); transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); will-change: transform;">
+        <div style="padding: 1.5rem; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between;">
+            <a href="/index.html" style="display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: #1f2937; font-weight: 600; font-size: 1.125rem;">
+                <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1rem;">V</div>
+                <div>VaultCaddy</div>
+            </a>
+            <button onclick="window.closeMobileSidebar()" style="background: none; border: none; cursor: pointer; color: #6b7280; font-size: 1.5rem;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <nav style="padding: 1.5rem;">
+            <a href="/index.html#features" style="display: block; padding: 0.75rem 1rem; color: #4b5563; text-decoration: none; font-size: 1rem; font-weight: 500; border-radius: 6px; transition: background 0.2s;" onclick="closeMobileSidebar()" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">功能</a>
+            <a href="/index.html#pricing" style="display: block; padding: 0.75rem 1rem; color: #4b5563; text-decoration: none; font-size: 1rem; font-weight: 500; border-radius: 6px; transition: background 0.2s;" onclick="closeMobileSidebar()" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">價格</a>
+            <a href="/dashboard.html" style="display: block; padding: 0.75rem 1rem; color: #4b5563; text-decoration: none; font-size: 1rem; font-weight: 500; border-radius: 6px; transition: background 0.2s;" onclick="closeMobileSidebar()" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">儀表板</a>
+            <a href="/blog/how-to-convert-pdf-bank-statement-to-excel.html" style="display: block; padding: 0.75rem 1rem; color: #4b5563; text-decoration: none; font-size: 1rem; font-weight: 500; border-radius: 6px; transition: background 0.2s;" onclick="closeMobileSidebar()" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">博客</a>
+        </nav>
+    </div>
+
+    <!-- 統一導航欄容器 -->
     <!-- 🔒 Auth 加載動畫 -->
     <div class="auth-loading">
         <div style="text-align: center;">
@@ -825,912 +889,6 @@
     <!-- 統一靜態導航欄 -->
     <!-- ✅ 統一靜態導航欄 -->
     <!-- ✅ 統一靜態導航欄（與 firstproject.html 完全一致）-->
-    <nav class="vaultcaddy-navbar" id="main-navbar" style="position: fixed; top: 0; left: 0; right: 0; height: 60px; background: #ffffff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; z-index: 1000; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);">
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <!-- 漢堡菜單按鈕（僅手機顯示）-->
-            <button id="mobile-menu-btn" onclick="openMobileSidebar()" style="display: none; background: none; border: none; cursor: pointer; padding: 0.5rem; color: #1f2937; font-size: 1.5rem;">
-                <i class="fas fa-bars"></i>
-            </button>
-            
-            <a href="index.html" style="display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: #1f2937; font-weight: 600; font-size: 1.125rem;">
-                <div class="desktop-logo" style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.25rem;">
-                    V
-                </div>
-                <div class="desktop-logo-text">
-                    <div>VaultCaddy</div>
-                    <div style="font-size: 0.75rem; color: #6b7280; font-weight: 400; text-transform: uppercase; letter-spacing: 0.05em;">AI DOCUMENT PROCESSING</div>
-                </div>
-            </a>
-        </div>
-        <div style="display: flex; align-items: center; gap: 2rem;">
-            <div style="display: flex; align-items: center; gap: 2rem;">
-                <a href="index.html#features" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">功能</a>
-                <a href="index.html#pricing" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">價格</a>
-                <a href="dashboard.html" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">儀表板</a>
-            </div>
-            <div id="user-menu" style="position: relative; display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;">
-                <div id="user-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">U</div>
-            </div>
-        </div>
-    </nav>
-    
-    <!-- 手機側邊欄菜單 -->
-    <div id="mobile-sidebar" style="position: fixed; top: 0; left: -100%; width: 280px; height: 100vh; background: white; z-index: 2000; transition: left 0.3s ease; box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto;">
-        <div style="padding: 1.5rem;">
-            <!-- 菜單項 -->
-            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                <a href="index.html#features" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
-                    <i class="fas fa-star" style="width: 20px; color: #667eea;"></i>
-                    <span>功能</span>
-                </a>
-                <a href="index.html#pricing" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
-                    <i class="fas fa-dollar-sign" style="width: 20px; color: #667eea;"></i>
-                    <span>價格</span>
-                </a>
-                <a href="dashboard.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
-                    <i class="fas fa-th-large" style="width: 20px; color: #667eea;"></i>
-                    <span>儀表板</span>
-                </a>
-                
-                <div style="height: 1px; background: #e5e7eb; margin: 1rem 0;"></div>
-                
-                <a href="privacy.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
-                    <i class="fas fa-shield-alt" style="width: 20px; color: #6b7280;"></i>
-                    <span>隱私政策</span>
-                </a>
-                <a href="terms.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
-                    <i class="fas fa-file-contract" style="width: 20px; color: #6b7280;"></i>
-                    <span>服務條款</span>
-                </a>
-            </div>
-        </div>
-    </div>
-    
-    <!-- 側邊欄遮罩 -->
-    <div id="mobile-sidebar-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; display: none;" onclick="closeMobileSidebar()"></div>
-    
-    <div id="user-dropdown" style="display: none; position: fixed; top: 70px; right: 2rem; background: white; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); padding: 1rem; min-width: 220px; z-index: 2000; border: 1px solid #e5e7eb;">
-        <div style="padding: 0.75rem; border-bottom: 1px solid #f3f4f6;">
-            <div style="font-weight: 600; font-size: 1rem; color: #1f2937; margin-bottom: 0.25rem;"><span>Credits</span>: <span id="dropdown-credits">0</span></div>
-            <div style="font-size: 0.875rem; color: #6b7280;" id="dropdown-email">user@example.com</div>
-        </div>
-        <div style="padding: 0.5rem 0;">
-            <a href="account.html" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; color: #374151; text-decoration: none; border-radius: 6px; transition: background 0.2s; font-size: 0.9375rem;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
-                <span><i class="fas fa-user" style="margin-right: 0.75rem; color: #6b7280; width: 16px;"></i><span>帳戶</span></span>
-                <span style="color: #9ca3af; font-size: 0.875rem;">⌘A</span>
-            </a>
-            <a href="billing.html" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; color: #374151; text-decoration: none; border-radius: 6px; transition: background 0.2s; font-size: 0.9375rem;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
-                <span><i class="fas fa-credit-card" style="margin-right: 0.75rem; color: #6b7280; width: 16px;"></i><span>計費</span></span>
-                <span style="color: #9ca3af; font-size: 0.875rem;">⌘B</span>
-            </a>
-        </div>
-        <div style="border-top: 1px solid #f3f4f6; padding-top: 0.5rem;">
-            <button onclick="handleLogout()" style="width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; color: #ef4444; background: transparent; border: none; border-radius: 6px; cursor: pointer; transition: background 0.2s; font-size: 0.9375rem; text-align: left;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='transparent'">
-                <span><i class="fas fa-sign-out-alt" style="margin-right: 0.75rem; width: 16px;"></i><span>登出</span></span>
-                <span style="color: #fca5a5; font-size: 0.875rem;">⌘Q</span>
-            </button>
-        </div>
-    </div>
-    
-    <!-- ✅ index.html 動態更新用戶狀態 -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('✅ index.html 初始化');
-            
-            let userCredits = 0;
-            let userEmail = '';
-            let userDisplayName = '';
-            
-            // 獲取用戶首字母
-            function getUserInitial() {
-                if (!userDisplayName || userDisplayName.trim() === '') {
-                    // 如果沒有 displayName，使用 email 的第一個字母
-                    return userEmail ? userEmail.charAt(0).toUpperCase() : 'U';
-                }
-                
-                // 分割名字（支援中英文）
-                const parts = userDisplayName.trim().split(/\s+/);
-                
-                if (parts.length >= 2) {
-                    // 有 First Name 和 Last Name
-                    const firstInitial = parts[0].charAt(0).toUpperCase();
-                    const lastInitial = parts[parts.length - 1].charAt(0).toUpperCase();
-                    return firstInitial + lastInitial;
-                } else if (parts.length === 1) {
-                    // 只有一個名字，取前兩個字母
-                    const name = parts[0];
-                    if (name.length >= 2) {
-                        return name.substring(0, 2).toUpperCase();
-                    } else {
-                        return name.charAt(0).toUpperCase();
-                    }
-                }
-                
-                return 'U';
-            }
-            
-            // 🔥 漢堡菜單功能（立即執行，不等待 DOMContentLoaded）
-            (function() {
-                console.log('🔵 初始化漢堡菜單...');
-                
-                // 打開側邊欄
-                window.openMobileSidebar = function() {
-                    console.log('🔵 openMobileSidebar 被調用');
-                    const sidebar = document.getElementById('mobile-sidebar');
-                    const overlay = document.getElementById('mobile-sidebar-overlay');
-                    console.log('🔵 sidebar:', sidebar);
-                    console.log('🔵 overlay:', overlay);
-                    
-                    if (sidebar && overlay) {
-                        sidebar.style.left = '0';
-                        overlay.style.display = 'block';
-                        document.body.style.overflow = 'hidden';
-                        console.log('✅ 側邊欄已打開');
-                    } else {
-                        console.error('❌ 找不到側邊欄或遮罩元素');
-                    }
-                };
-                
-                // 關閉側邊欄
-                window.closeMobileSidebar = function() {
-                    console.log('🔵 closeMobileSidebar 被調用');
-                    const sidebar = document.getElementById('mobile-sidebar');
-                    const overlay = document.getElementById('mobile-sidebar-overlay');
-                    
-                    if (sidebar && overlay) {
-                        sidebar.style.left = '-100%';
-                        overlay.style.display = 'none';
-                        document.body.style.overflow = 'auto';
-                        console.log('✅ 側邊欄已關閉');
-                    }
-                };
-                
-                // 漢堡菜單按鈕使用 onclick，無需額外綁定
-                console.log('✅ 漢堡菜單功能已就緒（使用 onclick）');
-            })();
-                
-                // 手機版自動輪播（僅在手機版啟用）
-                if (window.innerWidth <= 768) {
-                    // 評價輪播
-                    const testimonialsContainer = document.getElementById('testimonials-container');
-                    if (testimonialsContainer) {
-                        let testimonialIndex = 0;
-                        const testimonialCards = testimonialsContainer.children;
-                        
-                        setInterval(() => {
-                            testimonialIndex = (testimonialIndex + 1) % testimonialCards.length;
-                            const scrollAmount = testimonialCards[testimonialIndex].offsetLeft - testimonialsContainer.offsetLeft;
-                            testimonialsContainer.scrollTo({
-                                left: scrollAmount,
-                                behavior: 'smooth'
-                            });
-                        }, 4000); // 每4秒切換
-                    }
-                    
-                    // 學習中心輪播
-                    const learningContainer = document.getElementById('learning-center-container');
-                    if (learningContainer) {
-                        let learningIndex = 0;
-                        const learningCards = learningContainer.children;
-                        
-                        setInterval(() => {
-                            learningIndex = (learningIndex + 1) % learningCards.length;
-                            const scrollAmount = learningCards[learningIndex].offsetLeft - learningContainer.offsetLeft;
-                            learningContainer.scrollTo({
-                                left: scrollAmount,
-                                behavior: 'smooth'
-                            });
-                        }, 5000); // 每5秒切換
-                    }
-                }
-            });
-            
-            // 切換下拉菜單
-            async function toggleDropdown() {
-                const dropdown = document.getElementById('user-dropdown');
-                if (dropdown.style.display === 'none') {
-                    dropdown.style.display = 'block';
-                    
-                    // 🔥 即時從 SimpleDataManager 獲取最新 Credits
-                    if (window.simpleDataManager && window.simpleDataManager.initialized) {
-                        try {
-                            userCredits = await window.simpleDataManager.getUserCredits();
-                            console.log('✅ 即時獲取 Credits:', userCredits);
-                        } catch (error) {
-                            console.error('❌ 無法獲取 Credits:', error);
-                        }
-                    }
-                    
-                    // 更新下拉菜單內容
-                    document.getElementById('dropdown-credits').textContent = userCredits.toLocaleString();
-                    document.getElementById('dropdown-email').textContent = userEmail;
-                } else {
-                    dropdown.style.display = 'none';
-                }
-            }
-            
-            // 點擊外部關閉下拉菜單
-            document.addEventListener('click', function(event) {
-                const dropdown = document.getElementById('user-dropdown');
-                const userMenu = document.getElementById('user-menu');
-                
-                if (dropdown && userMenu && 
-                    !dropdown.contains(event.target) && 
-                    !userMenu.contains(event.target)) {
-                    dropdown.style.display = 'none';
-                }
-            });
-            
-            // 登出功能
-            window.handleLogout = async function() {
-                try {
-                    if (window.simpleAuth) {
-                        await window.simpleAuth.logout();
-                        window.location.href = 'index.html';
-                    }
-                } catch (error) {
-                    console.error('登出失敗:', error);
-                    alert('登出失敗，請重試');
-                }
-            };
-            
-            // 等待 Firebase 和 simpleAuth 加載
-            async function updateUserMenu() {
-                const userMenu = document.getElementById('user-menu');
-                if (!userMenu) return;
-                
-                try {
-                    const isLoggedIn = window.simpleAuth && window.simpleAuth.isLoggedIn();
-                    
-                    if (isLoggedIn) {
-                        // ✅ 已登入：顯示用戶頭像
-                        const currentUser = window.simpleAuth.getCurrentUser();
-                        userEmail = currentUser.email || '';
-                        userDisplayName = currentUser.displayName || '';
-                        
-                        // 🔥 從 Firestore 獲取 displayName 和 credits
-                        if (window.simpleDataManager && window.simpleDataManager.initialized) {
-                            try {
-                                const userDoc = await window.simpleDataManager.getUserDocument();
-                                if (userDoc) {
-                                    userDisplayName = userDoc.displayName || userDisplayName;
-                                    userCredits = userDoc.credits || 0;
-                                    console.log('✅ index.html 獲取 Credits:', userCredits);
-                                }
-                            } catch (error) {
-                                console.log('⚠️ 無法從 Firestore 獲取用戶資料:', error);
-                            }
-                        } else {
-                            console.log('⏳ SimpleDataManager 尚未初始化，等待中...');
-                            // 延遲重試
-                            setTimeout(async () => {
-                                if (window.simpleDataManager && window.simpleDataManager.initialized) {
-                                    try {
-                                        userCredits = await window.simpleDataManager.getUserCredits();
-                                        console.log('✅ 延遲獲取 Credits:', userCredits);
-                                    } catch (error) {
-                                        console.error('❌ 延遲獲取失敗:', error);
-                                    }
-                                }
-                            }, 1000);
-                        }
-                        
-                        const userInitial = getUserInitial();
-                        console.log(`👤 用戶首字母: "${userInitial}" (displayName: "${userDisplayName}")`);
-                        
-                        userMenu.innerHTML = `
-                            <div onclick="toggleDropdown()" style="cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
-                                <div style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">${userInitial}</div>
-                            </div>
-                        `;
-                        console.log('✅ 用戶已登入，顯示頭像');
-                    } else {
-                        // ✅ 未登入：顯示登入按鈕
-                        userMenu.innerHTML = `
-                            <button onclick="window.location.href='auth.html'" style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.875rem;" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">登入</button>
-                        `;
-                        console.log('✅ 用戶未登入，顯示登入按鈕');
-                    }
-                } catch (e) {
-                    console.log('❌ 無法更新用戶菜單:', e);
-                }
-            }
-            
-            // 立即嘗試更新
-            updateUserMenu();
-            
-            // 監聽 Firebase 和 Auth 事件
-            window.addEventListener('firebase-ready', updateUserMenu);
-            window.addEventListener('user-logged-in', updateUserMenu);
-            window.addEventListener('user-logged-out', updateUserMenu);
-            
-            // 延遲再次檢查（以防事件已經觸發）
-            setTimeout(updateUserMenu, 1000);
-            setTimeout(updateUserMenu, 2000);
-            
-            // 暴露 toggleDropdown 到全局
-            window.toggleDropdown = toggleDropdown;
-        });
-    </script>
-    
-    
 
-    <!-- 主要內容區域 -->
-    <main style="padding-top: 10px;">
-    <!-- Dashboard 容器 -->
-    <div class="dashboard-container" style="display: flex; min-height: calc(100vh - 10px); background: #ffffff; padding-top: 10px;">
-        <!-- 左側邊欄 (由 sidebar-component.js 動態生成) -->
-        <aside class="sidebar"></aside>
-
-        <!-- 主要內容區域 -->
-        <main class="main-content" style="flex: 1; background: #ffffff; margin-left: 280px; overflow-y: auto; min-height: calc(100vh - 60px); display: block !important; visibility: visible !important;">
-            <!-- 訂閱方案 -->
-            <div class="plans-section" id="subscription-plans" style="padding: 2rem;">
-                <div style="text-align: center; margin-bottom: 3rem;">
-                    <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 0.75rem; color: #1f2937; line-height: 1.3;">無隱藏費用，安全可靠</h2>
-                    <p style="font-size: 1rem; color: #6b7280; margin: 0;">與數千家企業一起，節省財務數據錄入的時間。</p>
-                </div>
-                
-                <!-- 月費和年費並列顯示 -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; max-width: 1000px; margin: 2rem auto;">
-                    <!-- 月費方案 -->
-                    <div style="border: 2px solid #e5e7eb; border-radius: 12px; padding: 2rem; background: white;">
-                        <div style="text-align: center;">
-                            <h3 data-i18n="pricing.monthly" style="font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem;">月費</h3>
-                            <p data-i18n="pricing.suitable_for" style="color: #6b7280; margin: 0.5rem 0; font-size: 0.875rem;">適合會計師、企業和個人用戶</p>
-                            <div style="margin: 1.5rem 0;">
-                                <span style="font-size: 1.25rem; color: #6b7280;">HKD</span>
-                                <span style="font-size: 2.5rem; font-weight: 700; color: #1f2937;">$78</span>
-                                <span style="font-size: 1rem; color: #6b7280;">/月</span>
-                            </div>
-                            <p style="margin: 0.5rem 0; color: #6b7280; font-size: 0.875rem;">包含 100 Credits（每處理 1 頁消耗 1 個 Credit）</p>
-                        </div>
-                        <div style="margin-top: 1.5rem;">
-                            <ul style="display: flex; flex-direction: column; gap: 0.5rem; list-style: none; margin: 0; padding: 0;">
-                                <li style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>每月 100 Credits</span></li>
-                                <li style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span><strong>超出後每頁 HKD $0.5</strong></span></li>
-                                <li style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>批次處理無限制文件</span></li>
-                                <li style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>一鍵轉換所有文件</span></li>
-                                <li style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>Excel/CSV 匯出</span></li>
-                                <li style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>QuickBooks 整合</span></li>
-                                <li style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>複合式 AI 處理</span></li>
-                                <li style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span><strong>8 種語言支援</strong></span></li>
-                                <li style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>電子郵件支援</span></li>
-                                <li style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>安全文件上傳</span></li>
-                                <li style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>365 天數據保留</span></li>
-                                <li style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>30 天圖片保留</span></li>
-                            </ul>
-                        </div>
-                        <div style="margin-top: 1.5rem;">
-                            <a href="https://buy.stripe.com/cNi8wQ0bagJA1CS58ef7i08" data-i18n="pricing.cta" class="cta-btn" style="width: 100%; padding: 0.75rem; background: #8b5cf6; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: block; text-align: center; text-decoration: none;">立即開始</a>
-                        </div>
-                    </div>
-
-                    <!-- 年費方案 -->
-                    <div style="border: 2px solid #8b5cf6; border-radius: 12px; padding: 2rem; background: linear-gradient(135deg, #ffffff 0%, #f3f0ff 100%); position: relative;">
-                        <div data-i18n="pricing.save" style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #8b5cf6; color: white; padding: 0.25rem 1rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">節省 20%</div>
-                        <div style="text-align: center;">
-                            <h3 data-i18n="pricing.yearly" style="font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem;">年費</h3>
-                            <p data-i18n="pricing.suitable_for" style="color: #6b7280; margin: 0.5rem 0; font-size: 0.875rem;">適合會計師、企業和個人用戶</p>
-                            <div style="margin: 1.5rem 0;">
-                                <span style="font-size: 1.25rem; color: #6b7280;">HKD</span>
-                                <span style="font-size: 2.5rem; font-weight: 700; color: #1f2937;">$62</span>
-                                <span style="font-size: 1rem; color: #6b7280;">/月</span>
-                            </div>
-                            <p style="margin: 0.5rem 0; color: #6b7280; font-size: 0.875rem;">包含 1,200 Credits（每處理 1 頁消耗 1 個 Credit）</p>
-                        </div>
-                        <div style="margin-top: 1.5rem;">
-                            <ul style="display: flex; flex-direction: column; gap: 0.5rem; list-style: none; margin: 0; padding: 0;">
-                                <li style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>每年 1,200 Credits</span></li>
-                                <li style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span><strong>超出後每頁 HKD $0.5</strong></span></li>
-                                <li style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>批次處理無限制文件</span></li>
-                                <li style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>一鍵轉換所有文件</span></li>
-                                <li style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>Excel/CSV 匯出</span></li>
-                                <li style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>QuickBooks 整合</span></li>
-                                <li style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>複合式 AI 處理</span></li>
-                                <li style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span><strong>8 種語言支援</strong></span></li>
-                                <li style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>電子郵件支援</span></li>
-                                <li style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>安全文件上傳</span></li>
-                                <li style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>365 天數據保留</span></li>
-                                <li style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>30 天圖片保留</span></li>
-                            </ul>
-                        </div>
-                        <div style="margin-top: 1.5rem;">
-                            <a href="https://buy.stripe.com/dRm6oI3nmeBs3L00RYf7i07" data-i18n="pricing.cta" class="cta-btn" style="width: 100%; padding: 0.75rem; background: #8b5cf6; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: block; text-align: center; text-decoration: none;">立即開始</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </main>
-    </div>
-
-    <script>
-        // ✅ 簡化：直接使用 SimpleAuth
-        function checkAuth() {
-            return window.simpleAuth && window.simpleAuth.isLoggedIn();
-        }
-        
-        function showAuthNotificationInBilling() {
-            console.log('💡 在 Billing 頁面顯示身份驗證提示');
-            
-            const notification = document.createElement('div');
-            notification.id = 'billing-auth-notification';
-            notification.innerHTML = `
-                <div style="position: fixed; top: 0; left: 0; right: 0; background: #f3e8ff; border-bottom: 1px solid #8b5cf6; padding: 0.75rem; z-index: 1000; text-align: center;">
-                    <p style="margin: 0; color: #6b21a8;">
-                        <i class="fas fa-info-circle"></i> 
-                        如需完整計費功能，請 <a href="auth.html" style="color: #7c3aed; text-decoration: underline;">重新登入</a> 或 
-                        <button onclick="window.location.reload()" style="background: #8b5cf6; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 4px; margin-left: 0.5rem;">重新載入頁面</button>
-                        <button onclick="document.getElementById('billing-auth-notification').remove()" style="background: transparent; border: none; color: #6b21a8; margin-left: 1rem;">✕</button>
-                    </p>
-                </div>
-            `;
-            document.body.insertBefore(notification, document.body.firstChild);
-            
-            // 調整頁面內容向下偏移
-            const mainContent = document.querySelector('.billing-container');
-            if (mainContent) {
-                mainContent.style.marginTop = '60px';
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Billing 頁面載入中...');
-
-            // 初始化統一側邊欄
-            window.billingSidebar = new VaultCaddySidebar('billing');
-
-            // 初始化頁面
-            initBillingPage();
-            
-            // 處理 Stripe 支付回調
-            handlePaymentSuccess();
-            
-            // 檢查 Credits 是否過期
-            checkCreditsExpiry();
-            
-            // 監聽語言變更事件
-            window.addEventListener('languageChanged', function(e) {
-                console.log('Billing: 語言已變更為', e.detail.language);
-                // 重新應用翻譯
-                if (window.languageManager) {
-                    window.languageManager.loadLanguage(e.detail.language);
-                }
-            });
-        });
-
-        function initBillingPage() {
-            console.log('Billing page initialized');
-        }
-
-        // 管理方案
-        function managePlan() {
-            window.VaultCaddyNavbar.showNotification('Plan management coming soon!', 'info');
-        }
-
-        // 購買 Credits
-        function purchaseCredits(credits, price) {
-            console.log(`購買 ${credits} credits，價格 $${price}`);
-            
-            // 使用 StripeManager 處理購買
-            if (window.StripeManager) {
-                window.StripeManager.purchaseCredits(credits);
-            } else {
-                alert('Stripe 管理器未載入，請刷新頁面重試');
-            }
-        }
-
-        // 初始化 Stripe 支付
-        function initializeStripePayment(credits, price) {
-            // 這裡將來會整合 Stripe Checkout
-            window.VaultCaddyNavbar.showNotification(`正在初始化 ${credits} Credits 購買流程...`, 'info');
-            
-            // 模擬支付成功
-            setTimeout(() => {
-                simulatePaymentSuccess(credits);
-            }, 2000);
-        }
-
-        // 模擬支付成功並更新 Credits
-        function simulatePaymentSuccess(credits) {
-            // 更新本地 Credits 數量（實際上應該從伺服器獲取）
-            const currentCredits = parseInt(document.querySelector('.stat-value').textContent) || 0;
-            const newCredits = currentCredits + credits;
-            
-            // 更新 UI 顯示
-            document.querySelector('.stat-value').textContent = newCredits;
-            
-            window.VaultCaddyNavbar.showNotification(`成功購買 ${credits} Credits！當前餘額：${newCredits} Credits`, 'success');
-        }
-
-        // ✅ 統一的訂閱方案函數（2025-11-22 更新）
-        function subscribeToPlan(planType) {
-            console.log(`開始 ${planType} 方案訂閱流程`);
-            
-            // 使用 StripeManager 處理訂閱
-            if (window.StripeManager && window.StripeManager.subscribeToPlan) {
-                window.StripeManager.subscribeToPlan(planType);
-            } else {
-                console.error('❌ StripeManager 未載入');
-                alert('系統初始化中，請稍後再試');
-            }
-            
-            return;
-            
-            // === 以下是舊邏輯（保留作為參考）===
-            
-            // ✅ 新定價方案（2025-11-20 更新）
-            // 月費: HKD $78/月，包含 100 Credits + 超出後 HKD $0.5/頁
-            // 年費: HKD $62/月（$744/年），包含 1,200 Credits + 超出後 HKD $0.5/頁
-            
-            // ✅ Stripe 產品映射（2025-11-22 更新）
-            // 月費: prod_TSmKnHeaQVxZXC - HKD $78/月 + 使用量計費
-            // 年費: prod_TSsEWI5bv9pSkz - HKD $744/年 + 使用量計費
-            const stripeProductIds = {
-                'monthly': 'prod_TSmKnHeaQVxZXC',  // VaultCaddy 月費
-                'yearly': 'prod_TSsEWI5bv9pSkz'     // VaultCaddy 年費
-            };
-            
-            // Credits 映射 - 根據時間週期
-            const creditsMap = {
-                'monthly': { 
-                    credits: 100, 
-                    duration: '1個月',
-                    price: 'HKD $78',
-                    displayPrice: 'HKD $78/月'
-                },
-                'yearly': { 
-                    credits: 1200, 
-                    duration: '12個月',
-                    price: 'HKD $744',
-                    displayPrice: 'HKD $62/月 (年付 $744)'
-                }
-            };
-            
-            const paymentLink = stripeLinks[planType];
-            const creditsInfo = creditsMap[planType];
-            
-            if (!paymentLink || paymentLink.includes('REPLACE_WITH_YOUR')) {
-                console.error('⚠️ Payment link 尚未配置');
-                alert('付費功能正在設置中，請稍後再試或聯繫客服。\n\n提示：管理員需要在 Stripe 創建新的 Payment Links。');
-                return;
-            }
-            
-            console.log('=== 訂閱詳細信息 ===');
-            console.log('計費週期:', planType === 'yearly' ? '年費' : '月費');
-            console.log('Credits:', creditsInfo.credits);
-            console.log('有效期:', creditsInfo.duration);
-            console.log('價格:', creditsInfo.displayPrice);
-            console.log('支付連結:', paymentLink);
-            
-            // 顯示確認訊息
-            const confirmMessage = `確認訂閱 VaultCaddy Pro (${planType === 'yearly' ? '年費' : '月費'})？
-
-您將獲得：
-• ${creditsInfo.credits} Credits
-• 有效期：${creditsInfo.duration}
-• 超出後每頁 HKD $0.5
-• 批次處理無限制文件
-• Excel/CSV 匯出
-• QuickBooks 整合
-• 8 種語言支援
-
-總價：${creditsInfo.displayPrice}
-
-點擊確認後將前往安全支付頁面。`;
-            
-            if (confirm(confirmMessage)) {
-                // 顯示處理訊息
-                if (window.VaultCaddyNavbar) {
-                    window.VaultCaddyNavbar.showNotification('正在重定向到安全支付頁面...', 'info');
-                }
-                
-                // 設置訂閱元數據到本地存儲
-                localStorage.setItem('pendingSubscription', JSON.stringify({
-                    planType: 'pro',  // 統一為 Pro 方案
-                    period: planType,  // monthly 或 yearly
-                    credits: creditsInfo.credits,
-                    duration: creditsInfo.duration,
-                    price: creditsInfo.price,
-                    timestamp: new Date().toISOString()
-                }));
-                
-                // 重定向到 Stripe Payment Link
-                setTimeout(() => {
-                    window.open(paymentLink, '_self');
-                }, 1000);
-            }
-        }
-        
-        // 處理支付成功回調
-        function handlePaymentSuccess() {
-            // 檢查是否有待處理的訂閱
-            const pendingSubscription = localStorage.getItem('pendingSubscription');
-            if (pendingSubscription) {
-                try {
-                    const subscription = JSON.parse(pendingSubscription);
-                    console.log('檢測到待處理的訂閱:', subscription);
-                    
-                    // 授予 Credits
-                    grantSubscriptionCredits(subscription);
-                    
-                    // 顯示成功訊息
-                    if (window.VaultCaddyNavbar) {
-                        window.VaultCaddyNavbar.showNotification(
-                            `成功訂閱 ${subscription.planType.toUpperCase()} 方案！已獲得 ${subscription.credits} Credits`, 
-                            'success'
-                        );
-                    }
-                    
-                    // 清理待處理的訂閱數據
-                    localStorage.removeItem('pendingSubscription');
-                    
-                    // 更新用戶訂閱狀態
-                    localStorage.setItem('userPlan', subscription.planType);
-                    localStorage.setItem('userPlanPeriod', subscription.period);
-                    
-                } catch (error) {
-                    console.error('處理訂閱回調失敗:', error);
-                }
-            }
-        }
-        
-        // 授予訂閱 Credits
-        function grantSubscriptionCredits(subscription) {
-            const currentCredits = parseInt(localStorage.getItem('userCredits') || '0');
-            const newCredits = currentCredits + subscription.credits;
-            
-            // 設置 Credits 到期時間
-            const expiryDate = new Date();
-            if (subscription.period === 'yearly') {
-                expiryDate.setFullYear(expiryDate.getFullYear() + 1);
-            } else {
-                expiryDate.setMonth(expiryDate.getMonth() + 1);
-            }
-            
-            // 更新本地存儲
-            localStorage.setItem('userCredits', newCredits.toString());
-            localStorage.setItem('creditsExpiry', expiryDate.toISOString());
-            localStorage.setItem('subscriptionCredits', subscription.credits.toString());
-            
-            console.log(`已授予 ${subscription.credits} Credits，新餘額: ${newCredits}`);
-            console.log(`Credits 到期時間: ${expiryDate.toLocaleDateString()}`);
-            
-            // 更新 UI 顯示
-            const creditsElements = document.querySelectorAll('.stat-value');
-            if (creditsElements.length > 0) {
-                const creditsElement = creditsElements[creditsElements.length - 1];
-                creditsElement.textContent = newCredits;
-            }
-        }
-        
-        // 檢查 Credits 是否過期
-        function checkCreditsExpiry() {
-            const creditsExpiry = localStorage.getItem('creditsExpiry');
-            const subscriptionCredits = parseInt(localStorage.getItem('subscriptionCredits') || '0');
-            
-            if (creditsExpiry && subscriptionCredits > 0) {
-                const expiryDate = new Date(creditsExpiry);
-                const now = new Date();
-                
-                console.log('Credits 檢查：');
-                console.log('到期時間:', expiryDate.toLocaleDateString());
-                console.log('當前時間:', now.toLocaleDateString());
-                console.log('訂閱 Credits:', subscriptionCredits);
-                
-                if (now > expiryDate) {
-                    // Credits 已過期，移除訂閱 Credits
-                    console.log('Credits 已過期，正在移除...');
-                    
-                    const currentCredits = parseInt(localStorage.getItem('userCredits') || '0');
-                    const newCredits = Math.max(0, currentCredits - subscriptionCredits);
-                    
-                    // 更新本地存儲
-                    localStorage.setItem('userCredits', newCredits.toString());
-                    localStorage.removeItem('creditsExpiry');
-                    localStorage.removeItem('subscriptionCredits');
-                    localStorage.removeItem('userPlan');
-                    localStorage.removeItem('userPlanPeriod');
-                    
-                    // 更新 UI 顯示
-                    const creditsElements = document.querySelectorAll('.stat-value');
-                    if (creditsElements.length > 0) {
-                        const creditsElement = creditsElements[creditsElements.length - 1];
-                        creditsElement.textContent = newCredits;
-                    }
-                    
-                    // 顯示過期通知
-                    if (window.VaultCaddyNavbar) {
-                        window.VaultCaddyNavbar.showNotification(
-                            `您的訂閱 Credits 已過期並被移除。剩餘 ${newCredits} Credits`, 
-                            'warning'
-                        );
-                    }
-                    
-                    console.log(`已移除 ${subscriptionCredits} 過期 Credits，新餘額: ${newCredits}`);
-                } else {
-                    // Credits 尚未過期，顯示剩餘時間
-                    const timeLeft = Math.ceil((expiryDate - now) / (1000 * 60 * 60 * 24));
-                    console.log(`訂閱 Credits 還有 ${timeLeft} 天到期`);
-                }
-            }
-        }
-        
-        // 獲取 Credits 狀態信息
-        function getCreditsStatus() {
-            const userCredits = parseInt(localStorage.getItem('userCredits') || '0');
-            const subscriptionCredits = parseInt(localStorage.getItem('subscriptionCredits') || '0');
-            const creditsExpiry = localStorage.getItem('creditsExpiry');
-            const userPlan = localStorage.getItem('userPlan');
-            
-            let status = {
-                totalCredits: userCredits,
-                subscriptionCredits: subscriptionCredits,
-                purchasedCredits: userCredits - subscriptionCredits,
-                plan: userPlan || 'none',
-                hasSubscription: subscriptionCredits > 0 && creditsExpiry,
-                daysLeft: 0
-            };
-            
-            if (creditsExpiry) {
-                const expiryDate = new Date(creditsExpiry);
-                const now = new Date();
-                status.daysLeft = Math.max(0, Math.ceil((expiryDate - now) / (1000 * 60 * 60 * 24)));
-            }
-            
-            return status;
-        }
-
-        // 切換月費/年費
-        function togglePricingPlan(planType) {
-            // 更新按鈕狀態
-            document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelector(`[data-plan="${planType}"]`).classList.add('active');
-            
-            // 更新按鈕樣式
-            document.querySelectorAll('.toggle-btn').forEach(btn => {
-                if (btn.classList.contains('active')) {
-                    btn.style.background = 'white';
-                    btn.style.color = '#1f2937';
-                } else {
-                    btn.style.background = '#f9fafb';
-                    btn.style.color = '#6b7280';
-                }
-            });
-            
-            if (planType === 'monthly') {
-                // 顯示月費，隱藏年費
-                document.querySelectorAll('.monthly-price, .monthly-period, .monthly-subtitle, .monthly-feature, .monthly-savings').forEach(el => {
-                    el.style.display = 'inline';
-                });
-                document.querySelectorAll('.yearly-price, .yearly-period, .yearly-subtitle, .yearly-feature, .yearly-savings').forEach(el => {
-                    el.style.display = 'none';
-                });
-            } else {
-                // 顯示年費，隱藏月費
-                document.querySelectorAll('.monthly-price, .monthly-period, .monthly-subtitle, .monthly-feature, .monthly-savings').forEach(el => {
-                    el.style.display = 'none';
-                });
-                document.querySelectorAll('.yearly-price, .yearly-period, .yearly-subtitle, .yearly-feature, .yearly-savings').forEach(el => {
-                    el.style.display = 'inline';
-                });
-            }
-        }
-        
-        // ==================== Email 驗證檢查 ====================
-        (async function initEmailVerification() {
-            try {
-                // 等待 Firebase 和驗證檢查器初始化
-                await new Promise((resolve) => {
-                    const checkReady = setInterval(() => {
-                        if (window.emailVerificationChecker && firebase.auth) {
-                            clearInterval(checkReady);
-                            resolve();
-                        }
-                    }, 100);
-                    
-                    setTimeout(() => {
-                        clearInterval(checkReady);
-                        resolve();
-                    }, 10000);
-                });
-                
-                // 檢查驗證狀態並顯示提示（不阻擋功能）
-                await checkEmailVerification({ showNotice: true, blockPage: false });
-            } catch (error) {
-                console.error('❌ Email 驗證檢查失敗:', error);
-            }
-        })();
-    </script>
-
-    <!-- 🔥 漢堡菜單超級簡單修復方案 -->
-    <script>
-        console.log('🔥 開始初始化漢堡菜單...');
-        
-        // 打開側邊欄函數
-        function openSidebar() {
-            console.log('🔵 打開側邊欄');
-            const sidebar = document.getElementById('mobile-sidebar');
-            const overlay = document.getElementById('mobile-sidebar-overlay');
-            
-            if (sidebar && overlay) {
-                sidebar.style.left = '0';
-                overlay.style.display = 'block';
-                overlay.style.opacity = '1';
-                document.body.style.overflow = 'hidden';
-                console.log('✅ 側邊欄已打開');
-            }
-        }
-        
-        // 關閉側邊欄函數
-        function closeSidebar() {
-            console.log('🔵 關閉側邊欄');
-            const sidebar = document.getElementById('mobile-sidebar');
-            const overlay = document.getElementById('mobile-sidebar-overlay');
-            
-            if (sidebar && overlay) {
-                sidebar.style.left = '-100%';
-                overlay.style.opacity = '0';
-                setTimeout(() => {
-                    overlay.style.display = 'none';
-                }, 300); // 等待動畫完成（與 CSS transition 一致）
-                document.body.style.overflow = 'auto';
-                console.log('✅ 側邊欄已關閉');
-            }
-        }
-        
-        // 超級簡單的初始化函數
-        function simpleInitMenu() {
-            const btn = document.getElementById('mobile-menu-btn');
-            const overlay = document.getElementById('mobile-sidebar-overlay');
-            
-            if (!btn || !overlay) {
-                console.log('⏳ 元素未找到，200ms後重試');
-                setTimeout(simpleInitMenu, 200);
-                return;
-            }
-            
-            console.log('✅ 找到所有元素！');
-            
-            // 按鈕點擊處理
-            btn.addEventListener('click', function() {
-                console.log('🔵 按鈕被點擊！');
-                openSidebar();
-            });
-            
-            // 觸摸處理
-            btn.addEventListener('touchend', function(e) {
-                e.preventDefault();
-                console.log('🔵 觸摸事件！');
-                openSidebar();
-            });
-            
-            // 遮罩點擊關閉
-            overlay.addEventListener('click', function() {
-                console.log('🔵 點擊遮罩關閉');
-                closeSidebar();
-            });
-            
-            // 遮罩觸摸關閉
-            overlay.addEventListener('touchend', function(e) {
-                e.preventDefault();
-                console.log('🔵 觸摸遮罩關閉');
-                closeSidebar();
-            });
-            
-            console.log('✅ 所有事件監聽器已綁定');
-        }
-        
-        // 立即嘗試初始化
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', simpleInitMenu);
-        } else {
-            setTimeout(simpleInitMenu, 100);
-        }
-        
-        // 暴露函數供側邊欄內的連結使用
-        window.closeMobileSidebar = closeSidebar;
-    </script>
 </body>
 </html>

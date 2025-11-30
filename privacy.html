@@ -7,7 +7,10 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
     <!-- Firebase SDK（CDN 版本 - compat）-->
-    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+        <!-- ✅ 統一初始化管理器 -->
+    <script defer src="init-manager.js?v=20251130"></script>
+
+<script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
     
@@ -16,6 +19,7 @@
     <!-- 🔥 新的簡化系統 -->
     <script defer src="simple-auth.js?v=20251105-force-init"></script>
     <script defer src="simple-data-manager.js?v=20251105-force-init"></script>
+    <script defer src="unified-auth.js?v=20251129"></script>
     
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -160,16 +164,16 @@
     </style>
 </head>
 <body>
-    <!-- ✅ 統一靜態導航欄（與 firstproject.html 完全一致）-->
+    <!-- ✅ 統一靜態導航欄 -->
     <nav class="vaultcaddy-navbar" id="main-navbar" style="position: fixed; top: 0; left: 0; right: 0; height: 60px; background: #ffffff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; z-index: 1000; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);">
         <div style="display: flex; align-items: center; gap: 0.5rem;">
             <!-- 漢堡菜單按鈕（僅手機顯示）-->
-            <button id="mobile-menu-btn" style="display: none; background: none; border: none; cursor: pointer; padding: 0.5rem; color: #1f2937; font-size: 1.5rem;">
-                <i class="fas fa-bars"></i>
+            <button id="mobile-menu-btn" style="display: none; background: none; border: none; cursor: pointer; padding: 0.5rem; color: #1f2937; font-size: 1.5rem; -webkit-tap-highlight-color: rgba(0,0,0,0.1); touch-action: manipulation;">
+                <i class="fas fa-bars" style="pointer-events: none;"></i>
             </button>
             
-            <a href="index.html" style="display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: #1f2937; font-weight: 600; font-size: 1.125rem;">
-                <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.25rem;">
+            <a href="/index.html" style="display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: #1f2937; font-weight: 600; font-size: 1.125rem;">
+                <div class="desktop-logo" style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.25rem;">
                     V
                 </div>
                 <div class="desktop-logo-text">
@@ -180,16 +184,41 @@
         </div>
         <div style="display: flex; align-items: center; gap: 2rem;">
             <div style="display: flex; align-items: center; gap: 2rem;">
-                <a href="index.html#features" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">功能</a>
-                <a href="index.html#pricing" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">價格</a>
-                <a href="dashboard.html" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">儀表板</a>
+                <a href="/index.html#features" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">功能</a>
+                <a href="/index.html#pricing" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">價格</a>
+                <a href="/dashboard.html" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">儀表板</a>
             </div>
-            <div id="user-menu" style="position: relative; display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;">
-                <div id="user-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">U</div>
+            <div id="user-menu" style="position: relative; display: flex; align-items: center; gap: 0.75rem;">
+                <!-- 初始狀態：登入按鈕 -->
+                <button onclick="window.location.href='/auth.html'" style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.875rem;" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">登入</button>
             </div>
         </div>
     </nav>
     
+    <!-- 手機側邊欄菜單 -->
+    <div id="mobile-sidebar-overlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; opacity: 0; transition: opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);"></div>
+    <div id="mobile-sidebar" style="display: none; position: fixed; top: 0; left: 0; height: 100%; width: 280px; max-width: 80%; background: #ffffff; z-index: 1001; box-shadow: 2px 0 10px rgba(0,0,0,0.1); transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); will-change: transform;">
+        <div style="padding: 1.5rem; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between;">
+            <a href="/index.html" style="display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: #1f2937; font-weight: 600; font-size: 1.125rem;">
+                <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1rem;">V</div>
+                <div>VaultCaddy</div>
+            </a>
+            <button onclick="window.closeMobileSidebar()" style="background: none; border: none; cursor: pointer; color: #6b7280; font-size: 1.5rem;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <nav style="padding: 1.5rem;">
+            <a href="/index.html#features" style="display: block; padding: 0.75rem 1rem; color: #4b5563; text-decoration: none; font-size: 1rem; font-weight: 500; border-radius: 6px; transition: background 0.2s;" onclick="closeMobileSidebar()" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">功能</a>
+            <a href="/index.html#pricing" style="display: block; padding: 0.75rem 1rem; color: #4b5563; text-decoration: none; font-size: 1rem; font-weight: 500; border-radius: 6px; transition: background 0.2s;" onclick="closeMobileSidebar()" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">價格</a>
+            <a href="/dashboard.html" style="display: block; padding: 0.75rem 1rem; color: #4b5563; text-decoration: none; font-size: 1rem; font-weight: 500; border-radius: 6px; transition: background 0.2s;" onclick="closeMobileSidebar()" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">儀表板</a>
+            <a href="/blog/how-to-convert-pdf-bank-statement-to-excel.html" style="display: block; padding: 0.75rem 1rem; color: #4b5563; text-decoration: none; font-size: 1rem; font-weight: 500; border-radius: 6px; transition: background 0.2s;" onclick="closeMobileSidebar()" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">博客</a>
+        </nav>
+    </div>
+
+    <!-- 統一導航欄容器 -->
+    <div id="navbar-container"></div>
+
+    <!-- ✅ 統一靜態導航欄（與 firstproject.html 完全一致）-->
     <!-- 手機側邊欄菜單 -->
     <div id="mobile-sidebar" style="position: fixed; top: 0; left: -100%; width: 280px; height: 100vh; background: white; z-index: 2000; transition: left 0.3s ease; box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto;">
         <div style="padding: 1.5rem;">
@@ -223,8 +252,6 @@
     </div>
     
     <!-- 側邊欄遮罩 -->
-    <div id="mobile-sidebar-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; display: none;" onclick="closeMobileSidebar()"></div>
-    
     <div id="user-dropdown" style="display: none; position: fixed; top: 70px; right: 2rem; background: white; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); padding: 1rem; min-width: 220px; z-index: 2000; border: 1px solid #e5e7eb;">
         <div style="padding: 0.75rem; border-bottom: 1px solid #f3f4f6;">
             <div style="font-weight: 600; font-size: 1rem; color: #1f2937; margin-bottom: 0.25rem;"><span>Credits</span>: <span id="dropdown-credits">0</span></div>
@@ -952,5 +979,6 @@
         // 暴露函數供側邊欄內的連結使用
         window.closeMobileSidebar = closeSidebar;
     </script>
+    <script src="load-unified-navbar.js?v=20251129"></script>
 </body>
 </html>
