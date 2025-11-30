@@ -935,8 +935,6 @@
         });
         
         // 🔄 動態生成 Export 菜單（根據文檔類型）
-        let currentDocumentType = null; // 將由頁面加載時設置
-        
         window.toggleExportMenu = function() {
             const menu = document.getElementById('exportMenu');
             if (!menu) return;
@@ -956,11 +954,18 @@
             const menu = document.getElementById('exportMenu');
             if (!menu) return;
             
+            // 從 currentDocument 獲取文檔類型（定義在 document-detail-new.js）
+            let docType = 'general';
+            if (window.currentDocument) {
+                docType = window.currentDocument.type || window.currentDocument.documentType || 'general';
+                console.log('📄 Export 菜單 - 文檔類型:', docType);
+            }
+            
             let menuHTML = '<div style="padding: 0.5rem 0;">';
             
             // 根據文檔類型顯示對應選項
-            if (currentDocumentType === '發票' || currentDocumentType === 'invoice') {
-                // 只顯示發票選項
+            if (docType === 'invoice' || docType === '發票') {
+                // 發票：顯示發票選項 + 其他（IIF/QBO）
                 menuHTML += `
                     <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">發票</div>
                     <button onclick="exportDocument('invoice_summary_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
@@ -978,6 +983,20 @@
                         </div>
                     </button>
                     <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">其他</div>
+                    <button onclick="exportDocument('xero_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-csv" style="color: #2563eb; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">Xero CSV</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">官方最小格式</div>
+                        </div>
+                    </button>
+                    <button onclick="exportDocument('quickbooks_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-csv" style="color: #059669; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">QuickBooks CSV</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">官方最小格式</div>
+                        </div>
+                    </button>
                     <button onclick="exportDocument('iif')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
                         <i class="fas fa-file-alt" style="color: #3b82f6; width: 20px;"></i>
                         <div>
@@ -994,7 +1013,7 @@
                     </button>
                 `;
             } else {
-                // 銀行對帳單：顯示銀行對帳單選項
+                // 銀行對帳單：顯示銀行對帳單選項 + 其他（Xero/QuickBooks/IIF/QBO）
                 menuHTML += `
                     <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">銀行對帳單</div>
                     <button onclick="exportDocument('bank_statement_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
@@ -1039,18 +1058,6 @@
             menuHTML += '</div>';
             menu.innerHTML = menuHTML;
         }
-        
-        // 🔄 在頁面加載時檢測文檔類型
-        window.addEventListener('DOMContentLoaded', function() {
-            // 嘗試從頁面中獲取文檔類型信息
-            setTimeout(() => {
-                const typeElement = document.querySelector('[data-doc-type]');
-                if (typeElement) {
-                    currentDocumentType = typeElement.getAttribute('data-doc-type');
-                    console.log('📄 文檔類型:', currentDocumentType);
-                }
-            }, 1000);
-        });
     </script>
 </body>
 </html>
