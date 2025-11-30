@@ -3381,20 +3381,15 @@
             }
         };
         
-        window.toggleExportMenu = function() {
+        // 🔄 更新 Export 菜單內容（提取為獨立函數）
+        function updateExportMenuContent() {
             const menu = document.getElementById('exportMenu');
             if (!menu) return;
-            
-            // 如果菜單已顯示，則關閉
-            if (menu.style.display === 'block') {
-                menu.style.display = 'none';
-                return;
-            }
             
             // 獲取選中的文檔
             const checkboxes = document.querySelectorAll('.document-checkbox:checked');
             if (checkboxes.length === 0) {
-                alert('請先選擇要導出的文檔');
+                menu.style.display = 'none';
                 return;
             }
             
@@ -3419,17 +3414,6 @@
             
             // 動態生成菜單內容
             let menuHTML = '<div style="padding: 0.5rem 0;">';
-            
-            // 通用格式（始終顯示）
-            menuHTML += `
-                <button onclick="exportDocuments('csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                    <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
-                    <div>
-                        <div style="font-weight: 500;">CSV（通用）</div>
-                        <div style="font-size: 0.75rem; color: #6b7280;">所有文檔類型</div>
-                    </div>
-                </button>
-            `;
             
             // 銀行對帳單選項
             if (hasBankStatement) {
@@ -3482,7 +3466,7 @@
             
             // QuickBooks 選項（如果有任何文檔）
             menuHTML += `
-                <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">QuickBooks</div>
+                <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">QUICKBOOKS</div>
                 <button onclick="exportDocuments('iif')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
                     <i class="fas fa-file-alt" style="color: #3b82f6; width: 20px;"></i>
                     <div>
@@ -3501,10 +3485,43 @@
             
             menuHTML += '</div>';
             
-            // 更新菜單內容並顯示
+            // 更新菜單內容
             menu.innerHTML = menuHTML;
+        }
+        
+        // 🔄 切換 Export 菜單顯示/隱藏
+        window.toggleExportMenu = function() {
+            const menu = document.getElementById('exportMenu');
+            if (!menu) return;
+            
+            // 如果菜單已顯示，則關閉
+            if (menu.style.display === 'block') {
+                menu.style.display = 'none';
+                return;
+            }
+            
+            // 獲取選中的文檔
+            const checkboxes = document.querySelectorAll('.document-checkbox:checked');
+            if (checkboxes.length === 0) {
+                alert('請先選擇要導出的文檔');
+                return;
+            }
+            
+            // 更新菜單內容並顯示
+            updateExportMenuContent();
             menu.style.display = 'block';
         };
+        
+        // 🔄 監聽 checkbox 變化，實時更新 Export 菜單
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('document-checkbox')) {
+                const menu = document.getElementById('exportMenu');
+                // 只有當菜單打開時才更新
+                if (menu && menu.style.display === 'block') {
+                    updateExportMenuContent();
+                }
+            }
+        });
         
         // ✅ 按類型導出文檔（內部輔助函數）
         async function exportByType(docs, format) {
