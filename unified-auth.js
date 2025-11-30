@@ -76,7 +76,7 @@
                 }
                 
                 // 獲取用戶名首字母
-                const initial = (user.email && user.email.length > 0) ? user.email.substring(0, 2).toUpperCase() : 'U'; : 'U';
+                const initial = (user.email && user.email.length > 0) ? user.email.substring(0, 2).toUpperCase() : 'U';
                 
                 // 顯示用戶頭像和下拉菜單
                 userMenu.innerHTML = `
