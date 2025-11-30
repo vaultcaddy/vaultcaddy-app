@@ -75,8 +75,19 @@
                     }, { once: true });
                 }
                 
-                // 獲取用戶名首字母
-                const initial = 'YC';
+                // 獲取用戶名前兩個字的首字母
+                let initial = 'YC'; // 默認值
+                if (user.displayName && user.displayName.trim()) {
+                    // 如果有 displayName，取前兩個字的首字母
+                    const names = user.displayName.trim().split(' ');
+                    if (names.length >= 2) {
+                        // 例如 "yeung cavlin" -> "YC"
+                        initial = names[0].charAt(0).toUpperCase() + names[1].charAt(0).toUpperCase();
+                    } else {
+                        // 如果只有一個名字，取前兩個字符
+                        initial = user.displayName.substring(0, 2).toUpperCase();
+                    }
+                }
                 
                 // 顯示用戶頭像和下拉菜單
                 userMenu.innerHTML = `
