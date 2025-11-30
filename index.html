@@ -1508,22 +1508,29 @@
             
             /* ========== 手機版專屬優化 ========== */
             
-            /* 🔥 功能卡片內距縮小（減少左右空白） */
+            /* 🔥 功能卡片內距縮小 */
             div[style*="border-radius: 24px"][style*="padding: 4rem"] {
-                padding: 1.5rem 0.75rem !important; /* 左右更小 */
+                padding: 1.5rem 0.5rem !important; /* 左右極小 */
             }
             
             /* 🔥 所有大內距的 div 都縮小 */
             div[style*="padding: 2rem"],
             div[style*="padding: 3rem"] {
-                padding: 1rem 0.75rem !important; /* 左右更小 */
+                padding: 1rem 0.5rem !important; /* 左右極小 */
             }
             
-            /* 🔥 白色卡片左右內距減少 */
+            /* 🔥 白色卡片左右內距極小，讓卡片更寬 */
             .fade-in-right > div,
             .fade-in-left > div {
-                padding-left: 1rem !important;
-                padding-right: 1rem !important;
+                padding-left: 0.75rem !important;
+                padding-right: 0.75rem !important;
+                max-width: 100% !important; /* 占滿容器 */
+            }
+            
+            /* 🔥 確保卡片內部內容也占滿寬度 */
+            .fade-in-right > div > div,
+            .fade-in-left > div > div {
+                width: 100% !important;
             }
             
             /* 🔥 確保藍色標籤保持圓角膠囊形狀 */
@@ -1532,12 +1539,33 @@
                 display: inline-block !important;
             }
             
+            /* 🔥 確保圓形圖標容器顯示（圖3/4 - 超高準確率等圖標） */
+            div[style*="width: 80px"][style*="height: 80px"],
+            div[style*="width: 64px"][style*="height: 64px"] {
+                display: flex !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+            }
+            
+            /* 🔥 確保圖標內的 Font Awesome 圖標顯示 */
+            .fas.fa-bolt,
+            .fas.fa-bullseye,
+            .fas.fa-hand-holding-usd,
+            .fas.fa-file-alt {
+                display: inline-block !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+            }
+            
             /* 🔥 確保所有動畫元素在手機版立即顯示 */
             .fade-in-left,
             .fade-in-right,
-            .fade-in-up {
+            .fade-in-up,
+            .fade-in-up.delay-1,
+            .fade-in-up.delay-2,
+            .fade-in-up.delay-3 {
                 opacity: 1 !important;
-                transform: translateX(0) !important;
+                transform: translateX(0) translateY(0) !important;
                 transition: none !important;
             }
             

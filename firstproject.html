@@ -3456,25 +3456,36 @@
         
         // 🔄 切換 Export 菜單顯示/隱藏
         window.toggleExportMenu = function() {
+            console.log('🔍 toggleExportMenu 被調用');
             const menu = document.getElementById('exportMenu');
-            if (!menu) return;
+            console.log('📋 菜單元素:', menu);
+            
+            if (!menu) {
+                console.error('❌ 找不到 #exportMenu 元素');
+                return;
+            }
             
             // 如果菜單已顯示，則關閉
             if (menu.style.display === 'block') {
+                console.log('🔒 關閉菜單');
                 menu.style.display = 'none';
                 return;
             }
             
             // 獲取選中的文檔
             const checkboxes = document.querySelectorAll('.document-checkbox:checked');
+            console.log('✅ 已選中文檔數量:', checkboxes.length);
+            
             if (checkboxes.length === 0) {
                 alert('請先選擇要導出的文檔');
                 return;
             }
             
             // 更新菜單內容並顯示
+            console.log('🔄 更新菜單內容...');
             updateExportMenuContent();
             menu.style.display = 'block';
+            console.log('✅ 菜單已顯示');
         };
         
         // 🔄 監聽 checkbox 變化，實時更新 Export 菜單
