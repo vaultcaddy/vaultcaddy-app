@@ -1967,14 +1967,9 @@
                                 <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
                             </button>
                             <div id="exportMenu" class="export-menu" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 0.5rem; background: white; border: 1px solid #e5e7eb; border-radius: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-width: 250px; z-index: 1000;">
-                                <div style="padding: 0.5rem 0;">
-                                    <!-- 通用格式 -->
-                                    <button onclick="exportDocuments('csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                                        <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
-                                        <div>
-                                            <div style="font-weight: 500;">CSV（通用）</div>
-                                            <div style="font-size: 0.75rem; color: #6b7280;">所有文檔類型</div>
-                                        </div>
+                                <!-- 動態生成的菜單內容 -->
+                            </div>
+                        </div>
                                     </button>
                                     
                                     <!-- 分隔線 -->
@@ -3444,41 +3439,119 @@
             console.log('📤 開始導出:', format);
             
             try {
-                // 檢查是否有勾選的文檔
+                // 獲取選中的文檔
                 const selectedDocs = Array.from(window.selectedDocuments || new Set());
                 
                 let docsToExport;
-                
                 if (selectedDocs.length > 0) {
-                    // 如果有勾選，只導出已勾選且已完成的文檔
                     docsToExport = allDocuments.filter(doc => 
                         selectedDocs.includes(doc.id) && 
                         doc.status === 'completed' && 
                         doc.processedData
                     );
-                    console.log(`📋 導出 ${docsToExport.length} 個已勾選的文檔`);
                 } else {
-                    // 如果沒有勾選，導出所有已完成的文檔
-                    docsToExport = allDocuments.filter(doc => doc.status === 'completed' && doc.processedData);
-                    console.log(`📋 導出所有 ${docsToExport.length} 個已完成的文檔`);
+                    docsToExport = allDocuments.filter(doc => 
+                        doc.status === 'completed' && 
+                        doc.processedData
+                    );
                 }
                 
                 if (docsToExport.length === 0) {
-                    if (selectedDocs.length > 0) {
-                        alert('所選文檔中沒有已完成處理的文檔。\n請確保所選文檔已完成處理。');
-                    } else {
-                        alert('沒有可導出的文檔。\n請先勾選要導出的文檔，或確保至少有一個文檔已完成處理。');
-                    }
+                    alert('沒有可導出的文檔
+請先選擇已完成處理的文檔');
                     return;
                 }
                 
-                // ✅ 按類型分組文檔
-                const groupedDocs = {
-                    bank_statements: [],
-                    invoices: [],
-                    receipts: [],
-                    general: []
-                };
+                // 根據格式過濾文檔
+                let filteredDocs = docsToExport;
+                let exportType = '';
+                
+                if (format === 'bank_statement_csv' || format === 'xero_csv') {
+                    // 只導出銀行對帳單
+                    filteredDocs = docsToExport.filter(doc => {
+                        const type = (doc.documentType || '').toLowerCase();
+                        return type === 'bank_statement' || type === 'bank_statements' || type.includes('銀行');
+                    });
+                    exportType = '銀行對帳單';
+                } else if (format === 'invoice_summary_csv' || format === 'invoice_detailed_csv') {
+                    // 只導出發票
+                    filteredDocs = docsToExport.filter(doc => {
+                        const type = (doc.documentType || '').toLowerCase();
+                        return type === 'invoice' || type === 'invoices' || type.includes('發票');
+                    });
+                    exportType = '發票';
+                }
+                
+                if (filteredDocs.length === 0) {
+                    alert(`沒有可導出的${exportType}
+請確保已選擇${exportType}文檔`);
+                    return;
+                }
+                
+                console.log(`✅ 準備導出 ${filteredDocs.length} 個${exportType}`);
+                
+                // 生成導出內容
+                let exportContent = '';
+                let fileName = '';
+                let mimeType = 'text/csv;charset=utf-8;';
+                
+                switch(format) {
+                    case 'bank_statement_csv':
+                        exportContent = generateBankStatementCSV(filteredDocs);
+                        fileName = `bank_statements_${new Date().toISOString().split('T')[0]}.csv`;
+                        break;
+                        
+                    case 'xero_csv':
+                        exportContent = generateXeroCSV(filteredDocs);
+                        fileName = `xero_bank_${new Date().toISOString().split('T')[0]}.csv`;
+                        break;
+                        
+                    case 'invoice_summary_csv':
+                        exportContent = generateInvoiceSummaryCSV(filteredDocs);
+                        fileName = `invoices_summary_${new Date().toISOString().split('T')[0]}.csv`;
+                        break;
+                        
+                    case 'invoice_detailed_csv':
+                        exportContent = generateInvoiceDetailedCSV(filteredDocs);
+                        fileName = `invoices_detailed_${new Date().toISOString().split('T')[0]}.csv`;
+                        break;
+                        
+                    case 'iif':
+                        exportContent = generateIIF(filteredDocs);
+                        fileName = `quickbooks_${new Date().toISOString().split('T')[0]}.iif`;
+                        mimeType = 'text/plain;charset=utf-8;';
+                        break;
+                        
+                    case 'qbo':
+                        exportContent = generateQBO(filteredDocs);
+                        fileName = `quickbooks_online_${new Date().toISOString().split('T')[0]}.qbo`;
+                        mimeType = 'application/vnd.intu.qbo;charset=utf-8;';
+                        break;
+                        
+                    default:
+                        throw new Error(`不支持的格式: ${format}`);
+                }
+                
+                // 下載文件
+                const blob = new Blob([exportContent], { type: mimeType });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = fileName;
+                link.click();
+                URL.revokeObjectURL(link.href);
+                
+                // 關閉菜單
+                toggleExportMenu();
+                
+                alert(`✅ 導出成功！
+文件名: ${fileName}
+文檔數量: ${filteredDocs.length}`);
+                
+            } catch (error) {
+                console.error('❌ 導出錯誤:', error);
+                alert(`導出失敗: ${error.message}`);
+            }
+        };
                 
                 docsToExport.forEach(doc => {
                     const docType = (doc.documentType || '').toLowerCase();
