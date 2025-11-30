@@ -1599,32 +1599,34 @@
             let userEmail = '';
             let userDisplayName = '';
             
-            // 獲取用戶首字母
+            // 獲取用戶首字母（統一邏輯：取前兩個字符）
             function getUserInitial() {
                 if (!userDisplayName || userDisplayName.trim() === '') {
-                    // 如果沒有 displayName，使用 email 的第一個字母
-                    return userEmail ? userEmail.charAt(0).toUpperCase() : 'U';
+                    // 如果沒有 displayName，使用 email 的前兩個字符
+                    return userEmail && userEmail.length >= 2 
+                        ? userEmail.substring(0, 2).toUpperCase() 
+                        : 'YC';
                 }
                 
                 // 分割名字（支援中英文）
                 const parts = userDisplayName.trim().split(/\s+/);
                 
                 if (parts.length >= 2) {
-                    // 有 First Name 和 Last Name
+                    // 有 First Name 和 Last Name：取兩個首字母
                     const firstInitial = parts[0].charAt(0).toUpperCase();
                     const lastInitial = parts[parts.length - 1].charAt(0).toUpperCase();
                     return firstInitial + lastInitial;
                 } else if (parts.length === 1) {
-                    // 只有一個名字，取前兩個字母
+                    // 只有一個名字，取前兩個字符
                     const name = parts[0];
                     if (name.length >= 2) {
                         return name.substring(0, 2).toUpperCase();
                     } else {
-                        return name.charAt(0).toUpperCase();
+                        return name.charAt(0).toUpperCase() + 'C'; // 單字符補 'C'
                     }
                 }
                 
-                return 'U';
+                return 'YC';
             }
             
             // 🔥 漢堡菜單功能（立即執行，不等待 DOMContentLoaded）
@@ -3381,9 +3383,127 @@
         
         window.toggleExportMenu = function() {
             const menu = document.getElementById('exportMenu');
-            if (menu) {
-                menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+            if (!menu) return;
+            
+            // 如果菜單已顯示，則關閉
+            if (menu.style.display === 'block') {
+                menu.style.display = 'none';
+                return;
             }
+            
+            // 獲取選中的文檔
+            const checkboxes = document.querySelectorAll('.document-checkbox:checked');
+            if (checkboxes.length === 0) {
+                alert('請先選擇要導出的文檔');
+                return;
+            }
+            
+            // 分析選中文檔的類型
+            let hasBankStatement = false;
+            let hasInvoice = false;
+            
+            checkboxes.forEach(checkbox => {
+                const row = checkbox.closest('tr');
+                if (!row) return;
+                
+                const typeCell = row.querySelector('td:nth-child(3)'); // 類型列
+                if (!typeCell) return;
+                
+                const typeText = typeCell.textContent.trim();
+                if (typeText === '發票' || typeText.includes('發票')) {
+                    hasInvoice = true;
+                } else if (typeText === '銀行對帳單' || typeText.includes('銀行')) {
+                    hasBankStatement = true;
+                }
+            });
+            
+            // 動態生成菜單內容
+            let menuHTML = '<div style="padding: 0.5rem 0;">';
+            
+            // 通用格式（始終顯示）
+            menuHTML += `
+                <button onclick="exportDocuments('csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                    <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
+                    <div>
+                        <div style="font-weight: 500;">CSV（通用）</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">所有文檔類型</div>
+                    </div>
+                </button>
+            `;
+            
+            // 銀行對帳單選項
+            if (hasBankStatement) {
+                menuHTML += `
+                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">銀行對帳單</div>
+                    <button onclick="exportDocuments('bank_statement_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">標準 CSV</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">完整欄位格式</div>
+                        </div>
+                    </button>
+                    <button onclick="exportDocuments('xero_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-csv" style="color: #3b82f6; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">Xero CSV</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">官方最小格式</div>
+                        </div>
+                    </button>
+                    <button onclick="exportDocuments('quickbooks_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">QuickBooks CSV</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">官方最小格式</div>
+                        </div>
+                    </button>
+                `;
+            }
+            
+            // 發票選項
+            if (hasInvoice) {
+                menuHTML += `
+                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">發票</div>
+                    <button onclick="exportDocuments('invoice_summary_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-invoice" style="color: #f59e0b; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">標準 CSV（總數）</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">快速對帳</div>
+                        </div>
+                    </button>
+                    <button onclick="exportDocuments('invoice_detail_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-invoice" style="color: #f59e0b; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">完整交易數據 CSV</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">詳細記錄</div>
+                        </div>
+                    </button>
+                `;
+            }
+            
+            // QuickBooks 選項（如果有任何文檔）
+            menuHTML += `
+                <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">QuickBooks</div>
+                <button onclick="exportDocuments('iif')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                    <i class="fas fa-file-alt" style="color: #3b82f6; width: 20px;"></i>
+                    <div>
+                        <div style="font-weight: 500;">IIF</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Desktop</div>
+                    </div>
+                </button>
+                <button onclick="exportDocuments('qbo')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                    <i class="fas fa-cloud" style="color: #8b5cf6; width: 20px;"></i>
+                    <div>
+                        <div style="font-weight: 500;">QBO</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Online</div>
+                    </div>
+                </button>
+            `;
+            
+            menuHTML += '</div>';
+            
+            // 更新菜單內容並顯示
+            menu.innerHTML = menuHTML;
+            menu.style.display = 'block';
         };
         
         // ✅ 按類型導出文檔（內部輔助函數）
