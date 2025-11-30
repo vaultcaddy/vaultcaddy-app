@@ -1508,49 +1508,80 @@
             
             /* ========== 手機版專屬優化 ========== */
             
-            /* 🔥 強制顯示發票和銀行卡片（圖1和圖2） */
-            .fade-in-right,
+            /* 🔥 功能區域手機版佈局（上下排列） */
+            #features div[style*="grid-template-columns: 1fr 1fr"] {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 2rem !important;
+            }
+            
+            /* 🔥 強制顯示左側文字區域（圖2 - 藍色標籤區） */
             .fade-in-left,
-            div.fade-in-right,
-            div.fade-in-left {
+            div.fade-in-left,
+            .feature-text-section {
                 display: block !important;
                 opacity: 1 !important;
                 visibility: visible !important;
                 transform: translateX(0) !important;
                 transition: none !important;
+                order: 1 !important; /* 先顯示 */
+            }
+            
+            /* 🔥 強制顯示右側卡片區域（圖3 - 茶餐廳發票） */
+            .fade-in-right,
+            div.fade-in-right {
+                display: block !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+                transform: translateX(0) rotate(-2deg) !important;
+                transition: none !important;
+                order: 2 !important; /* 後顯示 */
+            }
+            
+            /* 🔥 確保藍色標籤顯示 */
+            .feature-badge,
+            div[style*="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)"][style*="padding: 0.5rem 1.5rem"] {
+                display: inline-block !important;
+                opacity: 1 !important;
+                visibility: visible !important;
             }
             
             /* 🔥 確保白色卡片容器完整顯示 */
             .fade-in-right > div,
-            .fade-in-left > div {
+            .fade-in-left > div,
+            div[style*="background: white"][style*="border-radius: 16px"][style*="box-shadow"] {
                 display: block !important;
                 opacity: 1 !important;
                 visibility: visible !important;
             }
             
-            /* 🔥 強制顯示所有內部元素 */
+            /* 🔥 強制顯示所有文字和圖標 */
             .fade-in-right *,
             .fade-in-left * {
                 opacity: 1 !important;
                 visibility: visible !important;
             }
             
-            /* 確保圖標顯示（圖4和圖5 - 圓形圖標） */
+            /* 🔥 確保所有檢查標記和圖標顯示 */
             div[style*="width: 80px"][style*="height: 80px"],
             div[style*="width: 40px"][style*="height: 40px"],
-            div[style*="width: 64px"][style*="height: 64px"] {
-                display: flex !important;
+            div[style*="width: 64px"][style*="height: 64px"],
+            .fas.fa-check,
+            .fas.fa-robot,
+            .fas.fa-check-circle,
+            .fas.fa-upload {
+                display: inline-flex !important;
                 opacity: 1 !important;
                 visibility: visible !important;
             }
             
-            /* 確保所有圖標的 <i> 標籤顯示 */
-            .fade-in-right i,
-            .fade-in-left i,
-            div[style*="width: 80px"] i,
-            div[style*="width: 64px"] i {
-                display: inline-block !important;
+            /* 🔥 確保所有標題和段落顯示 */
+            .fade-in-left h2,
+            .fade-in-left strong,
+            .fade-in-left p {
+                display: block !important;
                 opacity: 1 !important;
+                visibility: visible !important;
             }
             
             /* 調整 CTA 按鈕向上移（只在手機版） */
