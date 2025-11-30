@@ -1563,7 +1563,6 @@
             </div>
         </div>
     </div>
-    </div>
     
     <!-- 側邊欄遮罩 -->
     <div id="mobile-sidebar-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; display: none;" onclick="closeMobileSidebar()"></div>
@@ -1604,7 +1603,7 @@
             function getUserInitial() {
                 if (!userDisplayName || userDisplayName.trim() === '') {
                     // 如果沒有 displayName，使用 email 的第一個字母
-                    return 'YC';
+                    return userEmail ? userEmail.charAt(0).toUpperCase() : 'U';
                 }
                 
                 // 分割名字（支援中英文）
@@ -1929,33 +1928,31 @@
         <main class="main-content" id="main-content" style="flex: 1; background: #ffffff; overflow-y: auto; min-height: calc(100vh - 60px); display: block !important; visibility: visible !important;">
             <!-- Team Project 視圖 -->
             <div id="team-project-view" class="view-container" style="display: block !important; visibility: visible !important; padding: 2rem 3rem; background: #ffffff;">
-                <!-- 頁面標題和控制欄 -->
-                <header style="margin-bottom: 2rem; margin-top: 30pt;">
-                    <!-- 所有元素在同一行 -->
-                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 2rem;">
-                        <!-- 左側：標題 -->
-                        <div style="display: flex; align-items: center; gap: 0.75rem;">
-                            <h1 id="team-project-title" contenteditable="false" style="font-size: 2rem; font-weight: 700; color: #1f2937; margin: 0; outline: none; border: 2px solid transparent; padding: 0.25rem 0; border-radius: 4px; transition: all 0.2s;">Project</h1>
-                            <button id="edit-project-name-btn" onclick="toggleProjectNameEdit()" style="background: transparent; border: none; cursor: pointer; color: #6b7280; padding: 0.5rem; border-radius: 4px; transition: all 0.2s;" title="編輯項目名稱">
-                                <i class="fas fa-pen" style="font-size: 1.25rem;"></i>
-                            </button>
-                        </div>
-                        
-                        <!-- 中間：搜尋欄 -->
-                        <div style="position: relative; flex: 1; max-width: 400px; min-width: 250px;">
-                            <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #9ca3af;"></i>
-                            <input type="text" id="document-search" placeholder="搜尋文檔..." style="
-                                width: 100%;
-                                padding: 0.625rem 1rem 0.625rem 2.75rem;
-                                border: 1px solid #e5e7eb;
-                                border-radius: 8px;
-                                font-size: 0.875rem;
-                                transition: all 0.2s;
-                            " onkeyup="filterDocuments(this.value)">
-                        </div>
-                        
-                        <!-- 右側：操作按鈕 -->
-                        <div id="action-buttons-container" style="display: flex; gap: 1rem; align-items: center;">
+                <!-- 頁面標題和控制欄（同一水平線） -->
+                <header style="margin-bottom: 2rem; margin-top: 30pt; display: flex; justify-content: space-between; align-items: center;">
+                    <!-- 左側：標題 -->
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <h1 id="team-project-title" contenteditable="false" style="font-size: 2rem; font-weight: 700; color: #1f2937; margin: 0; outline: none; border: 2px solid transparent; padding: 0.25rem 0; border-radius: 4px; transition: all 0.2s;">Project</h1>
+                        <button id="edit-project-name-btn" onclick="toggleProjectNameEdit()" style="background: transparent; border: none; cursor: pointer; color: #6b7280; padding: 0.5rem; border-radius: 4px; transition: all 0.2s;" title="編輯項目名稱">
+                            <i class="fas fa-pen" style="font-size: 1.25rem;"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- 中間：搜尋欄 -->
+                    <div style="position: relative; flex: 1; max-width: 400px; margin: 0 2rem;">
+                        <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #9ca3af;"></i>
+                        <input type="text" id="document-search" placeholder="搜尋文檔..." style="
+                            width: 100%;
+                            padding: 0.625rem 1rem 0.625rem 2.75rem;
+                            border: 1px solid #e5e7eb;
+                            border-radius: 8px;
+                            font-size: 0.875rem;
+                            transition: all 0.2s;
+                        " onkeyup="filterDocuments(this.value)">
+                    </div>
+                    
+                    <!-- 右側：操作按鈕 -->
+                    <div id="action-buttons-container" style="display: flex; gap: 1rem; align-items: center; flex-shrink: 0;">
                         <button id="upload-btn" onclick="openUploadModal()" style="background: #8b5cf6; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
                             <span>Upload files</span>
                             <i class="fas fa-arrow-right"></i>
@@ -1967,9 +1964,14 @@
                                 <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
                             </button>
                             <div id="exportMenu" class="export-menu" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 0.5rem; background: white; border: 1px solid #e5e7eb; border-radius: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-width: 250px; z-index: 1000;">
-                                <!-- 動態生成的菜單內容 -->
-                            </div>
-                        </div>
+                                <div style="padding: 0.5rem 0;">
+                                    <!-- 通用格式 -->
+                                    <button onclick="exportDocuments('csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                                        <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
+                                        <div>
+                                            <div style="font-weight: 500;">CSV（通用）</div>
+                                            <div style="font-size: 0.75rem; color: #6b7280;">所有文檔類型</div>
+                                        </div>
                                     </button>
                                     
                                     <!-- 分隔線 -->
@@ -3439,119 +3441,41 @@
             console.log('📤 開始導出:', format);
             
             try {
-                // 獲取選中的文檔
+                // 檢查是否有勾選的文檔
                 const selectedDocs = Array.from(window.selectedDocuments || new Set());
                 
                 let docsToExport;
+                
                 if (selectedDocs.length > 0) {
+                    // 如果有勾選，只導出已勾選且已完成的文檔
                     docsToExport = allDocuments.filter(doc => 
                         selectedDocs.includes(doc.id) && 
                         doc.status === 'completed' && 
                         doc.processedData
                     );
+                    console.log(`📋 導出 ${docsToExport.length} 個已勾選的文檔`);
                 } else {
-                    docsToExport = allDocuments.filter(doc => 
-                        doc.status === 'completed' && 
-                        doc.processedData
-                    );
+                    // 如果沒有勾選，導出所有已完成的文檔
+                    docsToExport = allDocuments.filter(doc => doc.status === 'completed' && doc.processedData);
+                    console.log(`📋 導出所有 ${docsToExport.length} 個已完成的文檔`);
                 }
                 
                 if (docsToExport.length === 0) {
-                    alert('沒有可導出的文檔
-請先選擇已完成處理的文檔');
+                    if (selectedDocs.length > 0) {
+                        alert('所選文檔中沒有已完成處理的文檔。\n請確保所選文檔已完成處理。');
+                    } else {
+                        alert('沒有可導出的文檔。\n請先勾選要導出的文檔，或確保至少有一個文檔已完成處理。');
+                    }
                     return;
                 }
                 
-                // 根據格式過濾文檔
-                let filteredDocs = docsToExport;
-                let exportType = '';
-                
-                if (format === 'bank_statement_csv' || format === 'xero_csv') {
-                    // 只導出銀行對帳單
-                    filteredDocs = docsToExport.filter(doc => {
-                        const type = (doc.documentType || '').toLowerCase();
-                        return type === 'bank_statement' || type === 'bank_statements' || type.includes('銀行');
-                    });
-                    exportType = '銀行對帳單';
-                } else if (format === 'invoice_summary_csv' || format === 'invoice_detailed_csv') {
-                    // 只導出發票
-                    filteredDocs = docsToExport.filter(doc => {
-                        const type = (doc.documentType || '').toLowerCase();
-                        return type === 'invoice' || type === 'invoices' || type.includes('發票');
-                    });
-                    exportType = '發票';
-                }
-                
-                if (filteredDocs.length === 0) {
-                    alert(`沒有可導出的${exportType}
-請確保已選擇${exportType}文檔`);
-                    return;
-                }
-                
-                console.log(`✅ 準備導出 ${filteredDocs.length} 個${exportType}`);
-                
-                // 生成導出內容
-                let exportContent = '';
-                let fileName = '';
-                let mimeType = 'text/csv;charset=utf-8;';
-                
-                switch(format) {
-                    case 'bank_statement_csv':
-                        exportContent = generateBankStatementCSV(filteredDocs);
-                        fileName = `bank_statements_${new Date().toISOString().split('T')[0]}.csv`;
-                        break;
-                        
-                    case 'xero_csv':
-                        exportContent = generateXeroCSV(filteredDocs);
-                        fileName = `xero_bank_${new Date().toISOString().split('T')[0]}.csv`;
-                        break;
-                        
-                    case 'invoice_summary_csv':
-                        exportContent = generateInvoiceSummaryCSV(filteredDocs);
-                        fileName = `invoices_summary_${new Date().toISOString().split('T')[0]}.csv`;
-                        break;
-                        
-                    case 'invoice_detailed_csv':
-                        exportContent = generateInvoiceDetailedCSV(filteredDocs);
-                        fileName = `invoices_detailed_${new Date().toISOString().split('T')[0]}.csv`;
-                        break;
-                        
-                    case 'iif':
-                        exportContent = generateIIF(filteredDocs);
-                        fileName = `quickbooks_${new Date().toISOString().split('T')[0]}.iif`;
-                        mimeType = 'text/plain;charset=utf-8;';
-                        break;
-                        
-                    case 'qbo':
-                        exportContent = generateQBO(filteredDocs);
-                        fileName = `quickbooks_online_${new Date().toISOString().split('T')[0]}.qbo`;
-                        mimeType = 'application/vnd.intu.qbo;charset=utf-8;';
-                        break;
-                        
-                    default:
-                        throw new Error(`不支持的格式: ${format}`);
-                }
-                
-                // 下載文件
-                const blob = new Blob([exportContent], { type: mimeType });
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = fileName;
-                link.click();
-                URL.revokeObjectURL(link.href);
-                
-                // 關閉菜單
-                toggleExportMenu();
-                
-                alert(`✅ 導出成功！
-文件名: ${fileName}
-文檔數量: ${filteredDocs.length}`);
-                
-            } catch (error) {
-                console.error('❌ 導出錯誤:', error);
-                alert(`導出失敗: ${error.message}`);
-            }
-        };
+                // ✅ 按類型分組文檔
+                const groupedDocs = {
+                    bank_statements: [],
+                    invoices: [],
+                    receipts: [],
+                    general: []
+                };
                 
                 docsToExport.forEach(doc => {
                     const docType = (doc.documentType || '').toLowerCase();
