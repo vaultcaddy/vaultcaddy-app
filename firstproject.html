@@ -1330,15 +1330,15 @@
         transform: translate(-50%, -50%) !important;
         right: auto !important;
         margin: 0 !important;
-        z-index: 99999 !important; /* 必須高於側邊欄(2000)和遮罩(1999) */
-        max-height: 70vh !important;
+        z-index: 999999 !important; /* 必須高於所有其他元素 */
+        max-height: 80vh !important;
         overflow-y: auto !important;
         width: 90% !important;
         max-width: 400px !important;
         background: white !important;
         box-shadow: 0 20px 60px rgba(0,0,0,0.3) !important;
         border-radius: 12px !important;
-        padding: 1rem !important;
+        padding: 1.5rem !important;
     }
     
     /* 🔧 Export 菜單背景遮罩 */
@@ -2042,6 +2042,8 @@
                         }
                         #action-buttons-container-mobile {
                             display: flex !important;
+            z-index: 10000 !important; /* 確保在左側欄之上 */
+            position: relative !important;
                         }
                     }
                 </style>
@@ -3509,6 +3511,64 @@
             menu.style.display = 'block';
             menu.classList.add('active');
             console.log('✅ 菜單已顯示');
+        };
+        
+        // 🔧 添加菜單遮罩，點擊遮罩關閉菜單
+        window.closeExportMenuOnOverlay = function() {
+            const menu = document.getElementById('exportMenu');
+            if (!menu) return;
+            
+            // 創建遮罩（如果不存在）
+            let overlay = document.getElementById('export-menu-overlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'export-menu-overlay';
+                overlay.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100vw;
+                    height: 100vh;
+                    background: rgba(0, 0, 0, 0.5);
+                    z-index: 99998;
+                    display: none;
+                `;
+                overlay.addEventListener('click', function() {
+                    menu.style.display = 'none';
+                    menu.classList.remove('active');
+                    overlay.style.display = 'none';
+                });
+                document.body.appendChild(overlay);
+            }
+            
+            // 當菜單顯示時顯示遮罩
+            if (menu.style.display === 'block') {
+                overlay.style.display = 'block';
+            } else {
+                overlay.style.display = 'none';
+            }
+        };
+        
+        // 🔧 修改 toggleExportMenu 以支持遮罩
+        const originalToggle = window.toggleExportMenu;
+        window.toggleExportMenu = function() {
+            originalToggle();
+            
+            // 在手機版顯示/隱藏遮罩
+            if (window.innerWidth <= 768) {
+                const menu = document.getElementById('exportMenu');
+                const overlay = document.getElementById('export-menu-overlay');
+                
+                if (menu && overlay) {
+                    if (menu.style.display === 'block') {
+                        overlay.style.display = 'block';
+                    } else {
+                        overlay.style.display = 'none';
+                    }
+                } else if (menu && !overlay) {
+                    closeExportMenuOnOverlay();
+                }
+            }
         };
         
         // 🔄 監聽 checkbox 變化，實時更新 Export 菜單
