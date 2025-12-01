@@ -644,30 +644,11 @@
             
             // 獲取用戶首字母
             function getUserInitial() {
-                if (!userDisplayName || userDisplayName.trim() === '') {
-                    // 如果沒有 displayName，使用 email 的第一個字母
-                    return userEmail ? userEmail.charAt(0).toUpperCase() : 'U';
+                // 只使用 email 的第一個字母
+                if (userEmail && userEmail.trim() !== '') {
+                    return userEmail.charAt(0).toUpperCase();
                 }
-                
-                // 分割名字（支援中英文）
-                const parts = userDisplayName.trim().split(/\s+/);
-                
-                if (parts.length >= 2) {
-                    // 有 First Name 和 Last Name：取兩個首字母
-                    const firstInitial = parts[0].charAt(0).toUpperCase();
-                    const lastInitial = parts[parts.length - 1].charAt(0).toUpperCase();
-                    return firstInitial + lastInitial;
-                } else if (parts.length === 1) {
-                    // 只有一個名字，取前兩個字符
-                    const name = parts[0];
-                    if (name.length >= 2) {
-                        return name.substring(0, 2).toUpperCase();
-                    } else {
-                        return name.charAt(0).toUpperCase() + 'C'; // 單字符補 'C'
-                    }
-                }
-                
-                return userEmail ? userEmail.charAt(0).toUpperCase() : 'U';
+                return 'U';
             }
             
             // 🔥 漢堡菜單功能（立即執行，不等待 DOMContentLoaded）
