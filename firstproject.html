@@ -1330,13 +1330,27 @@
         transform: translate(-50%, -50%) !important;
         right: auto !important;
         margin: 0 !important;
-        z-index: 9999999 !important; /* 必須高於側邊欄 */
+        z-index: 99999 !important; /* 必須高於側邊欄(2000)和遮罩(1999) */
         max-height: 70vh !important;
         overflow-y: auto !important;
         width: 90% !important;
         max-width: 400px !important;
         background: white !important;
         box-shadow: 0 20px 60px rgba(0,0,0,0.3) !important;
+        border-radius: 12px !important;
+        padding: 1rem !important;
+    }
+    
+    /* 🔧 Export 菜單背景遮罩 */
+    #exportMenu.active::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: -1;
     }
     
     /* Export 菜單項更大觸控區域 */
@@ -3476,6 +3490,7 @@
             if (menu.style.display === 'block') {
                 console.log('🔒 關閉菜單');
                 menu.style.display = 'none';
+                menu.classList.remove('active');
                 return;
             }
             
@@ -3492,6 +3507,7 @@
             console.log('🔄 更新菜單內容...');
             updateExportMenuContent();
             menu.style.display = 'block';
+            menu.classList.add('active');
             console.log('✅ 菜單已顯示');
         };
         
