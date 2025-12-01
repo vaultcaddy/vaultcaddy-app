@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VaultCaddy 手機版 UI 編輯器</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f3f4f6;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 左側控制面板 */
+        .control-panel {
+            width: 350px;
+            background: white;
+            border-right: 1px solid #e5e7eb;
+            overflow-y: auto;
+            padding: 1.5rem;
+        }
+
+        .control-panel h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .control-section {
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .control-section:last-child {
+            border-bottom: none;
+        }
+
+        .control-section h3 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+        }
+
+        .control-item {
+            margin-bottom: 1rem;
+        }
+
+        .control-item label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .control-item input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e5e7eb;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .control-item input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        .control-item input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+        }
+
+        .value-display {
+            display: inline-block;
+            background: #f3f4f6;
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #667eea;
+            margin-left: 0.5rem;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            margin-top: 0.5rem;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        /* 右側手機預覽 */
+        .preview-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            overflow: auto;
+        }
+
+        .phone-frame {
+            width: 375px;
+            height: 812px;
+            background: white;
+            border-radius: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            position: relative;
+            border: 12px solid #1f2937;
+        }
+
+        .phone-notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 30px;
+            background: #1f2937;
+            border-radius: 0 0 20px 20px;
+            z-index: 1000;
+        }
+
+        .phone-content {
+            height: 100%;
+            overflow-y: auto;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 1rem 2rem;
+        }
+
+        /* 可編輯元素樣式 */
+        .editable-element {
+            position: relative;
+            cursor: move;
+            transition: all 0.3s ease;
+        }
+
+        .editable-element:hover {
+            outline: 2px dashed #667eea;
+            outline-offset: 4px;
+        }
+
+        .editable-element.selected {
+            outline: 2px solid #667eea;
+            outline-offset: 4px;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        /* Hero 區域元素 */
+        #hero-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: white;
+            text-align: center;
+            line-height: 1.2;
+            margin-bottom: 0.5rem;
+        }
+
+        #hero-subtitle-line1 {
+            font-size: 1.25rem;
+            color: white;
+            text-align: center;
+            opacity: 0.95;
+            margin-bottom: 0.5rem;
+        }
+
+        #hero-trust-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 9999px;
+            padding: 0.5rem 1.5rem;
+            margin: 1rem auto;
+            width: fit-content;
+        }
+
+        #hero-subtitle-line2 {
+            font-size: 1rem;
+            color: white;
+            text-align: center;
+            opacity: 0.95;
+            margin-bottom: 1rem;
+        }
+
+        #hero-cta-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .cta-btn {
+            padding: 0.875rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .cta-btn-primary {
+            background: white;
+            color: #667eea;
+        }
+
+        .cta-btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        #hero-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: white;
+            opacity: 0.8;
+        }
+
+        /* 代碼輸出區 */
+        .code-output {
+            background: #1f2937;
+            color: #10b981;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 1rem;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .element-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .element-tag {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .element-tag:hover {
+            background: #e5e7eb;
+        }
+
+        .element-tag.active {
+            background: #667eea;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- 左側控制面板 -->
+    <div class="control-panel">
+        <h2>
+            <i class="fas fa-sliders-h"></i>
+            手機版 UI 編輯器
+        </h2>
+
+        <!-- 元素選擇器 -->
+        <div class="control-section">
+            <h3>選擇要編輯的元素</h3>
+            <div class="element-selector">
+                <div class="element-tag active" data-element="hero-title">主標題</div>
+                <div class="element-tag" data-element="hero-trust-badge">信任標籤</div>
+                <div class="element-tag" data-element="hero-subtitle-line1">副標題1</div>
+                <div class="element-tag" data-element="hero-subtitle-line2">副標題2</div>
+                <div class="element-tag" data-element="hero-cta-buttons">CTA按鈕</div>
+                <div class="element-tag" data-element="hero-stats">統計數據</div>
+            </div>
+        </div>
+
+        <!-- 間距控制 -->
+        <div class="control-section">
+            <h3>間距調整</h3>
+            <div class="control-item">
+                <label>
+                    上方間距 (margin-top)
+                    <span class="value-display" id="margin-top-value">0pt</span>
+                </label>
+                <input type="range" id="margin-top" min="-50" max="50" value="0" step="1">
+            </div>
+            <div class="control-item">
+                <label>
+                    下方間距 (margin-bottom)
+                    <span class="value-display" id="margin-bottom-value">0pt</span>
+                </label>
+                <input type="range" id="margin-bottom" min="-50" max="50" value="0" step="1">
+            </div>
+            <div class="control-item">
+                <label>
+                    內距 (padding)
+                    <span class="value-display" id="padding-value">0pt</span>
+                </label>
+                <input type="range" id="padding" min="0" max="50" value="0" step="1">
+            </div>
+        </div>
+
+        <!-- 字體大小控制 -->
+        <div class="control-section">
+            <h3>字體大小</h3>
+            <div class="control-item">
+                <label>
+                    字體大小 (font-size)
+                    <span class="value-display" id="font-size-value">16px</span>
+                </label>
+                <input type="range" id="font-size" min="10" max="48" value="16" step="1">
+            </div>
+        </div>
+
+        <!-- 操作按鈕 -->
+        <div class="control-section">
+            <button class="btn btn-primary" onclick="generateCSS()">
+                <i class="fas fa-code"></i> 生成 CSS 代碼
+            </button>
+            <button class="btn btn-secondary" onclick="resetStyles()">
+                <i class="fas fa-undo"></i> 重置所有樣式
+            </button>
+            <button class="btn btn-secondary" onclick="copyCSS()">
+                <i class="fas fa-copy"></i> 複製 CSS 到剪貼板
+            </button>
+        </div>
+
+        <!-- CSS 代碼輸出 -->
+        <div class="control-section">
+            <h3>生成的 CSS 代碼</h3>
+            <div class="code-output" id="css-output">/* 點擊「生成 CSS 代碼」按鈕查看結果 */</div>
+        </div>
+    </div>
+
+    <!-- 右側手機預覽 -->
+    <div class="preview-container">
+        <div class="phone-frame">
+            <div class="phone-notch"></div>
+            <div class="phone-content">
+                <!-- Hero 區域 -->
+                <div id="hero-title" class="editable-element selected">
+                    針對香港銀行對帳單處理<br>
+                    <span style="font-size: 2.5rem; color: #fbbf24;">低至 HKD 0.5/頁</span>
+                </div>
+
+                <div id="hero-trust-badge" class="editable-element">
+                    <i class="fas fa-star" style="color: #fbbf24;"></i>
+                    <span style="font-weight: 600; font-size: 0.875rem; color: white;">超過 200+ 企業信賴</span>
+                </div>
+
+                <div id="hero-subtitle-line1" class="editable-element">
+                    專為會計師及小型公司設計的 AI 文檔處理平台
+                </div>
+
+                <div id="hero-subtitle-line2" class="editable-element">
+                    <strong>自動轉換 Excel/CSV/QuickBooks/Xero</strong><br>
+                    <strong>• 準確率 98% • 節省 90% 時間</strong>
+                </div>
+
+                <div id="hero-cta-buttons" class="editable-element">
+                    <div class="cta-btn cta-btn-primary">
+                        <i class="fas fa-rocket"></i> 免費試用 20 頁
+                    </div>
+                    <div class="cta-btn cta-btn-secondary">
+                        <i class="fas fa-calendar-check"></i> 無需預約
+                    </div>
+                </div>
+
+                <div id="hero-stats" class="editable-element">
+                    <div class="stat-item">
+                        <div class="stat-number">10秒</div>
+                        <div class="stat-label">平均處理時間</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">98%</div>
+                        <div class="stat-label">數據準確率</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">200+</div>
+                        <div class="stat-label">企業客戶</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentElement = 'hero-title';
+        const styles = {};
+
+        // 初始化
+        document.querySelectorAll('.element-tag').forEach(tag => {
+            tag.addEventListener('click', function() {
+                document.querySelectorAll('.element-tag').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                currentElement = this.dataset.element;
+                
+                // 更新選中狀態
+                document.querySelectorAll('.editable-element').forEach(el => el.classList.remove('selected'));
+                document.getElementById(currentElement).classList.add('selected');
+                
+                // 加載當前元素的樣式
+                loadElementStyles();
+            });
+        });
+
+        // 加載元素當前樣式
+        function loadElementStyles() {
+            const element = document.getElementById(currentElement);
+            const computedStyle = window.getComputedStyle(element);
+            
+            // 更新滑桿值
+            const marginTop = parseInt(styles[currentElement]?.marginTop || 0);
+            const marginBottom = parseInt(styles[currentElement]?.marginBottom || 0);
+            const padding = parseInt(styles[currentElement]?.padding || 0);
+            const fontSize = parseInt(styles[currentElement]?.fontSize || computedStyle.fontSize);
+            
+            document.getElementById('margin-top').value = marginTop;
+            document.getElementById('margin-bottom').value = marginBottom;
+            document.getElementById('padding').value = padding;
+            document.getElementById('font-size').value = fontSize;
+            
+            updateValueDisplays();
+        }
+
+        // 更新數值顯示
+        function updateValueDisplays() {
+            document.getElementById('margin-top-value').textContent = document.getElementById('margin-top').value + 'pt';
+            document.getElementById('margin-bottom-value').textContent = document.getElementById('margin-bottom').value + 'pt';
+            document.getElementById('padding-value').textContent = document.getElementById('padding').value + 'pt';
+            document.getElementById('font-size-value').textContent = document.getElementById('font-size').value + 'px';
+        }
+
+        // 監聽滑桿變化
+        ['margin-top', 'margin-bottom', 'padding', 'font-size'].forEach(id => {
+            document.getElementById(id).addEventListener('input', function() {
+                updateValueDisplays();
+                applyStyles();
+            });
+        });
+
+        // 應用樣式
+        function applyStyles() {
+            const element = document.getElementById(currentElement);
+            const marginTop = document.getElementById('margin-top').value;
+            const marginBottom = document.getElementById('margin-bottom').value;
+            const padding = document.getElementById('padding').value;
+            const fontSize = document.getElementById('font-size').value;
+            
+            element.style.marginTop = marginTop + 'pt';
+            element.style.marginBottom = marginBottom + 'pt';
+            element.style.padding = padding + 'pt';
+            element.style.fontSize = fontSize + 'px';
+            
+            // 保存樣式
+            styles[currentElement] = {
+                marginTop,
+                marginBottom,
+                padding,
+                fontSize
+            };
+        }
+
+        // 生成 CSS 代碼
+        function generateCSS() {
+            let css = '/* VaultCaddy 手機版 UI 調整 - 添加到 @media (max-width: 768px) 內 */\n\n';
+            
+            for (const [elementId, style] of Object.entries(styles)) {
+                if (Object.keys(style).length === 0) continue;
+                
+                css += `#${elementId} {\n`;
+                if (style.marginTop && style.marginTop !== '0') {
+                    css += `    margin-top: ${style.marginTop}pt !important;\n`;
+                }
+                if (style.marginBottom && style.marginBottom !== '0') {
+                    css += `    margin-bottom: ${style.marginBottom}pt !important;\n`;
+                }
+                if (style.padding && style.padding !== '0') {
+                    css += `    padding: ${style.padding}pt !important;\n`;
+                }
+                if (style.fontSize) {
+                    css += `    font-size: ${style.fontSize}px !important;\n`;
+                }
+                css += `}\n\n`;
+            }
+            
+            document.getElementById('css-output').textContent = css || '/* 沒有樣式變更 */';
+        }
+
+        // 重置樣式
+        function resetStyles() {
+            if (!confirm('確定要重置所有樣式嗎？')) return;
+            
+            Object.keys(styles).forEach(key => {
+                styles[key] = {};
+            });
+            
+            document.querySelectorAll('.editable-element').forEach(el => {
+                el.style.marginTop = '';
+                el.style.marginBottom = '';
+                el.style.padding = '';
+                el.style.fontSize = '';
+            });
+            
+            loadElementStyles();
+            document.getElementById('css-output').textContent = '/* 已重置所有樣式 */';
+        }
+
+        // 複製 CSS
+        function copyCSS() {
+            const cssText = document.getElementById('css-output').textContent;
+            navigator.clipboard.writeText(cssText).then(() => {
+                alert('✅ CSS 代碼已複製到剪貼板！');
+            }).catch(() => {
+                alert('❌ 複製失敗，請手動複製');
+            });
+        }
+
+        // 初始化數值顯示
+        updateValueDisplays();
+    </script>
+</body>
+</html>
+
