@@ -324,8 +324,7 @@
                 <a href="dashboard.html" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">儀表板</a>
             </div>
             <div id="user-menu" style="position: relative; display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;">
-                <!-- 未登入時顯示登入按鈕 -->
-                <button onclick="window.location.href='auth.html'" style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.875rem;" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">登入</button>
+                <div id="user-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">Y</div>
             </div>
         </div>
     </nav>
@@ -622,18 +621,19 @@
                         const userInitial = getUserInitial();
                         console.log(`👤 用戶首字母: "${userInitial}" (displayName: "${userDisplayName}")`);
                         
-                        userMenu.innerHTML = `
-                            <div onclick="toggleDropdown()" style="cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
-                                <div style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">${userInitial}</div>
-                            </div>
-                        `;
+                        // 🔥 简化：直接更新头像内容
+                        const avatar = document.getElementById('user-avatar');
+                        if (avatar) {
+                            avatar.textContent = userInitial;
+                        }
                         console.log('✅ 用戶已登入，顯示頭像');
                     } else {
-                        // ✅ 未登入：顯示登入按鈕
-                        userMenu.innerHTML = `
-                            <button onclick="window.location.href='auth.html'" style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.875rem;" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">登入</button>
-                        `;
-                        console.log('✅ 用戶未登入，顯示登入按鈕');
+                        // ✅ 未登入：头像显示"U"（未登入）
+                        const avatar = document.getElementById('user-avatar');
+                        if (avatar) {
+                            avatar.textContent = 'U';
+                        }
+                        console.log('✅ 用戶未登入，顯示"U"');
                     }
                 } catch (e) {
                     console.log('❌ 無法更新用戶菜單:', e);
