@@ -594,6 +594,73 @@
             }
         })();
     </script>
+
+    <script>
+        // 🔥 定義 updateUserMenu 函數（blog 頁面專用）
+        window.updateUserMenu = function() {
+            console.log('🔄 [Blog] updateUserMenu 被調用');
+            
+            const loginBtn = document.getElementById('loginBtn');
+            const userAvatar = document.getElementById('userAvatar');
+            const userDropdown = document.getElementById('user-dropdown');
+            
+            // 檢查用戶是否已登入
+            firebase.auth().onAuthStateChanged(function(user) {
+                if (user) {
+                    console.log('✅ [Blog] 用戶已登入:', user.email);
+                    
+                    // 設置全局變量
+                    window.userEmail = user.email;
+                    window.userDisplayName = user.displayName || '';
+                    
+                    // 隱藏登入按鈕
+                    if (loginBtn) {
+                        loginBtn.style.display = 'none';
+                    }
+                    
+                    // 顯示用戶頭像
+                    if (userAvatar) {
+                        userAvatar.style.display = 'flex';
+                        
+                        // 設置頭像文字（只取第一個字母）
+                        const initial = window.userDisplayName 
+                            ? window.userDisplayName.charAt(0).toUpperCase()
+                            : user.email.charAt(0).toUpperCase();
+                        
+                        userAvatar.textContent = initial;
+                        console.log('✅ [Blog] 用戶頭像已更新:', initial);
+                    }
+                    
+                    // 更新下拉菜單中的 email
+                    const userEmailElement = document.getElementById('userEmail');
+                    if (userEmailElement) {
+                        userEmailElement.textContent = user.email;
+                    }
+                } else {
+                    console.log('ℹ️  [Blog] 用戶未登入');
+                    
+                    // 顯示登入按鈕
+                    if (loginBtn) {
+                        loginBtn.style.display = 'block';
+                    }
+                    
+                    // 隱藏用戶頭像
+                    if (userAvatar) {
+                        userAvatar.style.display = 'none';
+                    }
+                }
+            });
+        };
+        
+        // 頁面加載後立即調用
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                setTimeout(window.updateUserMenu, 1000);
+            });
+        } else {
+            setTimeout(window.updateUserMenu, 1000);
+        }
+    </script>
 </body>
 </html>
 
