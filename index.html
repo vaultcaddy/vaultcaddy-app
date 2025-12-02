@@ -203,51 +203,37 @@
     
     <!-- 滑動動畫 CSS -->
     <style>
-        /* ========== 💡 銀行對帳單示例卡片樣式（方便修改）========== */
+        /* ========== 💡 發票卡片樣式（與圖3銀行卡片完全一致）========== */
         .demo-invoice-card {
             background: white;
             border-radius: 16px;
-            padding: 2rem;
+            padding: 2rem; /* 與圖3一致 */
             box-shadow: 0 20px 60px rgba(0,0,0,0.15);
             transform: rotate(-2deg);
         }
         
         .invoice-inner {
-            text-align: center;
-            padding: 1.5rem;
+            padding: 1.5rem; /* 與圖3一致 */
             background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
             border-radius: 12px;
             margin-bottom: 1rem;
         }
         
-        /* 銀行標題樣式 */
-        .bank-header {
+        /* 茶餐廳標題 */
+        .bank-header,
+        .restaurant-header {
+            font-weight: 700;
+            font-size: 1.125rem; /* 與圖3一致 */
+            color: #1f2937;
+            margin-bottom: 1rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.5rem;
-            font-weight: 700;
-            font-size: 1.125rem;
-            color: #2563eb;
-            margin-bottom: 1rem;
-        }
-        
-        .bank-icon {
-            font-size: 1.25rem;
-        }
-        
-        .bank-name {
-            color: #2563eb;
-        }
-        
-        /* 茶餐廳標題樣式（使用相同大小）*/
-        .restaurant-header {
-            color: #1f2937;
         }
         
         .restaurant-name-main {
             font-weight: 700;
-            font-size: 1.125rem;
+            font-size: 1.125rem; /* 與圖3一致 */
             color: #1f2937;
         }
         
@@ -257,34 +243,25 @@
         }
         
         .invoice-items {
-            margin-top: 1rem;
+            padding-top: 1rem; /* 與圖3一致 */
         }
         
         .invoice-item {
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            margin-bottom: 0.75rem;
-            gap: 0.5rem;
-        }
-        
-        .item-icon {
-            font-size: 1rem;
-            flex-shrink: 0;
+            margin-bottom: 0.75rem; /* 與圖3一致 */
+            align-items: center;
         }
         
         .item-name {
-            flex: 1;
+            color: #4b5563; /* 與圖3一致 */
             text-align: left;
-            color: #4b5563;
-            font-size: 1rem;
         }
         
         .item-price {
-            font-weight: 600;
-            flex-shrink: 0;
+            font-weight: 700; /* 與圖3一致：font-weight: 700 */
             color: #4b5563;
-            font-size: 1rem;
+            font-size: 1.125rem; /* 與圖3一致：font-size: 1.125rem */
         }
         
         /* 收入（綠色）- 用於銀行卡片 */
@@ -298,14 +275,14 @@
         }
         
         .invoice-total {
-            border-top: 2px solid #667eea;
-            padding-top: 0.75rem;
+            border-top: 2px solid #667eea; /* 與圖3一致 */
+            padding-top: 0.75rem; /* 與圖3一致 */
             display: flex;
             justify-content: space-between;
-            font-weight: 800;
-            font-size: 1.25rem;
+            font-weight: 900; /* 與圖3一致：font-weight: 900 */
+            font-size: 1.5rem; /* 與圖3一致：font-size: 1.5rem */
             color: #667eea;
-            margin-top: 0.5rem;
+            margin-top: 1rem; /* 與圖3一致 */
         }
         
         /* 銀行卡片總計使用藍色 */
@@ -788,9 +765,15 @@
                 updateUserMenu();
             });
             
-            // 🔥 多重檢查機制（確保登錄狀態正確顯示）
+            // 🔥 激進的登錄狀態檢查機制
+            let loginCheckInterval;
+            let loginCheckCount = 0;
+            const MAX_LOGIN_CHECKS = 20; // 最多檢查20次（10秒）
+            
             function checkLoginStatus() {
-                console.log('🔍 checkLoginStatus 被調用');
+                loginCheckCount++;
+                console.log(`🔍 checkLoginStatus 第 ${loginCheckCount} 次檢查`);
+                
                 if (window.simpleAuth && typeof window.simpleAuth.isLoggedIn === 'function') {
                     const isLoggedIn = window.simpleAuth.isLoggedIn();
                     console.log('🔵 isLoggedIn:', isLoggedIn);
@@ -803,16 +786,35 @@
                         if (hasButton) {
                             console.log('🔄 強制更新用戶頭像');
                             updateUserMenu();
+                            
+                            // 更新成功後停止檢查
+                            if (loginCheckInterval) {
+                                clearInterval(loginCheckInterval);
+                                console.log('✅ 登錄狀態已更新，停止檢查');
+                            }
+                        } else {
+                            console.log('✅ 用戶頭像已顯示，停止檢查');
+                            if (loginCheckInterval) {
+                                clearInterval(loginCheckInterval);
+                            }
                         }
+                    }
+                }
+                
+                // 達到最大檢查次數後停止
+                if (loginCheckCount >= MAX_LOGIN_CHECKS) {
+                    if (loginCheckInterval) {
+                        clearInterval(loginCheckInterval);
+                        console.log('⏰ 達到最大檢查次數，停止檢查');
                     }
                 }
             }
             
-            // 延遲檢查（多次檢查確保成功）
-            setTimeout(checkLoginStatus, 300);
-            setTimeout(checkLoginStatus, 800);
-            setTimeout(checkLoginStatus, 1500);
-            setTimeout(checkLoginStatus, 3000);
+            // 立即開始持續檢查（每500ms檢查一次）
+            loginCheckInterval = setInterval(checkLoginStatus, 500);
+            
+            // 立即執行第一次檢查
+            checkLoginStatus();
             
             // 暴露 toggleDropdown 到全局
             window.toggleDropdown = toggleDropdown;
@@ -1683,53 +1685,41 @@
                 font-size: 16px !important;
             }
             
-            /* 🎨 手機版：發票/銀行卡片調整 */
+            /* 🎨 手機版：發票卡片（保持與桌面版相同比例）*/
             .demo-invoice-card {
-                padding: 1rem !important;
-                font-size: 0.875rem !important;
+                padding: 1.5rem !important; /* 縮小但保持比例 */
                 transform: rotate(0deg) !important; /* 手機版不旋轉 */
             }
             
             .invoice-inner {
-                padding: 1rem !important;
+                padding: 1.25rem !important; /* 保持比例 */
             }
             
             .bank-header,
-            .restaurant-header {
-                font-size: 1rem !important;
-                margin-bottom: 0.75rem !important;
-                gap: 0.25rem !important;
-            }
-            
+            .restaurant-header,
             .restaurant-name-main {
-                font-size: 1rem !important;
-            }
-            
-            .bank-icon {
-                font-size: 1.125rem !important;
+                font-size: 1rem !important; /* 稍微縮小 */
+                margin-bottom: 0.75rem !important;
             }
             
             .invoice-item {
-                font-size: 0.875rem !important;
-                margin-bottom: 0.5rem !important;
-                gap: 0.25rem !important;
-            }
-            
-            .item-icon {
-                font-size: 0.875rem !important;
+                margin-bottom: 0.75rem !important; /* 保持與桌面版一致 */
             }
             
             .item-name {
-                font-size: 0.875rem !important;
+                font-size: 0.9375rem !important; /* 稍微縮小但保持清晰 */
             }
             
             .item-price {
-                font-size: 0.875rem !important;
+                font-size: 1rem !important; /* 與桌面版1.125rem的比例 */
+                font-weight: 700 !important;
             }
             
             .invoice-total {
-                font-size: 1rem !important;
-                padding-top: 0.5rem !important;
+                font-size: 1.25rem !important; /* 與桌面版1.5rem的比例 */
+                font-weight: 900 !important;
+                padding-top: 0.75rem !important;
+                margin-top: 0.75rem !important;
             }
             
             /* ✅ PRICING - 使用真實版設計（顯示詳細功能列表）*/
