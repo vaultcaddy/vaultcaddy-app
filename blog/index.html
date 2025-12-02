@@ -336,15 +336,30 @@
                 }
             };
             
-            // 🔥 只在 SimpleAuth 初始化後才更新（圖2開始）
-            // 監聽 Firebase 和 Auth 事件
-            window.addEventListener('firebase-ready', updateUserMenu);
-            window.addEventListener('user-logged-in', updateUserMenu);
-            window.addEventListener('user-logged-out', updateUserMenu);
+            // 🔥 優化：只使用一個可靠的檢查方式
+            // 直接監聽 Firebase Auth 狀態變化（最可靠）
+            function initAuthCheck() {
+                if (typeof firebase === 'undefined' || !firebase.auth) {
+                    // Firebase 尚未加載，等待後重試
+                    setTimeout(initAuthCheck, 100);
+                    return;
+                }
+                
+                // Firebase Auth 的 onAuthStateChanged 是最可靠的方式
+                firebase.auth().onAuthStateChanged(function(user) {
+                    if (user) {
+                        // 用戶已登入，更新 UI
+                        updateUserMenu();
+                    } else {
+                        // 用戶未登入，顯示預設狀態
+                        const avatar = document.getElementById('user-avatar');
+                        if (avatar) avatar.textContent = 'U';
+                    }
+                });
+            }
             
-            // 延遲檢查（等待 SimpleAuth 初始化）
-            setTimeout(updateUserMenu, 1000);
-            setTimeout(updateUserMenu, 2000);
+            // 開始檢查
+            initAuthCheck();
         });
     </script>
     
