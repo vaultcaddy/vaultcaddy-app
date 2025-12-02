@@ -134,6 +134,8 @@ class SimpleAuth {
         
         // 檢查是否在受保護頁面
         const currentPage = this.getCurrentPage();
+        const currentPath = window.location.pathname;
+        
         const publicPages = [
             'index.html',
             'auth.html',
@@ -144,9 +146,14 @@ class SimpleAuth {
             ''
         ];
         
-        if (!publicPages.includes(currentPage)) {
+        // Blog目錄下的所有頁面都是公開的
+        const isBlogPage = currentPath.includes('/blog/');
+        
+        if (!publicPages.includes(currentPage) && !isBlogPage) {
             console.log('🔒 受保護頁面，重定向到 auth.html...');
             window.location.href = 'auth.html';
+        } else if (isBlogPage) {
+            console.log('📝 Blog 頁面，允許未登入訪問');
         }
     }
     
