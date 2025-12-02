@@ -203,7 +203,7 @@
     
     <!-- 滑動動畫 CSS -->
     <style>
-        /* ========== 💡 香港茶餐廳示例卡片樣式（方便修改）========== */
+        /* ========== 💡 銀行對帳單示例卡片樣式（方便修改）========== */
         .demo-invoice-card {
             background: white;
             border-radius: 16px;
@@ -220,11 +220,24 @@
             margin-bottom: 1rem;
         }
         
-        .restaurant-name {
+        /* 銀行標題樣式 */
+        .bank-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
             font-weight: 700;
             font-size: 1.125rem;
-            color: #1f2937;
+            color: #2563eb;
             margin-bottom: 1rem;
+        }
+        
+        .bank-icon {
+            font-size: 1.25rem;
+        }
+        
+        .bank-name {
+            color: #2563eb;
         }
         
         .invoice-divider {
@@ -238,28 +251,51 @@
         
         .invoice-item {
             display: flex;
+            align-items: center;
             justify-content: space-between;
             margin-bottom: 0.75rem;
-            color: #4b5563;
+            gap: 0.5rem;
+        }
+        
+        .item-icon {
+            font-size: 1rem;
+            flex-shrink: 0;
         }
         
         .item-name {
+            flex: 1;
             text-align: left;
+            color: #4b5563;
         }
         
         .item-price {
             font-weight: 600;
+            flex-shrink: 0;
+        }
+        
+        /* 收入（綠色）*/
+        .item-price.positive {
+            color: #10b981;
+        }
+        
+        /* 支出（紅色）*/
+        .item-price.negative {
+            color: #ef4444;
         }
         
         .invoice-total {
-            border-top: 2px solid #667eea;
+            border-top: 2px solid #3b82f6;
             padding-top: 0.75rem;
             display: flex;
             justify-content: space-between;
             font-weight: 800;
             font-size: 1.25rem;
-            color: #667eea;
+            color: #2563eb;
             margin-top: 0.5rem;
+        }
+        
+        .bank-total {
+            color: #2563eb;
         }
         
         /* 滑動動畫基礎設置 */
@@ -720,14 +756,34 @@
                 }
             }
             
-            // 🔥 簡化邏輯：只在 auth-state-changed 事件時更新
+            // 🔥 監聽 auth-state-changed 事件
             window.addEventListener('auth-state-changed', (event) => {
                 console.log('🔔 收到 auth-state-changed 事件');
                 updateUserMenu();
             });
             
-            // 立即執行一次（使用初始的登入按鈕）
-            // HTML 已經有登入按鈕，不需要額外處理
+            // 🔥 主動檢查登錄狀態（延遲執行，確保 simpleAuth 已初始化）
+            setTimeout(() => {
+                console.log('⏰ 延遲檢查登錄狀態');
+                if (window.simpleAuth && window.simpleAuth.isLoggedIn()) {
+                    console.log('✅ 用戶已登入，更新 UI');
+                    updateUserMenu();
+                } else {
+                    console.log('❌ 用戶未登入');
+                }
+            }, 500);
+            
+            // 🔥 再次檢查（防止首次檢查時 simpleAuth 未完全初始化）
+            setTimeout(() => {
+                if (window.simpleAuth && window.simpleAuth.isLoggedIn()) {
+                    const userMenu = document.getElementById('user-menu');
+                    // 如果還是顯示登入按鈕，強制更新
+                    if (userMenu && userMenu.querySelector('button')) {
+                        console.log('🔄 強制更新用戶頭像');
+                        updateUserMenu();
+                    }
+                }
+            }, 1500);
             
             // 暴露 toggleDropdown 到全局
             window.toggleDropdown = toggleDropdown;
@@ -844,28 +900,34 @@
                             </div>
                         </div>
                         <div class="fade-in-right" style="position: relative;">
-                            <!-- 模擬發票圖示 -->
-                            <!-- 💡 修改說明：這是可編輯的發票示例卡片 -->
+                            <!-- 模擬銀行對帳單 -->
+                            <!-- 💡 修改說明：這是可編輯的銀行對帳單示例卡片 -->
                             <div id="invoice-card" class="demo-invoice-card">
                                 <div class="invoice-inner">
-                                    <div class="restaurant-name">香港茶餐廳</div>
+                                    <div class="bank-header">
+                                        <span class="bank-icon">🏦</span>
+                                        <span class="bank-name">中国銀行（香港）2025-03</span>
+                                    </div>
                                     <div class="invoice-divider"></div>
                                     <div class="invoice-items">
-                                        <div class="invoice-item">
-                                            <span class="item-name">蛋撻 x5</span>
-                                            <span class="item-price">$60</span>
+                                        <div class="invoice-item income">
+                                            <span class="item-icon">✅</span>
+                                            <span class="item-name">客戶收款</span>
+                                            <span class="item-price positive">+$12,500</span>
                                         </div>
-                                        <div class="invoice-item">
-                                            <span class="item-name">鴛鴦奶茶 x3</span>
-                                            <span class="item-price">$54</span>
+                                        <div class="invoice-item expense">
+                                            <span class="item-icon">❌</span>
+                                            <span class="item-name">員工薪酬</span>
+                                            <span class="item-price negative">-$15,000</span>
                                         </div>
-                                        <div class="invoice-item">
-                                            <span class="item-name">菠蘿包 x4</span>
-                                            <span class="item-price">$32</span>
+                                        <div class="invoice-item expense">
+                                            <span class="item-icon">❌</span>
+                                            <span class="item-name">辦公用品</span>
+                                            <span class="item-price negative">-$2,800</span>
                                         </div>
-                                        <div class="invoice-total">
-                                            <span>總計</span>
-                                            <span>$146</span>
+                                        <div class="invoice-total bank-total">
+                                            <span>月結餘額</span>
+                                            <span>$28,600</span>
                                         </div>
                                     </div>
                                 </div>
@@ -1596,28 +1658,47 @@
                 font-size: 16px !important;
             }
             
-            /* 🎨 香港茶餐廳卡片內距調整 */
+            /* 🎨 手機版：銀行對帳單卡片調整 */
             .demo-invoice-card {
                 padding: 1rem !important;
                 font-size: 0.875rem !important;
+                transform: rotate(0deg) !important; /* 手機版不旋轉 */
             }
             
             .invoice-inner {
                 padding: 1rem !important;
             }
             
-            .restaurant-name {
+            .bank-header {
                 font-size: 1rem !important;
                 margin-bottom: 0.75rem !important;
+                gap: 0.25rem !important;
+            }
+            
+            .bank-icon {
+                font-size: 1.125rem !important;
             }
             
             .invoice-item {
                 font-size: 0.875rem !important;
                 margin-bottom: 0.5rem !important;
+                gap: 0.25rem !important;
+            }
+            
+            .item-icon {
+                font-size: 0.875rem !important;
+            }
+            
+            .item-name {
+                font-size: 0.875rem !important;
+            }
+            
+            .item-price {
+                font-size: 0.875rem !important;
             }
             
             .invoice-total {
-                font-size: 1.125rem !important;
+                font-size: 1rem !important;
                 padding-top: 0.5rem !important;
             }
             
