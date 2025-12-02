@@ -1211,6 +1211,15 @@
     
         @media (max-width: 768px) {
     
+    /* 🔥 手機版必須顯示 V logo */
+    .desktop-logo {
+        display: flex !important;
+    }
+    
+    .desktop-logo-text {
+        display: none !important;
+    }
+    
     /* ==================== Export 菜單手機版樣式 ==================== */
     
     /* Export 菜單在手機版居中顯示 */
@@ -1744,7 +1753,11 @@
             
             // 獲取用戶首字母（統一邏輯：取前兩個字符）
             function getUserInitial() {
-                // 只使用 email 的第一個字母
+                // 優先使用 displayName 的第一個字母
+                if (userDisplayName && userDisplayName.trim()) {
+                    return userDisplayName.charAt(0).toUpperCase();
+                }
+                // 否則使用 email 的第一個字母
                 if (userEmail && userEmail.trim()) {
                     return userEmail.charAt(0).toUpperCase();
                 }
@@ -3611,6 +3624,34 @@
             // 更新菜單內容並顯示
             console.log('🔄 更新菜單內容...');
             updateExportMenuContent();
+            
+            // 🔥 根據屏幕大小設置菜單樣式
+            if (window.innerWidth <= 768) {
+                // 手機版：居中顯示
+                menu.style.position = 'fixed';
+                menu.style.top = '50%';
+                menu.style.left = '50%';
+                menu.style.transform = 'translate(-50%, -50%)';
+                menu.style.right = 'auto';
+                menu.style.margin = '0';
+                menu.style.width = '90%';
+                menu.style.maxWidth = '400px';
+                menu.style.zIndex = '999999';
+                console.log('📱 手機版：菜單居中顯示');
+            } else {
+                // 桌面版：保持原有樣式（在按鈕下方）
+                menu.style.position = 'absolute';
+                menu.style.top = '100%';
+                menu.style.left = 'auto';
+                menu.style.right = '0';
+                menu.style.transform = 'none';
+                menu.style.marginTop = '0.5rem';
+                menu.style.width = 'auto';
+                menu.style.minWidth = '250px';
+                menu.style.zIndex = '1000';
+                console.log('💻 桌面版：菜單在按鈕下方');
+            }
+            
             menu.style.display = 'block';
             menu.classList.add('active');
             console.log('✅ 菜單已顯示');

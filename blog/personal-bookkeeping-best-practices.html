@@ -278,21 +278,7 @@
     </div>
     
     <script src="../unified-auth.js"></script>
-    <script>
-        // 確保 Firebase 和認證正確初始化
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('✅ 博客頁面認證初始化');
-            
-            // 等待 unified-auth.js 加載完成
-            setTimeout(function() {
-                if (window.updateUserAvatar) {
-                    console.log('✅ unified-auth.js 已加載');
-                } else {
-                    console.error('❌ unified-auth.js 未正確加載');
-                }
-            }, 500);
-        });
-    </script>
+    
     <script>
         function openMobileSidebar() {
             document.getElementById('mobile-sidebar').style.left = '0';
@@ -642,6 +628,55 @@
             </div>
         </article>
     </div>
+
+    <script>
+        // 🔥 強制重新檢查登入狀態
+        (function() {
+            console.log('🔵 [Blog] 開始認證檢查');
+            
+            function checkAuth() {
+                // 檢查 SimpleAuth 是否存在
+                if (typeof window.simpleAuth === 'undefined') {
+                    console.log('⏳ [Blog] SimpleAuth 尚未加載，等待中...');
+                    setTimeout(checkAuth, 200);
+                    return;
+                }
+                
+                console.log('✅ [Blog] SimpleAuth 已加載');
+                
+                // 檢查 Firebase Auth
+                if (!firebase.auth()) {
+                    console.error('❌ [Blog] Firebase Auth 未初始化');
+                    return;
+                }
+                
+                // 監聽 Auth 狀態變化
+                firebase.auth().onAuthStateChanged(function(user) {
+                    if (user) {
+                        console.log('✅ [Blog] Firebase 用戶已登入:', user.email);
+                        console.log('✅ [Blog] isLoggedIn:', true);
+                        
+                        // 強制更新 UI
+                        setTimeout(function() {
+                            if (window.updateUserMenu) {
+                                console.log('🔄 [Blog] 更新用戶菜單');
+                                window.updateUserMenu();
+                            }
+                        }, 500);
+                    } else {
+                        console.log('ℹ️  [Blog] 用戶未登入');
+                    }
+                });
+            }
+            
+            // 等待 DOM 加載完成
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', checkAuth);
+            } else {
+                checkAuth();
+            }
+        })();
+    </script>
 </body>
 </html>
 
