@@ -203,93 +203,7 @@
     
     <!-- 滑動動畫 CSS -->
     <style>
-        /* ========== 💡 發票卡片樣式（與圖3銀行卡片完全一致）========== */
-        .demo-invoice-card {
-            background: white;
-            border-radius: 16px;
-            padding: 2rem; /* 與圖3一致 */
-            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-            transform: rotate(-2deg);
-        }
-        
-        .invoice-inner {
-            padding: 1.5rem; /* 與圖3一致 */
-            background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
-            border-radius: 12px;
-            margin-bottom: 1rem;
-        }
-        
-        /* 茶餐廳標題 */
-        .bank-header,
-        .restaurant-header {
-            font-weight: 700;
-            font-size: 1.125rem; /* 與圖3一致 */
-            color: #1f2937;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .restaurant-name-main {
-            font-weight: 700;
-            font-size: 1.125rem; /* 與圖3一致 */
-            color: #1f2937;
-        }
-        
-        .invoice-divider {
-            border-top: 2px dashed #e5e7eb;
-            padding-top: 1rem;
-        }
-        
-        .invoice-items {
-            padding-top: 1rem; /* 與圖3一致 */
-        }
-        
-        .invoice-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 0.75rem; /* 與圖3一致 */
-            align-items: center;
-        }
-        
-        .item-name {
-            color: #4b5563; /* 與圖3一致 */
-            text-align: left;
-        }
-        
-        .item-price {
-            font-weight: 700; /* 與圖3一致：font-weight: 700 */
-            color: #4b5563;
-            font-size: 1.125rem; /* 與圖3一致：font-size: 1.125rem */
-        }
-        
-        /* 收入（綠色）- 用於銀行卡片 */
-        .item-price.positive {
-            color: #10b981;
-        }
-        
-        /* 支出（紅色）- 用於銀行卡片 */
-        .item-price.negative {
-            color: #ef4444;
-        }
-        
-        .invoice-total {
-            border-top: 2px solid #667eea; /* 與圖3一致 */
-            padding-top: 0.75rem; /* 與圖3一致 */
-            display: flex;
-            justify-content: space-between;
-            font-weight: 900; /* 與圖3一致：font-weight: 900 */
-            font-size: 1.5rem; /* 與圖3一致：font-size: 1.5rem */
-            color: #667eea;
-            margin-top: 1rem; /* 與圖3一致 */
-        }
-        
-        /* 銀行卡片總計使用藍色 */
-        .bank-total {
-            border-top-color: #3b82f6;
-            color: #2563eb;
-        }
+        /* ========== 💡 注意：卡片現在使用 inline styles，不需要這些 CSS ========== */
         
         /* 滑動動畫基礎設置 */
         .fade-in-up {
@@ -1661,9 +1575,9 @@
                 padding: 1.5rem 0.5rem !important; /* 左右極小 */
             }
             
-            /* 🔥 所有大內距的 div 都縮小 */
-            div[style*="padding: 2rem"],
-            div[style*="padding: 3rem"] {
+            /* 🔥 所有大內距的 div 都縮小（排除卡片）*/
+            div[style*="padding: 2rem"]:not(.fade-in-right > div):not(.fade-in-left > div),
+            div[style*="padding: 3rem"]:not(.fade-in-right > div):not(.fade-in-left > div) {
                 padding: 1rem 0.5rem !important; /* 左右極小 */
             }
             
@@ -1675,11 +1589,34 @@
                 margin-bottom: 5pt !important;
             }
             
-            /* ========== 基於用戶選擇的最終設計 ========== */
+            /* ========== 手機版卡片優化 ========== */
             
-            /* 🎨 手機版：茶餐廳卡片優化（只針對手機版調整大小）*/
-            /* 注意：茶餐廳卡片現在使用inline styles，這裡的CSS不會影響它 */
-            /* 這裡只是為了保持代碼整潔，實際上已經不需要這些CSS了 */
+            /* 茶餐廳和銀行卡片固定寬度 */
+            .fade-in-right > div[style*="border-radius: 16px"],
+            .fade-in-left > div[style*="border-radius: 16px"] {
+                width: 280px !important;
+                max-width: 90vw !important;
+                margin: 0 auto !important;
+                padding: 1.5rem !important;
+                transform: rotate(0deg) !important;
+            }
+            
+            /* 內層容器 */
+            .fade-in-right > div[style*="border-radius: 16px"] > div,
+            .fade-in-left > div[style*="border-radius: 16px"] > div {
+                padding: 1.25rem !important;
+            }
+            
+            /* 文字大小適配 */
+            .fade-in-right > div[style*="border-radius: 16px"] [style*="font-size: 1.125rem"],
+            .fade-in-left > div[style*="border-radius: 16px"] [style*="font-size: 1.125rem"] {
+                font-size: 1rem !important;
+            }
+            
+            .fade-in-right > div[style*="border-radius: 16px"] [style*="font-size: 1.5rem"],
+            .fade-in-left > div[style*="border-radius: 16px"] [style*="font-size: 1.5rem"] {
+                font-size: 1.25rem !important;
+            }
             
             /* ✅ PRICING - 使用真實版設計（顯示詳細功能列表）*/
             .pricing-card ul,
