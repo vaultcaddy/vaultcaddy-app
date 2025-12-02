@@ -577,95 +577,79 @@
                 }
             };
             
-            // 🔥 唯一的登錄狀態管理（直接監聽 Firebase Auth）
-            console.log('📍 [index.html] 開始設置登錄監聽器');
-            
-            let authUnsubscribe = null;
-            
-            function setupAuthListener() {
-                console.log('🔥 [setupAuthListener] 等待 Firebase Auth...');
+            // 🔥 與 dashboard.html 完全相同的更新方式
+            async function updateUserMenu() {
+                const userMenu = document.getElementById('user-menu');
+                if (!userMenu) return;
                 
-                let checkCount = 0;
-                const maxChecks = 150; // 15秒（150 * 100ms）
-                
-                const waitForAuth = setInterval(() => {
-                    checkCount++;
+                try {
+                    const isLoggedIn = window.simpleAuth && window.simpleAuth.isLoggedIn();
                     
-                    if (window.firebase && firebase.auth) {
-                        clearInterval(waitForAuth);
-                        console.log('✅ [setupAuthListener] Firebase Auth 已就緒');
+                    if (isLoggedIn) {
+                        // ✅ 已登入：顯示用戶頭像
+                        const currentUser = window.simpleAuth.getCurrentUser();
+                        userEmail = currentUser.email || '';
+                        userDisplayName = currentUser.displayName || '';
                         
-                        // 🔥 直接監聽 Firebase Auth 狀態
-                        authUnsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
-                            console.log('🔔 [onAuthStateChanged] 觸發 -', user ? `用戶: ${user.email}` : '未登入');
-                            
-                            const userMenu = document.getElementById('user-menu');
-                            if (!userMenu) {
-                                console.error('❌ [onAuthStateChanged] 找不到 user-menu 元素');
-                                return;
+                        // 🔥 從 Firestore 獲取 displayName 和 credits
+                        if (window.simpleDataManager && window.simpleDataManager.initialized) {
+                            try {
+                                const userDoc = await window.simpleDataManager.getUserDocument();
+                                if (userDoc) {
+                                    userDisplayName = userDoc.displayName || userDisplayName;
+                                    userCredits = userDoc.credits || 0;
+                                    console.log('✅ index.html 獲取 Credits:', userCredits);
+                                }
+                            } catch (error) {
+                                console.log('⚠️ 無法從 Firestore 獲取用戶資料:', error);
                             }
-                            
-                            console.log('📍 [onAuthStateChanged] user-menu 元素存在');
-                            console.log('📍 [onAuthStateChanged] 當前 innerHTML:', userMenu.innerHTML.substring(0, 100));
-                            
-                            if (user) {
-                                // ✅ 用戶已登入 - 顯示頭像
-                                console.log('👤 [onAuthStateChanged] 用戶已登入:', user.email);
-                                
-                                // 更新變量
-                                userEmail = user.email || '';
-                                userDisplayName = user.displayName || '';
-                                
-                                // 從 Firestore 獲取資料
+                        } else {
+                            console.log('⏳ SimpleDataManager 尚未初始化，等待中...');
+                            // 延遲重試
+                            setTimeout(async () => {
                                 if (window.simpleDataManager && window.simpleDataManager.initialized) {
                                     try {
-                                        const userDoc = await window.simpleDataManager.getUserDocument();
-                                        if (userDoc) {
-                                            userDisplayName = userDoc.displayName || userDisplayName;
-                                            userCredits = userDoc.credits || 0;
-                                            console.log('✅ [onAuthStateChanged] Firestore 資料:', { displayName: userDisplayName, credits: userCredits });
-                                        }
+                                        userCredits = await window.simpleDataManager.getUserCredits();
+                                        console.log('✅ 延遲獲取 Credits:', userCredits);
                                     } catch (error) {
-                                        console.warn('⚠️ [onAuthStateChanged] Firestore 獲取失敗:', error);
+                                        console.error('❌ 延遲獲取失敗:', error);
                                     }
                                 }
-                                
-                                const userInitial = getUserInitial();
-                                console.log('👤 [onAuthStateChanged] 用戶首字母:', userInitial);
-                                
-                                // 🔥 直接更新 UI（使用 innerHTML）
-                                console.log('🔄 [onAuthStateChanged] 開始更新 UI...');
-                                userMenu.innerHTML = `
-                                    <div onclick="window.toggleDropdown()" style="cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
-                                        <div style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">${userInitial}</div>
-                                    </div>
-                                `;
-                                
-                                console.log('✅ [onAuthStateChanged] UI 已更新為用戶頭像');
-                                console.log('📍 [onAuthStateChanged] 更新後 innerHTML:', userMenu.innerHTML.substring(0, 100));
-                                
-                            } else {
-                                // ❌ 用戶未登入 - 顯示登入按鈕
-                                console.log('❌ [onAuthStateChanged] 用戶未登入');
-                                userMenu.innerHTML = `
-                                    <button onclick="window.location.href='auth.html'" style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.875rem;" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">登入</button>
-                                `;
-                                console.log('✅ [onAuthStateChanged] UI 已更新為登入按鈕');
-                            }
-                        });
+                            }, 1000);
+                        }
                         
-                        console.log('✅ [setupAuthListener] Firebase Auth 監聽器已設置');
+                        const userInitial = getUserInitial();
+                        console.log(`👤 用戶首字母: "${userInitial}" (displayName: "${userDisplayName}")`);
                         
-                    } else if (checkCount >= maxChecks) {
-                        clearInterval(waitForAuth);
-                        console.error('❌ [setupAuthListener] Firebase Auth 初始化超時（15秒）');
+                        userMenu.innerHTML = `
+                            <div onclick="toggleDropdown()" style="cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+                                <div style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">${userInitial}</div>
+                            </div>
+                        `;
+                        console.log('✅ 用戶已登入，顯示頭像');
+                    } else {
+                        // ✅ 未登入：顯示登入按鈕
+                        userMenu.innerHTML = `
+                            <button onclick="window.location.href='auth.html'" style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.875rem;" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">登入</button>
+                        `;
+                        console.log('✅ 用戶未登入，顯示登入按鈕');
                     }
-                }, 100);
+                } catch (e) {
+                    console.log('❌ 無法更新用戶菜單:', e);
+                }
             }
             
-            // 🔥 立即執行
-            setupAuthListener();
-            console.log('📍 [index.html] setupAuthListener() 已調用');
+            // 立即嘗試更新
+            updateUserMenu();
+            
+            // 監聽 Firebase 和 Auth 事件
+            window.addEventListener('firebase-ready', updateUserMenu);
+            window.addEventListener('user-logged-in', updateUserMenu);
+            window.addEventListener('user-logged-out', updateUserMenu);
+            
+            // 延遲再次檢查（以防事件已經觸發）
+            setTimeout(updateUserMenu, 1000);
+            setTimeout(updateUserMenu, 2000);
             
             // 暴露 toggleDropdown 到全局
             window.toggleDropdown = toggleDropdown;
@@ -1821,70 +1805,6 @@
         window.closeMobileSidebar = closeSidebar;
     </script>
     
-    <!-- 🔥 登錄狀態檢測（在頁面底部直接執行）-->
-    <script>
-    (function() {
-        console.log('🔥 [DIRECT] 開始登錄檢測（頁面底部直接執行）');
-        
-        // 等待 Firebase Auth 初始化
-        let checkCount = 0;
-        const checkAuth = setInterval(() => {
-            checkCount++;
-            console.log(`🔍 [DIRECT] 第 ${checkCount} 次檢查 Firebase Auth...`);
-            
-            if (window.firebase && firebase.auth) {
-                clearInterval(checkAuth);
-                console.log('✅ [DIRECT] Firebase Auth 已就緒');
-                
-                // 直接監聽 Firebase Auth 狀態
-                firebase.auth().onAuthStateChanged((user) => {
-                    console.log('🔔 [DIRECT] Auth 狀態變化:', user ? `用戶: ${user.email}` : '未登入');
-                    
-                    const userMenu = document.getElementById('user-menu');
-                    if (!userMenu) {
-                        console.error('❌ [DIRECT] 找不到 user-menu');
-                        return;
-                    }
-                    
-                    console.log('📍 [DIRECT] user-menu 存在，當前內容:', userMenu.innerHTML.substring(0, 50));
-                    
-                    if (user) {
-                        // 用戶已登入 - 顯示頭像
-                        console.log('👤 [DIRECT] 用戶已登入:', user.email);
-                        const initial = user.email ? user.email.charAt(0).toUpperCase() : 'U';
-                        console.log('👤 [DIRECT] 首字母:', initial);
-                        
-                        userMenu.innerHTML = `
-                            <div style="cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
-                                <div style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">${initial}</div>
-                            </div>
-                        `;
-                        
-                        console.log('✅ [DIRECT] UI 已更新為頭像');
-                        console.log('📍 [DIRECT] 更新後內容:', userMenu.innerHTML.substring(0, 50));
-                    } else {
-                        // 用戶未登入 - 顯示登入按鈕
-                        console.log('❌ [DIRECT] 用戶未登入');
-                        userMenu.innerHTML = `
-                            <button onclick="window.location.href='auth.html'" style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.875rem;">登入</button>
-                        `;
-                        console.log('✅ [DIRECT] UI 已更新為登入按鈕');
-                    }
-                });
-                
-                console.log('✅ [DIRECT] Auth 監聽器已設置');
-            }
-            
-            // 15秒超時
-            if (checkCount >= 150) {
-                clearInterval(checkAuth);
-                console.error('❌ [DIRECT] Firebase Auth 初始化超時');
-            }
-        }, 100);
-        
-        console.log('✅ [DIRECT] 登錄檢測已啟動');
-    })();
-    </script>
 </body>
 </html>
 
