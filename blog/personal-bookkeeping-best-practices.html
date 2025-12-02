@@ -278,6 +278,43 @@
     </div>
     
     <script src="../unified-auth.js"></script>
+    <script>
+        // 🔥 強制檢查登入狀態（博客頁面專用）
+        window.addEventListener('load', function() {
+            console.log('🔵 [Blog] 強制檢查登入狀態');
+            
+            setTimeout(function() {
+                // 直接使用 Firebase Auth 檢查
+                if (firebase && firebase.auth()) {
+                    firebase.auth().onAuthStateChanged(function(firebaseUser) {
+                        if (firebaseUser) {
+                            console.log('✅ [Blog] Firebase 確認用戶已登入:', firebaseUser.email);
+                            
+                            // 強制設置 simpleAuth 的登入狀態
+                            if (window.simpleAuth && window.simpleAuth.currentUser === null) {
+                                console.log('🔄 [Blog] 修正 simpleAuth 狀態');
+                                window.simpleAuth.currentUser = {
+                                    uid: firebaseUser.uid,
+                                    email: firebaseUser.email,
+                                    displayName: firebaseUser.displayName
+                                };
+                            }
+                            
+                            // 強制更新 UI
+                            setTimeout(function() {
+                                if (window.updateUserMenu) {
+                                    console.log('🔄 [Blog] 強制更新用戶菜單');
+                                    window.updateUserMenu();
+                                }
+                            }, 500);
+                        } else {
+                            console.log('ℹ️  [Blog] Firebase 確認用戶未登入');
+                        }
+                    });
+                }
+            }, 1000);
+        });
+    </script>
     
     <script>
         function openMobileSidebar() {
