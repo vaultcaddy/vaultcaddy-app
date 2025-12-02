@@ -667,68 +667,122 @@
                 }
             }
             
-            // 🔥 監聽 auth-state-changed 事件
-            window.addEventListener('auth-state-changed', (event) => {
-                console.log('🔔 收到 auth-state-changed 事件');
-                updateUserMenu();
-            });
+            // 🔥 登錄狀態檢測 - 最可靠的方案
+            let loginCheckInterval = null;
+            let isUpdating = false; // 防止重複更新
+            let updateSuccess = false; // 記錄是否已成功更新
             
-            // 🔥 監聽 user-logged-in 事件（更直接的登錄事件）
-            window.addEventListener('user-logged-in', (event) => {
-                console.log('🔔 收到 user-logged-in 事件');
-                updateUserMenu();
-            });
-            
-            // 🔥 激進的登錄狀態檢查機制
-            let loginCheckInterval;
-            let loginCheckCount = 0;
-            const MAX_LOGIN_CHECKS = 20; // 最多檢查20次（10秒）
-            
-            function checkLoginStatus() {
-                loginCheckCount++;
-                console.log(`🔍 checkLoginStatus 第 ${loginCheckCount} 次檢查`);
+            async function smartCheckLogin() {
+                // 如果已經成功更新，不再檢查
+                if (updateSuccess) {
+                    if (loginCheckInterval) {
+                        clearInterval(loginCheckInterval);
+                        loginCheckInterval = null;
+                    }
+                    return;
+                }
                 
-                if (window.simpleAuth && typeof window.simpleAuth.isLoggedIn === 'function') {
-                    const isLoggedIn = window.simpleAuth.isLoggedIn();
-                    console.log('🔵 isLoggedIn:', isLoggedIn);
+                // 如果正在更新，跳過這次檢查
+                if (isUpdating) {
+                    console.log('⏭️ 跳過檢查（正在更新中）');
+                    return;
+                }
+                
+                try {
+                    const userMenu = document.getElementById('user-menu');
+                    if (!userMenu) return;
                     
-                    if (isLoggedIn) {
-                        const userMenu = document.getElementById('user-menu');
-                        const hasButton = userMenu && userMenu.querySelector('button');
-                        console.log('🔵 userMenu 有登入按鈕:', hasButton);
+                    // 檢查是否已登入
+                    if (window.simpleAuth && typeof window.simpleAuth.isLoggedIn === 'function') {
+                        const isLoggedIn = window.simpleAuth.isLoggedIn();
                         
-                        if (hasButton) {
-                            console.log('🔄 強制更新用戶頭像');
-                            updateUserMenu();
+                        if (isLoggedIn) {
+                            // 檢查當前UI狀態
+                            const hasButton = userMenu.querySelector('button');
+                            const hasAvatar = userMenu.querySelector('div[style*="border-radius: 50%"]');
                             
-                            // 更新成功後停止檢查
-                            if (loginCheckInterval) {
-                                clearInterval(loginCheckInterval);
-                                console.log('✅ 登錄狀態已更新，停止檢查');
-                            }
-                        } else {
-                            console.log('✅ 用戶頭像已顯示，停止檢查');
-                            if (loginCheckInterval) {
-                                clearInterval(loginCheckInterval);
+                            console.log(`🔍 登錄狀態檢查 - 已登入:${isLoggedIn}, 有按鈕:${!!hasButton}, 有頭像:${!!hasAvatar}`);
+                            
+                            if (hasButton && !hasAvatar) {
+                                // 需要更新：有按鈕但沒有頭像
+                                isUpdating = true;
+                                console.log('🔄 開始更新用戶頭像...');
+                                
+                                await updateUserMenu();
+                                
+                                // 驗證更新是否成功
+                                setTimeout(() => {
+                                    const newHasAvatar = userMenu.querySelector('div[style*="border-radius: 50%"]');
+                                    const newHasButton = userMenu.querySelector('button');
+                                    
+                                    if (newHasAvatar && !newHasButton) {
+                                        updateSuccess = true;
+                                        console.log('✅ 用戶頭像更新成功！');
+                                        
+                                        // 停止檢查
+                                        if (loginCheckInterval) {
+                                            clearInterval(loginCheckInterval);
+                                            loginCheckInterval = null;
+                                            console.log('🛑 停止登錄狀態檢查');
+                                        }
+                                    } else {
+                                        console.log('⚠️ 更新未成功，繼續檢查...');
+                                    }
+                                    
+                                    isUpdating = false;
+                                }, 200);
+                            } else if (hasAvatar) {
+                                // 已經有頭像，標記為成功
+                                updateSuccess = true;
+                                console.log('✅ 用戶頭像已顯示');
+                                
+                                if (loginCheckInterval) {
+                                    clearInterval(loginCheckInterval);
+                                    loginCheckInterval = null;
+                                }
                             }
                         }
                     }
-                }
-                
-                // 達到最大檢查次數後停止
-                if (loginCheckCount >= MAX_LOGIN_CHECKS) {
-                    if (loginCheckInterval) {
-                        clearInterval(loginCheckInterval);
-                        console.log('⏰ 達到最大檢查次數，停止檢查');
-                    }
+                } catch (error) {
+                    console.error('❌ 檢查登錄狀態出錯:', error);
+                    isUpdating = false;
                 }
             }
             
-            // 立即開始持續檢查（每500ms檢查一次）
-            loginCheckInterval = setInterval(checkLoginStatus, 500);
+            // 監聽事件
+            window.addEventListener('auth-state-changed', () => {
+                console.log('🔔 收到 auth-state-changed 事件');
+                updateSuccess = false; // 重置狀態
+                smartCheckLogin();
+            });
+            
+            window.addEventListener('user-logged-in', () => {
+                console.log('🔔 收到 user-logged-in 事件');
+                updateSuccess = false; // 重置狀態
+                smartCheckLogin();
+            });
+            
+            // 啟動持續檢查（每500ms一次，最多20秒）
+            let checkCount = 0;
+            const MAX_CHECKS = 40; // 40次 x 500ms = 20秒
+            
+            loginCheckInterval = setInterval(() => {
+                checkCount++;
+                
+                if (updateSuccess || checkCount >= MAX_CHECKS) {
+                    if (loginCheckInterval) {
+                        clearInterval(loginCheckInterval);
+                        loginCheckInterval = null;
+                        console.log(updateSuccess ? '✅ 檢查完成' : '⏰ 達到最大檢查次數');
+                    }
+                    return;
+                }
+                
+                smartCheckLogin();
+            }, 500);
             
             // 立即執行第一次檢查
-            checkLoginStatus();
+            smartCheckLogin();
             
             // 暴露 toggleDropdown 到全局
             window.toggleDropdown = toggleDropdown;
