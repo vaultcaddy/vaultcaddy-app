@@ -67,6 +67,7 @@
             overflow: hidden;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             transition: transform 0.2s;
+            cursor: pointer; /* 🔥 整個卡片可點擊 */
         }
         .blog-card:hover {
             transform: translateY(-4px);
@@ -140,9 +141,11 @@
                 display: none !important;
             }
             
-            /* 🔥 隱藏漢堡菜單按鈕（Blog頁面不需要）*/
-            #mobile-menu-btn {
-                display: none !important;
+            /* 🔥 手機版顯示漢堡菜單 */
+            @media (max-width: 768px) {
+                #mobile-menu-btn {
+                    display: block !important;
+                }
             }
             
             /* 調整導航欄 padding */
@@ -185,7 +188,7 @@
                 <i class="fas fa-bars"></i>
             </button>
             
-            <a href="../index.html" style="display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: #1f2937; font-weight: 600; font-size: 1.125rem;">
+            <a href="../index.html" style="display: none; align-items: center; gap: 0.75rem; text-decoration: none; color: #1f2937; font-weight: 600; font-size: 1.125rem;">
                 <div class="desktop-logo" style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.25rem;">
                     V
                 </div>
@@ -203,7 +206,7 @@
                 <a href="../dashboard.html" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">儀表板</a>
             </div>
             <div id="user-menu" style="position: relative; display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;">
-                <button onclick="window.location.href='../auth.html'" style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.875rem;" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">登入</button>
+                <div id="user-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">U</div>
             </div>
         </div>
     </nav>
@@ -305,24 +308,20 @@
                 try {
                     const isLoggedIn = window.simpleAuth && window.simpleAuth.isLoggedIn();
                     
+                    const avatar = document.getElementById('user-avatar');
+                    if (!avatar) return;
+                    
                     if (isLoggedIn) {
-                        // ✅ 已登入：顯示用戶頭像
+                        // ✅ 已登入：更新用戶頭像
                         const currentUser = window.simpleAuth.getCurrentUser();
                         userEmail = currentUser.email || '';
                         userDisplayName = currentUser.displayName || '';
                         
                         const userInitial = getUserInitial();
-                        
-                        userMenu.innerHTML = `
-                            <div onclick="toggleDropdown()" style="cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
-                                <div style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem; opacity: 1; transition: opacity 0.3s;">${userInitial}</div>
-                            </div>
-                        `;
+                        avatar.textContent = userInitial;
                     } else {
-                        // ✅ 未登入：顯示登入按鈕
-                        userMenu.innerHTML = `
-                            <button onclick="window.location.href='../auth.html'" style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.875rem;" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">登入</button>
-                        `;
+                        // ✅ 未登入：顯示"U"
+                        avatar.textContent = 'U';
                     }
                 } catch (e) {
                     // 静默处理错误
@@ -337,15 +336,13 @@
                 }
             };
             
-            // 立即嘗試更新
-            updateUserMenu();
-            
+            // 🔥 只在 SimpleAuth 初始化後才更新（圖2開始）
             // 監聽 Firebase 和 Auth 事件
             window.addEventListener('firebase-ready', updateUserMenu);
             window.addEventListener('user-logged-in', updateUserMenu);
             window.addEventListener('user-logged-out', updateUserMenu);
             
-            // 延遲再次檢查（以防事件已經觸發）
+            // 延遲檢查（等待 SimpleAuth 初始化）
             setTimeout(updateUserMenu, 1000);
             setTimeout(updateUserMenu, 2000);
         });
@@ -399,7 +396,7 @@
 
         <div class="blog-grid">
             <!-- 個人/自由工作者文章 -->
-            <div class="blog-card" data-category="freelancer">
+            <div class="blog-card" data-category="freelancer" onclick="window.location.href='freelancer-invoice-management.html'">
                 <div class="blog-card-image" style="background-image: url('https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&h=400&fit=crop&q=80'); background-size: cover; background-position: center;"></div>
                 <div class="blog-card-content">
                     <span class="blog-card-category">個人/自由工作者</span>
@@ -412,7 +409,7 @@
                 </div>
             </div>
 
-            <div class="blog-card" data-category="freelancer">
+            <div class="blog-card" data-category="freelancer" onclick="window.location.href='personal-bookkeeping-best-practices.html'">
                 <div class="blog-card-image" style="background-image: url('https://images.unsplash.com/photo-1554224154-26032ffc0d07?w=800&h=400&fit=crop&q=80'); background-size: cover; background-position: center;"></div>
                 <div class="blog-card-content">
                     <span class="blog-card-category">個人/自由工作者</span>
@@ -425,7 +422,7 @@
                 </div>
             </div>
 
-            <div class="blog-card" data-category="freelancer">
+            <div class="blog-card" data-category="freelancer" onclick="window.location.href='freelancer-tax-preparation-guide.html'">
                 <div class="blog-card-image" style="background-image: url('https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800&h=400&fit=crop&q=80'); background-size: cover; background-position: center;"></div>
                 <div class="blog-card-content">
                     <span class="blog-card-category">個人/自由工作者</span>
@@ -439,7 +436,7 @@
             </div>
 
             <!-- 成本分析文章（精選） -->
-            <div class="blog-card" data-category="all" style="border: 2px solid #667eea;">
+            <div class="blog-card" data-category="all" style="border: 2px solid #667eea;" onclick="window.location.href='manual-vs-ai-cost-analysis.html'">
                 <div class="blog-card-image" style="background-image: url('https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=400&fit=crop&q=80'); background-size: cover; background-position: center;"></div>
                 <div class="blog-card-content">
                     <span class="blog-card-category" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">精選文章</span>
@@ -453,7 +450,7 @@
             </div>
 
             <!-- 小型企業文章 -->
-            <div class="blog-card" data-category="smb">
+            <div class="blog-card" data-category="smb" onclick="window.location.href='small-business-document-management.html'">
                 <div class="blog-card-image" style="background-image: url('https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&h=400&fit=crop&q=80'); background-size: cover; background-position: center;"></div>
                 <div class="blog-card-content">
                     <span class="blog-card-category">小型企業</span>
@@ -466,7 +463,7 @@
                 </div>
             </div>
 
-            <div class="blog-card" data-category="smb">
+            <div class="blog-card" data-category="smb" onclick="window.location.href='ai-invoice-processing-for-smb.html'">
                 <div class="blog-card-image" style="background-image: url('https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800&h=400&fit=crop&q=80'); background-size: cover; background-position: center;"></div>
                 <div class="blog-card-content">
                     <span class="blog-card-category">小型企業</span>
@@ -479,7 +476,7 @@
                 </div>
             </div>
 
-            <div class="blog-card" data-category="smb">
+            <div class="blog-card" data-category="smb" onclick="window.location.href='quickbooks-integration-guide.html'">
                 <div class="blog-card-image" style="background-image: url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=400&fit=crop&q=80'); background-size: cover; background-position: center;"></div>
                 <div class="blog-card-content">
                     <span class="blog-card-category">小型企業</span>
@@ -493,7 +490,7 @@
             </div>
 
             <!-- 會計事務所文章 -->
-            <div class="blog-card" data-category="accountant">
+            <div class="blog-card" data-category="accountant" onclick="window.location.href='accounting-firm-automation.html'">
                 <div class="blog-card-image" style="background-image: url('https://images.unsplash.com/photo-1551836022-deb4988cc6c0?w=800&h=400&fit=crop&q=80'); background-size: cover; background-position: center;"></div>
                 <div class="blog-card-content">
                     <span class="blog-card-category">會計事務所</span>
@@ -506,7 +503,7 @@
                 </div>
             </div>
 
-            <div class="blog-card" data-category="accountant">
+            <div class="blog-card" data-category="accountant" onclick="window.location.href='client-document-management-for-accountants.html'">
                 <div class="blog-card-image" style="background-image: url('https://images.unsplash.com/photo-1521791136064-7986c2920216?w=800&h=400&fit=crop&q=80'); background-size: cover; background-position: center;"></div>
                 <div class="blog-card-content">
                     <span class="blog-card-category">會計事務所</span>
@@ -519,7 +516,7 @@
                 </div>
             </div>
 
-            <div class="blog-card" data-category="accountant">
+            <div class="blog-card" data-category="accountant" onclick="window.location.href='ocr-accuracy-for-accounting.html'">
                 <div class="blog-card-image" style="background-image: url('https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?w=800&h=400&fit=crop&q=80'); background-size: cover; background-position: center;"></div>
                 <div class="blog-card-content">
                     <span class="blog-card-category">會計事務所</span>
@@ -532,7 +529,7 @@
                 </div>
             </div>
 
-            <div class="blog-card" data-category="accountant">
+            <div class="blog-card" data-category="accountant" onclick="window.location.href='accounting-workflow-optimization.html'">
                 <div class="blog-card-image" style="background-image: url('https://images.unsplash.com/photo-1507925921958-8a62f3d1a50d?w=800&h=400&fit=crop&q=80'); background-size: cover; background-position: center;"></div>
                 <div class="blog-card-content">
                     <span class="blog-card-category">會計事務所</span>
