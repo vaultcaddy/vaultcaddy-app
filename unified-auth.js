@@ -75,24 +75,20 @@
                     }, { once: true });
                 }
                 
-                // 獲取用戶名前兩個字的首字母
-                let initial = 'YC'; // 默認值
+                // 獲取用戶名首字母（只取一個字母）
+                let initial = 'Y'; // 默認值
                 if (user.displayName && user.displayName.trim()) {
-                    // 如果有 displayName，取前兩個字的首字母
-                    const names = user.displayName.trim().split(' ');
-                    if (names.length >= 2) {
-                        // 例如 "yeung cavlin" -> "YC"
-                        initial = names[0].charAt(0).toUpperCase() + names[1].charAt(0).toUpperCase();
-                    } else {
-                        // 如果只有一個名字，取前兩個字符
-                        initial = user.displayName.substring(0, 2).toUpperCase();
-                    }
+                    // 取 displayName 的第一個字母
+                    initial = user.displayName.charAt(0).toUpperCase();
+                } else if (user.email && user.email.trim()) {
+                    // 如果沒有 displayName，取 email 的第一個字母
+                    initial = user.email.charAt(0).toUpperCase();
                 }
                 
                 // 顯示用戶頭像和下拉菜單
                 userMenu.innerHTML = `
                     <div style="position: relative;">
-                        <div id="user-avatar" onclick="toggleDropdown()" style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; cursor: pointer; font-size: 1rem; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3); transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.4)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(102, 126, 234, 0.3)'">
+                        <div id="user-avatar" onclick="toggleDropdown()" style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; cursor: pointer; font-size: 1rem; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3); opacity: 1; transition: transform 0.2s, box-shadow 0.2s, opacity 0.3s;" onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.4)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(102, 126, 234, 0.3)'">
                             ${initial}
                         </div>
                         <div id="user-dropdown" style="display: none !important; position: absolute; top: 50px; right: 0; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); min-width: 200px; z-index: 1000; border: 1px solid #e5e7eb;">
