@@ -1820,7 +1820,71 @@
         // 暴露函數供側邊欄內的連結使用
         window.closeMobileSidebar = closeSidebar;
     </script>
-
+    
+    <!-- 🔥 登錄狀態檢測（在頁面底部直接執行）-->
+    <script>
+    (function() {
+        console.log('🔥 [DIRECT] 開始登錄檢測（頁面底部直接執行）');
+        
+        // 等待 Firebase Auth 初始化
+        let checkCount = 0;
+        const checkAuth = setInterval(() => {
+            checkCount++;
+            console.log(`🔍 [DIRECT] 第 ${checkCount} 次檢查 Firebase Auth...`);
+            
+            if (window.firebase && firebase.auth) {
+                clearInterval(checkAuth);
+                console.log('✅ [DIRECT] Firebase Auth 已就緒');
+                
+                // 直接監聽 Firebase Auth 狀態
+                firebase.auth().onAuthStateChanged((user) => {
+                    console.log('🔔 [DIRECT] Auth 狀態變化:', user ? `用戶: ${user.email}` : '未登入');
+                    
+                    const userMenu = document.getElementById('user-menu');
+                    if (!userMenu) {
+                        console.error('❌ [DIRECT] 找不到 user-menu');
+                        return;
+                    }
+                    
+                    console.log('📍 [DIRECT] user-menu 存在，當前內容:', userMenu.innerHTML.substring(0, 50));
+                    
+                    if (user) {
+                        // 用戶已登入 - 顯示頭像
+                        console.log('👤 [DIRECT] 用戶已登入:', user.email);
+                        const initial = user.email ? user.email.charAt(0).toUpperCase() : 'U';
+                        console.log('👤 [DIRECT] 首字母:', initial);
+                        
+                        userMenu.innerHTML = `
+                            <div style="cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+                                <div style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">${initial}</div>
+                            </div>
+                        `;
+                        
+                        console.log('✅ [DIRECT] UI 已更新為頭像');
+                        console.log('📍 [DIRECT] 更新後內容:', userMenu.innerHTML.substring(0, 50));
+                    } else {
+                        // 用戶未登入 - 顯示登入按鈕
+                        console.log('❌ [DIRECT] 用戶未登入');
+                        userMenu.innerHTML = `
+                            <button onclick="window.location.href='auth.html'" style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.875rem;">登入</button>
+                        `;
+                        console.log('✅ [DIRECT] UI 已更新為登入按鈕');
+                    }
+                });
+                
+                console.log('✅ [DIRECT] Auth 監聽器已設置');
+            }
+            
+            // 15秒超時
+            if (checkCount >= 150) {
+                clearInterval(checkAuth);
+                console.error('❌ [DIRECT] Firebase Auth 初始化超時');
+            }
+        }, 100);
+        
+        console.log('✅ [DIRECT] 登錄檢測已啟動');
+    })();
+    </script>
 </body>
 </html>
 
