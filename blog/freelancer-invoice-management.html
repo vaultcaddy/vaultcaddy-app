@@ -124,9 +124,9 @@
 
         /* 手機版樣式 */
         @media (max-width: 768px) {
-            /* 手機版顯示 logo */
+            /* 🔥 手機版隱藏 V字logo */
             .desktop-logo {
-                display: flex !important;
+                display: none !important;
             }
             
             /* 隱藏桌面版 logo 文字 */
@@ -254,42 +254,75 @@
         </div>
     </div>
     
+    <script src="../simple-auth.js"></script>
     <script src="../unified-auth.js"></script>
     <script>
-        // 🔥 強制檢查登入狀態（博客頁面專用）
-        window.addEventListener('load', function() {
-            console.log('🔵 [Blog] 強制檢查登入狀態');
+        document.addEventListener('DOMContentLoaded', function() {
+            let userCredits = 0;
+            let userEmail = '';
+            let userDisplayName = '';
             
-            setTimeout(function() {
-                // 直接使用 Firebase Auth 檢查
-                if (firebase && firebase.auth()) {
-                    firebase.auth().onAuthStateChanged(function(firebaseUser) {
-                        if (firebaseUser) {
-                            console.log('✅ [Blog] Firebase 確認用戶已登入:', firebaseUser.email);
-                            
-                            // 強制設置 simpleAuth 的登入狀態
-                            if (window.simpleAuth && window.simpleAuth.currentUser === null) {
-                                console.log('🔄 [Blog] 修正 simpleAuth 狀態');
-                                window.simpleAuth.currentUser = {
-                                    uid: firebaseUser.uid,
-                                    email: firebaseUser.email,
-                                    displayName: firebaseUser.displayName
-                                };
-                            }
-                            
-                            // 強制更新 UI
-                            setTimeout(function() {
-                                if (window.updateUserMenu) {
-                                    console.log('🔄 [Blog] 強制更新用戶菜單');
-                                    window.updateUserMenu();
-                                }
-                            }, 500);
-                        } else {
-                            console.log('ℹ️  [Blog] Firebase 確認用戶未登入');
-                        }
-                    });
+            // 獲取用戶首字母
+            function getUserInitial() {
+                if (userDisplayName && userDisplayName.trim()) {
+                    return userDisplayName.charAt(0).toUpperCase();
                 }
-            }, 1000);
+                if (userEmail && userEmail.trim()) {
+                    return userEmail.charAt(0).toUpperCase();
+                }
+                return 'U';
+            }
+            
+            // 更新用戶菜單
+            async function updateUserMenu() {
+                const userMenu = document.getElementById('user-menu');
+                if (!userMenu) return;
+                
+                try {
+                    const isLoggedIn = window.simpleAuth && window.simpleAuth.isLoggedIn();
+                    const avatar = document.getElementById('user-avatar');
+                    if (!avatar) return;
+                    
+                    if (isLoggedIn) {
+                        const currentUser = window.simpleAuth.getCurrentUser();
+                        userEmail = currentUser.email || '';
+                        userDisplayName = currentUser.displayName || '';
+                        const userInitial = getUserInitial();
+                        avatar.textContent = userInitial;
+                    } else {
+                        avatar.textContent = 'U';
+                    }
+                } catch (e) {
+                    // 静默处理错误
+                }
+            }
+            
+            // 切換下拉菜單
+            window.toggleDropdown = function() {
+                const dropdown = document.getElementById('user-dropdown');
+                if (dropdown) {
+                    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+                }
+            };
+            
+            // 優化：只使用一個可靠的檢查方式
+            function initAuthCheck() {
+                if (typeof firebase === 'undefined' || !firebase.auth) {
+                    setTimeout(initAuthCheck, 100);
+                    return;
+                }
+                
+                firebase.auth().onAuthStateChanged(function(user) {
+                    if (user) {
+                        updateUserMenu();
+                    } else {
+                        const avatar = document.getElementById('user-avatar');
+                        if (avatar) avatar.textContent = 'U';
+                    }
+                });
+            }
+            
+            initAuthCheck();
         });
     </script>
     
@@ -546,121 +579,6 @@
         </article>
     </div>
 
-    <script>
-        // 🔥 強制重新檢查登入狀態
-        (function() {
-            console.log('🔵 [Blog] 開始認證檢查');
-            
-            function checkAuth() {
-                // 檢查 SimpleAuth 是否存在
-                if (typeof window.simpleAuth === 'undefined') {
-                    console.log('⏳ [Blog] SimpleAuth 尚未加載，等待中...');
-                    setTimeout(checkAuth, 200);
-                    return;
-                }
-                
-                console.log('✅ [Blog] SimpleAuth 已加載');
-                
-                // 檢查 Firebase Auth
-                if (!firebase.auth()) {
-                    console.error('❌ [Blog] Firebase Auth 未初始化');
-                    return;
-                }
-                
-                // 監聽 Auth 狀態變化
-                firebase.auth().onAuthStateChanged(function(user) {
-                    if (user) {
-                        console.log('✅ [Blog] Firebase 用戶已登入:', user.email);
-                        console.log('✅ [Blog] isLoggedIn:', true);
-                        
-                        // 強制更新 UI
-                        setTimeout(function() {
-                            if (window.updateUserMenu) {
-                                console.log('🔄 [Blog] 更新用戶菜單');
-                                window.updateUserMenu();
-                            }
-                        }, 500);
-                    } else {
-                        console.log('ℹ️  [Blog] 用戶未登入');
-                    }
-                });
-            }
-            
-            // 等待 DOM 加載完成
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', checkAuth);
-            } else {
-                checkAuth();
-            }
-        })();
-    </script>
-
-    <script>
-        // 🔥 定義 updateUserMenu 函數（blog 頁面專用）
-        window.updateUserMenu = function() {
-            console.log('🔄 [Blog] updateUserMenu 被調用');
-            
-            const loginBtn = document.getElementById('loginBtn');
-            const userAvatar = document.getElementById('userAvatar');
-            const userDropdown = document.getElementById('user-dropdown');
-            
-            // 檢查用戶是否已登入
-            firebase.auth().onAuthStateChanged(function(user) {
-                if (user) {
-                    console.log('✅ [Blog] 用戶已登入:', user.email);
-                    
-                    // 設置全局變量
-                    window.userEmail = user.email;
-                    window.userDisplayName = user.displayName || '';
-                    
-                    // 隱藏登入按鈕
-                    if (loginBtn) {
-                        loginBtn.style.display = 'none';
-                    }
-                    
-                    // 顯示用戶頭像
-                    if (userAvatar) {
-                        userAvatar.style.display = 'flex';
-                        
-                        // 設置頭像文字（只取第一個字母）
-                        const initial = window.userDisplayName 
-                            ? window.userDisplayName.charAt(0).toUpperCase()
-                            : user.email.charAt(0).toUpperCase();
-                        
-                        userAvatar.textContent = initial;
-                        console.log('✅ [Blog] 用戶頭像已更新:', initial);
-                    }
-                    
-                    // 更新下拉菜單中的 email
-                    const userEmailElement = document.getElementById('userEmail');
-                    if (userEmailElement) {
-                        userEmailElement.textContent = user.email;
-                    }
-                } else {
-                    console.log('ℹ️  [Blog] 用戶未登入');
-                    
-                    // 顯示登入按鈕
-                    if (loginBtn) {
-                        loginBtn.style.display = 'block';
-                    }
-                    
-                    // 隱藏用戶頭像
-                    if (userAvatar) {
-                        userAvatar.style.display = 'none';
-                    }
-                }
-            });
-        };
-        
-        // 頁面加載後立即調用
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', function() {
-                setTimeout(window.updateUserMenu, 1000);
-            });
-        } else {
-            setTimeout(window.updateUserMenu, 1000);
-        }
-    </script>
 </body>
 </html>
 

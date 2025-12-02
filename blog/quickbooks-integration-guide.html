@@ -25,7 +25,7 @@
         @media (max-width: 768px) {
             /* 手機版顯示 logo */
             .desktop-logo {
-                display: flex !important;
+                display: none !important; /* 🔥 手機版隱藏 V字logo */
             }
             
             /* 隱藏桌面版 logo 文字 */
@@ -157,22 +157,78 @@
         </div>
     </div>
     
+        <script src="../simple-auth.js"></script>
     <script src="../unified-auth.js"></script>
     <script>
-        // 確保 Firebase 和認證正確初始化
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('✅ 博客頁面認證初始化');
+            let userCredits = 0;
+            let userEmail = '';
+            let userDisplayName = '';
             
-            // 等待 unified-auth.js 加載完成
-            setTimeout(function() {
-                if (window.updateUserAvatar) {
-                    console.log('✅ unified-auth.js 已加載');
-                } else {
-                    console.error('❌ unified-auth.js 未正確加載');
+            // 獲取用戶首字母
+            function getUserInitial() {
+                if (userDisplayName && userDisplayName.trim()) {
+                    return userDisplayName.charAt(0).toUpperCase();
                 }
-            }, 500);
+                if (userEmail && userEmail.trim()) {
+                    return userEmail.charAt(0).toUpperCase();
+                }
+                return 'U';
+            }
+            
+            // 更新用戶菜單
+            async function updateUserMenu() {
+                const userMenu = document.getElementById('user-menu');
+                if (!userMenu) return;
+                
+                try {
+                    const isLoggedIn = window.simpleAuth && window.simpleAuth.isLoggedIn();
+                    const avatar = document.getElementById('user-avatar');
+                    if (!avatar) return;
+                    
+                    if (isLoggedIn) {
+                        const currentUser = window.simpleAuth.getCurrentUser();
+                        userEmail = currentUser.email || '';
+                        userDisplayName = currentUser.displayName || '';
+                        const userInitial = getUserInitial();
+                        avatar.textContent = userInitial;
+                    } else {
+                        avatar.textContent = 'U';
+                    }
+                } catch (e) {
+                    // 静默处理错误
+                }
+            }
+            
+            // 切換下拉菜單
+            window.toggleDropdown = function() {
+                const dropdown = document.getElementById('user-dropdown');
+                if (dropdown) {
+                    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+                }
+            };
+            
+            // 優化：只使用一個可靠的檢查方式
+            function initAuthCheck() {
+                if (typeof firebase === 'undefined' || !firebase.auth) {
+                    setTimeout(initAuthCheck, 100);
+                    return;
+                }
+                
+                firebase.auth().onAuthStateChanged(function(user) {
+                    if (user) {
+                        updateUserMenu();
+                    } else {
+                        const avatar = document.getElementById('user-avatar');
+                        if (avatar) avatar.textContent = 'U';
+                    }
+                });
+            }
+            
+            initAuthCheck();
         });
     </script>
+    
     <script>
         function openMobileSidebar() {
             document.getElementById('mobile-sidebar').style.left = '0';

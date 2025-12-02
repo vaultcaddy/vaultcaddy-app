@@ -101,7 +101,7 @@
         @media (max-width: 768px) {
             /* 手機版顯示 logo */
             .desktop-logo {
-                display: flex !important;
+                display: none !important; /* 🔥 手機版隱藏 V字logo */
             }
             
             /* 隱藏桌面版 logo 文字 */
@@ -659,41 +659,25 @@
 
     <script>
         // 🔥 強制重新檢查登入狀態
-        (function() {
-            console.log('🔵 [Blog] 開始認證檢查');
-            
+        (function() {            
             function checkAuth() {
                 // 檢查 SimpleAuth 是否存在
-                if (typeof window.simpleAuth === 'undefined') {
-                    console.log('⏳ [Blog] SimpleAuth 尚未加載，等待中...');
-                    setTimeout(checkAuth, 200);
+                if (typeof window.simpleAuth === 'undefined') {                    setTimeout(checkAuth, 200);
                     return;
-                }
-                
-                console.log('✅ [Blog] SimpleAuth 已加載');
-                
+                }                
                 // 檢查 Firebase Auth
-                if (!firebase.auth()) {
-                    console.error('❌ [Blog] Firebase Auth 未初始化');
-                    return;
+                if (!firebase.auth()) {                    return;
                 }
                 
                 // 監聽 Auth 狀態變化
                 firebase.auth().onAuthStateChanged(function(user) {
-                    if (user) {
-                        console.log('✅ [Blog] Firebase 用戶已登入:', user.email);
-                        console.log('✅ [Blog] isLoggedIn:', true);
-                        
+                    if (user) {                        
                         // 強制更新 UI
                         setTimeout(function() {
-                            if (window.updateUserMenu) {
-                                console.log('🔄 [Blog] 更新用戶菜單');
-                                window.updateUserMenu();
+                            if (window.updateUserMenu) {                                window.updateUserMenu();
                             }
                         }, 500);
-                    } else {
-                        console.log('ℹ️  [Blog] 用戶未登入');
-                    }
+                    } else {                    }
                 });
             }
             
