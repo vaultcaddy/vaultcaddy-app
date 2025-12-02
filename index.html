@@ -307,8 +307,8 @@
             </button>
             
             <a href="index.html" style="display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: #1f2937; font-weight: 600; font-size: 1.125rem;">
-                <div class="desktop-logo" style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.25rem;">
-                    V
+                <div class="desktop-logo" style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.25rem;">
+                    Y
                 </div>
                 <div class="desktop-logo-text">
                     <div>VaultCaddy</div>
@@ -635,17 +635,18 @@
                 }
             }
             
-            // 立即嘗試更新
-            updateUserMenu();
+            // 🔥 優化：只在 SimpleAuth 初始化後才更新（刪除立即調用）
+            // updateUserMenu();  ← 刪除！SimpleAuth 尚未初始化
             
             // 監聽 Firebase 和 Auth 事件
             window.addEventListener('firebase-ready', updateUserMenu);
             window.addEventListener('user-logged-in', updateUserMenu);
             window.addEventListener('user-logged-out', updateUserMenu);
             
-            // 延遲再次檢查（以防事件已經觸發）
-            setTimeout(updateUserMenu, 1000);
-            setTimeout(updateUserMenu, 2000);
+            // 延遲檢查（等待 SimpleAuth 初始化完成）
+            setTimeout(updateUserMenu, 500);   // 0.5秒後首次檢查
+            setTimeout(updateUserMenu, 1000);  // 1秒後再次檢查
+            setTimeout(updateUserMenu, 2000);  // 2秒後最終確認
             
             // 暴露 toggleDropdown 到全局
             window.toggleDropdown = toggleDropdown;
