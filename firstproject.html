@@ -1484,7 +1484,7 @@
         padding: 0.5rem 0.25rem !important;
     }
     
-    /* 🔧 手機版：類型列文字大小與其他一樣 */
+    /* 🔧 手機版：類型列（第3列）文字大小與其他一樣 */
     .table-container table thead th:nth-child(3),
     .table-container table tbody td:nth-child(3) {
         font-size: 0.75rem !important;
@@ -1495,18 +1495,15 @@
         display: none !important;
     }
     
-    /* 🔧 手機版：保持原有table布局，不使用flex */
-    /* 表格保持原有列順序 */
-    
-    /* 🔧 手機版：操作列 */
-    .table-container table thead th:nth-child(9),
-    .table-container table tbody td:nth-child(9) {
+    /* 🔧 手機版：狀態列（第4列，在類型和供應商中間） */
+    .table-container table thead th:nth-child(4),
+    .table-container table tbody td:nth-child(4) {
         text-align: center !important;
     }
     
-    /* 🔧 手機版：狀態列 */
-    .table-container table thead th:nth-child(7),
-    .table-container table tbody td:nth-child(7) {
+    /* 🔧 手機版：操作列（第9列） */
+    .table-container table thead th:nth-child(9),
+    .table-container table tbody td:nth-child(9) {
         text-align: center !important;
     }
     
@@ -2265,6 +2262,11 @@
                                     <span>類型</span>
                                     <i class="fas fa-sort sort-icon" data-column="type" style="margin-left: 0.5rem; color: #9ca3af;"></i>
                                 </th>
+                                <!-- 狀態列（移到類型和供應商中間）-->
+                                <th onclick="sortTable('status')" style="text-align: left; padding: 0.5rem 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; cursor: pointer; user-select: none;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+                                    <span>狀態</span>
+                                    <i class="fas fa-sort sort-icon" data-column="status" style="margin-left: 0.5rem; color: #9ca3af;"></i>
+                                </th>
                                 <!-- 供應商/來源/銀行列 -->
                                 <th onclick="sortTable('vendor')" style="text-align: left; padding: 0.5rem 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; cursor: pointer; user-select: none;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
                                     <span>供應商/來源/銀行</span>
@@ -2279,11 +2281,6 @@
                                 <th onclick="sortTable('date')" style="text-align: left; padding: 0.5rem 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; cursor: pointer; user-select: none;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
                                     <span>日期</span>
                                     <i class="fas fa-sort sort-icon" data-column="date" style="margin-left: 0.5rem; color: #9ca3af;"></i>
-                                </th>
-                                <!-- 狀態列 -->
-                                <th onclick="sortTable('status')" style="text-align: left; padding: 0.5rem 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; cursor: pointer; user-select: none;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
-                                    <span>狀態</span>
-                                    <i class="fas fa-sort sort-icon" data-column="status" style="margin-left: 0.5rem; color: #9ca3af;"></i>
                                 </th>
                                 <!-- 上傳日期列 -->
                                 <th onclick="sortTable('uploadDate')" style="text-align: left; padding: 0.5rem 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; cursor: pointer; user-select: none;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
@@ -2675,6 +2672,13 @@
                                 </div>
                             </td>
                             
+                            <!-- 狀態（移到類型和供應商中間）-->
+                            <td style="padding: 1rem;">
+                                <span style="padding: 0.375rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; white-space: nowrap; background: ${isProcessing ? '#fef3c7' : isFailed ? '#fee2e2' : '#d1fae5'}; color: ${isProcessing ? '#92400e' : isFailed ? '#991b1b' : '#065f46'};">
+                                    ${isProcessing ? '處理中' : isFailed ? '失敗' : '已完成'}
+                                </span>
+                            </td>
+                            
                             <!-- 供應商/來源/銀行 -->
                             <td class="document-vendor-cell" style="padding: 1rem;">
                                 <div style="color: #374151; line-height: 1.6;">${vendor}</div>
@@ -2688,13 +2692,6 @@
                             <!-- 日期 -->
                             <td class="document-date-cell" style="padding: 1rem;">
                                 <span style="color: #374151;">${date}</span>
-                            </td>
-                            
-                            <!-- 狀態 -->
-                            <td style="padding: 1rem;">
-                                <span style="padding: 0.375rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; white-space: nowrap; background: ${isProcessing ? '#fef3c7' : isFailed ? '#fee2e2' : '#d1fae5'}; color: ${isProcessing ? '#92400e' : isFailed ? '#991b1b' : '#065f46'};">
-                                    ${isProcessing ? '處理中' : isFailed ? '失敗' : '已完成'}
-                                </span>
                             </td>
                             
                             <!-- 上傳日期 -->
