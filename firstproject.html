@@ -1780,13 +1780,29 @@
                 if (window.innerWidth <= 768) {
                     const header = document.getElementById('project-header');
                     if (header) {
-                        header.style.marginTop = '5pt';
-                        console.log('📱 手機版：調整 header margin-top 為 5pt');
+                        header.style.setProperty('margin-top', '0', 'important');
+                        header.style.setProperty('padding-top', '5pt', 'important');
+                        console.log('📱 手機版：調整 header margin-top 為 0，padding-top 為 5pt');
+                    }
+                    // 同時調整 team-project-view 的 padding
+                    const teamProjectView = document.getElementById('team-project-view');
+                    if (teamProjectView) {
+                        teamProjectView.style.setProperty('padding-top', '0.5rem', 'important');
+                    }
+                } else {
+                    // 桌面版恢復原始樣式
+                    const header = document.getElementById('project-header');
+                    if (header) {
+                        header.style.removeProperty('margin-top');
+                        header.style.removeProperty('padding-top');
                     }
                 }
             }
-            adjustMobileLayout();
+            // 延遲執行確保 DOM 完全載入
+            setTimeout(adjustMobileLayout, 100);
+            setTimeout(adjustMobileLayout, 500);
             window.addEventListener('resize', adjustMobileLayout);
+            window.addEventListener('load', adjustMobileLayout);
             
             let userCredits = 0;
             let userEmail = '';
