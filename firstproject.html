@@ -1407,15 +1407,16 @@
         padding: 0.5rem !important;
     }
     
-    /* 隱藏部分列（手機版） */
-    table th:nth-child(3),
-    table td:nth-child(3) {
+    /* 隱藏部分列（手機版）- 只針對 dashboard 的 CREATED 列，不影響 firstproject */
+    .dashboard-table th:nth-child(3),
+    .dashboard-table td:nth-child(3) {
         display: none !important; /* 隱藏 CREATED 列 */
     }
     
     /* ==================== First Project 專用 ==================== */
     
     /* 🔧 導航欄之外所有內容向上移 10pt */
+    #team-project-view .main-content,
     .main-content {
         margin-top: -10pt !important;
         padding-top: 0 !important;
@@ -1424,13 +1425,21 @@
     /* 🔧 手機版：移除header的margin-top（覆蓋內聯樣式） */
     #team-project-view header,
     #team-project-view #project-header,
-    header#project-header {
-        margin-top: 0pt !important;
+    header#project-header,
+    #project-header {
+        margin-top: 0 !important;
         padding-top: 0 !important;
     }
     
     #team-project-view {
-        padding-top: 0.5rem !important;
+        padding-top: 0 !important;
+        margin-top: 0 !important;
+    }
+    
+    /* 🔥 強制 firstproject 表格的類型列（第3列）顯示 */
+    .table-container table th:nth-child(3),
+    .table-container table td:nth-child(3) {
+        display: table-cell !important;
     }
     
     /* 🔧 確保 Export 按鈕可點擊 */
@@ -3727,16 +3736,48 @@
             console.log('🔄 更新菜單內容...');
             updateExportMenuContent();
             
-            // 🔥 菜單已固定在頁面最外層，居中顯示
+            // 🔥 根據屏幕大小設置菜單樣式
+            if (window.innerWidth <= 768) {
+                // 手機版：居中顯示
+                menu.style.position = 'fixed';
+                menu.style.top = '50%';
+                menu.style.left = '50%';
+                menu.style.transform = 'translate(-50%, -50%)';
+                menu.style.right = 'auto';
+                menu.style.width = '90%';
+                menu.style.maxWidth = '400px';
+                console.log('📱 手機版：菜單居中顯示');
+                
+                // 顯示遮罩
+                if (overlay) {
+                    overlay.style.display = 'block';
+                }
+            } else {
+                // 桌面版：在Export按鈕下方
+                const exportBtn = document.getElementById('export-btn-desktop');
+                if (exportBtn) {
+                    const rect = exportBtn.getBoundingClientRect();
+                    menu.style.position = 'fixed';
+                    menu.style.top = (rect.bottom + 8) + 'px';
+                    menu.style.right = (window.innerWidth - rect.right) + 'px';
+                    menu.style.left = 'auto';
+                    menu.style.transform = 'none';
+                    menu.style.width = 'auto';
+                    menu.style.minWidth = '280px';
+                    menu.style.maxWidth = '400px';
+                }
+                console.log('💻 桌面版：菜單在按鈕下方');
+                
+                // 桌面版不顯示遮罩
+                if (overlay) {
+                    overlay.style.display = 'none';
+                }
+            }
+            
             menu.style.display = 'block';
             menu.classList.add('active');
             
-            // 顯示遮罩
-            if (overlay) {
-                overlay.style.display = 'block';
-            }
-            
-            console.log('✅ 菜單已顯示（獨立於父容器）');
+            console.log('✅ 菜單已顯示');
         };
         
         // 🔄 監聽 checkbox 變化，實時更新 Export 菜單
@@ -4504,6 +4545,25 @@
         
         // 暴露函數供側邊欄內的連結使用
         window.closeMobileSidebar = closeSidebar;
+        
+        // 🔥 手機版優化：移除header的margin-top
+        function optimizeMobileLayout() {
+            if (window.innerWidth <= 768) {
+                const header = document.getElementById('project-header');
+                if (header) {
+                    header.style.marginTop = '0';
+                    header.style.paddingTop = '0';
+                }
+                const teamView = document.getElementById('team-project-view');
+                if (teamView) {
+                    teamView.style.paddingTop = '0.5rem';
+                }
+            }
+        }
+        
+        // 頁面載入時和窗口調整大小時執行
+        optimizeMobileLayout();
+        window.addEventListener('resize', optimizeMobileLayout);
     </script>
     
     <!-- 🔥 Export 菜單（獨立於容器外，避免被父元素隱藏）-->
