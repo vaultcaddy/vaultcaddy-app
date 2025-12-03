@@ -1233,11 +1233,17 @@
         z-index: 999999 !important;
         width: 90% !important;
         max-width: 400px !important;
-        background: #ffffff !important;
+        background-color: #ffffff !important;
         box-shadow: 0 20px 60px rgba(0,0,0,0.3) !important;
         border-radius: 12px !important;
         padding: 1.5rem !important;
         overflow: hidden !important; /* 🔥 移除滾動 */
+    }
+    
+    /* 🔥 確保菜單內容也是白色背景 */
+    #exportMenu > div,
+    #exportMenu .export-menu-item {
+        background-color: #ffffff !important;
     }
     
     /* 🔥 Export 菜單顯示時（強制覆蓋所有樣式）*/
@@ -1307,11 +1313,17 @@
         z-index: 999999 !important;
         width: 90% !important;
         max-width: 400px !important;
-        background: #ffffff !important;
+        background-color: #ffffff !important;
         box-shadow: 0 20px 60px rgba(0,0,0,0.3) !important;
         border-radius: 12px !important;
         padding: 1.5rem !important;
         overflow: hidden !important; /* 🔥 移除滾動 */
+    }
+    
+    /* 🔥 確保菜單內容也是白色背景 */
+    #exportMenu > div,
+    #exportMenu .export-menu-item {
+        background-color: #ffffff !important;
     }
     
     /* Export 菜單背景遮罩 */
@@ -1662,11 +1674,17 @@
         z-index: 999999 !important;
         width: 90% !important;
         max-width: 400px !important;
-        background: #ffffff !important;
+        background-color: #ffffff !important;
         box-shadow: 0 20px 60px rgba(0,0,0,0.3) !important;
         border-radius: 12px !important;
         padding: 1.5rem !important;
         overflow: hidden !important; /* 🔥 移除滾動 */
+    }
+    
+    /* 🔥 確保菜單內容也是白色背景 */
+    #exportMenu > div,
+    #exportMenu .export-menu-item {
+        background-color: #ffffff !important;
     }
     
     /* Export 菜單背景遮罩 */
@@ -2204,11 +2222,17 @@
         z-index: 999999 !important;
         width: 90% !important;
         max-width: 400px !important;
-        background: #ffffff !important;
+        background-color: #ffffff !important;
         box-shadow: 0 20px 60px rgba(0,0,0,0.3) !important;
         border-radius: 12px !important;
         padding: 1.5rem !important;
         overflow: hidden !important; /* 🔥 移除滾動 */
+    }
+    
+    /* 🔥 確保菜單內容也是白色背景 */
+    #exportMenu > div,
+    #exportMenu .export-menu-item {
+        background-color: #ffffff !important;
     }
     
     /* Export 菜單背景遮罩 */
@@ -3590,7 +3614,7 @@
             });
             
             // 動態生成菜單內容
-            let menuHTML = '<div style="padding: 0.5rem 0;">';
+            let menuHTML = '<div style="padding: 0.5rem 0; background: #ffffff;">';
             
             // 銀行對帳單選項
             if (hasBankStatement) {
@@ -3820,32 +3844,34 @@
         window.exportDocuments = async function(format) {
             console.log('📤 開始導出:', format);
             
+            // 🔥 關閉菜單
+            closeExportMenu();
+            
             try {
-                // 檢查是否有勾選的文檔
-                const selectedDocs = Array.from(window.selectedDocuments || new Set());
+                // 🔥 直接從 DOM 獲取選中的文檔 ID
+                const selectedCheckboxes = document.querySelectorAll('.document-checkbox:checked');
+                const selectedDocIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.docId);
+                
+                console.log('📋 選中的文檔 ID:', selectedDocIds);
                 
                 let docsToExport;
                 
-                if (selectedDocs.length > 0) {
-                    // 如果有勾選，只導出已勾選且已完成的文檔
+                if (selectedDocIds.length > 0) {
+                    // 🔥 只導出已勾選且已完成的文檔
                     docsToExport = allDocuments.filter(doc => 
-                        selectedDocs.includes(doc.id) && 
+                        selectedDocIds.includes(doc.id) && 
                         doc.status === 'completed' && 
                         doc.processedData
                     );
-                    console.log(`📋 導出 ${docsToExport.length} 個已勾選的文檔`);
+                    console.log(`📋 導出 ${docsToExport.length} 個已勾選的文檔（共選中 ${selectedDocIds.length} 個）`);
                 } else {
-                    // 如果沒有勾選，導出所有已完成的文檔
-                    docsToExport = allDocuments.filter(doc => doc.status === 'completed' && doc.processedData);
-                    console.log(`📋 導出所有 ${docsToExport.length} 個已完成的文檔`);
+                    // 如果沒有勾選，提示用戶
+                    alert('請先選擇要導出的文檔');
+                    return;
                 }
                 
                 if (docsToExport.length === 0) {
-                    if (selectedDocs.length > 0) {
-                        alert('所選文檔中沒有已完成處理的文檔。\n請確保所選文檔已完成處理。');
-                    } else {
-                        alert('沒有可導出的文檔。\n請先勾選要導出的文檔，或確保至少有一個文檔已完成處理。');
-                    }
+                    alert('所選文檔中沒有已完成處理的文檔。\n請確保所選文檔已完成處理。');
                     return;
                 }
                 
@@ -4523,7 +4549,7 @@
     </script>
     
     <!-- 🔥 Export 菜單（獨立於容器外，避免被父元素隱藏）-->
-    <div id="exportMenu" class="export-menu" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); min-width: 280px; max-width: 400px; z-index: 999999; padding: 1rem; overflow: hidden;">
+    <div id="exportMenu" class="export-menu" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: #ffffff !important; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); min-width: 280px; max-width: 400px; z-index: 999999; padding: 1rem; overflow: hidden;">
         <!-- 動態生成 -->
     </div>
     
