@@ -883,28 +883,45 @@
                 touch-action: manipulation !important;
             }
             
-            /* 🔧 Export 菜單在手機版需要固定定位（居中顯示） */
+            /* 🔧 Export 菜單在手機版需要固定定位（居中顯示）- 全白色設計 */
             #exportMenu {
                 position: fixed !important;
-                top: 50% !important;
-                left: 50% !important;
-                transform: translate(-50%, -50%) !important;
-                right: auto !important;
-                bottom: auto !important;
+                top: 0 !important; /* 🔥 放到最上層 */
+                left: 0 !important;
+                transform: none !important;
+                right: 0 !important;
+                bottom: 0 !important;
                 margin: 0 !important;
                 z-index: 999999 !important;
-                width: 90% !important;
-                max-width: 400px !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                height: 100% !important;
                 background: #ffffff !important;
-                overflow: hidden !important; /* 🔥 移除滾動 */
-                box-shadow: 0 20px 60px rgba(0,0,0,0.3) !important;
-                border-radius: 12px !important;
-                padding: 1rem !important;
+                overflow: auto !important;
+                box-shadow: none !important; /* 🔥 無陰影 */
+                border: none !important; /* 🔥 無邊框 */
+                border-radius: 0 !important;
+                padding: 1.5rem !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: flex-start !important;
+                padding-top: 80px !important; /* 留出導航欄空間 */
             }
             
-            /* 🔥 Export 菜單背景遮罩 */
+            /* 🔥 確保菜單所有部分都是白色無邊框 */
+            #exportMenu,
+            #exportMenu > *,
+            #exportMenu > div,
+            #exportMenu .export-menu-item,
+            #exportMenu button {
+                background-color: #ffffff !important;
+                border: none !important;
+                border-color: transparent !important;
+            }
+            
+            /* 🔥 Export 菜單背景遮罩（不需要，因為菜單全屏） */
             #exportMenuOverlay {
-                z-index: 999998 !important;
+                display: none !important;
             }
             
             /* Export 菜單項更大觸控區域 */
@@ -1403,20 +1420,45 @@
             // 根據文檔類型生成菜單
             updateExportMenuForDocumentDetail();
             
-            // 🔥 手機版：居中顯示 + 背景遮罩
+            // 🔥 手機版：全屏顯示（放到最上層）
             if (window.innerWidth <= 768) {
                 menu.style.position = 'fixed';
-                menu.style.top = '50%';
-                menu.style.left = '50%';
-                menu.style.transform = 'translate(-50%, -50%)';
-                menu.style.right = 'auto';
-                menu.style.width = '90%';
-                menu.style.maxWidth = '400px';
+                menu.style.top = '0';
+                menu.style.left = '0';
+                menu.style.right = '0';
+                menu.style.bottom = '0';
+                menu.style.transform = 'none';
+                menu.style.width = '100%';
+                menu.style.maxWidth = '100%';
+                menu.style.height = '100%';
                 menu.style.zIndex = '999999';
+                menu.style.backgroundColor = '#ffffff';
+                menu.style.border = 'none';
+                menu.style.boxShadow = 'none';
+                menu.style.borderRadius = '0';
+                menu.style.paddingTop = '80px'; // 留出導航欄空間
+                menu.style.overflow = 'auto';
+                console.log('📱 手機版：菜單全屏顯示');
                 
-                // 顯示遮罩
+                // 不需要遮罩，因為菜單全屏
                 if (overlay) {
-                    overlay.style.display = 'block';
+                    overlay.style.display = 'none';
+                }
+            } else {
+                // 桌面版樣式保持不變
+                const exportBtn = document.querySelector('.export-dropdown button');
+                if (exportBtn) {
+                    const rect = exportBtn.getBoundingClientRect();
+                    menu.style.position = 'absolute';
+                    menu.style.top = '100%';
+                    menu.style.right = '0';
+                    menu.style.left = 'auto';
+                    menu.style.transform = 'none';
+                    menu.style.width = 'auto';
+                    menu.style.minWidth = '250px';
+                    menu.style.maxWidth = '400px';
+                    menu.style.height = 'auto';
+                    menu.style.paddingTop = '0.5rem';
                 }
             }
             
@@ -1434,9 +1476,24 @@
                 // 🔥 標準化文檔類型
                 docType = docType.toLowerCase();
                 console.log('📄 Export 菜單 - 文檔類型:', docType);
+            } else {
+                console.warn('⚠️ window.currentDocument 未定義，無法獲取文檔類型');
             }
             
-            let menuHTML = '<div style="padding: 0.5rem 0; background: #ffffff;">';
+            // 🔥 手機版：添加關閉按鈕
+            let menuHTML = '';
+            if (window.innerWidth <= 768) {
+                menuHTML += `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 1rem; border-bottom: 1px solid #e5e7eb; margin-bottom: 1rem;">
+                        <h2 style="margin: 0; font-size: 1.25rem; font-weight: 600; color: #1f2937;">選擇導出格式</h2>
+                        <button onclick="closeExportMenu()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6b7280; padding: 0.5rem;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+            }
+            
+            menuHTML += '<div style="padding: 0.5rem 0; background: #ffffff;">';
             
             // 根據文檔類型顯示對應選項
             if (docType === 'invoice' || docType === '發票' || docType === 'invoices') {

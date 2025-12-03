@@ -6,8 +6,13 @@
 // 調試模式
 const DEBUG_MODE = false;
 
-// 全局變量
+// 全局變量（也暴露到 window 對象以便其他腳本訪問）
 let currentDocument = null;
+// 🔥 暴露為全局變量
+Object.defineProperty(window, 'currentDocument', {
+    get: function() { return currentDocument; },
+    set: function(val) { currentDocument = val; }
+});
 let currentPageNumber = 1;
 let totalPagesCount = 1;
 let zoomLevel = 100;
