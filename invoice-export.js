@@ -259,6 +259,157 @@
     }
     
     /**
+     * 生成 IIF 格式的發票（QuickBooks Desktop）
+     * 
+     * IIF (Intuit Interchange Format) 是 QuickBooks Desktop 的導入格式
+     * 包含交易記錄（TRNS）和分割行（SPL）
+     * 
+     * @param {Array} invoices - 發票文檔數組
+     * @returns {string} IIF 內容
+     */
+    function generateIIF(invoices) {
+        console.log(`📊 生成 IIF，共 ${invoices.length} 個發票`);
+        
+        // IIF 格式標題
+        let iif = '!TRNS\tTRNSID\tTRNSTYPE\tDATE\tACCNT\tNAME\tAMOUNT\tDOCNUM\tMEMO\n';
+        iif += '!SPL\tSPLID\tTRNSTYPE\tDATE\tACCNT\tAMOUNT\tDOCNUM\tMEMO\tTAXABLE\n';
+        iif += '!ENDTRNS\n';
+        
+        invoices.forEach((invoice, index) => {
+            const data = invoice.processedData || {};
+            const trnsId = `TRNS-${index + 1}`;
+            
+            // 格式化日期為 MM/DD/YYYY
+            let date = new Date().toLocaleDateString('en-US');
+            if (data.invoiceDate || data.date || data.issueDate) {
+                const dateStr = data.invoiceDate || data.date || data.issueDate;
+                try {
+                    date = new Date(dateStr).toLocaleDateString('en-US');
+                } catch (e) {
+                    console.warn('日期格式化失敗:', dateStr);
+                }
+            }
+            
+            const vendor = data.vendorName || data.vendor || data.supplier || data.supplierName || 'Unknown Vendor';
+            const totalAmount = data.totalAmount || data.total || data.amount || data.grandTotal || '0';
+            const taxAmount = data.taxAmount || data.tax || data.gst || data.vat || '0';
+            const invoiceNumber = data.invoiceNumber || data.invoice_number || data.number || `INV-${index + 1}`;
+            
+            // 構建備註
+            let memo = data.notes || data.memo || invoice.fileName || '';
+            const items = data.items || data.lineItems || data.products || data.services || [];
+            if (items.length > 0) {
+                const itemsSummary = items.map(item => item.description || item.name || item.itemName).join(', ');
+                memo = itemsSummary.substring(0, 100);
+            }
+            
+            // 主交易行 - 應付賬款
+            iif += `TRNS\t${trnsId}\tBILL\t${date}\tAccounts Payable\t${vendor}\t${totalAmount}\t${invoiceNumber}\t${memo}\n`;
+            
+            // Split lines - 費用明細
+            if (items.length > 0) {
+                items.forEach((item, itemIndex) => {
+                    const itemAmount = item.subtotal || item.amount || item.total || 
+                        (parseFloat(item.quantity || 1) * parseFloat(item.unitPrice || item.price || 0)) || '0';
+                    const itemMemo = item.description || item.name || item.itemName || `Item ${itemIndex + 1}`;
+                    iif += `SPL\t${trnsId}-${itemIndex}\tBILL\t${date}\tExpenses\t-${itemAmount}\t${invoiceNumber}\t${itemMemo}\tN\n`;
+                });
+                
+                // 如果有稅額，添加稅額行
+                if (parseFloat(taxAmount) > 0) {
+                    iif += `SPL\t${trnsId}-TAX\tBILL\t${date}\tTax Expense\t-${taxAmount}\t${invoiceNumber}\tTax\tY\n`;
+                }
+            } else {
+                // 沒有項目明細，使用總金額
+                iif += `SPL\t${trnsId}\tBILL\t${date}\tExpenses\t-${totalAmount}\t${invoiceNumber}\t${memo}\tN\n`;
+            }
+            
+            iif += 'ENDTRNS\n';
+        });
+        
+        console.log('✅ IIF 生成成功');
+        return iif;
+    }
+    
+    /**
+     * 生成 QBO 格式的發票（QuickBooks Online）
+     * 
+     * QBO (OFX) 格式用於 QuickBooks Online 導入
+     * 
+     * @param {Array} invoices - 發票文檔數組
+     * @returns {string} QBO 內容
+     */
+    function generateQBO(invoices) {
+        console.log(`📊 生成 QBO，共 ${invoices.length} 個發票`);
+        
+        const now = new Date();
+        const dtserver = now.toISOString().replace(/[-:]/g, '').split('.')[0];
+        
+        let qbo = 'OFXHEADER:100\n';
+        qbo += 'DATA:OFXSGML\n';
+        qbo += 'VERSION:102\n';
+        qbo += 'SECURITY:NONE\n';
+        qbo += 'ENCODING:USASCII\n';
+        qbo += 'CHARSET:1252\n';
+        qbo += 'COMPRESSION:NONE\n';
+        qbo += 'OLDFILEUID:NONE\n';
+        qbo += 'NEWFILEUID:NONE\n\n';
+        qbo += '<OFX>\n';
+        qbo += '<SIGNONMSGSRSV1>\n';
+        qbo += '<SONRS>\n';
+        qbo += '<STATUS>\n';
+        qbo += '<CODE>0</CODE>\n';
+        qbo += '<SEVERITY>INFO</SEVERITY>\n';
+        qbo += '</STATUS>\n';
+        qbo += `<DTSERVER>${dtserver}</DTSERVER>\n`;
+        qbo += '<LANGUAGE>ENG</LANGUAGE>\n';
+        qbo += '</SONRS>\n';
+        qbo += '</SIGNONMSGSRSV1>\n';
+        qbo += '<BILLPAYMSGRSV1>\n';
+        qbo += '<BILLTRNRSV1>\n';
+        
+        invoices.forEach((invoice, index) => {
+            const data = invoice.processedData || {};
+            
+            // 格式化日期為 YYYYMMDD
+            let dtposted = now.toISOString().replace(/[-:]/g, '').split('T')[0];
+            if (data.invoiceDate || data.date || data.issueDate) {
+                const dateStr = data.invoiceDate || data.date || data.issueDate;
+                try {
+                    dtposted = new Date(dateStr).toISOString().replace(/[-:]/g, '').split('T')[0];
+                } catch (e) {
+                    console.warn('日期格式化失敗:', dateStr);
+                }
+            }
+            
+            const vendor = data.vendorName || data.vendor || data.supplier || data.supplierName || 'Unknown Vendor';
+            const totalAmount = parseFloat(data.totalAmount || data.total || data.amount || data.grandTotal || '0');
+            const invoiceNumber = data.invoiceNumber || data.invoice_number || data.number || `INV${index + 1}`;
+            const memo = data.notes || data.memo || invoice.fileName || '';
+            
+            // 生成交易 ID
+            const fitid = `BILL${now.getTime()}${index}`;
+            
+            qbo += '<STMTTRN>\n';
+            qbo += '<TRNTYPE>PAYMENT</TRNTYPE>\n';
+            qbo += `<DTPOSTED>${dtposted}</DTPOSTED>\n`;
+            qbo += `<TRNAMT>-${totalAmount.toFixed(2)}</TRNAMT>\n`;
+            qbo += `<FITID>${fitid}</FITID>\n`;
+            qbo += `<CHECKNUM>${invoiceNumber}</CHECKNUM>\n`;
+            qbo += `<NAME>${vendor}</NAME>\n`;
+            qbo += `<MEMO>${memo}</MEMO>\n`;
+            qbo += '</STMTTRN>\n';
+        });
+        
+        qbo += '</BILLTRNRSV1>\n';
+        qbo += '</BILLPAYMSGRSV1>\n';
+        qbo += '</OFX>';
+        
+        console.log('✅ QBO 生成成功');
+        return qbo;
+    }
+    
+    /**
      * 格式化日期為 Xero 格式 (DD/MM/YYYY)
      */
     function formatDateForXero(dateStr) {
@@ -332,6 +483,8 @@
         generateInvoiceDetailedCSV,
         generateXeroCSV,
         generateQuickBooksCSV,
+        generateIIF,
+        generateQBO,
         downloadCSV,
         
         // 便捷方法
@@ -357,6 +510,39 @@
             const csv = generateQuickBooksCSV(invoices);
             const defaultFilename = filename || `Invoice_${new Date().toISOString().split('T')[0]}_QuickBooks.csv`;
             downloadCSV(csv, defaultFilename);
+        },
+        
+        // IIF 和 QBO 便捷方法
+        exportIIF: function(invoices, filename) {
+            const content = generateIIF(invoices);
+            const defaultFilename = filename || `Invoice_${new Date().toISOString().split('T')[0]}.iif`;
+            // 直接下載 IIF
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8;' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = defaultFilename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            console.log(`✅ 文件已下載: ${defaultFilename}`);
+        },
+        
+        exportQBO: function(invoices, filename) {
+            const content = generateQBO(invoices);
+            const defaultFilename = filename || `Invoice_${new Date().toISOString().split('T')[0]}.qbo`;
+            // 直接下載 QBO
+            const blob = new Blob([content], { type: 'application/vnd.intu.qbo;charset=utf-8;' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = defaultFilename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            console.log(`✅ 文件已下載: ${defaultFilename}`);
         }
     };
     
