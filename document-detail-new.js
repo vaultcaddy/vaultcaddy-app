@@ -1268,9 +1268,16 @@ function toggleExportMenu(event) {
 }
 
 // 點擊其他地方關閉菜單
-document.addEventListener('click', function() {
+document.addEventListener('click', function(event) {
     const menu = document.getElementById('exportMenu');
-    if (menu) menu.style.display = 'none';
+    const exportBtn = document.querySelector('[onclick*="toggleExportMenu"]');
+    
+    // 如果點擊的是菜單內部或按鈕，不關閉菜單
+    if (menu && menu.style.display === 'block') {
+        if (!menu.contains(event.target) && (!exportBtn || !exportBtn.contains(event.target))) {
+            menu.style.display = 'none';
+        }
+    }
 });
 
 async function exportDocument(format) {
