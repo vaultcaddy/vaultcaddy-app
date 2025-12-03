@@ -3641,7 +3641,7 @@
                             <div style="font-size: 0.75rem; color: #6b7280;">快速對帳</div>
                         </div>
                     </button>
-                    <button onclick="exportDocuments('invoice_detail_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                    <button onclick="exportDocuments('invoice_detailed_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
                         <i class="fas fa-file-invoice" style="color: #f59e0b; width: 20px;"></i>
                         <div>
                             <div style="font-weight: 500;">完整交易數據 CSV</div>
@@ -3960,29 +3960,58 @@
                         break;
                     
                     case 'xero_csv':
-                        // Xero CSV（官方最小格式）
-                        if (window.BankStatementExport) {
-                            exportContent = window.BankStatementExport.generateXeroCSV(docsToExport);
+                        // Xero CSV（根據文檔類型導出）
+                        // 分離銀行對帳單和發票
+                        const xeroBankDocs = docsToExport.filter(d => 
+                            (d.documentType || d.type || '').toLowerCase().includes('bank')
+                        );
+                        const xeroInvoiceDocs = docsToExport.filter(d => 
+                            (d.documentType || d.type || '').toLowerCase().includes('invoice')
+                        );
+                        
+                        if (xeroBankDocs.length > 0 && window.BankStatementExport) {
+                            exportContent = window.BankStatementExport.generateXeroCSV(xeroBankDocs);
                             fileName = `BankStatement_${new Date().toISOString().split('T')[0]}_Xero.csv`;
-                            mimeType = 'text/csv;charset=utf-8;';
-                            console.log('✅ Xero CSV 導出（官方最小格式）');
+                            console.log('✅ Xero CSV 導出（銀行對帳單）');
+                        } else if (xeroInvoiceDocs.length > 0 && window.InvoiceExport) {
+                            // 🔥 發票導出 Xero 格式
+                            exportContent = window.InvoiceExport.generateXeroCSV ? 
+                                window.InvoiceExport.generateXeroCSV(xeroInvoiceDocs) :
+                                window.InvoiceExport.generateInvoiceSummaryCSV(xeroInvoiceDocs);
+                            fileName = `Invoice_${new Date().toISOString().split('T')[0]}_Xero.csv`;
+                            console.log('✅ Xero CSV 導出（發票）');
                         } else {
-                            alert('銀行對帳單導出模塊未載入，請刷新頁面後重試');
+                            alert('沒有可導出的文檔或導出模塊未載入');
                             return;
                         }
+                        mimeType = 'text/csv;charset=utf-8;';
                         break;
                     
                     case 'quickbooks_csv':
-                        // QuickBooks CSV（官方最小格式）
-                        if (window.BankStatementExport) {
-                            exportContent = window.BankStatementExport.generateQuickBooksCSV(docsToExport);
+                        // QuickBooks CSV（根據文檔類型導出）
+                        const qbBankDocs = docsToExport.filter(d => 
+                            (d.documentType || d.type || '').toLowerCase().includes('bank')
+                        );
+                        const qbInvoiceDocs = docsToExport.filter(d => 
+                            (d.documentType || d.type || '').toLowerCase().includes('invoice')
+                        );
+                        
+                        if (qbBankDocs.length > 0 && window.BankStatementExport) {
+                            exportContent = window.BankStatementExport.generateQuickBooksCSV(qbBankDocs);
                             fileName = `BankStatement_${new Date().toISOString().split('T')[0]}_QuickBooks.csv`;
-                            mimeType = 'text/csv;charset=utf-8;';
-                            console.log('✅ QuickBooks CSV 導出（官方最小格式）');
+                            console.log('✅ QuickBooks CSV 導出（銀行對帳單）');
+                        } else if (qbInvoiceDocs.length > 0 && window.InvoiceExport) {
+                            // 🔥 發票導出 QuickBooks 格式
+                            exportContent = window.InvoiceExport.generateQuickBooksCSV ? 
+                                window.InvoiceExport.generateQuickBooksCSV(qbInvoiceDocs) :
+                                window.InvoiceExport.generateInvoiceSummaryCSV(qbInvoiceDocs);
+                            fileName = `Invoice_${new Date().toISOString().split('T')[0]}_QuickBooks.csv`;
+                            console.log('✅ QuickBooks CSV 導出（發票）');
                         } else {
-                            alert('銀行對帳單導出模塊未載入，請刷新頁面後重試');
+                            alert('沒有可導出的文檔或導出模塊未載入');
                             return;
                         }
+                        mimeType = 'text/csv;charset=utf-8;';
                         break;
                     
                     case 'invoice_summary_csv':

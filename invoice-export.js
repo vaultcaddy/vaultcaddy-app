@@ -120,6 +120,179 @@
     }
     
     /**
+     * 生成 Xero 格式的發票 CSV
+     * 
+     * Xero 發票/賬單導入格式：
+     * ContactName, InvoiceNumber, InvoiceDate, DueDate, Description, Quantity, UnitAmount, AccountCode
+     * 
+     * @param {Array} invoices - 發票文檔數組
+     * @returns {string} CSV 內容
+     */
+    function generateXeroCSV(invoices) {
+        console.log(`📊 生成 Xero CSV，共 ${invoices.length} 個發票`);
+        
+        const headers = ['*ContactName', '*InvoiceNumber', '*InvoiceDate', 'DueDate', '*Description', 'Quantity', 'UnitAmount', 'AccountCode', 'TaxType'];
+        const rows = [headers];
+        
+        invoices.forEach(invoice => {
+            const data = invoice.processedData || {};
+            
+            // 提取基本信息
+            const contactName = data.vendorName || data.vendor || data.supplier || data.supplierName || 'Unknown Vendor';
+            const invoiceNumber = data.invoiceNumber || data.invoice_number || data.number || '';
+            const invoiceDate = formatDateForXero(data.invoiceDate || data.date || data.issueDate || '');
+            const dueDate = formatDateForXero(data.dueDate || '');
+            const total = data.totalAmount || data.total || data.amount || '0';
+            
+            // 提取項目列表
+            const items = data.items || data.lineItems || data.products || data.services || [];
+            
+            if (items.length === 0) {
+                // 如果沒有項目明細，至少添加一行
+                const row = [
+                    contactName,
+                    invoiceNumber,
+                    invoiceDate,
+                    dueDate,
+                    'Invoice Total',
+                    '1',
+                    total,
+                    '',
+                    ''
+                ];
+                rows.push(row);
+            } else {
+                // 為每個項目添加一行
+                items.forEach(item => {
+                    const description = item.description || item.itemName || item.name || item.product || '';
+                    const quantity = item.quantity || item.qty || '1';
+                    const unitPrice = item.unitPrice || item.price || item.rate || item.unit_price || '0';
+                    
+                    const row = [
+                        contactName,
+                        invoiceNumber,
+                        invoiceDate,
+                        dueDate,
+                        description,
+                        quantity,
+                        unitPrice,
+                        '',
+                        ''
+                    ];
+                    rows.push(row);
+                });
+            }
+        });
+        
+        const csv = rows.map(row => row.map(escapeCSV).join(',')).join('\n');
+        console.log('✅ Xero CSV 生成成功');
+        return csv;
+    }
+    
+    /**
+     * 生成 QuickBooks 格式的發票 CSV
+     * 
+     * QuickBooks 發票導入格式：
+     * Vendor, RefNumber, TxnDate, DueDate, ItemDescription, Quantity, Rate, Amount
+     * 
+     * @param {Array} invoices - 發票文檔數組
+     * @returns {string} CSV 內容
+     */
+    function generateQuickBooksCSV(invoices) {
+        console.log(`📊 生成 QuickBooks CSV，共 ${invoices.length} 個發票`);
+        
+        const headers = ['Vendor', 'RefNumber', 'TxnDate', 'DueDate', 'ItemDescription', 'Quantity', 'Rate', 'Amount'];
+        const rows = [headers];
+        
+        invoices.forEach(invoice => {
+            const data = invoice.processedData || {};
+            
+            // 提取基本信息
+            const vendor = data.vendorName || data.vendor || data.supplier || data.supplierName || 'Unknown Vendor';
+            const refNumber = data.invoiceNumber || data.invoice_number || data.number || '';
+            const txnDate = formatDateForQuickBooks(data.invoiceDate || data.date || data.issueDate || '');
+            const dueDate = formatDateForQuickBooks(data.dueDate || '');
+            const total = data.totalAmount || data.total || data.amount || '0';
+            
+            // 提取項目列表
+            const items = data.items || data.lineItems || data.products || data.services || [];
+            
+            if (items.length === 0) {
+                // 如果沒有項目明細，至少添加一行
+                const row = [
+                    vendor,
+                    refNumber,
+                    txnDate,
+                    dueDate,
+                    'Invoice Total',
+                    '1',
+                    total,
+                    total
+                ];
+                rows.push(row);
+            } else {
+                // 為每個項目添加一行
+                items.forEach(item => {
+                    const description = item.description || item.itemName || item.name || item.product || '';
+                    const quantity = item.quantity || item.qty || '1';
+                    const rate = item.unitPrice || item.price || item.rate || item.unit_price || '0';
+                    const amount = item.subtotal || item.amount || item.total || (parseFloat(quantity) * parseFloat(rate)) || '0';
+                    
+                    const row = [
+                        vendor,
+                        refNumber,
+                        txnDate,
+                        dueDate,
+                        description,
+                        quantity,
+                        rate,
+                        amount
+                    ];
+                    rows.push(row);
+                });
+            }
+        });
+        
+        const csv = rows.map(row => row.map(escapeCSV).join(',')).join('\n');
+        console.log('✅ QuickBooks CSV 生成成功');
+        return csv;
+    }
+    
+    /**
+     * 格式化日期為 Xero 格式 (DD/MM/YYYY)
+     */
+    function formatDateForXero(dateStr) {
+        if (!dateStr) return '';
+        try {
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime())) return dateStr;
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+        } catch (e) {
+            return dateStr;
+        }
+    }
+    
+    /**
+     * 格式化日期為 QuickBooks 格式 (MM/DD/YYYY)
+     */
+    function formatDateForQuickBooks(dateStr) {
+        if (!dateStr) return '';
+        try {
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime())) return dateStr;
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${month}/${day}/${year}`;
+        } catch (e) {
+            return dateStr;
+        }
+    }
+    
+    /**
      * Escape CSV 字段，處理特殊字符
      * 
      * @param {*} value - 要轉義的值
@@ -157,6 +330,8 @@
     window.InvoiceExport = {
         generateInvoiceSummaryCSV,
         generateInvoiceDetailedCSV,
+        generateXeroCSV,
+        generateQuickBooksCSV,
         downloadCSV,
         
         // 便捷方法
@@ -169,6 +344,18 @@
         exportDetailed: function(invoices, filename) {
             const csv = generateInvoiceDetailedCSV(invoices);
             const defaultFilename = filename || `Invoice_Detailed_${new Date().toISOString().split('T')[0]}.csv`;
+            downloadCSV(csv, defaultFilename);
+        },
+        
+        exportXero: function(invoices, filename) {
+            const csv = generateXeroCSV(invoices);
+            const defaultFilename = filename || `Invoice_${new Date().toISOString().split('T')[0]}_Xero.csv`;
+            downloadCSV(csv, defaultFilename);
+        },
+        
+        exportQuickBooks: function(invoices, filename) {
+            const csv = generateQuickBooksCSV(invoices);
+            const defaultFilename = filename || `Invoice_${new Date().toISOString().split('T')[0]}_QuickBooks.csv`;
             downloadCSV(csv, defaultFilename);
         }
     };
