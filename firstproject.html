@@ -247,6 +247,17 @@
             margin-top: 30pt;
         }
         
+        /* 🔥 手機版：減少內容距離 */
+        @media (max-width: 768px) {
+            #project-header {
+                margin-top: 0 !important;
+                padding-top: 0 !important;
+            }
+            #team-project-view {
+                padding-top: 0.5rem !important;
+            }
+        }
+        
         .page-header {
             padding: 2rem;
             border-bottom: 1px solid #e2e8f0;
@@ -1786,25 +1797,33 @@
                     const header = document.getElementById('project-header');
                     if (header) {
                         header.style.setProperty('margin-top', '0', 'important');
-                        header.style.setProperty('padding-top', '5pt', 'important');
-                        console.log('📱 手機版：調整 header margin-top 為 0，padding-top 為 5pt');
+                        header.style.setProperty('padding-top', '0', 'important');
+                        console.log('📱 手機版：調整 header margin-top 和 padding-top 為 0');
                     }
                     // 同時調整 team-project-view 的 padding
                     const teamProjectView = document.getElementById('team-project-view');
                     if (teamProjectView) {
                         teamProjectView.style.setProperty('padding-top', '0.5rem', 'important');
+                        console.log('📱 手機版：調整 team-project-view padding-top 為 0.5rem');
                     }
                 } else {
                     // 桌面版恢復原始樣式
                     const header = document.getElementById('project-header');
                     if (header) {
-                        header.style.removeProperty('margin-top');
+                        header.style.marginTop = '30pt';
                         header.style.removeProperty('padding-top');
+                    }
+                    const teamProjectView = document.getElementById('team-project-view');
+                    if (teamProjectView) {
+                        teamProjectView.style.removeProperty('padding-top');
                     }
                 }
             }
+            // 立即執行
+            adjustMobileLayout();
             // 延遲執行確保 DOM 完全載入
             setTimeout(adjustMobileLayout, 100);
+            setTimeout(adjustMobileLayout, 300);
             setTimeout(adjustMobileLayout, 500);
             window.addEventListener('resize', adjustMobileLayout);
             window.addEventListener('load', adjustMobileLayout);
