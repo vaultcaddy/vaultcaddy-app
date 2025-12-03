@@ -883,27 +883,26 @@
                 touch-action: manipulation !important;
             }
             
-            /* 🔧 Export 菜單在手機版需要固定定位（居中顯示）- 全白色設計 */
-            /* 🔥 注意：默認隱藏，只在 display: block 時生效 */
+            /* 🔧 Export 菜單在手機版居中顯示（恢復框架設計） */
             #exportMenu[style*="display: block"] {
                 position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                transform: none !important;
-                right: 0 !important;
-                bottom: 0 !important;
+                top: 50% !important;
+                left: 50% !important;
+                transform: translate(-50%, -50%) !important;
+                right: auto !important;
+                bottom: auto !important;
                 margin: 0 !important;
-                z-index: 999999 !important;
-                width: 100% !important;
-                max-width: 100% !important;
-                height: 100% !important;
+                z-index: 9999999 !important; /* 🔥 確保在最上層 */
+                width: 90% !important;
+                max-width: 400px !important;
+                height: auto !important;
+                max-height: 80vh !important;
                 background: #ffffff !important;
                 overflow: auto !important;
                 box-shadow: none !important;
                 border: none !important;
-                border-radius: 0 !important;
+                border-radius: 12px !important;
                 padding: 1.5rem !important;
-                padding-top: 80px !important;
             }
             
             /* 🔥 確保菜單所有部分都是白色無邊框 */
@@ -916,9 +915,15 @@
                 border-color: transparent !important;
             }
             
-            /* 🔥 Export 菜單背景遮罩（不需要，因為菜單全屏） */
+            /* 🔥 Export 菜單背景遮罩 */
             #exportMenuOverlay {
-                display: none !important;
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                background: rgba(0, 0, 0, 0.5) !important;
+                z-index: 9999998 !important;
             }
             
             /* Export 菜單項更大觸控區域 */
@@ -1196,11 +1201,7 @@
         
         <!-- 右側數據面板 -->
         <div class="data-panel">
-            <div class="tabs">
-                <button class="tab active">Results</button>
-                <button class="tab">Export</button>
-                <button class="tab">JSON</button>
-            </div>
+            <!-- 🔥 已移除 "Results Export JSON" 標籤頁 -->
             
             <!-- 文檔詳情（根據類型動態顯示） -->
             <div id="documentDetailsSection">
@@ -1417,29 +1418,37 @@
             // 根據文檔類型生成菜單
             updateExportMenuForDocumentDetail();
             
-            // 🔥 手機版：全屏顯示（放到最上層）
+            // 🔥 手機版：居中顯示（恢復框架設計）
             if (window.innerWidth <= 768) {
                 menu.style.position = 'fixed';
-                menu.style.top = '0';
-                menu.style.left = '0';
-                menu.style.right = '0';
-                menu.style.bottom = '0';
-                menu.style.transform = 'none';
-                menu.style.width = '100%';
-                menu.style.maxWidth = '100%';
-                menu.style.height = '100%';
-                menu.style.zIndex = '999999';
+                menu.style.top = '50%';
+                menu.style.left = '50%';
+                menu.style.transform = 'translate(-50%, -50%)';
+                menu.style.right = 'auto';
+                menu.style.bottom = 'auto';
+                menu.style.width = '90%';
+                menu.style.maxWidth = '400px';
+                menu.style.height = 'auto';
+                menu.style.maxHeight = '80vh';
+                menu.style.zIndex = '9999999'; // 確保在最上層
                 menu.style.backgroundColor = '#ffffff';
                 menu.style.border = 'none';
                 menu.style.boxShadow = 'none';
-                menu.style.borderRadius = '0';
-                menu.style.paddingTop = '80px'; // 留出導航欄空間
+                menu.style.borderRadius = '12px';
+                menu.style.padding = '1.5rem';
                 menu.style.overflow = 'auto';
-                console.log('📱 手機版：菜單全屏顯示');
+                console.log('📱 手機版：菜單居中顯示');
                 
-                // 不需要遮罩，因為菜單全屏
+                // 顯示遮罩
                 if (overlay) {
-                    overlay.style.display = 'none';
+                    overlay.style.display = 'block';
+                    overlay.style.position = 'fixed';
+                    overlay.style.top = '0';
+                    overlay.style.left = '0';
+                    overlay.style.width = '100vw';
+                    overlay.style.height = '100vh';
+                    overlay.style.background = 'rgba(0,0,0,0.5)';
+                    overlay.style.zIndex = '9999998';
                 }
             } else {
                 // 桌面版樣式保持不變
