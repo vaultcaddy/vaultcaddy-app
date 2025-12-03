@@ -61,6 +61,44 @@
                 window.location.href = 'dashboard.html';
             }
         }
+        
+        // 🔥 刪除當前文檔
+        async function deleteCurrentDocument() {
+            const confirmDelete = confirm('確定要刪除此文檔嗎？此操作無法撤銷。');
+            if (!confirmDelete) return;
+            
+            try {
+                const params = new URLSearchParams(window.location.search);
+                const projectId = params.get('project');
+                const documentId = params.get('id');
+                
+                if (!projectId || !documentId) {
+                    alert('無法獲取文檔信息');
+                    return;
+                }
+                
+                // 從 Firestore 刪除文檔
+                if (firebase && firebase.firestore) {
+                    await firebase.firestore()
+                        .collection('projects')
+                        .doc(projectId)
+                        .collection('documents')
+                        .doc(documentId)
+                        .delete();
+                    
+                    console.log('✅ 文檔已刪除:', documentId);
+                    alert('文檔已成功刪除');
+                    
+                    // 返回儀表板
+                    goBackToDashboard();
+                } else {
+                    alert('無法連接到數據庫');
+                }
+            } catch (error) {
+                console.error('❌ 刪除文檔失敗:', error);
+                alert('刪除文檔失敗: ' + error.message);
+            }
+        }
     </script>
     
     <style>
@@ -629,7 +667,8 @@
                 display: block !important;
             }
             
-            /* 🔥 手機版：隱藏桌面版 logo 文字 */
+            /* 🔥 手機版：隱藏桌面版 logo 和文字 */
+            .desktop-logo,
             .desktop-logo-text {
                 display: none !important;
             }
@@ -707,7 +746,7 @@
             /* 詳情頁面頂部 - 更現代化 */
             .detail-header {
                 padding: 0.75rem 1rem !important;
-                padding-top: 5pt !important; /* 距離導航欄5pt */
+                padding-top: 0 !important; /* 移除與導航欄的空白 */
                 flex-direction: column !important;
                 align-items: flex-start !important;
                 gap: 0.75rem !important;
@@ -778,9 +817,17 @@
                 padding: 0.75rem 1rem !important;
                 font-size: 0.875rem !important;
                 border-radius: 8px !important;
-                background: #f3f4f6 !important;
-                border: 1px solid #e5e7eb !important;
-                color: #374151 !important;
+            }
+            
+            .detail-header .top-actions .icon-btn.delete {
+                background: #fee2e2 !important;
+                border: 1px solid #fecaca !important;
+                color: #ef4444 !important;
+                justify-content: center !important;
+            }
+            
+            .detail-header .top-actions .icon-btn.delete:hover {
+                background: #fecaca !important;
             }
             
             
@@ -1077,8 +1124,9 @@
                             <!-- 動態生成的菜單內容 -->
                         </div>
                     </div>
-                    <button class="icon-btn">
-                        <i class="fas fa-ellipsis-v"></i>
+                    <button class="icon-btn delete" onclick="deleteCurrentDocument()" title="刪除文檔" style="background: #fee2e2; border: 1px solid #fecaca; color: #ef4444; padding: 0.5rem 1rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-trash"></i>
+                        <span>Delete</span>
                     </button>
                 </div>
             </div>
