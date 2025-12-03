@@ -1012,7 +1012,7 @@
                             <tbody id="credits-history-tbody">
                                 <!-- 動態載入記錄 -->
                                 <tr>
-                                    <td colspan="4" style="text-align: center; padding: 3rem; color: #9ca3af;">
+                                    <td colspan="3" style="text-align: center; padding: 3rem; color: #9ca3af;">
                                         <i class="fas fa-history" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
                                         <div>載入記錄中...</div>
                                     </td>
@@ -1380,13 +1380,14 @@
         // 載入 Credits 歷史記錄
         async function loadCreditsHistory() {
             const tbody = document.getElementById('credits-history-tbody');
+            const filter = document.getElementById('history-month-filter').value;
             
             try {
                 // 檢查是否有登入用戶
                 if (!window.simpleAuth || !window.simpleAuth.currentUser) {
                     tbody.innerHTML = `
                         <tr>
-                            <td colspan="4" style="text-align: center; padding: 2rem; color: #9ca3af;">
+                            <td colspan="3" style="text-align: center; padding: 2rem; color: #9ca3af;">
                                 請先登入以查看記錄
                             </td>
                         </tr>
@@ -1396,19 +1397,32 @@
                 
                 const userId = window.simpleAuth.currentUser.uid;
                 
-                // 從 Firestore 獲取 Credits 歷史記錄（最多顯示10個）
-                const historySnapshot = await firebase.firestore()
+                // 🔥 構建查詢，支持月份過濾
+                let query = firebase.firestore()
                     .collection('users')
                     .doc(userId)
                     .collection('creditsHistory')
-                    .orderBy('createdAt', 'desc')
-                    .limit(10)
-                    .get();
+                    .orderBy('createdAt', 'desc');
+                
+                // 如果選擇了特定月份，添加日期範圍過濾
+                if (filter !== 'all') {
+                    const [year, month] = filter.split('-').map(Number);
+                    const startDate = new Date(year, month - 1, 1); // 月份的第一天
+                    const endDate = new Date(year, month, 0, 23, 59, 59); // 月份的最後一天
+                    
+                    query = query
+                        .where('createdAt', '>=', startDate)
+                        .where('createdAt', '<=', endDate);
+                    
+                    console.log(`📅 過濾 ${year}年${month}月 的記錄`);
+                }
+                
+                const historySnapshot = await query.limit(50).get();
                 
                 if (historySnapshot.empty) {
                     tbody.innerHTML = `
                         <tr>
-                            <td colspan="4" style="text-align: center; padding: 2rem; color: #9ca3af;">
+                            <td colspan="3" style="text-align: center; padding: 2rem; color: #9ca3af;">
                                 <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5;"></i>
                                 <div>暫無記錄</div>
                             </td>
