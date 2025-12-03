@@ -906,7 +906,7 @@
                         <div style="margin-bottom: 1rem;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
                                 <span id="credits-used-text" style="font-size: 1.5rem; font-weight: 700; color: #1f2937;">200</span>
-                                <span style="font-size: 0.875rem; color: #6b7280;">/ <span id="credits-total-text">200</span></span>
+                                <!-- 🔥 刪除了 "/ 總額" 顯示 -->
                             </div>
                             
                             <!-- 進度條 -->
@@ -1005,7 +1005,7 @@
                                 <tr>
                                     <th style="text-align: left; padding: 1rem; font-weight: 600; color: #6b7280; font-size: 0.875rem; border-bottom: 2px solid #e5e7eb;">日期</th>
                                     <th style="text-align: left; padding: 1rem; font-weight: 600; color: #6b7280; font-size: 0.875rem; border-bottom: 2px solid #e5e7eb;">描述</th>
-                                    <th style="text-align: center; padding: 1rem; font-weight: 600; color: #6b7280; font-size: 0.875rem; border-bottom: 2px solid #e5e7eb;">類型</th>
+                                    <!-- 🔥 刪除了類型列 -->
                                     <th style="text-align: right; padding: 1rem; font-weight: 600; color: #6b7280; font-size: 0.875rem; border-bottom: 2px solid #e5e7eb;">Credits</th>
                                 </tr>
                             </thead>
@@ -1291,10 +1291,10 @@
                 
                 // 更新重置日期說明
                 if (currentPlan === 'Free') {
-                    // Free Plan 顯示一次性說明
+                    // 🔥 Free Plan 不顯示任何說明（刪除了"一次性 Credits，用完即止。"）
                     const resetDateElement = document.getElementById('credits-reset-date');
                     if (resetDateElement && resetDateElement.parentElement) {
-                        resetDateElement.parentElement.innerHTML = '<div style="font-size: 0.75rem; color: #9ca3af; margin-top: 0.25rem;">一次性 Credits，用完即止。</div>';
+                        resetDateElement.parentElement.innerHTML = '';
                     }
                 } else {
                     // 付費計劃顯示重置日期
@@ -1447,7 +1447,8 @@
                         type = '使用';
                         typeColor = '#ef4444';
                         sign = '-';
-                        description = record.metadata?.projectName || '文檔處理';
+                        // 🔥 如果是文檔處理，顯示"文件轉換"
+                        description = record.metadata?.projectName || '文件轉換';
                     } else if (record.type === 'reset') {
                         type = '重置';
                         typeColor = '#6b7280';
@@ -1457,18 +1458,15 @@
                         type = '其他';
                         typeColor = '#9ca3af';
                         sign = '';
-                        description = '其他操作';
+                        // 🔥 將"其他操作"改為"文件轉換"
+                        description = '文件轉換';
                     }
                     
+                    // 🔥 刪除了類型列
                     rows.push(`
                         <tr style="border-bottom: 1px solid #e5e7eb;">
                             <td style="padding: 1rem; color: #6b7280; font-size: 0.875rem;">${date}</td>
                             <td style="padding: 1rem; color: #1f2937;">${description}</td>
-                            <td style="padding: 1rem; text-align: center;">
-                                <span style="display: inline-flex; padding: 0.25rem 0.75rem; background: ${typeColor}15; color: ${typeColor}; border-radius: 12px; font-size: 0.875rem; font-weight: 500;">
-                                    ${type}
-                                </span>
-                            </td>
                             <td style="padding: 1rem; text-align: right; font-weight: 600; color: ${typeColor};">
                                 ${sign}${record.amount || 0}
                             </td>
@@ -1484,7 +1482,7 @@
                 console.error('載入 Credits 歷史記錄失敗:', error);
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="4" style="text-align: center; padding: 2rem; color: #ef4444;">
+                        <td colspan="3" style="text-align: center; padding: 2rem; color: #ef4444;">
                             <i class="fas fa-exclamation-circle" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
                             <div>載入記錄失敗</div>
                             <div style="font-size: 0.875rem; margin-top: 0.5rem; color: #9ca3af;">${error.message}</div>
