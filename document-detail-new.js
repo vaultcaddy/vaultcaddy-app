@@ -611,14 +611,14 @@ function displayInvoiceContent(data) {
     const detailsSection = document.getElementById('documentDetailsSection');
     const dataSection = document.getElementById('documentDataSection');
     
-    // 發票詳情卡片（改為4行單列布局）
+    // 發票詳情卡片（桌面版2列，手機版1列）
     detailsSection.innerHTML = `
         <div class="bank-details-card">
             <h3 class="card-title" style="margin-bottom: 1.5rem;">
                 <i class="fas fa-file-invoice" style="color: #3b82f6; margin-right: 0.5rem;"></i>
                 發票詳情
             </h3>
-            <div style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
+            <div class="invoice-details-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
                     <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">發票號碼</label>
                     <input type="text" id="invoiceNumber" value="${data.invoiceNumber || data.invoice_number || '—'}" 
@@ -643,7 +643,27 @@ function displayInvoiceContent(data) {
                            onchange="autoSaveInvoiceDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; font-weight: 600; color: #10b981; background: white;">
                 </div>
+                <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">電話</label>
+                    <input type="tel" id="vendorPhone" value="${data.phone || data.vendorPhone || '—'}" 
+                           onchange="autoSaveInvoiceDetails()"
+                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
+                </div>
+                <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">Email</label>
+                    <input type="email" id="vendorEmail" value="${data.email || data.vendorEmail || '—'}" 
+                           onchange="autoSaveInvoiceDetails()"
+                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
+                </div>
             </div>
+            <style>
+                /* 手機版改為1列 */
+                @media (max-width: 768px) {
+                    .invoice-details-grid {
+                        grid-template-columns: 1fr !important;
+                    }
+                }
+            </style>
         </div>
     `;
     
@@ -1208,6 +1228,33 @@ async function autoSaveAllChanges() {
 
 // 自動保存發票詳情（觸發自動保存）
 async function autoSaveInvoiceDetails() {
+    // 獲取所有發票字段
+    const invoiceNumber = document.getElementById('invoiceNumber')?.value;
+    const invoiceDate = document.getElementById('invoiceDate')?.value;
+    const vendor = document.getElementById('vendor')?.value;
+    const totalAmount = document.getElementById('totalAmount')?.value;
+    const vendorPhone = document.getElementById('vendorPhone')?.value;
+    const vendorEmail = document.getElementById('vendorEmail')?.value;
+    
+    // 更新 currentDocument
+    if (currentDocument && currentDocument.processedData) {
+        currentDocument.processedData = {
+            ...currentDocument.processedData,
+            invoiceNumber: invoiceNumber,
+            invoice_number: invoiceNumber,
+            date: invoiceDate,
+            invoice_date: invoiceDate,
+            vendor: vendor,
+            supplier: vendor,
+            total: totalAmount,
+            totalAmount: totalAmount,
+            phone: vendorPhone,
+            vendorPhone: vendorPhone,
+            email: vendorEmail,
+            vendorEmail: vendorEmail
+        };
+    }
+    
     markAsChanged();
 }
 
