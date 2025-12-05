@@ -447,6 +447,10 @@
                 <div class="form-switch">
                     還沒有帳戶？ <a href="#" onclick="switchToRegister()">立即註冊</a>
                 </div>
+                
+                <div class="form-switch" style="margin-top: 1rem;">
+                    <a href="forgot-password.html">忘記帳戶密碼？</a>
+                </div>
 
                 <div class="divider">
                     <span>或</span>
@@ -692,10 +696,26 @@
                 showNotification('Google 登入成功！正在跳轉...', 'success');
                 // SimpleAuth 會自動重定向到 dashboard.html
             } catch (error) {
+                console.error('❌ Google 登入錯誤:', error);
+                
+                let errorMessage = 'Google 登入失敗';
+                
                 if (error.code === 'auth/popup-closed-by-user') {
-                    showNotification('您取消了 Google 登入', 'info');
+                    errorMessage = '您取消了 Google 登入';
+                    showNotification(errorMessage, 'info');
+                } else if (error.code === 'auth/unauthorized-domain') {
+                    // Firebase 域名未授權錯誤
+                    errorMessage = 'Firebase 配置錯誤：請在 Firebase Console > Authentication > Settings > Authorized domains 中添加您的域名 (vaultcaddy.com)';
+                    console.error('🔥 Firebase 授權域名配置錯誤');
+                    console.error('📋 解決方法：');
+                    console.error('1. 前往 Firebase Console: https://console.firebase.google.com');
+                    console.error('2. 選擇您的專案');
+                    console.error('3. 進入 Authentication > Settings');
+                    console.error('4. 在 "Authorized domains" 中添加: vaultcaddy.com');
+                    showNotification(errorMessage, 'error');
                 } else {
-                    showNotification(error.message || 'Google 登入失敗', 'error');
+                    errorMessage = error.message || 'Google 登入失敗';
+                    showNotification(errorMessage, 'error');
                 }
             }
         }
