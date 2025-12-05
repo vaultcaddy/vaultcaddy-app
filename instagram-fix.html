@@ -1,0 +1,115 @@
+<!-- Instagram WebView 兼容性测试页面 -->
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram 兼容性测试</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            padding: 2rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .status {
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 8px;
+            background: #f3f4f6;
+        }
+        .success { background: #d1fae5; color: #065f46; }
+        .error { background: #fee2e2; color: #991b1b; }
+        .info { background: #dbeafe; color: #1e40af; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Instagram WebView 兼容性测试</h1>
+    
+    <div id="results">
+        <div class="status">检测中...</div>
+    </div>
+    
+    <script>
+        const results = document.getElementById('results');
+        
+        function addStatus(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.textContent = message;
+            results.appendChild(div);
+        }
+        
+        // 清除初始消息
+        results.innerHTML = '';
+        
+        // 1. 检测浏览器环境
+        const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+        const isInstagram = (userAgent.indexOf('Instagram') > -1);
+        const isFBWebView = (userAgent.indexOf('FBAN') > -1 || userAgent.indexOf('FBAV') > -1);
+        
+        addStatus(`User Agent: ${userAgent}`, 'info');
+        addStatus(`Instagram WebView: ${isInstagram ? '是' : '否'}`, isInstagram ? 'success' : 'info');
+        addStatus(`Facebook WebView: ${isFBWebView ? '是' : '否'}`, isFBWebView ? 'success' : 'info');
+        
+        // 2. 检测JavaScript功能
+        addStatus('✅ JavaScript 正常执行', 'success');
+        
+        // 3. 检测DOM API
+        try {
+            document.createElement('div');
+            addStatus('✅ DOM API 可用', 'success');
+        } catch (e) {
+            addStatus('❌ DOM API 错误: ' + e.message, 'error');
+        }
+        
+        // 4. 检测Fetch API
+        if (typeof fetch !== 'undefined') {
+            addStatus('✅ Fetch API 可用', 'success');
+        } else {
+            addStatus('❌ Fetch API 不可用', 'error');
+        }
+        
+        // 5. 检测Local Storage
+        try {
+            localStorage.setItem('test', 'test');
+            localStorage.removeItem('test');
+            addStatus('✅ Local Storage 可用', 'success');
+        } catch (e) {
+            addStatus('❌ Local Storage 错误: ' + e.message, 'error');
+        }
+        
+        // 6. 检测网络连接
+        fetch('https://vaultcaddy.com/index.html')
+            .then(response => {
+                addStatus('✅ 网络连接正常', 'success');
+                addStatus(`状态码: ${response.status}`, 'info');
+            })
+            .catch(err => {
+                addStatus('❌ 网络连接失败: ' + err.message, 'error');
+            });
+        
+        // 7. 检测Firebase CDN
+        fetch('https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js', { method: 'HEAD' })
+            .then(response => {
+                if (response.ok) {
+                    addStatus('✅ Firebase CDN 可访问', 'success');
+                } else {
+                    addStatus('❌ Firebase CDN 访问失败: ' + response.status, 'error');
+                }
+            })
+            .catch(err => {
+                addStatus('❌ Firebase CDN 错误: ' + err.message, 'error');
+            });
+        
+        // 8. 检测CSS加载
+        const style = window.getComputedStyle(document.body);
+        addStatus(`✅ CSS 加载正常 (字体: ${style.fontFamily})`, 'success');
+        
+        // 9. 显示窗口信息
+        addStatus(`窗口大小: ${window.innerWidth}x${window.innerHeight}`, 'info');
+        addStatus(`屏幕大小: ${screen.width}x${screen.height}`, 'info');
+    </script>
+</body>
+</html>
+
