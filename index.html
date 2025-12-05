@@ -688,37 +688,55 @@
                     }
                 });
                 
-                // 2. 功能組內部內容緊湊化（減少間距）
+                // 2. 功能組優化（手機版）
                 const featureContainers = document.querySelectorAll('div[style*="border-radius: 24px"][style*="padding: 4rem"]');
                 featureContainers.forEach((container, index) => {
-                    // 減少徽章的 margin-bottom
+                    // 徽章置中
                     const badges = container.querySelectorAll('.feature-badge');
                     badges.forEach(badge => {
+                        badge.style.display = 'block';
+                        badge.style.textAlign = 'center';
+                        badge.style.marginLeft = 'auto';
+                        badge.style.marginRight = 'auto';
                         badge.style.marginBottom = '0.5rem';
+                        badge.style.width = 'fit-content';
                     });
                     
-                    // 減少標題的 margin-bottom
+                    // 標題置中
                     const titles = container.querySelectorAll('h2');
                     titles.forEach(title => {
+                        title.style.textAlign = 'center';
                         title.style.marginBottom = '0.75rem';
                     });
                     
-                    // 減少描述段落之間的間距
-                    const textSections = container.querySelectorAll('.feature-text-section, div[style*="space-y"]');
+                    // 減少每段文字間距 10pt
+                    const textSections = container.querySelectorAll('.feature-text-section');
                     textSections.forEach(section => {
-                        const divs = section.querySelectorAll('div[style*="margin-bottom"]');
-                        divs.forEach(div => {
-                            div.style.marginBottom = '0.5rem';
+                        const descDivs = section.querySelectorAll('div[style*="margin-bottom: 1.5rem"]');
+                        descDivs.forEach((div, divIndex) => {
+                            if (divIndex === descDivs.length - 1) {
+                                // 最後一段：減少 20pt
+                                div.style.marginBottom = 'calc(1.5rem - 20pt)';
+                            } else {
+                                // 其他段落：減少 10pt
+                                div.style.marginBottom = 'calc(1.5rem - 10pt)';
+                            }
                         });
                     });
                     
                     // 減少 grid 容器的 gap
                     const gridContainer = container.querySelector('div[style*="grid-template-columns"]');
                     if (gridContainer) {
-                        gridContainer.style.gap = '2rem';
+                        gridContainer.style.gap = '1.5rem';
                     }
                     
-                    console.log(`✅ 功能組 ${index + 1} 內容已緊湊化`);
+                    console.log(`✅ 功能組 ${index + 1} 已優化（徽章置中、間距調整）`);
+                });
+                
+                // 3. 卡片與上方文字間距減少 20pt
+                const demoCards = document.querySelectorAll('.fade-in-right[style*="position: relative"], .fade-in-left[style*="position: relative"]');
+                demoCards.forEach(card => {
+                    card.style.marginTop = '-20pt';
                 });
                 
                 console.log('✅ 手機版樣式已強制應用');
@@ -1380,27 +1398,46 @@
                 padding-right: 0.75rem !important;
             }
             
-            /* 🔥 功能卡片內距 */
+            /* 🔥 功能卡片內距優化 */
             div[style*="border-radius: 24px"][style*="padding: 4rem"] {
                 padding: 1.5rem !important;
             }
             
-            /* 🔥 功能組內部元素緊湊化 */
+            /* 🔥 智能發票/銀行對賬單徽章置中 */
             .feature-badge {
+                display: block !important;
+                text-align: center !important;
+                margin-left: auto !important;
+                margin-right: auto !important;
                 margin-bottom: 0.5rem !important;
+                width: fit-content !important;
             }
             
+            /* 🔥 標題也置中 */
             div[style*="border-radius: 24px"] h2 {
+                text-align: center !important;
                 margin-bottom: 0.75rem !important;
             }
             
-            div[style*="border-radius: 24px"] .feature-text-section > div,
-            div[style*="border-radius: 24px"] div[style*="space-y"] > div {
-                margin-bottom: 0.5rem !important;
+            /* 🔥 每段文字間距減少 10pt */
+            div[style*="border-radius: 24px"] .feature-text-section > div > div[style*="margin-bottom"] {
+                margin-bottom: calc(1.5rem - 10pt) !important;
             }
             
+            /* 🔥 最後一段描述與下方卡片間距減少 20pt */
+            div[style*="border-radius: 24px"] .feature-text-section > div > div:last-child {
+                margin-bottom: calc(1.5rem - 20pt) !important;
+            }
+            
+            /* 🔥 grid 容器間距優化 */
             div[style*="border-radius: 24px"] div[style*="grid-template-columns"] {
-                gap: 2rem !important;
+                gap: 1.5rem !important;
+            }
+            
+            /* 🔥 卡片與文字之間的間距減少 20pt */
+            .fade-in-right[style*="position: relative"],
+            .fade-in-left[style*="position: relative"] {
+                margin-top: -20pt !important;
             }
             
             /* 🔥 所有大內距的 div 都縮小（排除功能卡片）*/
