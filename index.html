@@ -688,55 +688,67 @@
                     }
                 });
                 
-                // 2. 功能組優化（手機版）
+                // 2. 功能組優化（手機版）- 使用更精確的選擇器
                 const featureContainers = document.querySelectorAll('div[style*="border-radius: 24px"][style*="padding: 4rem"]');
+                console.log(`🔍 找到 ${featureContainers.length} 個功能組容器`);
+                
                 featureContainers.forEach((container, index) => {
-                    // 徽章置中
+                    // 找到 grid 容器並改為垂直排列
+                    const gridContainer = container.querySelector('div[style*="grid-template-columns"]');
+                    if (gridContainer) {
+                        gridContainer.style.display = 'flex';
+                        gridContainer.style.flexDirection = 'column';
+                        gridContainer.style.gap = '1rem';
+                        console.log(`✅ 功能組 ${index + 1} grid 已改為垂直排列`);
+                    }
+                    
+                    // 徽章置中（找到所有帶有 feature-badge 類的元素）
                     const badges = container.querySelectorAll('.feature-badge');
+                    console.log(`  找到 ${badges.length} 個徽章`);
                     badges.forEach(badge => {
-                        badge.style.display = 'block';
-                        badge.style.textAlign = 'center';
-                        badge.style.marginLeft = 'auto';
-                        badge.style.marginRight = 'auto';
-                        badge.style.marginBottom = '0.5rem';
-                        badge.style.width = 'fit-content';
+                        badge.style.setProperty('display', 'block', 'important');
+                        badge.style.setProperty('text-align', 'center', 'important');
+                        badge.style.setProperty('margin-left', 'auto', 'important');
+                        badge.style.setProperty('margin-right', 'auto', 'important');
+                        badge.style.setProperty('margin-bottom', '0.5rem', 'important');
+                        badge.style.setProperty('width', 'fit-content', 'important');
                     });
                     
                     // 標題置中
                     const titles = container.querySelectorAll('h2');
+                    console.log(`  找到 ${titles.length} 個標題`);
                     titles.forEach(title => {
-                        title.style.textAlign = 'center';
-                        title.style.marginBottom = '0.75rem';
+                        title.style.setProperty('text-align', 'center', 'important');
+                        title.style.setProperty('margin-bottom', '0.75rem', 'important');
                     });
                     
-                    // 減少每段文字間距 10pt
-                    const textSections = container.querySelectorAll('.feature-text-section');
-                    textSections.forEach(section => {
-                        const descDivs = section.querySelectorAll('div[style*="margin-bottom: 1.5rem"]');
-                        descDivs.forEach((div, divIndex) => {
-                            if (divIndex === descDivs.length - 1) {
-                                // 最後一段：減少 20pt
-                                div.style.marginBottom = 'calc(1.5rem - 20pt)';
+                    // 減少所有 flex 容器的間距（OCR、智能分類、即時同步等）
+                    const flexDivs = container.querySelectorAll('div[style*="display: flex"]');
+                    console.log(`  找到 ${flexDivs.length} 個 flex 容器`);
+                    flexDivs.forEach((div, divIndex) => {
+                        const currentMargin = div.style.marginBottom;
+                        if (currentMargin && currentMargin.includes('1.5rem')) {
+                            // 最後一個：減少 20pt
+                            if (divIndex === flexDivs.length - 1) {
+                                div.style.setProperty('margin-bottom', 'calc(1.5rem - 20pt)', 'important');
                             } else {
-                                // 其他段落：減少 10pt
-                                div.style.marginBottom = 'calc(1.5rem - 10pt)';
+                                // 其他：減少 10pt
+                                div.style.setProperty('margin-bottom', 'calc(1.5rem - 10pt)', 'important');
                             }
-                        });
+                        }
                     });
                     
-                    // 減少 grid 容器的 gap
-                    const gridContainer = container.querySelector('div[style*="grid-template-columns"]');
-                    if (gridContainer) {
-                        gridContainer.style.gap = '1.5rem';
-                    }
-                    
-                    console.log(`✅ 功能組 ${index + 1} 已優化（徽章置中、間距調整）`);
+                    console.log(`✅ 功能組 ${index + 1} 已優化完成`);
                 });
                 
                 // 3. 卡片與上方文字間距減少 20pt
-                const demoCards = document.querySelectorAll('.fade-in-right[style*="position: relative"], .fade-in-left[style*="position: relative"]');
-                demoCards.forEach(card => {
-                    card.style.marginTop = '-20pt';
+                const demoCards = document.querySelectorAll('.fade-in-right, .fade-in-left');
+                console.log(`🔍 找到 ${demoCards.length} 個示例卡片`);
+                demoCards.forEach((card, index) => {
+                    if (card.style.position === 'relative' || card.querySelector('div[style*="position: relative"]')) {
+                        card.style.setProperty('margin-top', '-20pt', 'important');
+                        console.log(`✅ 卡片 ${index + 1} 已上移 20pt`);
+                    }
                 });
                 
                 console.log('✅ 手機版樣式已強制應用');
@@ -1403,8 +1415,8 @@
                 padding: 1.5rem !important;
             }
             
-            /* 🔥 智能發票/銀行對賬單徽章置中 */
-            .feature-badge {
+            /* 🔥 智能發票/銀行對賬單徽章置中（提高優先級）*/
+            html body .feature-badge[style] {
                 display: block !important;
                 text-align: center !important;
                 margin-left: auto !important;
@@ -1413,31 +1425,33 @@
                 width: fit-content !important;
             }
             
-            /* 🔥 標題也置中 */
-            div[style*="border-radius: 24px"] h2 {
+            /* 🔥 標題也置中（提高優先級）*/
+            html body div[style*="border-radius: 24px"] h2[style] {
                 text-align: center !important;
                 margin-bottom: 0.75rem !important;
             }
             
-            /* 🔥 每段文字間距減少 10pt */
-            div[style*="border-radius: 24px"] .feature-text-section > div > div[style*="margin-bottom"] {
-                margin-bottom: calc(1.5rem - 10pt) !important;
+            /* 🔥 功能區內的所有 flex 容器間距減少 */
+            html body div[style*="border-radius: 24px"] div[style*="display: flex"][style*="gap: 1rem"] {
+                margin-bottom: calc(1rem - 10pt) !important;
             }
             
-            /* 🔥 最後一段描述與下方卡片間距減少 20pt */
-            div[style*="border-radius: 24px"] .feature-text-section > div > div:last-child {
-                margin-bottom: calc(1.5rem - 20pt) !important;
+            /* 🔥 grid 容器改為垂直排列 */
+            html body div[style*="border-radius: 24px"] div[style*="grid-template-columns: 1fr 1fr"] {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 1rem !important;
             }
             
-            /* 🔥 grid 容器間距優化 */
-            div[style*="border-radius: 24px"] div[style*="grid-template-columns"] {
-                gap: 1.5rem !important;
-            }
-            
-            /* 🔥 卡片與文字之間的間距減少 20pt */
-            .fade-in-right[style*="position: relative"],
-            .fade-in-left[style*="position: relative"] {
+            /* 🔥 卡片與上方文字間距減少 20pt */
+            html body .fade-in-right[style*="position: relative"],
+            html body .fade-in-left[style*="position: relative"] {
                 margin-top: -20pt !important;
+            }
+            
+            /* 🔥 描述段落間距統一減少 */
+            html body .feature-text-section div[style*="margin-bottom: 1.5rem"] {
+                margin-bottom: calc(1.5rem - 10pt) !important;
             }
             
             /* 🔥 所有大內距的 div 都縮小（排除功能卡片）*/
