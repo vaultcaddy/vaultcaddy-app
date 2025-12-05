@@ -323,8 +323,8 @@
                 <a href="/blog/" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">學習中心</a>
                 <a href="dashboard.html" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">儀表板</a>
             </div>
-            <div id="user-menu" style="position: relative; display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;">
-                <div id="user-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">Y</div>
+            <div id="user-menu" style="position: relative; display: flex; align-items: center; gap: 0.75rem;">
+                <!-- 初始狀態：不顯示任何內容，由 JavaScript 動態更新 -->
             </div>
         </div>
     </nav>
@@ -621,19 +621,22 @@
                         const userInitial = getUserInitial();
                         console.log(`👤 用戶首字母: "${userInitial}" (displayName: "${userDisplayName}")`);
                         
-                        // 🔥 简化：直接更新头像内容
-                        const avatar = document.getElementById('user-avatar');
-                        if (avatar) {
-                            avatar.textContent = userInitial;
-                        }
+                        // 🔥 已登入：顯示頭像和下拉菜單
+                        userMenu.innerHTML = `
+                            <div style="cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;" onclick="toggleDropdown()">
+                                <div id="user-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">${userInitial}</div>
+                            </div>
+                        `;
+                        userMenu.style.cursor = 'pointer';
                         console.log('✅ 用戶已登入，顯示頭像');
                     } else {
-                        // ✅ 未登入：头像显示"U"（未登入）
-                        const avatar = document.getElementById('user-avatar');
-                        if (avatar) {
-                            avatar.textContent = 'U';
-                        }
-                        console.log('✅ 用戶未登入，顯示"U"');
+                        // ✅ 未登入：顯示登入按鈕
+                        userMenu.innerHTML = `
+                            <button onclick="window.location.href='auth.html'" style="padding: 0.5rem 1.5rem; background: #667eea; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.875rem;">
+                                登入
+                            </button>
+                        `;
+                        console.log('✅ 用戶未登入，顯示登入按鈕');
                     }
                 } catch (e) {
                     console.log('❌ 無法更新用戶菜單:', e);
