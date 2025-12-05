@@ -523,16 +523,17 @@
             #pricing-container {
                 grid-template-columns: 1fr !important;
                 gap: 1.5rem !important;
+                padding: 0 1rem !important; /* 🔥 添加內距 */
             }
             
             /* 年費方案移到第一位 */
             #yearly-plan {
-                order: 1;
+                order: 1 !important;
             }
             
             /* 月費方案移到第二位 */
             #monthly-plan {
-                order: 2;
+                order: 2 !important;
             }
             
             /* 🔥 定價卡片功能列表：改為 2 列顯示 */
@@ -541,14 +542,17 @@
                 gap: 0.5rem 0.75rem !important;
             }
             
-            /* 🔥 移除左右寬度限制，讓卡片佔滿容器 */
-            .pricing-card,
-            #monthly-plan,
-            #yearly-plan {
+            /* 🔥 強制移除左右寬度限制，讓卡片佔滿容器 */
+            html body .pricing-card[style],
+            html body #monthly-plan[style],
+            html body #yearly-plan[style],
+            html body div[id="monthly-plan"],
+            html body div[id="yearly-plan"] {
                 max-width: none !important;
                 width: 100% !important;
                 margin-left: 0 !important;
                 margin-right: 0 !important;
+                box-sizing: border-box !important;
             }
         
         /* 手機版 UI 優化樣式 */
@@ -1311,6 +1315,40 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Billing 頁面載入中...');
+            
+            // 🔥 手機版強制修改定價卡片寬度
+            function forceMobilePricingWidth() {
+                if (window.innerWidth <= 768) {
+                    const monthlyPlan = document.getElementById('monthly-plan');
+                    const yearlyPlan = document.getElementById('yearly-plan');
+                    const pricingContainer = document.getElementById('pricing-container');
+                    
+                    if (monthlyPlan) {
+                        monthlyPlan.style.maxWidth = 'none';
+                        monthlyPlan.style.width = '100%';
+                        monthlyPlan.style.marginLeft = '0';
+                        monthlyPlan.style.marginRight = '0';
+                        console.log('✅ 月付卡片寬度已強制設為 100%');
+                    }
+                    
+                    if (yearlyPlan) {
+                        yearlyPlan.style.maxWidth = 'none';
+                        yearlyPlan.style.width = '100%';
+                        yearlyPlan.style.marginLeft = '0';
+                        yearlyPlan.style.marginRight = '0';
+                        console.log('✅ 年付卡片寬度已強制設為 100%');
+                    }
+                    
+                    if (pricingContainer) {
+                        pricingContainer.style.padding = '0 1rem';
+                        console.log('✅ 定價容器內距已調整');
+                    }
+                }
+            }
+            
+            // 立即執行 + 視窗調整時執行
+            forceMobilePricingWidth();
+            window.addEventListener('resize', forceMobilePricingWidth);
 
             // 初始化統一側邊欄
             window.billingSidebar = new VaultCaddySidebar('billing');
