@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ログイン / 登録 - VaultCaddy</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .auth-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            width: 100%;
+            max-width: 1000px;
+            min-height: 600px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            position: relative;
+        }
+
+        .home-button {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+
+        .home-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            background: #f9fafb;
+        }
+
+        .auth-brand {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-brand::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .brand-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .brand-logo i {
+            font-size: 3rem;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1rem;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .brand-logo h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .brand-tagline {
+            font-size: 1.25rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+
+        .brand-features {
+            list-style: none;
+        }
+
+        .brand-features li {
+            padding: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .brand-features i {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .auth-forms {
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        .form-container {
+            display: none;
+        }
+
+        .form-container.active {
+            display: block;
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .form-header h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-header p {
+            color: #6b7280;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-input.error {
+            border-color: #ef4444;
+        }
+
+        .error-message {
+            color: #ef4444;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-loader {
+            display: none;
+        }
+
+        .btn-loader.show {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .form-switch {
+            text-align: center;
+            margin-top: 2rem;
+            color: #6b7280;
+        }
+
+        .form-switch a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .form-switch a:hover {
+            text-decoration: underline;
+        }
+
+        .social-login {
+            margin: 2rem 0;
+        }
+
+        .social-btn {
+            width: 100%;
+            padding: 0.875rem;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            font-weight: 600;
+            color: #374151;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            margin-bottom: 1rem;
+        }
+
+        .social-btn:hover {
+            border-color: #d1d5db;
+            background: #f9fafb;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 2rem 0;
+            color: #9ca3af;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #e5e7eb;
+        }
+
+        .divider span {
+            padding: 0 1rem;
+            font-size: 0.875rem;
+        }
+
+        .credits-info {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .credits-info i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .auth-container {
+                grid-template-columns: 1fr;
+                max-width: 400px;
+            }
+
+            .auth-brand {
+                display: none;
+            }
+
+            .auth-forms {
+                padding: 2rem;
+            }
+        }
+
+        /* 通知樣式 */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: #10b981;
+        }
+
+        .notification.error {
+            background: #ef4444;
+        }
+
+        .notification.info {
+            background: #3b82f6;
+        }
+    </style>
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="alternate icon" type="image/png" href="favicon.png">
+</head>
+<body>
+    <div class="auth-container">
+        <!-- 返回首頁按鈕 -->
+        <a href="index.html" class="home-button">
+            <i class="fas fa-home"></i>
+            <span>返回首頁</span>
+        </a>
+        
+        <!-- 品牌區域 -->
+        <div class="auth-brand">
+            <div class="brand-content">
+                <div class="brand-logo">
+                    <div class="logo-icon" style="position: relative;">
+                        <svg width="48" height="48" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="authLogoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#ffffff"/>
+                                    <stop offset="50%" stop-color="#f8fafc"/>
+                                    <stop offset="100%" stop-color="#e2e8f0"/>
+                                </linearGradient>
+                            </defs>
+                            <path d="M8 6 L20 28 L32 6 L28 6 L20 20 L12 6 Z" fill="url(#authLogoGradient)" stroke="none"/>
+                        </svg>
+                    </div>
+                    <h1>VaultCaddy</h1>
+                </div>
+                <p class="brand-tagline">AI驅動的智能文檔處理平台</p>
+                <ul class="brand-features">
+                    <li><i class="fas fa-check"></i> 銀行對帳單自動轉換</li>
+                    <li><i class="fas fa-check"></i> 發票收據智能識別</li>
+                    <li><i class="fas fa-check"></i> 多格式輸出支持</li>
+                    <li><i class="fas fa-check"></i> 銀行級安全保護</li>
+                    <li><i class="fas fa-check"></i> 與會計軟體整合</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 表單區域 -->
+        <div class="auth-forms">
+            <!-- 登入表單 -->
+            <div class="form-container active" id="login-form">
+                <div class="form-header">
+                    <h2>おかえりなさい</h2>
+                    <p>登入您的VaultCaddy帳戶</p>
+                </div>
+
+                <!-- Google 登入區域 -->
+                <div class="google-auth-section" style="margin-bottom: 2rem;">
+                    <div id="google-signin-button-auth" style="display: flex; justify-content: center; margin-bottom: 1rem;"></div>
+                    <div class="divider" style="text-align: center; margin: 1.5rem 0; color: #6b7280; font-size: 0.875rem;">
+                        <span style="background: white; padding: 0 1rem;">或使用傳統方式登入</span>
+                    </div>
+                </div>
+
+                <form id="login-form-element">
+                    <div class="form-group">
+                        <label for="login-email">メールアドレス</label>
+                        <input type="email" id="login-email" class="form-input" required>
+                        <div class="error-message" id="login-email-error"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="login-password">パスワード</label>
+                        <input type="password" id="login-password" class="form-input" required>
+                        <div class="error-message" id="login-password-error"></div>
+                    </div>
+
+                    <button type="submit" class="submit-btn" id="login-submit">
+                        <span class="btn-text">ログイン</span>
+                        <div class="btn-loader"></div>
+                    </button>
+                </form>
+
+                <div class="form-switch">
+                    還沒有帳戶？ <a href="#" onclick="switchToRegister()">今すぐ登録</a>
+                </div>
+                
+                <div class="form-switch" style="margin-top: 1rem;">
+                    <a href="forgot-password.html">パスワードをお忘れですか？</a>
+                </div>
+
+                <div class="divider">
+                    <span>或</span>
+                </div>
+
+                <div class="social-login">
+                    <a href="#" class="social-btn" onclick="googleLogin()">
+                        <i class="fab fa-google"></i>
+                        使用Google登入
+                    </a>
+                </div>
+            </div>
+
+            <!-- 註冊表單 -->
+            <div class="form-container" id="register-form">
+                <div class="form-header">
+                    <h2>創建帳戶</h2>
+                    <p>開始您的VaultCaddy之旅</p>
+                </div>
+
+                <form id="register-form-element">
+                    <div class="form-group">
+                        <label for="register-firstName">名字</label>
+                        <input type="text" id="register-firstName" class="form-input" required>
+                        <div class="error-message" id="register-firstName-error"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="register-lastName">姓氏</label>
+                        <input type="text" id="register-lastName" class="form-input" required>
+                        <div class="error-message" id="register-lastName-error"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="register-email">メールアドレス</label>
+                        <input type="email" id="register-email" class="form-input" required>
+                        <div class="error-message" id="register-email-error"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="register-company">公司名稱（可選）</label>
+                        <input type="text" id="register-company" class="form-input">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="register-password">密碼（至少8位字符）</label>
+                        <input type="password" id="register-password" class="form-input" required>
+                        <div class="error-message" id="register-password-error"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="register-confirmPassword">パスワードの確認</label>
+                        <input type="password" id="register-confirmPassword" class="form-input" required>
+                        <div class="error-message" id="register-confirmPassword-error"></div>
+                    </div>
+
+                    <button type="submit" class="submit-btn" id="register-submit">
+                        <span class="btn-text">創建帳戶</span>
+                        <div class="btn-loader"></div>
+                    </button>
+                </form>
+
+                <div class="credits-info">
+                    <i class="fas fa-gift"></i>
+                    <div><strong>註冊即送10個Credits！</strong></div>
+                    <div>立即開始處理您的文檔</div>
+                </div>
+
+                <div class="form-switch">
+                    已有帳戶？ <a href="#" onclick="switchToLogin()">今すぐログイン</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK（CDN 版本 - compat）-->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-functions-compat.js"></script>
+    
+    <!-- Firebase 配置 -->
+    <script src="firebase-config.js?v=20251101"></script>
+    
+    <!-- 🔥 新的簡化系統 -->
+    <script src="simple-auth.js?v=20251101"></script>
+    <script src="simple-data-manager.js?v=20251101"></script>
+    
+    <script src="config.js"></script>
+    <script src="translations.js?v=20251101"></script>
+    <script>
+        // 等待 SimpleAuth 初始化
+        function waitForAuth() {
+            return new Promise((resolve) => {
+                if (window.simpleAuth && window.simpleAuth.initialized) {
+                    resolve();
+                } else {
+                    const checkInterval = setInterval(() => {
+                        if (window.simpleAuth && window.simpleAuth.initialized) {
+                            clearInterval(checkInterval);
+                            resolve();
+                        }
+                    }, 100);
+                }
+            });
+        }
+        
+        // 表單切換
+        function switchToRegister() {
+            document.getElementById('login-form').classList.remove('active');
+            document.getElementById('register-form').classList.add('active');
+        }
+
+        function switchToLogin() {
+            document.getElementById('register-form').classList.remove('active');
+            document.getElementById('login-form').classList.add('active');
+        }
+
+        // 初始化 Google 登入按鈕
+        document.addEventListener('DOMContentLoaded', function() {
+            // 等待 Google Auth 初始化完成
+            const initGoogleButton = () => {
+                if (window.googleAuth && window.googleAuth.isInitialized) {
+                    window.googleAuth.renderSignInButton('google-signin-button-auth');
+                    console.log('✅ Auth 頁面 Google 登入按鈕已設置');
+                } else {
+                    setTimeout(initGoogleButton, 500);
+                }
+            };
+            
+            initGoogleButton();
+            
+            // 監聽 Google 登入成功
+            window.addEventListener('authStateChanged', function(e) {
+                if (e.detail.isLoggedIn) {
+                    console.log('✅ Google 登入成功，跳轉到 Dashboard');
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html#bank-statement';
+                    }, 1000);
+                }
+            });
+        });
+
+        // 登入處理
+        document.getElementById('login-form-element').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('login-submit');
+            const btnText = submitBtn.querySelector('.btn-text');
+            const btnLoader = submitBtn.querySelector('.btn-loader');
+            
+            try {
+                // 顯示載入狀態
+                submitBtn.disabled = true;
+                btnText.style.display = 'none';
+                btnLoader.classList.add('show');
+                
+                // 等待 SimpleAuth 初始化
+                await waitForAuth();
+                
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
+                
+                await window.simpleAuth.loginWithEmail(email, password);
+                showNotification('登入成功！正在跳轉...', 'success');
+                // SimpleAuth 會自動重定向到 dashboard.html
+            } catch (error) {
+                showNotification(error.message, 'error');
+                
+                // 恢復按鈕狀態
+                submitBtn.disabled = false;
+                btnText.style.display = 'inline';
+                btnLoader.classList.remove('show');
+            }
+        });
+
+        // 註冊處理
+        document.getElementById('register-form-element').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('register-submit');
+            const btnText = submitBtn.querySelector('.btn-text');
+            const btnLoader = submitBtn.querySelector('.btn-loader');
+            
+            try {
+                // 檢查密碼確認
+                const password = document.getElementById('register-password').value;
+                const confirmPassword = document.getElementById('register-confirmPassword').value;
+                
+                if (password !== confirmPassword) {
+                    throw new Error('密碼確認不一致');
+                }
+                
+                // 顯示載入狀態
+                submitBtn.disabled = true;
+                btnText.style.display = 'none';
+                btnLoader.classList.add('show');
+                
+                // 等待 SimpleAuth 初始化
+                await waitForAuth();
+                
+                const firstName = document.getElementById('register-firstName').value;
+                const lastName = document.getElementById('register-lastName').value;
+                const email = document.getElementById('register-email').value;
+                const displayName = `${firstName} ${lastName}`.trim();
+                
+                // 創建 Firebase Auth 用戶（但不自動登入）
+                await window.simpleAuth.registerWithEmail(email, password, displayName);
+                
+                // 發送驗證碼
+                const functions = firebase.functions();
+                const sendCodeFunc = functions.httpsCallable('sendVerificationCode');
+                await sendCodeFunc({ email: email, displayName: displayName });
+                
+                showNotification('註冊成功！驗證碼已發送到您的郵箱', 'success');
+                
+                // 登出用戶（因為需要先驗證 email）
+                await firebase.auth().signOut();
+                
+                // 跳轉到驗證頁面
+                setTimeout(() => {
+                    window.location.href = `verify-email.html?email=${encodeURIComponent(email)}`;
+                }, 1500);
+                
+            } catch (error) {
+                showNotification(error.message, 'error');
+                
+                // 恢復按鈕狀態
+                submitBtn.disabled = false;
+                btnText.style.display = 'inline';
+                btnLoader.classList.remove('show');
+            }
+        });
+
+        // Google 登入
+        async function googleLogin() {
+            try {
+                // 等待 SimpleAuth 初始化
+                await waitForAuth();
+                
+                await window.simpleAuth.loginWithGoogle();
+                showNotification('Google 登入成功！正在跳轉...', 'success');
+                // SimpleAuth 會自動重定向到 dashboard.html
+            } catch (error) {
+                console.error('❌ Google 登入錯誤:', error);
+                
+                let errorMessage = 'Google 登入失敗';
+                
+                if (error.code === 'auth/popup-closed-by-user') {
+                    errorMessage = '您取消了 Google 登入';
+                    showNotification(errorMessage, 'info');
+                } else if (error.code === 'auth/unauthorized-domain') {
+                    // Firebase 域名未授權錯誤
+                    errorMessage = 'Firebase 配置錯誤：請在 Firebase Console > Authentication > Settings > Authorized domains 中添加您的域名 (vaultcaddy.com)';
+                    console.error('🔥 Firebase 授權域名配置錯誤');
+                    console.error('📋 解決方法：');
+                    console.error('1. 前往 Firebase Console: https://console.firebase.google.com');
+                    console.error('2. 選擇您的專案');
+                    console.error('3. 進入 Authentication > Settings');
+                    console.error('4. 在 "Authorized domains" 中添加: vaultcaddy.com');
+                    showNotification(errorMessage, 'error');
+                } else {
+                    errorMessage = error.message || 'Google 登入失敗';
+                    showNotification(errorMessage, 'error');
+                }
+            }
+        }
+
+        // 通知函數
+        function showNotification(message, type = 'info') {
+            // 移除現有通知
+            const existingNotification = document.querySelector('.notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+            
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // 顯示動畫
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            // 自動移除
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 5000);
+        }
+
+        // 頁面載入時檢查是否已登入（SimpleAuth 會自動處理）
+        // 無需手動檢查，SimpleAuth.handleAuthStateChange 會自動重定向
+    </script>
+    
+    <!-- 🌍 語言選擇器 -->
+    <script src="language-selector.js?v=20251205"></script>
+
+</body>
+</html>
