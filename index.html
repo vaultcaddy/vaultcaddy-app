@@ -712,6 +712,8 @@
                         badge.style.setProperty('margin-right', 'auto', 'important');
                         badge.style.setProperty('margin-bottom', '0.5rem', 'important');
                         badge.style.setProperty('width', 'fit-content', 'important');
+                        badge.style.setProperty('font-size', '2.5rem', 'important'); // 與標題相同大小
+                        badge.style.setProperty('padding', '0.75rem 2rem', 'important'); // 調整內距
                     });
                     
                     // 標題置中
@@ -723,19 +725,11 @@
                     });
                     
                     // 減少所有 flex 容器的間距（OCR、智能分類、即時同步等）
-                    const flexDivs = container.querySelectorAll('div[style*="display: flex"]');
-                    console.log(`  找到 ${flexDivs.length} 個 flex 容器`);
+                    const flexDivs = container.querySelectorAll('div[style*="display: flex"][style*="align-items: start"]');
+                    console.log(`  找到 ${flexDivs.length} 個描述 flex 容器`);
                     flexDivs.forEach((div, divIndex) => {
-                        const currentMargin = div.style.marginBottom;
-                        if (currentMargin && currentMargin.includes('1.5rem')) {
-                            // 最後一個：減少 20pt
-                            if (divIndex === flexDivs.length - 1) {
-                                div.style.setProperty('margin-bottom', 'calc(1.5rem - 20pt)', 'important');
-                            } else {
-                                // 其他：減少 10pt
-                                div.style.setProperty('margin-bottom', 'calc(1.5rem - 10pt)', 'important');
-                            }
-                        }
+                        // 所有描述段落間距都減少 20pt（圖3和圖4）
+                        div.style.setProperty('margin-bottom', 'calc(1.5rem - 20pt)', 'important');
                     });
                     
                     console.log(`✅ 功能組 ${index + 1} 已優化完成`);
@@ -1423,6 +1417,8 @@
                 margin-right: auto !important;
                 margin-bottom: 0.5rem !important;
                 width: fit-content !important;
+                font-size: 2.5rem !important; /* 與標題相同大小 */
+                padding: 0.75rem 2rem !important; /* 調整內距 */
             }
             
             /* 🔥 標題也置中（提高優先級）*/
@@ -1434,6 +1430,11 @@
             /* 🔥 功能區內的所有 flex 容器間距減少 */
             html body div[style*="border-radius: 24px"] div[style*="display: flex"][style*="gap: 1rem"] {
                 margin-bottom: calc(1rem - 10pt) !important;
+            }
+            
+            /* 🔥 描述段落間距進一步減少 10pt */
+            html body div[style*="border-radius: 24px"] div[style*="display: flex"][style*="align-items: start"] {
+                margin-bottom: calc(1.5rem - 20pt) !important;
             }
             
             /* 🔥 grid 容器改為垂直排列 */
