@@ -655,6 +655,53 @@
             
             // 暴露 toggleDropdown 到全局
             window.toggleDropdown = toggleDropdown;
+            
+            // 🔥 手機版強制修改樣式（解決CSS無法覆蓋內聯樣式的問題）
+            function forceMobileStyles() {
+                // 僅在手機版執行
+                if (window.innerWidth > 768) return;
+                
+                console.log('🔥 強制應用手機版樣式');
+                
+                // 1. 價值卡片（極速處理、超高準確率、性價比最高）
+                const valueCards = document.querySelectorAll('.fade-in-up.delay-1, .fade-in-up.delay-2, .fade-in-up.delay-3');
+                valueCards.forEach(card => {
+                    card.style.padding = '1rem 1rem 0.5rem 1rem';
+                    
+                    // 修改圖標容器
+                    const iconContainer = card.querySelector('div[style*="width: 80px"]');
+                    if (iconContainer) {
+                        iconContainer.style.marginBottom = '0.5rem';
+                    }
+                    
+                    // 修改標題
+                    const title = card.querySelector('h3');
+                    if (title) {
+                        title.style.marginBottom = '0.35rem';
+                    }
+                    
+                    // 修改段落
+                    const paragraph = card.querySelector('p');
+                    if (paragraph) {
+                        paragraph.style.marginBottom = '0';
+                        paragraph.style.lineHeight = '1.5';
+                    }
+                });
+                
+                // 2. 功能區卡片（智能發票收據處理、銀行對賬單智能分析）
+                const featureContainers = document.querySelectorAll('div[style*="border-radius: 24px"][style*="padding: 4rem"]');
+                featureContainers.forEach(container => {
+                    container.style.paddingTop = 'calc(1.5rem - 30pt)';
+                });
+                
+                console.log('✅ 手機版樣式已強制應用');
+            }
+            
+            // 立即執行
+            forceMobileStyles();
+            
+            // 窗口大小改變時重新檢查
+            window.addEventListener('resize', forceMobileStyles);
         });
     </script>
     
@@ -1312,10 +1359,9 @@
                 padding-top: calc(1.5rem - 30pt) !important; /* 🔥 手機版：上移 30pt */
             }
             
-            /* 🔥 所有大內距的 div 都縮小 */
-            div[style*="padding: 2rem"],
-            div[style*="padding: 3rem"],
-            div[style*="padding: 4rem"] {
+            /* 🔥 所有大內距的 div 都縮小（排除功能卡片）*/
+            div[style*="padding: 2rem"]:not([style*="border-radius: 24px"]),
+            div[style*="padding: 3rem"]:not([style*="border-radius: 24px"]) {
                 padding: 1.25rem !important;
             }
             
@@ -1490,16 +1536,7 @@
             
             /* ========== 手機版專屬優化 ========== */
             
-            /* 🔥 功能卡片內距縮小 */
-            div[style*="border-radius: 24px"][style*="padding: 4rem"] {
-                padding: 1.5rem 0.5rem !important; /* 左右極小 */
-            }
-            
-            /* 🔥 所有大內距的 div 都縮小（排除卡片）*/
-            div[style*="padding: 2rem"]:not(.fade-in-right > div):not(.fade-in-left > div),
-            div[style*="padding: 3rem"]:not(.fade-in-right > div):not(.fade-in-left > div) {
-                padding: 1rem 0.5rem !important; /* 左右極小 */
-            }
+            /* 🔥 功能卡片內距已在上方統一設置，此處不再重複 */
             
             /* 🔥 手機版：強大功能 section 使用電腦版設計（刪除所有特殊樣式）*/
             /* 不再覆蓋 fade-in-right 和 fade-in-left 的樣式 */
