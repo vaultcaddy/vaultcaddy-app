@@ -611,14 +611,14 @@ function displayInvoiceContent(data) {
     const detailsSection = document.getElementById('documentDetailsSection');
     const dataSection = document.getElementById('documentDataSection');
     
-    // 發票詳情卡片（改為單列卡片式布局）
+    // 發票詳情卡片（改為4行單列布局）
     detailsSection.innerHTML = `
         <div class="bank-details-card">
             <h3 class="card-title" style="margin-bottom: 1.5rem;">
                 <i class="fas fa-file-invoice" style="color: #3b82f6; margin-right: 0.5rem;"></i>
                 發票詳情
             </h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
                     <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">發票號碼</label>
                     <input type="text" id="invoiceNumber" value="${data.invoiceNumber || data.invoice_number || '—'}" 
