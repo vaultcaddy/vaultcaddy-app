@@ -688,15 +688,37 @@
                     }
                 });
                 
-                // 2. 功能組內部內容上移（不移動卡片本身）
+                // 2. 功能組內部內容緊湊化（減少間距）
                 const featureContainers = document.querySelectorAll('div[style*="border-radius: 24px"][style*="padding: 4rem"]');
                 featureContainers.forEach((container, index) => {
-                    // 找到內部的 grid 容器（包含左右兩欄內容）
+                    // 減少徽章的 margin-bottom
+                    const badges = container.querySelectorAll('.feature-badge');
+                    badges.forEach(badge => {
+                        badge.style.marginBottom = '0.5rem';
+                    });
+                    
+                    // 減少標題的 margin-bottom
+                    const titles = container.querySelectorAll('h2');
+                    titles.forEach(title => {
+                        title.style.marginBottom = '0.75rem';
+                    });
+                    
+                    // 減少描述段落之間的間距
+                    const textSections = container.querySelectorAll('.feature-text-section, div[style*="space-y"]');
+                    textSections.forEach(section => {
+                        const divs = section.querySelectorAll('div[style*="margin-bottom"]');
+                        divs.forEach(div => {
+                            div.style.marginBottom = '0.5rem';
+                        });
+                    });
+                    
+                    // 減少 grid 容器的 gap
                     const gridContainer = container.querySelector('div[style*="grid-template-columns"]');
                     if (gridContainer) {
-                        gridContainer.style.marginTop = '-60pt'; // 內容向上移動 60pt
-                        console.log(`✅ 功能組 ${index + 1} 內容已上移 60pt`);
+                        gridContainer.style.gap = '2rem';
                     }
+                    
+                    console.log(`✅ 功能組 ${index + 1} 內容已緊湊化`);
                 });
                 
                 console.log('✅ 手機版樣式已強制應用');
@@ -1361,6 +1383,24 @@
             /* 🔥 功能卡片內距 */
             div[style*="border-radius: 24px"][style*="padding: 4rem"] {
                 padding: 1.5rem !important;
+            }
+            
+            /* 🔥 功能組內部元素緊湊化 */
+            .feature-badge {
+                margin-bottom: 0.5rem !important;
+            }
+            
+            div[style*="border-radius: 24px"] h2 {
+                margin-bottom: 0.75rem !important;
+            }
+            
+            div[style*="border-radius: 24px"] .feature-text-section > div,
+            div[style*="border-radius: 24px"] div[style*="space-y"] > div {
+                margin-bottom: 0.5rem !important;
+            }
+            
+            div[style*="border-radius: 24px"] div[style*="grid-template-columns"] {
+                gap: 2rem !important;
             }
             
             /* 🔥 所有大內距的 div 都縮小（排除功能卡片）*/
