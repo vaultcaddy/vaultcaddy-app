@@ -108,6 +108,17 @@ window.emailVerificationChecker = {
             document.body.style.paddingTop = '120px'; // 60px (navbar) + 60px (notice)
         }
         
+        // 🔧 手機版專用：調整 dashboard-container
+        const dashboardContainer = document.querySelector('.dashboard-container');
+        if (dashboardContainer) {
+            // 檢查是否為手機版（<= 768px）
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile) {
+                dashboardContainer.style.paddingTop = 'calc(60px + 60px)'; // navbar + banner
+                console.log('✅ 手機版 dashboard-container 已調整');
+            }
+        }
+        
         // ✅ 調整左側欄位置（當驗證 banner 出現時，sidebar 需要向下移動）
         const adjustSidebar = () => {
             const sidebar = document.querySelector('.sidebar') || document.querySelector('aside.sidebar');
