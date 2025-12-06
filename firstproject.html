@@ -109,7 +109,7 @@
             display: flex;
             min-height: 100vh;
             background: #ffffff;
-            padding-top: 60px; /* 為導航欄留出空間 */
+            padding-top: 25px; /* 🔥 電腦版：上移 15pt (60px - 15pt ≈ 45px) */
         }
         
         .sidebar {
@@ -244,6 +244,34 @@
             min-height: calc(100vh - 60px);
             display: block !important;
             visibility: visible !important;
+        }
+        
+        /* 🔥 桌面版：header 距離和容器 padding */
+        #project-header {
+            margin-top: 15pt; /* 🔥 從 30pt 減少到 15pt */
+        }
+        
+        #team-project-view {
+            padding: 2rem 3rem;
+        }
+        
+        /* 🔥 手機版：減少內容距離（最高優先級）*/
+        @media (max-width: 768px) {
+            .dashboard-container {
+                padding-top: 60px !important; /* 只需要導航欄高度 */
+            }
+            .main-content {
+                margin-left: 0 !important;
+                padding-top: 0 !important;
+            }
+            #team-project-view {
+                padding: 0 0.75rem !important; /* 最小 padding */
+            }
+            #project-header {
+                margin-top: 0.5rem !important; /* 只有 0.5rem 的距離 */
+                margin-bottom: 0.5rem !important;
+                padding-top: 0 !important;
+            }
         }
         
         .page-header {
@@ -1214,7 +1242,83 @@
         }
     
         @media (max-width: 768px) {
-            /* 導航欄 */
+    
+    /* 🔥 手機版必須顯示 V logo */
+    .desktop-logo {
+        display: flex !important;
+    }
+    
+    .desktop-logo-text {
+        display: none !important;
+    }
+    
+    /* ==================== Export 菜單手機版樣式 ==================== */
+    
+    /* Export 菜單在手機版居中顯示 - 全白色設計 */
+    #exportMenu {
+        position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        right: auto !important;
+        margin: 0 !important;
+        z-index: 999999 !important;
+        width: 90% !important;
+        max-width: 400px !important;
+        background-color: #ffffff !important;
+        box-shadow: none !important; /* 🔥 移除陰影 */
+        border-radius: 12px !important;
+        border: none !important; /* 🔥 移除邊框 */
+        padding: 1.5rem !important;
+        overflow: hidden !important;
+    }
+    
+    /* 🔥 確保菜單所有部分都是白色，無邊框 */
+    #exportMenu,
+    #exportMenu > *,
+    #exportMenu > div,
+    #exportMenu .export-menu-item,
+    #exportMenu button {
+        background-color: #ffffff !important;
+        border-color: transparent !important;
+    }
+    
+    /* 🔥 Export 菜單顯示時（強制覆蓋所有樣式）*/
+    #exportMenu[style*="display: block"],
+    #exportMenu[style*="display:block"],
+    #exportMenu.show,
+    #exportMenu.active {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        min-height: 100px !important;
+    }
+    
+    /* Export 菜單背景遮罩 - 僅在菜單外層有灰色遮罩 */
+    #exportMenuOverlay {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        background: rgba(0, 0, 0, 0.5) !important;
+        z-index: 999998 !important;
+    }
+    
+    /* Export 菜單項更大觸控區域 */
+    #exportMenu button {
+        min-height: 50px !important;
+        touch-action: manipulation !important;
+        border: none !important;
+    }
+    
+    /* 🔥 手機版內容距離導航欄減少 */
+    #project-header {
+        margin-top: 5pt !important;
+    }
+    
+    /* 導航欄 */
             .vaultcaddy-navbar {
                 padding: 0 0.75rem !important;
             }
@@ -1224,16 +1328,27 @@
                 display: block !important;
             }
             
-            /* 隱藏桌面版 Logo 和文字 */
-            .desktop-logo,
+            /* 手機版顯示 logo，隱藏文字 */
+            .desktop-logo {
+                display: flex !important; /* ✅ 顯示 V 圖標 */
+            }
+            
             .desktop-logo-text {
-                display: none !important;
+                display: none !important; /* ✅ 隱藏 "VaultCaddy" 文字 */
             }
         
         /* 手機版 UI 優化樣式 */
 /* 適用於 dashboard.html, firstproject.html, account.html, billing.html */
 
 @media (max-width: 768px) {
+    
+    /* 🔥 手機版內容距離導航欄減少 */
+    #project-header {
+        margin-top: 5pt !important;
+    }
+    
+    /* ==================== Export 菜單手機版樣式（已統一）==================== */
+
     /* ==================== 通用樣式 ==================== */
     
     /* 主容器 */
@@ -1304,14 +1419,27 @@
         padding: 0.5rem !important;
     }
     
-    /* 隱藏部分列（手機版） */
-    table th:nth-child(3),
-    table td:nth-child(3) {
+    /* 隱藏部分列（手機版）- 只針對 dashboard 的 CREATED 列，不影響 firstproject */
+    .dashboard-table th:nth-child(3),
+    .dashboard-table td:nth-child(3) {
         display: none !important; /* 隱藏 CREATED 列 */
     }
     
-    /* ==================== First Project 專用 ==================== */
+    /* ==================== First Project 專用（僅手機版） ==================== */
     
+    /* 🔥 強制 firstproject 表格的類型列（第3列）顯示 */
+    .table-container table th:nth-child(3),
+    .table-container table td:nth-child(3) {
+        display: table-cell !important;
+    }
+    
+    /* 🔧 確保 Export 按鈕可點擊 */
+    #export-btn-desktop,
+    #export-dropdown-desktop {
+        pointer-events: auto !important;
+        touch-action: manipulation !important; /* 防止雙擊縮放 */
+    }
+
     /* 文檔類型選擇器 */
     .document-type-selector {
         grid-template-columns: 1fr !important;
@@ -1333,9 +1461,71 @@
         width: 100% !important;
     }
     
-    /* 文檔表格 */
+    /* 🔥 文檔表格手機版優化 */
     #team-project-tbody tr {
         font-size: 0.8125rem !important;
+    }
+    
+    /* 🔧 文檔名稱只顯示10個字符 */
+    .table-container table tbody td:nth-child(2) {
+        max-width: 120px !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+    
+    /* 🔧 手機版：所有列都顯示，但文字截斷為10個字符 */
+    .table-container table thead th,
+    .table-container table tbody td {
+        max-width: 120px !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        padding: 0.5rem 0.25rem !important;
+        font-size: 0.75rem !important;
+    }
+    
+    /* 🔧 手機版：Checkbox列保持小尺寸 */
+    .table-container table thead th:nth-child(1),
+    .table-container table tbody td:nth-child(1) {
+        max-width: 40px !important;
+        min-width: 40px !important;
+        width: 40px !important;
+        padding: 0.5rem 0.25rem !important;
+    }
+    
+    /* 🔧 手機版：類型列（第3列）文字大小與其他一樣 */
+    .table-container table thead th:nth-child(3),
+    .table-container table tbody td:nth-child(3) {
+        font-size: 0.75rem !important;
+        text-align: center !important;
+    }
+    
+    /* 🔧 手機版：類型列顯示圖標和文字（不再隱藏） */
+    .table-container table tbody td:nth-child(3) span {
+        display: inline !important;
+    }
+    
+    /* 🔧 手機版：狀態列（第4列，在類型和供應商中間） */
+    .table-container table thead th:nth-child(4),
+    .table-container table tbody td:nth-child(4) {
+        text-align: center !important;
+    }
+    
+    /* 🔧 手機版：操作列（第9列） */
+    .table-container table thead th:nth-child(9),
+    .table-container table tbody td:nth-child(9) {
+        text-align: center !important;
+    }
+    
+    /* 🔧 確保橫向滾動 */
+    .table-container {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    .table-container table {
+        min-width: 800px !important; /* 確保表格寬度觸發滾動 */
     }
     
     /* 隱藏部分列 */
@@ -1466,10 +1656,14 @@
     }
 }
 
-
-        
         /* First Project 特定樣式 */
         @media (max-width: 768px) {
+    
+    /* 🔥 手機版內容距離導航欄減少（First Project 特定）*/
+    #project-header {
+        margin-top: 5pt !important;
+    }
+    
             .project-header {
                 flex-direction: column !important;
                 gap: 1rem !important;
@@ -1494,6 +1688,29 @@
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="alternate icon" type="image/png" href="favicon.png">
     <link rel="stylesheet" href="mobile-responsive.css">
+    
+    <!-- 🔥 手機版強制樣式（最高優先級）-->
+    <style id="mobile-force-styles">
+        @media screen and (max-width: 768px) {
+            html body .dashboard-container {
+                padding-top: 20px !important; /* 🔥 手機導航欄高度 56px - 15pt 上移 */
+            }
+            html body .main-content {
+                margin-left: 0 !important;
+                padding: 0 !important;
+                padding-top: 0 !important;
+            }
+            html body #team-project-view {
+                padding: 0.5rem 0.75rem !important;
+                padding-top: 0 !important;
+            }
+            html body #project-header {
+                margin-top: 0 !important; /* 🔥 完全無間距 */
+                margin-bottom: 0.5rem !important;
+                padding: 0 !important;
+            }
+        }
+    </style>
 </head>
 <body class="auth-checking">
     <!-- 🔒 Auth 加載動畫 -->
@@ -1528,10 +1745,12 @@
             <div style="display: flex; align-items: center; gap: 2rem;">
                 <a href="index.html#features" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">功能</a>
                 <a href="index.html#pricing" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">價格</a>
+                <a href="/blog/" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">學習中心</a>
                 <a href="dashboard.html" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">儀表板</a>
             </div>
+            
             <div id="user-menu" style="position: relative; display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;">
-                <div id="user-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">U</div>
+                <div id="user-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">Y</div>
             </div>
         </div>
     </nav>
@@ -1541,6 +1760,10 @@
         <div style="padding: 1.5rem;">
             <!-- 菜單項 -->
             <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <a href="index.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
+                    <i class="fas fa-home" style="width: 20px; color: #667eea;"></i>
+                    <span>首頁</span>
+                </a>
                 <a href="index.html#features" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
                     <i class="fas fa-star" style="width: 20px; color: #667eea;"></i>
                     <span>功能</span>
@@ -1549,11 +1772,17 @@
                     <i class="fas fa-dollar-sign" style="width: 20px; color: #667eea;"></i>
                     <span>價格</span>
                 </a>
+                <a href="/blog/" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
+                    <i class="fas fa-graduation-cap" style="width: 20px; color: #667eea;"></i>
+                    <span>學習中心</span>
+                </a>
                 <a href="dashboard.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
                     <i class="fas fa-th-large" style="width: 20px; color: #667eea;"></i>
                     <span>儀表板</span>
                 </a>
                 
+                <div style="height: 1px; background: #e5e7eb; margin: 1rem 0;"></div>
+
                 <div style="height: 1px; background: #e5e7eb; margin: 1rem 0;"></div>
                 
                 <a href="privacy.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
@@ -1599,35 +1828,57 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('✅ index.html 初始化');
             
+            // 🔥 手機版：調整內容距離導航欄的距離
+            function adjustMobileLayout() {
+                if (window.innerWidth <= 768) {
+                    const header = document.getElementById('project-header');
+                    if (header) {
+                        header.style.setProperty('margin-top', '0', 'important');
+                        header.style.setProperty('padding-top', '0', 'important');
+                        console.log('📱 手機版：調整 header margin-top 和 padding-top 為 0');
+                    }
+                    // 同時調整 team-project-view 的 padding
+                    const teamProjectView = document.getElementById('team-project-view');
+                    if (teamProjectView) {
+                        teamProjectView.style.setProperty('padding-top', '0.5rem', 'important');
+                        console.log('📱 手機版：調整 team-project-view padding-top 為 0.5rem');
+                    }
+                } else {
+                    // 桌面版恢復原始樣式
+                    const header = document.getElementById('project-header');
+                    if (header) {
+                        header.style.marginTop = '30pt';
+                        header.style.removeProperty('padding-top');
+                    }
+                    const teamProjectView = document.getElementById('team-project-view');
+                    if (teamProjectView) {
+                        teamProjectView.style.removeProperty('padding-top');
+                    }
+                }
+            }
+            // 立即執行
+            adjustMobileLayout();
+            // 延遲執行確保 DOM 完全載入
+            setTimeout(adjustMobileLayout, 100);
+            setTimeout(adjustMobileLayout, 300);
+            setTimeout(adjustMobileLayout, 500);
+            window.addEventListener('resize', adjustMobileLayout);
+            window.addEventListener('load', adjustMobileLayout);
+            
             let userCredits = 0;
             let userEmail = '';
             let userDisplayName = '';
             
-            // 獲取用戶首字母
+            // 獲取用戶首字母（統一邏輯：取前兩個字符）
             function getUserInitial() {
-                if (!userDisplayName || userDisplayName.trim() === '') {
-                    // 如果沒有 displayName，使用 email 的第一個字母
-                    return userEmail ? userEmail.charAt(0).toUpperCase() : 'U';
+                // 優先使用 displayName 的第一個字母
+                if (userDisplayName && userDisplayName.trim()) {
+                    return userDisplayName.charAt(0).toUpperCase();
                 }
-                
-                // 分割名字（支援中英文）
-                const parts = userDisplayName.trim().split(/\s+/);
-                
-                if (parts.length >= 2) {
-                    // 有 First Name 和 Last Name
-                    const firstInitial = parts[0].charAt(0).toUpperCase();
-                    const lastInitial = parts[parts.length - 1].charAt(0).toUpperCase();
-                    return firstInitial + lastInitial;
-                } else if (parts.length === 1) {
-                    // 只有一個名字，取前兩個字母
-                    const name = parts[0];
-                    if (name.length >= 2) {
-                        return name.substring(0, 2).toUpperCase();
-                    } else {
-                        return name.charAt(0).toUpperCase();
-                    }
+                // 否則使用 email 的第一個字母
+                if (userEmail && userEmail.trim()) {
+                    return userEmail.charAt(0).toUpperCase();
                 }
-                
                 return 'U';
             }
             
@@ -1802,7 +2053,7 @@
                         
                         userMenu.innerHTML = `
                             <div onclick="toggleDropdown()" style="cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
-                                <div style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">${userInitial}</div>
+                                <div style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem; opacity: 1; transition: opacity 0.3s;">${userInitial}</div>
                             </div>
                         `;
                         console.log('✅ 用戶已登入，顯示頭像');
@@ -1834,11 +2085,9 @@
             window.toggleDropdown = toggleDropdown;
         });
     </script>
-    
-    
 
     <!-- 主要內容區域 -->
-    <main style="padding-top: 70px;">
+    <main style="padding-top: 10px;">
     
     <!-- AI 上傳模態框 - 放在 body 最前面確保立即載入 -->
     <div id="aiUploadModal" class="ai-upload-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 10000; align-items: center; justify-content: center;">
@@ -1924,146 +2173,114 @@
     </div>
 
     <!-- Dashboard 容器 -->
-    <div class="dashboard-container" style="display: flex !important; min-height: calc(100vh - 70px); background: #ffffff; padding-top: 70px; visibility: visible !important;">
+    <div class="dashboard-container" style="display: flex !important; min-height: 100vh; background: #ffffff; visibility: visible !important;">
         <!-- 左側邊欄 (由 sidebar-component.js 動態生成) -->
         <aside class="sidebar"></aside>
 
         <!-- 主內容區域 -->
         <main class="main-content" id="main-content" style="flex: 1; background: #ffffff; overflow-y: auto; min-height: calc(100vh - 60px); display: block !important; visibility: visible !important;">
             <!-- Team Project 視圖 -->
-            <div id="team-project-view" class="view-container" style="display: block !important; visibility: visible !important; padding: 2rem 3rem; background: #ffffff;">
-                <!-- 頁面標題和控制欄（同一水平線） -->
-                <header style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
-                    <!-- 左側：標題和子標題 -->
-                    <div style="display: flex; align-items: center; gap: 2rem;">
-                        <div>
-                            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-                                <h1 id="team-project-title" contenteditable="false" style="font-size: 2rem; font-weight: 700; color: #1f2937; margin: 0; outline: none; border: 2px solid transparent; padding: 0.25rem 0; border-radius: 4px; transition: all 0.2s;">Project</h1>
-                                <button id="edit-project-name-btn" onclick="toggleProjectNameEdit()" style="background: transparent; border: none; cursor: pointer; color: #6b7280; padding: 0.5rem; border-radius: 4px; transition: all 0.2s;" title="編輯項目名稱">
-                                    <i class="fas fa-pen" style="font-size: 1.25rem;"></i>
+            <div id="team-project-view" class="view-container" style="display: block !important; visibility: visible !important; background: #ffffff;">
+                <!-- 頁面標題和控制欄 -->
+                <!-- 🔥 移除 inline margin-top，由 CSS 控制（手機版 5pt，桌面版 30pt）-->
+                <header id="project-header" style="margin-bottom: 2rem;">
+                    <!-- 第一行：標題（桌面版）或獨立一行（手機版） -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <h1 id="team-project-title" contenteditable="false" style="font-size: 2rem; font-weight: 700; color: #1f2937; margin: 0; outline: none; border: 2px solid transparent; padding: 0.25rem 0; border-radius: 4px; transition: all 0.2s;">Project</h1>
+                            <button id="edit-project-name-btn" onclick="toggleProjectNameEdit()" style="background: transparent; border: none; cursor: pointer; color: #6b7280; padding: 0.5rem; border-radius: 4px; transition: all 0.2s;" title="編輯項目名稱">
+                                <i class="fas fa-pen" style="font-size: 1.25rem;"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- 桌面版操作按鈕 -->
+                        <div id="action-buttons-container-desktop" style="display: flex; gap: 1rem; align-items: center;">
+                            <button id="upload-btn-desktop" onclick="openUploadModal()" style="background: #8b5cf6; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
+                                <span>Upload files</span>
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                            <div class="dropdown" id="export-dropdown-desktop" style="position: relative;">
+                                <button id="export-btn-desktop" onclick="toggleExportMenu()" style="background: #10b981; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
+                                    <i class="fas fa-download"></i>
+                                    <span>Export</span>
+                                    <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
                                 </button>
                             </div>
-                            <!-- 搜尋欄 -->
-                            <div style="position: relative; max-width: 400px; margin-top: 0.5rem;">
-                                <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #9ca3af;"></i>
-                                <input type="text" id="document-search" placeholder="搜尋文檔..." style="
-                                    width: 100%;
-                                    padding: 0.625rem 1rem 0.625rem 2.75rem;
-                                    border: 1px solid #e5e7eb;
-                                    border-radius: 8px;
-                                    font-size: 0.875rem;
-                                    transition: all 0.2s;
-                                " onkeyup="filterDocuments(this.value)">
-                            </div>
+                            <button onclick="deleteSelectedDocuments()" id="delete-selected-btn-desktop" disabled style="background: #ef4444; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500; opacity: 0.5;">
+                                <i class="fas fa-trash"></i>
+                                <span>Delete</span>
+                            </button>
                         </div>
                     </div>
                     
-                    <!-- 右側：操作按鈕 -->
-                    <div style="display: flex; gap: 1rem; align-items: center;">
-                        <button onclick="openUploadModal()" style="background: #8b5cf6; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
+                    <!-- 手機版操作按鈕（獨立一行） -->
+                    <div id="action-buttons-container-mobile" style="display: none; gap: 1rem; flex-wrap: wrap;">
+                        <button id="upload-btn-mobile" onclick="openUploadModal()" style="background: #8b5cf6; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500; flex: 1; min-width: 120px; justify-content: center;">
                             <span>Upload files</span>
-                            <i class="fas fa-arrow-right"></i>
                         </button>
-                        <div class="dropdown" style="position: relative;">
-                            <button onclick="toggleExportMenu()" style="background: #10b981; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
-                                <i class="fas fa-download"></i>
-                                <span>Export</span>
-                                <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
-                            </button>
-                            <div id="exportMenu" class="export-menu" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 0.5rem; background: white; border: 1px solid #e5e7eb; border-radius: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-width: 250px; z-index: 1000;">
-                                <div style="padding: 0.5rem 0;">
-                                    <!-- 通用格式 -->
-                                    <button onclick="exportDocuments('csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                                        <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
-                                        <div>
-                                            <div style="font-weight: 500;">CSV（通用）</div>
-                                            <div style="font-size: 0.75rem; color: #6b7280;">所有文檔類型</div>
-                                        </div>
-                                    </button>
-                                    
-                                    <!-- 分隔線 -->
-                                    <div style="height: 1px; background: #e5e7eb; margin: 0.5rem 0;"></div>
-                                    
-                                    <!-- 銀行對帳單專用格式 -->
-                                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">銀行對帳單</div>
-                                    
-                                    <button onclick="exportDocuments('bank_statement_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                                        <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
-                                        <div>
-                                            <div style="font-weight: 500;">標準 CSV</div>
-                                            <div style="font-size: 0.75rem; color: #6b7280;">完整欄位格式</div>
-                                        </div>
-                                    </button>
-                                    
-                                    <button onclick="exportDocuments('xero_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                                        <i class="fas fa-file-csv" style="color: #2563eb; width: 20px;"></i>
-                                        <div>
-                                            <div style="font-weight: 500;">Xero CSV</div>
-                                            <div style="font-size: 0.75rem; color: #6b7280;">官方最小格式</div>
-                                        </div>
-                                    </button>
-                                    
-                                    <button onclick="exportDocuments('quickbooks_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                                        <i class="fas fa-file-csv" style="color: #059669; width: 20px;"></i>
-                                        <div>
-                                            <div style="font-weight: 500;">QuickBooks CSV</div>
-                                            <div style="font-size: 0.75rem; color: #6b7280;">官方最小格式</div>
-                                        </div>
-                                    </button>
-                                    
-                                    <!-- 分隔線 -->
-                                    <div style="height: 1px; background: #e5e7eb; margin: 0.5rem 0;"></div>
-                                    
-                                    <!-- 發票專用格式 -->
-                                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">發票</div>
-                                    
-                                    <button onclick="exportDocuments('invoice_summary_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                                        <i class="fas fa-file-csv" style="color: #f59e0b; width: 20px;"></i>
-                                        <div>
-                                            <div style="font-weight: 500;">標準 CSV（總數）</div>
-                                            <div style="font-size: 0.75rem; color: #6b7280;">快速對帳</div>
-                                        </div>
-                                    </button>
-                                    
-                                    <button onclick="exportDocuments('invoice_detailed_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                                        <i class="fas fa-file-csv" style="color: #f59e0b; width: 20px;"></i>
-                                        <div>
-                                            <div style="font-weight: 500;">完整交易數據 CSV</div>
-                                            <div style="font-size: 0.75rem; color: #6b7280;">詳細記錄</div>
-                                        </div>
-                                    </button>
-                                    
-                                    <!-- 分隔線 -->
-                                    <div style="height: 1px; background: #e5e7eb; margin: 0.5rem 0;"></div>
-                                    
-                                    <!-- QuickBooks 專用格式 -->
-                                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">QuickBooks</div>
-                                    
-                                    <button onclick="exportDocuments('iif')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                                        <i class="fas fa-file-alt" style="color: #3b82f6; width: 20px;"></i>
-                                        <div>
-                                            <div style="font-weight: 500;">IIF</div>
-                                            <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Desktop</div>
-                                        </div>
-                                    </button>
-                                    
-                                    <button onclick="exportDocuments('qbo')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                                        <i class="fas fa-cloud" style="color: #8b5cf6; width: 20px;"></i>
-                                        <div>
-                                            <div style="font-weight: 500;">QBO</div>
-                                            <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Online</div>
-                                        </div>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        <button onclick="deleteSelectedDocuments()" id="delete-selected-btn" disabled style="background: #ef4444; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500; opacity: 0.5;">
-                            <i class="fas fa-trash"></i>
+                        <button id="export-btn-mobile" onclick="toggleExportMenu()" style="background: #10b981; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500; flex: 1; min-width: 100px; justify-content: center; position: relative;">
+                            <span>Export</span>
+                        </button>
+                        <button onclick="deleteSelectedDocuments()" id="delete-selected-btn-mobile" disabled style="background: #ef4444; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500; opacity: 0.5; flex: 1; min-width: 100px; justify-content: center;">
                             <span>Delete</span>
-                            <span id="delete-count" style="display: none;"></span>
                         </button>
                     </div>
                 </header>
+                
+                <!-- 手機版 CSS -->
+                <style>
+                    @media (max-width: 768px) {
+    
+    /* ==================== Export 菜單手機版樣式（全白色設計） ==================== */
+    
+    /* Export 菜單在手機版居中顯示 - 全白色無邊框 */
+    #exportMenu {
+        position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        right: auto !important;
+        margin: 0 !important;
+        z-index: 999999 !important;
+        width: 90% !important;
+        max-width: 400px !important;
+        background-color: #ffffff !important;
+        box-shadow: none !important; /* 🔥 無陰影 */
+        border: none !important; /* 🔥 無邊框 */
+        border-radius: 12px !important;
+        padding: 1.5rem !important;
+        overflow: hidden !important;
+    }
+    
+    /* 🔥 確保菜單所有部分都是白色無邊框 */
+    #exportMenu,
+    #exportMenu > *,
+    #exportMenu > div,
+    #exportMenu .export-menu-item,
+    #exportMenu button {
+        background-color: #ffffff !important;
+        border: none !important;
+        border-color: transparent !important;
+    }
+    
+    /* 🔥 手機版內容距離導航欄減少 */
+    #project-header {
+        margin-top: 5pt !important;
+    }
+    
+    /* Export 菜單項更大觸控區域 */
+    #exportMenu button {
+        min-height: 50px !important;
+        touch-action: manipulation !important;
+    }
+                        #action-buttons-container-desktop {
+                            display: none !important;
+                        }
+                        #action-buttons-container-mobile {
+                            display: flex !important;
+                        }
+                    }
+                </style>
 
                 <!-- 文檔表格 -->
                 <div class="table-container" style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; overflow-x: auto;">
@@ -2071,11 +2288,11 @@
                         <thead style="background: #f8fafc;">
                             <tr>
                                 <!-- Checkbox 列 -->
-                                <th style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; width: 50px;">
+                                <th style="text-align: left; padding: 0.5rem 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; width: 50px;">
                                     <input type="checkbox" id="select-all-checkbox" onchange="toggleSelectAll()">
                                 </th>
                                 <!-- 文檔名稱列 -->
-                                <th onclick="sortTable('name')" style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; cursor: pointer; user-select: none;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+                                <th onclick="sortTable('name')" style="text-align: left; padding: 0.5rem 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; cursor: pointer; user-select: none;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
                                     <span>文檔名稱</span>
                                     <i class="fas fa-sort sort-icon" data-column="name" style="margin-left: 0.5rem; color: #9ca3af;"></i>
                                 </th>
@@ -2084,33 +2301,33 @@
                                     <span>類型</span>
                                     <i class="fas fa-sort sort-icon" data-column="type" style="margin-left: 0.5rem; color: #9ca3af;"></i>
                                 </th>
+                                <!-- 狀態列（移到類型和供應商中間）-->
+                                <th onclick="sortTable('status')" style="text-align: left; padding: 0.5rem 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; cursor: pointer; user-select: none;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+                                    <span>狀態</span>
+                                    <i class="fas fa-sort sort-icon" data-column="status" style="margin-left: 0.5rem; color: #9ca3af;"></i>
+                                </th>
                                 <!-- 供應商/來源/銀行列 -->
-                                <th onclick="sortTable('vendor')" style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; cursor: pointer; user-select: none;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+                                <th onclick="sortTable('vendor')" style="text-align: left; padding: 0.5rem 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; cursor: pointer; user-select: none;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
                                     <span>供應商/來源/銀行</span>
                                     <i class="fas fa-sort sort-icon" data-column="vendor" style="margin-left: 0.5rem; color: #9ca3af;"></i>
                                 </th>
                                 <!-- 金額列（拉寬以容納2行顯示）-->
-                                <th onclick="sortTable('amount')" style="text-align: right; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; cursor: pointer; user-select: none; min-width: 150px;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+                                <th onclick="sortTable('amount')" style="text-align: right; padding: 0.5rem 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; cursor: pointer; user-select: none; min-width: 150px;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
                                     <span>金額</span>
                                     <i class="fas fa-sort sort-icon" data-column="amount" style="margin-left: 0.5rem; color: #9ca3af;"></i>
                                 </th>
                                 <!-- 日期列 -->
-                                <th onclick="sortTable('date')" style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; cursor: pointer; user-select: none;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+                                <th onclick="sortTable('date')" style="text-align: left; padding: 0.5rem 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; cursor: pointer; user-select: none;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
                                     <span>日期</span>
                                     <i class="fas fa-sort sort-icon" data-column="date" style="margin-left: 0.5rem; color: #9ca3af;"></i>
                                 </th>
-                                <!-- 狀態列 -->
-                                <th onclick="sortTable('status')" style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; cursor: pointer; user-select: none;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
-                                    <span>狀態</span>
-                                    <i class="fas fa-sort sort-icon" data-column="status" style="margin-left: 0.5rem; color: #9ca3af;"></i>
-                                </th>
                                 <!-- 上傳日期列 -->
-                                <th onclick="sortTable('uploadDate')" style="text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; cursor: pointer; user-select: none;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+                                <th onclick="sortTable('uploadDate')" style="text-align: left; padding: 0.5rem 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; cursor: pointer; user-select: none;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
                                     <span>上傳日期</span>
                                     <i class="fas fa-sort sort-icon" data-column="uploadDate" style="margin-left: 0.5rem; color: #9ca3af;"></i>
                                 </th>
                                 <!-- 操作列 -->
-                                <th style="text-align: center; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; width: 100px;">
+                                <th style="text-align: center; padding: 0.5rem 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; width: 100px;">
                                     <span>操作</span>
                                 </th>
                             </tr>
@@ -2127,6 +2344,19 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+                
+                <!-- 發票總計行 -->
+                <div id="invoice-summary" style="display: none; margin-top: 1rem; padding: 1rem 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; color: white;">
+                        <div style="font-size: 1.125rem; font-weight: 700;">
+                            <i class="fas fa-receipt" style="margin-right: 0.5rem;"></i>
+                            共 <span id="total-invoice-count">0</span> 張發票
+                        </div>
+                        <div style="font-size: 1.5rem; font-weight: 900;">
+                            $<span id="total-invoice-amount">0</span>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- 分頁控制 -->
@@ -2466,7 +2696,7 @@
                             <td style="padding: 1rem;"><input type="checkbox" class="document-checkbox" data-doc-id="${doc.id}"></td>
                             
                             <!-- 文檔名稱 -->
-                            <td style="padding: 1rem;">
+                            <td class="document-name-cell" style="padding: 1rem;">
                                 <div style="display: flex; align-items: center; gap: 0.75rem; ${!isProcessing && !isFailed ? 'cursor: pointer;' : 'cursor: default;'}" ${!isProcessing && !isFailed ? `onclick="viewDocument('${doc.id}')"` : ''}>
                                     <i class="fas fa-file-pdf" style="color: #ef4444; font-size: 1.25rem;"></i>
                                     <span style="font-weight: 500; color: #1f2937;">${doc.name || doc.fileName || '未命名'}</span>
@@ -2474,33 +2704,33 @@
                             </td>
                             
                             <!-- 類型 -->
-                            <td style="padding: 1rem;">
+                            <td class="document-type-cell" style="padding: 1rem;">
                                 <div style="display: flex; align-items: center; gap: 0.5rem;">
                                     <i class="fas ${typeInfo.icon}" style="color: ${typeInfo.color}; font-size: 1rem;"></i>
                                     <span style="font-size: 0.875rem; color: #6b7280;">${typeInfo.label}</span>
                                 </div>
                             </td>
                             
-                            <!-- 供應商/來源/銀行 -->
-                            <td style="padding: 1rem;">
-                                <div style="color: #374151; line-height: 1.6;">${vendor}</div>
-                            </td>
-                            
-                            <!-- 金額 -->
-                            <td style="padding: 1rem; text-align: right; min-width: 150px;">
-                                <div style="font-weight: 600; color: #059669; font-size: 0.875rem; line-height: 1.6; white-space: nowrap;">${amountDisplay}</div>
-                            </td>
-                            
-                            <!-- 日期 -->
-                            <td style="padding: 1rem;">
-                                <span style="color: #374151;">${date}</span>
-                            </td>
-                            
-                            <!-- 狀態 -->
+                            <!-- 狀態（移到類型和供應商中間）-->
                             <td style="padding: 1rem;">
                                 <span style="padding: 0.375rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; white-space: nowrap; background: ${isProcessing ? '#fef3c7' : isFailed ? '#fee2e2' : '#d1fae5'}; color: ${isProcessing ? '#92400e' : isFailed ? '#991b1b' : '#065f46'};">
                                     ${isProcessing ? '處理中' : isFailed ? '失敗' : '已完成'}
                                 </span>
+                            </td>
+                            
+                            <!-- 供應商/來源/銀行 -->
+                            <td class="document-vendor-cell" style="padding: 1rem;">
+                                <div style="color: #374151; line-height: 1.6;">${vendor}</div>
+                            </td>
+                            
+                            <!-- 金額 -->
+                            <td class="document-amount-cell" style="padding: 1rem; text-align: right; min-width: 150px;">
+                                <div style="font-weight: 600; color: #059669; font-size: 0.875rem; line-height: 1.6; white-space: nowrap;">${amountDisplay}</div>
+                            </td>
+                            
+                            <!-- 日期 -->
+                            <td class="document-date-cell" style="padding: 1rem;">
+                                <span style="color: #374151;">${date}</span>
                             </td>
                             
                             <!-- 上傳日期 -->
@@ -2525,6 +2755,11 @@
                 }).join('');
                 
                 // ✅ 輪詢機制會自動檢測複選框變化，無需手動添加事件監聽器
+                
+                // ✅ 更新發票總計
+                setTimeout(() => {
+                    updateDocumentTotal();
+                }, 100);
         }
         
         // ==================== 載入文檔 ====================
@@ -3284,8 +3519,7 @@
             
             // 輪詢會自動檢測到變化並更新按鈕
         };
-        
-        
+
         window.deleteSelectedDocuments = async function() {
             const selectedCheckboxes = document.querySelectorAll('.document-checkbox:checked');
             if (selectedCheckboxes.length === 0) {
@@ -3368,12 +3602,217 @@
             }
         };
         
-        window.toggleExportMenu = function() {
+        // 🔄 更新 Export 菜單內容（提取為獨立函數）
+        function updateExportMenuContent() {
             const menu = document.getElementById('exportMenu');
-            if (menu) {
-                menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+            if (!menu) return;
+            
+            // 獲取選中的文檔
+            const checkboxes = document.querySelectorAll('.document-checkbox:checked');
+            if (checkboxes.length === 0) {
+                menu.style.display = 'none';
+                return;
             }
+            
+            // 分析選中文檔的類型
+            let hasBankStatement = false;
+            let hasInvoice = false;
+            
+            checkboxes.forEach(checkbox => {
+                const row = checkbox.closest('tr');
+                if (!row) return;
+                
+                const typeCell = row.querySelector('td:nth-child(3)'); // 類型列
+                if (!typeCell) return;
+                
+                const typeText = typeCell.textContent.trim();
+                if (typeText === '發票' || typeText.includes('發票')) {
+                    hasInvoice = true;
+                } else if (typeText === '銀行對帳單' || typeText.includes('銀行')) {
+                    hasBankStatement = true;
+                }
+            });
+            
+            // 動態生成菜單內容
+            let menuHTML = '<div style="padding: 0.5rem 0; background: #ffffff;">';
+            
+            // 銀行對帳單選項
+            if (hasBankStatement) {
+                menuHTML += `
+                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">銀行對帳單</div>
+                    <button onclick="exportDocuments('bank_statement_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">標準 CSV</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">完整欄位格式</div>
+                        </div>
+                    </button>
+                `;
+            }
+            
+            // 發票選項
+            if (hasInvoice) {
+                menuHTML += `
+                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">發票</div>
+                    <button onclick="exportDocuments('invoice_summary_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-invoice" style="color: #f59e0b; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">標準 CSV（總數）</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">快速對帳</div>
+                        </div>
+                    </button>
+                    <button onclick="exportDocuments('invoice_detailed_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-invoice" style="color: #f59e0b; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">完整交易數據 CSV</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">詳細記錄</div>
+                        </div>
+                    </button>
+                `;
+            }
+            
+            // 其他選項（Xero、QuickBooks、IIF、QBO）- 始終顯示
+            menuHTML += `
+                <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">其他</div>
+                <button onclick="exportDocuments('xero_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                    <i class="fas fa-file-csv" style="color: #3b82f6; width: 20px;"></i>
+                    <div>
+                        <div style="font-weight: 500;">Xero CSV</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">官方最小格式</div>
+                    </div>
+                </button>
+                <button onclick="exportDocuments('quickbooks_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                    <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
+                    <div>
+                        <div style="font-weight: 500;">QuickBooks CSV</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">官方最小格式</div>
+                    </div>
+                </button>
+                <button onclick="exportDocuments('iif')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                    <i class="fas fa-file-alt" style="color: #3b82f6; width: 20px;"></i>
+                    <div>
+                        <div style="font-weight: 500;">IIF</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Desktop</div>
+                    </div>
+                </button>
+                <button onclick="exportDocuments('qbo')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                    <i class="fas fa-cloud" style="color: #8b5cf6; width: 20px;"></i>
+                    <div>
+                        <div style="font-weight: 500;">QBO</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Online</div>
+                    </div>
+                </button>
+            `;
+            
+            menuHTML += '</div>';
+            
+            // 更新菜單內容
+            menu.innerHTML = menuHTML;
+        }
+        
+        // 🔄 關閉 Export 菜單
+        window.closeExportMenu = function() {
+            const menu = document.getElementById('exportMenu');
+            const overlay = document.getElementById('exportMenuOverlay');
+            if (menu) {
+                menu.style.display = 'none';
+                menu.classList.remove('active');
+            }
+            if (overlay) {
+                overlay.style.display = 'none';
+            }
+            console.log('🔒 菜單已關閉');
         };
+        
+        // 🔄 切換 Export 菜單顯示/隱藏
+        window.toggleExportMenu = function() {
+            console.log('🔍 toggleExportMenu 被調用');
+            const menu = document.getElementById('exportMenu');
+            const overlay = document.getElementById('exportMenuOverlay');
+            console.log('📋 菜單元素:', menu);
+            
+            if (!menu) {
+                console.error('❌ 找不到 #exportMenu 元素');
+                return;
+            }
+            
+            // 如果菜單已顯示，則關閉
+            if (menu.style.display === 'block') {
+                closeExportMenu();
+                return;
+            }
+            
+            // 獲取選中的文檔
+            const checkboxes = document.querySelectorAll('.document-checkbox:checked');
+            console.log('✅ 已選中文檔數量:', checkboxes.length);
+            
+            if (checkboxes.length === 0) {
+                alert('請先選擇要導出的文檔');
+                return;
+            }
+            
+            // 更新菜單內容並顯示
+            console.log('🔄 更新菜單內容...');
+            updateExportMenuContent();
+            
+            // 🔥 根據屏幕大小設置菜單樣式
+            if (window.innerWidth <= 768) {
+                // 手機版：居中顯示，全白色設計
+                menu.style.position = 'fixed';
+                menu.style.top = '50%';
+                menu.style.left = '50%';
+                menu.style.transform = 'translate(-50%, -50%)';
+                menu.style.right = 'auto';
+                menu.style.width = '90%';
+                menu.style.maxWidth = '400px';
+                menu.style.backgroundColor = '#ffffff'; // 🔥 白色背景
+                menu.style.border = 'none'; // 🔥 無邊框
+                menu.style.boxShadow = 'none'; // 🔥 無陰影
+                menu.style.borderRadius = '12px';
+                console.log('📱 手機版：菜單居中顯示（全白色）');
+                
+                // 顯示遮罩
+                if (overlay) {
+                    overlay.style.display = 'block';
+                }
+            } else {
+                // 桌面版：在Export按鈕下方
+                const exportBtn = document.getElementById('export-btn-desktop');
+                if (exportBtn) {
+                    const rect = exportBtn.getBoundingClientRect();
+                    menu.style.position = 'fixed';
+                    menu.style.top = (rect.bottom + 8) + 'px';
+                    menu.style.right = (window.innerWidth - rect.right) + 'px';
+                    menu.style.left = 'auto';
+                    menu.style.transform = 'none';
+                    menu.style.width = 'auto';
+                    menu.style.minWidth = '280px';
+                    menu.style.maxWidth = '400px';
+                }
+                console.log('💻 桌面版：菜單在按鈕下方');
+                
+                // 桌面版不顯示遮罩
+                if (overlay) {
+                    overlay.style.display = 'none';
+                }
+            }
+            
+            menu.style.display = 'block';
+            menu.classList.add('active');
+            
+            console.log('✅ 菜單已顯示');
+        };
+        
+        // 🔄 監聽 checkbox 變化，實時更新 Export 菜單
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('document-checkbox')) {
+                const menu = document.getElementById('exportMenu');
+                // 只有當菜單打開時才更新
+                if (menu && menu.style.display === 'block') {
+                    updateExportMenuContent();
+                }
+            }
+        });
         
         // ✅ 按類型導出文檔（內部輔助函數）
         async function exportByType(docs, format) {
@@ -3429,32 +3868,34 @@
         window.exportDocuments = async function(format) {
             console.log('📤 開始導出:', format);
             
+            // 🔥 關閉菜單
+            closeExportMenu();
+            
             try {
-                // 檢查是否有勾選的文檔
-                const selectedDocs = Array.from(window.selectedDocuments || new Set());
+                // 🔥 直接從 DOM 獲取選中的文檔 ID
+                const selectedCheckboxes = document.querySelectorAll('.document-checkbox:checked');
+                const selectedDocIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.docId);
+                
+                console.log('📋 選中的文檔 ID:', selectedDocIds);
                 
                 let docsToExport;
                 
-                if (selectedDocs.length > 0) {
-                    // 如果有勾選，只導出已勾選且已完成的文檔
+                if (selectedDocIds.length > 0) {
+                    // 🔥 只導出已勾選且已完成的文檔
                     docsToExport = allDocuments.filter(doc => 
-                        selectedDocs.includes(doc.id) && 
+                        selectedDocIds.includes(doc.id) && 
                         doc.status === 'completed' && 
                         doc.processedData
                     );
-                    console.log(`📋 導出 ${docsToExport.length} 個已勾選的文檔`);
+                    console.log(`📋 導出 ${docsToExport.length} 個已勾選的文檔（共選中 ${selectedDocIds.length} 個）`);
                 } else {
-                    // 如果沒有勾選，導出所有已完成的文檔
-                    docsToExport = allDocuments.filter(doc => doc.status === 'completed' && doc.processedData);
-                    console.log(`📋 導出所有 ${docsToExport.length} 個已完成的文檔`);
+                    // 如果沒有勾選，提示用戶
+                    alert('請先選擇要導出的文檔');
+                    return;
                 }
                 
                 if (docsToExport.length === 0) {
-                    if (selectedDocs.length > 0) {
-                        alert('所選文檔中沒有已完成處理的文檔。\n請確保所選文檔已完成處理。');
-                    } else {
-                        alert('沒有可導出的文檔。\n請先勾選要導出的文檔，或確保至少有一個文檔已完成處理。');
-                    }
+                    alert('所選文檔中沒有已完成處理的文檔。\n請確保所選文檔已完成處理。');
                     return;
                 }
                 
@@ -3543,29 +3984,58 @@
                         break;
                     
                     case 'xero_csv':
-                        // Xero CSV（官方最小格式）
-                        if (window.BankStatementExport) {
-                            exportContent = window.BankStatementExport.generateXeroCSV(docsToExport);
+                        // Xero CSV（根據文檔類型導出）
+                        // 分離銀行對帳單和發票
+                        const xeroBankDocs = docsToExport.filter(d => 
+                            (d.documentType || d.type || '').toLowerCase().includes('bank')
+                        );
+                        const xeroInvoiceDocs = docsToExport.filter(d => 
+                            (d.documentType || d.type || '').toLowerCase().includes('invoice')
+                        );
+                        
+                        if (xeroBankDocs.length > 0 && window.BankStatementExport) {
+                            exportContent = window.BankStatementExport.generateXeroCSV(xeroBankDocs);
                             fileName = `BankStatement_${new Date().toISOString().split('T')[0]}_Xero.csv`;
-                            mimeType = 'text/csv;charset=utf-8;';
-                            console.log('✅ Xero CSV 導出（官方最小格式）');
+                            console.log('✅ Xero CSV 導出（銀行對帳單）');
+                        } else if (xeroInvoiceDocs.length > 0 && window.InvoiceExport) {
+                            // 🔥 發票導出 Xero 格式
+                            exportContent = window.InvoiceExport.generateXeroCSV ? 
+                                window.InvoiceExport.generateXeroCSV(xeroInvoiceDocs) :
+                                window.InvoiceExport.generateInvoiceSummaryCSV(xeroInvoiceDocs);
+                            fileName = `Invoice_${new Date().toISOString().split('T')[0]}_Xero.csv`;
+                            console.log('✅ Xero CSV 導出（發票）');
                         } else {
-                            alert('銀行對帳單導出模塊未載入，請刷新頁面後重試');
+                            alert('沒有可導出的文檔或導出模塊未載入');
                             return;
                         }
+                        mimeType = 'text/csv;charset=utf-8;';
                         break;
                     
                     case 'quickbooks_csv':
-                        // QuickBooks CSV（官方最小格式）
-                        if (window.BankStatementExport) {
-                            exportContent = window.BankStatementExport.generateQuickBooksCSV(docsToExport);
+                        // QuickBooks CSV（根據文檔類型導出）
+                        const qbBankDocs = docsToExport.filter(d => 
+                            (d.documentType || d.type || '').toLowerCase().includes('bank')
+                        );
+                        const qbInvoiceDocs = docsToExport.filter(d => 
+                            (d.documentType || d.type || '').toLowerCase().includes('invoice')
+                        );
+                        
+                        if (qbBankDocs.length > 0 && window.BankStatementExport) {
+                            exportContent = window.BankStatementExport.generateQuickBooksCSV(qbBankDocs);
                             fileName = `BankStatement_${new Date().toISOString().split('T')[0]}_QuickBooks.csv`;
-                            mimeType = 'text/csv;charset=utf-8;';
-                            console.log('✅ QuickBooks CSV 導出（官方最小格式）');
+                            console.log('✅ QuickBooks CSV 導出（銀行對帳單）');
+                        } else if (qbInvoiceDocs.length > 0 && window.InvoiceExport) {
+                            // 🔥 發票導出 QuickBooks 格式
+                            exportContent = window.InvoiceExport.generateQuickBooksCSV ? 
+                                window.InvoiceExport.generateQuickBooksCSV(qbInvoiceDocs) :
+                                window.InvoiceExport.generateInvoiceSummaryCSV(qbInvoiceDocs);
+                            fileName = `Invoice_${new Date().toISOString().split('T')[0]}_QuickBooks.csv`;
+                            console.log('✅ QuickBooks CSV 導出（發票）');
                         } else {
-                            alert('銀行對帳單導出模塊未載入，請刷新頁面後重試');
+                            alert('沒有可導出的文檔或導出模塊未載入');
                             return;
                         }
+                        mimeType = 'text/csv;charset=utf-8;';
                         break;
                     
                     case 'invoice_summary_csv':
@@ -3595,13 +4065,52 @@
                         break;
                     
                     case 'iif':
-                        exportContent = generateIIF(docsToExport);
-                        fileName = `vaultcaddy_export_${new Date().toISOString().split('T')[0]}.iif`;
+                        // IIF 格式（根據文檔類型導出）
+                        const iifBankDocs = docsToExport.filter(d => 
+                            (d.documentType || d.type || '').toLowerCase().includes('bank')
+                        );
+                        const iifInvoiceDocs = docsToExport.filter(d => 
+                            (d.documentType || d.type || '').toLowerCase().includes('invoice')
+                        );
+                        
+                        if (iifBankDocs.length > 0) {
+                            exportContent = generateIIF(iifBankDocs);
+                            fileName = `BankStatement_${new Date().toISOString().split('T')[0]}.iif`;
+                        } else if (iifInvoiceDocs.length > 0) {
+                            // 🔥 發票導出 IIF 格式
+                            exportContent = window.InvoiceExport && window.InvoiceExport.generateIIF ? 
+                                window.InvoiceExport.generateIIF(iifInvoiceDocs) :
+                                generateIIF(iifInvoiceDocs);
+                            fileName = `Invoice_${new Date().toISOString().split('T')[0]}.iif`;
+                        } else {
+                            exportContent = generateIIF(docsToExport);
+                            fileName = `vaultcaddy_export_${new Date().toISOString().split('T')[0]}.iif`;
+                        }
                         mimeType = 'text/plain;charset=utf-8;';
                         break;
+                        
                     case 'qbo':
-                        exportContent = generateQBO(docsToExport);
-                        fileName = `vaultcaddy_export_${new Date().toISOString().split('T')[0]}.qbo`;
+                        // QBO 格式（根據文檔類型導出）
+                        const qboBankDocs = docsToExport.filter(d => 
+                            (d.documentType || d.type || '').toLowerCase().includes('bank')
+                        );
+                        const qboInvoiceDocs = docsToExport.filter(d => 
+                            (d.documentType || d.type || '').toLowerCase().includes('invoice')
+                        );
+                        
+                        if (qboBankDocs.length > 0) {
+                            exportContent = generateQBO(qboBankDocs);
+                            fileName = `BankStatement_${new Date().toISOString().split('T')[0]}.qbo`;
+                        } else if (qboInvoiceDocs.length > 0) {
+                            // 🔥 發票導出 QBO 格式
+                            exportContent = window.InvoiceExport && window.InvoiceExport.generateQBO ? 
+                                window.InvoiceExport.generateQBO(qboInvoiceDocs) :
+                                generateQBO(qboInvoiceDocs);
+                            fileName = `Invoice_${new Date().toISOString().split('T')[0]}.qbo`;
+                        } else {
+                            exportContent = generateQBO(docsToExport);
+                            fileName = `vaultcaddy_export_${new Date().toISOString().split('T')[0]}.qbo`;
+                        }
                         mimeType = 'application/vnd.intu.qbo;charset=utf-8;';
                         break;
                     default:
@@ -3894,34 +4403,118 @@
         // ==================== 文檔搜尋功能 ====================
         function filterDocuments(searchTerm) {
             const tbody = document.getElementById('team-project-tbody');
-            if (!tbody) return;
+            if (!tbody) {
+                console.error('❌ 找不到表格 tbody');
+                return;
+            }
             
             const rows = tbody.getElementsByTagName('tr');
             const term = searchTerm.toLowerCase().trim();
             
-            console.log(`🔍 搜尋文檔: "${term}"`);
+            console.log(`🔍 搜尋文檔: "${term}", 總共 ${rows.length} 行`);
+            
+            // 如果搜尋欄是空的，顯示所有行
+            if (term === '') {
+                for (let row of rows) {
+                    row.style.display = '';
+                }
+                console.log(`✅ 顯示所有 ${rows.length} 個文檔`);
+                updateDocumentTotal(); // 更新總計
+                return;
+            }
             
             let visibleCount = 0;
             for (let row of rows) {
+                // 跳過沒有 cells 的行（例如空狀態行）
+                if (!row.cells || row.cells.length === 0) {
+                    row.style.display = 'none';
+                    continue;
+                }
+                
+                // 跳過 colspan 行（空狀態提示）
+                if (row.querySelector('td[colspan]')) {
+                    row.style.display = 'none';
+                    continue;
+                }
+                
                 // 搜尋所有列的內容
                 let rowText = '';
                 for (let cell of row.cells) {
                     rowText += cell.textContent.toLowerCase() + ' ';
                 }
                 
+                console.log(`🔍 行內容: "${rowText.substring(0, 50)}..."`);
+                
                 if (rowText.includes(term)) {
                     row.style.display = '';
                     visibleCount++;
+                    console.log(`✅ 匹配！`);
                 } else {
                     row.style.display = 'none';
                 }
             }
             
-            console.log(`✅ 顯示 ${visibleCount} 個文檔`);
+            console.log(`✅ 顯示 ${visibleCount} 個文檔（搜尋: "${term}"）`);
+            updateDocumentTotal(); // 更新總計
         }
         
         // 暴露到全局供搜尋框使用
         window.filterDocuments = filterDocuments;
+        
+        // ==================== 計算發票總計 ====================
+        function updateDocumentTotal() {
+            const tbody = document.getElementById('team-project-tbody');
+            const summaryDiv = document.getElementById('invoice-summary');
+            
+            if (!tbody || !summaryDiv) {
+                console.log('⚠️ 找不到表格或總計元素');
+                return;
+            }
+            
+            const rows = tbody.getElementsByTagName('tr');
+            let invoiceCount = 0;
+            let totalAmount = 0;
+            
+            for (let row of rows) {
+                // 跳過隱藏的行（被搜尋過濾掉的）
+                if (row.style.display === 'none') continue;
+                
+                // 跳過 "No results" 行
+                if (row.querySelector('td[colspan]')) continue;
+                
+                // 檢查類型欄位是否為 "發票"
+                const typeCell = row.querySelector('.document-type-cell');
+                if (typeCell && typeCell.textContent.trim() === '發票') {
+                    invoiceCount++;
+                    
+                    // 提取金額
+                    const amountCell = row.querySelector('.document-amount-cell');
+                    if (amountCell) {
+                        const amountText = amountCell.textContent.trim();
+                        // 移除 $ 和逗號，轉換為數字
+                        const amount = parseFloat(amountText.replace(/[$,]/g, '')) || 0;
+                        totalAmount += amount;
+                    }
+                }
+            }
+            
+            // 更新顯示
+            if (invoiceCount > 0) {
+                document.getElementById('total-invoice-count').textContent = invoiceCount;
+                document.getElementById('total-invoice-amount').textContent = totalAmount.toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+                summaryDiv.style.display = 'block';
+            } else {
+                summaryDiv.style.display = 'none';
+            }
+            
+            console.log(`📊 發票統計: ${invoiceCount} 張, 總額: $${totalAmount.toFixed(2)}`);
+        }
+        
+        // 暴露到全局
+        window.updateDocumentTotal = updateDocumentTotal;
     </script>
     
     <!-- CSV 導出優化模塊 -->
@@ -3957,5 +4550,103 @@
             </div>
         </div>
     </div>
+
+    <!-- 🔥 漢堡菜單超級簡單修復方案 -->
+    <script>
+        console.log('🔥 開始初始化漢堡菜單...');
+        
+        // 打開側邊欄函數
+        function openSidebar() {
+            console.log('🔵 打開側邊欄');
+            const sidebar = document.getElementById('mobile-sidebar');
+            const overlay = document.getElementById('mobile-sidebar-overlay');
+            
+            if (sidebar && overlay) {
+                sidebar.style.left = '0';
+                overlay.style.display = 'block';
+                overlay.style.opacity = '1';
+                document.body.style.overflow = 'hidden';
+                console.log('✅ 側邊欄已打開');
+            }
+        }
+        
+        // 關閉側邊欄函數
+        function closeSidebar() {
+            console.log('🔵 關閉側邊欄');
+            const sidebar = document.getElementById('mobile-sidebar');
+            const overlay = document.getElementById('mobile-sidebar-overlay');
+            
+            if (sidebar && overlay) {
+                sidebar.style.left = '-100%';
+                overlay.style.opacity = '0';
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                }, 300); // 等待動畫完成（與 CSS transition 一致）
+                document.body.style.overflow = 'auto';
+                console.log('✅ 側邊欄已關閉');
+            }
+        }
+        
+        // 超級簡單的初始化函數
+        function simpleInitMenu() {
+            const btn = document.getElementById('mobile-menu-btn');
+            const overlay = document.getElementById('mobile-sidebar-overlay');
+            
+            if (!btn || !overlay) {
+                console.log('⏳ 元素未找到，200ms後重試');
+                setTimeout(simpleInitMenu, 200);
+                return;
+            }
+            
+            console.log('✅ 找到所有元素！');
+            
+            // 按鈕點擊處理
+            btn.addEventListener('click', function() {
+                console.log('🔵 按鈕被點擊！');
+                openSidebar();
+            });
+            
+            // 觸摸處理
+            btn.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                console.log('🔵 觸摸事件！');
+                openSidebar();
+            });
+            
+            // 遮罩點擊關閉
+            overlay.addEventListener('click', function() {
+                console.log('🔵 點擊遮罩關閉');
+                closeSidebar();
+            });
+            
+            // 遮罩觸摸關閉
+            overlay.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                console.log('🔵 觸摸遮罩關閉');
+                closeSidebar();
+            });
+            
+            console.log('✅ 所有事件監聽器已綁定');
+        }
+        
+        // 立即嘗試初始化
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', simpleInitMenu);
+        } else {
+            setTimeout(simpleInitMenu, 100);
+        }
+        
+        // 暴露函數供側邊欄內的連結使用
+        window.closeMobileSidebar = closeSidebar;
+    </script>
+    
+    <!-- 🔥 Export 菜單（獨立於容器外，避免被父元素隱藏）-->
+    <div id="exportMenu" class="export-menu" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: #ffffff !important; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); min-width: 280px; max-width: 400px; z-index: 999999; padding: 1rem; overflow: hidden;">
+        <!-- 動態生成 -->
+    </div>
+    
+    <!-- Export 菜單背景遮罩 -->
+    <div id="exportMenuOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999998;" onclick="closeExportMenu()"></div>
+
 </body>
 </html>
