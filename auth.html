@@ -698,6 +698,12 @@
             } catch (error) {
                 console.error('❌ Google 登入錯誤:', error);
                 
+                // 隱藏 popup 衝突錯誤（用戶快速點擊導致）
+                if (error.code === 'auth/cancelled-popup-request') {
+                    console.log('ℹ️ Popup 請求已取消（用戶快速點擊），忽略錯誤');
+                    return; // 不顯示錯誤訊息
+                }
+                
                 let errorMessage = 'Google 登入失敗';
                 
                 if (error.code === 'auth/popup-closed-by-user') {
