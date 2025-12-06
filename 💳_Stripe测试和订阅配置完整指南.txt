@@ -1,0 +1,503 @@
+# 💳 Stripe 测试和订阅配置 - 完整指南
+
+## 📋 您的两个问题
+
+### 问题1：如何在不付钱的情况下测试是否可行？
+✅ 使用 Stripe 测试模式 + 测试卡号
+
+### 问题2：年付一次744是否太惊吓？
+✅ 可以改为自动每月收费！推荐改为分期付款
+
+---
+
+## 🧪 问题1：如何测试 Stripe 支付（不付真钱）
+
+### ✅ Stripe 测试模式
+
+Stripe 提供**测试模式（Test Mode）**，可以完全免费测试：
+- ✅ 不会真实扣款
+- ✅ 使用测试卡号模拟支付
+- ✅ 所有功能与生产环境相同
+- ✅ 可以测试 Credits 增加
+
+---
+
+### 🎯 测试目标
+
+**测试1：月费 HK$78 支付后 Credits 是否增加100**
+```
+支付链接：https://buy.stripe.com/cNi8wQ0bagJA1CS58ef7i08
+预期结果：支付成功后，用户 Credits 增加 100
+```
+
+**测试2：超过100后是否自动收费 HK$0.5/Credit**
+```
+这个需要单独配置"按量计费"功能
+目前的订阅是固定 Credits，不是按量计费
+```
+
+---
+
+### 📝 完整测试步骤
+
+#### 步骤1：确认当前在测试模式
+
+**登录 Stripe Dashboard：**
+```
+https://dashboard.stripe.com/
+```
+
+**检查测试模式：**
+- 左上角应该显示 "TEST MODE"（橙色标签）
+- 如果是 "LIVE MODE"，点击切换到 "TEST MODE"
+
+---
+
+#### 步骤2：使用测试卡号支付
+
+**访问支付链接：**
+```
+月费：https://buy.stripe.com/cNi8wQ0bagJA1CS58ef7i08
+年费：https://buy.stripe.com/dRm6oI3nmeBs3L00RYf7i07
+```
+
+**填写测试信息：**
+```
+邮箱：test@example.com
+卡号：4242 4242 4242 4242
+到期：12/25（任何未来日期）
+CVC：123（任何3位数）
+邮编：12345（任何邮编）
+```
+
+**点击支付：**
+- ✅ 测试模式下不会真实扣款
+- ✅ 支付会立即成功
+
+---
+
+#### 步骤3：验证 Credits 是否增加
+
+**3.1 检查 Webhook 是否触发**
+
+**查看 Stripe Dashboard：**
+```
+https://dashboard.stripe.com/test/webhooks
+```
+
+**应该看到：**
+- `checkout.session.completed` 事件
+- `payment_intent.succeeded` 事件
+- `customer.subscription.created` 事件（如果是订阅）
+
+---
+
+**3.2 检查 Firestore 数据**
+
+**Firebase Console：**
+```
+Firestore Database → users → [用户文档]
+```
+
+**应该看到：**
+```json
+{
+  "credits": 100,  // ← 应该增加了100
+  "currentCredits": 100,
+  "subscription": {
+    "status": "active",
+    "planType": "basic",  // 或 "pro"
+    "monthlyCredits": 100,
+    "stripeSubscriptionId": "sub_xxxxx"
+  }
+}
+```
+
+---
+
+**3.3 检查 Firebase Functions 日志**
+
+**查看日志：**
+```bash
+firebase functions:log --only stripeWebhook
+```
+
+**应该看到：**
+```
+✅ 結帳完成: cs_test_xxxxx
+✅ 訂閱變更: sub_xxxxx
+🎁 已添加 100 Credits
+```
+
+---
+
+### 💡 测试卡号大全
+
+**成功支付：**
+```
+4242 4242 4242 4242 - 基本成功（最常用）
+4000 0027 6000 3184 - 3D验证成功
+```
+
+**失败测试：**
+```
+4000 0000 0000 0002 - 卡片被拒绝
+4000 0000 0000 9995 - 余额不足
+4000 0000 0000 0069 - 卡片过期
+4000 0000 0000 0127 - CVC错误
+```
+
+**其他货币：**
+```
+4000 0034 4000 0001 - 香港卡（HKD）
+4000 0015 6000 0008 - 人民币卡（CNY）
+```
+
+---
+
+## 💰 问题2：年付改为月付（推荐！）
+
+### ❌ 当前问题
+
+**年付链接：** https://buy.stripe.com/dRm6oI3nmeBs3L00RYf7i07
+
+**问题：**
+- ❌ 一次性支付 HK$744 太惊吓
+- ❌ 用户可能因为金额太大而放弃
+- ❌ 心理负担大
+
+---
+
+### ✅ 推荐方案：改为每月自动收费
+
+**方案A：每月自动扣款（推荐！）**
+```
+年付方案：HK$744/年
+改为月付：HK$62/月 × 12个月 = HK$744/年
+
+优势：
+✅ 每月只需支付 HK$62
+✅ 心理负担小
+✅ 更容易接受
+✅ 自动续订，不用担心忘记
+✅ 可以随时取消
+```
+
+**方案B：首月优惠 + 后续月付**
+```
+首月：HK$1（体验价）
+后续：HK$62/月
+
+优势：
+✅ 极低门槛吸引用户
+✅ 用户更愿意尝试
+✅ 转化率更高
+```
+
+---
+
+### 🔧 如何修改为每月自动收费
+
+#### 方法1：在 Stripe Dashboard 修改（推荐）
+
+**步骤：**
+```
+1. 登录 Stripe Dashboard
+   https://dashboard.stripe.com/
+
+2. 进入 Payment Links
+   Products → Payment links
+
+3. 找到年付链接
+   plink_1SWBm2JmiQ31C0GTmfhIAhu7
+
+4. 点击 "Edit"（编辑）
+
+5. 修改订阅设置
+   Billing period: Yearly → Monthly
+   Amount: HK$744 → HK$62
+
+6. 保存
+```
+
+---
+
+#### 方法2：创建新的月付链接
+
+**步骤1：创建产品**
+```
+Stripe Dashboard → Products → Add product
+
+产品名称：VaultCaddy 年付方案（月结）
+描述：每月自动扣款 HK$62，相当于年付 HK$744（节省20%）
+```
+
+**步骤2：设置价格**
+```
+Price: HK$62.00
+Billing period: Monthly
+```
+
+**步骤3：添加 Metadata（重要！）**
+```
+monthly_credits: 100
+plan_type: basic
+```
+
+**步骤4：创建 Payment Link**
+```
+Create payment link
+选择刚创建的产品
+生成链接
+```
+
+**步骤5：替换 billing.html 中的链接**
+```html
+<!-- 修改前 -->
+<a href="https://buy.stripe.com/dRm6oI3nmeBs3L00RYf7i07">
+
+<!-- 修改后 -->
+<a href="https://buy.stripe.com/[新的月付链接]">
+```
+
+---
+
+### 📊 方案对比
+
+| 方案 | 首次支付 | 月支付 | 年支付 | 心理负担 | 转化率 |
+|------|---------|--------|--------|---------|--------|
+| **年付（当前）** | HK$744 | - | HK$744 | ❌ 高 | ❌ 低 |
+| **月付（推荐）** | HK$62 | HK$62 | HK$744 | ✅ 低 | ✅ 高 |
+| **首月优惠** | HK$1 | HK$62 | HK$743 | ✅✅ 很低 | ✅✅ 很高 |
+
+---
+
+## 🎯 关于"超过100后自动收费HK$0.5/Credit"
+
+### ❌ 当前情况
+
+**当前订阅模式：**
+- 月费 HK$78 = 固定 100 Credits/月
+- 用完100个后，**没有自动续费机制**
+- 用户需要手动购买更多 Credits
+
+---
+
+### ✅ 实现按量计费的方法
+
+#### 方法1：Stripe Usage-Based Billing（推荐！）
+
+**配置步骤：**
+
+**1. 创建 Usage-Based 产品**
+```
+Stripe Dashboard → Products → Add product
+
+产品名称：VaultCaddy Credits 超额使用
+计费模式：Usage-based
+价格：HK$0.5 per Credit
+```
+
+**2. 设置使用量报告**
+```
+在 Firebase Functions 中添加代码：
+
+// 当用户使用 Credits 时
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
+await stripe.subscriptionItems.createUsageRecord(
+  subscriptionItemId,
+  {
+    quantity: creditsUsed,  // 使用的 Credits 数量
+    timestamp: Math.floor(Date.now() / 1000),
+    action: 'increment'
+  }
+);
+```
+
+**3. 在月底自动计费**
+```
+Stripe 会自动：
+1. 统计本月超额使用的 Credits
+2. 计算费用（超额Credits × HK$0.5）
+3. 在月底自动扣款
+```
+
+---
+
+#### 方法2：手动按需购买（当前方案）
+
+**当前实现：**
+- 用户用完100个Credits后
+- 需要手动访问 billing.html
+- 购买额外的 Credits 包
+
+**优势：**
+- ✅ 用户可控
+- ✅ 不会意外扣款
+
+**劣势：**
+- ❌ 不够自动化
+- ❌ 用户体验不佳
+
+---
+
+## 🚀 推荐的最终方案
+
+### 方案：分层订阅 + 超额按量计费
+
+**基础版（月付）：**
+```
+价格：HK$62/月（自动扣款）
+包含：100 Credits/月
+超额：HK$0.5/Credit（自动计费）
+```
+
+**优势：**
+- ✅ 每月只需 HK$62，心理负担小
+- ✅ 用完100个后自动按量计费
+- ✅ 用户不用担心突然没有 Credits
+- ✅ 收入更稳定
+
+---
+
+## 📋 实施检查清单
+
+### 1. 修改年付为月付
+
+- [ ] 登录 Stripe Dashboard
+- [ ] 创建新的月付产品（HK$62/月）
+- [ ] 设置 Metadata（monthly_credits: 100）
+- [ ] 创建新的 Payment Link
+- [ ] 更新 billing.html 中的链接
+- [ ] 更新 index.html 中的链接
+
+---
+
+### 2. 配置 Webhook（确保 Credits 自动添加）
+
+- [ ] Stripe Dashboard → Webhooks
+- [ ] 确认 Webhook URL：
+  ```
+  https://us-central1-[项目ID].cloudfunctions.net/stripeWebhook
+  ```
+- [ ] 确认监听事件：
+  - checkout.session.completed
+  - payment_intent.succeeded
+  - customer.subscription.created
+  - customer.subscription.updated
+
+---
+
+### 3. 测试完整流程
+
+- [ ] 在测试模式下支付
+- [ ] 检查 Webhook 触发
+- [ ] 检查 Firestore Credits 增加
+- [ ] 检查 Firebase Functions 日志
+- [ ] 测试取消订阅
+- [ ] 测试续订
+
+---
+
+### 4. （可选）配置超额按量计费
+
+- [ ] 创建 Usage-Based 产品
+- [ ] 修改 Firebase Functions
+- [ ] 实现使用量上报
+- [ ] 测试超额计费
+
+---
+
+## 🧪 完整测试脚本
+
+### 测试月付订阅
+
+```bash
+# 1. 访问月付链接（测试模式）
+# 使用测试卡号：4242 4242 4242 4242
+
+# 2. 检查 Firestore
+# Firebase Console → Firestore → users → [测试用户]
+# 确认 credits: 100
+
+# 3. 检查 Stripe Dashboard
+# Dashboard → Customers
+# 确认订阅状态：Active
+
+# 4. 检查 Functions 日志
+firebase functions:log --only stripeWebhook
+
+# 5. 模拟下个月续订
+# Stripe Dashboard → Subscriptions → 找到测试订阅
+# 点击 "Send test webhook" → subscription.updated
+# 确认 Credits 再次增加 100
+```
+
+---
+
+## 📞 常见问题
+
+### Q1：测试模式的支付会扣真钱吗？
+**A：** 不会！测试模式完全免费，只是模拟支付流程。
+
+---
+
+### Q2：如何切换到生产模式？
+**A：** Stripe Dashboard 左上角切换 "LIVE MODE"，但必须先完成测试！
+
+---
+
+### Q3：Webhook 没有触发怎么办？
+**A：**
+1. 检查 Webhook URL 是否正确
+2. 检查 Firebase Functions 是否部署
+3. 查看 Stripe Dashboard → Webhooks → 事件日志
+
+---
+
+### Q4：月付改为年付，用户会被扣12次款吗？
+**A：** 是的，这就是月付的意思。用户每月自动扣 HK$62，共12次。
+
+如果想一次性扣年费，那就还是年付。但建议月付，因为：
+- ✅ 心理负担小
+- ✅ 更容易接受
+- ✅ 转化率更高
+
+---
+
+### Q5：首月优惠（HK$1）如何设置？
+**A：**
+```
+Stripe Dashboard → Products → 创建产品
+设置：
+- First month: HK$1
+- After: HK$62/month
+```
+
+---
+
+## 🎊 总结
+
+### 问题1答案：如何测试？
+✅ 使用 Stripe 测试模式 + 测试卡号 4242 4242 4242 4242
+✅ 完全免费，不会真实扣款
+✅ 可以测试 Credits 增加
+
+### 问题2答案：年付改月付？
+✅ **强烈推荐改为月付！**
+✅ HK$744/年 → HK$62/月 × 12
+✅ 降低心理负担，提高转化率
+
+### 额外建议：超额计费？
+✅ 可以配置 Stripe Usage-Based Billing
+✅ 超过100 Credits 自动按 HK$0.5/Credit 计费
+✅ 提升用户体验
+
+---
+
+🎯 **下一步：**
+1. 在测试模式测试当前支付流程
+2. 创建新的月付链接
+3. 配置超额按量计费（可选）
+4. 充分测试后再切换到生产模式
