@@ -842,9 +842,7 @@
     <!-- ✅ index.html 動態更新用戶狀態 -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('✅ index.html 初始化');
-            
-            let userCredits = 0;
+let userCredits = 0;
             let userEmail = '';
             let userDisplayName = '';
             
@@ -863,43 +861,34 @@
             
             // 🔥 漢堡菜單功能（立即執行，不等待 DOMContentLoaded）
             (function() {
-                console.log('🔵 初始化漢堡菜單...');
-                
-                // 打開側邊欄
+// 打開側邊欄
                 window.openMobileSidebar = function() {
-                    console.log('🔵 openMobileSidebar 被調用');
-                    const sidebar = document.getElementById('mobile-sidebar');
+const sidebar = document.getElementById('mobile-sidebar');
                     const overlay = document.getElementById('mobile-sidebar-overlay');
-                    console.log('🔵 sidebar:', sidebar);
-                    console.log('🔵 overlay:', overlay);
-                    
-                    if (sidebar && overlay) {
+
+if (sidebar && overlay) {
                         sidebar.style.left = '0';
                         overlay.style.display = 'block';
                         document.body.style.overflow = 'hidden';
-                        console.log('✅ 側邊欄已打開');
-                    } else {
+} else {
                         console.error('❌ 找不到側邊欄或遮罩元素');
                     }
                 };
                 
                 // 關閉側邊欄
                 window.closeMobileSidebar = function() {
-                    console.log('🔵 closeMobileSidebar 被調用');
-                    const sidebar = document.getElementById('mobile-sidebar');
+const sidebar = document.getElementById('mobile-sidebar');
                     const overlay = document.getElementById('mobile-sidebar-overlay');
                     
                     if (sidebar && overlay) {
                         sidebar.style.left = '-100%';
                         overlay.style.display = 'none';
                         document.body.style.overflow = 'auto';
-                        console.log('✅ 側邊欄已關閉');
-                    }
+}
                 };
                 
                 // 漢堡菜單按鈕使用 onclick，無需額外綁定
-                console.log('✅ 漢堡菜單功能已就緒（使用 onclick）');
-            })();
+})();
                 
                 // 手機版自動輪播（僅在手機版啟用）
                 if (window.innerWidth <= 768) {
@@ -947,8 +936,7 @@
                     if (window.simpleDataManager && window.simpleDataManager.initialized) {
                         try {
                             userCredits = await window.simpleDataManager.getUserCredits();
-                            console.log('✅ 即時獲取 Credits:', userCredits);
-                        } catch (error) {
+} catch (error) {
                             console.error('❌ 無法獲取 Credits:', error);
                         }
                     }
@@ -1007,20 +995,16 @@
                                 if (userDoc) {
                                     userDisplayName = userDoc.displayName || userDisplayName;
                                     userCredits = userDoc.credits || 0;
-                                    console.log('✅ index.html 獲取 Credits:', userCredits);
-                                }
+}
                             } catch (error) {
-                                console.log('⚠️ 無法從 Firestore 獲取用戶資料:', error);
-                            }
+}
                         } else {
-                            console.log('⏳ SimpleDataManager 尚未初始化，等待中...');
-                            // 延遲重試
+// 延遲重試
                             setTimeout(async () => {
                                 if (window.simpleDataManager && window.simpleDataManager.initialized) {
                                     try {
                                         userCredits = await window.simpleDataManager.getUserCredits();
-                                        console.log('✅ 延遲獲取 Credits:', userCredits);
-                                    } catch (error) {
+} catch (error) {
                                         console.error('❌ 延遲獲取失敗:', error);
                                     }
                                 }
@@ -1028,24 +1012,21 @@
                         }
                         
                         const userInitial = getUserInitial();
-                        console.log(`👤 用戶首字母: "${userInitial}" (displayName: "${userDisplayName}")`);
+                        `);
                         
                         userMenu.innerHTML = `
                             <div onclick="toggleDropdown()" style="cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
                                 <div style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem; opacity: 1; transition: opacity 0.3s;">${userInitial}</div>
                             </div>
                         `;
-                        console.log('✅ 用戶已登入，顯示頭像');
-                    } else {
+} else {
                         // ✅ 未登入：顯示登入按鈕
                         userMenu.innerHTML = `
                             <button onclick="window.location.href='auth.html'" style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.875rem;" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">登入</button>
                         `;
-                        console.log('✅ 用戶未登入，顯示登入按鈕');
-                    }
+}
                 } catch (e) {
-                    console.log('❌ 無法更新用戶菜單:', e);
-                }
+}
             }
             
             // 立即嘗試更新
@@ -1223,8 +1204,7 @@
             // 保存到 Firebase
             try {
                 await window.simpleDataManager.createProject(projectName);
-                console.log('✅ 項目已保存到 Firebase');
-            } catch (error) {
+} catch (error) {
                 console.error('❌ 保存到 Firebase 失敗:', error);
                 alert('創建項目失敗，請重試');
                 return;
@@ -1240,9 +1220,7 @@
             
             // 重新載入項目列表
             loadProjects();
-            
-            console.log('✅ 項目已創建:', newProject);
-        }
+}
 
         // ✅ 簡化：直接使用 SimpleAuth
         function checkLoginStatus() {
@@ -1251,14 +1229,11 @@
 
         // 載入項目列表
         async function loadProjects() {
-            console.log('🔄 載入項目列表');
-            
-            // 從 Firebase 獲取項目數據
+// 從 Firebase 獲取項目數據
             let projects = [];
             try {
                 projects = await window.simpleDataManager.getProjects();
-                console.log(`✅ 從 Firebase 加載 ${projects.length} 個項目`);
-            } catch (error) {
+} catch (error) {
                 console.error('❌ 從 Firebase 加載項目失敗:', error);
                 projects = [];
             }
@@ -1394,9 +1369,7 @@
             
             try {
                 await window.simpleDataManager.deleteProject(projectToDelete.id);
-                console.log('✅ 項目已刪除:', projectToDelete.name);
-                
-                // 觸發側邊欄更新
+// 觸發側邊欄更新
                 window.dispatchEvent(new Event('projectDeleted'));
                 
                 // 關閉模態框
@@ -1422,35 +1395,26 @@
         let dataManagerInitialized = false;
         
         window.addEventListener('auth-state-changed', async function(e) {
-            console.log('🔥 收到 auth-state-changed 事件');
-            authInitialized = true;
+authInitialized = true;
             
             // 檢查是否已登入
             if (!e.detail.user) {
-                console.log('❌ 用戶未登入');
-                return; // SimpleAuth 會自動處理重定向
+return; // SimpleAuth 會自動處理重定向
             }
-            
-            console.log('✅ 用戶已登入:', e.detail.user.email);
-            
-            // 初始化側邊欄
+// 初始化側邊欄
             initializeDashboard();
         });
         
         // 初始化 Dashboard
         function initializeDashboard() {
-            console.log('🎯 初始化 Dashboard...');
-            
-            // 初始化側邊欄
+// 初始化側邊欄
             if (window.VaultCaddySidebar && !window.dashboardSidebar) {
                 window.dashboardSidebar = new VaultCaddySidebar('dashboard');
-                console.log('✅ 側邊欄已初始化');
-            }
+}
             
             // 如果 SimpleDataManager 已初始化，載入項目
             if (window.simpleDataManager && window.simpleDataManager.initialized) {
-                console.log('✅ SimpleDataManager 已就緒，載入項目');
-                loadProjects();
+loadProjects();
             }
         }
         
@@ -1460,12 +1424,9 @@
             if (window.simpleDataManager && window.simpleDataManager.initialized && !dataManagerInitialized) {
                 dataManagerInitialized = true;
                 clearInterval(checkDataManager);
-                console.log('✅ SimpleDataManager 已初始化');
-                
-                // 如果用戶已登入，載入項目
+// 如果用戶已登入，載入項目
                 if (authInitialized && window.simpleAuth && window.simpleAuth.isLoggedIn()) {
-                    console.log('✅ 用戶已登入 + SimpleDataManager 已就緒，載入項目');
-                    loadProjects();
+loadProjects();
                 }
             }
         }, 100);
@@ -1506,12 +1467,9 @@
 
     <!-- 🔥 漢堡菜單超級簡單修復方案 -->
     <script>
-        console.log('🔥 開始初始化漢堡菜單...');
-        
-        // 打開側邊欄函數
+// 打開側邊欄函數
         function openSidebar() {
-            console.log('🔵 打開側邊欄');
-            const sidebar = document.getElementById('mobile-sidebar');
+const sidebar = document.getElementById('mobile-sidebar');
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
             if (sidebar && overlay) {
@@ -1519,14 +1477,12 @@
                 overlay.style.display = 'block';
                 overlay.style.opacity = '1';
                 document.body.style.overflow = 'hidden';
-                console.log('✅ 側邊欄已打開');
-            }
+}
         }
         
         // 關閉側邊欄函數
         function closeSidebar() {
-            console.log('🔵 關閉側邊欄');
-            const sidebar = document.getElementById('mobile-sidebar');
+const sidebar = document.getElementById('mobile-sidebar');
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
             if (sidebar && overlay) {
@@ -1536,8 +1492,7 @@
                     overlay.style.display = 'none';
                 }, 300); // 等待動畫完成（與 CSS transition 一致）
                 document.body.style.overflow = 'auto';
-                console.log('✅ 側邊欄已關閉');
-            }
+}
         }
         
         // 超級簡單的初始化函數
@@ -1546,41 +1501,31 @@
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
             if (!btn || !overlay) {
-                console.log('⏳ 元素未找到，200ms後重試');
-                setTimeout(simpleInitMenu, 200);
+setTimeout(simpleInitMenu, 200);
                 return;
             }
-            
-            console.log('✅ 找到所有元素！');
-            
-            // 按鈕點擊處理
+// 按鈕點擊處理
             btn.addEventListener('click', function() {
-                console.log('🔵 按鈕被點擊！');
-                openSidebar();
+openSidebar();
             });
             
             // 觸摸處理
             btn.addEventListener('touchend', function(e) {
                 e.preventDefault();
-                console.log('🔵 觸摸事件！');
-                openSidebar();
+openSidebar();
             });
             
             // 遮罩點擊關閉
             overlay.addEventListener('click', function() {
-                console.log('🔵 點擊遮罩關閉');
-                closeSidebar();
+closeSidebar();
             });
             
             // 遮罩觸摸關閉
             overlay.addEventListener('touchend', function(e) {
                 e.preventDefault();
-                console.log('🔵 觸摸遮罩關閉');
-                closeSidebar();
+closeSidebar();
             });
-            
-            console.log('✅ 所有事件監聽器已綁定');
-        }
+}
         
         // 立即嘗試初始化
         if (document.readyState === 'loading') {

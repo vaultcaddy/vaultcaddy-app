@@ -1822,23 +1822,19 @@
     <!-- ✅ index.html 動態更新用戶狀態 -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('✅ index.html 初始化');
-            
-            // 🔥 手機版：調整內容距離導航欄的距離
+// 🔥 手機版：調整內容距離導航欄的距離
             function adjustMobileLayout() {
                 if (window.innerWidth <= 768) {
                     const header = document.getElementById('project-header');
                     if (header) {
                         header.style.setProperty('margin-top', '0', 'important');
                         header.style.setProperty('padding-top', '0', 'important');
-                        console.log('📱 手機版：調整 header margin-top 和 padding-top 為 0');
-                    }
+}
                     // 同時調整 team-project-view 的 padding
                     const teamProjectView = document.getElementById('team-project-view');
                     if (teamProjectView) {
                         teamProjectView.style.setProperty('padding-top', '0.5rem', 'important');
-                        console.log('📱 手機版：調整 team-project-view padding-top 為 0.5rem');
-                    }
+}
                 } else {
                     // 桌面版恢復原始樣式
                     const header = document.getElementById('project-header');
@@ -1880,43 +1876,34 @@
             
             // 🔥 漢堡菜單功能（立即執行，不等待 DOMContentLoaded）
             (function() {
-                console.log('🔵 初始化漢堡菜單...');
-                
-                // 打開側邊欄
+// 打開側邊欄
                 window.openMobileSidebar = function() {
-                    console.log('🔵 openMobileSidebar 被調用');
-                    const sidebar = document.getElementById('mobile-sidebar');
+const sidebar = document.getElementById('mobile-sidebar');
                     const overlay = document.getElementById('mobile-sidebar-overlay');
-                    console.log('🔵 sidebar:', sidebar);
-                    console.log('🔵 overlay:', overlay);
-                    
-                    if (sidebar && overlay) {
+
+if (sidebar && overlay) {
                         sidebar.style.left = '0';
                         overlay.style.display = 'block';
                         document.body.style.overflow = 'hidden';
-                        console.log('✅ 側邊欄已打開');
-                    } else {
+} else {
                         console.error('❌ 找不到側邊欄或遮罩元素');
                     }
                 };
                 
                 // 關閉側邊欄
                 window.closeMobileSidebar = function() {
-                    console.log('🔵 closeMobileSidebar 被調用');
-                    const sidebar = document.getElementById('mobile-sidebar');
+const sidebar = document.getElementById('mobile-sidebar');
                     const overlay = document.getElementById('mobile-sidebar-overlay');
                     
                     if (sidebar && overlay) {
                         sidebar.style.left = '-100%';
                         overlay.style.display = 'none';
                         document.body.style.overflow = 'auto';
-                        console.log('✅ 側邊欄已關閉');
-                    }
+}
                 };
                 
                 // 漢堡菜單按鈕使用 onclick，無需額外綁定
-                console.log('✅ 漢堡菜單功能已就緒（使用 onclick）');
-            })();
+})();
                 
                 // 手機版自動輪播（僅在手機版啟用）
                 if (window.innerWidth <= 768) {
@@ -1964,8 +1951,7 @@
                     if (window.simpleDataManager && window.simpleDataManager.initialized) {
                         try {
                             userCredits = await window.simpleDataManager.getUserCredits();
-                            console.log('✅ 即時獲取 Credits:', userCredits);
-                        } catch (error) {
+} catch (error) {
                             console.error('❌ 無法獲取 Credits:', error);
                         }
                     }
@@ -2024,20 +2010,16 @@
                                 if (userDoc) {
                                     userDisplayName = userDoc.displayName || userDisplayName;
                                     userCredits = userDoc.credits || 0;
-                                    console.log('✅ index.html 獲取 Credits:', userCredits);
-                                }
+}
                             } catch (error) {
-                                console.log('⚠️ 無法從 Firestore 獲取用戶資料:', error);
-                            }
+}
                         } else {
-                            console.log('⏳ SimpleDataManager 尚未初始化，等待中...');
-                            // 延遲重試
+// 延遲重試
                             setTimeout(async () => {
                                 if (window.simpleDataManager && window.simpleDataManager.initialized) {
                                     try {
                                         userCredits = await window.simpleDataManager.getUserCredits();
-                                        console.log('✅ 延遲獲取 Credits:', userCredits);
-                                    } catch (error) {
+} catch (error) {
                                         console.error('❌ 延遲獲取失敗:', error);
                                     }
                                 }
@@ -2045,24 +2027,21 @@
                         }
                         
                         const userInitial = getUserInitial();
-                        console.log(`👤 用戶首字母: "${userInitial}" (displayName: "${userDisplayName}")`);
+                        `);
                         
                         userMenu.innerHTML = `
                             <div onclick="toggleDropdown()" style="cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
                                 <div style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem; opacity: 1; transition: opacity 0.3s;">${userInitial}</div>
                             </div>
                         `;
-                        console.log('✅ 用戶已登入，顯示頭像');
-                    } else {
+} else {
                         // ✅ 未登入：顯示登入按鈕
                         userMenu.innerHTML = `
                             <button onclick="window.location.href='auth.html'" style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.875rem;" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">登入</button>
                         `;
-                        console.log('✅ 用戶未登入，顯示登入按鈕');
-                    }
+}
                 } catch (e) {
-                    console.log('❌ 無法更新用戶菜單:', e);
-                }
+}
             }
             
             // 立即嘗試更新
@@ -2435,24 +2414,17 @@
         
         // ==================== 初始化 ====================
         window.addEventListener('auth-state-changed', async (e) => {
-            console.log('🔥 收到 auth-state-changed 事件');
-            
-            // 移除 auth-checking 類別，顯示頁面
+// 移除 auth-checking 類別，顯示頁面
             document.body.classList.remove('auth-checking');
             document.body.classList.add('auth-ready');
             
             if (!e.detail.user) {
-                console.log('❌ 用戶未登入，重定向到首頁');
-                window.location.href = 'index.html';
+window.location.href = 'index.html';
                 return;
             }
-            
-            console.log('✅ 用戶已登入:', e.detail.user.email);
-            
-            // 創建側邊欄
+// 創建側邊欄
             if (window.VaultCaddySidebar && !window.unifiedSidebar) {
-                console.log('🎨 創建側邊欄');
-                window.unifiedSidebar = new VaultCaddySidebar();
+window.unifiedSidebar = new VaultCaddySidebar();
             }
             
             // 載入項目數據
@@ -2470,16 +2442,12 @@
                     console.error('❌ 沒有項目 ID');
                     return;
                 }
-                
-                console.log('📂 載入項目:', currentProjectId);
-                
-                const projects = await window.simpleDataManager.getProjects();
+const projects = await window.simpleDataManager.getProjects();
                 currentProject = projects.find(p => p.id === currentProjectId);
                 
                 if (currentProject) {
                     document.getElementById('team-project-title').textContent = currentProject.name;
-                    console.log('✅ 項目名稱:', currentProject.name);
-                }
+}
                 
             } catch (error) {
                 console.error('❌ 載入項目失敗:', error);
@@ -2762,13 +2730,8 @@
         async function loadDocuments() {
             try {
                 if (!currentProjectId) return;
-                
-                console.log('📄 載入文檔列表');
-                
-                const documents = await window.simpleDataManager.getDocuments(currentProjectId);
-                console.log('✅ 找到', documents.length, '個文檔');
-                
-                // 保存到全局變量
+const documents = await window.simpleDataManager.getDocuments(currentProjectId);
+// 保存到全局變量
                 allDocuments = documents;
                 window.allDocuments = documents;
                 window.filteredDocuments = [...documents]; // 初始化過濾列表
@@ -2815,10 +2778,7 @@
             if (pendingDocs.length === 0) {
                 return;
             }
-            
-            console.log(`🔄 發現 ${pendingDocs.length} 個待處理文檔，開始恢復處理...`);
-            
-            for (const doc of pendingDocs) {
+for (const doc of pendingDocs) {
                 try {
                     // 從 Storage 下載文件
                     const response = await fetch(doc.downloadURL);
@@ -2827,7 +2787,7 @@
                     
                     const pages = doc.pages || 1;
                     
-                    console.log(`🔄 恢復處理: ${doc.fileName} (${pages} 頁)`);
+                    `);
                     
                     // 繼續 AI 處理
                     processFileWithAI(file, doc.id, pages).catch(err => {
@@ -2842,8 +2802,7 @@
         
         // ==================== 上傳模態框 ====================
         window.openUploadModal = function() {
-            console.log('🎯 打開上傳模態框');
-            const modal = document.getElementById('aiUploadModal');
+const modal = document.getElementById('aiUploadModal');
             if (modal) {
                 modal.style.display = 'flex';
                 initializeAIUpload();
@@ -2902,15 +2861,13 @@
                 
                 const files = Array.from(e.dataTransfer.files);
                 if (files.length > 0) {
-                    console.log('📥 拖放文件:', files.length, '個');
-                    handleUpload(files);
+handleUpload(files);
                 }
             });
         }
         
         window.selectDocumentType = function(type) {
-            console.log('📋 選擇文檔類型:', type);
-            selectedDocumentType = type;
+selectedDocumentType = type;
             
             document.querySelectorAll('.doc-type-card').forEach(card => {
                 card.style.borderColor = '#e5e7eb';
@@ -2929,9 +2886,7 @@
         };
         
         async function handleUpload(files) {
-            console.log('📤 準備上傳', files.length, '個文件');
-            
-            // 1. 計算所有文件的總頁數
+// 1. 計算所有文件的總頁數
             let totalPages = 0;
             const filePages = [];
             
@@ -2940,15 +2895,11 @@
                 filePages.push({ file, pages });
                 totalPages += pages;
             }
-            
-            console.log(`📊 總頁數: ${totalPages}`);
-            
-            // 2. 檢查 Credits 是否足夠
+// 2. 檢查 Credits 是否足夠
             if (window.creditsManager) {
                 const hasEnoughCredits = await window.creditsManager.checkCredits(totalPages);
                 if (!hasEnoughCredits) {
-                    console.log('❌ Credits 不足，取消批量上傳');
-                    return;
+return;
                 }
             }
             
@@ -2967,7 +2918,7 @@
          */
         async function uploadFileDirect(file, pages) {
             try {
-                console.log('📤 上傳文件:', file.name, `(${pages} 頁)`);
+                `);
                 
                 // ✅ 如果是 PDF，先轉換為圖片（與 uploadFile 函數保持一致）
                 let filesToProcess = [file];
@@ -2975,13 +2926,10 @@
                 
                 if (window.pdfToImageConverter && window.pdfToImageConverter.isPDF(file)) {
                     try {
-                        console.log('📄 檢測到 PDF 文件，開始轉換為圖片...');
-                        const imageFiles = await window.pdfToImageConverter.convertPDFToImages(file);
-                        console.log(`✅ PDF 轉換完成，生成 ${imageFiles.length} 張圖片`);
-                        filesToProcess = imageFiles;
+const imageFiles = await window.pdfToImageConverter.convertPDFToImages(file);
+filesToProcess = imageFiles;
                         isPDFConverted = true;
-                        console.log(`📄 將處理所有 ${imageFiles.length} 頁`);
-                    } catch (pdfError) {
+} catch (pdfError) {
                         console.error('❌ PDF 轉換失敗:', pdfError);
                         alert(`PDF 轉換失敗: ${pdfError.message}\n\n請確認文件是否有效。`);
                         return;
@@ -2989,14 +2937,11 @@
                 }
                 
                 // 上傳所有文件到 Storage
-                console.log(`📤 開始上傳 ${filesToProcess.length} 個文件...`);
-                const uploadPromises = filesToProcess.map(f => 
+const uploadPromises = filesToProcess.map(f => 
                     window.simpleDataManager.uploadFile(currentProjectId, f)
                 );
                 const imageUrls = await Promise.all(uploadPromises);
-                console.log(`✅ ${imageUrls.length} 個文件已上傳到 Storage`);
-                
-                const docData = {
+const docData = {
                     name: file.name,
                     fileName: file.name,
                     fileSize: file.size,
@@ -3014,16 +2959,13 @@
                 };
                 
                 const docId = await window.simpleDataManager.createDocument(currentProjectId, docData);
-                console.log('✅ 文檔記錄已創建:', docId);
-                
-                // ✅ 立即重新載入文檔列表，顯示新上傳的文件
+// ✅ 立即重新載入文檔列表，顯示新上傳的文件
                 await loadDocuments();
                 
                 // 扣除 Credits（按實際頁數）
                 if (window.creditsManager) {
                     await window.creditsManager.deductCredits(filesToProcess.length);
-                    console.log(`💰 已扣除 ${filesToProcess.length} Credits`);
-                }
+}
                 
                 // 後台處理 AI（處理所有頁面）
                 processMultiPageFileWithAI(filesToProcess, docId, selectedDocumentType).catch(err => {
@@ -3038,18 +2980,13 @@
         
         async function uploadFile(file) {
             try {
-                console.log('📤 準備上傳文件:', file.name);
-                
-                // 1. 計算文件頁數
+// 1. 計算文件頁數
                 const pages = await getFilePageCount(file);
-                console.log(`📄 文件頁數: ${pages}`);
-                
-                // 2. 檢查 Credits 是否足夠
+// 2. 檢查 Credits 是否足夠
                 if (window.creditsManager) {
                     const hasEnoughCredits = await window.creditsManager.checkCredits(pages);
                     if (!hasEnoughCredits) {
-                        console.log('❌ Credits 不足，取消上傳');
-                        return;
+return;
                     }
                 }
                 
@@ -3059,13 +2996,10 @@
                 
                 if (window.pdfToImageConverter && window.pdfToImageConverter.isPDF(file)) {
                     try {
-                        console.log('📄 檢測到 PDF 文件，開始轉換為圖片...');
-                        const imageFiles = await window.pdfToImageConverter.convertPDFToImages(file);
-                        console.log(`✅ PDF 轉換完成，生成 ${imageFiles.length} 張圖片`);
-                        filesToProcess = imageFiles; // ✅ 使用所有頁面
+const imageFiles = await window.pdfToImageConverter.convertPDFToImages(file);
+filesToProcess = imageFiles; // ✅ 使用所有頁面
                         isPDFConverted = true;
-                        console.log(`📄 將處理所有 ${imageFiles.length} 頁`);
-                    } catch (pdfError) {
+} catch (pdfError) {
                         console.error('❌ PDF 轉換失敗:', pdfError);
                         alert(`PDF 轉換失敗: ${pdfError.message}\n\n請確認文件是否有效，或嘗試直接上傳 JPG/PNG 圖片。`);
                         return; // ⚠️ 這裡返回，Credits 還沒有被扣除
@@ -3073,14 +3007,11 @@
                 }
                 
                 // 4. 上傳所有文件到 Storage（支持多頁 PDF）
-                console.log(`📤 開始上傳 ${filesToProcess.length} 個文件...`);
-                const uploadPromises = filesToProcess.map(f => 
+const uploadPromises = filesToProcess.map(f => 
                     window.simpleDataManager.uploadFile(currentProjectId, f)
                 );
                 const imageUrls = await Promise.all(uploadPromises);
-                console.log(`✅ ${imageUrls.length} 個文件已上傳到 Storage`);
-                
-                const docData = {
+const docData = {
                     name: file.name, // 保留原始文件名
                     fileName: file.name,
                     fileSize: file.size,
@@ -3098,13 +3029,10 @@
                 };
                 
                 const docId = await window.simpleDataManager.createDocument(currentProjectId, docData);
-                console.log('✅ 文檔記錄已創建:', docId);
-                
-                // 5. 扣除 Credits（所有頁數）
+// 5. 扣除 Credits（所有頁數）
                 if (window.creditsManager) {
                     await window.creditsManager.deductCredits(filesToProcess.length);
-                    console.log(`💰 已扣除 ${filesToProcess.length} Credits（${filesToProcess.length} 頁）`);
-                }
+}
                 
                 // 6. 重新載入列表以顯示新文檔
                 await loadDocuments();
@@ -3143,8 +3071,7 @@
                         return pageMatches.length;
                     }
                 } catch (error) {
-                    console.warn('⚠️ 無法讀取 PDF 頁數:', error);
-                }
+}
             }
             
             // 對於圖片或其他文件，默認為 1 頁
@@ -3165,8 +3092,7 @@
             async add(task, taskName = '') {
                 // 如果超過並發限制，放入隊列
                 if (this.running >= this.maxConcurrent) {
-                    console.log(`📝 ${taskName} 加入排隊（當前運行：${this.running}，隊列：${this.queue.length}）`);
-                    return new Promise((resolve, reject) => {
+return new Promise((resolve, reject) => {
                         this.queue.push({ task, taskName, resolve, reject });
                     });
                 }
@@ -3177,16 +3103,12 @@
             
             async run(task, taskName = '') {
                 this.running++;
-                console.log(`▶️ ${taskName} 開始執行（當前運行：${this.running}，隊列：${this.queue.length}）`);
-                
-                try {
+try {
                     const result = await task();
                     return result;
                 } finally {
                     this.running--;
-                    console.log(`✅ ${taskName} 完成（當前運行：${this.running}，隊列：${this.queue.length}）`);
-                    
-                    // 從隊列中取出下一個任務
+// 從隊列中取出下一個任務
                     if (this.queue.length > 0) {
                         const { task, taskName, resolve, reject } = this.queue.shift();
                         this.run(task, taskName).then(resolve).catch(reject);
@@ -3200,7 +3122,7 @@
         
         async function processFileWithAI(file, docId, pages = 1) {
             try {
-                console.log('🤖 開始 AI 處理:', file.name, `(${pages} 頁)`);
+                `);
                 
                 if (!window.HybridVisionDeepSeekProcessor) {
                     throw new Error('AI 處理器未載入');
@@ -3208,16 +3130,11 @@
                 
                 const processor = new window.HybridVisionDeepSeekProcessor();
                 const result = await processor.processDocument(file, selectedDocumentType);
-                
-                console.log('✅ AI 處理完成');
-                
-                await window.simpleDataManager.updateDocument(currentProjectId, docId, {
+await window.simpleDataManager.updateDocument(currentProjectId, docId, {
                     status: 'completed',
                     processedData: result.data || result.extractedData
                 });
-                
-                console.log('✅ 文檔狀態已更新');
-                await loadDocuments();
+await loadDocuments();
                 
             } catch (error) {
                 console.error('❌ AI 處理失敗:', error);
@@ -3225,17 +3142,14 @@
                 // ✅ 退回 Credits（防止重複退回）
                 if (window.creditsManager && pages > 0 && !refundedDocuments.has(docId)) {
                     try {
-                        console.log(`💰 準備退回 ${pages} Credits（文檔 ID: ${docId}）`);
-                        await window.creditsManager.refundCredits(pages);
+await window.creditsManager.refundCredits(pages);
                         refundedDocuments.add(docId); // 標記已退回
-                        console.log(`✅ 已退回 ${pages} Credits（文檔 ID: ${docId}）`);
-                        console.log(`📋 已退回的文檔列表:`, Array.from(refundedDocuments));
+);
                     } catch (refundError) {
                         console.error('❌ 退回 Credits 失敗:', refundError);
                     }
                 } else if (refundedDocuments.has(docId)) {
-                    console.warn(`⚠️ 文檔 ${docId} 的 Credits 已經退回過，跳過重複退回`);
-                }
+}
                 
                 await window.simpleDataManager.updateDocument(currentProjectId, docId, {
                     status: 'failed',
@@ -3252,8 +3166,7 @@
         async function processMultiPageFileWithAI(files, docId, documentType) {
             // ✅ 檢查是否正在處理
             if (processingDocuments.has(docId)) {
-                console.warn(`⚠️ 文檔 ${docId} 正在處理中，跳過重複處理`);
-                return;
+return;
             }
             
             // ✅ 使用排隊系統（混合並發，最多 3 個）
@@ -3262,10 +3175,8 @@
                 try {
                     // ✅ 添加到處理鎖
                     processingDocuments.add(docId);
-                    console.log(`🔒 鎖定文檔 ${docId}，開始處理`);
-                    console.log(`🤖 開始多頁 AI 處理: ${files.length} 頁（方案 C：批量 OCR + 逐頁 DeepSeek）`);
-                
-                if (!window.HybridVisionDeepSeekProcessor) {
+
+if (!window.HybridVisionDeepSeekProcessor) {
                     throw new Error('AI 處理器未載入');
                 }
                 
@@ -3273,9 +3184,7 @@
                 
                 // ✅ 方案 B：使用批量處理方法（批量 OCR + 單次 DeepSeek）
                 if (files.length > 1) {
-                    console.log(`📚 使用批量處理模式（${files.length} 頁）`);
-                    
-                    // 更新狀態為處理中
+// 更新狀態為處理中
                     await window.simpleDataManager.updateDocument(currentProjectId, docId, {
                         status: 'processing',
                         processingProgress: 10
@@ -3295,14 +3204,9 @@
                         pageCount: result.pageCount,
                         processingProgress: 100
                     });
-                    
-                    console.log('✅ 批量處理完成');
-                    
-                } else {
+} else {
                     // 單頁文檔，使用原有邏輯
-                    console.log(`📄 使用單頁處理模式`);
-                    
-                    await window.simpleDataManager.updateDocument(currentProjectId, docId, {
+await window.simpleDataManager.updateDocument(currentProjectId, docId, {
                         status: 'processing',
                         processingProgress: 50
                     });
@@ -3318,9 +3222,7 @@
                         processor: result.processor,
                         processingProgress: 100
                     });
-                    
-                    console.log('✅ 單頁處理完成');
-                }
+}
                 
                 await loadDocuments();
                 
@@ -3330,16 +3232,13 @@
                 // ✅ 退回 Credits（防止重複退回）
                 if (window.creditsManager && files.length > 0 && !refundedDocuments.has(docId)) {
                     try {
-                        console.log(`💰 準備退回 ${files.length} Credits（文檔 ID: ${docId}）`);
-                        await window.creditsManager.refundCredits(files.length);
+await window.creditsManager.refundCredits(files.length);
                         refundedDocuments.add(docId); // 標記已退回
-                        console.log(`✅ 已退回 ${files.length} Credits（文檔 ID: ${docId}）`);
-                    } catch (refundError) {
+} catch (refundError) {
                         console.error('❌ 退回 Credits 失敗:', refundError);
                     }
                 } else if (refundedDocuments.has(docId)) {
-                    console.warn(`⚠️ 文檔 ${docId} 的 Credits 已經退回過，跳過重複退回`);
-                }
+}
                 
                 await window.simpleDataManager.updateDocument(currentProjectId, docId, {
                     status: 'failed',
@@ -3349,8 +3248,7 @@
                 } finally {
                     // ✅ 無論成功或失敗，都釋放鎖
                     processingDocuments.delete(docId);
-                    console.log(`🔓 解鎖文檔 ${docId}，處理完成`);
-                }
+}
             }, fileName); // ✅ 傳遞文件名用於日誌
         }
         
@@ -3442,8 +3340,7 @@
         // ==================== 其他功能 ====================
         // ==================== 查看文檔詳情 ====================
         window.viewDocument = function(docId) {
-            console.log('🔍 查看文檔詳情:', docId);
-            if (!currentProjectId) {
+if (!currentProjectId) {
                 console.error('❌ 找不到項目 ID');
                 return;
             }
@@ -3456,8 +3353,7 @@
             
             try {
                 await window.simpleDataManager.deleteDocument(currentProjectId, docId);
-                console.log('✅ 文檔已刪除');
-                await loadDocuments();
+await loadDocuments();
             } catch (error) {
                 console.error('❌ 刪除失敗:', error);
                 alert('刪除失敗: ' + error.message);
@@ -3478,9 +3374,7 @@
             }
             
             lastSelectedCount = selectedCount;
-            console.log(`📊 更新按鈕: ${selectedCount} 個文檔被選中`);
-            
-            // 更新 Delete 按鈕
+// 更新 Delete 按鈕
             const deleteBtn = document.getElementById('delete-selected-btn');
             if (deleteBtn) {
                 const deleteSpan = deleteBtn.querySelector('span');
@@ -3536,8 +3430,7 @@
                 });
                 
                 await Promise.all(deletePromises);
-                console.log(`✅ 已刪除 ${count} 個文檔`);
-                alert(`成功刪除 ${count} 個文檔`);
+alert(`成功刪除 ${count} 個文檔`);
                 await loadDocuments();
             } catch (error) {
                 console.error('❌ 刪除失敗:', error);
@@ -3556,8 +3449,7 @@
         };
         
         window.toggleProjectNameEdit = function() {
-            console.log('編輯項目名稱功能待實現');
-        };
+};
         
         // ==================== 創建項目模態框 ====================
         window.openCreateProjectModal = function() {
@@ -3584,8 +3476,7 @@
             
             try {
                 const newProject = await window.simpleDataManager.createProject(projectName);
-                console.log('✅ 項目已創建:', newProject.id);
-                window.closeCreateProjectModal();
+window.closeCreateProjectModal();
                 
                 // 觸發側邊欄重新渲染
                 window.dispatchEvent(new Event('projectCreated'));
@@ -3717,17 +3608,13 @@
             if (overlay) {
                 overlay.style.display = 'none';
             }
-            console.log('🔒 菜單已關閉');
-        };
+};
         
         // 🔄 切換 Export 菜單顯示/隱藏
         window.toggleExportMenu = function() {
-            console.log('🔍 toggleExportMenu 被調用');
-            const menu = document.getElementById('exportMenu');
+const menu = document.getElementById('exportMenu');
             const overlay = document.getElementById('exportMenuOverlay');
-            console.log('📋 菜單元素:', menu);
-            
-            if (!menu) {
+if (!menu) {
                 console.error('❌ 找不到 #exportMenu 元素');
                 return;
             }
@@ -3740,16 +3627,13 @@
             
             // 獲取選中的文檔
             const checkboxes = document.querySelectorAll('.document-checkbox:checked');
-            console.log('✅ 已選中文檔數量:', checkboxes.length);
-            
-            if (checkboxes.length === 0) {
+if (checkboxes.length === 0) {
                 alert('請先選擇要導出的文檔');
                 return;
             }
             
             // 更新菜單內容並顯示
-            console.log('🔄 更新菜單內容...');
-            updateExportMenuContent();
+updateExportMenuContent();
             
             // 🔥 根據屏幕大小設置菜單樣式
             if (window.innerWidth <= 768) {
@@ -3765,9 +3649,7 @@
                 menu.style.border = 'none'; // 🔥 無邊框
                 menu.style.boxShadow = 'none'; // 🔥 無陰影
                 menu.style.borderRadius = '12px';
-                console.log('📱 手機版：菜單居中顯示（全白色）');
-                
-                // 顯示遮罩
+// 顯示遮罩
                 if (overlay) {
                     overlay.style.display = 'block';
                 }
@@ -3785,9 +3667,7 @@
                     menu.style.minWidth = '280px';
                     menu.style.maxWidth = '400px';
                 }
-                console.log('💻 桌面版：菜單在按鈕下方');
-                
-                // 桌面版不顯示遮罩
+// 桌面版不顯示遮罩
                 if (overlay) {
                     overlay.style.display = 'none';
                 }
@@ -3795,9 +3675,7 @@
             
             menu.style.display = 'block';
             menu.classList.add('active');
-            
-            console.log('✅ 菜單已顯示');
-        };
+};
         
         // 🔄 監聽 checkbox 變化，實時更新 Export 菜單
         document.addEventListener('change', function(e) {
@@ -3813,8 +3691,7 @@
         // ✅ 按類型導出文檔（內部輔助函數）
         async function exportByType(docs, format) {
             if (!docs || docs.length === 0) {
-                console.log('⚠️ 沒有文檔需要導出');
-                return;
+return;
             }
             
             let exportContent = '';
@@ -3857,24 +3734,17 @@
             a.click();
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
-            
-            console.log(`✅ 已導出: ${fileName}`);
-        }
+}
         
         window.exportDocuments = async function(format) {
-            console.log('📤 開始導出:', format);
-            
-            // 🔥 關閉菜單
+// 🔥 關閉菜單
             closeExportMenu();
             
             try {
                 // 🔥 直接從 DOM 獲取選中的文檔 ID
                 const selectedCheckboxes = document.querySelectorAll('.document-checkbox:checked');
                 const selectedDocIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.docId);
-                
-                console.log('📋 選中的文檔 ID:', selectedDocIds);
-                
-                let docsToExport;
+let docsToExport;
                 
                 if (selectedDocIds.length > 0) {
                     // 🔥 只導出已勾選且已完成的文檔
@@ -3883,8 +3753,7 @@
                         doc.status === 'completed' && 
                         doc.processedData
                     );
-                    console.log(`📋 導出 ${docsToExport.length} 個已勾選的文檔（共選中 ${selectedDocIds.length} 個）`);
-                } else {
+} else {
                     // 如果沒有勾選，提示用戶
                     alert('請先選擇要導出的文檔');
                     return;
@@ -3915,15 +3784,7 @@
                         groupedDocs.general.push(doc);
                     }
                 });
-                
-                console.log('📊 文檔分組結果:', {
-                    bank_statements: groupedDocs.bank_statements.length,
-                    invoices: groupedDocs.invoices.length,
-                    receipts: groupedDocs.receipts.length,
-                    general: groupedDocs.general.length
-                });
-                
-                // ✅ 如果是 CSV（通用）格式，按類型分別導出
+// ✅ 如果是 CSV（通用）格式，按類型分別導出
                 if (format === 'csv') {
                     let exportedCount = 0;
                     
@@ -3957,11 +3818,9 @@
                         // 使用優化版 ExportOptimizer（如果可用）
                         if (window.ExportOptimizer) {
                             exportContent = ExportOptimizer.generateCSV(docsToExport);
-                            console.log('✅ 使用優化版 CSV 導出');
-                        } else {
+} else {
                             exportContent = generateCSV(docsToExport);
-                            console.log('⚠️ 使用舊版 CSV 導出');
-                        }
+}
                         fileName = `vaultcaddy_export_${new Date().toISOString().split('T')[0]}.csv`;
                         mimeType = 'text/csv;charset=utf-8;';
                         break;
@@ -3972,8 +3831,7 @@
                             exportContent = window.BankStatementExport.generateBankStatementCSV(docsToExport);
                             fileName = `BankStatement_${new Date().toISOString().split('T')[0]}.csv`;
                             mimeType = 'text/csv;charset=utf-8;';
-                            console.log('✅ 標準銀行對帳單 CSV 導出');
-                        } else {
+} else {
                             alert('銀行對帳單導出模塊未載入，請刷新頁面後重試');
                             return;
                         }
@@ -3992,15 +3850,13 @@
                         if (xeroBankDocs.length > 0 && window.BankStatementExport) {
                             exportContent = window.BankStatementExport.generateXeroCSV(xeroBankDocs);
                             fileName = `BankStatement_${new Date().toISOString().split('T')[0]}_Xero.csv`;
-                            console.log('✅ Xero CSV 導出（銀行對帳單）');
-                        } else if (xeroInvoiceDocs.length > 0 && window.InvoiceExport) {
+} else if (xeroInvoiceDocs.length > 0 && window.InvoiceExport) {
                             // 🔥 發票導出 Xero 格式
                             exportContent = window.InvoiceExport.generateXeroCSV ? 
                                 window.InvoiceExport.generateXeroCSV(xeroInvoiceDocs) :
                                 window.InvoiceExport.generateInvoiceSummaryCSV(xeroInvoiceDocs);
                             fileName = `Invoice_${new Date().toISOString().split('T')[0]}_Xero.csv`;
-                            console.log('✅ Xero CSV 導出（發票）');
-                        } else {
+} else {
                             alert('沒有可導出的文檔或導出模塊未載入');
                             return;
                         }
@@ -4019,15 +3875,13 @@
                         if (qbBankDocs.length > 0 && window.BankStatementExport) {
                             exportContent = window.BankStatementExport.generateQuickBooksCSV(qbBankDocs);
                             fileName = `BankStatement_${new Date().toISOString().split('T')[0]}_QuickBooks.csv`;
-                            console.log('✅ QuickBooks CSV 導出（銀行對帳單）');
-                        } else if (qbInvoiceDocs.length > 0 && window.InvoiceExport) {
+} else if (qbInvoiceDocs.length > 0 && window.InvoiceExport) {
                             // 🔥 發票導出 QuickBooks 格式
                             exportContent = window.InvoiceExport.generateQuickBooksCSV ? 
                                 window.InvoiceExport.generateQuickBooksCSV(qbInvoiceDocs) :
                                 window.InvoiceExport.generateInvoiceSummaryCSV(qbInvoiceDocs);
                             fileName = `Invoice_${new Date().toISOString().split('T')[0]}_QuickBooks.csv`;
-                            console.log('✅ QuickBooks CSV 導出（發票）');
-                        } else {
+} else {
                             alert('沒有可導出的文檔或導出模塊未載入');
                             return;
                         }
@@ -4040,8 +3894,7 @@
                             exportContent = window.InvoiceExport.generateInvoiceSummaryCSV(docsToExport);
                             fileName = `Invoice_Summary_${new Date().toISOString().split('T')[0]}.csv`;
                             mimeType = 'text/csv;charset=utf-8;';
-                            console.log('✅ 發票總數 CSV 導出');
-                        } else {
+} else {
                             alert('發票導出模塊未載入，請刷新頁面後重試');
                             return;
                         }
@@ -4053,8 +3906,7 @@
                             exportContent = window.InvoiceExport.generateInvoiceDetailedCSV(docsToExport);
                             fileName = `Invoice_Detailed_${new Date().toISOString().split('T')[0]}.csv`;
                             mimeType = 'text/csv;charset=utf-8;';
-                            console.log('✅ 發票詳細交易數據 CSV 導出');
-                        } else {
+} else {
                             alert('發票導出模塊未載入，請刷新頁面後重試');
                             return;
                         }
@@ -4123,10 +3975,7 @@
                 
                 // 隱藏下拉菜單
                 toggleExportMenu();
-                
-                console.log('✅ 導出成功:', fileName);
-                
-            } catch (error) {
+} catch (error) {
                 console.error('❌ 導出失敗:', error);
                 alert('導出失敗: ' + error.message);
             }
@@ -4406,16 +4255,12 @@
             
             const rows = tbody.getElementsByTagName('tr');
             const term = searchTerm.toLowerCase().trim();
-            
-            console.log(`🔍 搜尋文檔: "${term}", 總共 ${rows.length} 行`);
-            
-            // 如果搜尋欄是空的，顯示所有行
+// 如果搜尋欄是空的，顯示所有行
             if (term === '') {
                 for (let row of rows) {
                     row.style.display = '';
                 }
-                console.log(`✅ 顯示所有 ${rows.length} 個文檔`);
-                updateDocumentTotal(); // 更新總計
+updateDocumentTotal(); // 更新總計
                 return;
             }
             
@@ -4439,19 +4284,16 @@
                     rowText += cell.textContent.toLowerCase() + ' ';
                 }
                 
-                console.log(`🔍 行內容: "${rowText.substring(0, 50)}..."`);
+                }..."`);
                 
                 if (rowText.includes(term)) {
                     row.style.display = '';
                     visibleCount++;
-                    console.log(`✅ 匹配！`);
-                } else {
+} else {
                     row.style.display = 'none';
                 }
             }
-            
-            console.log(`✅ 顯示 ${visibleCount} 個文檔（搜尋: "${term}"）`);
-            updateDocumentTotal(); // 更新總計
+updateDocumentTotal(); // 更新總計
         }
         
         // 暴露到全局供搜尋框使用
@@ -4463,8 +4305,7 @@
             const summaryDiv = document.getElementById('invoice-summary');
             
             if (!tbody || !summaryDiv) {
-                console.log('⚠️ 找不到表格或總計元素');
-                return;
+return;
             }
             
             const rows = tbody.getElementsByTagName('tr');
@@ -4506,7 +4347,7 @@
                 summaryDiv.style.display = 'none';
             }
             
-            console.log(`📊 發票統計: ${invoiceCount} 張, 總額: $${totalAmount.toFixed(2)}`);
+            }`);
         }
         
         // 暴露到全局
@@ -4549,12 +4390,9 @@
 
     <!-- 🔥 漢堡菜單超級簡單修復方案 -->
     <script>
-        console.log('🔥 開始初始化漢堡菜單...');
-        
-        // 打開側邊欄函數
+// 打開側邊欄函數
         function openSidebar() {
-            console.log('🔵 打開側邊欄');
-            const sidebar = document.getElementById('mobile-sidebar');
+const sidebar = document.getElementById('mobile-sidebar');
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
             if (sidebar && overlay) {
@@ -4562,14 +4400,12 @@
                 overlay.style.display = 'block';
                 overlay.style.opacity = '1';
                 document.body.style.overflow = 'hidden';
-                console.log('✅ 側邊欄已打開');
-            }
+}
         }
         
         // 關閉側邊欄函數
         function closeSidebar() {
-            console.log('🔵 關閉側邊欄');
-            const sidebar = document.getElementById('mobile-sidebar');
+const sidebar = document.getElementById('mobile-sidebar');
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
             if (sidebar && overlay) {
@@ -4579,8 +4415,7 @@
                     overlay.style.display = 'none';
                 }, 300); // 等待動畫完成（與 CSS transition 一致）
                 document.body.style.overflow = 'auto';
-                console.log('✅ 側邊欄已關閉');
-            }
+}
         }
         
         // 超級簡單的初始化函數
@@ -4589,41 +4424,31 @@
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
             if (!btn || !overlay) {
-                console.log('⏳ 元素未找到，200ms後重試');
-                setTimeout(simpleInitMenu, 200);
+setTimeout(simpleInitMenu, 200);
                 return;
             }
-            
-            console.log('✅ 找到所有元素！');
-            
-            // 按鈕點擊處理
+// 按鈕點擊處理
             btn.addEventListener('click', function() {
-                console.log('🔵 按鈕被點擊！');
-                openSidebar();
+openSidebar();
             });
             
             // 觸摸處理
             btn.addEventListener('touchend', function(e) {
                 e.preventDefault();
-                console.log('🔵 觸摸事件！');
-                openSidebar();
+openSidebar();
             });
             
             // 遮罩點擊關閉
             overlay.addEventListener('click', function() {
-                console.log('🔵 點擊遮罩關閉');
-                closeSidebar();
+closeSidebar();
             });
             
             // 遮罩觸摸關閉
             overlay.addEventListener('touchend', function(e) {
                 e.preventDefault();
-                console.log('🔵 觸摸遮罩關閉');
-                closeSidebar();
+closeSidebar();
             });
-            
-            console.log('✅ 所有事件監聽器已綁定');
-        }
+}
         
         // 立即嘗試初始化
         if (document.readyState === 'loading') {
