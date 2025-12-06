@@ -1,0 +1,116 @@
+# 🎯 下一步操作指南
+
+## 📦 立即上传的文件（4个）
+
+```
+1. auth.html
+   - 文案：10→20 Credits
+   - 隐藏 popup 错误
+
+2. simple-auth.js
+   - 创建 Firestore 用户文档
+
+3. document-detail.html
+   - Export 菜单桌面版下拉显示
+
+4. firebase-functions/index.js
+   - 邮件链接包含 email 参数
+```
+
+---
+
+## 🚀 部署 Firebase Functions
+
+**在服务器上传 firebase-functions/ 后：**
+
+```bash
+cd firebase-functions
+
+# 部署 Functions
+firebase deploy --only functions
+
+# 等待完成（约1-2分钟）
+```
+
+---
+
+## 🔧 Firebase Console 配置（3件事）
+
+### 1. 启用 Google 登录
+
+```
+访问：
+https://console.firebase.google.com/u/1/project/vaultcaddy-production-cbbe2/authentication/providers
+
+操作：
+1. 点击 "Google" 行
+2. 启用开关
+3. 填写支持邮箱：vaultcaddy@gmail.com
+4. 保存
+```
+
+---
+
+### 2. 添加授权域名
+
+```
+访问：
+https://console.firebase.google.com/u/1/project/vaultcaddy-production-cbbe2/authentication/settings
+
+操作：
+1. 向下滚动到 "Authorized domains"
+2. 点击 "Add domain"
+3. 输入：vaultcaddy.com
+4. 保存
+```
+
+---
+
+### 3. 配置 Email SMTP
+
+```bash
+cd firebase-functions
+
+# 获取 Gmail App Password from https://myaccount.google.com/apppasswords
+
+# 配置
+firebase functions:config:set email.user="vaultcaddy@gmail.com"
+firebase functions:config:set email.password="[16位App Password]"
+
+# 重新部署
+firebase deploy --only functions
+```
+
+---
+
+## 🧪 测试清单
+
+### 测试1：注册和验证
+- [ ] 注册新账号
+- [ ] 收到验证码邮件
+- [ ] 点击"立即验证"成功
+- [ ] 验证后获得20个Credits
+
+### 测试2：Google 登录
+- [ ] 点击Google登录
+- [ ] 选择账号
+- [ ] 登录成功
+- [ ] 无 popup 错误
+
+### 测试3：Export 菜单
+- [ ] 桌面版：下拉显示，无遮罩
+- [ ] 手机版：居中显示，有遮罩
+
+---
+
+## 🎊 完成后的功能
+
+- ✅ 注册送20个Credits（验证后）
+- ✅ Google 登录正常
+- ✅ 邮件验证正常
+- ✅ Export 菜单正常
+- ✅ 所有错误已隐藏/修复
+
+---
+
+🚀 **按顺序完成即可！有问题随时告诉我！**
