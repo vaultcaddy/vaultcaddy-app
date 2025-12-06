@@ -213,6 +213,24 @@ class SimpleAuth {
                 console.log('✅ 用戶名稱已設置:', displayName);
             }
             
+            // 🎯 創建 Firestore 用戶文檔（重要！驗證後需要這個文檔來添加 Credits）
+            try {
+                const db = firebase.firestore();
+                await db.collection('users').doc(result.user.uid).set({
+                    email: email,
+                    displayName: displayName || '',
+                    credits: 0,  // 初始為 0，驗證後會加 20
+                    currentCredits: 0,
+                    emailVerified: false,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                console.log('✅ Firestore 用戶文檔已創建');
+            } catch (firestoreError) {
+                console.error('❌ 創建 Firestore 用戶文檔失敗:', firestoreError);
+                // 不拋出錯誤，因為 Auth 用戶已經創建成功
+            }
+            
             console.log('✅ 註冊成功');
             return result.user;
         } catch (error) {

@@ -1,0 +1,390 @@
+# 🔧 注册验证和20个Credits问题 - 完整修复指南
+
+## ✅ 已完成的修改
+
+### 1. ✅ 文案修改
+**文件：** `auth.html`
+
+**修改内容：**
+```html
+修改前：<div><strong>註冊即送10個Credits！</strong></div>
+修改后：<div><strong>註冊及驗證即送20個Credits！</strong></div>
+```
+
+**效果：**
+- ✅ 明确说明需要验证后才能获得Credits
+- ✅ Credits数量从10个改为20个
+
+---
+
+## 🔍 问题诊断
+
+### 问题1：注册后自动发送验证码Email
+
+**当前代码逻辑：** ✅ 正常
+```javascript
+// auth.html 第664-667行
+// 發送驗證碼
+const functions = firebase.functions();
+const sendCodeFunc = functions.httpsCallable('sendVerificationCode');
+await sendCodeFunc({ email: email, displayName: displayName });
+```
+
+**可能的问题：**
+1. ❌ Firebase Functions 未部署
+2. ❌ Email 配置未设置
+3. ❌ Gmail SMTP 权限问题
+
+---
+
+### 问题2：完成验证码验证后没有成功送20个Credits
+
+**当前代码逻辑：** ✅ 正常
+```javascript
+// firebase-functions/index.js 第623-659行
+// 🎁 驗證成功後贈送 20 個 Credits
+const newCredits = currentCredits + 20;
+transaction.update(userRef, {
+    credits: newCredits,
+    currentCredits: newCredits,
+    emailVerified: true,
+    ...
+});
+```
+
+**可能的问题：**
+1. ❌ Firebase Functions 未部署
+2. ❌ 用户文档未创建
+3. ❌ Transaction 失败但未报错
+
+---
+
+## 🔧 修复步骤
+
+### 步骤1：检查 Firebase Functions 部署状态
+
+**登录 Firebase Console：**
+```
+1. 访问：https://console.firebase.google.com/
+2. 选择项目
+3. 左侧菜单 → Functions
+4. 检查是否有以下函数：
+   - sendVerificationCode
+   - verifyCode
+```
+
+**如果函数不存在：**
+```bash
+cd firebase-functions
+firebase deploy --only functions
+```
+
+---
+
+### 步骤2：配置 Email 发送（Gmail SMTP）
+
+**设置 Firebase Config：**
+```bash
+cd firebase-functions
+
+# 设置 Gmail 用户名和密码
+firebase functions:config:set email.user="vaultcaddy@gmail.com"
+firebase functions:config:set email.password="your-app-password"
+
+# 查看配置
+firebase functions:config:get
+
+# 重新部署
+firebase deploy --only functions
+```
+
+**获取 Gmail App Password：**
+```
+1. 访问：https://myaccount.google.com/apppasswords
+2. 选择应用：Mail
+3. 选择设备：Other (Custom name)
+4. 输入名称：VaultCaddy
+5. 点击生成
+6. 复制16位密码（不包含空格）
+7. 使用上面的命令设置
+```
+
+---
+
+### 步骤3：修复 Credits 赠送逻辑（已优化）
+
+**检查用户创建逻辑：**
+
+当前代码在 `verifyCode` 函数中：
+```javascript
+// 查找用户
+const usersSnapshot = await db.collection('users')
+    .where('email', '==', email)
+    .limit(1)
+    .get();
+
+if (!usersSnapshot.empty) {
+    // 赠送 Credits
+    ...
+}
+```
+
+**可能的问题：**
+- 用户创建时没有在 Firestore 中创建文档
+- 只在 Firebase Auth 创建了用户，但没有在 Firestore 创建
+
+**解决方案：** 确保注册时创建 Firestore 用户文档
+
+---
+
+### 步骤4：添加调试日志
+
+**修改 auth.html 注册逻辑（添加详细日志）：**
+
+在 auth.html 的注册成功后添加：
+```javascript
+// 發送驗證碼
+console.log('📧 准备发送验证码到:', email);
+const functions = firebase.functions();
+const sendCodeFunc = functions.httpsCallable('sendVerificationCode');
+const result = await sendCodeFunc({ email: email, displayName: displayName });
+console.log('✅ 验证码发送结果:', result);
+```
+
+---
+
+### 步骤5：修复 Firestore 用户创建
+
+**检查 simple-auth.js 的 registerWithEmail 方法：**
+
+应该包含创建 Firestore 用户文档的逻辑：
+```javascript
+async registerWithEmail(email, password, displayName) {
+    // 创建 Firebase Auth 用户
+    const userCredential = await firebase.auth()
+        .createUserWithEmailAndPassword(email, password);
+    
+    // 创建 Firestore 用户文档
+    await firebase.firestore().collection('users').doc(userCredential.user.uid).set({
+        email: email,
+        displayName: displayName,
+        credits: 0,  // 初始为0，验证后会加20
+        currentCredits: 0,
+        emailVerified: false,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    
+    return userCredential;
+}
+```
+
+---
+
+## 📋 完整测试流程
+
+### 测试步骤：
+
+1. **注册新账号**
+   ```
+   访问：https://vaultcaddy.com/auth.html
+   填写注册表单
+   点击"创建账户"
+   ```
+
+2. **检查控制台**
+   ```
+   打开浏览器控制台（F12）
+   应该看到：
+   ✅ 注册成功！验证码已发送到您的邮箱
+   ```
+
+3. **检查邮箱**
+   ```
+   检查注册邮箱（包括垃圾邮件）
+   应该收到验证码邮件
+   ```
+
+4. **输入验证码**
+   ```
+   输入6位验证码
+   点击"验证"
+   ```
+
+5. **检查 Credits**
+   ```
+   验证成功后跳转到首页
+   登录账号
+   查看 Credits 余额
+   应该显示：20
+   ```
+
+---
+
+## 🔍 调试检查清单
+
+### Firebase Console 检查：
+
+- [ ] Functions 已部署
+  - sendVerificationCode 存在
+  - verifyCode 存在
+
+- [ ] Email 配置已设置
+  - email.user 已配置
+  - email.password 已配置
+
+- [ ] Authentication 已启用
+  - Email/Password 提供商已启用
+
+- [ ] Firestore 规则允许写入
+  - users 集合可写
+  - verificationCodes 集合可写
+
+---
+
+### 控制台日志检查：
+
+**注册时应该看到：**
+```
+✅ 注册成功！验证码已发送到您的邮箱
+📧 准备发送验证码到: user@example.com
+✅ 验证码发送结果: { success: true }
+```
+
+**验证时应该看到：**
+```
+🔍 開始驗證...
+📧 驗證碼: 123456 | Email: user@example.com
+✅ 驗證結果: { success: true, message: '驗證成功！已贈送 20 個 Credits' }
+驗證成功！正在跳轉...
+```
+
+---
+
+### Firestore 数据检查：
+
+**验证前 - users 集合：**
+```json
+{
+  "email": "user@example.com",
+  "displayName": "User Name",
+  "credits": 0,
+  "currentCredits": 0,
+  "emailVerified": false,
+  "createdAt": "2025-12-06T..."
+}
+```
+
+**验证后 - users 集合：**
+```json
+{
+  "email": "user@example.com",
+  "displayName": "User Name",
+  "credits": 20,  // ← 应该是 20
+  "currentCredits": 20,  // ← 应该是 20
+  "emailVerified": true,  // ← 应该是 true
+  "emailVerifiedAt": "2025-12-06T...",
+  "createdAt": "2025-12-06T...",
+  "updatedAt": "2025-12-06T..."
+}
+```
+
+**验证后 - creditsHistory 子集合：**
+```json
+{
+  "type": "bonus",
+  "amount": 20,
+  "reason": "email_verification",
+  "description": "完成 Email 驗證獎勵",
+  "createdAt": "2025-12-06T...",
+  "balanceAfter": 20
+}
+```
+
+---
+
+## 🚀 快速部署命令
+
+**部署 Firebase Functions：**
+```bash
+cd firebase-functions
+
+# 安装依赖
+npm install
+
+# 部署所有函数
+firebase deploy --only functions
+
+# 或只部署验证相关函数
+firebase deploy --only functions:sendVerificationCode,functions:verifyCode
+```
+
+**查看部署日志：**
+```bash
+firebase functions:log
+```
+
+---
+
+## 📞 常见问题
+
+### Q1：验证码邮件没有收到？
+
+**检查：**
+1. 检查垃圾邮件文件夹
+2. 确认 Email 配置正确
+3. 查看 Firebase Functions 日志
+
+**调试：**
+```bash
+firebase functions:log --only sendVerificationCode
+```
+
+---
+
+### Q2：验证成功但没有 Credits？
+
+**检查：**
+1. Firestore 中是否有用户文档
+2. Firebase Functions 日志是否有错误
+3. Transaction 是否成功
+
+**调试：**
+```bash
+firebase functions:log --only verifyCode
+```
+
+---
+
+### Q3：如何手动添加 Credits？
+
+**Firebase Console：**
+```
+1. Firestore Database → users → 选择用户文档
+2. 编辑字段：
+   - credits: 20
+   - currentCredits: 20
+   - emailVerified: true
+3. 保存
+```
+
+---
+
+## 📄 相关文件
+
+**需要检查的文件：**
+1. `auth.html` - 注册表单
+2. `verify-email.html` - 验证码输入页面
+3. `firebase-functions/index.js` - 后端逻辑
+4. `simple-auth.js` - 认证逻辑
+
+**需要上传的文件：**
+1. `auth.html` - 文案已修改
+2. `firebase-functions/` - 如果修改了Functions代码
+
+---
+
+🎯 **下一步：**
+1. 上传修改后的 auth.html
+2. 检查 Firebase Functions 部署
+3. 配置 Email SMTP
+4. 测试完整注册流程
