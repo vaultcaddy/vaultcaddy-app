@@ -1471,15 +1471,19 @@
                 return;
             }
             
-            // 創建/顯示背景遮罩
-            if (!overlay) {
-                const newOverlay = document.createElement('div');
-                newOverlay.id = 'exportMenuOverlay';
-                newOverlay.onclick = closeExportMenu;
-                document.body.appendChild(newOverlay);
-            }
-            if (overlay) {
-                overlay.style.display = 'block';
+            // 🔧 只在手機版顯示背景遮罩（桌面版不需要）
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile) {
+                // 創建/顯示背景遮罩（僅手機版）
+                if (!overlay) {
+                    const newOverlay = document.createElement('div');
+                    newOverlay.id = 'exportMenuOverlay';
+                    newOverlay.onclick = closeExportMenu;
+                    document.body.appendChild(newOverlay);
+                }
+                if (overlay) {
+                    overlay.style.display = 'block';
+                }
             }
             
             // 根據文檔類型生成菜單
