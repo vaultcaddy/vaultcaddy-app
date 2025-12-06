@@ -522,7 +522,7 @@ exports.sendVerificationCode = functions.https.onCall(async (data, context) => {
                             </ul>
                             
                             <p style="text-align: center;">
-                                <a href="https://vaultcaddy.com/verify-email.html" class="button">立即驗證</a>
+                                <a href="https://vaultcaddy.com/verify-email.html?email=${encodeURIComponent(email)}" class="button">立即驗證</a>
                             </p>
                             
                             <p><strong>需要幫助？</strong></p>
