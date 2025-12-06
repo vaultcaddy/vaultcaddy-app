@@ -1,0 +1,345 @@
+# ✅ Export菜单和发票字段更新 - 完成报告
+
+## 📋 完成的修改
+
+### 1. ✅ Document-Detail Export菜单显示方式统一
+
+**问题：**
+- document-detail.html 的桌面版Export菜单是居中弹出显示
+- firstproject.html 的桌面版Export菜单是右侧下拉菜单
+- 用户希望统一为右侧下拉菜单显示
+
+**修改文件：** `document-detail.html`
+
+**具体修改：**
+```css
+/* 🔥 桌面版改为右侧下拉菜单（与firstproject.html相同） */
+@media (min-width: 769px) {
+    #exportMenu[style*="display: block"] {
+        position: absolute !important;
+        top: 100% !important;
+        left: auto !important;
+        right: 0 !important;
+        transform: none !important;
+        margin-top: 0.5rem !important;
+        width: 300px !important;
+        max-width: 300px !important;
+        z-index: 9999 !important;
+    }
+    
+    /* 桌面版不需要背景遮罩 */
+    #exportMenuOverlay {
+        display: none !important;
+    }
+}
+```
+
+**效果：**
+- ✅ 桌面版：右侧下拉菜单（与firstproject.html一致）
+- ✅ 手机版：保持居中弹出（用户体验更好）
+
+---
+
+### 2. ✅ 发票CSV导出添加电话和Email字段
+
+**问题：**
+- 发票详情中已添加了电话和Email字段
+- 但CSV导出中没有这些字段
+
+**修改文件：** `invoice-export.js`
+
+**函数：** `generateInvoiceDetailedCSV(invoices)`
+
+**修改前的表头：**
+```javascript
+const headers = ['發票編號', '供應商', '日期', '項目名稱', '數量', '單價', '小計', '總金額'];
+```
+
+**修改后的表头：**
+```javascript
+const headers = ['發票編號', '供應商', '電話', 'Email', '日期', '項目名稱', '數量', '單價', '小計', '總金額'];
+```
+
+**数据提取：**
+```javascript
+const phone = data.vendorPhone || data.phone || data.supplier_phone || '';
+const email = data.vendorEmail || data.email || data.supplier_email || '';
+```
+
+**CSV行格式：**
+```javascript
+const row = [
+    invoiceNumber,
+    vendor,
+    phone,        // ← 新增
+    email,        // ← 新增
+    date,
+    itemName,
+    quantity,
+    unitPrice,
+    subtotal,
+    total
+];
+```
+
+**效果：**
+- ✅ 发票详细CSV包含电话和Email列
+- ✅ 支持多种字段名称（vendorPhone, phone, supplier_phone等）
+- ✅ 适用于 document-detail.html 和 firstproject.html
+
+---
+
+## 🔍 已确认的AI提取支持
+
+### AI系统Prompt已包含电话和Email提取
+
+**文件：** `hybrid-vision-deepseek.js`
+
+**系统Prompt片段：**
+```javascript
+{
+  "supplier": "必須 - 供應商名稱（公司名稱）",
+  "supplier_address": "字符串",
+  "supplier_phone": "字符串",      // ✅ 已包含
+  "supplier_email": "字符串",      // ✅ 已包含
+  "customer": "必須 - 客戶名稱",
+  ...
+}
+```
+
+**结论：**
+- ✅ AI已配置提取供应商电话和Email
+- ✅ 数据存储在 `supplier_phone` 和 `supplier_email` 字段
+- ✅ document-detail-new.js 已支持保存这些字段
+
+---
+
+## 📦 需要上传的文件
+
+### 必须上传（2个文件）
+
+```
+1. document-detail.html
+   → Export菜单桌面版显示方式修改
+   → 桌面版：右侧下拉菜单
+   → 手机版：居中弹出
+
+2. invoice-export.js
+   → 发票详细CSV添加电话和Email列
+   → 适用于所有发票导出
+```
+
+---
+
+## 🧪 测试步骤
+
+### 测试1：Export菜单显示（桌面版）
+
+**测试页面：**
+```
+https://vaultcaddy.com/document-detail.html?project=VBU9wYm73WMFUImwRqmB&id=ByrVPNk5qFxCL3ep8azQ
+```
+
+**测试步骤：**
+1. 在桌面浏览器打开（宽度>768px）
+2. 点击 Export 按钮
+3. 检查菜单是否显示在右侧（不是居中）
+4. 检查菜单宽度是否为300px
+5. 检查是否有背景遮罩（桌面版不应该有）
+
+**预期结果：**
+- ✅ Export菜单在按钮右下方显示
+- ✅ 菜单宽度300px
+- ✅ 没有背景遮罩
+- ✅ 与firstproject.html的显示方式一致
+
+---
+
+### 测试2：Export菜单显示（手机版）
+
+**测试页面：** 同上
+
+**测试步骤：**
+1. 在手机浏览器打开或使用开发者工具模拟手机
+2. 点击 Export 按钮
+3. 检查菜单是否居中显示
+4. 检查是否有背景遮罩
+
+**预期结果：**
+- ✅ Export菜单在屏幕中央显示
+- ✅ 有半透明背景遮罩
+- ✅ 菜单宽度90%，最大400px
+- ✅ 用户体验良好
+
+---
+
+### 测试3：发票CSV导出包含电话和Email
+
+**测试页面：**
+```
+https://vaultcaddy.com/firstproject.html?project=VBU9wYm73WMFUImwRqmB
+```
+
+**测试步骤：**
+1. 选择至少一个发票文档
+2. 点击 Export → 發票完整交易數據 CSV
+3. 打开下载的CSV文件
+4. 检查表头是否包含"電話"和"Email"列
+
+**预期结果：**
+- ✅ CSV表头：發票編號, 供應商, 電話, Email, 日期, ...
+- ✅ 数据行包含对应的电话和Email值
+- ✅ 如果没有电话/Email，显示为空
+
+---
+
+### 测试4：Document-Detail单文档导出
+
+**测试页面：**
+```
+https://vaultcaddy.com/document-detail.html?project=VBU9wYm73WMFUImwRqmB&id=ByrVPNk5qFxCL3ep8azQ
+```
+
+**测试步骤：**
+1. 打开一个发票文档
+2. 确认发票详情中有电话和Email字段
+3. 点击 Export → 發票完整交易數據 CSV
+4. 打开下载的CSV文件
+5. 检查是否包含电话和Email
+
+**预期结果：**
+- ✅ CSV包含电话和Email列
+- ✅ 数据与页面上显示的一致
+
+---
+
+## 📊 字段映射关系
+
+### 发票数据字段名称支持
+
+**电话字段：**
+```
+- vendorPhone（推荐）
+- phone
+- supplier_phone
+```
+
+**Email字段：**
+```
+- vendorEmail（推荐）
+- email
+- supplier_email
+```
+
+**代码逻辑：**
+```javascript
+const phone = data.vendorPhone || data.phone || data.supplier_phone || '';
+const email = data.vendorEmail || data.email || data.supplier_email || '';
+```
+
+---
+
+## ✨ 预期效果
+
+### Export菜单
+
+**桌面版（>768px）：**
+```
+[Export按钮] ▼
+         [Export菜单]
+         - 標準 CSV
+         - 完整交易數據 CSV
+         - Xero CSV
+         - QuickBooks CSV
+         - IIF
+         - QBO
+```
+
+**手机版（≤768px）：**
+```
+        [背景遮罩]
+           [Export菜单]
+           - 標準 CSV
+           - 完整交易數據 CSV
+           - ...
+           [居中显示，白色，圆角]
+```
+
+### 发票CSV导出
+
+**文件格式：**
+```csv
+發票編號,供應商,電話,Email,日期,項目名稱,數量,單價,小計,總金額
+200602,雙喜喜麵食品有限公司,2345-6789,info@doubleshinoodle.hk,2025-10-03,乾麵類 Dry noodles,1,202.00,202.00,432.00
+```
+
+---
+
+## 🎯 实现细节
+
+### 1. 桌面版Export菜单定位
+
+**关键CSS：**
+- `position: absolute` - 相对于父元素定位
+- `top: 100%` - 在父元素下方
+- `right: 0` - 右对齐
+- `transform: none` - 不使用居中变换
+- `margin-top: 0.5rem` - 与按钮有间距
+
+### 2. 手机版Export菜单定位
+
+**关键CSS：**
+- `position: fixed` - 固定在屏幕上
+- `top: 50%`, `left: 50%` - 居中定位点
+- `transform: translate(-50%, -50%)` - 居中变换
+- `width: 90%` - 响应式宽度
+- `z-index: 2147483647` - 最高层级
+
+### 3. CSV字段提取优先级
+
+```
+优先级1: vendorPhone / vendorEmail（标准字段名）
+优先级2: phone / email（简短字段名）
+优先级3: supplier_phone / supplier_email（AI返回格式）
+```
+
+---
+
+## 📝 注意事项
+
+### 1. Xero和QuickBooks CSV
+
+- ✅ 这些是会计软件的标准导入格式
+- ✅ 只包含必需的字段（供应商名、发票号、金额等）
+- ✅ 不包含电话和Email（符合会计软件要求）
+- ✅ 如需这些字段，使用"發票完整交易數據 CSV"
+
+### 2. 数据来源
+
+- ✅ AI提取时会尝试提取电话和Email
+- ✅ 用户可以在document-detail.html手动编辑
+- ✅ 修改后会自动保存到Firebase
+- ✅ 导出时从processedData中读取
+
+### 3. 兼容性
+
+- ✅ 新格式向下兼容（旧数据没有电话/Email时显示为空）
+- ✅ 不影响现有导出功能
+- ✅ 适用于所有发票类型
+
+---
+
+## 🎊 完成状态
+
+| 任务 | 状态 | 文件 |
+|------|------|------|
+| Export菜单桌面版改为下拉 | ✅ | document-detail.html |
+| Export菜单手机版保持居中 | ✅ | document-detail.html |
+| 发票CSV添加电话列 | ✅ | invoice-export.js |
+| 发票CSV添加Email列 | ✅ | invoice-export.js |
+| AI提取电话Email | ✅ | hybrid-vision-deepseek.js（已存在） |
+| 数据保存电话Email | ✅ | document-detail-new.js（已存在） |
+
+---
+
+🚀 现在可以上传文件并测试了！

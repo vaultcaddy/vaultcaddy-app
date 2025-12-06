@@ -62,7 +62,7 @@
     function generateInvoiceDetailedCSV(invoices) {
         console.log(`📊 生成發票詳細數據 CSV，共 ${invoices.length} 個發票`);
         
-        const headers = ['發票編號', '供應商', '日期', '項目名稱', '數量', '單價', '小計', '總金額'];
+        const headers = ['發票編號', '供應商', '電話', 'Email', '日期', '項目名稱', '數量', '單價', '小計', '總金額'];
         const rows = [headers];
         
         invoices.forEach(invoice => {
@@ -71,6 +71,8 @@
             // 提取基本信息
             const invoiceNumber = data.invoiceNumber || data.invoice_number || data.number || '';
             const vendor = data.vendorName || data.vendor || data.supplier || data.supplierName || '';
+            const phone = data.vendorPhone || data.phone || data.supplier_phone || '';
+            const email = data.vendorEmail || data.email || data.supplier_email || '';
             const date = data.invoiceDate || data.date || data.issueDate || '';
             const total = data.totalAmount || data.total || data.amount || data.grandTotal || '0';
             
@@ -82,6 +84,8 @@
                 const row = [
                     invoiceNumber,
                     vendor,
+                    phone,
+                    email,
                     date,
                     '總計',
                     '1',
@@ -101,6 +105,8 @@
                     const row = [
                         invoiceNumber,
                         vendor,
+                        phone,
+                        email,
                         date,
                         itemName,
                         quantity,
