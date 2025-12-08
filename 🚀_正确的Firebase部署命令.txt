@@ -1,0 +1,145 @@
+# 🚀 正确的 Firebase 部署命令
+
+## ❌ 您的错误（图5）
+
+```bash
+cd: no such file or directory: firebase-functions
+Error: Not in a Firebase app directory (could not locate firebase.json)
+```
+
+**原因：** 您在错误的目录运行命令了！
+
+---
+
+## ✅ 正确的步骤
+
+### 方法1：在主目录运行（推荐）
+
+```bash
+# 1. 进入主目录
+cd /Users/cavlinyeung/ai-bank-parser
+
+# 2. 直接部署
+firebase deploy --only functions
+```
+
+---
+
+### 方法2：分步骤
+
+```bash
+# 1. 确认当前目录
+pwd
+# 应该显示：/Users/cavlinyeung/ai-bank-parser
+
+# 2. 检查 firebase.json 是否存在
+ls -la firebase.json
+# 应该显示：-rw-r--r--@ 1 cavlinyeung staff 385 Nov 30 13:58 firebase.json
+
+# 3. 部署
+firebase deploy --only functions
+```
+
+---
+
+## 📋 部署过程
+
+**执行后会看到：**
+
+```
+=== Deploying to 'vaultcaddy-production-cbbe2'...
+
+i  deploying functions
+i  functions: ensuring required API cloudfunctions.googleapis.com is enabled...
+i  functions: ensuring required API cloudbuild.googleapis.com is enabled...
+✔  functions: required API cloudfunctions.googleapis.com is enabled
+✔  functions: required API cloudbuild.googleapis.com is enabled
+i  functions: preparing firebase-functions directory for uploading...
+i  functions: packaged firebase-functions (XX.X KB) for uploading
+✔  functions: firebase-functions folder uploaded successfully
+i  functions: updating Node.js 18 function sendVerificationCode(us-central1)...
+i  functions: updating Node.js 18 function verifyCode(us-central1)...
+✔  functions[sendVerificationCode(us-central1)]: Successful update operation.
+✔  functions[verifyCode(us-central1)]: Successful update operation.
+
+✔  Deploy complete!
+```
+
+**等待时间：** 约 1-3 分钟
+
+---
+
+## 🧪 验证部署成功
+
+### 方法1：Firebase Console
+
+```
+访问：
+https://console.firebase.google.com/u/1/project/vaultcaddy-production-cbbe2/functions
+
+确认：
+- sendVerificationCode 状态为 "Active"
+- verifyCode 状态为 "Active"
+- Last deployed: 刚才的时间
+```
+
+---
+
+### 方法2：测试注册
+
+```
+1. 用新邮箱注册账号
+2. 收到验证邮件
+3. 点击"立即验证"
+4. 应该直接打开验证页面（带 email 参数）
+5. 不再提示"缺少 email 参数"
+```
+
+---
+
+## 🎯 如果遇到问题
+
+### 问题1：firebase: command not found
+
+**解决：**
+```bash
+npm install -g firebase-tools
+```
+
+---
+
+### 问题2：需要登录
+
+**解决：**
+```bash
+firebase login
+```
+
+---
+
+### 问题3：权限不足
+
+**解决：**
+```bash
+# 确认登录的 Google 账号有 vaultcaddy-production-cbbe2 项目的权限
+firebase projects:list
+```
+
+---
+
+## 📝 完整命令示例
+
+```bash
+# 一步到位
+cd /Users/cavlinyeung/ai-bank-parser && firebase deploy --only functions
+```
+
+**这个命令会：**
+1. 切换到主目录
+2. 自动找到 firebase.json
+3. 部署 firebase-functions/ 目录中的所有 Functions
+4. 更新 sendVerificationCode 和 verifyCode
+
+---
+
+🎊 **部署完成后，新注册的用户就会收到修复后的验证邮件了！**

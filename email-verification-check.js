@@ -100,24 +100,49 @@ window.emailVerificationChecker = {
         // 插入到頁面頂部
         document.body.insertBefore(notice, document.body.firstChild);
         
-        // 調整頁面內容位置（避免被橫幅遮擋，考慮頂部欄高度）
-        const mainContent = document.querySelector('main') || document.querySelector('.container') || document.body;
-        if (mainContent && mainContent !== document.body) {
-            mainContent.style.marginTop = '60px';
-        } else {
-            document.body.style.paddingTop = '120px'; // 60px (navbar) + 60px (notice)
-        }
-        
-        // 🔧 手機版專用：調整 dashboard-container
-        const dashboardContainer = document.querySelector('.dashboard-container');
-        if (dashboardContainer) {
-            // 檢查是否為手機版（<= 768px）
+        // 🔧 統一調整頁面佈局（支持所有頁面）
+        const adjustPageLayout = () => {
             const isMobile = window.innerWidth <= 768;
-            if (isMobile) {
-                dashboardContainer.style.paddingTop = 'calc(60px + 60px)'; // navbar + banner
-                console.log('✅ 手機版 dashboard-container 已調整');
+            const bannerHeight = 60; // 橫幅高度
+            const navbarHeight = 60; // 導航欄高度
+            
+            console.log(`📱 調整頁面佈局 - ${isMobile ? '手機版' : '桌面版'}`);
+            
+            // 1. 調整 dashboard-container（所有頁面都有）
+            const dashboardContainer = document.querySelector('.dashboard-container');
+            if (dashboardContainer) {
+                if (isMobile) {
+                    dashboardContainer.style.paddingTop = `${navbarHeight + bannerHeight}px`;
+                    console.log('✅ dashboard-container paddingTop:', dashboardContainer.style.paddingTop);
+                } else {
+                    dashboardContainer.style.paddingTop = `${navbarHeight + bannerHeight}px`;
+                }
             }
-        }
+            
+            // 2. 調整 main-content（如果存在）
+            const mainContent = document.querySelector('.main-content');
+            if (mainContent && isMobile) {
+                mainContent.style.paddingTop = '1rem';
+                console.log('✅ main-content 已調整');
+            }
+            
+            // 3. 調整 settings-container（account.html）
+            const settingsContainer = document.querySelector('.settings-container');
+            if (settingsContainer && isMobile) {
+                settingsContainer.style.paddingTop = '0';
+                console.log('✅ settings-container 已調整');
+            }
+            
+            // 4. 如果都沒有，調整 body
+            if (!dashboardContainer && !mainContent) {
+                document.body.style.paddingTop = `${navbarHeight + bannerHeight}px`;
+                console.log('✅ body paddingTop 已調整');
+            }
+        };
+        
+        // 延遲調整，確保 DOM 完全加載
+        setTimeout(adjustPageLayout, 100);
+        setTimeout(adjustPageLayout, 500); // 再次調整，以防首次失敗
         
         // ✅ 調整左側欄位置（當驗證 banner 出現時，sidebar 需要向下移動）
         const adjustSidebar = () => {
