@@ -204,12 +204,22 @@
             const urlParams = new URLSearchParams(window.location.search);
             userEmail = urlParams.get('email');
             
+            // ✅ 如果URL中沒有email，嘗試從localStorage獲取
+            if (!userEmail) {
+                userEmail = localStorage.getItem('pendingVerificationEmail');
+            }
+            
+            // ✅ 如果還是沒有email，嘗試從sessionStorage獲取
+            if (!userEmail) {
+                userEmail = sessionStorage.getItem('registrationEmail');
+            }
+            
             console.log('📧 Email:', userEmail);
 
             if (!userEmail) {
-                console.error('❌ 沒有 email，跳轉到註冊頁面');
-                alert('缺少 email 參數，請重新註冊');
-                window.location.href = 'auth.html';
+                console.error('❌ 沒有 email，顯示輸入框');
+                // ✅ 顯示輸入框讓用戶輸入email，而不是直接跳轉
+                showEmailInputPrompt();
                 return;
             }
 
@@ -400,6 +410,50 @@
             successDiv.textContent = message;
             successDiv.style.display = 'block';
             errorDiv.style.display = 'none';
+        }
+        
+        // ✅ 顯示email輸入提示
+        function showEmailInputPrompt() {
+            const emailDisplay = document.getElementById('emailDisplay');
+            emailDisplay.innerHTML = `
+                <div style="margin: 1rem 0;">
+                    <label style="display: block; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">請輸入您註冊時使用的 Email：</label>
+                    <input type="email" id="manualEmailInput" placeholder="your@email.com" 
+                           style="width: 100%; padding: 0.75rem; border: 2px solid #d1d5db; border-radius: 8px; font-size: 1rem; margin-bottom: 0.5rem;">
+                    <button onclick="confirmEmail()" 
+                            style="width: 100%; padding: 0.75rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 0.5rem;">
+                        確認
+                    </button>
+                </div>
+            `;
+            
+            // 聚焦到輸入框
+            setTimeout(() => {
+                document.getElementById('manualEmailInput')?.focus();
+            }, 100);
+        }
+        
+        // ✅ 確認手動輸入的email
+        function confirmEmail() {
+            const input = document.getElementById('manualEmailInput');
+            const email = input?.value.trim();
+            
+            if (!email) {
+                showError('請輸入 Email 地址');
+                return;
+            }
+            
+            // 簡單的email驗證
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showError('請輸入有效的 Email 地址');
+                return;
+            }
+            
+            // 設置userEmail並刷新頁面
+            userEmail = email;
+            localStorage.setItem('pendingVerificationEmail', email);
+            window.location.href = `verify-email.html?email=${encodeURIComponent(email)}`;
         }
     </script>
 </body>

@@ -808,7 +808,7 @@ function displayBankStatementContent(data) {
                 帳戶信息
                 <span style="font-size: 0.875rem; color: #6b7280; font-weight: normal; margin-left: 0.5rem;">(可編輯)</span>
             </h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="bank-info-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
                     <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">銀行名稱</label>
                     <input type="text" id="bankName" value="${bankName}" 
@@ -844,7 +844,7 @@ function displayBankStatementContent(data) {
                     <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">對帳單日期</label>
                     <input type="date" id="statementDate" value="${statementDate}" 
                            onchange="autoSaveBankStatementDetails()"
-                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
+                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white; max-width: 100%; overflow: hidden; text-overflow: ellipsis;">
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
                     <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">期初餘額</label>
@@ -859,6 +859,20 @@ function displayBankStatementContent(data) {
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; font-weight: 600; color: #10b981; background: white;">
                 </div>
             </div>
+            <style>
+                /* ✅ 手機版：帳戶信息改為1列顯示 */
+                @media (max-width: 768px) {
+                    .bank-info-grid {
+                        grid-template-columns: 1fr !important;
+                    }
+                    
+                    /* ✅ 修復日期輸入框超出問題 */
+                    input[type="date"] {
+                        max-width: 100% !important;
+                        overflow: hidden !important;
+                    }
+                }
+            </style>
         </div>
         
         <!-- ✅ 其他賬戶（可展開/摺疊）-->
@@ -917,7 +931,13 @@ function displayBankStatementContent(data) {
         
         transactionsHTML += `
             <tr data-index="${actualIndex}">
-                <td class="checkbox-cell"><input type="checkbox"></td>
+                <td class="checkbox-cell">
+                    <input type="checkbox" 
+                           class="transaction-checkbox" 
+                           data-index="${actualIndex}"
+                           ${tx.checked ? 'checked' : ''}
+                           onchange="handleTransactionCheckbox(${actualIndex}, this.checked)">
+                </td>
                 <td contenteditable="true" class="editable-cell" data-field="date" style="min-width: 100px;">${tx.date || '—'}</td>
                 <td contenteditable="true" class="editable-cell" data-field="description" style="min-width: 200px;">${description}</td>
                 <td class="amount-cell" style="position: relative;">
@@ -1635,6 +1655,30 @@ function updateTransactionAmount(index, value, wasIncome) {
     // 標記為有未保存更改
     markAsChanged();
 }
+
+// ✅ 處理交易記錄複選框變化
+window.handleTransactionCheckbox = function(index, checked) {
+    console.log(`✅ 交易 ${index} 複選框變化: ${checked}`);
+    
+    if (!currentDocument || !currentDocument.processedData || !currentDocument.processedData.transactions) {
+        console.error('❌ 無法找到交易數據');
+        return;
+    }
+    
+    const transaction = currentDocument.processedData.transactions[index];
+    if (!transaction) {
+        console.error(`❌ 找不到交易 ${index}`);
+        return;
+    }
+    
+    // 更新交易的 checked 狀態
+    transaction.checked = checked;
+    
+    // 標記為有未保存更改並自動保存
+    markAsChanged();
+    
+    console.log(`💾 交易 ${index} 已標記為 ${checked ? '已核對' : '未核對'}`);
+};
 
 // ✅ 監聽可編輯單元格的變化
 function setupTransactionEditListeners() {

@@ -108,35 +108,62 @@ window.emailVerificationChecker = {
             
             console.log(`📱 調整頁面佈局 - ${isMobile ? '手機版' : '桌面版'}`);
             
-            // 1. 調整 dashboard-container（所有頁面都有）
-            const dashboardContainer = document.querySelector('.dashboard-container');
-            if (dashboardContainer) {
-                if (isMobile) {
-                    dashboardContainer.style.paddingTop = `${navbarHeight + bannerHeight}px`;
+            // ✅ 手機版：調整所有可能的容器
+            if (isMobile) {
+                // 1. 調整 dashboard-container
+                const dashboardContainer = document.querySelector('.dashboard-container');
+                if (dashboardContainer) {
+                    dashboardContainer.style.paddingTop = `${navbarHeight + bannerHeight + 20}px`; // 額外20px間距
                     console.log('✅ dashboard-container paddingTop:', dashboardContainer.style.paddingTop);
-                } else {
+                }
+                
+                // 2. 調整 account-container（billing.html）
+                const accountContainer = document.querySelector('.account-container');
+                if (accountContainer) {
+                    accountContainer.style.paddingTop = `${navbarHeight + bannerHeight + 20}px`;
+                    console.log('✅ account-container 已調整');
+                }
+                
+                // 3. 調整 main-content
+                const mainContent = document.querySelector('.main-content');
+                if (mainContent) {
+                    const currentPadding = parseInt(mainContent.style.paddingTop || '0');
+                    if (currentPadding < bannerHeight) {
+                        mainContent.style.paddingTop = `${bannerHeight + 20}px`;
+                        console.log('✅ main-content 已調整');
+                    }
+                }
+                
+                // 4. 調整 settings-container（account.html）
+                const settingsContainer = document.querySelector('.settings-container');
+                if (settingsContainer) {
+                    settingsContainer.style.marginTop = `${bannerHeight}px`;
+                    console.log('✅ settings-container 已調整');
+                }
+                
+                // 5. 調整 pricing-container（billing.html）
+                const pricingContainer = document.querySelector('.pricing-container');
+                if (pricingContainer) {
+                    pricingContainer.style.marginTop = `${bannerHeight}px`;
+                    console.log('✅ pricing-container 已調整');
+                }
+                
+                // 6. 如果都沒有，調整 body
+                if (!dashboardContainer && !accountContainer && !mainContent) {
+                    document.body.style.paddingTop = `${navbarHeight + bannerHeight + 20}px`;
+                    console.log('✅ body paddingTop 已調整');
+                }
+            } else {
+                // 桌面版：正常調整
+                const dashboardContainer = document.querySelector('.dashboard-container');
+                if (dashboardContainer) {
                     dashboardContainer.style.paddingTop = `${navbarHeight + bannerHeight}px`;
                 }
-            }
-            
-            // 2. 調整 main-content（如果存在）
-            const mainContent = document.querySelector('.main-content');
-            if (mainContent && isMobile) {
-                mainContent.style.paddingTop = '1rem';
-                console.log('✅ main-content 已調整');
-            }
-            
-            // 3. 調整 settings-container（account.html）
-            const settingsContainer = document.querySelector('.settings-container');
-            if (settingsContainer && isMobile) {
-                settingsContainer.style.paddingTop = '0';
-                console.log('✅ settings-container 已調整');
-            }
-            
-            // 4. 如果都沒有，調整 body
-            if (!dashboardContainer && !mainContent) {
-                document.body.style.paddingTop = `${navbarHeight + bannerHeight}px`;
-                console.log('✅ body paddingTop 已調整');
+                
+                const accountContainer = document.querySelector('.account-container');
+                if (accountContainer) {
+                    accountContainer.style.paddingTop = `${navbarHeight + bannerHeight}px`;
+                }
             }
         };
         
