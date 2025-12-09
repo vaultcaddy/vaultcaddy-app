@@ -88,9 +88,41 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
 async function handleCheckoutCompleted(session) {
     console.log('✅ 結帳完成:', session.id);
     
-    const userId = session.client_reference_id || session.metadata?.userId;
+    // 尝试获取用户ID（支持多种方式）
+    let userId = session.client_reference_id || session.metadata?.userId;
+    
+    // 如果没有userId，尝试通过email查找
+    if (!userId && session.customer_email) {
+        console.log(`🔍 嘗試通過 email 查找用戶: ${session.customer_email}`);
+        try {
+            const usersSnapshot = await db.collection('users')
+                .where('email', '==', session.customer_email)
+                .limit(1)
+                .get();
+            
+            if (!usersSnapshot.empty) {
+                userId = usersSnapshot.docs[0].id;
+                console.log(`✅ 通過 email 找到用戶: ${userId}`);
+            } else {
+                console.log(`⚠️ 未找到 email 對應的用戶，創建新用戶: ${session.customer_email}`);
+                // 创建新用户
+                const newUserRef = await db.collection('users').add({
+                    email: session.customer_email,
+                    credits: 0,
+                    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                    source: 'stripe_payment'
+                });
+                userId = newUserRef.id;
+                console.log(`✅ 新用戶已創建: ${userId}`);
+            }
+        } catch (error) {
+            console.error('❌ 查找用戶失敗:', error);
+        }
+    }
+    
     if (!userId) {
-        console.error('❌ 無法獲取用戶 ID');
+        console.error('❌ 無法獲取用戶 ID，session:', JSON.stringify(session, null, 2));
         return;
     }
     
@@ -101,17 +133,28 @@ async function handleCheckoutCompleted(session) {
         const productId = item.price.product;
         const product = await stripe.products.retrieve(productId);
         
-        // 根據產品類型添加 Credits
-        const credits = parseInt(product.metadata.credits || 0);
+        console.log(`📦 產品信息:`, {
+            productId: product.id,
+            name: product.name,
+            metadata: product.metadata
+        });
+        
+        // 根據產品 metadata 添加 Credits
+        const credits = parseInt(product.metadata.monthly_credits || product.metadata.credits || 0);
         
         if (credits > 0) {
+            console.log(`💰 準備添加 ${credits} Credits 給用戶 ${userId}`);
             await addCredits(userId, credits, {
                 source: 'purchase',
                 stripeSessionId: session.id,
                 productName: product.name,
                 amount: session.amount_total / 100,
-                currency: session.currency
+                currency: session.currency,
+                planType: product.metadata.plan_type || 'unknown'
             });
+            console.log(`✅ 成功添加 ${credits} Credits`);
+        } else {
+            console.log(`⚠️ 產品沒有配置 Credits: ${product.name}`);
         }
     }
 }
@@ -144,9 +187,34 @@ async function handlePaymentSuccess(paymentIntent) {
 async function handleSubscriptionChange(subscription) {
     console.log('✅ 訂閱變更:', subscription.id);
     
-    const userId = subscription.metadata?.userId;
+    // 尝试获取用户ID
+    let userId = subscription.metadata?.userId;
+    
+    // 如果没有userId，尝试通过customer查找
+    if (!userId && subscription.customer) {
+        console.log(`🔍 嘗試通過 Stripe Customer 查找用戶: ${subscription.customer}`);
+        try {
+            // 获取customer的email
+            const customer = await stripe.customers.retrieve(subscription.customer);
+            
+            if (customer.email) {
+                const usersSnapshot = await db.collection('users')
+                    .where('email', '==', customer.email)
+                    .limit(1)
+                    .get();
+                
+                if (!usersSnapshot.empty) {
+                    userId = usersSnapshot.docs[0].id;
+                    console.log(`✅ 通過 customer email 找到用戶: ${userId}`);
+                }
+            }
+        } catch (error) {
+            console.error('❌ 查找用戶失敗:', error);
+        }
+    }
+    
     if (!userId) {
-        console.error('❌ 無法獲取用戶 ID');
+        console.error('❌ 無法獲取用戶 ID，subscription:', JSON.stringify(subscription, null, 2));
         return;
     }
     
@@ -154,19 +222,27 @@ async function handleSubscriptionChange(subscription) {
     const priceId = subscription.items.data[0].price.id;
     const product = await stripe.products.retrieve(subscription.items.data[0].price.product);
     
-    // 確定計劃類型和 Credits
-    let planType = 'free';
-    let monthlyCredits = 0;
+    console.log(`📦 訂閱產品信息:`, {
+        productId: product.id,
+        name: product.name,
+        metadata: product.metadata
+    });
     
-    if (product.metadata.plan_type) {
-        planType = product.metadata.plan_type; // basic, pro, business
-        monthlyCredits = parseInt(product.metadata.monthly_credits || 0);
-    }
+    // 確定計劃類型和 Credits
+    let planType = product.metadata.plan_type || 'monthly';
+    let monthlyCredits = parseInt(product.metadata.monthly_credits || 0);
+    
+    console.log(`📊 訂閱詳情:`, {
+        planType,
+        monthlyCredits,
+        status: subscription.status
+    });
     
     // 更新用戶訂閱信息
     await db.collection('users').doc(userId).update({
         subscription: {
             stripeSubscriptionId: subscription.id,
+            stripeCustomerId: subscription.customer,
             status: subscription.status,
             planType: planType,
             monthlyCredits: monthlyCredits,
@@ -178,12 +254,15 @@ async function handleSubscriptionChange(subscription) {
     });
     
     // 如果是新訂閱或續訂，添加當月 Credits
-    if (subscription.status === 'active') {
+    if (subscription.status === 'active' && monthlyCredits > 0) {
+        console.log(`💰 準備添加 ${monthlyCredits} Credits（訂閱）`);
         await addCredits(userId, monthlyCredits, {
             source: 'subscription',
             planType: planType,
-            period: `${new Date(subscription.current_period_start * 1000).toISOString()} - ${new Date(subscription.current_period_end * 1000).toISOString()}`
+            period: `${new Date(subscription.current_period_start * 1000).toISOString()} - ${new Date(subscription.current_period_end * 1000).toISOString()}`,
+            subscriptionId: subscription.id
         });
+        console.log(`✅ 成功添加 ${monthlyCredits} Credits（訂閱）`);
     }
 }
 
