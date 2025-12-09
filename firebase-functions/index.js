@@ -1068,5 +1068,89 @@ exports.reportDailyUsage = functions.pubsub.schedule('0 0 * * *')  // 每天午�
         }
     });
 
+// ============================================
+// 13. 創建 Stripe Checkout Session（動態傳遞用戶信息）
+// ============================================
+
+/**
+ * 創建 Stripe Checkout Session
+ * 自動傳遞用戶的 email 和 userId，實現無縫支付體驗
+ */
+exports.createStripeCheckoutSession = functions.https.onCall(async (data, context) => {
+    const { planType, userId, email } = data;
+    
+    console.log('🛒 創建 Checkout Session:', { planType, userId, email });
+    
+    // 檢查 Stripe 是否已配置
+    if (!stripe || !stripeConfig) {
+        console.error('❌ Stripe 未配置');
+        throw new functions.https.HttpsError('unavailable', 'Stripe 未配置，請聯繫管理員');
+    }
+    
+    // 驗證參數
+    if (!planType || !userId || !email) {
+        throw new functions.https.HttpsError('invalid-argument', '缺少必要參數');
+    }
+    
+    // 定義價格 ID（從 Stripe Dashboard 獲取）
+    const priceMapping = {
+        monthly: {
+            basePriceId: 'price_1ScSATJmiQ31C0GTv5nR9h2e',  // 月費基礎價格 $58
+            usagePriceId: 'price_1SXNNdJmiQ31C0GTvSu5uXyJ'  // 月費用量計費
+        },
+        yearly: {
+            basePriceId: 'price_1ScS7JJmiQ31C0GTCbEZ5lJZ',  // 年費基礎價格 $552
+            usagePriceId: 'price_1SXNSwJmiQ31C0GTkPTxc3DI'  // 年費用量計費
+        }
+    };
+    
+    const selectedPlan = priceMapping[planType];
+    
+    if (!selectedPlan) {
+        console.error('❌ 無效的計劃類型:', planType);
+        throw new functions.https.HttpsError('invalid-argument', '無效的訂閱計劃');
+    }
+    
+    try {
+        console.log('📝 創建 Checkout Session，價格:', selectedPlan);
+        
+        // 創建 Checkout Session
+        const session = await stripe.checkout.sessions.create({
+            mode: 'subscription',
+            line_items: [
+                {
+                    price: selectedPlan.basePriceId,  // 基礎訂閱費
+                    quantity: 1
+                },
+                {
+                    price: selectedPlan.usagePriceId,  // 用量計費
+                    quantity: 1
+                }
+            ],
+            customer_email: email,  // ← 自動填充 email
+            client_reference_id: userId,  // ← 傳遞 userId
+            metadata: {
+                userId: userId,  // ← 傳遞 userId（雙重保險）
+                planType: planType
+            },
+            success_url: `https://vaultcaddy.com/billing.html?success=true&session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: 'https://vaultcaddy.com/billing.html?canceled=true',
+            allow_promotion_codes: true,  // 允許使用優惠碼
+            billing_address_collection: 'auto'  // 自動收集帳單地址
+        });
+        
+        console.log('✅ Checkout Session 創建成功:', session.id);
+        
+        return {
+            url: session.url,
+            sessionId: session.id
+        };
+        
+    } catch (error) {
+        console.error('❌ 創建 Checkout Session 失敗:', error);
+        throw new functions.https.HttpsError('internal', `創建支付會話失敗: ${error.message}`);
+    }
+});
+
 console.log('✅ Firebase Cloud Functions 已載入（包含 Email 驗證、數據清理和 Stripe 使用量計費功能）');
 

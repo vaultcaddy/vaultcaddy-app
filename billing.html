@@ -1244,7 +1244,7 @@
                         </div>
                         
                         <!-- CTA 按鈕 -->
-                        <a href="https://buy.stripe.com/3cI5kEe202SK4P41W2f7i09" data-i18n="pricing.cta" class="cta-btn" style="width: 100%; padding: 1rem; font-size: 1rem; font-weight: 600; background: #8b5cf6; color: white; border: none; border-radius: 8px; cursor: pointer; display: block; text-align: center; text-decoration: none; transition: background 0.2s;">開始使用</a>
+                        <button onclick="createCheckoutSession('monthly')" data-i18n="pricing.cta" class="cta-btn" style="width: 100%; padding: 1rem; font-size: 1rem; font-weight: 600; background: #8b5cf6; color: white; border: none; border-radius: 8px; cursor: pointer; display: block; text-align: center; text-decoration: none; transition: background 0.2s;">開始使用</button>
                     </div>
 
                     <!-- 年付方案 -->
@@ -1280,7 +1280,7 @@
                         </div>
                         
                         <!-- CTA 按鈕 -->
-                        <a href="https://buy.stripe.com/8x200kbTSalc5T81W2f7i0a" data-i18n="pricing.cta" class="cta-btn" style="width: 100%; padding: 1rem; font-size: 1rem; font-weight: 600; background: #8b5cf6; color: white; border: none; border-radius: 8px; cursor: pointer; display: block; text-align: center; text-decoration: none; transition: background 0.2s;">開始使用</a>
+                        <button onclick="createCheckoutSession('yearly')" data-i18n="pricing.cta" class="cta-btn" style="width: 100%; padding: 1rem; font-size: 1rem; font-weight: 600; background: #8b5cf6; color: white; border: none; border-radius: 8px; cursor: pointer; display: block; text-align: center; text-decoration: none; transition: background 0.2s;">開始使用</button>
                     </div>
                 </div>
             </div>
@@ -1816,6 +1816,78 @@
         
         // 暴露函數供側邊欄內的連結使用
         window.closeMobileSidebar = closeSidebar;
+    </script>
+
+    <!-- ✅ Stripe Checkout Session 創建函數 -->
+    <script>
+        /**
+         * 創建 Stripe Checkout Session 並跳轉
+         * 這樣可以自動傳遞用戶的 email 和 userId
+         */
+        async function createCheckoutSession(planType) {
+            console.log(`🛒 創建 ${planType} 訂閱...`);
+            
+            // 檢查用戶是否登錄
+            if (!window.simpleAuth || !window.simpleAuth.isLoggedIn()) {
+                alert('請先登錄');
+                window.location.href = 'auth.html';
+                return;
+            }
+            
+            try {
+                // 獲取當前用戶
+                const currentUser = window.simpleAuth.getCurrentUser();
+                const userEmail = currentUser.email;
+                const userId = currentUser.uid;
+                
+                console.log(`👤 用戶信息:`, { userEmail, userId });
+                
+                // 顯示加載狀態
+                const button = event.target;
+                const originalText = button.textContent;
+                button.disabled = true;
+                button.textContent = '正在跳轉到支付頁面...';
+                button.style.opacity = '0.6';
+                
+                // 調用 Firebase Function 創建 Checkout Session
+                const createSession = firebase.functions().httpsCallable('createStripeCheckoutSession');
+                
+                console.log(`📞 調用 Firebase Function...`);
+                const result = await createSession({
+                    planType: planType,
+                    userId: userId,
+                    email: userEmail
+                });
+                
+                console.log(`✅ Checkout Session 創建成功:`, result.data);
+                
+                // 跳轉到 Stripe Checkout
+                window.location.href = result.data.url;
+                
+            } catch (error) {
+                console.error('❌ 創建支付會話失敗:', error);
+                
+                // 恢復按鈕狀態
+                if (button) {
+                    button.disabled = false;
+                    button.textContent = originalText;
+                    button.style.opacity = '1';
+                }
+                
+                // 顯示友好的錯誤信息
+                if (error.message.includes('not-found')) {
+                    alert('訂閱計劃配置錯誤，請聯繫客服');
+                } else if (error.message.includes('unauthenticated')) {
+                    alert('請先登錄');
+                    window.location.href = 'auth.html';
+                } else {
+                    alert('創建支付會話失敗，請重試或聯繫客服');
+                }
+            }
+        }
+        
+        // 暴露到全局
+        window.createCheckoutSession = createCheckoutSession;
     </script>
 
 </body>
