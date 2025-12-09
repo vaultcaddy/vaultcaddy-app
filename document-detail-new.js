@@ -643,18 +643,6 @@ function displayInvoiceContent(data) {
                            onchange="autoSaveInvoiceDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; font-weight: 600; color: #10b981; background: white;">
                 </div>
-                <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">電話</label>
-                    <input type="tel" id="vendorPhone" value="${data.phone || data.vendorPhone || '—'}" 
-                           onchange="autoSaveInvoiceDetails()"
-                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
-                </div>
-                <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">Email</label>
-                    <input type="email" id="vendorEmail" value="${data.email || data.vendorEmail || '—'}" 
-                           onchange="autoSaveInvoiceDetails()"
-                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
-                </div>
             </div>
             <style>
                 /* 手機版改為1列 */
@@ -1253,8 +1241,6 @@ async function autoSaveInvoiceDetails() {
     const invoiceDate = document.getElementById('invoiceDate')?.value;
     const vendor = document.getElementById('vendor')?.value;
     const totalAmount = document.getElementById('totalAmount')?.value;
-    const vendorPhone = document.getElementById('vendorPhone')?.value;
-    const vendorEmail = document.getElementById('vendorEmail')?.value;
     
     // 更新 currentDocument
     if (currentDocument && currentDocument.processedData) {
@@ -1267,11 +1253,7 @@ async function autoSaveInvoiceDetails() {
             vendor: vendor,
             supplier: vendor,
             total: totalAmount,
-            totalAmount: totalAmount,
-            phone: vendorPhone,
-            vendorPhone: vendorPhone,
-            email: vendorEmail,
-            vendorEmail: vendorEmail
+            totalAmount: totalAmount
         };
     }
     
