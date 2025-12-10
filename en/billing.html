@@ -1252,7 +1252,7 @@
                         </div>
                         
                         <!-- CTA 按鈕 -->
-                        <a href="https://buy.stripe.com/3cI5kEe202SK4P41W2f7i09" data-i18n="pricing.cta" class="cta-btn" style="width: 100%; padding: 1rem; font-size: 1rem; font-weight: 600; background: #8b5cf6; color: white; border: none; border-radius: 8px; cursor: pointer; display: block; text-align: center; text-decoration: none; transition: background 0.2s;">開始使用</a>
+                        <button onclick="createCheckoutSession('monthly')" data-i18n="pricing.cta" class="cta-btn" style="width: 100%; padding: 1rem; font-size: 1rem; font-weight: 600; background: #8b5cf6; color: white; border: none; border-radius: 8px; cursor: pointer; display: block; text-align: center; text-decoration: none; transition: background 0.2s;">開始使用</button>
                     </div>
 
                     <!-- 年付方案 -->
@@ -1288,7 +1288,7 @@
                         </div>
                         
                         <!-- CTA 按鈕 -->
-                        <a href="https://buy.stripe.com/8x200kbTSalc5T81W2f7i0a" data-i18n="pricing.cta" class="cta-btn" style="width: 100%; padding: 1rem; font-size: 1rem; font-weight: 600; background: #8b5cf6; color: white; border: none; border-radius: 8px; cursor: pointer; display: block; text-align: center; text-decoration: none; transition: background 0.2s;">開始使用</a>
+                        <button onclick="createCheckoutSession('yearly')" data-i18n="pricing.cta" class="cta-btn" style="width: 100%; padding: 1rem; font-size: 1rem; font-weight: 600; background: #8b5cf6; color: white; border: none; border-radius: 8px; cursor: pointer; display: block; text-align: center; text-decoration: none; transition: background 0.2s;">開始使用</button>
                     </div>
                 </div>
             </div>
@@ -1824,6 +1824,62 @@
         
         // 暴露函數供側邊欄內的連結使用
         window.closeMobileSidebar = closeSidebar;
+    </script>
+
+    <!-- ✅ Stripe Checkout Session 創建函數 -->
+    <script>
+        async function createCheckoutSession(planType) {
+            console.log(`🛒 創建 ${planType} 訂閱...`);
+            
+            if (!window.simpleAuth || !window.simpleAuth.isLoggedIn()) {
+                alert('Please login first');
+                window.location.href = 'auth.html';
+                return;
+            }
+            
+            try {
+                const currentUser = window.simpleAuth.getCurrentUser();
+                const userEmail = currentUser.email;
+                const userId = currentUser.uid;
+                
+                console.log(`👤 用戶信息:`, { userEmail, userId });
+                
+                const button = event.target;
+                const originalText = button.textContent;
+                button.disabled = true;
+                button.textContent = 'Redirecting to payment...';
+                button.style.opacity = '0.6';
+                
+                const createSession = firebase.functions().httpsCallable('createStripeCheckoutSession');
+                
+                const result = await createSession({
+                    planType: planType,
+                    userId: userId,
+                    email: userEmail
+                });
+                
+                console.log(`✅ Checkout Session 創建成功:`, result.data);
+                window.location.href = result.data.url;
+                
+            } catch (error) {
+                console.error('❌ 創建支付會話失敗:', error);
+                
+                if (button) {
+                    button.disabled = false;
+                    button.textContent = originalText;
+                    button.style.opacity = '1';
+                }
+                
+                if (error.message.includes('unauthenticated')) {
+                    alert('Please login first');
+                    window.location.href = 'auth.html';
+                } else {
+                    alert('Failed to create payment session. Please try again or contact support.');
+                }
+            }
+        }
+        
+        window.createCheckoutSession = createCheckoutSession;
     </script>
     
     <!-- 🌍 語言選擇器 -->

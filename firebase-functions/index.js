@@ -1095,12 +1095,12 @@ exports.createStripeCheckoutSession = functions.https.onCall(async (data, contex
     // 定義價格 ID（從 Stripe Dashboard 獲取）
     const priceMapping = {
         monthly: {
-            basePriceId: 'price_1ScSATJmiQ31C0GTv5nR9h2e',  // 月費基礎價格 $58
-            usagePriceId: 'price_1SXNNdJmiQ31C0GTvSu5uXyJ'  // 月費用量計費
+            basePriceId: 'price_1ScS9QJmiQ31C0GTy4y6z0l0',  // 月費基礎價格 $58
+            usagePriceId: 'price_1ScSATJmiQ31C0GTW1qWu0OF'  // 月費用量計費
         },
         yearly: {
-            basePriceId: 'price_1ScS7JJmiQ31C0GTCbEZ5lJZ',  // 年費基礎價格 $552
-            usagePriceId: 'price_1SXNSwJmiQ31C0GTkPTxc3DI'  // 年費用量計費
+            basePriceId: 'price_1ScS8EJmiQ31C0GT599VDffL',  // 年費基礎價格 $552
+            usagePriceId: 'price_1ScS7iJmiQ31C0GTv3ScXonr'  // 年費用量計費
         }
     };
     
