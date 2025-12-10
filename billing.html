@@ -489,6 +489,21 @@
             left: 100%;
         }
         
+        /* 🧪 測試模式切換按鈕樣式 */
+        #test-mode-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(234, 88, 12, 0.15);
+        }
+        
+        #test-mode-info code {
+            background: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: 600;
+            color: #dc2626;
+        }
+        
         @media (max-width: 1024px) {
             .plans-grid {
                 grid-template-columns: 1fr;
@@ -496,6 +511,24 @@
             
             .billing-overview {
                 grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            /* 🧪 測試模式按鈕在手機上的樣式 */
+            #test-mode-toggle {
+                flex-direction: column;
+                gap: 0.5rem !important;
+                padding: 0.75rem !important;
+            }
+            
+            #test-mode-toggle label {
+                font-size: 0.75rem !important;
+            }
+            
+            #test-mode-info {
+                padding: 0.75rem !important;
+                font-size: 0.75rem !important;
             }
         }
     
@@ -1208,6 +1241,19 @@
                 <div style="text-align: center; margin-bottom: 3rem;">
                     <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 0.75rem; color: #1f2937; line-height: 1.3;">無隱藏費用，安全可靠</h2>
                     <p style="font-size: 1rem; color: #6b7280; margin: 0;">與數千家企業一起，節省財務數據錄入的時間。</p>
+                    
+                    <!-- 🧪 測試模式切換按鈕 -->
+                    <div id="test-mode-toggle" style="margin-top: 1.5rem; display: inline-flex; align-items: center; gap: 0.75rem; padding: 0.5rem 1rem; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onclick="toggleTestMode()">
+                        <input type="checkbox" id="test-mode-checkbox" style="width: 18px; height: 18px; cursor: pointer;" />
+                        <label for="test-mode-checkbox" style="cursor: pointer; font-size: 0.875rem; font-weight: 600; color: #ea580c; margin: 0;">
+                            🧪 測試模式 (使用測試卡號免費測試)
+                        </label>
+                    </div>
+                    <div id="test-mode-info" style="display: none; margin-top: 1rem; padding: 1rem; background: #fef3c7; border: 1px solid #fbbf24; border-radius: 8px; font-size: 0.875rem; text-align: left; max-width: 600px; margin-left: auto; margin-right: auto;">
+                        <p style="margin: 0 0 0.5rem 0; font-weight: 600; color: #92400e;">📝 測試模式已啟用</p>
+                        <p style="margin: 0 0 0.5rem 0; color: #78350f;">使用測試卡號：<code style="background: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-family: monospace;">4242 4242 4242 4242</code></p>
+                        <p style="margin: 0; color: #78350f;">任意未來日期、任意 CVC、任意郵編</p>
+                    </div>
                 </div>
                 
                 <!-- 月付和年付並列顯示（使用 index.html 的卡片樣式）-->
@@ -1818,6 +1864,48 @@
         window.closeMobileSidebar = closeSidebar;
     </script>
 
+    <!-- ✅ 測試模式切換功能 -->
+    <script>
+        // 🧪 測試模式全局變量
+        let isTestMode = false;
+        
+        // 🧪 測試模式 Price IDs（用戶提供的）
+        const TEST_PRICE_IDS = {
+            monthly: {
+                basePriceId: 'price_1Scj13JmiQ31C0GT4TJsWzFg',  // 月費基礎 $58
+                usagePriceId: 'price_1Scj1UJmiQ31C0GTXDsN6TFh'  // 月費用量計費
+            },
+            yearly: {
+                basePriceId: '',  // 年費基礎（待創建）
+                usagePriceId: ''  // 年費用量計費（待創建）
+            }
+        };
+        
+        // 🧪 切換測試模式
+        function toggleTestMode() {
+            const checkbox = document.getElementById('test-mode-checkbox');
+            const info = document.getElementById('test-mode-info');
+            const toggle = document.getElementById('test-mode-toggle');
+            
+            isTestMode = checkbox.checked;
+            
+            if (isTestMode) {
+                info.style.display = 'block';
+                toggle.style.background = '#fef3c7';
+                toggle.style.borderColor = '#fbbf24';
+                console.log('🧪 測試模式已啟用');
+            } else {
+                info.style.display = 'none';
+                toggle.style.background = '#fff7ed';
+                toggle.style.borderColor = '#fed7aa';
+                console.log('✅ 生產模式已啟用');
+            }
+        }
+        
+        // 暴露到全局
+        window.toggleTestMode = toggleTestMode;
+    </script>
+
     <!-- ✅ Stripe Checkout Session 創建函數 -->
     <script>
         /**
@@ -1825,6 +1913,26 @@
          * 這樣可以自動傳遞用戶的 email 和 userId
          */
         async function createCheckoutSession(planType, event) {
+            // 🧪 檢查是否為測試模式
+            if (window.isTestMode) {
+                console.log('🧪 測試模式：使用 Payment Link');
+                
+                // 檢查是否有年費測試 Price
+                if (planType === 'yearly' && (!TEST_PRICE_IDS.yearly.basePriceId || !TEST_PRICE_IDS.yearly.usagePriceId)) {
+                    alert('⚠️ 年費測試方案尚未創建\n\n請在 Stripe 測試模式下創建年費產品和價格，或選擇月費方案進行測試。');
+                    return;
+                }
+                
+                // 使用測試 Payment Link（僅月費可用）
+                if (planType === 'monthly') {
+                    window.open('https://buy.stripe.com/test_9B67sM9LK50SbdsdEKf7i00', '_blank');
+                } else {
+                    alert('⚠️ 年費測試方案尚未創建\n\n請在 Stripe 測試模式下創建年費產品和價格，或選擇月費方案進行測試。');
+                }
+                return;
+            }
+            
+            // ✅ 生產模式：正常流程
             console.log(`🛒 創建 ${planType} 訂閱...`);
             
             // 檢查用戶是否登錄
