@@ -1244,7 +1244,7 @@
                         </div>
                         
                         <!-- CTA 按鈕 -->
-                        <button onclick="createCheckoutSession('monthly')" data-i18n="pricing.cta" class="cta-btn" style="width: 100%; padding: 1rem; font-size: 1rem; font-weight: 600; background: #8b5cf6; color: white; border: none; border-radius: 8px; cursor: pointer; display: block; text-align: center; text-decoration: none; transition: background 0.2s;">開始使用</button>
+                        <button onclick="createCheckoutSession('monthly', event)" data-i18n="pricing.cta" class="cta-btn" style="width: 100%; padding: 1rem; font-size: 1rem; font-weight: 600; background: #8b5cf6; color: white; border: none; border-radius: 8px; cursor: pointer; display: block; text-align: center; text-decoration: none; transition: background 0.2s;">開始使用</button>
                     </div>
 
                     <!-- 年付方案 -->
@@ -1280,7 +1280,7 @@
                         </div>
                         
                         <!-- CTA 按鈕 -->
-                        <button onclick="createCheckoutSession('yearly')" data-i18n="pricing.cta" class="cta-btn" style="width: 100%; padding: 1rem; font-size: 1rem; font-weight: 600; background: #8b5cf6; color: white; border: none; border-radius: 8px; cursor: pointer; display: block; text-align: center; text-decoration: none; transition: background 0.2s;">開始使用</button>
+                        <button onclick="createCheckoutSession('yearly', event)" data-i18n="pricing.cta" class="cta-btn" style="width: 100%; padding: 1rem; font-size: 1rem; font-weight: 600; background: #8b5cf6; color: white; border: none; border-radius: 8px; cursor: pointer; display: block; text-align: center; text-decoration: none; transition: background 0.2s;">開始使用</button>
                     </div>
                 </div>
             </div>
@@ -1824,7 +1824,7 @@
          * 創建 Stripe Checkout Session 並跳轉
          * 這樣可以自動傳遞用戶的 email 和 userId
          */
-        async function createCheckoutSession(planType) {
+        async function createCheckoutSession(planType, event) {
             console.log(`🛒 創建 ${planType} 訂閱...`);
             
             // 檢查用戶是否登錄
@@ -1843,11 +1843,13 @@
                 console.log(`👤 用戶信息:`, { userEmail, userId });
                 
                 // 顯示加載狀態
-                const button = event.target;
-                const originalText = button.textContent;
-                button.disabled = true;
-                button.textContent = '正在跳轉到支付頁面...';
-                button.style.opacity = '0.6';
+                const button = event?.target || event?.currentTarget;
+                const originalText = button?.textContent || '開始使用';
+                if (button) {
+                    button.disabled = true;
+                    button.textContent = '正在跳轉到支付頁面...';
+                    button.style.opacity = '0.6';
+                }
                 
                 // 調用 Firebase Function 創建 Checkout Session
                 const createSession = firebase.functions().httpsCallable('createStripeCheckoutSession');
