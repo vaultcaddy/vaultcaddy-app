@@ -1837,28 +1837,34 @@
                 return;
             }
             
+            const button = event?.target || event?.currentTarget;
+            const originalText = button?.textContent || '開始する';
+            
             try {
-                const currentUser = window.simpleAuth.getCurrentUser();
-                const userEmail = currentUser.email;
-                const userId = currentUser.uid;
-                
-                const button = event?.target || event?.currentTarget;
-                const originalText = button?.textContent || '開始する';
                 if (button) {
                     button.disabled = true;
                     button.textContent = '支払いページへ移動中...';
                     button.style.opacity = '0.6';
                 }
                 
+                const currentUser = window.simpleAuth.getCurrentUser();
+                const userEmail = currentUser.email;
+                const userId = currentUser.uid;
+                
                 const createSession = firebase.functions().httpsCallable('createStripeCheckoutSession');
                 
+                console.log(`📞 調用 Firebase Function...`, { planType, userId, email: userEmail });
                 const result = await createSession({
                     planType: planType,
                     userId: userId,
                     email: userEmail
                 });
                 
-                window.location.href = result.data.url;
+                if (result.data && result.data.url) {
+                    window.location.href = result.data.url;
+                } else {
+                    throw new Error('支払いURLが受信されませんでした');
+                }
                 
             } catch (error) {
                 console.error('❌ 創建支付會話失敗:', error);
@@ -1869,9 +1875,11 @@
                     button.style.opacity = '1';
                 }
                 
-                if (error.message.includes('unauthenticated')) {
+                if (error.code === 'functions/unauthenticated') {
                     alert('ログインしてください');
                     window.location.href = 'auth.html';
+                } else if (error.message) {
+                    alert(`支払いセッションの作成に失敗しました: ${error.message}`);
                 } else {
                     alert('支払いセッションの作成に失敗しました。もう一度お試しください。');
                 }

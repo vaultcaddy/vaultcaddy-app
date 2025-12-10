@@ -1837,23 +1837,25 @@
                 return;
             }
             
+            const button = event?.target || event?.currentTarget;
+            const originalText = button?.textContent || 'Get Started';
+            
             try {
-                const currentUser = window.simpleAuth.getCurrentUser();
-                const userEmail = currentUser.email;
-                const userId = currentUser.uid;
-                
-                console.log(`👤 用戶信息:`, { userEmail, userId });
-                
-                const button = event?.target || event?.currentTarget;
-                const originalText = button?.textContent || 'Get Started';
                 if (button) {
                     button.disabled = true;
                     button.textContent = 'Redirecting to payment...';
                     button.style.opacity = '0.6';
                 }
                 
+                const currentUser = window.simpleAuth.getCurrentUser();
+                const userEmail = currentUser.email;
+                const userId = currentUser.uid;
+                
+                console.log(`👤 用戶信息:`, { userEmail, userId });
+                
                 const createSession = firebase.functions().httpsCallable('createStripeCheckoutSession');
                 
+                console.log(`📞 調用 Firebase Function...`, { planType, userId, email: userEmail });
                 const result = await createSession({
                     planType: planType,
                     userId: userId,
@@ -1861,10 +1863,16 @@
                 });
                 
                 console.log(`✅ Checkout Session 創建成功:`, result.data);
-                window.location.href = result.data.url;
+                
+                if (result.data && result.data.url) {
+                    window.location.href = result.data.url;
+                } else {
+                    throw new Error('No payment URL received');
+                }
                 
             } catch (error) {
                 console.error('❌ 創建支付會話失敗:', error);
+                console.error('Error details:', error.code, error.message);
                 
                 if (button) {
                     button.disabled = false;
@@ -1872,9 +1880,11 @@
                     button.style.opacity = '1';
                 }
                 
-                if (error.message.includes('unauthenticated')) {
+                if (error.code === 'functions/unauthenticated') {
                     alert('Please login first');
                     window.location.href = 'auth.html';
+                } else if (error.message) {
+                    alert(`Failed to create payment session: ${error.message}`);
                 } else {
                     alert('Failed to create payment session. Please try again or contact support.');
                 }

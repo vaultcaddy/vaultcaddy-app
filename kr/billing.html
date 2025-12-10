@@ -1837,28 +1837,34 @@
                 return;
             }
             
+            const button = event?.target || event?.currentTarget;
+            const originalText = button?.textContent || '시작하기';
+            
             try {
-                const currentUser = window.simpleAuth.getCurrentUser();
-                const userEmail = currentUser.email;
-                const userId = currentUser.uid;
-                
-                const button = event?.target || event?.currentTarget;
-                const originalText = button?.textContent || '시작하기';
                 if (button) {
                     button.disabled = true;
                     button.textContent = '결제 페이지로 이동 중...';
                     button.style.opacity = '0.6';
                 }
                 
+                const currentUser = window.simpleAuth.getCurrentUser();
+                const userEmail = currentUser.email;
+                const userId = currentUser.uid;
+                
                 const createSession = firebase.functions().httpsCallable('createStripeCheckoutSession');
                 
+                console.log(`📞 調用 Firebase Function...`, { planType, userId, email: userEmail });
                 const result = await createSession({
                     planType: planType,
                     userId: userId,
                     email: userEmail
                 });
                 
-                window.location.href = result.data.url;
+                if (result.data && result.data.url) {
+                    window.location.href = result.data.url;
+                } else {
+                    throw new Error('결제 URL을 받지 못했습니다');
+                }
                 
             } catch (error) {
                 console.error('❌ 創建支付會話失敗:', error);
@@ -1869,9 +1875,11 @@
                     button.style.opacity = '1';
                 }
                 
-                if (error.message.includes('unauthenticated')) {
+                if (error.code === 'functions/unauthenticated') {
                     alert('먼저 로그인하세요');
                     window.location.href = 'auth.html';
+                } else if (error.message) {
+                    alert(`결제 세션 생성에 실패했습니다: ${error.message}`);
                 } else {
                     alert('결제 세션 생성에 실패했습니다. 다시 시도하거나 고객 지원에 문의하세요.');
                 }

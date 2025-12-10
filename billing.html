@@ -1834,7 +1834,18 @@
                 return;
             }
             
+            // 獲取按鈕元素（在 try 外定義，避免作用域問題）
+            const button = event?.target || event?.currentTarget;
+            const originalText = button?.textContent || '開始使用';
+            
             try {
+                // 顯示加載狀態
+                if (button) {
+                    button.disabled = true;
+                    button.textContent = '正在跳轉到支付頁面...';
+                    button.style.opacity = '0.6';
+                }
+                
                 // 獲取當前用戶
                 const currentUser = window.simpleAuth.getCurrentUser();
                 const userEmail = currentUser.email;
@@ -1842,19 +1853,10 @@
                 
                 console.log(`👤 用戶信息:`, { userEmail, userId });
                 
-                // 顯示加載狀態
-                const button = event?.target || event?.currentTarget;
-                const originalText = button?.textContent || '開始使用';
-                if (button) {
-                    button.disabled = true;
-                    button.textContent = '正在跳轉到支付頁面...';
-                    button.style.opacity = '0.6';
-                }
-                
                 // 調用 Firebase Function 創建 Checkout Session
                 const createSession = firebase.functions().httpsCallable('createStripeCheckoutSession');
                 
-                console.log(`📞 調用 Firebase Function...`);
+                console.log(`📞 調用 Firebase Function...`, { planType, userId, email: userEmail });
                 const result = await createSession({
                     planType: planType,
                     userId: userId,
@@ -1864,10 +1866,15 @@
                 console.log(`✅ Checkout Session 創建成功:`, result.data);
                 
                 // 跳轉到 Stripe Checkout
-                window.location.href = result.data.url;
+                if (result.data && result.data.url) {
+                    window.location.href = result.data.url;
+                } else {
+                    throw new Error('未收到支付頁面 URL');
+                }
                 
             } catch (error) {
                 console.error('❌ 創建支付會話失敗:', error);
+                console.error('錯誤詳情:', error.code, error.message);
                 
                 // 恢復按鈕狀態
                 if (button) {
@@ -1877,13 +1884,20 @@
                 }
                 
                 // 顯示友好的錯誤信息
-                if (error.message.includes('not-found')) {
-                    alert('訂閱計劃配置錯誤，請聯繫客服');
-                } else if (error.message.includes('unauthenticated')) {
-                    alert('請先登錄');
+                let errorMsg = '創建支付會話失敗，請重試或聯繫客服';
+                
+                if (error.code === 'functions/unauthenticated') {
+                    errorMsg = '請先登錄';
+                    alert(errorMsg);
                     window.location.href = 'auth.html';
+                } else if (error.code === 'functions/not-found') {
+                    errorMsg = '訂閱計劃配置錯誤，請聯繫客服';
+                    alert(errorMsg);
+                } else if (error.message) {
+                    errorMsg = `創建支付會話失敗: ${error.message}`;
+                    alert(errorMsg);
                 } else {
-                    alert('創建支付會話失敗，請重試或聯繫客服');
+                    alert(errorMsg);
                 }
             }
         }
