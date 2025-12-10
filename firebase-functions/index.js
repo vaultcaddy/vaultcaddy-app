@@ -1096,9 +1096,9 @@ exports.reportDailyUsage = functions.pubsub.schedule('0 0 * * *')  // 每天午�
  * 自動傳遞用戶的 email 和 userId，實現無縫支付體驗
  */
 exports.createStripeCheckoutSession = functions.https.onCall(async (data, context) => {
-    const { planType, userId, email } = data;
+    const { planType, userId, email, isTest = false } = data;
     
-    console.log('🛒 創建 Checkout Session:', { planType, userId, email });
+    console.log('🛒 創建 Checkout Session:', { planType, userId, email, isTest });
     
     // 檢查 Stripe 是否已配置
     if (!stripe || !stripeConfig) {
@@ -1111,8 +1111,8 @@ exports.createStripeCheckoutSession = functions.https.onCall(async (data, contex
         throw new functions.https.HttpsError('invalid-argument', '缺少必要參數');
     }
     
-    // 定義價格 ID（從 Stripe Dashboard 獲取）
-    const priceMapping = {
+    // 🎯 定義價格 ID（生產模式）
+    const productionPriceMapping = {
         monthly: {
             basePriceId: 'price_1ScS9QJmiQ31C0GTy4y6z0l0',  // 月費基礎價格 $58
             usagePriceId: 'price_1ScSATJmiQ31C0GTW1qWu0OF'  // 月費用量計費
@@ -1122,6 +1122,21 @@ exports.createStripeCheckoutSession = functions.https.onCall(async (data, contex
             usagePriceId: 'price_1ScS7iJmiQ31C0GTv3ScXonr'  // 年費用量計費
         }
     };
+    
+    // 🧪 定義測試模式價格 ID
+    const testPriceMapping = {
+        monthly: {
+            basePriceId: 'price_1Scj13JmiQ31C0GT4TJsWzFg',  // 測試月費基礎 $58
+            usagePriceId: 'price_1Scj1UJmiQ31C0GTXDsN6TFh'  // 測試月費用量計費
+        },
+        yearly: {
+            basePriceId: '',  // 測試年費基礎（尚未創建）
+            usagePriceId: ''  // 測試年費用量計費（尚未創建）
+        }
+    };
+    
+    // 根據 isTest 選擇對應的 Price Mapping
+    const priceMapping = isTest ? testPriceMapping : productionPriceMapping;
     
     const selectedPlan = priceMapping[planType];
     
@@ -1152,8 +1167,8 @@ exports.createStripeCheckoutSession = functions.https.onCall(async (data, contex
                 userId: userId,  // ← 傳遞 userId（雙重保險）
                 planType: planType
             },
-            success_url: `https://vaultcaddy.com/billing.html?success=true&session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: 'https://vaultcaddy.com/billing.html?canceled=true',
+            success_url: `https://vaultcaddy.com/billing.html?success=true&session_id={CHECKOUT_SESSION_ID}${isTest ? '&test=true' : ''}`,
+            cancel_url: `https://vaultcaddy.com/billing.html?canceled=true${isTest ? '&test=true' : ''}`,
             allow_promotion_codes: true,  // 允許使用優惠碼
             billing_address_collection: 'auto'  // 自動收集帳單地址
         });

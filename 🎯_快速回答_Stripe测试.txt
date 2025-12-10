@@ -7,46 +7,54 @@
 **月费产品**：
 - 基础价格 ($58/月): `price_1Scj13JmiQ31C0GT4TJsWzFg`
 - 用量计费 ($0 起步): `price_1Scj1UJmiQ31C0GTXDsN6TFh`
-- Payment Link: https://buy.stripe.com/test_9B67sM9LK50SbdsdEKf7i00
 
 **年费产品**：
 - ⚠️ 尚未创建（需要时再创建）
 
-### 2️⃣ 测试模式切换按钮（已添加）
+### 2️⃣ 测试按钮（已添加）
 
-在 `billing.html` 页面顶部添加了：
-- ✅ 测试模式切换开关
-- ✅ 自动显示测试卡号提示
-- ✅ 响应式设计（手机端友好）
+在 `billing.html` 页面：
+- ✅ 月费方案：**"🧪 測試 Get Started"** 按钮（黄色）
+- ✅ 年费方案：**"🧪 測試 Get Started (尚未配置)"** 按钮（灰色，禁用）
+- ✅ 测试提示信息：显示测试卡号
+- ✅ 和正式版一样的配置：自动传递 userId 和 email
+
+### 3️⃣ Firebase Functions（已更新）
+
+- ✅ 支持测试模式参数 `isTest`
+- ✅ 自动选择测试或生产 Price IDs
+- ✅ 测试模式下使用测试 Stripe Keys
+- ✅ 已部署到生产环境
 
 ---
 
-## 🎯 如何测试（3 个简单步骤）
+## 🚀 如何测试（3 个简单步骤）
 
 ### 步骤 1：访问 Billing 页面
 ```
 https://vaultcaddy.com/billing.html
 ```
 
-### 步骤 2：启用测试模式
-1. 在页面标题下方找到 "🧪 测试模式" 切换开关
-2. 勾选复选框
-3. 会显示测试卡号信息：`4242 4242 4242 4242`
+### 步骤 2：确认登录状态
+确保您已经登录到 VaultCaddy 账户。
 
-### 步骤 3：点击 "开始使用" 按钮
-1. 选择月费方案，点击 "开始使用"
-2. 会自动打开 Stripe 测试 Payment Link
-3. 使用测试卡号完成支付
+### 步骤 3：点击 "🧪 測試 Get Started" 按钮
+1. 在**月费方案**下找到黄色的 **"🧪 測試 Get Started"** 按钮
+2. 点击按钮
+3. 会自动跳转到 Stripe Checkout 页面，**您的 email 已自动填充**
+4. 使用测试卡号完成支付
 
 ---
 
 ## 💳 Stripe 测试卡号
 
 ### ✅ 成功测试卡
-- **卡号**: `4242 4242 4242 4242`
-- **有效期**: 任意未来日期（如 `12/34`）
-- **CVC**: 任意 3 位数字（如 `123`）
-- **郵編**: 任意邮编（如 `12345`）
+```
+卡号:     4242 4242 4242 4242
+有效期:   任意未来日期 (如 12/34)
+CVC:      任意 3 位数字 (如 123)
+郵編:     任意邮编 (如 12345)
+```
 
 ### ❌ 失败测试卡（用于测试错误处理）
 - **卡被拒绝**: `4000 0000 0000 0002`
@@ -60,40 +68,51 @@ https://vaultcaddy.com/billing.html
 ## 🔍 测试检查清单
 
 ### 支付流程测试
-- [ ] 测试模式切换开关工作正常
-- [ ] 点击 "开始使用" 打开 Payment Link
-- [ ] 使用测试卡号完成支付
-- [ ] 支付成功后跳转回 Dashboard
+- [ ] 点击 "🧪 測試 Get Started" 按钮
+- [ ] 确认 email 已自动填充
+- [ ] 使用测试卡号 `4242 4242 4242 4242` 完成支付
+- [ ] 支付成功后跳转回 `billing.html?success=true&test=true`
 
 ### Webhook 测试（需要 Stripe Dashboard 查看）
-- [ ] `checkout.session.completed` 事件被触发
-- [ ] Webhook 成功接收并处理
-- [ ] 用户 Credits 正确添加
-- [ ] 订阅信息正确保存
+- [ ] 前往 Stripe Dashboard > 测试模式
+- [ ] 检查 Webhook 日志
+- [ ] 确认 `checkout.session.completed` 事件被触发
+- [ ] 确认 Webhook 成功接收并处理（状态码 200）
 
 ### Firebase 数据测试
-- [ ] Firestore 中用户订阅信息正确
-- [ ] Credits 余额正确
-- [ ] Credits 历史记录正确
+- [ ] 前往 Firebase Console > Firestore
+- [ ] 检查用户订阅信息是否正确
+- [ ] 检查 Credits 余额是否正确
+- [ ] 检查 Credits 历史记录
+
+---
+
+## 🆚 测试模式 vs 正式版对比
+
+| 功能 | 测试 Get Started 🧪 | 正式 Get Started 💰 |
+|------|---------------------|---------------------|
+| 按钮颜色 | 黄色 | 紫色 |
+| Stripe Price IDs | 测试 Price IDs | 生产 Price IDs |
+| 支付卡号 | 测试卡号 (4242...) | 真实信用卡 |
+| 是否扣钱 | ❌ 不扣钱 | ✅ 真实扣款 |
+| Email 自动填充 | ✅ 支持 | ✅ 支持 |
+| 传递 userId | ✅ 支持 | ✅ 支持 |
+| Webhook 触发 | ✅ 支持 | ✅ 支持 |
+| 用途 | 开发测试 | 真实用户 |
 
 ---
 
 ## ⚠️ 重要提醒
 
-### 测试模式 vs 生产模式
+### 关于测试模式
+1. **完全免费**：测试模式下的所有支付都是模拟的，不涉及真实金钱
+2. **无限次测试**：您可以无限次使用测试卡号进行测试
+3. **和正式版一样**：测试模式使用相同的代码逻辑，只是 Price IDs 不同
 
-#### 🧪 测试模式（TEST MODE）
-- ✅ **不涉及真实金钱**
-- ✅ 使用测试卡号（4242...）
-- ✅ 无限次测试
-- ✅ 用于开发和测试
-- ⚠️ 需要在 Stripe 测试模式下创建产品
-
-#### 💰 生产模式（LIVE MODE）
-- ❌ **需要真实支付**
-- ❌ 使用真实信用卡
-- ❌ 会产生实际费用
-- ✅ 用于真实用户
+### 关于年费测试
+- 年费测试方案尚未创建
+- 按钮显示为灰色（禁用状态）
+- 如需测试年费，需要先在 Stripe 测试模式下创建年费产品
 
 ---
 
@@ -105,34 +124,91 @@ https://dashboard.stripe.com/test/products
 ```
 
 ### 2️⃣ 创建年费基础产品
-- 名称: VaultCaddy 年費 test
-- 价格: HKD $552/年
-- 计费周期: 每年
+1. 点击 "创建产品"
+2. 名称: `VaultCaddy 年費 test`
+3. 定价模式: 标准定价
+4. 价格: `HKD $552/年`
+5. 计费周期: 每年
+6. 保存并获取 Price ID
 
 ### 3️⃣ 创建年费用量计费
-- 产品: VaultCaddy 年費 test
-- 价格模式: 用量计费
-- 单价: HKD $0/单位
-- 计费周期: 每年
+1. 在同一产品下，点击 "添加其他价格"
+2. 定价模式: 用量计费
+3. 价格: `HKD $0.5/单位`
+4. 计费周期: 每年
+5. 保存并获取 Price ID
 
 ### 4️⃣ 更新代码
-将新的 Price IDs 添加到 `billing.html` 的 `TEST_PRICE_IDS.yearly` 中。
+将新的 Price IDs 添加到 `firebase-functions/index.js` 的 `testPriceMapping.yearly` 中：
+
+```javascript
+yearly: {
+    basePriceId: 'price_YOUR_TEST_YEARLY_BASE_ID',
+    usagePriceId: 'price_YOUR_TEST_YEARLY_USAGE_ID'
+}
+```
+
+然后重新部署：
+```bash
+firebase deploy --only functions:createStripeCheckoutSession
+```
+
+---
+
+## 🎯 测试流程图
+
+```
+1. 用户访问 billing.html
+   ↓
+2. 用户登录
+   ↓
+3. 点击 "🧪 測試 Get Started"
+   ↓
+4. 前端调用 Firebase Functions
+   传递: { planType: 'monthly', userId, email, isTest: true }
+   ↓
+5. Firebase Functions 创建 Stripe Checkout Session
+   使用测试 Price IDs
+   ↓
+6. 跳转到 Stripe Checkout
+   Email 已自动填充
+   ↓
+7. 输入测试卡号: 4242 4242 4242 4242
+   ↓
+8. 支付成功
+   ↓
+9. Stripe 触发 Webhook
+   ↓
+10. Firebase Functions 处理 Webhook
+    添加 Credits 到用户账户
+    ↓
+11. 跳转回 billing.html?success=true&test=true
+    ↓
+12. 测试完成！ 🎉
+```
 
 ---
 
 ## 🚀 测试完成后
 
+### 验证测试结果
+1. ✅ 前往 **Stripe Dashboard > 测试模式 > Payments**
+   - 查看测试支付记录
+   
+2. ✅ 前往 **Stripe Dashboard > 测试模式 > Webhooks**
+   - 查看 Webhook 触发日志
+   
+3. ✅ 前往 **Firebase Console > Functions > Logs**
+   - 查看 Firebase Functions 执行日志
+   
+4. ✅ 前往 **Firebase Console > Firestore**
+   - 检查用户数据是否正确更新
+
 ### 下一步
 1. ✅ 确认测试模式所有功能正常
-2. ✅ 在生产模式下进行最终验证
+2. ✅ 在生产模式下进行最终验证（小金额测试）
 3. ✅ 监控 Stripe Webhook 日志
 4. ✅ 监控 Firebase Functions 日志
-
-### 生产环境检查
-- [ ] 生产模式 Price IDs 正确
-- [ ] Webhook Secret 已配置
-- [ ] Firebase Functions 已部署
-- [ ] 所有价格显示正确
 
 ---
 
@@ -140,31 +216,40 @@ https://dashboard.stripe.com/test/products
 
 ### 关键链接
 - **Billing 页面**: https://vaultcaddy.com/billing.html
-- **测试 Payment Link**: https://buy.stripe.com/test_9B67sM9LK50SbdsdEKf7i00
 - **Stripe 测试模式**: https://dashboard.stripe.com/test/dashboard
-- **Stripe Webhook**: https://dashboard.stripe.com/test/webhooks
+- **Stripe 测试 Webhook**: https://dashboard.stripe.com/test/webhooks
+- **Firebase Functions 日志**: https://console.firebase.google.com/project/vaultcaddy-production-cbbe2/functions/logs
 
 ### 测试卡号（记住这个就够了）
 ```
 4242 4242 4242 4242
-任意未来日期 / 任意 CVC / 任意郵編
 ```
+
+### 按钮位置
+- 月费方案下方：黄色 **"🧪 測試 Get Started"** 按钮 ✅
+- 年费方案下方：灰色 **"🧪 測試 Get Started (尚未配置)"** 按钮 ⚠️
 
 ---
 
 ## ❓ 常见问题
 
-### Q: 测试模式下支付会扣钱吗？
+### Q: 测试按钮在哪里？
+A: 在 `billing.html` 页面，**月费方案**的正式 "开始使用" 按钮下方，有一个黄色的 "🧪 測試 Get Started" 按钮。
+
+### Q: 测试模式下会扣钱吗？
 A: **不会！** 测试模式完全免费，不涉及真实金钱。
 
-### Q: 年费方案显示尚未创建？
-A: 目前只配置了月费测试产品。如需测试年费，需先在 Stripe 测试模式下创建。
+### Q: 为什么年费测试按钮是灰色的？
+A: 因为年费测试产品尚未创建。如需测试年费，请先在 Stripe 测试模式下创建。
 
-### Q: 测试成功后如何切换到生产模式？
-A: 取消勾选 "🧪 测试模式" 复选框即可。
+### Q: 测试按钮和正式按钮有什么区别？
+A: 除了使用不同的 Stripe Price IDs（测试 vs 生产），其他完全一样：都会自动传递 userId 和 email，都会触发 Webhook。
 
 ### Q: 如何查看测试支付记录？
-A: 前往 Stripe Dashboard > 测试模式 > Payments 查看。
+A: 前往 **Stripe Dashboard > 切换到测试模式 > Payments** 查看。
+
+### Q: 测试成功后如何切换到生产模式？
+A: 点击正式的紫色 "开始使用" 按钮即可使用生产模式（会扣真实金额）。
 
 ---
 
@@ -173,22 +258,45 @@ A: 前往 Stripe Dashboard > 测试模式 > Payments 查看。
 ```
 测试日期: _____________
 测试人员: _____________
+测试账号: _____________
 
 ✅ 功能测试
-- [ ] 测试模式切换
-- [ ] 月费 Payment Link
-- [ ] 支付流程完成
-- [ ] Webhook 触发
-- [ ] Credits 添加
+- [ ] 测试按钮显示正常
+- [ ] Email 自动填充
+- [ ] 测试卡号支付成功
+- [ ] Webhook 触发成功
+- [ ] Credits 添加成功
+
+📝 测试数据
+- 用户 ID: _____________
+- 测试支付 ID: _____________
+- Webhook 状态码: _____________
+- Credits 变化: _____ → _____
 
 ❌ 发现问题
 1. _______________
 2. _______________
 
-📝 备注
+💡 改进建议
 _______________
 ```
 
 ---
 
+## 🎉 总结
+
+您现在有：
+- ✅ **黄色测试按钮**：点击后使用测试 Price IDs
+- ✅ **和正式版一样的配置**：自动传递 userId 和 email
+- ✅ **完全免费的测试**：使用测试卡号，不涉及真实金钱
+- ✅ **完整的测试流程**：从支付到 Webhook 到 Credits 添加
+
 **记住**：测试模式是您的朋友！尽情测试，无需担心费用！ 🎉
+
+---
+
+**最后提醒**：
+- 🧪 **黄色按钮** = 测试模式（免费）
+- 💰 **紫色按钮** = 生产模式（真实支付）
+
+选择正确的按钮很重要！ 😊
