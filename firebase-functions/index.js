@@ -701,48 +701,67 @@ exports.verifyCode = functions.https.onCall(async (data, context) => {
         
         // 🎁 驗證成功後贈送 20 個 Credits
         try {
+            console.log(`🔍 開始查找用戶: ${email}`);
+            
             // 查找用戶
             const usersSnapshot = await db.collection('users').where('email', '==', email).limit(1).get();
+            
+            console.log(`📊 查找結果: 找到 ${usersSnapshot.size} 個用戶`);
             
             if (!usersSnapshot.empty) {
                 const userDoc = usersSnapshot.docs[0];
                 const userId = userDoc.id;
+                const userData = userDoc.data();
                 const userRef = db.collection('users').doc(userId);
                 
-                // 使用事務添加 Credits
-                await db.runTransaction(async (transaction) => {
-                    const user = await transaction.get(userRef);
-                    
-                    if (user.exists) {
-                        const currentCredits = user.data().currentCredits || user.data().credits || 0;
-                        const newCredits = currentCredits + 20;
+                console.log(`👤 找到用戶: ${userId}, 當前 Credits: ${userData.currentCredits || userData.credits || 0}`);
+                
+                // 檢查是否已經贈送過驗證獎勵
+                if (userData.emailVerified === true && userData.emailVerifiedAt) {
+                    console.log(`⚠️ 用戶已經驗證過 Email，跳過贈送 Credits`);
+                } else {
+                    // 使用事務添加 Credits
+                    await db.runTransaction(async (transaction) => {
+                        const user = await transaction.get(userRef);
                         
-                        // 更新 Credits
-                        transaction.update(userRef, {
-                            credits: newCredits,
-                            currentCredits: newCredits,
-                            emailVerified: true,
-                            emailVerifiedAt: admin.firestore.FieldValue.serverTimestamp(),
-                            updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                        });
-                        
-                        // 記錄 Credits 歷史
-                        const historyRef = db.collection('users').doc(userId).collection('creditsHistory').doc();
-                        transaction.set(historyRef, {
-                            type: 'bonus',
-                            amount: 20,
-                            reason: 'email_verification',
-                            description: '完成 Email 驗證獎勵',
-                            createdAt: admin.firestore.FieldValue.serverTimestamp(),
-                            balanceAfter: newCredits
-                        });
-                        
-                        console.log(`🎁 已贈送 20 Credits 給用戶: ${email}`);
-                    }
-                });
+                        if (user.exists) {
+                            const currentCredits = user.data().currentCredits || user.data().credits || 0;
+                            const newCredits = currentCredits + 20;
+                            
+                            console.log(`💰 準備添加 Credits: ${currentCredits} + 20 = ${newCredits}`);
+                            
+                            // 更新 Credits
+                            transaction.update(userRef, {
+                                credits: newCredits,
+                                currentCredits: newCredits,
+                                emailVerified: true,
+                                emailVerifiedAt: admin.firestore.FieldValue.serverTimestamp(),
+                                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                            });
+                            
+                            // 記錄 Credits 歷史
+                            const historyRef = db.collection('users').doc(userId).collection('creditsHistory').doc();
+                            transaction.set(historyRef, {
+                                type: 'bonus',
+                                amount: 20,
+                                reason: 'email_verification',
+                                description: '完成 Email 驗證獎勵',
+                                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                                balanceAfter: newCredits
+                            });
+                            
+                            console.log(`🎁 已贈送 20 Credits 給用戶: ${email} (新餘額: ${newCredits})`);
+                        } else {
+                            console.error(`❌ 用戶不存在: ${userId}`);
+                        }
+                    });
+                }
+            } else {
+                console.error(`❌ 找不到用戶: ${email}`);
             }
         } catch (creditsError) {
             console.error('❌ 贈送 Credits 失敗:', creditsError);
+            console.error('錯誤堆棧:', creditsError.stack);
             // 不拋出錯誤，因為驗證已經成功
         }
         
