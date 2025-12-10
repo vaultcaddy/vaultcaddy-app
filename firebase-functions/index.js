@@ -13,7 +13,14 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 // Stripe 配置為可選（如果未設置則跳過 webhook 功能）
 const stripeConfig = functions.config().stripe;
-const stripe = stripeConfig ? require('stripe')(stripeConfig.secret_key) : null;
+
+// 🎯 初始化生产模式和测试模式的 Stripe 客户端
+const stripeLive = stripeConfig && stripeConfig.secret_key ? require('stripe')(stripeConfig.secret_key) : null;
+const stripeTest = stripeConfig && stripeConfig.test_secret_key ? require('stripe')(stripeConfig.test_secret_key) : null;
+
+// 为了向后兼容，保留 stripe 变量指向生产模式
+const stripe = stripeLive;
+
 const nodemailer = require('nodemailer');
 
 admin.initializeApp();
@@ -1100,10 +1107,14 @@ exports.createStripeCheckoutSession = functions.https.onCall(async (data, contex
     
     console.log('🛒 創建 Checkout Session:', { planType, userId, email, isTest });
     
+    // 🎯 根據 isTest 選擇使用的 Stripe 客戶端
+    const stripeClient = isTest ? stripeTest : stripeLive;
+    
     // 檢查 Stripe 是否已配置
-    if (!stripe || !stripeConfig) {
-        console.error('❌ Stripe 未配置');
-        throw new functions.https.HttpsError('unavailable', 'Stripe 未配置，請聯繫管理員');
+    if (!stripeClient || !stripeConfig) {
+        const mode = isTest ? '測試' : '生產';
+        console.error(`❌ Stripe ${mode}模式未配置`);
+        throw new functions.https.HttpsError('unavailable', `Stripe ${mode}模式未配置，請聯繫管理員`);
     }
     
     // 驗證參數
@@ -1146,10 +1157,10 @@ exports.createStripeCheckoutSession = functions.https.onCall(async (data, contex
     }
     
     try {
-        console.log('📝 創建 Checkout Session，價格:', selectedPlan);
+        console.log('📝 創建 Checkout Session，價格:', selectedPlan, '模式:', isTest ? '測試' : '生產');
         
-        // 創建 Checkout Session
-        const session = await stripe.checkout.sessions.create({
+        // 創建 Checkout Session（使用對應模式的客戶端）
+        const session = await stripeClient.checkout.sessions.create({
             mode: 'subscription',
             line_items: [
                 {
