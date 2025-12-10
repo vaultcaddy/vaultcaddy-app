@@ -133,9 +133,21 @@
         }
 
         .success-message {
-            background: #f0fdf4;
-            color: #16a34a;
-            border: 1px solid #bbf7d0;
+            background: #d1fae5;
+            color: #065f46;
+            border: 2px solid #10b981;
+            font-weight: 500;
+        }
+        
+        .paste-hint {
+            display: inline-block;
+            margin-top: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #d1fae5;
+            color: #065f46;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            border: 1px solid #10b981;
         }
     </style>
 </head>
@@ -152,17 +164,22 @@
             請輸入驗證碼以完成註冊。<br><br>
             <strong id="emailDisplay"></strong>
         </p>
+        
+        <div class="paste-hint">
+            <i class="fas fa-clipboard" style="margin-right: 0.5rem;"></i>
+            <strong>提示：</strong>可直接複製驗證碼並貼上到任意輸入框
+        </div>
 
         <div id="errorMessage" class="message error-message"></div>
         <div id="successMessage" class="message success-message"></div>
 
         <div class="code-inputs">
-            <input type="text" class="code-input" maxlength="1" id="code1">
-            <input type="text" class="code-input" maxlength="1" id="code2">
-            <input type="text" class="code-input" maxlength="1" id="code3">
-            <input type="text" class="code-input" maxlength="1" id="code4">
-            <input type="text" class="code-input" maxlength="1" id="code5">
-            <input type="text" class="code-input" maxlength="1" id="code6">
+            <input type="text" class="code-input" maxlength="1" id="code1" inputmode="numeric" pattern="[0-9]">
+            <input type="text" class="code-input" maxlength="1" id="code2" inputmode="numeric" pattern="[0-9]">
+            <input type="text" class="code-input" maxlength="1" id="code3" inputmode="numeric" pattern="[0-9]">
+            <input type="text" class="code-input" maxlength="1" id="code4" inputmode="numeric" pattern="[0-9]">
+            <input type="text" class="code-input" maxlength="1" id="code5" inputmode="numeric" pattern="[0-9]">
+            <input type="text" class="code-input" maxlength="1" id="code6" inputmode="numeric" pattern="[0-9]">
         </div>
 
         <button class="verify-button" id="verifyButton" onclick="verifyCode()">
@@ -231,8 +248,63 @@
             
             // 設置輸入框事件
             codeInputs.forEach((input, index) => {
-                // 輸入事件
+                // ✅ 粘貼事件（所有輸入框都監聽）
+                input.addEventListener('paste', (e) => {
+                    e.preventDefault();
+                    const pastedData = e.clipboardData.getData('text').trim();
+                    console.log('📋 粘貼內容:', pastedData);
+                    
+                    // 只取前6位數字
+                    const numbers = pastedData.replace(/\D/g, '').slice(0, 6);
+                    
+                    if (numbers.length === 6) {
+                        // 自動填充到各個輸入框（從第一個開始）
+                        numbers.split('').forEach((digit, i) => {
+                            if (codeInputs[i]) {
+                                codeInputs[i].value = digit;
+                            }
+                        });
+                        
+                        // 聚焦到最後一個輸入框
+                        codeInputs[5].focus();
+                        
+                        // 自動驗證
+                        setTimeout(() => {
+                            verifyCode();
+                        }, 100);
+                        
+                        showSuccess('驗證碼已自動填入');
+                    } else if (numbers.length > 0) {
+                        // 如果粘貼的不是完整的6位數字，從當前位置開始填充
+                        numbers.split('').forEach((digit, i) => {
+                            const targetIndex = index + i;
+                            if (targetIndex < 6 && codeInputs[targetIndex]) {
+                                codeInputs[targetIndex].value = digit;
+                            }
+                        });
+                        
+                        // 聚焦到下一個空白輸入框
+                        const nextEmptyIndex = index + numbers.length;
+                        if (nextEmptyIndex < 6) {
+                            codeInputs[nextEmptyIndex].focus();
+                        } else {
+                            codeInputs[5].focus();
+                        }
+                    } else {
+                        showError('粘貼內容中沒有找到數字');
+                    }
+                });
+                
+                // 輸入事件 - 只允許數字
                 input.addEventListener('input', (e) => {
+                    // 過濾非數字字符
+                    const value = e.target.value;
+                    const numericValue = value.replace(/\D/g, '');
+                    
+                    if (value !== numericValue) {
+                        e.target.value = numericValue;
+                    }
+                    
                     if (e.target.value.length === 1 && index < 5) {
                         codeInputs[index + 1].focus();
                     } else if (e.target.value.length === 1 && index === 5) {
@@ -248,7 +320,7 @@
                     }
                 });
 
-                // 只允許數字
+                // 只允許數字（keypress 事件作為額外保護）
                 input.addEventListener('keypress', (e) => {
                     if (!/[0-9]/.test(e.key)) {
                         e.preventDefault();
