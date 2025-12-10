@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VaultCaddy Logo 生成器 - Instagram 專用</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .container {
+            background: white;
+            border-radius: 24px;
+            padding: 3rem;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+            font-size: 2rem;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            margin-bottom: 2rem;
+            font-size: 1rem;
+        }
+
+        .preview-section {
+            background: #f9fafb;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-top: 1.5rem;
+        }
+
+        .preview-item {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .preview-item h3 {
+            color: #1f2937;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .preview-item p {
+            color: #6b7280;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+
+        #logoCanvas {
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            background: white;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .size-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .size-btn {
+            padding: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .size-btn:hover {
+            border-color: #667eea;
+            background: #f3f4f6;
+            transform: translateY(-2px);
+        }
+
+        .size-btn.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .size-label {
+            display: block;
+            font-size: 1.125rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .size-desc {
+            display: block;
+            font-size: 0.75rem;
+            opacity: 0.8;
+        }
+
+        .download-btn {
+            width: 100%;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.125rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 1rem;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .download-btn:active {
+            transform: translateY(0);
+        }
+
+        .info-box {
+            background: #eff6ff;
+            border: 2px solid #3b82f6;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .info-box h4 {
+            color: #1e40af;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .info-box ul {
+            color: #1e40af;
+            font-size: 0.875rem;
+            padding-left: 1.5rem;
+        }
+
+        .info-box li {
+            margin-bottom: 0.25rem;
+        }
+
+        .success-message {
+            background: #d1fae5;
+            border: 2px solid #10b981;
+            color: #065f46;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-top: 1rem;
+            display: none;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 1.5rem;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .preview-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 VaultCaddy Instagram Logo 生成器</h1>
+        <p class="subtitle">一鍵生成適合 Instagram 使用的高清 PNG Logo</p>
+
+        <!-- 預覽區域 -->
+        <div class="preview-section">
+            <h2 style="color: #1f2937; margin-bottom: 1rem;">預覽效果</h2>
+            <div class="preview-grid">
+                <div class="preview-item">
+                    <h3>當前尺寸</h3>
+                    <p id="currentSize">320 x 320 像素</p>
+                    <canvas id="logoCanvas" width="320" height="320"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 尺寸選擇 -->
+        <h3 style="color: #1f2937; margin-bottom: 1rem;">選擇尺寸</h3>
+        <div class="size-options">
+            <button class="size-btn active" onclick="setSize(320)">
+                <span class="size-label">320×320</span>
+                <span class="size-desc">Instagram 標準</span>
+            </button>
+            <button class="size-btn" onclick="setSize(512)">
+                <span class="size-label">512×512</span>
+                <span class="size-desc">高清版本</span>
+            </button>
+            <button class="size-btn" onclick="setSize(1024)">
+                <span class="size-label">1024×1024</span>
+                <span class="size-desc">超高清</span>
+            </button>
+            <button class="size-btn" onclick="setSize(2048)">
+                <span class="size-label">2048×2048</span>
+                <span class="size-desc">印刷品質</span>
+            </button>
+        </div>
+
+        <!-- 下載按鈕 -->
+        <button class="download-btn" onclick="downloadLogo()">
+            📥 下載 Instagram Logo (PNG)
+        </button>
+
+        <div class="success-message" id="successMessage">
+            ✅ Logo 已成功下載！可以直接上傳到 Instagram 了！
+        </div>
+
+        <!-- 使用說明 -->
+        <div class="info-box">
+            <h4>📌 Instagram Logo 使用指南：</h4>
+            <ul>
+                <li>✅ <strong>標準尺寸</strong>：320×320 像素（推薦）</li>
+                <li>✅ <strong>高清版本</strong>：512×512 或 1024×1024（更清晰）</li>
+                <li>✅ <strong>檔案格式</strong>：PNG（支援透明背景）</li>
+                <li>✅ <strong>上傳步驟</strong>：Instagram App → 個人檔案 → 編輯個人檔案 → 變更大頭貼照</li>
+                <li>✅ <strong>顯示效果</strong>：Instagram 會自動裁切為圓形</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let currentSize = 320;
+
+        // VaultCaddy Logo SVG
+        const logoSVG = `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+                <defs>
+                    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+                <rect width="100" height="100" rx="20" fill="url(#grad)"/>
+                <text x="50" y="70" font-family="Arial, sans-serif" font-size="60" font-weight="bold" fill="white" text-anchor="middle">V</text>
+            </svg>
+        `;
+
+        function setSize(size) {
+            currentSize = size;
+            
+            // 更新按鈕狀態
+            document.querySelectorAll('.size-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.closest('.size-btn').classList.add('active');
+            
+            // 更新顯示尺寸
+            document.getElementById('currentSize').textContent = `${size} x ${size} 像素`;
+            
+            // 重新繪製 canvas (保持預覽尺寸為 320)
+            drawLogo(320);
+        }
+
+        function drawLogo(displaySize) {
+            const canvas = document.getElementById('logoCanvas');
+            canvas.width = displaySize;
+            canvas.height = displaySize;
+            const ctx = canvas.getContext('2d');
+
+            // 將 SVG 轉換為圖片
+            const img = new Image();
+            const blob = new Blob([logoSVG], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+
+            img.onload = function() {
+                ctx.drawImage(img, 0, 0, displaySize, displaySize);
+                URL.revokeObjectURL(url);
+            };
+
+            img.src = url;
+        }
+
+        function downloadLogo() {
+            // 創建臨時 canvas 用於生成高清圖片
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = currentSize;
+            tempCanvas.height = currentSize;
+            const ctx = tempCanvas.getContext('2d');
+
+            // 將 SVG 轉換為圖片
+            const img = new Image();
+            const blob = new Blob([logoSVG], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+
+            img.onload = function() {
+                ctx.drawImage(img, 0, 0, currentSize, currentSize);
+                URL.revokeObjectURL(url);
+
+                // 下載圖片
+                tempCanvas.toBlob(function(blob) {
+                    const downloadUrl = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = downloadUrl;
+                    link.download = `vaultcaddy-instagram-logo-${currentSize}x${currentSize}.png`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(downloadUrl);
+
+                    // 顯示成功消息
+                    const successMsg = document.getElementById('successMessage');
+                    successMsg.style.display = 'block';
+                    setTimeout(() => {
+                        successMsg.style.display = 'none';
+                    }, 3000);
+                }, 'image/png', 1.0);
+            };
+
+            img.src = url;
+        }
+
+        // 初始化
+        window.onload = function() {
+            drawLogo(320);
+        };
+    </script>
+</body>
+</html>
+
