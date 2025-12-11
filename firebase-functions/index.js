@@ -50,22 +50,54 @@ function getTransporter() {
 
 exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
     // 檢查 Stripe 是否已配置
-    if (!stripe || !stripeConfig) {
+    if ((!stripeLive && !stripeTest) || !stripeConfig) {
         console.error('❌ Stripe 未配置');
         return res.status(503).send('Stripe not configured');
     }
     
     const sig = req.headers['stripe-signature'];
-    const endpointSecret = stripeConfig.webhook_secret;
     
     let event;
+    let isTestMode = false;
     
-    try {
-        event = stripe.webhooks.constructEvent(req.rawBody, sig, endpointSecret);
-    } catch (err) {
-        console.error('❌ Webhook signature verification failed:', err.message);
-        return res.status(400).send(`Webhook Error: ${err.message}`);
+    // 首先尝试使用生产模式的webhook密钥验证
+    if (stripeLive && stripeConfig.webhook_secret) {
+        try {
+            event = stripeLive.webhooks.constructEvent(req.rawBody, sig, stripeConfig.webhook_secret);
+            console.log('✅ 生产模式webhook签名验证成功');
+        } catch (err) {
+            console.log('⚠️ 生产模式签名验证失败，尝试测试模式:', err.message);
+            // 如果生产模式验证失败，尝试测试模式
+            if (stripeTest && stripeConfig.test_webhook_secret) {
+                try {
+                    event = stripeTest.webhooks.constructEvent(req.rawBody, sig, stripeConfig.test_webhook_secret);
+                    isTestMode = true;
+                    console.log('✅ 测试模式webhook签名验证成功');
+                } catch (testErr) {
+                    console.error('❌ 测试模式签名验证也失败:', testErr.message);
+                    return res.status(400).send(`Webhook Error: ${testErr.message}`);
+                }
+            } else {
+                console.error('❌ 未配置测试模式webhook密钥');
+                return res.status(400).send(`Webhook Error: ${err.message}`);
+            }
+        }
+    } else if (stripeTest && stripeConfig.test_webhook_secret) {
+        // 如果只配置了测试模式
+        try {
+            event = stripeTest.webhooks.constructEvent(req.rawBody, sig, stripeConfig.test_webhook_secret);
+            isTestMode = true;
+            console.log('✅ 测试模式webhook签名验证成功');
+        } catch (err) {
+            console.error('❌ Webhook signature verification failed:', err.message);
+            return res.status(400).send(`Webhook Error: ${err.message}`);
+        }
+    } else {
+        console.error('❌ Stripe webhook密钥未配置');
+        return res.status(503).send('Stripe webhook secret not configured');
     }
+    
+    console.log(`📨 收到${isTestMode ? '测试' : '生产'}模式webhook事件: ${event.type}, ID: ${event.id}`);
     
     // 處理不同類型的 Stripe 事件
     switch (event.type) {

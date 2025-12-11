@@ -1,0 +1,20 @@
+我已经在Stripe测试模式webhook详情页面上。webhook名称是charismatic-serenity，ID是we_1Sck6qJmiQ31C0GTuiWKs0HS。webhook显示100%错误率，但从页面上我还没有看到具体的错误信息。
+
+根据之前的配置，我们：
+1. 已经获取了测试模式webhook的签名密钥：whsec_5I0RUCi0eEkDGBvaNy8nGmVb80gp6eAL
+2. 已经将其配置到Firebase Functions环境变量：stripe.test_webhook_secret
+3. 已经重新部署了函数
+
+但credits仍然没有更新。让我分析一下可能的原因：
+
+**可能的问题：**
+
+1. **Firebase Functions代码问题：** Functions代码可能没有正确处理测试模式的webhook事件。我需要检查：
+   - stripeWebhook函数是否能正确区分测试模式和生产模式的webhook签名密钥
+   - 函数是否能正确验证测试模式的webhook事件
+
+2. **Webhook端点URL问题：** 需要确认测试模式webhook的端点URL是否正确指向Firebase Functions
+
+3. **日志问题：** 需要查看Firebase Functions的日志来确定具体的错误信息
+
+让我先检查Firebase Functions的代码，看看webhook处理逻辑是否正确：
