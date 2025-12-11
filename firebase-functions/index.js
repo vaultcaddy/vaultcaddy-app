@@ -149,8 +149,15 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
 /**
  * 處理結帳完成
  */
-async function handleCheckoutCompleted(session) {
-    console.log('✅ 結帳完成:', session.id);
+async function handleCheckoutCompleted(session, isTestMode = false) {
+    console.log(`✅ 結帳完成 (${isTestMode ? '測試模式' : '生產模式'}):`, session.id);
+    
+    // 選擇正確的 Stripe 客戶端
+    const stripeClient = isTestMode ? stripeTest : stripeLive;
+    if (!stripeClient) {
+        console.error(`❌ Stripe 客戶端未配置 (${isTestMode ? '測試模式' : '生產模式'})`);
+        throw new Error('Stripe client not configured');
+    }
     
     // 尝试获取用户ID（支持多种方式）
     let userId = session.client_reference_id || session.metadata?.userId;
@@ -190,12 +197,12 @@ async function handleCheckoutCompleted(session) {
         return;
     }
     
-    // 獲取購買的產品信息
-    const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
+    // 獲取購買的產品信息 - 使用正確的 Stripe 客戶端
+    const lineItems = await stripeClient.checkout.sessions.listLineItems(session.id);
     
     for (const item of lineItems.data) {
         const productId = item.price.product;
-        const product = await stripe.products.retrieve(productId);
+        const product = await stripeClient.products.retrieve(productId);
         
         console.log(`📦 產品信息:`, {
             productId: product.id,
@@ -248,8 +255,15 @@ async function handlePaymentSuccess(paymentIntent) {
 /**
  * 處理訂閱變更
  */
-async function handleSubscriptionChange(subscription) {
-    console.log('✅ 訂閱變更:', subscription.id);
+async function handleSubscriptionChange(subscription, isTestMode = false) {
+    console.log(`✅ 訂閱變更 (${isTestMode ? '測試模式' : '生產模式'}):`, subscription.id);
+    
+    // 選擇正確的 Stripe 客戶端
+    const stripeClient = isTestMode ? stripeTest : stripeLive;
+    if (!stripeClient) {
+        console.error(`❌ Stripe 客戶端未配置 (${isTestMode ? '測試模式' : '生產模式'})`);
+        throw new Error('Stripe client not configured');
+    }
     
     // 尝试获取用户ID
     let userId = subscription.metadata?.userId;
@@ -258,8 +272,8 @@ async function handleSubscriptionChange(subscription) {
     if (!userId && subscription.customer) {
         console.log(`🔍 嘗試通過 Stripe Customer 查找用戶: ${subscription.customer}`);
         try {
-            // 获取customer的email
-            const customer = await stripe.customers.retrieve(subscription.customer);
+            // 获取customer的email - 使用正確的 Stripe 客戶端
+            const customer = await stripeClient.customers.retrieve(subscription.customer);
             
             if (customer.email) {
                 const usersSnapshot = await db.collection('users')
@@ -282,9 +296,9 @@ async function handleSubscriptionChange(subscription) {
         return;
     }
     
-    // 獲取訂閱計劃信息
+    // 獲取訂閱計劃信息 - 使用正確的 Stripe 客戶端
     const priceId = subscription.items.data[0].price.id;
-    const product = await stripe.products.retrieve(subscription.items.data[0].price.product);
+    const product = await stripeClient.products.retrieve(subscription.items.data[0].price.product);
     
     console.log(`📦 訂閱產品信息:`, {
         productId: product.id,
