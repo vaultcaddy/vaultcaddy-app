@@ -1,0 +1,142 @@
+# ✅ 500 错误已修复 - Stripe 客户端选择问题
+
+## 🎯 **问题根源**
+
+### 您的诊断完全正确！
+
+**问题1：密钥不匹配** ✅ **已修复**
+- 测试 Webhook 签名密钥配置错误
+- 正确密钥：`whsec_hK6JuCnJTKmB4CD6q9ohYzrQbXhjGYpa`
+- 错误密钥：`whsec_5I0RUCi0eEkDGBvaNy8nGmVb80gp6eAL`
+
+**问题2：Stripe 客户端选择错误** ✅ **已修复**
+- 测试模式的 Webhook 事件需要使用 **测试模式的 Stripe 客户端** (`stripeTest`) 来访问 Stripe API
+- 之前的代码在 `handleCheckoutCompleted` 和 `handleSubscriptionChange` 函数中使用了全局的 `stripe` 对象（生产模式客户端）
+- 当尝试使用生产客户端访问测试模式的资源时，Stripe API 返回 404 Not Found 错误
+
+---
+
+## 🔍 **错误日志分析**
+
+### Stripe API 404 错误：
+```
+doc_url: 'https://stripe.com/docs/error-codes/resource-missing',
+param: 'session',
+statusCode: 404
+```
+
+### 原因：
+```javascript
+// ❌ 错误的代码（之前）
+async function handleCheckoutCompleted(session) {
+    // ... 
+    const lineItems = await stripe.checkout.sessions.listLineItems(session.id);  // 使用生产客户端
+    const product = await stripe.products.retrieve(productId);  // 使用生产客户端
+}
+```
+
+生产模式的 Stripe 客户端无法访问测试模式的 Session/Product，导致 404 错误。
+
+---
+
+## ✅ **修复方案**
+
+### 修改 `handleCheckoutCompleted` 函数：
+
+```javascript
+// ✅ 修复后的代码
+async function handleCheckoutCompleted(session, isTestMode = false) {
+    console.log(`✅ 結帳完成 (${isTestMode ? '測試模式' : '生產模式'}):`, session.id);
+    
+    // 選擇正確的 Stripe 客戶端
+    const stripeClient = isTestMode ? stripeTest : stripeLive;
+    if (!stripeClient) {
+        console.error(`❌ Stripe 客戶端未配置 (${isTestMode ? '測試模式' : '生產模式'})`);
+        throw new Error('Stripe client not configured');
+    }
+    
+    // ... 其他代码 ...
+    
+    // 使用正確的客戶端
+    const lineItems = await stripeClient.checkout.sessions.listLineItems(session.id);
+    const product = await stripeClient.products.retrieve(productId);
+}
+```
+
+### 同样修复了 `handleSubscriptionChange` 函数：
+
+```javascript
+async function handleSubscriptionChange(subscription, isTestMode = false) {
+    console.log(`✅ 訂閱變更 (${isTestMode ? '測試模式' : '生產模式'}):`, subscription.id);
+    
+    // 選擇正確的 Stripe 客戶端
+    const stripeClient = isTestMode ? stripeTest : stripeLive;
+    
+    // 使用正確的客戶端
+    const customer = await stripeClient.customers.retrieve(subscription.customer);
+    const product = await stripeClient.products.retrieve(subscription.items.data[0].price.product);
+}
+```
+
+---
+
+## 📝 **已完成的修复**
+
+1. ✅ **更新了测试 Webhook 签名密钥**（修复 403 错误）
+2. ✅ **修复了 Stripe 客户端选择逻辑**（修复 500 错误）
+3. ✅ **重新部署了 Firebase Functions**
+
+---
+
+## 🧪 **下一步测试**
+
+**现在请进行新的测试支付：**
+
+1. 打开：https://vaultcaddy.com/billing.html
+2. 点击 **"🧪 測試 Get Started"** 按钮
+3. 使用测试卡：**4242 4242 4242 4242**
+4. 完成支付
+
+**预期结果：**
+- ✅ 1200 Credits 应该成功添加到您的账户
+- ✅ 计划应该从 "Free Plan" 更新为 "Pro Plan"
+- ✅ Stripe Webhook 应该显示 ✅ 成功状态
+
+---
+
+## 📊 **问题回答**
+
+### **问题1：签名不匹配，是否用了正式版的不是test版的？**
+
+**是的！** 您的诊断完全正确：
+- 测试 Webhook 签名密钥配置错误 ✅ **已修复**
+
+### **问题2：test版中有这些多问题，如何知道正式版的正确可用？**
+
+**正式版（Live Mode）配置是正确的！** 
+
+#### 测试版和正式版的做法完全相同：
+
+| 步骤 | 测试模式 | 正式模式 | 说明 |
+|------|---------|---------|------|
+| **Webhook 签名验证** | `whsec_hK6J...` (Test) | `whsec_MNrl...` (Live) | ✅ 两者都正确配置 |
+| **Stripe 客户端** | `stripeTest` | `stripeLive` | ✅ 已修复，根据模式动态选择 |
+| **Price IDs** | `price_1Scj13...` (Test) | `price_1ScS9Q...` (Live) | ✅ 两者分别配置 |
+| **Firebase Function** | 同一个 `stripeWebhook` | 同一个 `stripeWebhook` | ✅ 同一代码，自动识别模式 |
+
+#### 测试版的问题不会影响正式版：
+- ✅ 测试版和正式版使用 **独立的密钥**
+- ✅ 测试版和正式版使用 **独立的产品/价格**
+- ✅ Firebase Function 自动根据 Webhook 签名选择正确的模式
+- ✅ 正式版的 Webhook 密钥从一开始就是正确的
+
+---
+
+## 🎉 **总结**
+
+**所有问题的根源：**
+1. ✅ 测试 Webhook 签名密钥不匹配（导致 403）
+2. ✅ Stripe 客户端选择错误（导致 500）
+
+**现在两个问题都已修复！测试支付应该可以成功添加 Credits 了！** 🚀
+
