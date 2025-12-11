@@ -69,8 +69,26 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
     
     const sig = req.headers['stripe-signature'];
     
-    // 获取raw body - Firebase Functions会自动提供
-    const payload = req.rawBody || req.body;
+    // 获取raw body - Firebase Functions会自动提供rawBody作为Buffer
+    // Stripe需要原始的请求体字符串来验证签名
+    let payload;
+    if (req.rawBody) {
+        // rawBody is a Buffer, convert to string
+        payload = req.rawBody.toString('utf8');
+    } else if (Buffer.isBuffer(req.body)) {
+        payload = req.body.toString('utf8');
+    } else if (typeof req.body === 'string') {
+        payload = req.body;
+    } else {
+        // If body is already parsed as JSON, we can't verify signature
+        // Log error and try to process anyway
+        console.error('⚠️ Request body已被解析为JSON，无法验证签名');
+        payload = JSON.stringify(req.body);
+    }
+    
+    console.log('📦 Payload type:', typeof payload);
+    console.log('📦 Payload length:', payload ? payload.length : 0);
+    console.log('📦 Signature:', sig);
     
     let event;
     let isTestMode = false;
