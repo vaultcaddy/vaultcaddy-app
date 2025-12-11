@@ -48,18 +48,16 @@ function getTransporter() {
 // 1. 處理 Stripe Webhook（付款成功後自動添加 Credits）
 // ============================================
 
-// Stripe Webhook处理函数 - 支持测试模式和生产模式
-exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
+// 使用 Express 来处理 Stripe webhook，保留 raw body 用于签名验证
+const express = require('express');
+const stripeWebhookApp = express();
+
+// Stripe webhook endpoint - 使用 express.raw() 来保留原始 body
+stripeWebhookApp.post('/', express.raw({type: 'application/json'}), async (req, res) => {
     // 设置CORS headers
     res.set('Access-Control-Allow-Origin', '*');
     res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.set('Access-Control-Allow-Headers', 'Content-Type, Stripe-Signature');
-    
-    // 处理OPTIONS预检请求
-    if (req.method === 'OPTIONS') {
-        res.status(204).send('');
-        return;
-    }
     
     // 檢查 Stripe 是否已配置
     if ((!stripeLive && !stripeTest) || !stripeConfig) {
@@ -68,62 +66,50 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
     }
     
     const sig = req.headers['stripe-signature'];
+    const payload = req.body; // This is a Buffer thanks to express.raw()
     
-    // 获取raw body - Firebase Functions会自动提供rawBody作为Buffer
-    // Stripe需要原始的请求体字符串来验证签名
-    let payload;
-    if (req.rawBody) {
-        // rawBody is a Buffer, convert to string
-        payload = req.rawBody.toString('utf8');
-    } else if (Buffer.isBuffer(req.body)) {
-        payload = req.body.toString('utf8');
-    } else if (typeof req.body === 'string') {
-        payload = req.body;
-    } else {
-        // If body is already parsed as JSON, we can't verify signature
-        // Log error and try to process anyway
-        console.error('⚠️ Request body已被解析为JSON，无法验证签名');
-        payload = JSON.stringify(req.body);
-    }
-    
-    console.log('📦 Payload type:', typeof payload);
+    console.log('📦 Payload type:', payload.constructor.name);
     console.log('📦 Payload length:', payload ? payload.length : 0);
     console.log('📦 Signature:', sig);
     
     let event;
     let isTestMode = false;
     
-    // ⚠️ 临时解决方案：跳过签名验证，直接解析事件
-    // Firebase Functions (1st Gen) 的 body 解析会破坏 rawBody，导致签名验证失败
-    // 这个临时方案允许 webhook 正常工作，但失去了签名验证的安全保护
-    console.log('⚠️ 临时跳过签名验证（Firebase Functions 1st Gen 限制）');
-    
-    try {
-        // 尝试从不同来源获取事件数据
-        if (typeof req.body === 'object' && req.body.type) {
-            // body 已被解析为对象
-            event = req.body;
-            console.log('✅ 使用已解析的 body 对象');
-        } else if (typeof payload === 'string') {
-            // payload 是字符串，需要解析
-            event = JSON.parse(payload);
-            console.log('✅ 解析 payload 字符串');
-        } else {
-            console.error('❌ 无法获取有效的事件数据');
-            return res.status(400).send('Invalid webhook payload');
+    // 首先尝试使用生产模式的webhook密钥验证
+    if (stripeLive && stripeConfig.webhook_secret) {
+        try {
+            event = stripeLive.webhooks.constructEvent(payload, sig, stripeConfig.webhook_secret);
+            console.log('✅ 生产模式webhook签名验证成功');
+        } catch (err) {
+            console.log('⚠️ 生产模式签名验证失败，尝试测试模式:', err.message);
+            // 如果生产模式验证失败，尝试测试模式
+            if (stripeTest && stripeConfig.test_webhook_secret) {
+                try {
+                    event = stripeTest.webhooks.constructEvent(payload, sig, stripeConfig.test_webhook_secret);
+                    isTestMode = true;
+                    console.log('✅ 测试模式webhook签名验证成功');
+                } catch (testErr) {
+                    console.error('❌ 测试模式签名验证也失败:', testErr.message);
+                    return res.status(400).send(`Webhook Error: ${testErr.message}`);
+                }
+            } else {
+                console.error('❌ 未配置测试模式webhook密钥');
+                return res.status(400).send(`Webhook Error: ${err.message}`);
+            }
         }
-        
-        // 判断是测试模式还是生产模式（通过事件ID或其他字段）
-        if (event.id && event.id.includes('_test_')) {
+    } else if (stripeTest && stripeConfig.test_webhook_secret) {
+        // 如果只配置了测试模式
+        try {
+            event = stripeTest.webhooks.constructEvent(payload, sig, stripeConfig.test_webhook_secret);
             isTestMode = true;
-            console.log('✅ 检测到测试模式事件');
-        } else {
-            console.log('✅ 检测到生产模式事件');
+            console.log('✅ 测试模式webhook签名验证成功');
+        } catch (err) {
+            console.error('❌ Webhook signature verification failed:', err.message);
+            return res.status(400).send(`Webhook Error: ${err.message}`);
         }
-        
-    } catch (err) {
-        console.error('❌ 解析 webhook payload 失败:', err.message);
-        return res.status(400).send(`Webhook Error: ${err.message}`);
+    } else {
+        console.error('❌ Stripe webhook密钥未配置');
+        return res.status(503).send('Stripe webhook secret not configured');
     }
     
     console.log(`📨 收到${isTestMode ? '测试' : '生产'}模式webhook事件: ${event.type}, ID: ${event.id}`);
@@ -154,6 +140,17 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
         res.status(500).json({ error: 'Webhook processing failed' });
     }
 });
+
+// 处理 OPTIONS 请求
+stripeWebhookApp.options('/', (req, res) => {
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type, Stripe-Signature');
+    res.status(204).send('');
+});
+
+// 导出为 Firebase Function
+exports.stripeWebhook = functions.https.onRequest(stripeWebhookApp);
 
 /**
  * 處理結帳完成
