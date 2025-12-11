@@ -48,18 +48,19 @@ function getTransporter() {
 // 1. 處理 Stripe Webhook（付款成功後自動添加 Credits）
 // ============================================
 
+// 导入cors middleware
+const cors = require('cors')({ origin: true });
+
 // Stripe Webhook处理函数 - 支持测试模式和生产模式
-exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
-    // 设置CORS headers，允许Stripe访问
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type, stripe-signature');
-    
-    // 处理OPTIONS预检请求
-    if (req.method === 'OPTIONS') {
-        res.status(204).send('');
-        return;
-    }
+// 使用cors middleware来自动处理CORS和绕过CSRF保护
+exports.stripeWebhook = functions.https.onRequest((req, res) => {
+    // 使用cors middleware包装，这会自动处理CORS并禁用CSRF保护
+    cors(req, res, async () => {
+        // 处理OPTIONS预检请求
+        if (req.method === 'OPTIONS') {
+            res.status(204).send('');
+            return;
+        }
     
     // 檢查 Stripe 是否已配置
     if ((!stripeLive && !stripeTest) || !stripeConfig) {
@@ -111,26 +112,32 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
     
     console.log(`📨 收到${isTestMode ? '测试' : '生产'}模式webhook事件: ${event.type}, ID: ${event.id}`);
     
-    // 處理不同類型的 Stripe 事件
-    switch (event.type) {
-        case 'checkout.session.completed':
-            await handleCheckoutCompleted(event.data.object);
-            break;
-        case 'payment_intent.succeeded':
-            await handlePaymentSuccess(event.data.object);
-            break;
-        case 'customer.subscription.created':
-        case 'customer.subscription.updated':
-            await handleSubscriptionChange(event.data.object);
-            break;
-        case 'customer.subscription.deleted':
-            await handleSubscriptionCancelled(event.data.object);
-            break;
-        default:
-            console.log(`未處理的事件類型: ${event.type}`);
-    }
-    
-    res.json({ received: true });
+        // 處理不同類型的 Stripe 事件
+        try {
+            switch (event.type) {
+                case 'checkout.session.completed':
+                    await handleCheckoutCompleted(event.data.object, isTestMode);
+                    break;
+                case 'payment_intent.succeeded':
+                    await handlePaymentSuccess(event.data.object);
+                    break;
+                case 'customer.subscription.created':
+                case 'customer.subscription.updated':
+                    await handleSubscriptionChange(event.data.object, isTestMode);
+                    break;
+                case 'customer.subscription.deleted':
+                    await handleSubscriptionCancelled(event.data.object);
+                    break;
+                default:
+                    console.log(`未處理的事件類型: ${event.type}`);
+            }
+            
+            res.status(200).json({ received: true });
+        } catch (error) {
+            console.error('❌ 处理webhook事件时发生错误:', error);
+            res.status(500).json({ error: 'Webhook processing failed' });
+        }
+    }); // Close cors middleware
 });
 
 /**
