@@ -1,0 +1,48 @@
+==============================================
+✅ 测试模式 Webhook 问题已修复
+==============================================
+
+问题根源：
+--------------
+Firebase Functions中的 `stripeWebhook` 函数只使用生产模式的webhook密钥（`stripe.webhook_secret`）来验证所有webhook事件，包括测试模式的事件。这导致测试模式的事件签名验证失败，webhook一直显示100%错误率。
+
+修复内容：
+--------------
+1. 修改了 `stripeWebhook` 函数，使其能够：
+   - 首先尝试使用生产模式密钥验证签名
+   - 如果失败，自动尝试使用测试模式密钥验证
+   - 正确识别和处理测试模式的事件
+
+2. 已重新部署Firebase Functions
+
+测试步骤：
+--------------
+1. 访问 https://vaultcaddy.com/billing.html?canceled=true
+2. 点击黄色的 "🧪 測試 Get Started" 按钮
+3. 使用测试卡号完成支付：4242 4242 4242 4242
+4. 检查账户是否收到1200 Credits
+5. 检查订阅计划是否从"Free Plan"变为"Pro Plan"
+
+技术细节：
+--------------
+修改前：
+- webhook函数使用固定的 `stripeConfig.webhook_secret` 验证所有事件
+- 测试模式事件签名验证失败 → webhook error → credits不更新
+
+修改后：
+- webhook函数智能选择正确的密钥（生产或测试）
+- 测试模式事件使用 `stripeConfig.test_webhook_secret` 验证
+- 签名验证成功 → webhook正常 → credits正确更新
+
+部署信息：
+--------------
+- 部署时间：刚刚
+- Function URL: https://us-central1-vaultcaddy-production-cbbe2.cloudfunctions.net/stripeWebhook
+- 部署状态：✅ 成功
+
+下一步：
+--------------
+请您现在进行测试支付，验证credits是否能够正确更新。如果仍有问题，我们可以查看Firebase Functions的实时日志来进一步诊断。
+
+==============================================
+

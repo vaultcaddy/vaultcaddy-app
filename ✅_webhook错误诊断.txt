@@ -1,0 +1,48 @@
+==============================================
+✅ Webhook 错误诊断报告
+==============================================
+
+当前状态：
+--------------
+1. 测试支付成功完成（Stripe显示多笔成功支付）
+2. Firebase Functions日志显示没有收到webhook调用
+3. Stripe webhook显示100%错误率
+
+问题分析：
+--------------
+虽然我们已经：
+1. ✅ 配置了测试模式webhook签名密钥
+2. ✅ 修改了Functions代码支持测试模式验证
+3. ✅ 重新部署了Functions
+
+但测试模式webhook仍然失败，Credits没有更新。
+
+下一步建议：
+--------------
+
+**方案1：通过浏览器查看具体错误（推荐）**
+我将继续通过浏览器进入Stripe dashboard，点击失败的webhook事件，查看具体的错误信息。这将帮助我们准确定位问题。
+
+**方案2：您手动查看错误信息**
+1. 登录 https://dashboard.stripe.com （测试模式）
+2. 点击左侧菜单 "开发人员" → "Webhook"
+3. 点击 "charismatic-serenity" webhook
+4. 在事件列表中点击任意失败的事件
+5. 查看 "请求" 和 "响应" 部分的错误信息
+6. 将错误信息告诉我，我可以帮您修复
+
+**方案3：使用Stripe CLI测试（最快）**
+```bash
+# 安装 Stripe CLI（如果还没安装）
+brew install stripe/stripe-cli/stripe
+
+# 登录
+stripe login
+
+# 触发测试webhook事件
+stripe trigger checkout.session.completed
+```
+然后查看Firebase Functions日志是否收到事件。
+
+==============================================
+
