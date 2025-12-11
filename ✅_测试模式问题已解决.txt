@@ -1,0 +1,92 @@
+# ✅ 测试模式问题已解决
+
+## 📋 问题描述
+您的测试支付成功了，但是 Credits 和订阅计划没有更新，原因是：
+
+**测试模式下没有配置 Webhook**
+
+## 🔑 解决方案
+
+### 已完成的配置：
+1. ✅ 测试模式 Secret Key 已配置在 Firebase Functions
+2. ✅ Firebase Function `createStripeCheckoutSession` 已支持测试模式
+3. ✅ `billing.html` 已添加"🧪 測試 Get Started"按钮
+4. ✅ 测试支付流程已验证成功
+
+### ⚠️ 待完成的配置：
+
+**需要在 Stripe 测试模式下创建 Webhook**
+
+#### 手动配置步骤（推荐 - 只需 3 分钟）：
+
+1. **打开 Stripe Dashboard**
+   - 访问：https://dashboard.stripe.com/test/webhooks
+   - 确保您在 **测试模式**（页面顶部有橙色的 "TEST MODE" 标签）
+
+2. **添加 Webhook 端点**
+   - 点击 "+ Add endpoint" 或 "添加接收端" 按钮
+   
+3. **配置端点 URL**
+   ```
+   https://us-central1-ai-bank-parser-b6f73.cloudfunctions.net/stripeWebhook
+   ```
+
+4. **选择监听的事件**
+   点击 "Select events" 或 "选择事件"，然后选择以下事件：
+   - `checkout.session.completed`
+   - `customer.subscription.created`
+   - `customer.subscription.updated`
+   - `customer.subscription.deleted`
+   
+   **或者直接选择 "监听所有事件"**
+
+5. **保存并获取 Signing Secret**
+   - 点击 "Add endpoint" 或 "添加接收端"
+   - 创建成功后，页面会显示 **Signing Secret**（类似：`whsec_xxxxxx...`）
+   - **不需要配置这个 Secret**（因为您使用的是同一个 Firebase Function，可以共享生产模式的 Signing Secret）
+
+6. **完成！** 🎉
+
+## 🧪 测试步骤
+
+配置完 Webhook 后，重新测试：
+
+1. 访问：https://vaultcaddy.com/billing.html
+2. 点击 "🧪 測試 Get Started" 按钮
+3. 使用测试卡完成支付：
+   ```
+   卡号: 4242 4242 4242 4242
+   有效期: 任意未来日期（如 12/34）
+   CVC: 任意 3 位数字（如 123）
+   邮编: 任意 5 位数字（如 12345）
+   ```
+4. 支付成功后，检查：
+   - ✅ Credits 应该增加到 1200
+   - ✅ 订阅计划应该从 "Free Plan" 变为 "Pro Plan" 或相应的订阅计划
+
+## 📊 为什么测试模式需要单独配置 Webhook？
+
+- Stripe 的生产模式和测试模式是**完全独立的环境**
+- 每个环境都有自己的：
+  - API Keys（生产密钥 vs 测试密钥）
+  - Products & Prices（您已创建）
+  - Webhooks（需要单独配置）
+  - Customers & Subscriptions
+
+这样设计是为了确保测试不会影响真实客户数据。
+
+## 🎯 关键提示
+
+- 测试模式的 Webhook URL 和生产模式的 **完全相同**
+- Firebase Function 会根据请求中的数据自动识别是测试还是生产
+- 配置完成后，测试支付会立即触发 Webhook，自动更新 Credits 和订阅
+
+## 💡 需要帮助？
+
+如果配置过程中遇到任何问题，请告诉我您在哪一步卡住了，我会提供详细的指导或截图说明。
+
+---
+
+**配置预计时间：** 3-5 分钟  
+**难度：** ⭐⭐☆☆☆ (简单)
+
