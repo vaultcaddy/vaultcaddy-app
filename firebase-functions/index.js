@@ -48,16 +48,18 @@ function getTransporter() {
 // 1. 處理 Stripe Webhook（付款成功後自動添加 Credits）
 // ============================================
 
-// 使用 Express 来处理 Stripe webhook，保留 raw body 用于签名验证
-const express = require('express');
-const stripeWebhookApp = express();
-
-// Stripe webhook endpoint - 使用 express.raw() 来保留原始 body
-stripeWebhookApp.post('/', express.raw({type: 'application/json'}), async (req, res) => {
+// Stripe Webhook - Using req.rawBody which is available in Firebase Functions
+exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
     // 设置CORS headers
     res.set('Access-Control-Allow-Origin', '*');
     res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.set('Access-Control-Allow-Headers', 'Content-Type, Stripe-Signature');
+    
+    // Handle OPTIONS preflight request
+    if (req.method === 'OPTIONS') {
+        res.status(204).send('');
+        return;
+    }
     
     // 檢查 Stripe 是否已配置
     if ((!stripeLive && !stripeTest) || !stripeConfig) {
@@ -66,9 +68,10 @@ stripeWebhookApp.post('/', express.raw({type: 'application/json'}), async (req, 
     }
     
     const sig = req.headers['stripe-signature'];
-    const payload = req.body; // This is a Buffer thanks to express.raw()
+    // Use req.rawBody which should be available in Firebase Functions
+    const payload = req.rawBody || req.body;
     
-    console.log('📦 Payload type:', payload.constructor.name);
+    console.log('📦 Payload type:', payload ? payload.constructor.name : 'undefined');
     console.log('📦 Payload length:', payload ? payload.length : 0);
     console.log('📦 Signature:', sig);
     
@@ -141,16 +144,7 @@ stripeWebhookApp.post('/', express.raw({type: 'application/json'}), async (req, 
     }
 });
 
-// 处理 OPTIONS 请求
-stripeWebhookApp.options('/', (req, res) => {
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type, Stripe-Signature');
-    res.status(204).send('');
-});
-
-// 导出为 Firebase Function
-exports.stripeWebhook = functions.https.onRequest(stripeWebhookApp);
+// End of stripeWebhook function
 
 /**
  * 處理結帳完成
