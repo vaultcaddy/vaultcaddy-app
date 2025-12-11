@@ -48,7 +48,19 @@ function getTransporter() {
 // 1. 處理 Stripe Webhook（付款成功後自動添加 Credits）
 // ============================================
 
+// Stripe Webhook处理函数 - 支持测试模式和生产模式
 exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
+    // 设置CORS headers，允许Stripe访问
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type, stripe-signature');
+    
+    // 处理OPTIONS预检请求
+    if (req.method === 'OPTIONS') {
+        res.status(204).send('');
+        return;
+    }
+    
     // 檢查 Stripe 是否已配置
     if ((!stripeLive && !stripeTest) || !stripeConfig) {
         console.error('❌ Stripe 未配置');
