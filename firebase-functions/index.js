@@ -418,15 +418,29 @@ async function handleSubscriptionCancelled(subscription) {
  * 添加 Credits
  */
 async function addCredits(userId, amount, metadata = {}) {
+    console.log(`🔍 addCredits 被调用: userId=${userId}, amount=${amount}, metadata=`, metadata);
     const userRef = db.collection('users').doc(userId);
     
     await db.runTransaction(async (transaction) => {
         const userDoc = await transaction.get(userRef);
-        const currentCredits = userDoc.data()?.credits || 0;
+        
+        if (!userDoc.exists) {
+            console.error(`❌ 用户文档不存在: ${userId}`);
+            throw new Error(`User document not found: ${userId}`);
+        }
+        
+        const userData = userDoc.data();
+        console.log(`📊 当前用户数据:`, userData);
+        
+        const currentCredits = userData?.credits || 0;
         const newCredits = currentCredits + amount;
         
+        console.log(`💰 Credits 更新: ${currentCredits} + ${amount} = ${newCredits}`);
+        
+        // ✅ 同时更新 credits 和 currentCredits 字段
         transaction.update(userRef, {
             credits: newCredits,
+            currentCredits: newCredits,  // ✅ 也更新 currentCredits
             updatedAt: admin.firestore.FieldValue.serverTimestamp()
         });
         
@@ -442,6 +456,7 @@ async function addCredits(userId, amount, metadata = {}) {
         });
         
         console.log(`✅ Credits 已添加: ${userId} +${amount} = ${newCredits}`);
+        console.log(`✅ credits 和 currentCredits 均已更新为: ${newCredits}`);
     });
 }
 

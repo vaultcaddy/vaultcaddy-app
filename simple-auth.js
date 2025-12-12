@@ -205,7 +205,11 @@ class SimpleAuth {
     async registerWithEmail(email, password, displayName = null) {
         try {
             console.log('📝 正在註冊...', email);
-            const result = await this.auth.createUserWithEmailAndPassword(email, password);
+            
+            // ✅ 統一轉換為小寫，避免大小寫匹配問題
+            const normalizedEmail = email.toLowerCase().trim();
+            
+            const result = await this.auth.createUserWithEmailAndPassword(normalizedEmail, password);
             
             // 設置顯示名稱
             if (displayName && result.user) {
@@ -214,21 +218,52 @@ class SimpleAuth {
             }
             
             // 🎯 創建 Firestore 用戶文檔（重要！驗證後需要這個文檔來添加 Credits）
+            console.log('📝 正在創建 Firestore 用戶文檔...');
+            console.log('   用戶 ID:', result.user.uid);
+            console.log('   Email:', normalizedEmail);
+            
             try {
                 const db = firebase.firestore();
-                await db.collection('users').doc(result.user.uid).set({
-                    email: email,
+                const userDoc = {
+                    email: normalizedEmail,  // ✅ 統一小寫
                     displayName: displayName || '',
                     credits: 0,  // 初始為 0，驗證後會加 20
                     currentCredits: 0,
                     emailVerified: false,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                };
+                
+                await db.collection('users').doc(result.user.uid).set(userDoc);
                 console.log('✅ Firestore 用戶文檔已創建');
+                console.log('   文檔內容:', { ...userDoc, createdAt: 'serverTimestamp', updatedAt: 'serverTimestamp' });
+                
+                // ✅ 驗證文檔是否真的創建成功
+                const docSnapshot = await db.collection('users').doc(result.user.uid).get();
+                if (!docSnapshot.exists) {
+                    throw new Error('文檔創建後無法讀取，可能創建失敗');
+                }
+                const docData = docSnapshot.data();
+                if (!docData.email) {
+                    throw new Error('文檔創建成功但缺少 email 字段');
+                }
+                console.log('✅ 用戶文檔驗證成功，email 字段:', docData.email);
+                
             } catch (firestoreError) {
                 console.error('❌ 創建 Firestore 用戶文檔失敗:', firestoreError);
-                // 不拋出錯誤，因為 Auth 用戶已經創建成功
+                console.error('   錯誤詳情:', firestoreError.message);
+                console.error('   錯誤堆棧:', firestoreError.stack);
+                
+                // ⚠️ 如果 Firestore 文檔創建失敗，刪除 Auth 用戶並拋出錯誤
+                console.warn('⚠️ 由於 Firestore 文檔創建失敗，將刪除 Auth 用戶');
+                try {
+                    await result.user.delete();
+                    console.log('✅ Auth 用戶已刪除');
+                } catch (deleteError) {
+                    console.error('❌ 刪除 Auth 用戶失敗:', deleteError);
+                }
+                
+                throw new Error('註冊失敗：無法創建用戶資料。請稍後再試。');
             }
             
             console.log('✅ 註冊成功');

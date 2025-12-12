@@ -1,0 +1,228 @@
+# 🔍 数据库结构与 Credits 添加流程诊断
+
+## ✅ **回答您的问题**
+
+### **问题：`verificationCodes` 中没有 credits，credits 在 `users` 中，需要合并吗？**
+
+**答案：❌ 不需要！这是正确的数据库设计！**
+
+---
+
+## 📊 **当前数据库结构（正确的设计）**
+
+### **1. `verificationCodes` 集合**
+```
+├── do.someeething@gmail.com
+├── osclin2002@gmail.com
+├── test@example.com
+└── vaultcaddy@gmail.com
+    ├── code: "121306"
+    ├── attempts: 0
+    ├── verified: true
+    ├── email: "vaultcaddy@gmail.com"
+    ├── createdAt: 2025年12月10日 UTC+8 13:00:41
+    ├── expiresAt: 2025年12月10日 UTC+8 13:10:40
+    └── verifiedAt: 2025年12月10日 UTC+8 13:01:09
+```
+
+**用途：** 仅用于存储和验证 email 验证码
+**✅ 不需要 credits 字段**
+
+---
+
+### **2. `users` 集合**
+```
+users/
+├── AZ55k5FJBofAeKE09AYbGVIEoDy1/
+│   ├── credits: 79970
+│   ├── currentCredits: 79970
+│   ├── email: "???" (需要确认)
+│   ├── createdAt: 2025年11月2日 UTC+8 15:40:14
+│   ├── updatedAt: 2025年12月8日 UTC+8 20:35:39
+│   └── creditsHistory/ (子集合)
+│
+├── MRT3Qt923hnaMK4v26Y6LKR.../
+│   └── ...
+│
+└── (其他用户)
+```
+
+**用途：** 存储用户的所有信息，包括 credits
+**✅ 这是 credits 应该存储的地方**
+
+---
+
+## 🔍 **关键问题诊断**
+
+### **问题 1：`vaultcaddy@gmail.com` 的用户 ID 是什么？**
+
+从截图中看到：
+- `AZ55k5FJBofAeKE09AYbGVIEoDy1` 有 79970 Credits
+
+**❓ 这个用户的 email 是 `vaultcaddy@gmail.com` 吗？**
+
+---
+
+### **问题 2：Stripe Webhook 如何查找用户？**
+
+当支付成功后，Stripe Webhook 的流程：
+
+```javascript
+// 1. 从 Stripe Checkout Session 获取 customer email
+const customerEmail = session.customer_email;  // "vaultcaddy@gmail.com"
+
+// 2. 在 Firestore 中查找用户
+const usersRef = admin.firestore().collection('users');
+const snapshot = await usersRef
+    .where('email', '==', customerEmail)
+    .limit(1)
+    .get();
+
+// 3. 如果找到用户，更新 credits
+if (!snapshot.empty) {
+    const userId = snapshot.docs[0].id;
+    await addCredits(userId, 100, {...});
+} else {
+    // ❌ 未找到用户 - Credits 不会增加！
+    console.error('❌ 無法獲取用戶 ID');
+}
+```
+
+---
+
+## 🧪 **诊断步骤**
+
+### **步骤 1：确认用户存在**
+
+请在 Firebase Console 中：
+1. 打开 `users` 集合
+2. 查找包含 `email: "vaultcaddy@gmail.com"` 的文档
+3. 记录该文档的 ID
+
+**预期：**
+- ✅ 找到用户，记录 ID
+- ❌ 未找到用户 = **这就是问题所在**
+
+---
+
+### **步骤 2：确认用户的当前 Credits**
+
+找到用户后：
+1. 查看 `credits` 字段的值
+2. 查看 `currentCredits` 字段的值
+
+**预期：**
+- 如果是 0，说明 Credits 从未被添加
+- 如果大于 0，说明之前有添加成功过
+
+---
+
+### **步骤 3：进行新的测试支付**
+
+**❗ 重要：必须在代码部署后进行新的测试支付**
+
+1. 打开 https://vaultcaddy.com/billing.html
+2. 点击 **"🧪 測試 Get Started"**
+3. 使用测试卡：**4242 4242 4242 4242**
+4. 完成支付
+
+---
+
+### **步骤 4：查看 Webhook 日志**
+
+支付完成后，运行：
+
+```bash
+firebase functions:log --only stripeWebhook 2>&1 | tail -100
+```
+
+**预期日志：**
+```
+✅ 訂閱變更 (測試模式): sub_xxx
+📋 Subscription 詳情: {...}
+🔍 嘗試通過 Stripe Customer 查找用戶: cus_xxx
+🔍 Customer email: vaultcaddy@gmail.com
+✅ 通過 customer email 找到用戶: <用戶ID>
+🎉 訂閱已激活，準備添加 100 Credits 給用戶 <用戶ID>
+✅ 已成功添加 100 Credits 給用戶 <用戶ID>
+```
+
+---
+
+### **步骤 5：再次确认 Credits**
+
+在 Firebase Console 中：
+1. 刷新 `users` 集合
+2. 查看 `vaultcaddy@gmail.com` 用户的 `credits` 字段
+3. 确认是否增加了 100
+
+---
+
+## 🚨 **可能的问题**
+
+### **问题 A：`vaultcaddy@gmail.com` 用户不存在于 `users` 集合**
+
+**症状：**
+- 只在 `verificationCodes` 中找到 `vaultcaddy@gmail.com`
+- `users` 集合中没有对应的用户文档
+
+**解决方案：**
+在注册时创建用户文档：
+
+```javascript
+// 在 auth.html 注册时
+const userDoc = {
+    email: email,
+    credits: 0,
+    currentCredits: 0,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+};
+await db.collection('users').doc(userId).set(userDoc);
+```
+
+---
+
+### **问题 B：`users` 集合中的用户 email 字段不匹配**
+
+**症状：**
+- `users` 集合中有用户，但 `email` 字段的值不是 "vaultcaddy@gmail.com"
+- 可能是 "Vaultcaddy@gmail.com" (大小写不同)
+
+**解决方案：**
+统一 email 为小写：
+
+```javascript
+const email = userEmail.toLowerCase();
+```
+
+---
+
+### **问题 C：用户未进行新的测试支付**
+
+**症状：**
+- Webhook 日志中没有新的事件
+- Firebase Functions 没有被调用
+
+**解决方案：**
+进行新的测试支付（必须在代码部署后）
+
+---
+
+## 📞 **下一步行动**
+
+请您：
+
+1. **确认用户 ID**
+   - 在 Firebase Console 中查找 `email: "vaultcaddy@gmail.com"` 的用户
+   - 告诉我该用户的 ID 和当前 Credits
+
+2. **进行新的测试支付**
+   - 在 https://vaultcaddy.com/billing.html 点击 "🧪 測試 Get Started"
+   - 使用测试卡完成支付
+
+3. **分享日志**
+   - 运行 `firebase functions:log --only stripeWebhook 2>&1 | tail -100`
+   - 告诉我输出内容
+
+**只有这样我才能准确诊断问题！** 🙏
+
