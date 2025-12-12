@@ -1109,8 +1109,13 @@
                     if (userDoc.exists) {
                         const userData = userDoc.data();
                         
-                        // 檢查訂閱狀態
-                        if (userData.subscription && userData.subscription.status === 'active') {
+                        // 🔥 優先檢查新的 planType 字段
+                        if (userData.planType) {
+                            savedPlan = userData.planType.replace(' Plan', ''); // 移除 ' Plan' 後綴
+                            console.log('✅ 從 planType 字段獲取計劃:', savedPlan);
+                        }
+                        // 檢查訂閱狀態（舊版邏輯）
+                        else if (userData.subscription && userData.subscription.status === 'active') {
                             savedPlan = userData.subscription.planType || 'Free';
                         }
                     }
@@ -1241,8 +1246,19 @@
                             const userData = userDoc.data();
                             currentCredits = userData.credits || 0;
                             
-                            // 如果有訂閱信息，獲取重置日期
-                            if (userData.subscription && userData.subscription.currentPeriodEnd) {
+                            // 🔥 優先檢查新的 resetDate 字段
+                            if (userData.resetDate) {
+                                const resetDate = userData.resetDate.toDate();
+                                document.getElementById('credits-reset-date').textContent = 
+                                    resetDate.toLocaleDateString('zh-TW', { 
+                                        year: 'numeric', 
+                                        month: 'long', 
+                                        day: 'numeric' 
+                                    });
+                                console.log('✅ 從 resetDate 字段獲取重置日期:', resetDate);
+                            }
+                            // 如果有訂閱信息，獲取重置日期（舊版邏輯）
+                            else if (userData.subscription && userData.subscription.currentPeriodEnd) {
                                 const resetDate = userData.subscription.currentPeriodEnd.toDate();
                                 document.getElementById('credits-reset-date').textContent = 
                                     resetDate.toLocaleDateString('zh-TW', { 
@@ -1641,6 +1657,95 @@
         
         // 暴露函數供側邊欄內的連結使用
         window.closeMobileSidebar = closeSidebar;
+    </script>
+
+    <!-- 創建項目模態框 -->
+    <div class="modal-overlay" id="createProjectModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create New Project</h2>
+                <button class="modal-close" onclick="closeCreateProjectModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="projectName">Project Name</label>
+                    <input 
+                        type="text" 
+                        id="projectName" 
+                        class="form-input" 
+                        placeholder="Enter project name..."
+                        onkeypress="if(event.key === 'Enter') createProject()"
+                    >
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeCreateProjectModal()">Cancel</button>
+                <button class="btn-create" id="createBtn" onclick="createProject()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 打開創建項目模態框
+        function openCreateProjectModal() {
+            const modal = document.getElementById('createProjectModal');
+            const input = document.getElementById('projectName');
+            modal.classList.add('active');
+            input.value = '';
+            input.focus();
+        }
+
+        // 關閉創建項目模態框
+        function closeCreateProjectModal() {
+            const modal = document.getElementById('createProjectModal');
+            modal.classList.remove('active');
+        }
+
+        // 創建新項目
+        async function createProject() {
+            const input = document.getElementById('projectName');
+            const projectName = input.value.trim();
+            
+            if (!projectName) {
+                alert('Please enter a project name');
+                return;
+            }
+            
+            // 創建新項目對象
+            const newProject = {
+                id: 'project-' + Date.now(),
+                name: projectName,
+                thumbnail: null,
+                lastModified: new Date().toISOString(),
+                created: new Date().toISOString()
+            };
+            
+            // 保存到 Firebase
+            try {
+                const projectId = await window.simpleDataManager.createProject(projectName);
+                console.log('✅ 項目已保存到 Firebase:', projectId);
+                
+                // 關閉模態框
+                closeCreateProjectModal();
+                
+                // 跳轉到新項目頁面
+                window.location.href = `firstproject.html?project=${projectId}`;
+            } catch (error) {
+                console.error('❌ 保存到 Firebase 失敗:', error);
+                alert('創建項目失敗，請重試');
+                return;
+            }
+        }
+
+        // 點擊遮罩關閉模態框
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('createProjectModal');
+            if (e.target === modal) {
+                closeCreateProjectModal();
+            }
+        });
     </script>
 
 </body>

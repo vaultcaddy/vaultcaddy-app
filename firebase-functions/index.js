@@ -263,6 +263,31 @@ async function handleCheckoutCompleted(session, isTestMode = false) {
                 planType: product.metadata.plan_type || 'unknown'
             });
             console.log(`✅ 成功添加 ${credits} Credits`);
+            
+            // 🔥 更新用户的订阅计划和重置日期
+            const planType = product.metadata.plan_type || 'monthly';
+            console.log(`📋 更新用户订阅计划: ${planType}`);
+            
+            // 计算重置日期：monthly = 1个月后，yearly = 1年后
+            const now = new Date();
+            let resetDate;
+            if (planType === 'yearly') {
+                resetDate = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
+                console.log(`📅 年费计划，重置日期为 1 年后: ${resetDate.toISOString()}`);
+            } else {
+                resetDate = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());
+                console.log(`📅 月费计划，重置日期为 1 个月后: ${resetDate.toISOString()}`);
+            }
+            
+            // 更新用户文档
+            await db.collection('users').doc(userId).update({
+                planType: 'Pro Plan',
+                subscriptionPlan: planType, // 'monthly' 或 'yearly'
+                resetDate: admin.firestore.Timestamp.fromDate(resetDate),
+                lastPurchaseDate: admin.firestore.FieldValue.serverTimestamp(),
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            });
+            console.log(`✅ 用户订阅计划已更新为 Pro Plan (${planType})`);
         } else {
             console.log(`⚠️ 產品沒有配置 Credits: ${product.name}`);
             console.log(`⚠️ product.metadata 完整内容:`, JSON.stringify(product.metadata, null, 2));

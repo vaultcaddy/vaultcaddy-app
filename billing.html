@@ -1962,5 +1962,85 @@
         window.createCheckoutSession = createCheckoutSession;
     </script>
 
+    <!-- 創建項目模態框 -->
+    <div class="modal-overlay" id="createProjectModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create New Project</h2>
+                <button class="modal-close" onclick="closeCreateProjectModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="projectName">Project Name</label>
+                    <input 
+                        type="text" 
+                        id="projectName" 
+                        class="form-input" 
+                        placeholder="Enter project name..."
+                        onkeypress="if(event.key === 'Enter') createProject()"
+                    >
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeCreateProjectModal()">Cancel</button>
+                <button class="btn-create" id="createBtn" onclick="createProject()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 打開創建項目模態框
+        function openCreateProjectModal() {
+            const modal = document.getElementById('createProjectModal');
+            const input = document.getElementById('projectName');
+            modal.classList.add('active');
+            input.value = '';
+            input.focus();
+        }
+
+        // 關閉創建項目模態框
+        function closeCreateProjectModal() {
+            const modal = document.getElementById('createProjectModal');
+            modal.classList.remove('active');
+        }
+
+        // 創建新項目
+        async function createProject() {
+            const input = document.getElementById('projectName');
+            const projectName = input.value.trim();
+            
+            if (!projectName) {
+                alert('Please enter a project name');
+                return;
+            }
+            
+            // 保存到 Firebase
+            try {
+                const projectId = await window.simpleDataManager.createProject(projectName);
+                console.log('✅ 項目已保存到 Firebase:', projectId);
+                
+                // 關閉模態框
+                closeCreateProjectModal();
+                
+                // 跳轉到新項目頁面
+                window.location.href = `firstproject.html?project=${projectId}`;
+            } catch (error) {
+                console.error('❌ 保存到 Firebase 失敗:', error);
+                alert('創建項目失敗，請重試');
+                return;
+            }
+        }
+
+        // 點擊遮罩關閉模態框
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('createProjectModal');
+            if (e.target === modal) {
+                closeCreateProjectModal();
+            }
+        });
+    </script>
+
 </body>
 </html>
