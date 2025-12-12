@@ -1,0 +1,176 @@
+# 🚨 最终根本原因：Credits 未增加
+
+## 📊 **问题确认**
+
+经过多次测试和日志分析，现在确认问题：
+
+✅ Stripe 显示：`checkout.session.completed` 事件返回 **200 OK**
+❌ Firebase Functions 日志：**没有处理 `checkout.session.completed` 事件的任何记录**
+✅ Firebase Functions 只处理了：`customer.subscription.created/updated` 事件
+
+---
+
+## 🔍 **根本原因分析**
+
+### **原因 1：Webhook 监听事件未配置**
+
+Stripe Test Mode Webhook 可能没有监听 `checkout.session.completed` 事件！
+
+**验证步骤：**
+1. 打开：https://dashboard.stripe.com/test/webhooks
+2. 点击 `charismatic-serenity` webhook
+3. 查看 "Events to send"
+4. 确认 `checkout.session.completed` 是否已选中
+
+---
+
+### **原因 2：Session 类型问题**
+
+当前使用的 Stripe Checkout Session 创建方式可能是 **Subscription 模式**，而不是 **Payment 模式**。
+
+**在 Subscription 模式下：**
+- Stripe 不会发送 `checkout.session.completed` 事件（或者发送时间延迟）
+- Stripe 会先发送 `customer.subscription.created` 事件（状态为 `incomplete`）
+- 当支付完成后，发送 `customer.subscription.updated` 事件（状态变为 `active`）
+
+**解决方案：**
+修改 `/Users/cavlinyeung/ai-bank-parser/firebase-functions/index.js` 中的 `handleSubscriptionChange` 函数，当订阅状态从 `incomplete` 变为 `active` 时，也要添加 Credits。
+
+---
+
+## ✅ **立即修复步骤**
+
+### **步骤 1：修改代码逻辑**
+
+在 `handleSubscriptionChange` 函数中添加 Credits 逻辑：
+
+```javascript
+async function handleSubscriptionChange(subscription, isTestMode = false) {
+    console.log(`✅ 訂閱變更 (${isTestMode ? '測試模式' : '生產模式'}):`, subscription.id);
+    console.log(`📋 Subscription 詳情:`, JSON.stringify(subscription, null, 2));
+
+    // 選擇正確的 Stripe 客戶端
+    const stripeClient = isTestMode ? stripeTest : stripeLive;
+    if (!stripeClient) {
+        console.error(`❌ Stripe 客戶端未配置 (${isTestMode ? '測試模式' : '生產模式'})`);
+        throw new Error('Stripe client not configured');
+    }
+
+    // ✨ 新增邏輯：當訂閱變為 active 時，添加 Credits
+    if (subscription.status === 'active') {
+        console.log('🎉 訂閱已激活，準備添加 Credits');
+
+        // 嘗試獲取用戶ID
+        const customer = await stripeClient.customers.retrieve(subscription.customer);
+        console.log(`📧 Customer email: ${customer.email}`);
+
+        if (!customer.email) {
+            console.error('❌ 無法獲取客戶 email');
+            return;
+        }
+
+        // 通過 email 查找用戶
+        const usersRef = admin.firestore().collection('users');
+        const snapshot = await usersRef.where('email', '==', customer.email).limit(1).get();
+
+        if (snapshot.empty) {
+            console.error(`❌ 未找到用戶: ${customer.email}`);
+            return;
+        }
+
+        const userId = snapshot.docs[0].id;
+        console.log(`✅ 找到用戶: ${userId}`);
+
+        // 獲取產品信息並添加 Credits
+        for (const item of subscription.items.data) {
+            const priceId = item.price.id;
+            const productId = item.price.product;
+
+            console.log(`🔍 正在獲取產品: ${productId}`);
+            const product = await stripeClient.products.retrieve(productId);
+
+            console.log(`📦 產品信息:`, {
+                productId: product.id,
+                name: product.name,
+                metadata: product.metadata
+            });
+
+            // 根據產品 metadata 添加 Credits
+            const credits = parseInt(product.metadata.monthly_credits || product.metadata.credits || 0);
+            console.log(`🔢 計算得到的 Credits: ${credits}`);
+
+            if (credits > 0) {
+                console.log(`💰 準備添加 ${credits} Credits 給用戶 ${userId}`);
+                await addCredits(userId, credits, {
+                    type: 'subscription_activated',
+                    subscriptionId: subscription.id,
+                    planType: product.metadata.plan_type || 'unknown',
+                    productName: product.name
+                });
+                console.log(`✅ 已成功添加 ${credits} Credits 給用戶 ${userId}`);
+            } else {
+                console.warn(`⚠️ 產品 ${product.name} (${product.id}) 沒有配置 credits，跳過添加`);
+            }
+        }
+
+        // 更新用戶的訂閱狀態
+        await admin.firestore().collection('users').doc(userId).update({
+            subscriptionId: subscription.id,
+            planType: subscription.items.data[0]?.price?.metadata?.plan_type || 'monthly',
+            status: 'active',
+            lastPaymentDate: admin.firestore.FieldValue.serverTimestamp()
+        });
+        console.log(`✅ 用戶 ${userId} 的訂閱狀態已更新`);
+    }
+}
+```
+
+### **步驟 2：重新部署**
+
+```bash
+cd /Users/cavlinyeung/ai-bank-parser
+firebase deploy --only functions:stripeWebhook
+```
+
+### **步驟 3：重新測試**
+
+1. 打開 https://vaultcaddy.com/billing.html
+2. 點擊 **"🧪 測試 Get Started"**
+3. 使用測試卡：**4242 4242 4242 4242**
+4. 完成支付
+
+### **步驟 4：檢查結果**
+
+```bash
+firebase functions:log --only stripeWebhook 2>&1 | tail -100
+```
+
+查找：
+- `✅ 訂閱變更 (測試模式)`
+- `🎉 訂閱已激活，準備添加 Credits`
+- `💰 準備添加 100 Credits 給用戶`
+- `✅ 已成功添加 100 Credits 給用戶`
+
+---
+
+## 🎯 **預期結果**
+
+修改後：
+1. ✅ 支付完成後，Stripe 發送 `customer.subscription.updated` (status: active)
+2. ✅ Firebase Functions 處理該事件
+3. ✅ 從產品 metadata 讀取 `monthly_credits`
+4. ✅ 調用 `addCredits` 函數添加 Credits
+5. ✅ 更新用戶的訂閱狀態
+6. ✅ 用戶的 Credits 從 0 增加到 100
+
+---
+
+## 📞 **如果仍然失敗**
+
+如果修改後仍然失敗，可能需要：
+1. 檢查 Stripe Webhook 配置，確認監聽了 `customer.subscription.updated` 事件
+2. 檢查產品 metadata 是否正確配置了 `monthly_credits`
+3. 檢查 Firestore 安全規則是否允許更新用戶的 Credits
+
+**現在請執行步驟 1-4，然後告訴我結果！** 🙏
+

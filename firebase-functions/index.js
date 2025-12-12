@@ -280,6 +280,7 @@ async function handlePaymentSuccess(paymentIntent) {
  */
 async function handleSubscriptionChange(subscription, isTestMode = false) {
     console.log(`✅ 訂閱變更 (${isTestMode ? '測試模式' : '生產模式'}):`, subscription.id);
+    console.log(`📋 Subscription 詳情:`, JSON.stringify(subscription, null, 2));
     
     // 選擇正確的 Stripe 客戶端
     const stripeClient = isTestMode ? stripeTest : stripeLive;
@@ -297,6 +298,7 @@ async function handleSubscriptionChange(subscription, isTestMode = false) {
         try {
             // 获取customer的email - 使用正確的 Stripe 客戶端
             const customer = await stripeClient.customers.retrieve(subscription.customer);
+            console.log(`📧 Customer email: ${customer.email}`);
             
             if (customer.email) {
                 const usersSnapshot = await db.collection('users')
@@ -331,13 +333,35 @@ async function handleSubscriptionChange(subscription, isTestMode = false) {
     
     // 確定計劃類型和 Credits
     let planType = product.metadata.plan_type || 'monthly';
-    let monthlyCredits = parseInt(product.metadata.monthly_credits || 0);
+    let monthlyCredits = parseInt(product.metadata.monthly_credits || product.metadata.credits || 0);
     
     console.log(`📊 訂閱詳情:`, {
         planType,
         monthlyCredits,
         status: subscription.status
     });
+    
+    // ✨ 新增邏輯：當訂閱變為 active 時，添加 Credits
+    if (subscription.status === 'active' && monthlyCredits > 0) {
+        console.log(`🎉 訂閱已激活，準備添加 ${monthlyCredits} Credits 給用戶 ${userId}`);
+        
+        try {
+            await addCredits(userId, monthlyCredits, {
+                type: 'subscription_activated',
+                subscriptionId: subscription.id,
+                planType: planType,
+                productName: product.name,
+                isTestMode: isTestMode
+            });
+            console.log(`✅ 已成功添加 ${monthlyCredits} Credits 給用戶 ${userId}`);
+        } catch (error) {
+            console.error(`❌ 添加 Credits 失敗:`, error);
+        }
+    } else if (subscription.status !== 'active') {
+        console.log(`⚠️ 訂閱狀態不是 active (當前: ${subscription.status})，跳過添加 Credits`);
+    } else if (monthlyCredits === 0) {
+        console.warn(`⚠️ 產品 ${product.name} (${product.id}) 沒有配置 credits，跳過添加`);
+    }
     
     // 更新用戶訂閱信息
     await db.collection('users').doc(userId).update({
