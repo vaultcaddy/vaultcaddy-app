@@ -1,0 +1,133 @@
+# 🚨 紧急排查：Credits 未增加
+
+## ✅ **已确认的配置**
+1. ✅ Stripe 产品 Metadata 已配置：
+   - `monthly_credits`: `100`
+   - `plan_type`: `monthly`
+2. ✅ Webhook 返回 200 OK
+3. ✅ 代码已修复（500 错误已解决）
+4. ❌ Credits 仍然是 0
+
+---
+
+## 🔍 **最可能的原因：Webhook 没有被触发**
+
+### **检查 1：Webhook 端点是否正确？**
+
+请确认测试模式的 Webhook 端点 URL 是否为：
+```
+https://us-central1-vaultcaddy-production-cbbe2.cloudfunctions.net/stripeWebhook
+```
+
+**如何检查：**
+1. 打开 Stripe Dashboard（TEST MODE）
+2. 前往 **Developers** → **Webhooks**
+3. 找到您的测试 Webhook
+4. 确认 **端点 URL** 是上面的地址
+
+---
+
+## 🔍 **检查 2：Firebase Functions 是否收到 Webhook？**
+
+### **方法 1：查看 Firebase Console 日志**
+1. 打开 Firebase Console: https://console.firebase.google.com/project/vaultcaddy-production-cbbe2/functions
+2. 点击 **Logs** 标签
+3. 查找最近的 **stripeWebhook** 函数调用
+4. 查看是否有以下日志：
+   - `📨 收到测试模式webhook事件: checkout.session.completed`
+   - `✅ 結帳完成 (測試模式)`
+   - `📦 產品信息`
+
+### **方法 2：查看 Stripe Workbench 的响应体**
+1. 在 Stripe Workbench 中，点击 `checkout.session.completed` 事件
+2. 查看 **发送到 Webhook 端点** 部分
+3. 点击 **200 OK** 查看详细响应
+4. 如果响应体为空或只有 `"Webhook received"`，说明函数执行了但没有添加 Credits
+
+---
+
+## 🎯 **最关键的诊断步骤**
+
+### **添加详细日志到代码**
+
+我怀疑代码执行到了 `handleCheckoutCompleted`，但可能在某个步骤失败了。
+
+让我修改代码添加更详细的日志：
+
+```javascript
+async function handleCheckoutCompleted(session, isTestMode = false) {
+    console.log(`✅ 結帳完成 (${isTestMode ? '測試模式' : '生產模式'}):`, session.id);
+    console.log(`📋 Session 详情:`, JSON.stringify(session, null, 2));  // ← 新增
+    
+    // 選擇正確的 Stripe 客戶端
+    const stripeClient = isTestMode ? stripeTest : stripeLive;
+    if (!stripeClient) {
+        console.error(`❌ Stripe 客戶端未配置 (${isTestMode ? '測試模式' : '生產模式'})`);
+        throw new Error('Stripe client not configured');
+    }
+    
+    console.log(`🔧 使用的 Stripe 客戶端: ${isTestMode ? 'stripeTest' : 'stripeLive'}`);  // ← 新增
+    
+    // ... 其他代码 ...
+    
+    // 獲取購買的產品信息
+    console.log(`🔍 開始獲取產品信息...`);  // ← 新增
+    const lineItems = await stripeClient.checkout.sessions.listLineItems(session.id);
+    console.log(`📦 LineItems:`, JSON.stringify(lineItems, null, 2));  // ← 新增
+    
+    for (const item of lineItems.data) {
+        const productId = item.price.product;
+        console.log(`🔍 正在獲取產品: ${productId}`);  // ← 新增
+        const product = await stripeClient.products.retrieve(productId);
+        
+        console.log(`📦 產品信息:`, {
+            productId: product.id,
+            name: product.name,
+            metadata: product.metadata
+        });
+        
+        // 根據產品 metadata 添加 Credits
+        const credits = parseInt(product.metadata.monthly_credits || product.metadata.credits || 0);
+        console.log(`🔢 計算得到的 Credits: ${credits}`);  // ← 新增
+        
+        if (credits > 0) {
+            console.log(`💰 準備添加 ${credits} Credits 給用戶 ${userId}`);
+            await addCredits(userId, credits, {
+                source: 'purchase',
+                stripeSessionId: session.id,
+                productName: product.name,
+                amount: session.amount_total / 100,
+                currency: session.currency,
+                planType: product.metadata.plan_type || 'unknown'
+            });
+            console.log(`✅ 成功添加 ${credits} Credits`);
+        } else {
+            console.log(`⚠️ 產品沒有配置 Credits: ${product.name}`);
+            console.log(`⚠️ product.metadata:`, JSON.stringify(product.metadata, null, 2));  // ← 新增
+        }
+    }
+}
+```
+
+---
+
+## 🛠️ **立即修复方案**
+
+我现在将修改代码添加这些详细日志，然后您再进行一次测试支付。
+
+这样我们就能准确知道问题出在哪里了！
+
+---
+
+## 📋 **备用方案：手动添加 Credits**
+
+如果急需测试，可以暂时手动添加 Credits：
+
+1. 打开 Firebase Console: https://console.firebase.google.com/project/vaultcaddy-production-cbbe2/firestore
+2. 前往 **Firestore Database**
+3. 找到 `users` 集合
+4. 找到您的用户（vaultcaddy@gmail.com）
+5. 编辑 `credits` 字段，改为 `100`
+
+但这只是临时方案，我们需要修复 Webhook 的问题。
+

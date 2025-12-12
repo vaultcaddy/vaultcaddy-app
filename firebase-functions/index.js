@@ -151,6 +151,7 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
  */
 async function handleCheckoutCompleted(session, isTestMode = false) {
     console.log(`✅ 結帳完成 (${isTestMode ? '測試模式' : '生產模式'}):`, session.id);
+    console.log(`📋 Session 详情:`, JSON.stringify(session, null, 2));
     
     // 選擇正確的 Stripe 客戶端
     const stripeClient = isTestMode ? stripeTest : stripeLive;
@@ -158,9 +159,11 @@ async function handleCheckoutCompleted(session, isTestMode = false) {
         console.error(`❌ Stripe 客戶端未配置 (${isTestMode ? '測試模式' : '生產模式'})`);
         throw new Error('Stripe client not configured');
     }
+    console.log(`🔧 使用的 Stripe 客戶端: ${isTestMode ? 'stripeTest' : 'stripeLive'}`);
     
     // 尝试获取用户ID（支持多种方式）
     let userId = session.client_reference_id || session.metadata?.userId;
+    console.log(`🔍 初始 userId: ${userId}`);
     
     // 如果没有userId，尝试通过email查找
     if (!userId && session.customer_email) {
@@ -196,12 +199,17 @@ async function handleCheckoutCompleted(session, isTestMode = false) {
         console.error('❌ 無法獲取用戶 ID，session:', JSON.stringify(session, null, 2));
         return;
     }
+    console.log(`✅ 最終 userId: ${userId}`);
     
     // 獲取購買的產品信息 - 使用正確的 Stripe 客戶端
+    console.log(`🔍 開始獲取產品信息...`);
     const lineItems = await stripeClient.checkout.sessions.listLineItems(session.id);
+    console.log(`📦 LineItems 數量: ${lineItems.data.length}`);
+    console.log(`📦 LineItems 详情:`, JSON.stringify(lineItems, null, 2));
     
     for (const item of lineItems.data) {
         const productId = item.price.product;
+        console.log(`🔍 正在獲取產品: ${productId}`);
         const product = await stripeClient.products.retrieve(productId);
         
         console.log(`📦 產品信息:`, {
@@ -209,9 +217,13 @@ async function handleCheckoutCompleted(session, isTestMode = false) {
             name: product.name,
             metadata: product.metadata
         });
+        console.log(`📦 完整產品对象:`, JSON.stringify(product, null, 2));
         
         // 根據產品 metadata 添加 Credits
         const credits = parseInt(product.metadata.monthly_credits || product.metadata.credits || 0);
+        console.log(`🔢 計算得到的 Credits: ${credits}`);
+        console.log(`🔢 product.metadata.monthly_credits: ${product.metadata.monthly_credits}`);
+        console.log(`🔢 product.metadata.credits: ${product.metadata.credits}`);
         
         if (credits > 0) {
             console.log(`💰 準備添加 ${credits} Credits 給用戶 ${userId}`);
@@ -226,8 +238,10 @@ async function handleCheckoutCompleted(session, isTestMode = false) {
             console.log(`✅ 成功添加 ${credits} Credits`);
         } else {
             console.log(`⚠️ 產品沒有配置 Credits: ${product.name}`);
+            console.log(`⚠️ product.metadata 完整内容:`, JSON.stringify(product.metadata, null, 2));
         }
     }
+    console.log(`✅ handleCheckoutCompleted 執行完成`);
 }
 
 /**
