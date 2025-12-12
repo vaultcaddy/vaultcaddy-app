@@ -410,16 +410,12 @@ async function handleSubscriptionChange(subscription, isTestMode = false) {
         throw updateError;
     }
     
-    // 如果是新訂閱或續訂，添加當月 Credits
+    // 🔥 不要在这里添加 Credits！
+    // Credits 应该只在 checkout.session.completed 事件中添加
+    // 这里只负责更新订阅信息
     if (subscription.status === 'active' && monthlyCredits > 0) {
-        console.log(`💰 準備添加 ${monthlyCredits} Credits（訂閱）`);
-        await addCredits(userId, monthlyCredits, {
-            source: 'subscription',
-            planType: planType,
-            period: `${new Date(subscription.current_period_start * 1000).toISOString()} - ${new Date(subscription.current_period_end * 1000).toISOString()}`,
-            subscriptionId: subscription.id
-        });
-        console.log(`✅ 成功添加 ${monthlyCredits} Credits（訂閱）`);
+        console.log(`ℹ️ 訂閱狀態為 active，Credits 已在 checkout.session.completed 事件中添加`);
+        console.log(`ℹ️ 此函数只更新订阅信息，不添加 Credits`);
     }
 }
 
