@@ -364,19 +364,25 @@ async function handleSubscriptionChange(subscription, isTestMode = false) {
     }
     
     // 更新用戶訂閱信息
-    await db.collection('users').doc(userId).update({
-        subscription: {
-            stripeSubscriptionId: subscription.id,
-            stripeCustomerId: subscription.customer,
-            status: subscription.status,
-            planType: planType,
-            monthlyCredits: monthlyCredits,
-            currentPeriodStart: new Date(subscription.current_period_start * 1000),
-            currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-            cancelAtPeriodEnd: subscription.cancel_at_period_end
-        },
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
-    });
+    try {
+        await db.collection('users').doc(userId).update({
+            subscription: {
+                stripeSubscriptionId: subscription.id,
+                stripeCustomerId: subscription.customer,
+                status: subscription.status,
+                planType: planType,
+                monthlyCredits: monthlyCredits,
+                currentPeriodStart: admin.firestore.Timestamp.fromMillis(subscription.current_period_start * 1000),
+                currentPeriodEnd: admin.firestore.Timestamp.fromMillis(subscription.current_period_end * 1000),
+                cancelAtPeriodEnd: subscription.cancel_at_period_end
+            },
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        console.log(`✅ 用戶訂閱信息已更新: ${userId}`);
+    } catch (updateError) {
+        console.error(`❌ 更新用戶訂閱信息失敗:`, updateError);
+        throw updateError;
+    }
     
     // 如果是新訂閱或續訂，添加當月 Credits
     if (subscription.status === 'active' && monthlyCredits > 0) {

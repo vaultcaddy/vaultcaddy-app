@@ -194,6 +194,46 @@ class SimpleAuth {
             const provider = new firebase.auth.GoogleAuthProvider();
             const result = await this.auth.signInWithPopup(provider);
             console.log('✅ Google 登入成功');
+            
+            // 🎯 檢查並創建 Firestore 用戶文檔（如果不存在）
+            if (result.user) {
+                const db = firebase.firestore();
+                const userRef = db.collection('users').doc(result.user.uid);
+                const userDoc = await userRef.get();
+                
+                if (!userDoc.exists) {
+                    console.log('📝 首次 Google 登入，創建 Firestore 用戶文檔...');
+                    const normalizedEmail = result.user.email.toLowerCase().trim();
+                    
+                    const userData = {
+                        email: normalizedEmail,
+                        displayName: result.user.displayName || '',
+                        credits: 0,
+                        currentCredits: 0,
+                        emailVerified: result.user.emailVerified,
+                        photoURL: result.user.photoURL || '',
+                        provider: 'google',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+                    
+                    await userRef.set(userData);
+                    console.log('✅ Firestore 用戶文檔已創建（Google）');
+                    console.log('   Email:', normalizedEmail);
+                    console.log('   UID:', result.user.uid);
+                    
+                    // 驗證文檔創建成功
+                    const verifyDoc = await userRef.get();
+                    if (!verifyDoc.exists || !verifyDoc.data().email) {
+                        console.error('❌ Google 登入文檔創建驗證失敗');
+                    } else {
+                        console.log('✅ Google 登入用戶文檔驗證成功');
+                    }
+                } else {
+                    console.log('✅ Firestore 用戶文檔已存在');
+                }
+            }
+            
             return result.user;
         } catch (error) {
             console.error('❌ Google 登入失敗:', error);
