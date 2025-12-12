@@ -131,9 +131,6 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
             case 'checkout.session.completed':
                 await handleCheckoutCompleted(event.data.object, isTestMode);
                 break;
-            case 'payment_intent.succeeded':
-                await handlePaymentSuccess(event.data.object);
-                break;
             case 'customer.subscription.created':
             case 'customer.subscription.updated':
                 await handleSubscriptionChange(event.data.object, isTestMode);
@@ -142,8 +139,8 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
                 await handleSubscriptionCancelled(event.data.object);
                 break;
             default:
-                console.log(`⚠️ 未處理的事件類型: ${event.type}`);
-                console.log('📄 完整 Event Object:', JSON.stringify(event, null, 2));
+                console.log(`ℹ️ 收到未配置處理的事件: ${event.type}`);
+                console.log(`💡 如果這個事件頻繁出現，建議在 Stripe Dashboard 中移除對此事件的監聽`);
         }
         
         res.status(200).json({ received: true });
@@ -341,27 +338,10 @@ async function handleSubscriptionChange(subscription, isTestMode = false) {
         status: subscription.status
     });
     
-    // ✨ 新增邏輯：當訂閱變為 active 時，添加 Credits
-    if (subscription.status === 'active' && monthlyCredits > 0) {
-        console.log(`🎉 訂閱已激活，準備添加 ${monthlyCredits} Credits 給用戶 ${userId}`);
-        
-        try {
-            await addCredits(userId, monthlyCredits, {
-                type: 'subscription_activated',
-                subscriptionId: subscription.id,
-                planType: planType,
-                productName: product.name,
-                isTestMode: isTestMode
-            });
-            console.log(`✅ 已成功添加 ${monthlyCredits} Credits 給用戶 ${userId}`);
-        } catch (error) {
-            console.error(`❌ 添加 Credits 失敗:`, error);
-        }
-    } else if (subscription.status !== 'active') {
-        console.log(`⚠️ 訂閱狀態不是 active (當前: ${subscription.status})，跳過添加 Credits`);
-    } else if (monthlyCredits === 0) {
-        console.warn(`⚠️ 產品 ${product.name} (${product.id}) 沒有配置 credits，跳過添加`);
-    }
+    // ⚠️ 不在这里添加 Credits！
+    // Credits 应该只在 checkout.session.completed 事件中添加一次
+    // 这里只负责更新订阅信息
+    console.log(`ℹ️ 訂閱狀態: ${subscription.status}，Credits 将在 checkout.session.completed 事件中添加`);
     
     // 更新用戶訂閱信息
     try {
