@@ -1,160 +1,79 @@
-# 🔍 诊断：Credits 未增加的原因
+# 🔍 診斷：Credits 未增加的原因
 
-## ✅ **已确认的事实**
-1. Stripe Webhook 返回 **200 OK** - 函数执行完成
-2. Credits 仍然是 **0** - 未增加
-3. 签名验证已通过（从 403 → 500 → 200）
-4. Stripe 客户端选择问题已修复（使用正确的测试客户端）
+## ✅ **已確認的事實**
+
+1. ✅ Webhook 返回 200 OK（圖2-3中顯示成功）
+2. ✅ 產品 Metadata 配置正確：
+   - `monthly_credits`: `100`
+   - `plan_type`: `monthly`
+3. ❌ **Credits 仍然是 0（圖1中顯示）**
 
 ---
 
-## ❓ **可能的原因**
+## 🔍 **問題原因：訂閱狀態為 "incomplete"**
 
-### **原因 1：Stripe 测试产品 Metadata 未配置 `monthly_credits`**
+從 Stripe Webhook 日誌中發現，收到的事件類型是 **`customer.subscription.created`**，而不是 **`checkout.session.completed`**！
 
-**关键点：**
-- `handleCheckoutCompleted` 函数会读取产品的 `metadata.monthly_credits` 或 `metadata.credits`
-- 如果这些字段为空或为 0，**不会调用 `addCredits`**
-
-**代码逻辑：**
-```javascript
-// 根據產品 metadata 添加 Credits
-const credits = parseInt(product.metadata.monthly_credits || product.metadata.credits || 0);
-
-if (credits > 0) {
-    // 只有当 credits > 0 时才会添加
-    console.log(`💰 準備添加 ${credits} Credits 給用戶 ${userId}`);
-    await addCredits(userId, credits, {...});
-} else {
-    console.log(`⚠️ 產品沒有配置 Credits: ${product.name}`);
-}
+更重要的是，訂閱的狀態為：
+```json
+"status": "incomplete"
 ```
 
-**检查方法：**
-1. 打开 Stripe Dashboard（测试模式）
-2. 前往 **Products** → **你的测试月费产品**（price_1Scj13JmiQ31C0GT4TJsWzFg）
-3. 查看 **Metadata** 是否包含：
-   - `monthly_credits: 100`（或 `credits: 100`）
-   - `plan_type: pro`
+**這說明：**
+- 測試支付還沒有完成
+- 訂閱還處於 "incomplete" 狀態
+- `checkout.session.completed` 事件還沒有被觸發
+- 因此，Credits 添加的邏輯沒有執行
 
 ---
 
-### **原因 2：Firebase Functions 日志未显示详细信息**
+## 💡 **解決方案**
 
-**可能原因：**
-- 日志延迟（Firebase 日志有时会延迟几分钟）
-- 日志级别过滤
+### **步驟 1: 確認支付是否完成**
+1. 打開 Stripe Dashboard（TEST MODE）
+2. 前往 **Payments** 頁面
+3. 查看最近的支付是否顯示為 "Succeeded"
 
-**检查方法：**
-1. 前往 Firebase Console
-2. 打开 **Functions** → **Logs**
-3. 查看 **stripeWebhook** 函数的最新日志
-4. 搜索关键词：
-   - `✅ 結帳完成 (測試模式)`
-   - `💰 準備添加 ... Credits`
-   - `⚠️ 產品沒有配置 Credits`
+### **步驟 2: 重新進行測試支付**
+如果支付沒有完成：
+1. 打開 https://vaultcaddy.com/billing.html
+2. 點擊 **"🧪 測試 Get Started"** 按鈕
+3. 使用測試卡：**4242 4242 4242 4242**
+4. 完整填寫表單並提交
+5. 確保看到 "支付成功" 的消息
 
----
-
-### **原因 3：用户 ID 未找到**
-
-**可能原因：**
-- Stripe Checkout Session 的 `metadata` 或 `client_reference_id` 未传递 `userId`
-- 用户邮箱在 Firebase 中不存在
-
-**检查方法：**
-- 查看 Firebase Functions 日志中是否有：
-  - `❌ 無法獲取用戶 ID`
-  - `🔍 嘗試通過 email 查找用戶`
+### **步驟 3: 查看 Webhook 事件**
+支付完成後，應該會觸發以下 Webhook 事件：
+1. `checkout.session.completed` - **這個事件會觸發 Credits 添加**
+2. `customer.subscription.created`
+3. `invoice.payment_succeeded`
 
 ---
 
-## 📋 **下一步排查**
+## 📋 **檢查清單**
 
-### **步骤 1：检查 Stripe 测试产品 Metadata**
-1. 打开 Stripe Dashboard（确认在 **TEST MODE**）
-2. 前往 **Products** 页面
-3. 找到您的测试月费产品（应该是与 `price_1Scj13JmiQ31C0GT4TJsWzFg` 关联的产品）
-4. 点击进入产品详情页
-5. 滚动到 **Metadata** 部分
-6. 确认是否包含以下字段：
-   - **monthly_credits**: `100`（或您想要的数值）
-   - **plan_type**: `pro`
+請按順序檢查以下項目：
 
-**如果 Metadata 为空或没有 `monthly_credits` 字段，这就是问题所在！**
+- [ ] 測試支付是否已經完成？
+- [ ] Stripe Dashboard（TEST MODE）中是否顯示 "Succeeded" 狀態？
+- [ ] Webhook 是否收到 `checkout.session.completed` 事件？
+- [ ] Firebase Functions 日誌中是否有 "✅ 結帳完成 (測試模式)" 的消息？
+- [ ] Firebase Functions 日誌中是否有 "💰 準備添加 XXX Credits" 的消息？
 
 ---
 
-### **步骤 2：查看 Firebase Functions 详细日志**
-1. 前往 Firebase Console: https://console.firebase.google.com/project/vaultcaddy-production-cbbe2/functions
-2. 点击 **Logs** 标签
-3. 搜索最近的 **stripeWebhook** 函数执行记录
-4. 查找以下关键日志：
-   - `📨 收到测试模式webhook事件: checkout.session.completed`
-   - `✅ 結帳完成 (測試模式)`
-   - `📦 產品信息` - 显示产品的 metadata
-   - `💰 準備添加 ... Credits` - 如果看到这个，说明准备添加 Credits
-   - `⚠️ 產品沒有配置 Credits` - 如果看到这个，说明 metadata 未配置
+## 🚨 **如果上述步驟都完成了，但 Credits 仍然是 0**
+
+請執行以下命令查看詳細日誌：
+
+```bash
+firebase functions:log --only stripeWebhook
+```
+
+然後將日誌內容發給我，我會幫您進一步診斷。
 
 ---
 
-## 🎯 **最可能的原因**
+## 📝 **備註**
 
-根据经验，**最可能的原因是：**
-
-✅ **Stripe 测试产品的 Metadata 未配置 `monthly_credits` 字段**
-
-因为：
-1. Webhook 返回 200 OK，说明代码执行完成
-2. Credits 未增加，说明 `addCredits` 未被调用
-3. 代码逻辑中，只有 `credits > 0` 时才会调用 `addCredits`
-
----
-
-## 🛠️ **快速解决方案**
-
-### 如果 Metadata 未配置：
-
-1. 打开 Stripe Dashboard（测试模式）
-2. 前往 **Products**
-3. 找到您的测试月费产品
-4. 编辑产品，添加 **Metadata**：
-   - Key: `monthly_credits`
-   - Value: `100`（或您想要的数值）
-5. 再添加一个：
-   - Key: `plan_type`
-   - Value: `pro`
-6. 保存
-
-**然后重新进行测试支付！**
-
----
-
-## 📞 **请您确认**
-
-请您确认以下内容：
-
-1. ✅ Stripe 测试产品的 **Metadata** 是否包含 `monthly_credits` 字段？
-2. ✅ Firebase Functions 日志中是否有 `📦 產品信息` 的输出？如果有，metadata 的内容是什么？
-3. ✅ Firebase Functions 日志中是否有 `💰 準備添加 ... Credits` 或 `⚠️ 產品沒有配置 Credits` 的输出？
-
-请提供以上信息，我可以帮您进一步诊断！
-
----
-
-## ✅ **问题已找到！**
-
-用户已确认 Metadata 配置如下：
-- `monthly_credits`: `1200`
-- `plan_type`: `yearly`
-
-**问题：**
-1. 这是一个**月费**产品（间隔：每 1 个月），但 `plan_type` 设置为 `yearly`
-2. `monthly_credits` 设置为 `1200`（年费数量），应该是 `100`（月费数量）
-3. **之前的测试支付是在添加 Metadata 之前完成的，所以没有 Credits**
-
-**解决方案：**
-1. 将 `plan_type` 改为 `monthly`
-2. 将 `monthly_credits` 改为 `100`
-3. **重新进行测试支付**
-
+Stripe 測試模式的支付通常會立即完成，但有時可能需要幾秒鐘。如果您在支付後立即查看 Firebase，可能還沒有收到 Webhook 事件。請稍等片刻後再查看。

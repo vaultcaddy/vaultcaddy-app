@@ -50,6 +50,13 @@ function getTransporter() {
 
 // Stripe Webhook - Using req.rawBody which is available in Firebase Functions
 exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
+    console.log('========== WEBHOOK START ==========');
+    console.log('⏰ 时间:', new Date().toISOString());
+    console.log('🔧 HTTP Method:', req.method);
+    console.log('📍 Request Path:', req.path);
+    console.log('🔑 Headers:', JSON.stringify(req.headers, null, 2));
+    console.log('========================================');
+    
     // 设置CORS headers
     res.set('Access-Control-Allow-Origin', '*');
     res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -57,6 +64,7 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
     
     // Handle OPTIONS preflight request
     if (req.method === 'OPTIONS') {
+        console.log('ℹ️ OPTIONS request received, sending 204');
         res.status(204).send('');
         return;
     }
@@ -134,7 +142,8 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
                 await handleSubscriptionCancelled(event.data.object);
                 break;
             default:
-                console.log(`未處理的事件類型: ${event.type}`);
+                console.log(`⚠️ 未處理的事件類型: ${event.type}`);
+                console.log('📄 完整 Event Object:', JSON.stringify(event, null, 2));
         }
         
         res.status(200).json({ received: true });
