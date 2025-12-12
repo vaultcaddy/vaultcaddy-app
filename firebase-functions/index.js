@@ -125,6 +125,24 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
     
     console.log(`📨 收到${isTestMode ? '测试' : '生产'}模式webhook事件: ${event.type}, ID: ${event.id}`);
     
+    // 🔒 幂等性检查：防止重复处理同一个事件
+    const processedEventsRef = db.collection('processedStripeEvents').doc(event.id);
+    const processedEventDoc = await processedEventsRef.get();
+    
+    if (processedEventDoc.exists) {
+        console.log(`⚠️ 事件 ${event.id} 已经处理过，跳过处理`);
+        return res.status(200).json({ received: true, skipped: true, reason: 'already_processed' });
+    }
+    
+    // 記錄事件已處理（先记录，防止并发）
+    await processedEventsRef.set({
+        eventId: event.id,
+        eventType: event.type,
+        processedAt: admin.firestore.FieldValue.serverTimestamp(),
+        isTestMode: isTestMode
+    });
+    console.log(`✅ 事件 ${event.id} 已标记为处理中`);
+    
     // 處理不同類型的 Stripe 事件
     try {
         switch (event.type) {
@@ -142,10 +160,13 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
                 console.log(`ℹ️ 收到未配置處理的事件: ${event.type}`);
                 console.log(`💡 如果這個事件頻繁出現，建議在 Stripe Dashboard 中移除對此事件的監聽`);
         }
-        
+
         res.status(200).json({ received: true });
     } catch (error) {
         console.error('❌ 处理webhook事件时发生错误:', error);
+        // 如果处理失败，删除已处理标记，允许重试
+        await processedEventsRef.delete();
+        console.log(`⚠️ 事件 ${event.id} 处理失败，已删除处理标记，允许重试`);
         res.status(500).json({ error: 'Webhook processing failed' });
     }
 });
