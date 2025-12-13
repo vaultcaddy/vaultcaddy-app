@@ -1669,7 +1669,7 @@ exports.createStripeCheckoutSession = functions.https.onCall(async (data, contex
             usagePriceId: 'price_1Sdn7pJmiQ31C0GTTK1yVopH'  // 測試月費按量計費（支持多货币）
         },
         yearly: {
-            basePriceId: 'price_1Sdn7qJmiQ31C0GT57jbZfIg',  // 測試年費（支持 HKD/USD/GBP/JPY/KRW/EUR）
+            basePriceId: 'price_1SdoMxJmiQ31C0GTsgCDQz8n',  // 測試年費 HKD$552（支持 HKD/USD/GBP/JPY/KRW/EUR）
             usagePriceId: 'price_1Sdn7qJmiQ31C0GTwJVp4q4Q'  // 測試年費按量計費（支持多货币）
         }
     };
