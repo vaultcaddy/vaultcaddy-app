@@ -584,17 +584,136 @@ async function handleSubscriptionChange(subscription, isTestMode = false) {
 async function handleSubscriptionCancelled(subscription) {
     console.log('❌ 訂閱已取消:', subscription.id);
     
-    const userId = subscription.metadata?.userId;
+    let userId = subscription.metadata?.userId;
+    
+    // 如果没有userId，尝试通过customer查找
+    if (!userId && subscription.customer) {
+        console.log(`🔍 嘗試通過 Stripe Customer 查找用戶: ${subscription.customer}`);
+        try {
+            const isTestMode = subscription.id.startsWith('sub_');
+            const stripeClient = isTestMode ? stripeTest : stripeLive;
+            
+            if (stripeClient) {
+                const customer = await stripeClient.customers.retrieve(subscription.customer);
+                console.log(`📧 Customer email: ${customer.email}`);
+                
+                if (customer.email) {
+                    const usersSnapshot = await db.collection('users')
+                        .where('email', '==', customer.email)
+                        .limit(1)
+                        .get();
+                    
+                    if (!usersSnapshot.empty) {
+                        userId = usersSnapshot.docs[0].id;
+                        console.log(`✅ 通過 customer email 找到用戶: ${userId}`);
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('❌ 查找用戶失敗:', error);
+        }
+    }
+    
     if (!userId) {
         console.error('❌ 無法獲取用戶 ID');
         return;
     }
     
-    // 更新用戶訂閱狀態
-    await db.collection('users').doc(userId).update({
-        'subscription.status': 'cancelled',
-        'subscription.cancelledAt': admin.firestore.FieldValue.serverTimestamp()
-    });
+    console.log(`📊 處理用戶訂閱取消: ${userId}`);
+    
+    try {
+        // 獲取用戶當前數據
+        const userDoc = await db.collection('users').doc(userId).get();
+        const userData = userDoc.data();
+        const currentCredits = userData?.currentCredits || userData?.credits || 0;
+        const totalCreditsUsed = userData?.totalCreditsUsed || 0;
+        
+        console.log(`📊 訂閱取消時的用戶數據:`, {
+            credits: currentCredits,
+            totalCreditsUsed: totalCreditsUsed,
+            planType: userData?.planType
+        });
+        
+        // 🔥 重要：訂閱取消後，最多保留 50 個 Credits
+        const MAX_FREE_CREDITS = 50;
+        let finalCredits = currentCredits;
+        let clearedCredits = 0;
+        
+        if (currentCredits > MAX_FREE_CREDITS) {
+            clearedCredits = currentCredits - MAX_FREE_CREDITS;
+            finalCredits = MAX_FREE_CREDITS;
+            console.log(`🔥 清零超出的 Credits: ${currentCredits} → ${finalCredits}（清除 ${clearedCredits} 個）`);
+        } else if (currentCredits < 0) {
+            // 負數 Credits 保持不變（用戶欠費）
+            console.log(`⚠️ Credits 為負數（${currentCredits}），保持不變`);
+        } else {
+            // Credits <= 50，保持不變
+            console.log(`✅ Credits 未超過 ${MAX_FREE_CREDITS}，保持不變: ${currentCredits}`);
+        }
+        
+        // 更新用戶狀態
+        await db.collection('users').doc(userId).update({
+            planType: 'Free Plan', // ← 改為 Free Plan
+            subscriptionPlan: null,
+            subscription: null, // ← 刪除訂閱信息
+            credits: finalCredits, // ← 更新為最終 Credits
+            currentCredits: finalCredits, // ← 同步更新
+            cancelledAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        
+        console.log(`✅ 用戶已降級為 Free Plan: ${userId}，Credits: ${currentCredits} → ${finalCredits}`);
+        
+        // 記錄訂閱取消事件
+        await db.collection('users').doc(userId).collection('creditsHistory').add({
+            type: 'subscription_cancelled',
+            amount: 0,
+            description: `訂閱已取消（原有 ${currentCredits} Credits，保留 ${finalCredits} Credits${clearedCredits > 0 ? `，清除 ${clearedCredits} Credits` : ''}）`,
+            metadata: {
+                originalCredits: currentCredits,
+                finalCredits: finalCredits,
+                clearedCredits: clearedCredits,
+                totalCreditsUsed: totalCreditsUsed,
+                subscriptionId: subscription.id
+            },
+            createdAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        
+        // 如果清除了 Credits，記錄清零事件
+        if (clearedCredits > 0) {
+            await db.collection('users').doc(userId).collection('creditsHistory').add({
+                type: 'clear',
+                amount: -clearedCredits,
+                description: `訂閱取消，清除超出的 ${clearedCredits} Credits（保留上限：${MAX_FREE_CREDITS}）`,
+                metadata: {
+                    before: currentCredits,
+                    after: finalCredits,
+                    cleared: clearedCredits,
+                    maxFreeCredits: MAX_FREE_CREDITS
+                },
+                createdAt: admin.firestore.FieldValue.serverTimestamp()
+            });
+        }
+        
+        // ⚠️ 如果 Credits 是負數，記錄警告
+        if (finalCredits < 0) {
+            console.warn(`⚠️ 用戶 ${userId} 訂閱取消時 Credits 為負數: ${finalCredits}`);
+            console.warn(`⚠️ 用戶需要購買 Credits 才能繼續使用`);
+            
+            await db.collection('users').doc(userId).collection('creditsHistory').add({
+                type: 'warning',
+                amount: 0,
+                description: `訂閱取消，Credits 為負數（${finalCredits}），需要購買 Credits`,
+                metadata: {
+                    negativeCredits: finalCredits
+                },
+                createdAt: admin.firestore.FieldValue.serverTimestamp()
+            });
+        }
+        
+    } catch (error) {
+        console.error(`❌ 處理訂閱取消失敗:`, error);
+    }
 }
 
 /**
@@ -691,6 +810,30 @@ async function handleInvoicePaid(invoice, isTestMode = false) {
         const planType = product.metadata.plan_type || 'monthly';
         
         console.log(`🔢 計算得到的 Credits: ${credits}`);
+        
+        // ⚠️ 檢查訂閱是否已被取消
+        if (subscription.cancel_at_period_end) {
+            console.log(`⚠️ 訂閱已被用戶取消（cancel_at_period_end = true）`);
+            console.log(`⚠️ 這是最終賬單，只收取超額費用，不添加新 Credits`);
+            console.log(`⚠️ 訂閱將在 ${new Date(subscription.current_period_end * 1000).toISOString()} 結束`);
+            
+            // 記錄最終賬單
+            await db.collection('users').doc(userId).collection('creditsHistory').add({
+                type: 'final_invoice',
+                amount: 0,
+                description: `訂閱最終賬單（已取消，不添加新 Credits）`,
+                metadata: {
+                    invoiceId: invoice.id,
+                    subscriptionId: subscription.id,
+                    amountPaid: invoice.amount_paid / 100,
+                    currency: invoice.currency
+                },
+                createdAt: admin.firestore.FieldValue.serverTimestamp()
+            });
+            
+            console.log(`✅ 最終賬單已記錄，訂閱將自動結束`);
+            return; // ← 不添加新 Credits
+        }
         
         if (credits > 0) {
             console.log(`💰 準備為續費處理 Credits：用戶 ${userId}`);
