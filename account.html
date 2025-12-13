@@ -1790,30 +1790,32 @@
     </script>
 
     <!-- 創建項目模態框 -->
-    <div class="modal-overlay" id="createProjectModal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>創建新項目</h2>
-                <button class="modal-close" onclick="closeCreateProjectModal()">
-                    <i class="fas fa-times"></i>
+    <div id="createProjectModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 12px; padding: 2rem; width: 90%; max-width: 500px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
+            <h2 style="font-size: 1.5rem; font-weight: 600; color: #1f2937; margin: 0 0 1rem 0;">創建新項目</h2>
+            <p style="color: #6b7280; font-size: 0.875rem; margin: 0 0 1.5rem 0;">輸入項目名稱以創建新的文檔項目</p>
+            
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem;">項目名稱</label>
+                <input 
+                    type="text" 
+                    id="projectName" 
+                    placeholder="例如：2025年1月發票"
+                    style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem; color: #1f2937; box-sizing: border-box;"
+                    onkeypress="if(event.key==='Enter') createProject()">
+            </div>
+            
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button 
+                    onclick="closeCreateProjectModal()" 
+                    style="background: #ffffff; border: 1px solid #d1d5db; color: #374151; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500;">
+                    取消
                 </button>
-            </div>
-            <div class="modal-body">
-                <p style="color: #6b7280; font-size: 0.875rem; margin-bottom: 1rem;">輸入項目名稱以創建新的文檔項目</p>
-                <div class="form-group">
-                    <label class="form-label" for="projectName">項目名稱</label>
-                    <input 
-                        type="text" 
-                        id="projectName" 
-                        class="form-input" 
-                        placeholder="例如：2025年1月發票"
-                        onkeypress="if(event.key === 'Enter') createProject()"
-                    >
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-cancel" onclick="closeCreateProjectModal()">取消</button>
-                <button class="btn-create" id="createBtn" onclick="createProject()">創建</button>
+                <button 
+                    onclick="createProject()" 
+                    style="background: #3b82f6; border: none; color: white; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500;">
+                    創建
+                </button>
             </div>
         </div>
     </div>
@@ -1823,20 +1825,7 @@
         function openCreateProjectModal() {
             const modal = document.getElementById('createProjectModal');
             const input = document.getElementById('projectName');
-            
-            // 🔥 使用内联样式确保模态框正确显示
             modal.style.display = 'flex';
-            modal.style.position = 'fixed';
-            modal.style.top = '0';
-            modal.style.left = '0';
-            modal.style.right = '0';
-            modal.style.bottom = '0';
-            modal.style.background = 'rgba(0, 0, 0, 0.5)';
-            modal.style.zIndex = '9999';
-            modal.style.alignItems = 'center';
-            modal.style.justifyContent = 'center';
-            
-            modal.classList.add('active');
             input.value = '';
             input.focus();
         }
@@ -1844,11 +1833,7 @@
         // 關閉創建項目模態框
         function closeCreateProjectModal() {
             const modal = document.getElementById('createProjectModal');
-            
-            // 🔥 使用内联样式隐藏模态框
             modal.style.display = 'none';
-            
-            modal.classList.remove('active');
         }
 
         // 創建新項目
@@ -1888,9 +1873,8 @@
         }
 
         // 點擊遮罩關閉模態框
-        document.addEventListener('click', function(e) {
-            const modal = document.getElementById('createProjectModal');
-            if (e.target === modal) {
+        document.getElementById('createProjectModal').addEventListener('click', function(e) {
+            if (e.target === this) {
                 closeCreateProjectModal();
             }
         });

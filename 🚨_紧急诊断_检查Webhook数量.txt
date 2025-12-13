@@ -1,0 +1,181 @@
+# 🚨 紧急诊断：检查 Webhook 数量
+
+## 🔍 **诊断步骤**
+
+### **步骤 1：检查是否有多个 Webhook 端点**
+
+这是最可能的原因！如果有 2 个 Webhook 都指向同一个 URL，每个都会触发一次 `checkout.session.completed`，导致 Credits 被添加 2 次。
+
+**操作步骤**：
+
+1. **打开 Stripe Dashboard（测试模式）**：
+   https://dashboard.stripe.com/test/webhooks
+
+2. **查看所有 Webhook 端点**
+
+3. **确认**：
+   - 有多少个 Webhook 端点？
+   - 每个端点的 URL 是什么？
+
+**预期结果**：
+- ✅ 应该只有 **1 个** Webhook 端点
+- ✅ URL 应该是：`https://us-central1-vaultcaddy-production-cbbe2.cloudfunctions.net/stripeWebhook`
+
+**如果有 2 个或更多 Webhook**：
+- ❌ 这就是问题所在！
+- ❌ 每个 Webhook 都会触发一次事件处理
+- ❌ 导致 Credits 被添加多次
+
+**解决方案**：
+- 删除所有旧的 Webhook
+- 只保留一个
+
+---
+
+### **步骤 2：检查 Firebase Functions 日志**
+
+1. **打开 Firebase Console**：
+   https://console.firebase.google.com/project/vaultcaddy-production-cbbe2/functions
+
+2. **点击 `stripeWebhook` 函数**
+
+3. **点击"日志"标签**
+
+4. **查找最近的支付记录**（刚刚的测试）
+
+5. **查找关键日志**：
+
+**应该看到的日志（正确）**：
+```
+✅ 事件 evt_xxxxx 已标记为处理中（首次处理）
+✅ 結帳完成 (測試模式): cs_test_xxxxx
+💰 準備添加 100 Credits 給用戶 xxxxx
+✅ 成功添加 100 Credits
+```
+
+**如果看到 2 次**：
+```
+✅ 事件 evt_xxxxx 已标记为处理中（首次处理）
+✅ 結帳完成 (測試模式): cs_test_xxxxx
+💰 準備添加 100 Credits 給用戶 xxxxx
+✅ 成功添加 100 Credits
+
+✅ 事件 evt_yyyyy 已标记为处理中（首次处理）  ← 不同的 event ID！
+✅ 結帳完成 (測試模式): cs_test_xxxxx
+💰 準備添加 100 Credits 給用戶 xxxxx
+✅ 成功添加 100 Credits
+```
+
+**分析**：
+- 如果有 2 个不同的 event ID（`evt_xxxxx` 和 `evt_yyyyy`）
+- 说明 Stripe 发送了 2 个不同的 `checkout.session.completed` 事件
+- 可能是因为有 2 个 Webhook 端点
+
+---
+
+### **步骤 3：检查 processedStripeEvents 集合**
+
+1. **打开 Firestore**：
+   https://console.firebase.google.com/project/vaultcaddy-production-cbbe2/firestore
+
+2. **点击 `processedStripeEvents` 集合**
+
+3. **查看文档数量**
+
+4. **确认**：
+   - 有多少个 `checkout.session.completed` 类型的文档？
+   - 它们的 event ID 是什么？
+
+**预期结果**：
+- ✅ 应该只有 **1 个** `checkout.session.completed` 文档
+- ✅ event ID 类似：`evt_xxxxx`
+
+**如果有 2 个**：
+- ❌ 说明有 2 个不同的事件被处理了
+- ❌ 每个事件都添加了 100 Credits
+- ❌ 总共 200 Credits
+
+---
+
+## 📊 **可能的情况**
+
+### **情况 1：有多个 Webhook 端点（最可能）**
+
+**症状**：
+- Stripe Dashboard 中有 2 个或更多 Webhook
+- 每个 Webhook 都触发一次 `checkout.session.completed`
+- 导致 Credits 被添加 2 次
+
+**解决方案**：
+1. 删除所有 Webhook
+2. 创建一个新的 Webhook
+3. 只监听 4 个事件
+4. 重新测试
+
+---
+
+### **情况 2：Stripe 发送了重复事件（较少见）**
+
+**症状**：
+- 只有 1 个 Webhook
+- 但 Stripe 发送了 2 个不同的 `checkout.session.completed` 事件
+- 每个事件有不同的 event ID
+
+**解决方案**：
+- 这是 Stripe 的行为，我们无法控制
+- 但我们的幂等性检查应该能防止重复处理
+- 检查 Firebase Functions 日志，看是否有跳过处理的日志
+
+---
+
+### **情况 3：原子操作还没有生效**
+
+**症状**：
+- Firebase Functions 部署还没有完全生效
+- 还在使用旧的代码（没有原子操作）
+
+**解决方案**：
+- 等待更长时间（10-15 分钟）
+- 重新测试
+
+---
+
+## 📋 **请提供以下信息**
+
+### **信息 1：Webhook 端点数量（最重要！）**
+
+1. 打开：https://dashboard.stripe.com/test/webhooks
+2. **截图显示所有 Webhook 端点**
+3. 告诉我有多少个 Webhook
+
+---
+
+### **信息 2：Firebase Functions 日志**
+
+1. 打开：https://console.firebase.google.com/project/vaultcaddy-production-cbbe2/functions
+2. 点击 `stripeWebhook` 函数
+3. 点击"日志"标签
+4. **截图最近的日志**（刚刚的支付）
+5. 查找有多少次"准备添加 100 Credits"
+
+---
+
+### **信息 3：processedStripeEvents 集合**
+
+1. 打开：https://console.firebase.google.com/project/vaultcaddy-production-cbbe2/firestore
+2. 点击 `processedStripeEvents` 集合
+3. **截图所有文档**
+4. 告诉我有多少个 `checkout.session.completed` 类型的文档
+
+---
+
+## 💡 **临时快速诊断**
+
+在等待您提供截图的同时，我可以尝试通过其他方式诊断。
+
+**请告诉我**：
+1. Stripe Dashboard 中有多少个 Webhook 端点？（1 个还是多个？）
+2. Firebase Functions 日志中有多少次"添加 100 Credits"的记录？（1 次还是 2 次？）
+
+有了这些信息，我可以立即修复问题！ 💪
+

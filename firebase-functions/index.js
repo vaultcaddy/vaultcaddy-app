@@ -264,17 +264,34 @@ async function handleCheckoutCompleted(session, isTestMode = false) {
     console.log(`📦 LineItems 數量: ${lineItems.data.length}`);
     console.log(`📦 LineItems 详情:`, JSON.stringify(lineItems, null, 2));
     
+    // 🔥 关键修复：只处理第一个订阅类型的 line item，避免重复添加 Credits
+    let creditsAdded = false;
+    
     for (const item of lineItems.data) {
         const productId = item.price.product;
         console.log(`🔍 正在獲取產品: ${productId}`);
+        console.log(`📦 Line item 详情:`, JSON.stringify(item, null, 2));
+        
         const product = await stripeClient.products.retrieve(productId);
         
         console.log(`📦 產品信息:`, {
             productId: product.id,
             name: product.name,
-            metadata: product.metadata
+            metadata: product.metadata,
+            priceType: item.price.type // 'one_time' 或 'recurring'
         });
         console.log(`📦 完整產品对象:`, JSON.stringify(product, null, 2));
+        
+        // 🔥 只处理订阅类型的产品（price.type === 'recurring'）
+        // 并且只添加一次 Credits
+        if (creditsAdded) {
+            console.log(`⚠️ Credits 已添加，跳过此 line item: ${product.name}`);
+            continue;
+        }
+        
+        // 检查是否是订阅类型
+        const isSubscription = item.price.type === 'recurring';
+        console.log(`🔍 是否订阅类型: ${isSubscription}`);
         
         // 根據產品 metadata 添加 Credits
         const credits = parseInt(product.metadata.monthly_credits || product.metadata.credits || 0);
@@ -282,7 +299,7 @@ async function handleCheckoutCompleted(session, isTestMode = false) {
         console.log(`🔢 product.metadata.monthly_credits: ${product.metadata.monthly_credits}`);
         console.log(`🔢 product.metadata.credits: ${product.metadata.credits}`);
         
-        if (credits > 0) {
+        if (credits > 0 && isSubscription) {
             console.log(`💰 準備添加 ${credits} Credits 給用戶 ${userId}`);
             await addCredits(userId, credits, {
                 source: 'purchase',
@@ -293,6 +310,7 @@ async function handleCheckoutCompleted(session, isTestMode = false) {
                 planType: product.metadata.plan_type || 'unknown'
             });
             console.log(`✅ 成功添加 ${credits} Credits`);
+            creditsAdded = true; // 标记已添加，避免重复
             
             // 🔥 更新用户的订阅计划和重置日期
             const planType = product.metadata.plan_type || 'monthly';
@@ -318,10 +336,16 @@ async function handleCheckoutCompleted(session, isTestMode = false) {
                 updatedAt: admin.firestore.FieldValue.serverTimestamp()
             });
             console.log(`✅ 用户订阅计划已更新为 Pro Plan (${planType})`);
+        } else if (credits > 0 && !isSubscription) {
+            console.log(`⚠️ 產品有 Credits 但不是订阅类型，跳过: ${product.name} (type: ${item.price.type})`);
         } else {
             console.log(`⚠️ 產品沒有配置 Credits: ${product.name}`);
             console.log(`⚠️ product.metadata 完整内容:`, JSON.stringify(product.metadata, null, 2));
         }
+    }
+    
+    if (!creditsAdded) {
+        console.log(`⚠️ 警告：没有找到任何订阅类型的产品来添加 Credits`);
     }
     console.log(`✅ handleCheckoutCompleted 執行完成`);
 }
