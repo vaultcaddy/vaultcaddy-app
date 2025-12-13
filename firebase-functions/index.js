@@ -147,27 +147,51 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
     try {
         switch (event.type) {
             case 'checkout.session.completed':
+                // 🔥 关键事件：必须成功处理
                 await handleCheckoutCompleted(event.data.object, isTestMode);
                 break;
             case 'customer.subscription.created':
             case 'customer.subscription.updated':
-                await handleSubscriptionChange(event.data.object, isTestMode);
+                // ℹ️ 订阅事件：即使失败也不影响 Credits（已在 checkout 中添加）
+                try {
+                    await handleSubscriptionChange(event.data.object, isTestMode);
+                } catch (subscriptionError) {
+                    console.error('❌ 更新订阅信息失败，但 Credits 已在 checkout.session.completed 中添加:', subscriptionError);
+                    console.error('错误详情:', subscriptionError.stack);
+                    // 不抛出错误，继续执行
+                }
                 break;
             case 'customer.subscription.deleted':
-                await handleSubscriptionCancelled(event.data.object);
+                // ℹ️ 取消订阅：即使失败也返回成功
+                try {
+                    await handleSubscriptionCancelled(event.data.object);
+                } catch (cancelError) {
+                    console.error('❌ 处理订阅取消失败:', cancelError);
+                    console.error('错误详情:', cancelError.stack);
+                    // 不抛出错误，继续执行
+                }
                 break;
             default:
                 console.log(`ℹ️ 收到未配置處理的事件: ${event.type}`);
                 console.log(`💡 如果這個事件頻繁出現，建議在 Stripe Dashboard 中移除對此事件的監聽`);
         }
 
+        // ✅ 总是返回 200，避免 Stripe 重试
         res.status(200).json({ received: true });
     } catch (error) {
-        console.error('❌ 处理webhook事件时发生错误:', error);
-        // 如果处理失败，删除已处理标记，允许重试
-        await processedEventsRef.delete();
-        console.log(`⚠️ 事件 ${event.id} 处理失败，已删除处理标记，允许重试`);
-        res.status(500).json({ error: 'Webhook processing failed' });
+        console.error('❌ 处理 checkout.session.completed 时发生致命错误:', error);
+        console.error('错误详情:', error.stack);
+        
+        // 🔥 只有 checkout.session.completed 失败时才删除标记并返回 500
+        if (event.type === 'checkout.session.completed') {
+            await processedEventsRef.delete();
+            console.log(`⚠️ checkout 事件处理失败，已删除处理标记，允许重试`);
+            res.status(500).json({ error: 'Checkout processing failed' });
+        } else {
+            // 其他事件失败也返回 200，避免重试
+            console.log(`ℹ️ 非关键事件处理失败，但仍返回 200 避免重试`);
+            res.status(200).json({ received: true, error: error.message });
+        }
     }
 });
 
@@ -361,12 +385,35 @@ async function handleSubscriptionChange(subscription, isTestMode = false) {
     
     if (!userId) {
         console.error('❌ 無法獲取用戶 ID，subscription:', JSON.stringify(subscription, null, 2));
-        return;
+        console.error('⚠️ 跳過訂閱信息更新，但不影響 Credits（已在 checkout 中添加）');
+        return; // 不抛出错误，只是返回
+    }
+    
+    // 🔥 检查订阅数据是否完整
+    if (!subscription.items || !subscription.items.data || subscription.items.data.length === 0) {
+        console.error('❌ 訂閱數據不完整，沒有 items:', JSON.stringify(subscription, null, 2));
+        console.error('⚠️ 跳過訂閱信息更新，但不影響 Credits（已在 checkout 中添加）');
+        return; // 不抛出错误，只是返回
     }
     
     // 獲取訂閱計劃信息 - 使用正確的 Stripe 客戶端
     const priceId = subscription.items.data[0].price.id;
-    const product = await stripeClient.products.retrieve(subscription.items.data[0].price.product);
+    const productId = subscription.items.data[0].price.product;
+    
+    if (!productId) {
+        console.error('❌ 無法獲取產品 ID');
+        console.error('⚠️ 跳過訂閱信息更新，但不影響 Credits（已在 checkout 中添加）');
+        return; // 不抛出错误，只是返回
+    }
+    
+    let product;
+    try {
+        product = await stripeClient.products.retrieve(productId);
+    } catch (productError) {
+        console.error('❌ 獲取產品信息失敗:', productError);
+        console.error('⚠️ 跳過訂閱信息更新，但不影響 Credits（已在 checkout 中添加）');
+        return; // 不抛出错误，只是返回
+    }
     
     console.log(`📦 訂閱產品信息:`, {
         productId: product.id,
@@ -387,7 +434,7 @@ async function handleSubscriptionChange(subscription, isTestMode = false) {
     // ⚠️ 不在这里添加 Credits！
     // Credits 应该只在 checkout.session.completed 事件中添加一次
     // 这里只负责更新订阅信息
-    console.log(`ℹ️ 訂閱狀態: ${subscription.status}，Credits 将在 checkout.session.completed 事件中添加`);
+    console.log(`ℹ️ 訂閱狀態: ${subscription.status}，Credits 已在 checkout.session.completed 事件中添加`);
     
     // 更新用戶訂閱信息
     try {
@@ -407,7 +454,8 @@ async function handleSubscriptionChange(subscription, isTestMode = false) {
         console.log(`✅ 用戶訂閱信息已更新: ${userId}`);
     } catch (updateError) {
         console.error(`❌ 更新用戶訂閱信息失敗:`, updateError);
-        throw updateError;
+        console.error('⚠️ 訂閱信息更新失敗，但不影響 Credits（已在 checkout 中添加）');
+        // 不抛出错误，只记录日志
     }
     
     // 🔥 不要在这里添加 Credits！
