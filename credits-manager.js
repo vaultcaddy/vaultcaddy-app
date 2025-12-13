@@ -249,6 +249,9 @@
             const db = firebase.firestore();
             const userRef = db.collection('users').doc(user.uid);
             
+            // 用於儲存事務結果的變量
+            let transactionResult = null;
+            
             // 使用事務確保原子性
             await db.runTransaction(async (transaction) => {
                 const userDoc = await transaction.get(userRef);
@@ -261,12 +264,16 @@
                 // 支持兩種欄位名稱：credits 和 currentCredits
                 const currentCredits = userData.currentCredits || userData.credits || 0;
                 const planType = userData.planType || 'Free Plan';
+                const totalCreditsUsed = userData.totalCreditsUsed || 0; // 累計使用量
+                const includedCredits = userData.includedCredits || 0; // 訂閱包含的 Credits
                 
                 console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
-                console.log(`💰 扣除 Credits (credits-manager.js v2.0)`);
+                console.log(`💰 扣除 Credits (credits-manager.js v3.0)`);
                 console.log(`   當前 Credits: ${currentCredits}`);
                 console.log(`   扣除頁數: ${pages}`);
                 console.log(`   計劃類型: ${planType}`);
+                console.log(`   累計使用: ${totalCreditsUsed}`);
+                console.log(`   包含 Credits: ${includedCredits}`);
                 console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
                 
                 // ✅ Pro Plan 用戶可以使用負數 Credits（按量計費）
@@ -276,12 +283,15 @@
                 }
                 
                 const newCredits = currentCredits - pages;
+                const newTotalCreditsUsed = totalCreditsUsed + pages; // 累計使用量增加
                 console.log(`   新 Credits: ${newCredits}`);
+                console.log(`   新累計使用: ${newTotalCreditsUsed}`);
                 
                 // 同時更新兩個欄位以確保兼容性
                 transaction.update(userRef, { 
                     credits: newCredits,
                     currentCredits: newCredits,
+                    totalCreditsUsed: newTotalCreditsUsed, // ✅ 更新累計使用量
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 
@@ -304,7 +314,40 @@
                 // 🔔 更新顯示
                 updateCreditsDisplay(newCredits);
                 notifyCreditsListeners(newCredits);
+                
+                // 🚀 保存事務結果，供後續使用
+                transactionResult = {
+                    newCredits,
+                    newTotalCreditsUsed,
+                    planType,
+                    includedCredits
+                };
             });
+            
+            // 📊 如果是 Pro Plan 且超額使用，報告給 Stripe
+            if (transactionResult.planType === 'Pro Plan' && 
+                transactionResult.newTotalCreditsUsed > transactionResult.includedCredits) {
+                
+                console.log(`🔔 Pro Plan 用戶超額使用，準備報告給 Stripe`);
+                console.log(`   累計使用: ${transactionResult.newTotalCreditsUsed}`);
+                console.log(`   包含 Credits: ${transactionResult.includedCredits}`);
+                console.log(`   超額: ${transactionResult.newTotalCreditsUsed - transactionResult.includedCredits}`);
+                
+                // 調用後端 Cloud Function 報告使用量
+                try {
+                    const reportCreditsUsage = firebase.functions().httpsCallable('reportCreditsUsage');
+                    const result = await reportCreditsUsage({ userId: user.uid });
+                    
+                    if (result.data.success) {
+                        console.log(`✅ 使用量已報告給 Stripe:`, result.data);
+                    } else {
+                        console.warn(`⚠️ 報告使用量失敗:`, result.data.reason);
+                    }
+                } catch (reportError) {
+                    console.error(`❌ 調用報告函數失敗:`, reportError);
+                    // 不抛出错误，不影响用户体验
+                }
+            }
             
             return true;
         } catch (error) {

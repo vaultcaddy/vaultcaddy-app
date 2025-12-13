@@ -337,14 +337,55 @@ async function handleCheckoutCompleted(session, isTestMode = false) {
                 console.log(`📅 月费计划，重置日期为 1 个月后: ${resetDate.toISOString()}`);
             }
             
-            // 更新用户文档
-            await db.collection('users').doc(userId).update({
+            // 🔍 获取订阅信息，提取 metered subscription item ID
+            let meteredItemId = null;
+            if (session.subscription) {
+                console.log(`🔍 获取订阅详情: ${session.subscription}`);
+                try {
+                    const subscription = await stripeClient.subscriptions.retrieve(session.subscription);
+                    console.log(`📋 订阅 items:`, JSON.stringify(subscription.items.data, null, 2));
+                    
+                    // 查找 metered price 的 subscription item
+                    for (const subItem of subscription.items.data) {
+                        const price = await stripeClient.prices.retrieve(subItem.price.id);
+                        console.log(`🔍 检查 price: ${price.id}, recurring: ${price.recurring}, usage_type: ${price.recurring?.usage_type}`);
+                        
+                        if (price.recurring && price.recurring.usage_type === 'metered') {
+                            meteredItemId = subItem.id;
+                            console.log(`✅ 找到 metered subscription item: ${meteredItemId}`);
+                            break;
+                        }
+                    }
+                    
+                    if (!meteredItemId) {
+                        console.warn(`⚠️ 未找到 metered subscription item`);
+                    }
+                } catch (error) {
+                    console.error(`❌ 获取订阅详情失败:`, error);
+                }
+            }
+            
+            // 更新用户文档（包含 metered item ID 和累计使用量）
+            const updateData = {
                 planType: 'Pro Plan',
                 subscriptionPlan: planType, // 'monthly' 或 'yearly'
                 resetDate: admin.firestore.Timestamp.fromDate(resetDate),
                 lastPurchaseDate: admin.firestore.FieldValue.serverTimestamp(),
-                updatedAt: admin.firestore.FieldValue.serverTimestamp()
-            });
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                includedCredits: credits, // 订阅包含的 Credits 数量
+                totalCreditsUsed: 0 // 初始化累计使用量为 0
+            };
+            
+            // 如果找到 metered item ID，保存到 subscription 字段
+            if (meteredItemId) {
+                updateData.subscription = {
+                    meteredSubscriptionItemId: meteredItemId,
+                    stripeSubscriptionId: session.subscription
+                };
+                console.log(`✅ 保存 metered subscription item ID: ${meteredItemId}`);
+            }
+            
+            await db.collection('users').doc(userId).update(updateData);
             console.log(`✅ 用户订阅计划已更新为 Pro Plan (${planType})`);
         } else if (credits > 0 && !isSubscription) {
             console.log(`⚠️ 產品有 Credits 但不是订阅类型，跳过: ${product.name} (type: ${item.price.type})`);
@@ -476,19 +517,49 @@ async function handleSubscriptionChange(subscription, isTestMode = false) {
     // 这里只负责更新订阅信息
     console.log(`ℹ️ 訂閱狀態: ${subscription.status}，Credits 已在 checkout.session.completed 事件中添加`);
     
+    // 🔍 查找 metered subscription item
+    let meteredItemId = null;
+    try {
+        console.log(`🔍 查找 metered subscription item...`);
+        for (const subItem of subscription.items.data) {
+            const price = await stripeClient.prices.retrieve(subItem.price.id);
+            console.log(`🔍 检查 price: ${price.id}, recurring: ${price.recurring}, usage_type: ${price.recurring?.usage_type}`);
+            
+            if (price.recurring && price.recurring.usage_type === 'metered') {
+                meteredItemId = subItem.id;
+                console.log(`✅ 找到 metered subscription item: ${meteredItemId}`);
+                break;
+            }
+        }
+        
+        if (!meteredItemId) {
+            console.warn(`⚠️ 未找到 metered subscription item`);
+        }
+    } catch (error) {
+        console.error(`❌ 查找 metered item 失败:`, error);
+    }
+    
     // 更新用戶訂閱信息
     try {
+        const subscriptionData = {
+            stripeSubscriptionId: subscription.id,
+            stripeCustomerId: subscription.customer,
+            status: subscription.status,
+            planType: planType,
+            monthlyCredits: monthlyCredits,
+            currentPeriodStart: admin.firestore.Timestamp.fromMillis(subscription.current_period_start * 1000),
+            currentPeriodEnd: admin.firestore.Timestamp.fromMillis(subscription.current_period_end * 1000),
+            cancelAtPeriodEnd: subscription.cancel_at_period_end
+        };
+        
+        // 如果找到 metered item ID，添加到订阅数据中
+        if (meteredItemId) {
+            subscriptionData.meteredSubscriptionItemId = meteredItemId;
+            console.log(`✅ 保存 metered subscription item ID: ${meteredItemId}`);
+        }
+        
         await db.collection('users').doc(userId).update({
-            subscription: {
-                stripeSubscriptionId: subscription.id,
-                stripeCustomerId: subscription.customer,
-                status: subscription.status,
-                planType: planType,
-                monthlyCredits: monthlyCredits,
-                currentPeriodStart: admin.firestore.Timestamp.fromMillis(subscription.current_period_start * 1000),
-                currentPeriodEnd: admin.firestore.Timestamp.fromMillis(subscription.current_period_end * 1000),
-                cancelAtPeriodEnd: subscription.cancel_at_period_end
-            },
+            subscription: subscriptionData,
             updatedAt: admin.firestore.FieldValue.serverTimestamp()
         });
         console.log(`✅ 用戶訂閱信息已更新: ${userId}`);
@@ -1623,7 +1694,111 @@ exports.reportDailyUsage = functions.pubsub.schedule('0 0 * * *')  // 每天午�
     });
 
 // ============================================
-// 13. 創建 Stripe Checkout Session（動態傳遞用戶信息）
+// 13. 報告 Credits 使用量到 Stripe（按量計費）
+// ============================================
+
+/**
+ * 報告 Credits 使用量到 Stripe
+ * 當 Pro Plan 用戶超額使用時調用
+ */
+exports.reportCreditsUsage = functions.https.onCall(async (data, context) => {
+    const { userId } = data;
+    
+    console.log(`📡 報告 Credits 使用量: userId=${userId}`);
+    
+    // 驗證用戶身份
+    if (!context.auth || context.auth.uid !== userId) {
+        throw new functions.https.HttpsError('permission-denied', '無權限');
+    }
+    
+    try {
+        // 獲取用戶數據
+        const userDoc = await db.collection('users').doc(userId).get();
+        if (!userDoc.exists) {
+            throw new functions.https.HttpsError('not-found', '用戶不存在');
+        }
+        
+        const userData = userDoc.data();
+        const subscription = userData?.subscription;
+        const totalCreditsUsed = userData?.totalCreditsUsed || 0;
+        const includedCredits = userData?.includedCredits || 0;
+        
+        console.log(`📊 用戶數據:`, {
+            totalCreditsUsed,
+            includedCredits,
+            planType: userData?.planType,
+            subscription: subscription?.stripeSubscriptionId
+        });
+        
+        // 檢查是否有訂閱
+        if (!subscription || !subscription.stripeSubscriptionId) {
+            console.log(`⚠️ 用戶沒有活躍訂閱`);
+            return { success: false, reason: 'no_subscription' };
+        }
+        
+        // 檢查是否有 metered subscription item ID
+        const meteredItemId = subscription.meteredSubscriptionItemId;
+        if (!meteredItemId) {
+            console.error(`❌ 用戶訂閱中沒有 metered subscription item ID`);
+            return { success: false, reason: 'no_metered_item' };
+        }
+        
+        // 計算超額使用量
+        const overageCredits = Math.max(0, totalCreditsUsed - includedCredits);
+        console.log(`📊 計算超額: totalCreditsUsed=${totalCreditsUsed}, includedCredits=${includedCredits}, overage=${overageCredits}`);
+        
+        if (overageCredits === 0) {
+            console.log(`✅ 沒有超額使用，無需報告`);
+            return { success: true, overage: 0 };
+        }
+        
+        // 判斷測試模式
+        const isTestMode = subscription.stripeSubscriptionId.startsWith('sub_');
+        const stripeClient = isTestMode ? stripeTest : stripeLive;
+        
+        if (!stripeClient) {
+            throw new functions.https.HttpsError('internal', 'Stripe 客戶端未配置');
+        }
+        
+        console.log(`🔧 使用 ${isTestMode ? '測試' : '生產'} 模式的 Stripe 客戶端`);
+        
+        // 🔥 報告使用量到 Stripe
+        const usageRecord = await stripeClient.subscriptionItems.createUsageRecord(
+            meteredItemId,
+            {
+                quantity: overageCredits,
+                timestamp: Math.floor(Date.now() / 1000),
+                action: 'set' // 使用 'set' 而不是 'increment'，確保報告的是總量
+            }
+        );
+        
+        console.log(`✅ 使用量已報告給 Stripe:`, {
+            id: usageRecord.id,
+            quantity: usageRecord.quantity,
+            timestamp: usageRecord.timestamp
+        });
+        
+        // 記錄最後報告時間
+        await db.collection('users').doc(userId).update({
+            'usageTracking.lastReportedAt': admin.firestore.FieldValue.serverTimestamp(),
+            'usageTracking.lastReportedOverage': overageCredits,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        
+        return { 
+            success: true, 
+            overage: overageCredits,
+            usageRecordId: usageRecord.id
+        };
+        
+    } catch (error) {
+        console.error('❌ 報告使用量失敗:', error);
+        throw new functions.https.HttpsError('internal', `報告失敗: ${error.message}`);
+    }
+});
+
+// ============================================
+// 14. 創建 Stripe Checkout Session（動態傳遞用戶信息）
 // ============================================
 
 /**

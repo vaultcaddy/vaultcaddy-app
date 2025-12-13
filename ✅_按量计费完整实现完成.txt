@@ -1,0 +1,405 @@
+# ✅ 按量计费完整实现完成！
+
+## 🎉 **修复完成！**
+
+所有代码已成功部署到 Firebase！
+
+---
+
+## 📋 **完成的修改**
+
+### **1. 后端 Firebase Functions (`index.js`)**
+
+#### **✅ `handleCheckoutCompleted` 函数**
+- 在订阅创建后，自动查找并保存 `meteredSubscriptionItemId`
+- 初始化 `includedCredits`（订阅包含的 Credits 数量）
+- 初始化 `totalCreditsUsed = 0`（累计使用量）
+
+**保存的字段**：
+```javascript
+{
+  includedCredits: 100 or 1200,  // 订阅包含的 Credits
+  totalCreditsUsed: 0,            // 累计使用量
+  subscription: {
+    meteredSubscriptionItemId: "si_xxx", // ← 按量计费 item ID
+    stripeSubscriptionId: "sub_xxx"
+  }
+}
+```
+
+#### **✅ `handleSubscriptionChange` 函数**
+- 订阅更新时，也查找并保存 `meteredSubscriptionItemId`
+- 确保即使用户取消后重新订阅，也能正确保存
+
+#### **✅ 新增 `reportCreditsUsage` Cloud Function**
+- 接收前端请求，报告使用量到 Stripe
+- 验证用户身份和订阅状态
+- 计算超额使用量（totalCreditsUsed - includedCredits）
+- 使用 Stripe API 报告使用量
+
+**Cloud Function URL**：
+```
+https://us-central1-vaultcaddy-production-cbbe2.cloudfunctions.net/reportCreditsUsage
+```
+
+---
+
+### **2. 前端 `credits-manager.js`**
+
+#### **✅ `loadUserCredits` 函数**
+- 已加载 `planType`（Pro Plan / Free Plan）
+
+#### **✅ `checkCredits` 函数**
+- Pro Plan 用户：允许负数 Credits ✅
+- Free Plan 用户：检查 Credits 是否足够 ✅
+
+#### **✅ `deductCredits` 函数（核心修改）**
+- 加载 `totalCreditsUsed` 和 `includedCredits`
+- 扣除 Credits 时，同时更新 `totalCreditsUsed`
+- 扣除后，如果是 Pro Plan 且超额，自动调用后端 Cloud Function 报告使用量
+- 详细的 Console 日志，便于调试
+
+---
+
+## 📊 **完整流程示例**
+
+### **场景：年费用户（1,200 Credits）超额使用**
+
+#### **步骤 1：用户订阅年费**
+```
+用户支付 HK$552 → checkout.session.completed
+  ↓
+handleCheckoutCompleted:
+  - 添加 1,200 Credits
+  - 保存 includedCredits: 1200
+  - 保存 totalCreditsUsed: 0
+  - 保存 meteredSubscriptionItemId: "si_xxx"
+  ↓
+Firestore:
+{
+  credits: 1200,
+  currentCredits: 1200,
+  totalCreditsUsed: 0,
+  includedCredits: 1200,
+  planType: "Pro Plan",
+  subscription: {
+    meteredSubscriptionItemId: "si_xxx"
+  }
+}
+```
+
+#### **步骤 2：用户使用 1,200 个 Credits**
+```
+用户上传文档 1,200 次
+  ↓
+deductCredits 被调用 1,200 次
+  ↓
+Firestore:
+{
+  credits: 0,
+  currentCredits: 0,
+  totalCreditsUsed: 1200,  // 累计使用量
+  includedCredits: 1200
+}
+  ↓
+检查：totalCreditsUsed (1200) <= includedCredits (1200)
+  ↓
+✅ 不超额，不报告
+```
+
+#### **步骤 3：用户继续使用 1 个 Credit（超额）**
+```
+用户上传 1 页文档
+  ↓
+前端 deductCredits:
+  - credits: 0 → -1
+  - totalCreditsUsed: 1200 → 1201
+  ↓
+Firestore 更新:
+{
+  credits: -1,
+  currentCredits: -1,
+  totalCreditsUsed: 1201
+}
+  ↓
+检查：totalCreditsUsed (1201) > includedCredits (1200)
+  ↓
+🔔 超额！调用 reportCreditsUsage()
+  ↓
+后端 Cloud Function:
+  - 计算超额: 1201 - 1200 = 1
+  - 调用 Stripe API: createUsageRecord(si_xxx, quantity=1)
+  ↓
+Stripe 记录:
+  - 使用量: 1 credit
+  - 费用: 1 × HK$0.50 = HK$0.50
+  ↓
+下次账单（2026年12月13日）:
+  - 订阅费: HK$552.00
+  - 超额费: HK$0.50
+  - 总计: HK$552.50
+```
+
+#### **步骤 4：用户再使用 10 个 Credits**
+```
+用户上传 10 页文档
+  ↓
+totalCreditsUsed: 1201 → 1211
+  ↓
+超额: 1211 - 1200 = 11
+  ↓
+报告给 Stripe: quantity=11 (使用 'set'，不是 'increment')
+  ↓
+Stripe 记录更新:
+  - 使用量: 11 credits
+  - 费用: 11 × HK$0.50 = HK$5.50
+  ↓
+下次账单:
+  - 订阅费: HK$552.00
+  - 超额费: HK$5.50
+  - 总计: HK$557.50
+```
+
+---
+
+## 🧪 **测试步骤**
+
+### **测试 1：首次订阅（保存 metered item ID）**
+
+1. **清空现有订阅**
+   - Firebase Console → Firestore → users → 您的用户 ID
+   - 删除 `subscription` 字段
+
+2. **重新订阅年费**
+   - 访问：https://vaultcaddy.com/billing.html
+   - 点击 **"🧪 測試 Get Started (年费)"**
+   - 使用测试卡号：`4242 4242 4242 4242`
+   - 完成支付
+
+3. **验证 Firestore**
+   - Firebase Console → Firestore → users → 您的用户 ID
+   - 应该看到：
+     ```json
+     {
+       "credits": 1200,
+       "currentCredits": 1200,
+       "totalCreditsUsed": 0,
+       "includedCredits": 1200,
+       "planType": "Pro Plan",
+       "subscription": {
+         "meteredSubscriptionItemId": "si_xxxxx",  // ← 应该存在！
+         "stripeSubscriptionId": "sub_xxxxx"
+       }
+     }
+     ```
+
+4. **如果 `meteredSubscriptionItemId` 不存在**
+   - 查看 Cloud Functions 日志
+   - Firebase Console → Functions → reportCreditsUsage → Logs
+   - 查找错误信息
+
+---
+
+### **测试 2：超额使用（报告给 Stripe）**
+
+1. **手动修改 Credits**
+   - Firebase Console → Firestore → users → 您的用户 ID
+   - 修改：
+     ```json
+     {
+       "credits": 0,
+       "currentCredits": 0,
+       "totalCreditsUsed": 1200  // ← 已用完包含的 Credits
+     }
+     ```
+
+2. **上传 1 页文档**
+   - 访问：https://vaultcaddy.com/firstproject.html
+   - 按 `F12` 打开 Console
+   - 上传 1 页文档
+
+3. **查看 Console 日志（前端）**
+   应该看到：
+   ```
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   💰 扣除 Credits (credits-manager.js v3.0)
+      當前 Credits: 0
+      扣除頁數: 1
+      計劃類型: Pro Plan
+      累計使用: 1200
+      包含 Credits: 1200
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      新 Credits: -1
+      新累計使用: 1201
+   ✅ Credits 已扣除: 1 頁，剩餘: -1
+   
+   🔔 Pro Plan 用戶超額使用，準備報告給 Stripe
+      累計使用: 1201
+      包含 Credits: 1200
+      超額: 1
+   ✅ 使用量已報告給 Stripe: { success: true, overage: 1, ... }
+   ```
+
+4. **验证 Firestore**
+   ```json
+   {
+     "credits": -1,
+     "currentCredits": -1,
+     "totalCreditsUsed": 1201
+   }
+   ```
+
+5. **查看 Cloud Functions 日志**
+   - Firebase Console → Functions → reportCreditsUsage → Logs
+   应该看到：
+   ```
+   📡 報告 Credits 使用量: userId=xxx
+   📊 用戶數據: { totalCreditsUsed: 1201, includedCredits: 1200, ... }
+   📊 計算超額: totalCreditsUsed=1201, includedCredits=1200, overage=1
+   🔧 使用 測試 模式的 Stripe 客戶端
+   ✅ 使用量已報告給 Stripe: { id: 'mbur_xxx', quantity: 1, ... }
+   ```
+
+6. **查看 Stripe Dashboard**
+   - 访问：https://dashboard.stripe.com/test/subscriptions
+   - 找到您的订阅
+   - 点击 **"Usage"** 标签
+   - 应该看到：
+     ```
+     vaultcaddy_credit_usage: 1
+     Amount: HK$0.50
+     ```
+
+---
+
+### **测试 3：继续超额使用（累计报告）**
+
+1. **上传 5 页文档**
+   - totalCreditsUsed: 1201 → 1206
+   - 超额: 1206 - 1200 = 6
+
+2. **查看 Stripe Dashboard**
+   - Usage 应该更新为：
+     ```
+     vaultcaddy_credit_usage: 6
+     Amount: HK$3.00
+     ```
+
+---
+
+## 🔍 **故障排除**
+
+### **问题 1：`meteredSubscriptionItemId` 未保存**
+
+**症状**：
+- Firestore 中没有 `subscription.meteredSubscriptionItemId` 字段
+
+**原因**：
+- 订阅创建时，Stripe 没有返回 metered item
+- 或者代码没有正确查找
+
+**解决方案**：
+1. 检查 Stripe Dashboard → Products → VaultCaddy Yearly
+2. 确认有 2 个 Prices：
+   - 固定价格（HK$552/year）
+   - 按量价格（HK$0.50/credit，usage_type: metered）
+3. 重新订阅
+4. 查看 Cloud Functions 日志，确认是否找到 metered item
+
+---
+
+### **问题 2：前端没有调用 `reportCreditsUsage`**
+
+**症状**：
+- Credits 变成负数，但 Stripe 没有使用量记录
+- Console 没有显示 "報告給 Stripe"
+
+**原因**：
+- `totalCreditsUsed` 或 `includedCredits` 字段缺失
+
+**解决方案**：
+1. 检查 Firestore 用户文档，确认有：
+   ```json
+   {
+     "totalCreditsUsed": 1201,
+     "includedCredits": 1200
+   }
+   ```
+2. 如果缺失，手动添加这些字段
+3. 重新上传文档测试
+
+---
+
+### **问题 3：Stripe API 报错**
+
+**症状**：
+- Cloud Functions 日志显示 "報告 Stripe 使用量失敗"
+
+**可能原因**：
+- `meteredSubscriptionItemId` 错误
+- Stripe API Key 错误
+- Meter 配置错误
+
+**解决方案**：
+1. 检查 `meteredSubscriptionItemId` 是否正确
+2. 在 Stripe Dashboard 手动查找订阅的 Subscription Item ID
+3. 确认 Meter 存在且正确配置
+
+---
+
+## 📊 **费用计算示例**
+
+### **月费（HK$58/月，100 Credits）**
+
+| 使用量 | totalCreditsUsed | 超额 | 超额费用 | 下次账单总额 |
+|--------|------------------|------|---------|-------------|
+| 50 | 50 | 0 | HK$0.00 | HK$58.00 |
+| 100 | 100 | 0 | HK$0.00 | HK$58.00 |
+| 101 | 101 | 1 | HK$0.50 | HK$58.50 |
+| 110 | 110 | 10 | HK$5.00 | HK$63.00 |
+| 200 | 200 | 100 | HK$50.00 | HK$108.00 |
+
+### **年费（HK$552/年，1,200 Credits）**
+
+| 使用量 | totalCreditsUsed | 超额 | 超额费用 | 下次账单总额 |
+|--------|------------------|------|---------|-------------|
+| 500 | 500 | 0 | HK$0.00 | HK$552.00 |
+| 1,200 | 1,200 | 0 | HK$0.00 | HK$552.00 |
+| 1,201 | 1,201 | 1 | HK$0.50 | HK$552.50 |
+| 1,250 | 1,250 | 50 | HK$25.00 | HK$577.00 |
+| 2,000 | 2,000 | 800 | HK$400.00 | HK$952.00 |
+
+---
+
+## 🎯 **下一步**
+
+1. ✅ **测试测试模式**（完成上述测试步骤）
+2. ✅ **确认 Stripe 使用量记录正确**
+3. ✅ **测试订阅续费（Credits 清零逻辑）**
+4. ✅ **配置生产模式**（重复相同步骤）
+
+---
+
+## 🎉 **完成！**
+
+**按量计费功能已完整实现！**
+
+- ✅ 自动保存 `meteredSubscriptionItemId`
+- ✅ 跟踪累计使用量 `totalCreditsUsed`
+- ✅ 自动报告超额使用给 Stripe
+- ✅ Stripe 自动计费
+
+**立即测试**：https://vaultcaddy.com/firstproject.html 🚀
+
+---
+
+## 📞 **需要帮助？**
+
+如果测试过程中遇到任何问题：
+1. 查看 Console 日志（前端）
+2. 查看 Cloud Functions 日志（后端）
+3. 查看 Stripe Dashboard → Usage Records
+4. 提供详细的错误信息和截图
+
+**祝测试顺利！** 🎊
+

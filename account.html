@@ -1123,8 +1123,7 @@
                     <div style="margin-bottom: 1.5rem;">
                         <select id="history-month-filter" onchange="filterCreditsHistory()" style="padding: 0.5rem 1rem; border: 1px solid #d1d5db; border-radius: 6px; background: white; cursor: pointer; font-size: 0.875rem;">
                             <option value="all">所有記錄</option>
-                            <option value="2025-11">2025年11月</option>
-                            <option value="2025-10">2025年10月</option>
+                            <!-- 動態生成月份選項 -->
                         </select>
                     </div>
 
@@ -1521,9 +1520,78 @@
         }
         
         // 載入 Credits 歷史記錄
+        // 動態載入月份選項
+        async function loadMonthOptions() {
+            const select = document.getElementById('history-month-filter');
+            
+            try {
+                if (!window.simpleAuth || !window.simpleAuth.currentUser) {
+                    return;
+                }
+                
+                const userId = window.simpleAuth.currentUser.uid;
+                
+                // 獲取所有記錄
+                const historySnapshot = await firebase.firestore()
+                    .collection('users')
+                    .doc(userId)
+                    .collection('creditsHistory')
+                    .orderBy('createdAt', 'desc')
+                    .get();
+                
+                if (historySnapshot.empty) {
+                    return;
+                }
+                
+                // 提取不重複的年月
+                const months = new Set();
+                historySnapshot.forEach(doc => {
+                    const record = doc.data();
+                    if (record.createdAt) {
+                        const date = record.createdAt.toDate();
+                        const yearMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                        months.add(yearMonth);
+                    }
+                });
+                
+                // 按時間倒序排序
+                const sortedMonths = Array.from(months).sort((a, b) => b.localeCompare(a));
+                
+                // 保存當前選中的值
+                const currentValue = select.value;
+                
+                // 清空現有選項（除了"所有記錄"）
+                select.innerHTML = '<option value="all">所有記錄</option>';
+                
+                // 動態生成月份選項
+                sortedMonths.forEach(yearMonth => {
+                    const [year, month] = yearMonth.split('-');
+                    const option = document.createElement('option');
+                    option.value = yearMonth;
+                    option.textContent = `${year}年${parseInt(month)}月`;
+                    select.appendChild(option);
+                });
+                
+                // 恢復選中的值
+                if (sortedMonths.includes(currentValue)) {
+                    select.value = currentValue;
+                } else {
+                    select.value = 'all';
+                }
+                
+                console.log(`✅ 載入了 ${sortedMonths.length} 個月份選項:`, sortedMonths);
+                
+            } catch (error) {
+                console.error('載入月份選項失敗:', error);
+            }
+        }
+        
         async function loadCreditsHistory() {
             const tbody = document.getElementById('credits-history-tbody');
             const filter = document.getElementById('history-month-filter').value;
+            
+            // 🔥 首次載入時，動態生成月份選項
+            await loadMonthOptions();
             
             try {
                 // 檢查是否有登入用戶
