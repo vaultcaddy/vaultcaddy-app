@@ -170,26 +170,38 @@
     window.creditsManager.checkCredits = async function(requiredPages) {
         // 確保 Credits 已加載
         if (!window.creditsManager.isLoaded) {
+            console.log('⚠️ Credits 尚未加載，正在加載...');
             await loadUserCredits();
         }
         
         const currentCredits = window.creditsManager.currentCredits;
         const planType = window.creditsManager.planType || 'Free Plan';
         
-        console.log(`💳 檢查 Credits: 需要 ${requiredPages} 頁，當前有 ${currentCredits} 個 Credits (計劃: ${planType})`);
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('💳 檢查 Credits (credits-manager.js v2.0)');
+        console.log(`   需要: ${requiredPages} 頁`);
+        console.log(`   當前: ${currentCredits} 個 Credits`);
+        console.log(`   計劃: ${planType}`);
+        console.log(`   isLoaded: ${window.creditsManager.isLoaded}`);
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         
         // ✅ Pro Plan 用戶可以使用負數 Credits（按量計費）
         if (planType === 'Pro Plan') {
             console.log('✅ Pro Plan 用戶，允許使用負數 Credits（按量計費）');
+            console.log('✅ 跳過 Credits 檢查，允許繼續');
             return true;
         }
         
+        console.log('⚠️ Free Plan 用戶，需要檢查 Credits 是否足夠');
+        
         // Free Plan 用戶需要檢查 Credits 是否足夠
         if (currentCredits < requiredPages) {
+            console.log('❌ Credits 不足，顯示購買對話框');
             showInsufficientCreditsDialog(requiredPages, currentCredits);
             return false;
         }
         
+        console.log('✅ Credits 足夠，允許繼續');
         return true;
     };
     
@@ -248,12 +260,23 @@
                 const userData = userDoc.data();
                 // 支持兩種欄位名稱：credits 和 currentCredits
                 const currentCredits = userData.currentCredits || userData.credits || 0;
+                const planType = userData.planType || 'Free Plan';
                 
-                if (currentCredits < pages) {
+                console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+                console.log(`💰 扣除 Credits (credits-manager.js v2.0)`);
+                console.log(`   當前 Credits: ${currentCredits}`);
+                console.log(`   扣除頁數: ${pages}`);
+                console.log(`   計劃類型: ${planType}`);
+                console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+                
+                // ✅ Pro Plan 用戶可以使用負數 Credits（按量計費）
+                if (planType === 'Free Plan' && currentCredits < pages) {
+                    console.log(`❌ Free Plan 用戶 Credits 不足`);
                     throw new Error('Credits 不足');
                 }
                 
                 const newCredits = currentCredits - pages;
+                console.log(`   新 Credits: ${newCredits}`);
                 
                 // 同時更新兩個欄位以確保兼容性
                 transaction.update(userRef, { 
@@ -269,13 +292,18 @@
                     amount: -pages,
                     description: `處理文檔，使用 ${pages} Credits`,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    balanceAfter: newCredits
+                    balanceAfter: newCredits,
+                    planType: planType
                 });
                 
                 console.log(`✅ Credits 已扣除: ${pages} 頁，剩餘: ${newCredits}`);
                 
                 // 更新本地狀態
                 window.creditsManager.currentCredits = newCredits;
+                
+                // 🔔 更新顯示
+                updateCreditsDisplay(newCredits);
+                notifyCreditsListeners(newCredits);
             });
             
             return true;
