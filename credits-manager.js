@@ -49,9 +49,13 @@
                 const userData = userDoc.data();
                 // 支持兩種欄位名稱：currentCredits 優先，然後是 credits
                 const credits = userData.currentCredits || userData.credits || 0;
+                const planType = userData.planType || 'Free Plan'; // 獲取用戶計劃類型
                 
                 window.creditsManager.currentCredits = credits;
+                window.creditsManager.planType = planType; // 保存計劃類型
                 window.creditsManager.isLoaded = true;
+                
+                console.log(`📋 用戶計劃: ${planType}, Credits: ${credits}`);
                 
                 // 更新所有顯示 Credits 的地方
                 updateCreditsDisplay(credits);
@@ -170,9 +174,17 @@
         }
         
         const currentCredits = window.creditsManager.currentCredits;
+        const planType = window.creditsManager.planType || 'Free Plan';
         
-        console.log(`💳 檢查 Credits: 需要 ${requiredPages} 頁，當前有 ${currentCredits} 個 Credits`);
+        console.log(`💳 檢查 Credits: 需要 ${requiredPages} 頁，當前有 ${currentCredits} 個 Credits (計劃: ${planType})`);
         
+        // ✅ Pro Plan 用戶可以使用負數 Credits（按量計費）
+        if (planType === 'Pro Plan') {
+            console.log('✅ Pro Plan 用戶，允許使用負數 Credits（按量計費）');
+            return true;
+        }
+        
+        // Free Plan 用戶需要檢查 Credits 是否足夠
         if (currentCredits < requiredPages) {
             showInsufficientCreditsDialog(requiredPages, currentCredits);
             return false;
