@@ -153,8 +153,18 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
     try {
         switch (event.type) {
             case 'checkout.session.completed':
-                // 🔥 关键事件：必须成功处理
+                // 🔥 关键事件：必须成功处理（首次订阅）
                 await handleCheckoutCompleted(event.data.object, isTestMode);
+                break;
+            case 'invoice.paid':
+                // 🔥 订阅续费：每月自动续费时添加 Credits
+                try {
+                    await handleInvoicePaid(event.data.object, isTestMode);
+                } catch (invoiceError) {
+                    console.error('❌ 处理发票支付失败:', invoiceError);
+                    console.error('错误详情:', invoiceError.stack);
+                    // 续费失败不影响现有订阅，返回 200 避免重试
+                }
                 break;
             case 'customer.subscription.created':
             case 'customer.subscription.updated':
@@ -516,6 +526,165 @@ async function handleSubscriptionCancelled(subscription) {
     });
 }
 
+/**
+ * 處理發票支付成功（訂閱續費）
+ * 🔥 這個函數在訂閱每月自動續費時被調用
+ */
+async function handleInvoicePaid(invoice, isTestMode = false) {
+    console.log(`✅ 發票支付成功 (${isTestMode ? '測試模式' : '生產模式'}):`, invoice.id);
+    console.log(`📋 Invoice 详情:`, JSON.stringify(invoice, null, 2));
+    
+    // 選擇正確的 Stripe 客戶端
+    const stripeClient = isTestMode ? stripeTest : stripeLive;
+    if (!stripeClient) {
+        console.error(`❌ Stripe 客戶端未配置 (${isTestMode ? '測試模式' : '生產模式'})`);
+        return; // 不抛出错误，避免 500
+    }
+    
+    // 🔍 只處理訂閱發票（不處理一次性支付）
+    if (!invoice.subscription) {
+        console.log(`ℹ️ 這不是訂閱發票，跳過處理: ${invoice.id}`);
+        return;
+    }
+    
+    // 🔍 檢查是否是續費（不是首次訂閱）
+    // 首次訂閱已經在 checkout.session.completed 中處理
+    if (invoice.billing_reason === 'subscription_create') {
+        console.log(`ℹ️ 這是首次訂閱發票，Credits 已在 checkout.session.completed 中添加，跳過處理`);
+        return;
+    }
+    
+    console.log(`🔄 這是訂閱續費發票，billing_reason: ${invoice.billing_reason}`);
+    
+    // 🔍 獲取用戶 ID
+    let userId;
+    
+    // 先尝试从 customer 的 metadata 获取
+    try {
+        const customer = await stripeClient.customers.retrieve(invoice.customer);
+        console.log(`📧 Customer 信息:`, {
+            id: customer.id,
+            email: customer.email,
+            metadata: customer.metadata
+        });
+        
+        userId = customer.metadata?.userId;
+        
+        // 如果没有 userId，尝试通过 email 查找
+        if (!userId && customer.email) {
+            console.log(`🔍 嘗試通過 email 查找用戶: ${customer.email}`);
+            const usersSnapshot = await db.collection('users')
+                .where('email', '==', customer.email)
+                .limit(1)
+                .get();
+            
+            if (!usersSnapshot.empty) {
+                userId = usersSnapshot.docs[0].id;
+                console.log(`✅ 通過 email 找到用戶: ${userId}`);
+            }
+        }
+    } catch (error) {
+        console.error('❌ 查找用戶失敗:', error);
+    }
+    
+    if (!userId) {
+        console.error('❌ 無法獲取用戶 ID，invoice:', JSON.stringify(invoice, null, 2));
+        return;
+    }
+    
+    // 🔍 獲取訂閱信息
+    try {
+        const subscription = await stripeClient.subscriptions.retrieve(invoice.subscription);
+        console.log(`📋 Subscription 信息:`, {
+            id: subscription.id,
+            status: subscription.status,
+            items: subscription.items.data.map(item => ({
+                priceId: item.price.id,
+                productId: item.price.product
+            }))
+        });
+        
+        // 獲取產品信息
+        const priceId = subscription.items.data[0].price.id;
+        const productId = subscription.items.data[0].price.product;
+        const product = await stripeClient.products.retrieve(productId);
+        
+        console.log(`📦 產品信息:`, {
+            productId: product.id,
+            name: product.name,
+            metadata: product.metadata
+        });
+        
+        // 根據產品 metadata 添加 Credits
+        const credits = parseInt(product.metadata.monthly_credits || product.metadata.credits || 0);
+        const planType = product.metadata.plan_type || 'monthly';
+        
+        console.log(`🔢 計算得到的 Credits: ${credits}`);
+        
+        if (credits > 0) {
+            console.log(`💰 準備為續費處理 Credits：用戶 ${userId}`);
+            
+            // 🔥 第 1 步：清零旧的 Credits
+            const userRef = db.collection('users').doc(userId);
+            const userDoc = await userRef.get();
+            
+            if (userDoc.exists) {
+                const oldCredits = userDoc.data().credits || 0;
+                const oldCurrentCredits = userDoc.data().currentCredits || 0;
+                console.log(`🗑️ 清零旧 Credits: credits=${oldCredits}, currentCredits=${oldCurrentCredits}`);
+                
+                await userRef.update({
+                    credits: 0,
+                    currentCredits: 0,
+                    lastCreditsBeforeReset: oldCredits, // 记录清零前的 Credits
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                });
+                console.log(`✅ 旧 Credits 已清零`);
+            }
+            
+            // 🔥 第 2 步：添加新的 Credits
+            console.log(`💰 添加新的 ${credits} Credits`);
+            await addCredits(userId, credits, {
+                source: 'subscription_renewal',
+                stripeInvoiceId: invoice.id,
+                stripeSubscriptionId: subscription.id,
+                productName: product.name,
+                amount: invoice.amount_paid / 100,
+                currency: invoice.currency,
+                planType: planType,
+                billingReason: invoice.billing_reason
+            });
+            
+            console.log(`✅ 續費成功：旧 Credits 已清零，新 Credits ${credits} 已添加`);
+            
+            // 🔥 第 3 步：更新重置日期
+            const now = new Date();
+            let resetDate;
+            if (planType === 'yearly') {
+                resetDate = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
+                console.log(`📅 年费计划，重置日期为 1 年后: ${resetDate.toISOString()}`);
+            } else {
+                resetDate = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());
+                console.log(`📅 月费计划，重置日期为 1 个月后: ${resetDate.toISOString()}`);
+            }
+            
+            // 更新用户文档
+            await userRef.update({
+                resetDate: admin.firestore.Timestamp.fromDate(resetDate),
+                lastRenewalDate: admin.firestore.FieldValue.serverTimestamp(),
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            });
+            console.log(`✅ 用户重置日期已更新`);
+        } else {
+            console.log(`⚠️ 產品沒有配置 Credits: ${product.name}`);
+        }
+    } catch (error) {
+        console.error('❌ 處理訂閱續費失敗:', error);
+        console.error('错误详情:', error.stack);
+        // 不抛出错误，避免 500
+    }
+}
+
 // ============================================
 // 2. Credits 管理函數
 // ============================================
@@ -567,25 +736,58 @@ async function addCredits(userId, amount, metadata = {}) {
 }
 
 /**
- * 扣除 Credits
+ * 扣除 Credits（支持 Pro Plan 自动按量收费）
  */
 async function deductCredits(userId, amount, metadata = {}) {
     const userRef = db.collection('users').doc(userId);
     
     await db.runTransaction(async (transaction) => {
         const userDoc = await transaction.get(userRef);
-        const currentCredits = userDoc.data()?.credits || 0;
+        const userData = userDoc.data();
+        const currentCredits = userData?.credits || 0;
+        const planType = userData?.planType;
+        const subscription = userData?.subscription;
         
-        if (currentCredits < amount) {
+        console.log(`🔍 扣除 Credits: userId=${userId}, current=${currentCredits}, deduct=${amount}, planType=${planType}`);
+        
+        // 检查是否是 Pro Plan
+        const isProPlan = planType === 'Pro Plan' && subscription?.status === 'active';
+        
+        if (currentCredits < amount && !isProPlan) {
+            // Free Plan 或非订阅用户：Credits 不足，抛出错误
+            console.log(`❌ Credits 不足且非 Pro Plan: ${currentCredits} < ${amount}`);
             throw new Error('Credits 不足');
         }
         
         const newCredits = currentCredits - amount;
         
-        transaction.update(userRef, {
-            credits: newCredits,
-            updatedAt: admin.firestore.FieldValue.serverTimestamp()
-        });
+        // 🔥 检查是否需要按量收费（Pro Plan 且超过月度额度）
+        if (isProPlan && newCredits < 0) {
+            console.log(`💰 Pro Plan 用户超出月度额度，启动按量收费`);
+            console.log(`📊 当前 Credits: ${currentCredits}, 扣除: ${amount}, 结果: ${newCredits}`);
+            
+            // 计算超出的 Credits 数量
+            const overageCredits = Math.abs(Math.min(newCredits, 0));
+            console.log(`📈 超出额度: ${overageCredits} Credits`);
+            
+            // 🔥 报告使用量给 Stripe（异步，不阻塞事务）
+            // 注意：这里只是标记需要报告，实际报告在事务外进行
+            transaction.update(userRef, {
+                credits: newCredits,
+                'usageTracking.pendingOverageReport': admin.firestore.FieldValue.increment(overageCredits),
+                'usageTracking.totalOverageThisPeriod': admin.firestore.FieldValue.increment(overageCredits),
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            });
+            
+            console.log(`⚠️ Credits 为负数: ${newCredits}（将在月底通过 Stripe 收费）`);
+        } else {
+            // 正常扣除
+            transaction.update(userRef, {
+                credits: newCredits,
+                currentCredits: newCredits,  // 同时更新 currentCredits
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            });
+        }
         
         // 記錄 Credits 歷史
         const historyRef = userRef.collection('creditsHistory').doc();
@@ -594,12 +796,99 @@ async function deductCredits(userId, amount, metadata = {}) {
             amount: amount,
             before: currentCredits,
             after: newCredits,
-            metadata: metadata,
+            metadata: {
+                ...metadata,
+                isProPlan: isProPlan,
+                isOverage: newCredits < 0
+            },
             createdAt: admin.firestore.FieldValue.serverTimestamp()
         });
         
         console.log(`✅ Credits 已扣除: ${userId} -${amount} = ${newCredits}`);
     });
+    
+    // 🔥 事务完成后，报告使用量给 Stripe（如果需要）
+    const userDoc = await userRef.get();
+    const userData = userDoc.data();
+    const pendingOverage = userData?.usageTracking?.pendingOverageReport || 0;
+    
+    if (pendingOverage > 0) {
+        console.log(`📡 准备向 Stripe 报告超额使用量: ${pendingOverage} Credits`);
+        
+        try {
+            await reportUsageToStripe(userId, pendingOverage);
+            
+            // 清除待报告标记
+            await userRef.update({
+                'usageTracking.pendingOverageReport': 0,
+                'usageTracking.lastReportedAt': admin.firestore.FieldValue.serverTimestamp()
+            });
+            
+            console.log(`✅ 使用量已报告给 Stripe`);
+        } catch (error) {
+            console.error(`❌ 报告使用量失败:`, error);
+            // 不抛出错误，下次再试
+        }
+    }
+}
+
+/**
+ * 向 Stripe 报告使用量（用于按量计费）
+ */
+async function reportUsageToStripe(userId, quantity) {
+    console.log(`📡 reportUsageToStripe: userId=${userId}, quantity=${quantity}`);
+    
+    // 获取用户的订阅信息
+    const userDoc = await db.collection('users').doc(userId).get();
+    const userData = userDoc.data();
+    const subscription = userData?.subscription;
+    
+    if (!subscription || !subscription.stripeSubscriptionId) {
+        console.error(`❌ 用户没有活跃的订阅: ${userId}`);
+        return;
+    }
+    
+    // 🔍 检查是否是测试模式
+    const isTestMode = subscription.stripeSubscriptionId.startsWith('sub_');
+    const stripeClient = isTestMode ? stripeTest : stripeLive;
+    
+    if (!stripeClient) {
+        console.error(`❌ Stripe 客户端未配置`);
+        return;
+    }
+    
+    console.log(`🔧 使用 ${isTestMode ? '测试' : '生产'} 模式的 Stripe 客户端`);
+    
+    // 🔍 查找 metered subscription item
+    // 需要用户在 Stripe 中设置好 metered price，并将 subscription_item_id 存储在用户文档中
+    const meteredItemId = subscription.meteredSubscriptionItemId;
+    
+    if (!meteredItemId) {
+        console.error(`❌ 用户订阅中没有配置 metered subscription item`);
+        console.error(`💡 请在 Stripe 中为订阅添加 metered price，并将 subscription_item_id 存储在用户文档的 subscription.meteredSubscriptionItemId 字段中`);
+        return;
+    }
+    
+    // 🔥 报告使用量
+    try {
+        const usageRecord = await stripeClient.subscriptionItems.createUsageRecord(
+            meteredItemId,
+            {
+                quantity: quantity,
+                timestamp: Math.floor(Date.now() / 1000),
+                action: 'increment' // 增量报告
+            }
+        );
+        
+        console.log(`✅ 使用量已报告给 Stripe:`, {
+            usageRecordId: usageRecord.id,
+            quantity: quantity,
+            subscriptionItemId: meteredItemId
+        });
+    } catch (error) {
+        console.error(`❌ 报告使用量失败:`, error);
+        throw error;
+    }
 }
 
 // ============================================
@@ -1373,15 +1662,15 @@ exports.createStripeCheckoutSession = functions.https.onCall(async (data, contex
         }
     };
     
-    // 🧪 定義測試模式價格 ID
+    // 🧪 定義測試模式價格 ID（支持多货币）
     const testPriceMapping = {
         monthly: {
-            basePriceId: 'price_1Scj13JmiQ31C0GT4TJsWzFg',  // 測試月費基礎 $58
-            usagePriceId: 'price_1Scj1UJmiQ31C0GTXDsN6TFh'  // 測試月費用量計費
+            basePriceId: 'price_1Sdn7oJmiQ31C0GT8BSefS3u',  // 測試月費（支持 HKD/USD/GBP/JPY/KRW/EUR）
+            usagePriceId: 'price_1Sdn7pJmiQ31C0GTTK1yVopH'  // 測試月費按量計費（支持多货币）
         },
         yearly: {
-            basePriceId: '',  // 測試年費基礎（尚未創建）
-            usagePriceId: ''  // 測試年費用量計費（尚未創建）
+            basePriceId: 'price_1Sdn7qJmiQ31C0GT57jbZfIg',  // 測試年費（支持 HKD/USD/GBP/JPY/KRW/EUR）
+            usagePriceId: 'price_1Sdn7qJmiQ31C0GTwJVp4q4Q'  // 測試年費按量計費（支持多货币）
         }
     };
     
@@ -1407,8 +1696,7 @@ exports.createStripeCheckoutSession = functions.https.onCall(async (data, contex
                     quantity: 1
                 },
                 {
-                    price: selectedPlan.usagePriceId,  // 用量計費
-                    quantity: 1
+                    price: selectedPlan.usagePriceId  // 用量計費（metered price 不需要 quantity）
                 }
             ],
             customer_email: email,  // ← 自動填充 email

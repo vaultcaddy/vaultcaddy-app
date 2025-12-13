@@ -1,189 +1,273 @@
 # 📋 当前状态总结
 
-## ✅ **已完成的工作**
+## ✅ **已完成的功能**
 
-### **1. 用户注册和 Email 验证**
-- ✅ 用户注册时自动添加 `email` 字段到 Firestore
-- ✅ Email 验证后正确添加 20 Credits
-- ✅ 状态：**完全正常**
-
----
-
-### **2. Stripe 支付 Credits 问题**
-- ✅ 修复了 Credits 重复添加的问题
-- ✅ 问题原因：订阅事件返回 500 错误，导致 Stripe 重试
-- ✅ 解决方案：订阅事件失败不再返回 500，避免重试
-- ✅ 状态：**代码已修复并部署**
+### **1. Credits 正确添加（100，不是 200）** ✅
+- **问题**：每次支付添加 200 Credits
+- **原因**：checkout session 有 2 个 line items，每个都添加了 100 Credits
+- **修复**：
+  - 添加 `creditsAdded` 标志，确保只添加一次
+  - 检查 `price.type === 'recurring'`，只处理订阅类型的产品
+- **状态**：✅ 已部署并测试成功
 
 ---
 
-### **3. Pro Plan 显示**
-- ✅ 购买订阅后，`planType` 字段设为 "Pro Plan"
-- ✅ Pro Plan 颜色改为蓝紫色渐变（与购买按钮一致）
-- ✅ 状态：**完全正常**
+### **2. 订阅续费自动添加 Credits** ✅
+- **问题**：首次订阅添加 Credits，但每月续费没有添加
+- **修复**：
+  - 添加 `handleInvoicePaid` 函数处理 `invoice.paid` 事件
+  - 检查 `billing_reason` 区分首次订阅和续费
+  - 续费时自动添加 100 Credits
+  - 更新 `resetDate` 为下个月
+- **状态**：✅ 已部署，需要更新 Stripe Webhook 配置
 
 ---
 
-### **4. 重置日期**
-- ✅ 月费：重置日期设为 1 个月后
-- ✅ 年费：重置日期设为 1 年后
-- ✅ 状态：**完全正常**
+### **3. Pro Plan 和重置日期显示** ✅
+- **问题**：订阅后需要显示 Pro Plan 和重置日期
+- **修复**：
+  - 在 `handleCheckoutCompleted` 中设置 `planType = "Pro Plan"`
+  - 根据 `plan_type`（monthly/yearly）计算 `resetDate`
+  - 前端 `account.html` 正确显示
+- **状态**：✅ 已完成
 
 ---
 
-### **5. 左侧栏"+"按钮创建项目**
-- ✅ 模态框中文界面
-- ✅ 使用 JavaScript 内联样式强制显示在页面中间
-- ✅ 状态：**刚刚修复并部署**
+### **4. Pro Plan 颜色与"购买 Credits"按钮一致** ✅
+- **问题**：Pro Plan 显示颜色不匹配
+- **修复**：将 Pro Plan 显示改为蓝紫渐变色
+- **状态**：✅ 已完成
 
 ---
 
-## ⏳ **待测试的功能**
-
-### **1. Stripe 支付 Credits（最重要）**
-
-**最新修复**：
-- ✅ 使用 Firestore 原子操作（`create()`）确保幂等性
-- ✅ 即使并发请求也不会重复处理
-- ✅ 已部署并生效
-
-**需要测试**：
-1. 清理 Firestore 测试数据（将 Credits 设为 0）
-2. 删除 `processedStripeEvents` 集合
-3. 等待 3-5 分钟（确保部署完成）
-4. 测试支付
-5. 确认 Credits **只增加 100**
-
-**详细步骤**：请查看 `✅_原子幂等性检查已部署_测试步骤.txt`
+### **5. 左侧栏"+"按钮模态框** ✅
+- **问题**：点击左侧栏"+"按钮时，模态框显示位置错误
+- **修复**：
+  - 更新 CSS 确保模态框居中显示
+  - 添加背景遮罩
+  - 统一 `account.html` 和 `billing.html` 的模态框设计
+  - 与 `firstproject.html` 的设计保持一致
+- **状态**：✅ 已完成并部署
 
 ---
 
-### **2. 左侧栏"+"按钮（刚刚修复）**
-
-**最新修复**：
-- ✅ 在 HTML 标签上直接添加 `style="display: none;"`
-- ✅ 确保页面加载时模态框完全隐藏
-- ✅ 使用 JavaScript 内联样式控制显示/隐藏
-- ✅ 已部署并生效
-
-**需要测试**：
-1. 清除浏览器缓存
-2. 访问 https://vaultcaddy.com/account.html 或 https://vaultcaddy.com/billing.html
-3. 确认页面加载时**看不到模态框**
-4. 点击左侧栏的 **"+"** 按钮
-5. 确认模态框在**页面中间**弹出，有**背景遮罩**
-
-**详细步骤**：请查看 `🎯_完整测试指南_模态框和Credits.txt`
+### **6. Email 验证自动添加 Credits** ✅
+- **问题**：验证 email 后没有添加 20 Credits
+- **修复**：
+  - 修改 `verifyCode` 函数，验证成功后添加 20 Credits
+  - 更新 `addCredits` 函数同时更新 `credits` 和 `currentCredits`
+- **状态**：✅ 已完成
 
 ---
 
-## 🔥 **当前最紧急的任务**
-
-### **任务 1：清理 Stripe Webhook 重试**
-
-**当前状态**：
-- Stripe 还在不断重试失败的订阅事件
-- 导致 Credits 不断增加（已达到 79970）
-
-**必须立即执行**：
-1. **禁用 Stripe Webhook**：
-   - 前往：https://dashboard.stripe.com/test/webhooks
-   - 点击 `charismatic-serenity`
-   - 禁用 Webhook
-   - **等待 5 分钟**
-
-2. **清理 Firestore 数据**：
-   - 前往：https://console.firebase.google.com/project/vaultcaddy-production-cbbe2/firestore
-   - 将测试用户的 `credits` 和 `currentCredits` 设为 **0**
-   - 删除 `processedStripeEvents` 集合
-
-3. **重新启用 Webhook**：
-   - 启用 Webhook
-   - 确认只监听 4 个事件
-
-4. **测试支付**：
-   - 使用新账户或清零的账户
-   - 测试支付
-   - 确认 Credits **只增加 100**
+### **7. 注册时自动添加 Email 字段** ✅
+- **问题**：新注册用户的 Firestore 文档中缺少 `email` 字段
+- **修复**：
+  - 修改 `simple-auth.js` 的 `registerWithEmail` 函数
+  - 修改 `loginWithGoogle` 函数
+  - 确保 `email` 字段始终被添加
+- **状态**：✅ 已完成
 
 ---
 
-### **任务 2：测试左侧栏"+"按钮**
-
-**这个应该很快就能完成！**
-
-1. 访问 https://vaultcaddy.com/account.html
-2. 点击左侧栏 "+"
-3. 确认模态框正确显示
-
-**如果还是不行**：
-- 按 F12 打开控制台
-- 截图并告诉我
+### **8. 幂等性检查防止重复处理** ✅
+- **问题**：Stripe 重试导致事件被处理多次
+- **修复**：
+  - 使用 Firestore 的原子 `create()` 操作
+  - 在 `processedStripeEvents` 集合中记录已处理的事件
+  - 并发请求时只有第一个会成功
+- **状态**：✅ 已完成
 
 ---
 
-## 📊 **功能完成度**
+## ✅ **新增完成的功能**
 
-| 功能 | 状态 | 完成度 |
-|------|------|--------|
-| Email 验证 Credits | ✅ 正常 | 100% |
-| Stripe 支付 Credits | ⏳ 代码已修复，待测试 | 90% |
-| Pro Plan 显示 | ✅ 正常 | 100% |
-| Pro Plan 颜色 | ✅ 正常 | 100% |
-| 重置日期 | ✅ 正常 | 100% |
-| 左侧栏"+"按钮 | ✅ 已修复并统一设计 | 100% |
-| Credits 为 0 逻辑 | ⏳ 待实现 | 0% |
-
----
-
-## 🎯 **下一步计划**
-
-### **第一步：完成当前的测试**
-
-1. ✅ 测试左侧栏"+"按钮
-2. ✅ 清理 Stripe Webhook 重试
-3. ✅ 测试支付 Credits
-
-### **第二步：实现 Credits 为 0 的逻辑**
-
-**需求**：
-- **Free Plan**：Credits 为 0 时显示提示购买
-- **Pro Plan**：Credits 为 0 时自动扣费
-
-**实现位置**：
-- `firstproject.html` - 文档上传检查
-- `batch-upload-processor.js` - 批量上传检查
-- Firebase Functions - 自动扣费逻辑（如果需要）
+### **1. 续费时清零旧 Credits** ✅
+- **需求**：到期时清除剩余 Credits，然后续费并添加新的 100 Credits
+- **实现**：
+  - 修改 `handleInvoicePaid` 函数
+  - 第 1 步：清零旧 Credits
+  - 第 2 步：添加新的 100 Credits
+  - 第 3 步：更新 resetDate
+- **状态**：✅ 已部署，需要添加 `invoice.paid` 事件到 Webhook
 
 ---
 
-## 🙏 **请按照优先级进行**
-
-### **优先级 1：测试左侧栏"+"按钮**
-- 时间：**2 分钟**
-- 访问页面，点击"+"，确认显示
-
-### **优先级 2：清理 Stripe Webhook**
-- 时间：**10 分钟**
-- 禁用 Webhook → 清理数据 → 重新启用
-
-### **优先级 3：测试支付 Credits**
-- 时间：**5 分钟**
-- 测试支付，确认只增加 100 Credits
-
-### **优先级 4：实现 Credits 为 0 的逻辑**
-- 时间：**30 分钟**
-- 等待前 3 个测试完成后再开始
+### **2. Pro Plan 用完月度 Credits 后自动按量收费** ✅
+- **需求**：第 101+ 个 Credit 按 $0.50/个 自动收费
+- **实现**：
+  - 修改 `deductCredits` 函数，允许 Pro Plan Credits 为负数
+  - 添加 `reportUsageToStripe` 函数，向 Stripe 报告超额使用量
+  - 使用 Stripe 的 metered billing 和分层定价
+- **状态**：✅ 已部署，需要完成 Stripe 配置
 
 ---
 
-## 📝 **重要文件**
+## ✅ **新增完成的功能（多货币支持）**
 
-1. `✅_致命问题已修复_清理和测试步骤.txt` - Stripe Credits 问题修复指南
-2. `🔥_使用内联样式强制修复模态框.txt` - 模态框修复指南
-3. `📋_当前状态总结.txt` - 本文件
+### **1. 多货币订阅系统** ✅
+- **需求**：支持多种货币，价格都是整数
+- **实现**：
+  - 使用 Stripe Currency Options
+  - 支持 6 种货币（HKD, USD, GBP, JPY, KRW, EUR）
+  - 所有价格都是整数
+  - Stripe 自动货币选择
+- **状态**：✅ 已部署
+
+### **2. 测试模式月费和年费** ✅
+- **需求**：测试模式支持月费和年费订阅
+- **实现**：
+  - 创建新的测试产品（英文名称）
+  - 月费：100 Credits/月
+  - 年费：1,200 Credits/年（节省 20%）
+  - 两个测试按钮都已启用
+- **状态**：✅ 已部署
 
 ---
 
-**准备好了吗？让我们逐一完成这些测试！** 💪
+## ⏳ **待完成的功能**
 
+### **1. Credits 为 0 时的前端逻辑** ⏳
+- **需求**：
+  - Free Plan 用户：弹出购买提示
+  - Pro Plan 用户：显示超额使用提示（不阻止使用）
+- **状态**：待实现
+
+### **2. 配置生产模式** ⏳
+- **需求**：为真实的 Get Started 配置相同功能
+- **步骤**：
+  - 运行脚本创建生产产品
+  - 更新 Firebase Functions 生产 Price IDs
+  - 更新生产模式 Webhook
+- **状态**：待测试成功后执行
+
+---
+
+## 🚨 **必须完成的配置**
+
+### **配置 1：更新 Stripe Webhook**
+1. **打开 Stripe Dashboard（测试模式）**：
+   https://dashboard.stripe.com/test/webhooks
+
+2. **点击 webhook 端点**：
+   - `charismatic-serenity`
+
+3. **添加事件**：
+   - ✅ `checkout.session.completed`（已有）
+   - ✅ `customer.subscription.created`（已有）
+   - ✅ `customer.subscription.updated`（已有）
+   - ✅ `customer.subscription.deleted`（已有）
+   - ⏳ `invoice.paid` ← **需要添加这个！**
+
+4. **保存**
+
+**为什么需要**：续费清零功能依赖此事件
+
+---
+
+### **配置 2：设置 Stripe 分层定价（按量计费）**
+
+**详细配置指南**：请查看 `🔥_Stripe按量计费配置指南.txt`
+
+**快速步骤**：
+
+1. **创建 Metered Price**：
+   - 在 Stripe Dashboard 中为产品创建新的计量价格
+   - 定价模型：分层定价（Graduated）
+   - 第 1 层：1-100，每个 0.00 HKD
+   - 第 2 层：101+，每个 0.50 HKD
+
+2. **添加到订阅**：
+   - 创建测试订阅时包含 2 个 items
+   - Item 1：固定月费（现有）
+   - Item 2：计量价格（新创建）
+
+3. **存储 Subscription Item ID**：
+   - 在 Firestore 用户文档中添加：
+   - `subscription.meteredSubscriptionItemId: "si_xxxxx"`
+
+**为什么需要**：按量计费功能依赖此配置
+
+---
+
+## 📊 **技术架构**
+
+### **Stripe 事件处理流程**
+
+```
+Stripe 事件
+│
+├─ checkout.session.completed（首次订阅）
+│  ├─ handleCheckoutCompleted
+│  │  ├─ 添加 100 Credits
+│  │  ├─ 设置 planType = "Pro Plan"
+│  │  └─ 设置 resetDate = 1个月后
+│  └─ 创建购买记录
+│
+├─ invoice.paid（订阅续费）✨ 新增
+│  ├─ handleInvoicePaid ✨ 新增
+│  │  ├─ 检查 billing_reason（区分首次和续费）
+│  │  ├─ 添加 100 Credits ✨ 新增
+│  │  └─ 更新 resetDate = 下个月 ✨ 新增
+│  └─ 更新订阅信息
+│
+├─ customer.subscription.created/updated（订阅状态变更）
+│  └─ handleSubscriptionChange
+│     └─ 更新订阅信息（不添加 Credits）
+│
+└─ customer.subscription.deleted（取消订阅）
+   └─ handleSubscriptionCancelled
+      └─ 更新订阅状态为 cancelled
+```
+
+---
+
+## 🔍 **关键修复点**
+
+### **1. 避免重复添加 Credits**
+- ✅ 使用 `creditsAdded` 标志
+- ✅ 只处理订阅类型的 line items
+- ✅ 原子幂等性检查
+
+---
+
+### **2. 区分首次订阅和续费**
+- ✅ 首次订阅：`checkout.session.completed`
+- ✅ 续费：`invoice.paid`（billing_reason !== 'subscription_create'）
+
+---
+
+### **3. 正确计算重置日期**
+- ✅ 月费：resetDate = 当前时间 + 1 个月
+- ✅ 年费：resetDate = 当前时间 + 1 年
+
+---
+
+## 📝 **下一步行动**
+
+1. ✅ **更新 Stripe Webhook 配置**
+   - 添加 `invoice.paid` 事件
+
+2. 🧪 **测试订阅续费**
+   - 在 Stripe Dashboard 中手动触发测试发票
+   - 验证 Credits 是否增加
+   - 验证 resetDate 是否更新
+
+3. ❓ **确认 Pro Plan 用完 Credits 后的逻辑**
+   - 停止使用 vs 按量收费 vs 购买 Credits 包？
+
+4. 💻 **实现 Credits 为 0 时的逻辑**
+   - Free Plan：弹出购买提示
+   - Pro Plan：根据确认的方案实现
+
+---
+
+## 🎯 **最后更新**
+
+- **日期**：2025年12月13日
+- **版本**：v1.2
+- **状态**：
+  - ✅ Credits 正确添加（100）
+  - ✅ 订阅续费功能已实现
+  - ⏳ 等待 Stripe Webhook 配置更新
+  - ⏳ 等待 Pro Plan Credits 用完逻辑确认
