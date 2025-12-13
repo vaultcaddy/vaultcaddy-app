@@ -125,23 +125,29 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
     
     console.log(`📨 收到${isTestMode ? '测试' : '生产'}模式webhook事件: ${event.type}, ID: ${event.id}`);
     
-    // 🔒 幂等性检查：防止重复处理同一个事件
+    // 🔒 幂等性检查：使用原子操作防止并发重复处理
     const processedEventsRef = db.collection('processedStripeEvents').doc(event.id);
-    const processedEventDoc = await processedEventsRef.get();
     
-    if (processedEventDoc.exists) {
-        console.log(`⚠️ 事件 ${event.id} 已经处理过，跳过处理`);
-        return res.status(200).json({ received: true, skipped: true, reason: 'already_processed' });
+    try {
+        // 🔥 使用 create 方法确保原子性：如果文档已存在会抛出错误
+        await processedEventsRef.create({
+            eventId: event.id,
+            eventType: event.type,
+            processedAt: admin.firestore.FieldValue.serverTimestamp(),
+            isTestMode: isTestMode,
+            timestamp: Date.now()
+        });
+        console.log(`✅ 事件 ${event.id} 已标记为处理中（首次处理）`);
+    } catch (error) {
+        // 如果文档已存在，说明正在被处理或已经处理过
+        if (error.code === 6 || error.message.includes('ALREADY_EXISTS')) {
+            console.log(`⚠️ 事件 ${event.id} 已经处理过，跳过处理`);
+            return res.status(200).json({ received: true, skipped: true, reason: 'already_processed' });
+        }
+        // 其他错误继续抛出
+        console.error(`❌ 记录事件时发生错误:`, error);
+        throw error;
     }
-    
-    // 記錄事件已處理（先记录，防止并发）
-    await processedEventsRef.set({
-        eventId: event.id,
-        eventType: event.type,
-        processedAt: admin.firestore.FieldValue.serverTimestamp(),
-        isTestMode: isTestMode
-    });
-    console.log(`✅ 事件 ${event.id} 已标记为处理中`);
     
     // 處理不同類型的 Stripe 事件
     try {
