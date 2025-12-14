@@ -1064,8 +1064,13 @@
                         <!-- 使用說明 -->
                         <div style="padding: 0.75rem; background: #f9fafb; border-radius: 8px; margin-bottom: 1rem;">
                             <div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem;">Credits 使用情況</div>
-                            <div style="font-size: 0.875rem; color: #1f2937;">每處理 1 頁文檔消耗 1 個 Credit。</div>
-                            <div style="font-size: 0.75rem; color: #9ca3af; margin-top: 0.25rem;">
+                            <div id="credits-usage-description" style="font-size: 0.875rem; color: #1f2937;">
+                                每處理 1 頁文檔消耗 1 個 Credit
+                            </div>
+                            <div id="overage-info" style="display: none; font-size: 0.8125rem; color: #6366f1; margin-top: 0.375rem; padding: 0.5rem; background: #f0f4ff; border-left: 3px solid #6366f1; border-radius: 4px;">
+                                💡 <strong>超額計費</strong>：超出月度額度後自動按 <strong>HKD $0.5/頁</strong> 計費
+                            </div>
+                            <div style="font-size: 0.75rem; color: #9ca3af; margin-top: 0.5rem;">
                                 重置日期：<span id="credits-reset-date">2025年11月4日</span> ⓘ
                             </div>
                         </div>
@@ -1320,6 +1325,20 @@
             // 🔧 根據計劃類型顯示/隱藏訂閱管理按鈕
             const subscriptionManagement = document.getElementById('subscription-management');
             const upgradePlanLink = document.getElementById('upgrade-plan-link');
+            
+            // 💡 根據計劃類型顯示/隱藏超額計費說明
+            const overageInfo = document.getElementById('overage-info');
+            if (savedPlan === 'Pro' || savedPlan === 'Business') {
+                // Pro Plan 或 Business Plan 用戶：顯示超額計費說明
+                if (overageInfo) {
+                    overageInfo.style.display = 'block';
+                }
+            } else {
+                // Free Plan 或 Basic Plan 用戶：隱藏超額計費說明
+                if (overageInfo) {
+                    overageInfo.style.display = 'none';
+                }
+            }
             
             if (savedPlan === 'Pro' || savedPlan === 'Business') {
                 // Pro Plan 或 Business Plan 用戶：顯示訂閱管理，隱藏升級鏈接
