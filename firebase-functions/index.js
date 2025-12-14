@@ -650,7 +650,59 @@ async function handleSubscriptionCancelled(subscription) {
             planType: userData?.planType
         });
         
-        // 🔥 重要：訂閱取消後，最多保留 50 個 Credits
+        // 🔥 重要：如果有超額使用（負數 Credits），需要先報告給 Stripe
+        if (currentCredits < 0) {
+            console.log(`💰 檢測到超額使用: ${currentCredits} Credits`);
+            
+            const overageAmount = Math.abs(currentCredits);
+            console.log(`📊 超額數量: ${overageAmount} Credits`);
+            
+            // 獲取 Stripe 訂閱信息
+            const meteredItemId = userData?.meteredSubscriptionItemId;
+            const stripeSubscriptionId = userData?.stripeSubscriptionId;
+            
+            if (meteredItemId && stripeSubscriptionId) {
+                console.log(`📡 向 Stripe 報告超額使用...`);
+                console.log(`   - Subscription ID: ${stripeSubscriptionId}`);
+                console.log(`   - Metered Item ID: ${meteredItemId}`);
+                console.log(`   - 超額數量: ${overageAmount}`);
+                
+                try {
+                    // 判斷是測試模式還是生產模式
+                    const isTestMode = stripeSubscriptionId.startsWith('sub_') || 
+                                      subscription.id.includes('test') ||
+                                      subscription.livemode === false;
+                    const stripeClient = isTestMode ? stripeTest : stripeLive;
+                    
+                    if (stripeClient) {
+                        // 創建使用記錄（Stripe 會在最終發票中計算費用）
+                        const usageRecord = await stripeClient.subscriptionItems.createUsageRecord(
+                            meteredItemId,
+                            {
+                                quantity: overageAmount,
+                                timestamp: Math.floor(Date.now() / 1000),
+                                action: 'increment'
+                            }
+                        );
+                        
+                        console.log(`✅ 超額使用已報告給 Stripe:`, usageRecord.id);
+                        console.log(`💵 Stripe 會在最終發票中收取 ${overageAmount} Credits 的費用`);
+                    } else {
+                        console.error(`❌ Stripe 客戶端未配置`);
+                    }
+                } catch (stripeError) {
+                    console.error(`❌ 報告超額使用失敗:`, stripeError.message);
+                    console.error(`錯誤詳情:`, stripeError);
+                    // 繼續處理，不阻塞取消訂閱流程
+                }
+            } else {
+                console.warn(`⚠️ 缺少 Stripe 訂閱信息，無法報告超額使用`);
+                console.warn(`   - meteredItemId: ${meteredItemId}`);
+                console.warn(`   - stripeSubscriptionId: ${stripeSubscriptionId}`);
+            }
+        }
+        
+        // 🔥 重要：訂閱取消後，Credits 處理邏輯
         const MAX_FREE_CREDITS = 50;
         let finalCredits = currentCredits;
         let clearedCredits = 0;
@@ -660,8 +712,9 @@ async function handleSubscriptionCancelled(subscription) {
             finalCredits = MAX_FREE_CREDITS;
             console.log(`🔥 清零超出的 Credits: ${currentCredits} → ${finalCredits}（清除 ${clearedCredits} 個）`);
         } else if (currentCredits < 0) {
-            // 負數 Credits 保持不變（用戶欠費）
-            console.log(`⚠️ Credits 為負數（${currentCredits}），保持不變`);
+            // 負數 Credits → 重置為 0（超額費用已報告給 Stripe）
+            finalCredits = 0;
+            console.log(`💰 Credits 為負數（${currentCredits}），已報告超額使用，重置為 0`);
         } else {
             // Credits <= 50，保持不變
             console.log(`✅ Credits 未超過 ${MAX_FREE_CREDITS}，保持不變: ${currentCredits}`);
