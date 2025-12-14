@@ -111,12 +111,22 @@ class IGPostGenerator:
         draw = ImageDraw.Draw(img)
         
         # 嘗試使用系統字體（macOS）
-        try:
-            if bold:
-                font = ImageFont.truetype('/System/Library/Fonts/PingFang.ttc', font_size)
-            else:
-                font = ImageFont.truetype('/System/Library/Fonts/PingFang.ttc', font_size)
-        except:
+        font_paths = [
+            '/System/Library/AssetsV2/com_apple_MobileAsset_Font7/3419f2a427639ad8c8e139149a287865a90fa17e.asset/AssetData/PingFang.ttc',
+            '/System/Library/Fonts/PingFang.ttc',
+            '/System/Library/Fonts/STHeiti Medium.ttc',
+            '/System/Library/Fonts/Helvetica.ttc'
+        ]
+        
+        font = None
+        for font_path in font_paths:
+            try:
+                font = ImageFont.truetype(font_path, font_size, index=0)
+                break
+            except:
+                continue
+        
+        if font is None:
             # 如果找不到字體，使用默認字體
             font = ImageFont.load_default()
         
@@ -149,9 +159,22 @@ class IGPostGenerator:
         """
         draw = ImageDraw.Draw(img)
         
-        try:
-            font = ImageFont.truetype('/System/Library/Fonts/PingFang.ttc', font_size)
-        except:
+        font_paths = [
+            '/System/Library/AssetsV2/com_apple_MobileAsset_Font7/3419f2a427639ad8c8e139149a287865a90fa17e.asset/AssetData/PingFang.ttc',
+            '/System/Library/Fonts/PingFang.ttc',
+            '/System/Library/Fonts/STHeiti Medium.ttc',
+            '/System/Library/Fonts/Helvetica.ttc'
+        ]
+        
+        font = None
+        for font_path in font_paths:
+            try:
+                font = ImageFont.truetype(font_path, font_size, index=0)
+                break
+            except:
+                continue
+        
+        if font is None:
             font = ImageFont.load_default()
         
         y = start_y
