@@ -25,15 +25,21 @@ window.emailVerificationChecker = {
                 return false;
             }
             
-            // 檢查 Firestore 中的驗證狀態
-            const functions = firebase.functions();
-            const checkFunc = functions.httpsCallable('checkEmailVerified');
-            const result = await checkFunc({ email: user.email });
+            // 🔧 先強制刷新用戶狀態（確保獲取最新的 emailVerified）
+            await user.reload();
             
-            return result.data.verified || false;
+            // ✅ 直接使用 Firebase Auth 的 emailVerified 屬性（最准確）
+            const isVerified = user.emailVerified;
+            
+            console.log(`📧 Email 驗證狀態: ${isVerified ? '已驗證 ✅' : '未驗證 ❌'}`);
+            console.log(`   用戶: ${user.email}`);
+            console.log(`   emailVerified: ${user.emailVerified}`);
+            
+            return isVerified;
             
         } catch (error) {
             console.error('❌ 檢查驗證狀態失敗:', error);
+            // 發生錯誤時，假設未驗證（安全起見）
             return false;
         }
     },
