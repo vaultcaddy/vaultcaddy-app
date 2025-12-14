@@ -1025,13 +1025,6 @@
                                 
                                 <!-- 訂閱管理按鈕（Pro Plan 用戶才顯示）-->
                                 <div id="subscription-management" style="display: none; flex-direction: column; gap: 0.5rem; margin-top: 0.25rem;">
-                                    <!-- 訂閱狀態 -->
-                                    <div id="subscription-status" style="font-size: 0.75rem; color: #6b7280; display: flex; align-items: center; gap: 0.5rem;">
-                                        <i class="fas fa-circle" style="font-size: 0.5rem; color: #10b981;"></i>
-                                        <span id="subscription-status-text">訂閱活躍</span>
-                                        <span id="subscription-period-text"></span>
-                                    </div>
-                                    
                                     <!-- 下次計費日期 -->
                                     <div id="next-billing-date" style="font-size: 0.75rem; color: #6b7280; display: none;">
                                         <i class="fas fa-calendar-alt" style="margin-right: 0.25rem;"></i>
@@ -1364,27 +1357,10 @@
                 
                 const userData = userDoc.data();
                 
-                // 檢查訂閱狀態
-                const subscriptionStatusElement = document.getElementById('subscription-status');
-                const subscriptionStatusText = document.getElementById('subscription-status-text');
-                const subscriptionPeriodText = document.getElementById('subscription-period-text');
+                // 顯示下次計費日期
                 const nextBillingDateElement = document.getElementById('next-billing-date');
                 const nextBillingDateText = document.getElementById('next-billing-date-text');
                 
-                // 顯示訂閱週期
-                if (userData.subscriptionPeriod) {
-                    const periodText = userData.subscriptionPeriod === 'monthly' ? '(月付)' : '(年付)';
-                    subscriptionPeriodText.textContent = periodText;
-                    subscriptionPeriodText.style.display = 'inline';
-                }
-                
-                // 檢查是否已取消（但仍在有效期內）
-                if (userData.subscriptionCancelAtPeriodEnd) {
-                    subscriptionStatusText.innerHTML = '<i class="fas fa-exclamation-triangle" style="margin-right: 0.25rem; color: #f59e0b;"></i>訂閱將於期末取消';
-                    subscriptionStatusElement.querySelector('.fa-circle').style.color = '#f59e0b';
-                }
-                
-                // 顯示下次計費日期
                 if (userData.resetDate && !userData.subscriptionCancelAtPeriodEnd) {
                     nextBillingDateElement.style.display = 'block';
                     const resetDate = userData.resetDate.toDate();
@@ -1404,6 +1380,9 @@
         
         // 打開 Stripe Customer Portal（管理訂閱）
         async function openStripeCustomerPortal() {
+            const button = event?.target?.closest('button');
+            const originalHTML = button ? button.innerHTML : '';
+            
             try {
                 console.log('🔧 打開 Stripe Customer Portal');
                 
@@ -1413,21 +1392,26 @@
                 }
                 
                 // 顯示加載提示
-                const button = event.target.closest('button');
-                const originalHTML = button.innerHTML;
-                button.disabled = true;
-                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 載入中...';
+                if (button) {
+                    button.disabled = true;
+                    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 載入中...';
+                }
                 
                 // 調用 Cloud Function 創建 Customer Portal Session
                 const functions = firebase.functions();
                 const createPortalSession = functions.httpsCallable('createStripeCustomerPortalSession');
                 
+                console.log('📞 調用 createStripeCustomerPortalSession...');
+                
                 const result = await createPortalSession({
                     returnUrl: window.location.href // 返回當前頁面
                 });
                 
+                console.log('✅ Cloud Function 返回:', result);
+                
                 if (result.data && result.data.url) {
                     // 跳轉到 Stripe Customer Portal
+                    console.log('🔗 跳轉到:', result.data.url);
                     window.location.href = result.data.url;
                 } else {
                     throw new Error('無法創建 Customer Portal Session');
@@ -1435,12 +1419,26 @@
                 
             } catch (error) {
                 console.error('❌ 打開 Customer Portal 失敗:', error);
-                alert('無法打開訂閱管理頁面，請稍後再試。');
+                console.error('錯誤詳情:', error.code, error.message, error.details);
+                
+                // 根據錯誤類型顯示不同的提示
+                let errorMessage = '無法打開訂閱管理頁面';
+                
+                if (error.code === 'unauthenticated') {
+                    errorMessage = '請先登入';
+                } else if (error.code === 'failed-precondition') {
+                    errorMessage = '您還沒有訂閱記錄。請先訂閱 Pro Plan。';
+                } else if (error.message) {
+                    errorMessage = `錯誤：${error.message}`;
+                }
+                
+                alert(errorMessage);
                 
                 // 恢復按鈕狀態
-                const button = event.target.closest('button');
-                button.disabled = false;
-                button.innerHTML = originalHTML;
+                if (button) {
+                    button.disabled = false;
+                    button.innerHTML = originalHTML;
+                }
             }
         }
         

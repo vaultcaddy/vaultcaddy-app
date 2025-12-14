@@ -2056,36 +2056,52 @@ exports.createStripeCustomerPortalSession = functions.https.onCall(async (data, 
     }
     
     const userId = context.auth.uid;
-    const { returnUrl } = data;
+    const { returnUrl, isTest = false } = data;
+    
+    console.log(`👤 用戶 ID: ${userId}, 測試模式: ${isTest}`);
     
     try {
         // 從 Firestore 獲取用戶的 Stripe Customer ID
         const userDoc = await admin.firestore().collection('users').doc(userId).get();
         
         if (!userDoc.exists) {
+            console.error('❌ 找不到用戶文檔');
             throw new functions.https.HttpsError('not-found', '找不到用戶資料');
         }
         
         const userData = userDoc.data();
+        console.log('📄 用戶數據:', {
+            email: userData.email,
+            planType: userData.planType,
+            hasStripeCustomerId: !!userData.stripeCustomerId
+        });
+        
         const stripeCustomerId = userData.stripeCustomerId;
         
         if (!stripeCustomerId) {
-            throw new functions.https.HttpsError('failed-precondition', '您還沒有訂閱記錄');
+            console.error('❌ 用戶沒有 Stripe Customer ID');
+            throw new functions.https.HttpsError('failed-precondition', '您還沒有訂閱記錄。請先訂閱 Pro Plan。');
         }
+        
+        // 🎯 根據 isTest 選擇使用的 Stripe 客戶端
+        const stripeClient = isTest ? stripeTest : stripeLive;
+        const mode = isTest ? '測試' : '生產';
         
         // 檢查 Stripe 是否已配置
-        if (!stripeLive) {
-            console.error('❌ Stripe 生產模式未配置');
-            throw new functions.https.HttpsError('unavailable', 'Stripe 未配置，請聯繫管理員');
+        if (!stripeClient) {
+            console.error(`❌ Stripe ${mode}模式未配置`);
+            throw new functions.https.HttpsError('unavailable', `Stripe ${mode}模式未配置，請聯繫管理員`);
         }
         
+        console.log(`🔧 使用 Stripe ${mode}模式，Customer ID: ${stripeCustomerId}`);
+        
         // 創建 Customer Portal Session
-        const session = await stripeLive.billingPortal.sessions.create({
+        const session = await stripeClient.billingPortal.sessions.create({
             customer: stripeCustomerId,
             return_url: returnUrl || 'https://vaultcaddy.com/account.html'
         });
         
-        console.log('✅ Customer Portal Session 創建成功:', session.id);
+        console.log(`✅ Customer Portal Session 創建成功 (${mode}模式):`, session.id);
         
         return {
             url: session.url
