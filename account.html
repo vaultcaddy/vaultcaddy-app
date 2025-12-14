@@ -1022,7 +1022,31 @@
                                     <i class="fas fa-crown"></i>
                                     <span>Basic Plan</span>
                                 </div>
-                                <a href="billing.html#subscription-plans" style="color: #667eea; font-size: 0.875rem; text-decoration: none; font-weight: 500;">升級計劃 →</a>
+                                
+                                <!-- 訂閱管理按鈕（Pro Plan 用戶才顯示）-->
+                                <div id="subscription-management" style="display: none; flex-direction: column; gap: 0.5rem; margin-top: 0.25rem;">
+                                    <!-- 訂閱狀態 -->
+                                    <div id="subscription-status" style="font-size: 0.75rem; color: #6b7280; display: flex; align-items: center; gap: 0.5rem;">
+                                        <i class="fas fa-circle" style="font-size: 0.5rem; color: #10b981;"></i>
+                                        <span id="subscription-status-text">訂閱活躍</span>
+                                        <span id="subscription-period-text"></span>
+                                    </div>
+                                    
+                                    <!-- 下次計費日期 -->
+                                    <div id="next-billing-date" style="font-size: 0.75rem; color: #6b7280; display: none;">
+                                        <i class="fas fa-calendar-alt" style="margin-right: 0.25rem;"></i>
+                                        下次計費：<span id="next-billing-date-text"></span>
+                                    </div>
+                                    
+                                    <!-- 管理訂閱按鈕 -->
+                                    <button onclick="openStripeCustomerPortal()" style="padding: 0.5rem 1rem; background: white; color: #667eea; border: 1px solid #667eea; border-radius: 6px; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.5rem;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='white'">
+                                        <i class="fas fa-cog"></i>
+                                        <span>管理訂閱</span>
+                                    </button>
+                                </div>
+                                
+                                <!-- 升級計劃按鈕（Free Plan 用戶才顯示）-->
+                                <a id="upgrade-plan-link" href="billing.html#subscription-plans" style="color: #667eea; font-size: 0.875rem; text-decoration: none; font-weight: 500;">升級計劃 →</a>
                             </div>
                         </div>
                     </div>
@@ -1300,8 +1324,124 @@
             // 保存到 localStorage
             localStorage.setItem('userPlan', savedPlan);
             
+            // 🔧 根據計劃類型顯示/隱藏訂閱管理按鈕
+            const subscriptionManagement = document.getElementById('subscription-management');
+            const upgradePlanLink = document.getElementById('upgrade-plan-link');
+            
+            if (savedPlan === 'Pro' || savedPlan === 'Business') {
+                // Pro Plan 或 Business Plan 用戶：顯示訂閱管理，隱藏升級鏈接
+                subscriptionManagement.style.display = 'flex';
+                upgradePlanLink.style.display = 'none';
+                
+                // 加載訂閱詳情
+                await loadSubscriptionDetails();
+            } else {
+                // Free Plan 或 Basic Plan 用戶：隱藏訂閱管理，顯示升級鏈接
+                subscriptionManagement.style.display = 'none';
+                upgradePlanLink.style.display = 'block';
+            }
+            
             // 載入 Credits 使用情況
             loadCreditsUsage();
+        }
+        
+        // 載入訂閱詳情
+        async function loadSubscriptionDetails() {
+            try {
+                if (!window.simpleAuth || !window.simpleAuth.currentUser) {
+                    return;
+                }
+                
+                const userId = window.simpleAuth.currentUser.uid;
+                const userDoc = await firebase.firestore()
+                    .collection('users')
+                    .doc(userId)
+                    .get();
+                
+                if (!userDoc.exists) {
+                    return;
+                }
+                
+                const userData = userDoc.data();
+                
+                // 檢查訂閱狀態
+                const subscriptionStatusElement = document.getElementById('subscription-status');
+                const subscriptionStatusText = document.getElementById('subscription-status-text');
+                const subscriptionPeriodText = document.getElementById('subscription-period-text');
+                const nextBillingDateElement = document.getElementById('next-billing-date');
+                const nextBillingDateText = document.getElementById('next-billing-date-text');
+                
+                // 顯示訂閱週期
+                if (userData.subscriptionPeriod) {
+                    const periodText = userData.subscriptionPeriod === 'monthly' ? '(月付)' : '(年付)';
+                    subscriptionPeriodText.textContent = periodText;
+                    subscriptionPeriodText.style.display = 'inline';
+                }
+                
+                // 檢查是否已取消（但仍在有效期內）
+                if (userData.subscriptionCancelAtPeriodEnd) {
+                    subscriptionStatusText.innerHTML = '<i class="fas fa-exclamation-triangle" style="margin-right: 0.25rem; color: #f59e0b;"></i>訂閱將於期末取消';
+                    subscriptionStatusElement.querySelector('.fa-circle').style.color = '#f59e0b';
+                }
+                
+                // 顯示下次計費日期
+                if (userData.resetDate && !userData.subscriptionCancelAtPeriodEnd) {
+                    nextBillingDateElement.style.display = 'block';
+                    const resetDate = userData.resetDate.toDate();
+                    nextBillingDateText.textContent = resetDate.toLocaleDateString('zh-TW', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                }
+                
+                console.log('✅ 訂閱詳情已加載');
+                
+            } catch (error) {
+                console.error('❌ 加載訂閱詳情失敗:', error);
+            }
+        }
+        
+        // 打開 Stripe Customer Portal（管理訂閱）
+        async function openStripeCustomerPortal() {
+            try {
+                console.log('🔧 打開 Stripe Customer Portal');
+                
+                if (!window.simpleAuth || !window.simpleAuth.currentUser) {
+                    alert('請先登入');
+                    return;
+                }
+                
+                // 顯示加載提示
+                const button = event.target.closest('button');
+                const originalHTML = button.innerHTML;
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 載入中...';
+                
+                // 調用 Cloud Function 創建 Customer Portal Session
+                const functions = firebase.functions();
+                const createPortalSession = functions.httpsCallable('createStripeCustomerPortalSession');
+                
+                const result = await createPortalSession({
+                    returnUrl: window.location.href // 返回當前頁面
+                });
+                
+                if (result.data && result.data.url) {
+                    // 跳轉到 Stripe Customer Portal
+                    window.location.href = result.data.url;
+                } else {
+                    throw new Error('無法創建 Customer Portal Session');
+                }
+                
+            } catch (error) {
+                console.error('❌ 打開 Customer Portal 失敗:', error);
+                alert('無法打開訂閱管理頁面，請稍後再試。');
+                
+                // 恢復按鈕狀態
+                const button = event.target.closest('button');
+                button.disabled = false;
+                button.innerHTML = originalHTML;
+            }
         }
         
         // 載入 Credits 使用情況

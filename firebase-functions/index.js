@@ -2042,5 +2042,65 @@ exports.createStripeCheckoutSession = functions.https.onCall(async (data, contex
     }
 });
 
-console.log('✅ Firebase Cloud Functions 已載入（包含 Email 驗證、數據清理和 Stripe 使用量計費功能）');
+// ==================== Stripe Customer Portal ====================
+/**
+ * 創建 Stripe Customer Portal Session
+ * 用於用戶管理自己的訂閱（取消、更新支付方式、查看發票等）
+ */
+exports.createStripeCustomerPortalSession = functions.https.onCall(async (data, context) => {
+    console.log('🔧 創建 Customer Portal Session');
+    
+    // 檢查用戶是否已登入
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', '請先登入');
+    }
+    
+    const userId = context.auth.uid;
+    const { returnUrl } = data;
+    
+    try {
+        // 從 Firestore 獲取用戶的 Stripe Customer ID
+        const userDoc = await admin.firestore().collection('users').doc(userId).get();
+        
+        if (!userDoc.exists) {
+            throw new functions.https.HttpsError('not-found', '找不到用戶資料');
+        }
+        
+        const userData = userDoc.data();
+        const stripeCustomerId = userData.stripeCustomerId;
+        
+        if (!stripeCustomerId) {
+            throw new functions.https.HttpsError('failed-precondition', '您還沒有訂閱記錄');
+        }
+        
+        // 檢查 Stripe 是否已配置
+        if (!stripeLive) {
+            console.error('❌ Stripe 生產模式未配置');
+            throw new functions.https.HttpsError('unavailable', 'Stripe 未配置，請聯繫管理員');
+        }
+        
+        // 創建 Customer Portal Session
+        const session = await stripeLive.billingPortal.sessions.create({
+            customer: stripeCustomerId,
+            return_url: returnUrl || 'https://vaultcaddy.com/account.html'
+        });
+        
+        console.log('✅ Customer Portal Session 創建成功:', session.id);
+        
+        return {
+            url: session.url
+        };
+        
+    } catch (error) {
+        console.error('❌ 創建 Customer Portal Session 失敗:', error);
+        
+        if (error instanceof functions.https.HttpsError) {
+            throw error;
+        }
+        
+        throw new functions.https.HttpsError('internal', `創建管理頁面失敗: ${error.message}`);
+    }
+});
+
+console.log('✅ Firebase Cloud Functions 已載入（包含 Email 驗證、數據清理、Stripe 使用量計費和 Customer Portal 功能）');
 
