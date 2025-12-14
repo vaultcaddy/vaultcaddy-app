@@ -2118,5 +2118,77 @@ exports.createStripeCustomerPortalSession = functions.https.onCall(async (data, 
     }
 });
 
-console.log('✅ Firebase Cloud Functions 已載入（包含 Email 驗證、數據清理、Stripe 使用量計費和 Customer Portal 功能）');
+// ==================== 调试工具：查询用户 Credits ====================
+/**
+ * 查询用户 Credits 和历史记录（用于调试）
+ * 
+ * 使用方法（浏览器控制台）：
+ * const f = firebase.functions().httpsCallable('queryUserCredits');
+ * const result = await f({ email: 'user@example.com' });
+ * console.log(result.data);
+ */
+exports.queryUserCredits = functions.https.onCall(async (data, context) => {
+    const { email } = data;
+    
+    if (!email) {
+        throw new functions.https.HttpsError('invalid-argument', '缺少 email 参数');
+    }
+    
+    try {
+        // 查找用户
+        const usersSnapshot = await db.collection('users')
+            .where('email', '==', email)
+            .limit(1)
+            .get();
+        
+        if (usersSnapshot.empty) {
+            throw new functions.https.HttpsError('not-found', '找不到用户');
+        }
+        
+        const userDoc = usersSnapshot.docs[0];
+        const userId = userDoc.id;
+        const userData = userDoc.data();
+        
+        // 获取 Credits 历史
+        const historySnapshot = await db
+            .collection('users')
+            .doc(userId)
+            .collection('creditsHistory')
+            .orderBy('timestamp', 'desc')
+            .limit(100)
+            .get();
+        
+        const history = historySnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                type: data.type,
+                amount: data.amount,
+                timestamp: data.timestamp?.toDate?.()?.toISOString() || null,
+                metadata: data.metadata
+            };
+        });
+        
+        // 统计添加的次数
+        const addRecords = history.filter(h => h.type === 'add');
+        const totalAdded = addRecords.reduce((sum, h) => sum + (h.amount || 0), 0);
+        
+        return {
+            userId,
+            email: userData.email,
+            currentCredits: userData.credits || 0,
+            currentCreditsField: userData.currentCredits || 0,
+            planType: userData.planType || 'Free Plan',
+            totalAdded,
+            addCount: addRecords.length,
+            history: history.slice(0, 30) // 返回前 30 条
+        };
+        
+    } catch (error) {
+        console.error('查询失败:', error);
+        throw new functions.https.HttpsError('internal', error.message);
+    }
+});
+
+console.log('✅ Firebase Cloud Functions 已載入（包含 Email 驗證、數據清理、Stripe 使用量計費、Customer Portal 和调试工具）');
 
