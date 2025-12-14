@@ -656,10 +656,18 @@
                 const firstName = document.getElementById('register-firstName').value;
                 const lastName = document.getElementById('register-lastName').value;
                 const email = document.getElementById('register-email').value;
+                const company = document.getElementById('register-company').value || '';  // 🏢 公司名稱（可選）
                 const displayName = `${firstName} ${lastName}`.trim();
                 
+                // 🎯 準備額外資料
+                const additionalData = {
+                    company: company.trim()
+                };
+                
+                console.log('📝 註冊資料:', { email, displayName, company });
+                
                 // 創建 Firebase Auth 用戶（但不自動登入）
-                await window.simpleAuth.registerWithEmail(email, password, displayName);
+                await window.simpleAuth.registerWithEmail(email, password, displayName, additionalData);
                 
                 // 發送驗證碼
                 const functions = firebase.functions();

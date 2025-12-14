@@ -258,10 +258,13 @@ async function handleCheckoutCompleted(session, isTestMode = false) {
                 const newUserRef = await db.collection('users').add({
                     email: session.customer_email,
                     displayName: customerName,
+                    company: '',  // 🏢 Stripe 支付時公司名稱為空，用戶可後續填寫
                     credits: 0,
                     currentCredits: 0,
                     planType: 'Free Plan', // 初始為 Free Plan，稍後會更新為 Pro Plan
                     emailVerified: false,
+                    photoURL: '',  // 📷 Stripe 註冊無頭像
+                    provider: 'stripe',  // 🔐 通過 Stripe 支付創建
                     createdAt: admin.firestore.FieldValue.serverTimestamp(),
                     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
                     source: 'stripe_payment',

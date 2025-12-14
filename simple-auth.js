@@ -208,9 +208,11 @@ class SimpleAuth {
                     const userData = {
                         email: normalizedEmail,
                         displayName: result.user.displayName || '',
+                        company: '',  // 🏢 Google 登入時公司名稱為空，用戶可後續填寫
                         credits: 0,
                         currentCredits: 0,
                         emailVerified: result.user.emailVerified,
+                        planType: 'Free Plan',  // 📋 初始為 Free Plan
                         photoURL: result.user.photoURL || '',
                         provider: 'google',
                         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -242,7 +244,7 @@ class SimpleAuth {
     }
     
     // 電子郵件註冊
-    async registerWithEmail(email, password, displayName = null) {
+    async registerWithEmail(email, password, displayName = null, additionalData = {}) {
         try {
             console.log('📝 正在註冊...', email);
             
@@ -261,15 +263,20 @@ class SimpleAuth {
             console.log('📝 正在創建 Firestore 用戶文檔...');
             console.log('   用戶 ID:', result.user.uid);
             console.log('   Email:', normalizedEmail);
+            console.log('   額外資料:', additionalData);
             
             try {
                 const db = firebase.firestore();
                 const userDoc = {
                     email: normalizedEmail,  // ✅ 統一小寫
                     displayName: displayName || '',
+                    company: additionalData.company || '',  // 🏢 公司名稱
                     credits: 0,  // 初始為 0，驗證後會加 20
                     currentCredits: 0,
                     emailVerified: false,
+                    planType: 'Free Plan',  // 📋 初始為 Free Plan
+                    photoURL: '',  // 📷 Email 註冊無頭像
+                    provider: 'email',  // 🔐 註冊方式
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
