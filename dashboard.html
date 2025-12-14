@@ -1215,37 +1215,25 @@
                 return;
             }
             
-            // 創建新項目對象
-            const newProject = {
-                id: 'project-' + Date.now(),
-                name: projectName,
-                thumbnail: null,
-                lastModified: new Date().toISOString(),
-                created: new Date().toISOString()
-            };
-            
             // 保存到 Firebase
             try {
-                await window.simpleDataManager.createProject(projectName);
-                console.log('✅ 項目已保存到 Firebase');
+                const projectData = await window.simpleDataManager.createProject(projectName);
+                console.log('✅ 項目已保存到 Firebase:', projectData);
+                
+                // 關閉模態框
+                closeCreateProjectModal();
+                
+                // 🔥 修復：使用 Firebase 返回的真實 projectId
+                const projectId = projectData.id;
+                console.log('🚀 跳轉到新項目頁面:', projectId);
+                
+                // 跳轉到新項目頁面
+                window.location.href = `firstproject.html?project=${projectId}`;
             } catch (error) {
                 console.error('❌ 保存到 Firebase 失敗:', error);
                 alert('創建項目失敗，請重試');
                 return;
             }
-            
-            // 觸發項目創建事件，讓側邊欄更新
-            window.dispatchEvent(new CustomEvent('projectCreated', { 
-                detail: newProject 
-            }));
-            
-            // 關閉模態框
-            closeCreateProjectModal();
-            
-            // 重新載入項目列表
-            loadProjects();
-            
-            console.log('✅ 項目已創建:', newProject);
         }
 
         // ✅ 簡化：直接使用 SimpleAuth

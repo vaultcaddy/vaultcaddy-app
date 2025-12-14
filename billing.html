@@ -2141,11 +2141,15 @@
             
             // 保存到 Firebase
             try {
-                const projectId = await window.simpleDataManager.createProject(projectName);
-                console.log('✅ 項目已保存到 Firebase:', projectId);
+                const projectData = await window.simpleDataManager.createProject(projectName);
+                console.log('✅ 項目已保存到 Firebase:', projectData);
                 
                 // 關閉模態框
                 closeCreateProjectModal();
+                
+                // 🔥 修復：使用 projectData.id 而非 projectData 本身
+                const projectId = projectData.id;
+                console.log('🚀 跳轉到新項目頁面:', projectId);
                 
                 // 跳轉到新項目頁面
                 window.location.href = `firstproject.html?project=${projectId}`;

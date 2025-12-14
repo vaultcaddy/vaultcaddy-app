@@ -246,13 +246,26 @@ async function handleCheckoutCompleted(session, isTestMode = false) {
                 console.log(`✅ 通過 email 找到用戶: ${userId}`);
             } else {
                 console.log(`⚠️ 未找到 email 對應的用戶，創建新用戶: ${session.customer_email}`);
-                // 创建新用户
+                
+                // 🔥 从 Stripe session 中提取用户名
+                const customerName = session.customer_details?.name || 
+                                    session.customer_details?.email?.split('@')[0] || 
+                                    'VaultCaddy User';
+                
+                console.log(`📝 新用戶資料: email=${session.customer_email}, displayName=${customerName}`);
+                
+                // 创建新用户（包含所有必要字段）
                 const newUserRef = await db.collection('users').add({
                     email: session.customer_email,
+                    displayName: customerName,
                     credits: 0,
+                    currentCredits: 0,
+                    planType: 'Free Plan', // 初始為 Free Plan，稍後會更新為 Pro Plan
+                    emailVerified: false,
                     createdAt: admin.firestore.FieldValue.serverTimestamp(),
                     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-                    source: 'stripe_payment'
+                    source: 'stripe_payment',
+                    stripeCustomerId: session.customer
                 });
                 userId = newUserRef.id;
                 console.log(`✅ 新用戶已創建: ${userId}`);
