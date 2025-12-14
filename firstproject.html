@@ -2282,6 +2282,45 @@
                     }
                 </style>
 
+                <!-- 日期篩選器 -->
+                <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+                    <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;">
+                        <!-- 日期篩選 -->
+                        <div style="flex: 1; min-width: 200px;">
+                            <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+                                <i class="fas fa-calendar-alt" style="margin-right: 0.5rem; color: #8b5cf6;"></i>
+                                日期範圍
+                            </label>
+                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                <input type="date" id="date-from" style="flex: 1; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem;">
+                                <span style="color: #6b7280;">至</span>
+                                <input type="date" id="date-to" style="flex: 1; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem;">
+                            </div>
+                        </div>
+                        
+                        <!-- 上傳日期篩選 -->
+                        <div style="flex: 1; min-width: 200px;">
+                            <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+                                <i class="fas fa-upload" style="margin-right: 0.5rem; color: #8b5cf6;"></i>
+                                上傳日期範圍
+                            </label>
+                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                <input type="date" id="upload-date-from" style="flex: 1; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem;">
+                                <span style="color: #6b7280;">至</span>
+                                <input type="date" id="upload-date-to" style="flex: 1; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem;">
+                            </div>
+                        </div>
+                        
+                        <!-- 清除按鈕 -->
+                        <div style="align-self: flex-end;">
+                            <button onclick="clearDateFilters()" style="padding: 0.5rem 1rem; background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem; cursor: pointer; white-space: nowrap; transition: all 0.2s;" onmouseover="this.style.background='#e5e7eb'" onmouseout="this.style.background='#f3f4f6'">
+                                <i class="fas fa-times" style="margin-right: 0.5rem;"></i>
+                                清除篩選
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
                 <!-- 文檔表格 -->
                 <div class="table-container" style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; overflow-x: auto;">
                     <table style="width: 100%; border-collapse: collapse; min-width: 1000px;">
@@ -2316,15 +2355,15 @@
                                     <span>金額</span>
                                     <i class="fas fa-sort sort-icon" data-column="amount" style="margin-left: 0.5rem; color: #9ca3af;"></i>
                                 </th>
-                                <!-- 日期列 -->
-                                <th onclick="sortTable('date')" style="text-align: left; padding: 0.5rem 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; cursor: pointer; user-select: none;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+                                <!-- 日期列 - 已改為篩選器，移除排序 -->
+                                <th style="text-align: left; padding: 0.5rem 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
                                     <span>日期</span>
-                                    <i class="fas fa-sort sort-icon" data-column="date" style="margin-left: 0.5rem; color: #9ca3af;"></i>
+                                    <i class="fas fa-filter" style="margin-left: 0.5rem; color: #8b5cf6;"></i>
                                 </th>
-                                <!-- 上傳日期列 -->
-                                <th onclick="sortTable('uploadDate')" style="text-align: left; padding: 0.5rem 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; cursor: pointer; user-select: none;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+                                <!-- 上傳日期列 - 已改為篩選器，移除排序 -->
+                                <th style="text-align: left; padding: 0.5rem 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem;">
                                     <span>上傳日期</span>
-                                    <i class="fas fa-sort sort-icon" data-column="uploadDate" style="margin-left: 0.5rem; color: #9ca3af;"></i>
+                                    <i class="fas fa-filter" style="margin-left: 0.5rem; color: #8b5cf6;"></i>
                                 </th>
                                 <!-- 操作列 -->
                                 <th style="text-align: center; padding: 0.5rem 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; width: 100px;">
@@ -2462,6 +2501,9 @@
             // 載入項目數據
             await loadProject();
             await loadDocuments();
+            
+            // 初始化日期篩選器
+            initDateFilters();
         });
         
         // ==================== 載入項目 ====================
@@ -2521,6 +2563,136 @@
             renderDocuments();
         }
         
+        // ==================== 日期篩選功能 ====================
+        
+        // 全局日期篩選狀態
+        let dateFilters = {
+            dateFrom: null,
+            dateTo: null,
+            uploadDateFrom: null,
+            uploadDateTo: null
+        };
+        
+        // 應用日期篩選
+        function applyDateFilters() {
+            console.log('🗓️ 應用日期篩選', dateFilters);
+            
+            // 從原始文檔開始篩選
+            let filtered = [...allDocuments];
+            
+            // 篩選日期
+            if (dateFilters.dateFrom || dateFilters.dateTo) {
+                filtered = filtered.filter(doc => {
+                    const docDate = doc.processedData?.invoiceDate || doc.processedData?.transactionDate || doc.processedData?.date;
+                    if (!docDate) return false;
+                    
+                    const date = new Date(docDate);
+                    const fromDate = dateFilters.dateFrom ? new Date(dateFilters.dateFrom) : null;
+                    const toDate = dateFilters.dateTo ? new Date(dateFilters.dateTo) : null;
+                    
+                    if (fromDate && date < fromDate) return false;
+                    if (toDate && date > toDate) return false;
+                    
+                    return true;
+                });
+            }
+            
+            // 篩選上傳日期
+            if (dateFilters.uploadDateFrom || dateFilters.uploadDateTo) {
+                filtered = filtered.filter(doc => {
+                    const uploadDate = doc.uploadDate || doc.createdAt;
+                    if (!uploadDate) return false;
+                    
+                    // 轉換 Firestore Timestamp 或 Date 對象
+                    let date;
+                    if (uploadDate.toDate) {
+                        date = uploadDate.toDate();
+                    } else if (uploadDate.seconds) {
+                        date = new Date(uploadDate.seconds * 1000);
+                    } else {
+                        date = new Date(uploadDate);
+                    }
+                    
+                    const fromDate = dateFilters.uploadDateFrom ? new Date(dateFilters.uploadDateFrom) : null;
+                    const toDate = dateFilters.uploadDateTo ? new Date(dateFilters.uploadDateTo) : null;
+                    
+                    if (fromDate && date < fromDate) return false;
+                    if (toDate && date > toDate) return false;
+                    
+                    return true;
+                });
+            }
+            
+            // 更新過濾後的文檔列表
+            window.filteredDocuments = filtered;
+            
+            // 重新渲染
+            renderDocuments();
+        }
+        
+        // 清除日期篩選
+        function clearDateFilters() {
+            console.log('🗑️ 清除日期篩選');
+            
+            // 重置篩選狀態
+            dateFilters = {
+                dateFrom: null,
+                dateTo: null,
+                uploadDateFrom: null,
+                uploadDateTo: null
+            };
+            
+            // 清空輸入框
+            document.getElementById('date-from').value = '';
+            document.getElementById('date-to').value = '';
+            document.getElementById('upload-date-from').value = '';
+            document.getElementById('upload-date-to').value = '';
+            
+            // 重置過濾列表
+            window.filteredDocuments = [...allDocuments];
+            
+            // 重新渲染
+            renderDocuments();
+        }
+        
+        // 初始化日期篩選器事件監聽
+        function initDateFilters() {
+            const dateFrom = document.getElementById('date-from');
+            const dateTo = document.getElementById('date-to');
+            const uploadDateFrom = document.getElementById('upload-date-from');
+            const uploadDateTo = document.getElementById('upload-date-to');
+            
+            if (dateFrom) {
+                dateFrom.addEventListener('change', (e) => {
+                    dateFilters.dateFrom = e.target.value;
+                    applyDateFilters();
+                });
+            }
+            
+            if (dateTo) {
+                dateTo.addEventListener('change', (e) => {
+                    dateFilters.dateTo = e.target.value;
+                    applyDateFilters();
+                });
+            }
+            
+            if (uploadDateFrom) {
+                uploadDateFrom.addEventListener('change', (e) => {
+                    dateFilters.uploadDateFrom = e.target.value;
+                    applyDateFilters();
+                });
+            }
+            
+            if (uploadDateTo) {
+                uploadDateTo.addEventListener('change', (e) => {
+                    dateFilters.uploadDateTo = e.target.value;
+                    applyDateFilters();
+                });
+            }
+            
+            console.log('✅ 日期篩選器已初始化');
+        }
+        
         // ==================== 渲染文檔表格 ====================
         // 暴露為全局函數，供 firstproject-enhancements.js 使用
         window.renderDocuments = function renderDocuments() {
@@ -2531,7 +2703,7 @@
                 return;
             }
             
-            // 使用過濾後的文檔（支持搜索功能）
+            // 使用過濾後的文檔（支持搜索功能和日期篩選）
             const docsToRender = window.filteredDocuments || allDocuments;
             
             // 複製並排序文檔
