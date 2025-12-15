@@ -2319,12 +2319,34 @@
                             justify-content: center !important;
                             padding: 0.625rem 1rem !important;
                         }
+                        
+                        /* 🔥 手機版日期篩選折疊按鈕 */
+                        #date-filter-toggle-mobile {
+                            display: block !important;
+                        }
+                        
+                        /* 🔥 手機版默認收起日期篩選內容 */
+                        #date-filter-content {
+                            display: none !important;
+                        }
+                        
+                        #date-filter-content.expanded {
+                            display: flex !important;
+                            flex-direction: column !important;
+                        }
                     }
                 </style>
 
                 <!-- 日期篩選器 -->
                 <div class="date-filter-container" style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
-                    <div class="date-filter-wrapper" style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;">
+                    <!-- 手機版折疊按鈕 -->
+                    <button id="date-filter-toggle-mobile" onclick="toggleDateFilter()" style="display: none; width: 100%; background: #f8f9fa; border: 1px solid #e5e7eb; border-radius: 6px; padding: 0.75rem; margin-bottom: 1rem; cursor: pointer; text-align: left; font-weight: 600; color: #374151;">
+                        <i class="fas fa-calendar-alt" style="margin-right: 0.5rem; color: #8b5cf6;"></i>
+                        <span>日期篩選</span>
+                        <i id="date-filter-toggle-icon" class="fas fa-chevron-down" style="float: right; transition: transform 0.2s;"></i>
+                    </button>
+                    
+                    <div id="date-filter-content" class="date-filter-wrapper" style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;">
                         <!-- 日期篩選 -->
                         <div class="date-filter-group" style="flex: 1; min-width: 200px;">
                             <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
@@ -2358,7 +2380,7 @@
                                 清除篩選
                             </button>
                         </div>
-                    </div>
+                    </div> <!-- 關閉 date-filter-content -->
                 </div>
                 
                 <!-- 文檔表格 -->
@@ -2671,6 +2693,23 @@
         }
         
         // 清除日期篩選
+        // 🔥 手機版日期篩選折疊/展開
+        window.toggleDateFilter = function() {
+            const content = document.getElementById('date-filter-content');
+            const icon = document.getElementById('date-filter-toggle-icon');
+            
+            if (content && icon) {
+                content.classList.toggle('expanded');
+                
+                // 更新圖標
+                if (content.classList.contains('expanded')) {
+                    icon.style.transform = 'rotate(180deg)';
+                } else {
+                    icon.style.transform = 'rotate(0deg)';
+                }
+            }
+        };
+        
         function clearDateFilters() {
             console.log('🗑️ 清除日期篩選');
             
@@ -3696,16 +3735,21 @@
             lastSelectedCount = selectedCount;
             console.log(`📊 更新按鈕: ${selectedCount} 個文檔被選中`);
             
-            // 更新 Delete 按鈕
-            const deleteBtn = document.getElementById('delete-selected-btn');
-            if (deleteBtn) {
-                const deleteSpan = deleteBtn.querySelector('span');
-                if (deleteSpan) {
-                    deleteSpan.textContent = selectedCount > 0 ? `Delete ${selectedCount}` : 'Delete';
+            // 更新 Delete 按鈕（桌面版和手機版）
+            const deleteBtnDesktop = document.getElementById('delete-selected-btn-desktop');
+            const deleteBtnMobile = document.getElementById('delete-selected-btn-mobile');
+            
+            [deleteBtnDesktop, deleteBtnMobile].forEach(deleteBtn => {
+                if (deleteBtn) {
+                    const deleteSpan = deleteBtn.querySelector('span');
+                    if (deleteSpan) {
+                        deleteSpan.textContent = selectedCount > 0 ? `Delete ${selectedCount}` : 'Delete';
+                    }
+                    deleteBtn.disabled = selectedCount === 0;
+                    deleteBtn.style.opacity = selectedCount > 0 ? '1' : '0.5';
+                    deleteBtn.style.cursor = selectedCount > 0 ? 'pointer' : 'not-allowed';
                 }
-                deleteBtn.disabled = selectedCount === 0;
-                deleteBtn.style.opacity = selectedCount > 0 ? '1' : '0.5';
-            }
+            });
             
             // 更新 Export 按鈕
             const exportBtn = document.querySelector('[onclick*="toggleExportMenu"]');
