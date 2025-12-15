@@ -685,13 +685,13 @@ async function handleSubscriptionCancelled(subscription) {
                 console.log(`   - 超額數量: ${overageAmount}`);
                 console.log(`   - 總使用量: ${totalUsage}（這是 Stripe 計費的基礎）`);
                 
+                // 🔥 判斷是測試模式還是生產模式（在 try 之前定義，確保 catch 中也能使用）
+                const isTestMode = stripeSubscriptionId.startsWith('sub_') || 
+                                  subscription.id.includes('test') ||
+                                  subscription.livemode === false;
+                const stripeClient = isTestMode ? stripeTest : stripeLive;
+                
                 try {
-                    // 判斷是測試模式還是生產模式
-                    const isTestMode = stripeSubscriptionId.startsWith('sub_') || 
-                                      subscription.id.includes('test') ||
-                                      subscription.livemode === false;
-                    const stripeClient = isTestMode ? stripeTest : stripeLive;
-                    
                     if (stripeClient) {
                         // 🔥 報告總使用量（不是超額量！）
                         // Stripe 會根據梯度定價自動計算：前 monthlyCredits 個免費，超出部分收費
