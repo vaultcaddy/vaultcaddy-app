@@ -658,8 +658,14 @@ async function handleSubscriptionCancelled(subscription) {
             console.log(`📊 超額數量: ${overageAmount} Credits`);
             
             // 獲取 Stripe 訂閱信息
-            const meteredItemId = userData?.meteredSubscriptionItemId;
-            const stripeSubscriptionId = userData?.stripeSubscriptionId;
+            const meteredItemId = userData?.subscription?.meteredSubscriptionItemId;
+            const stripeSubscriptionId = userData?.subscription?.stripeSubscriptionId;
+            
+            console.log(`🔍 檢查訂閱信息:`, {
+                hasSubscription: !!userData?.subscription,
+                meteredItemId: meteredItemId,
+                stripeSubscriptionId: stripeSubscriptionId
+            });
             
             if (meteredItemId && stripeSubscriptionId) {
                 console.log(`📡 向 Stripe 報告超額使用...`);
@@ -2295,22 +2301,22 @@ exports.diagnoseOverageCharging = functions.https.onCall(async (data, context) =
             email: userData.email,
             currentCredits: userData.currentCredits || userData.credits || 0,
             planType: userData.planType || 'Free Plan',
-            meteredItemId: userData.meteredSubscriptionItemId || null,
-            stripeSubscriptionId: userData.stripeSubscriptionId || null,
+            meteredItemId: userData.subscription?.meteredSubscriptionItemId || null,
+            stripeSubscriptionId: userData.subscription?.stripeSubscriptionId || null,
             subscriptionStatus: userData.subscription?.status || 'none',
-            hasMeteredItem: !!userData.meteredSubscriptionItemId,
-            hasSubscriptionId: !!userData.stripeSubscriptionId,
+            hasMeteredItem: !!userData.subscription?.meteredSubscriptionItemId,
+            hasSubscriptionId: !!userData.subscription?.stripeSubscriptionId,
             checks: {
-                hasMeteredItem: !!userData.meteredSubscriptionItemId,
-                hasSubscriptionId: !!userData.stripeSubscriptionId,
-                canReportUsage: !!(userData.meteredSubscriptionItemId && userData.stripeSubscriptionId)
+                hasMeteredItem: !!userData.subscription?.meteredSubscriptionItemId,
+                hasSubscriptionId: !!userData.subscription?.stripeSubscriptionId,
+                canReportUsage: !!(userData.subscription?.meteredSubscriptionItemId && userData.subscription?.stripeSubscriptionId)
             },
             stripeUsageRecords: null,
             error: null
         };
         
         // 2. 如果有 Stripe 订阅信息，查询 Stripe 使用记录
-        if (userData.meteredSubscriptionItemId && userData.stripeSubscriptionId) {
+        if (userData.subscription?.meteredSubscriptionItemId && userData.subscription?.stripeSubscriptionId) {
             console.log(`📡 查询 Stripe 使用记录...`);
             
             try {
@@ -2324,7 +2330,7 @@ exports.diagnoseOverageCharging = functions.https.onCall(async (data, context) =
                 if (stripeClient) {
                     // 查询使用记录
                     const usageRecords = await stripeClient.subscriptionItems.listUsageRecordSummaries(
-                        userData.meteredSubscriptionItemId,
+                        userData.subscription.meteredSubscriptionItemId,
                         { limit: 100 }
                     );
                     
@@ -2416,13 +2422,19 @@ exports.manualReportOverage = functions.https.onCall(async (data, context) => {
         const userId = userDoc.id;
         const userData = userDoc.data();
         
-        const meteredItemId = userData.meteredSubscriptionItemId;
-        const stripeSubscriptionId = userData.stripeSubscriptionId;
+        const meteredItemId = userData.subscription?.meteredSubscriptionItemId;
+        const stripeSubscriptionId = userData.subscription?.stripeSubscriptionId;
+        
+        console.log(`🔍 检查订阅信息:`, {
+            hasSubscription: !!userData.subscription,
+            meteredItemId: meteredItemId,
+            stripeSubscriptionId: stripeSubscriptionId
+        });
         
         if (!meteredItemId || !stripeSubscriptionId) {
             throw new functions.https.HttpsError(
                 'failed-precondition',
-                `缺少 Stripe 订阅信息:\nmeteredItemId: ${meteredItemId}\nstripeSubscriptionId: ${stripeSubscriptionId}`
+                `缺少 Stripe 订阅信息:\nmeteredItemId: ${meteredItemId}\nstripeSubscriptionId: ${stripeSubscriptionId}\n\n请先确保用户有活跃的订阅！`
             );
         }
         
