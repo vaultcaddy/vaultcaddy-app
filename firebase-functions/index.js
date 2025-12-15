@@ -744,21 +744,29 @@ async function handleSubscriptionCancelled(subscription) {
                         
                         console.log(`✅ 發票項目已創建: ${invoiceItem.id}`);
                         
-                        // 創建並立即完成發票
+                        // 創建新發票（會自動包含上面創建的發票項目）
                         const invoice = await stripeClient.invoices.create({
                             customer: subscription.customer,
-                            auto_advance: true, // 自動完成並收費
                             collection_method: 'charge_automatically',
                             description: `VaultCaddy 超額使用費用`,
+                            auto_advance: false, // 手動控制支付流程
                         });
                         
                         console.log(`✅ 發票已創建: ${invoice.id}`);
+                        console.log(`📋 發票包含項目: ${invoiceItem.id}，金額: HK$${(totalAmount / 100).toFixed(2)}`);
                         
-                        // 完成並收取發票
+                        // 步驟 1：完成發票
                         const finalizedInvoice = await stripeClient.invoices.finalizeInvoice(invoice.id);
+                        console.log(`✅ 發票已完成: ${finalizedInvoice.id}`);
                         
-                        console.log(`✅ 發票已完成並自動收費: ${finalizedInvoice.id}`);
-                        console.log(`💵 發票金額: HK$${(totalAmount / 100).toFixed(2)}`);
+                        // 步驟 2：立即支付發票
+                        const paidInvoice = await stripeClient.invoices.pay(invoice.id, {
+                            paid_out_of_band: false, // 使用 Stripe 支付
+                        });
+                        
+                        console.log(`✅ 發票已成功支付: ${paidInvoice.id}`);
+                        console.log(`💵 支付金額: HK$${(paidInvoice.amount_paid / 100).toFixed(2)}`);
+                        console.log(`💳 支付狀態: ${paidInvoice.status}`);
                         console.log(`📧 發票已發送給客戶: ${subscription.customer}`);
                         
                     } catch (invoiceError) {
@@ -2602,21 +2610,32 @@ exports.manualReportOverage = functions.https.onCall(async (data, context) => {
             
             console.log(`✅ 發票項目已創建: ${invoiceItem.id}`);
             
-            // 創建並完成發票
+            // 創建新發票
             const invoice = await stripeClient.invoices.create({
                 customer: customerId,
-                auto_advance: true,
                 collection_method: 'charge_automatically',
                 description: `VaultCaddy 超額使用費用（手動報告）`,
+                auto_advance: false, // 手動控制支付流程
             });
             
             invoiceId = invoice.id;
             billingMethod = 'invoice';
             
             console.log(`✅ 發票已創建: ${invoice.id}`);
+            console.log(`📋 發票包含項目: ${invoiceItem.id}，金額: HK$${(totalAmount / 100).toFixed(2)}`);
             
+            // 步驟 1：完成發票
             const finalizedInvoice = await stripeClient.invoices.finalizeInvoice(invoice.id);
-            console.log(`✅ 發票已完成並自動收費，金額: HK$${(totalAmount / 100).toFixed(2)}`);
+            console.log(`✅ 發票已完成: ${finalizedInvoice.id}`);
+            
+            // 步驟 2：立即支付發票
+            const paidInvoice = await stripeClient.invoices.pay(invoice.id, {
+                paid_out_of_band: false,
+            });
+            
+            console.log(`✅ 發票已成功支付: ${paidInvoice.id}`);
+            console.log(`💵 支付金額: HK$${(paidInvoice.amount_paid / 100).toFixed(2)}`);
+            console.log(`💳 支付狀態: ${paidInvoice.status}`);
         }
         
         // 5. 记录到 Credits 历史
