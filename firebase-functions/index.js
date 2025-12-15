@@ -2259,5 +2259,223 @@ exports.queryUserCredits = functions.https.onCall(async (data, context) => {
     }
 });
 
-console.log('✅ Firebase Cloud Functions 已載入（包含 Email 驗證、數據清理、Stripe 使用量計費、Customer Portal 和调试工具）');
+/**
+ * 🔍 诊断超额计费问题
+ * 检查用户数据、Stripe 订阅、使用记录等
+ */
+exports.diagnoseOverageCharging = functions.https.onCall(async (data, context) => {
+    const { email } = data;
+    
+    if (!email) {
+        throw new functions.https.HttpsError('invalid-argument', '缺少 email 参数');
+    }
+    
+    try {
+        console.log(`🔍 开始诊断超额计费问题: ${email}`);
+        
+        // 1. 查找用户
+        const usersSnapshot = await db.collection('users')
+            .where('email', '==', email)
+            .limit(1)
+            .get();
+        
+        if (usersSnapshot.empty) {
+            throw new functions.https.HttpsError('not-found', '找不到用户');
+        }
+        
+        const userDoc = usersSnapshot.docs[0];
+        const userId = userDoc.id;
+        const userData = userDoc.data();
+        
+        console.log(`✅ 找到用户: ${userId}`);
+        console.log(`📊 用户数据:`, userData);
+        
+        const result = {
+            userId,
+            email: userData.email,
+            currentCredits: userData.currentCredits || userData.credits || 0,
+            planType: userData.planType || 'Free Plan',
+            meteredItemId: userData.meteredSubscriptionItemId || null,
+            stripeSubscriptionId: userData.stripeSubscriptionId || null,
+            subscriptionStatus: userData.subscription?.status || 'none',
+            hasMeteredItem: !!userData.meteredSubscriptionItemId,
+            hasSubscriptionId: !!userData.stripeSubscriptionId,
+            checks: {
+                hasMeteredItem: !!userData.meteredSubscriptionItemId,
+                hasSubscriptionId: !!userData.stripeSubscriptionId,
+                canReportUsage: !!(userData.meteredSubscriptionItemId && userData.stripeSubscriptionId)
+            },
+            stripeUsageRecords: null,
+            error: null
+        };
+        
+        // 2. 如果有 Stripe 订阅信息，查询 Stripe 使用记录
+        if (userData.meteredSubscriptionItemId && userData.stripeSubscriptionId) {
+            console.log(`📡 查询 Stripe 使用记录...`);
+            
+            try {
+                // 判断是测试模式还是生产模式
+                const isTestMode = userData.stripeSubscriptionId.startsWith('sub_') || 
+                                  userData.stripeSubscriptionId.includes('test');
+                const stripeClient = isTestMode ? stripeTest : stripeLive;
+                
+                console.log(`🔧 使用 ${isTestMode ? '测试' : '生产'} 模式`);
+                
+                if (stripeClient) {
+                    // 查询使用记录
+                    const usageRecords = await stripeClient.subscriptionItems.listUsageRecordSummaries(
+                        userData.meteredSubscriptionItemId,
+                        { limit: 100 }
+                    );
+                    
+                    console.log(`✅ 找到 ${usageRecords.data.length} 条使用记录`);
+                    
+                    result.stripeUsageRecords = usageRecords.data.map(record => ({
+                        id: record.id,
+                        period: {
+                            start: new Date(record.period.start * 1000).toISOString(),
+                            end: new Date(record.period.end * 1000).toISOString()
+                        },
+                        totalUsage: record.total_usage
+                    }));
+                    
+                    result.totalStripeUsage = usageRecords.data.reduce((sum, r) => sum + r.total_usage, 0);
+                } else {
+                    result.error = 'Stripe 客户端未配置';
+                }
+            } catch (stripeError) {
+                console.error(`❌ 查询 Stripe 使用记录失败:`, stripeError);
+                result.error = stripeError.message;
+                result.stripeError = {
+                    type: stripeError.type,
+                    code: stripeError.code,
+                    message: stripeError.message
+                };
+            }
+        } else {
+            result.error = '缺少 meteredSubscriptionItemId 或 stripeSubscriptionId';
+            console.warn(`⚠️ ${result.error}`);
+        }
+        
+        // 3. 查询 Credits 历史
+        const historySnapshot = await db
+            .collection('users')
+            .doc(userId)
+            .collection('creditsHistory')
+            .orderBy('createdAt', 'desc')
+            .limit(20)
+            .get();
+        
+        result.creditsHistory = historySnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                type: data.type,
+                amount: data.amount,
+                description: data.description,
+                createdAt: data.createdAt?.toDate?.()?.toISOString() || null,
+                metadata: data.metadata
+            };
+        });
+        
+        console.log(`✅ 诊断完成`);
+        console.log(`📊 结果:`, JSON.stringify(result, null, 2));
+        
+        return result;
+        
+    } catch (error) {
+        console.error('❌ 诊断失败:', error);
+        throw new functions.https.HttpsError('internal', error.message);
+    }
+});
+
+/**
+ * 🔧 手动报告超额使用（仅用于修复）
+ */
+exports.manualReportOverage = functions.https.onCall(async (data, context) => {
+    const { email, overageAmount } = data;
+    
+    if (!email || !overageAmount) {
+        throw new functions.https.HttpsError('invalid-argument', '缺少 email 或 overageAmount 参数');
+    }
+    
+    try {
+        console.log(`🔧 手动报告超额使用: ${email}, 数量: ${overageAmount}`);
+        
+        // 1. 查找用户
+        const usersSnapshot = await db.collection('users')
+            .where('email', '==', email)
+            .limit(1)
+            .get();
+        
+        if (usersSnapshot.empty) {
+            throw new functions.https.HttpsError('not-found', '找不到用户');
+        }
+        
+        const userDoc = usersSnapshot.docs[0];
+        const userId = userDoc.id;
+        const userData = userDoc.data();
+        
+        const meteredItemId = userData.meteredSubscriptionItemId;
+        const stripeSubscriptionId = userData.stripeSubscriptionId;
+        
+        if (!meteredItemId || !stripeSubscriptionId) {
+            throw new functions.https.HttpsError(
+                'failed-precondition',
+                `缺少 Stripe 订阅信息:\nmeteredItemId: ${meteredItemId}\nstripeSubscriptionId: ${stripeSubscriptionId}`
+            );
+        }
+        
+        // 2. 判断是测试模式还是生产模式
+        const isTestMode = stripeSubscriptionId.startsWith('sub_') || 
+                          stripeSubscriptionId.includes('test');
+        const stripeClient = isTestMode ? stripeTest : stripeLive;
+        
+        console.log(`🔧 使用 ${isTestMode ? '测试' : '生产'} 模式`);
+        
+        if (!stripeClient) {
+            throw new functions.https.HttpsError('failed-precondition', 'Stripe 客户端未配置');
+        }
+        
+        // 3. 创建使用记录
+        const usageRecord = await stripeClient.subscriptionItems.createUsageRecord(
+            meteredItemId,
+            {
+                quantity: overageAmount,
+                timestamp: Math.floor(Date.now() / 1000),
+                action: 'increment'
+            }
+        );
+        
+        console.log(`✅ 使用记录已创建:`, usageRecord.id);
+        
+        // 4. 记录到 Credits 历史
+        await db.collection('users').doc(userId).collection('creditsHistory').add({
+            type: 'manual_overage_report',
+            amount: 0,
+            description: `手动报告超额使用: ${overageAmount} Credits`,
+            metadata: {
+                overageAmount,
+                usageRecordId: usageRecord.id,
+                meteredItemId,
+                stripeSubscriptionId,
+                reportedAt: admin.firestore.FieldValue.serverTimestamp()
+            },
+            createdAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        
+        return {
+            success: true,
+            usageRecordId: usageRecord.id,
+            overageAmount,
+            message: `✅ 已向 Stripe 报告 ${overageAmount} Credits 的超额使用`
+        };
+        
+    } catch (error) {
+        console.error('❌ 手动报告失败:', error);
+        throw new functions.https.HttpsError('internal', error.message);
+    }
+});
+
+console.log('✅ Firebase Cloud Functions 已載入（包含 Email 驗證、數據清理、Stripe 使用量計費、Customer Portal、调试工具和超额计费诊断）');
 
