@@ -660,18 +660,30 @@ async function handleSubscriptionCancelled(subscription) {
             // 獲取 Stripe 訂閱信息
             const meteredItemId = userData?.subscription?.meteredSubscriptionItemId;
             const stripeSubscriptionId = userData?.subscription?.stripeSubscriptionId;
+            const monthlyCredits = userData?.subscription?.monthlyCredits || userData?.includedCredits || 100;
             
             console.log(`🔍 檢查訂閱信息:`, {
                 hasSubscription: !!userData?.subscription,
                 meteredItemId: meteredItemId,
-                stripeSubscriptionId: stripeSubscriptionId
+                stripeSubscriptionId: stripeSubscriptionId,
+                monthlyCredits: monthlyCredits,
+                overageAmount: overageAmount
             });
             
             if (meteredItemId && stripeSubscriptionId) {
-                console.log(`📡 向 Stripe 報告超額使用...`);
+                // 🔥 關鍵修復：計算總使用量而不是超額量
+                // Stripe 的梯度定價是基於總使用量的：
+                // - 0-100個：HK$0.00
+                // - 101+個：HK$0.50/個
+                // 所以我們需要報告 (包含的Credits + 超額量) 作為總使用量
+                const totalUsage = monthlyCredits + overageAmount;
+                
+                console.log(`📡 向 Stripe 報告總使用量...`);
                 console.log(`   - Subscription ID: ${stripeSubscriptionId}`);
                 console.log(`   - Metered Item ID: ${meteredItemId}`);
+                console.log(`   - 包含的 Credits: ${monthlyCredits}`);
                 console.log(`   - 超額數量: ${overageAmount}`);
+                console.log(`   - 總使用量: ${totalUsage}（這是 Stripe 計費的基礎）`);
                 
                 try {
                     // 判斷是測試模式還是生產模式
@@ -681,18 +693,22 @@ async function handleSubscriptionCancelled(subscription) {
                     const stripeClient = isTestMode ? stripeTest : stripeLive;
                     
                     if (stripeClient) {
-                        // 創建使用記錄（Stripe 會在最終發票中計算費用）
+                        // 🔥 報告總使用量（不是超額量！）
+                        // Stripe 會根據梯度定價自動計算：前 monthlyCredits 個免費，超出部分收費
                         const usageRecord = await stripeClient.subscriptionItems.createUsageRecord(
                             meteredItemId,
                             {
-                                quantity: overageAmount,
+                                quantity: totalUsage,  // ← 報告總使用量，讓 Stripe 自動計算梯度定價
                                 timestamp: Math.floor(Date.now() / 1000),
-                                action: 'increment'
+                                action: 'set'  // ← 使用 'set' 而不是 'increment'，確保設定的是總量
                             }
                         );
                         
-                        console.log(`✅ 超額使用已報告給 Stripe:`, usageRecord.id);
-                        console.log(`💵 Stripe 會在最終發票中收取 ${overageAmount} Credits 的費用`);
+                        console.log(`✅ 總使用量已報告給 Stripe:`, usageRecord.id);
+                        console.log(`💵 Stripe 會根據梯度定價計算費用:`);
+                        console.log(`   - 前 ${monthlyCredits} 個 Credits: HK$0（已包含在訂閱中）`);
+                        console.log(`   - 第 ${monthlyCredits + 1} 到 ${totalUsage} 個: HK$0.50/個`);
+                        console.log(`   - 預期收費: HK$${(overageAmount * 0.5).toFixed(2)}`);
                     } else {
                         console.error(`❌ Stripe 客戶端未配置`);
                     }
@@ -2424,11 +2440,13 @@ exports.manualReportOverage = functions.https.onCall(async (data, context) => {
         
         const meteredItemId = userData.subscription?.meteredSubscriptionItemId;
         const stripeSubscriptionId = userData.subscription?.stripeSubscriptionId;
+        const monthlyCredits = userData.subscription?.monthlyCredits || userData.includedCredits || 100;
         
         console.log(`🔍 检查订阅信息:`, {
             hasSubscription: !!userData.subscription,
             meteredItemId: meteredItemId,
-            stripeSubscriptionId: stripeSubscriptionId
+            stripeSubscriptionId: stripeSubscriptionId,
+            monthlyCredits: monthlyCredits
         });
         
         if (!meteredItemId || !stripeSubscriptionId) {
@@ -2449,28 +2467,46 @@ exports.manualReportOverage = functions.https.onCall(async (data, context) => {
             throw new functions.https.HttpsError('failed-precondition', 'Stripe 客户端未配置');
         }
         
-        // 3. 创建使用记录
+        // 3. 🔥 計算總使用量（不是超額量！）
+        // Stripe 的梯度定價是基於總使用量的
+        const totalUsage = monthlyCredits + overageAmount;
+        
+        console.log(`📊 計算使用量:`, {
+            monthlyCredits: monthlyCredits,
+            overageAmount: overageAmount,
+            totalUsage: totalUsage,
+            expectedCharge: `HK$${(overageAmount * 0.5).toFixed(2)}`
+        });
+        
+        // 4. 创建使用记录 - 報告總使用量
         const usageRecord = await stripeClient.subscriptionItems.createUsageRecord(
             meteredItemId,
             {
-                quantity: overageAmount,
+                quantity: totalUsage,  // ← 報告總使用量，讓 Stripe 根據梯度定價計算
                 timestamp: Math.floor(Date.now() / 1000),
-                action: 'increment'
+                action: 'set'  // ← 使用 'set' 而不是 'increment'
             }
         );
         
         console.log(`✅ 使用记录已创建:`, usageRecord.id);
+        console.log(`💵 Stripe 會根據梯度定價計算費用:`);
+        console.log(`   - 前 ${monthlyCredits} 個 Credits: HK$0（已包含在訂閱中）`);
+        console.log(`   - 第 ${monthlyCredits + 1} 到 ${totalUsage} 個: HK$0.50/個`);
+        console.log(`   - 預期收費: HK$${(overageAmount * 0.5).toFixed(2)}`);
         
         // 4. 记录到 Credits 历史
         await db.collection('users').doc(userId).collection('creditsHistory').add({
             type: 'manual_overage_report',
             amount: 0,
-            description: `手动报告超额使用: ${overageAmount} Credits`,
+            description: `手动报告超额使用: ${overageAmount} Credits（总使用量: ${totalUsage}）`,
             metadata: {
                 overageAmount,
+                totalUsage,
+                monthlyCredits,
                 usageRecordId: usageRecord.id,
                 meteredItemId,
                 stripeSubscriptionId,
+                expectedCharge: (overageAmount * 0.5).toFixed(2),
                 reportedAt: admin.firestore.FieldValue.serverTimestamp()
             },
             createdAt: admin.firestore.FieldValue.serverTimestamp()
@@ -2480,7 +2516,10 @@ exports.manualReportOverage = functions.https.onCall(async (data, context) => {
             success: true,
             usageRecordId: usageRecord.id,
             overageAmount,
-            message: `✅ 已向 Stripe 报告 ${overageAmount} Credits 的超额使用`
+            totalUsage,
+            monthlyCredits,
+            expectedCharge: `HK$${(overageAmount * 0.5).toFixed(2)}`,
+            message: `✅ 已向 Stripe 报告总使用量 ${totalUsage}（包含 ${monthlyCredits} + 超额 ${overageAmount}），预期收费 HK$${(overageAmount * 0.5).toFixed(2)}`
         };
         
     } catch (error) {
