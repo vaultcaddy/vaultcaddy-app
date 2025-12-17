@@ -753,19 +753,13 @@ async function handleSubscriptionCancelled(subscription) {
 }
 
 /**
- * 處理發票創建（在發票完成之前）
- * 🔥 關鍵：在這裡報告超額使用，讓 Stripe 將超額費用包含在發票中
+ * 🆕 處理發票創建（簡化版 - 使用 Billing Meter Events）
+ * 
+ * 由於使用了 Billing Meter Events API，使用量已經實時報告給 Stripe
+ * 此函數現在只用於記錄和監控，不再需要手動報告使用量
  */
 async function handleInvoiceCreated(invoice, isTestMode = false) {
     console.log(`📝 發票創建 (${isTestMode ? '測試模式' : '生產模式'}):`, invoice.id);
-    console.log(`📋 Invoice 详情:`, JSON.stringify(invoice, null, 2));
-    
-    // 選擇正確的 Stripe 客戶端
-    const stripeClient = isTestMode ? stripeTest : stripeLive;
-    if (!stripeClient) {
-        console.error(`❌ Stripe 客戶端未配置`);
-        return;
-    }
     
     // 只處理訂閱相關的發票
     if (!invoice.subscription) {
@@ -774,7 +768,7 @@ async function handleInvoiceCreated(invoice, isTestMode = false) {
     }
     
     try {
-        // 1. 通過 customer ID 查找用戶
+        // 通過 customer ID 查找用戶
         const customerId = invoice.customer;
         console.log(`🔍 查找客戶: ${customerId}`);
         
@@ -792,112 +786,35 @@ async function handleInvoiceCreated(invoice, isTestMode = false) {
         const userData = usersSnapshot.docs[0].data();
         console.log(`✅ 找到用戶: ${userId}`);
         
-        // 2. 檢查是否有超額使用
-        // 🔥 關鍵修復：使用 totalCreditsUsed 而不是 currentCredits
-        // 因為可能 customer.subscription.deleted 已經先觸發並重置了 currentCredits
+        // 記錄 Credits 狀態（僅用於監控）
         const currentCredits = userData.currentCredits || 0;
-        const totalCreditsUsed = userData.totalCreditsUsed || 0;
         const monthlyCredits = userData?.subscription?.monthlyCredits || userData?.includedCredits || 100;
         
         console.log(`📊 Credits 狀態:`, {
             currentCredits,
-            totalCreditsUsed,
             monthlyCredits
         });
         
-        // 計算實際的超額使用量
-        // 如果 currentCredits < 0，使用 currentCredits
-        // 否則，比較 totalCreditsUsed 和 monthlyCredits
+        // 計算超額使用量（僅用於日誌）
         let overageAmount = 0;
-        
         if (currentCredits < 0) {
-            // 情況 1：credits 還是負數（webhook 順序正常）
             overageAmount = Math.abs(currentCredits);
-            console.log(`✅ 從 currentCredits 檢測到超額: ${overageAmount} Credits`);
-        } else if (totalCreditsUsed > monthlyCredits) {
-            // 情況 2：credits 已被重置，但 totalCreditsUsed 顯示有超額（webhook 時序問題）
-            overageAmount = totalCreditsUsed - monthlyCredits;
-            console.log(`✅ 從 totalCreditsUsed 檢測到超額: ${overageAmount} Credits`);
-            console.log(`   （currentCredits 已被重置，但從歷史使用量計算出超額）`);
+            console.log(`💰 檢測到超額使用: ${overageAmount} Credits`);
+            console.log(`ℹ️ 使用量已通過 Billing Meter Events 實時報告給 Stripe`);
+            console.log(`ℹ️ Stripe 會自動在發票中包含超額費用`);
+        } else {
+            console.log(`✅ 沒有超額使用`);
         }
         
-        if (overageAmount === 0) {
-            console.log(`✅ 沒有超額使用，無需報告`);
-            console.log(`   - totalCreditsUsed: ${totalCreditsUsed}`);
-            console.log(`   - monthlyCredits: ${monthlyCredits}`);
-            return;
-        }
-        
-        // 3. 有超額使用，報告給 Stripe
-        const totalUsage = monthlyCredits + overageAmount;
-        
-        console.log(`⚠️ 檢測到超額使用: ${overageAmount} Credits`);
-        console.log(`📊 包含額度: ${monthlyCredits}, 總使用量: ${totalUsage}`);
-        
-        // 4. 獲取 metered subscription item ID
-        const meteredItemId = userData?.subscription?.meteredSubscriptionItemId;
-        
-        if (!meteredItemId) {
-            console.error(`❌ 未找到 meteredSubscriptionItemId`);
-            return;
-        }
-        
-        // 5. 報告使用量給 Stripe（在發票創建時）
-        const timestamp = Math.floor(Date.now() / 1000);
-        const usageRecord = await stripeClient.subscriptionItems.createUsageRecord(
-            meteredItemId,
-            {
-                quantity: totalUsage,
-                timestamp: timestamp,
-                action: 'set'
-            }
-        );
-        
-        console.log(`✅ 成功報告總使用量給 Stripe:`, usageRecord.id);
-        console.log(`📊 報告的使用量: ${totalUsage} (包含 ${monthlyCredits} + 超額 ${overageAmount})`);
-        
-        // 6. 計算預期收費
-        const tiers = [
-            { max: 100, rate: 0 },        // 0-100: 包含在訂閱中
-            { max: 500, rate: 0.50 },     // 101-500: HK$0.50/頁
-            { max: 1000, rate: 0.45 },    // 501-1000: HK$0.45/頁
-            { max: 2000, rate: 0.40 },    // 1001-2000: HK$0.40/頁
-            { max: Infinity, rate: 0.35 } // 2001+: HK$0.35/頁
-        ];
-        
-        let expectedCharge = 0;
-        let remaining = totalUsage;
-        let prevMax = 0;
-        
-        for (const tier of tiers) {
-            if (remaining <= 0) break;
-            const tierUsage = Math.min(remaining, tier.max - prevMax);
-            expectedCharge += tierUsage * tier.rate;
-            remaining -= tierUsage;
-            prevMax = tier.max;
-        }
-        
-        console.log(`💵 預期 Stripe 會在此發票中收取: HK$${expectedCharge.toFixed(2)}`);
-        console.log(`📧 Stripe 將自動將此費用添加到發票 ${invoice.id} 中`);
-        
-        // 7. 記錄到 creditsHistory
-        await admin.firestore().collection('users').doc(userId).collection('creditsHistory').add({
-            type: 'overage_reported_on_invoice',
-            amount: 0, // 不影響 credits，只是報告
-            description: `在發票創建時報告超額使用: ${overageAmount} Credits（總使用量: ${totalUsage}）`,
-            metadata: {
-                overageAmount,
-                totalUsage,
-                monthlyCredits,
-                usageRecordId: usageRecord.id,
-                invoiceId: invoice.id,
-                expectedCharge: expectedCharge.toFixed(2),
-                reportedAt: admin.firestore.FieldValue.serverTimestamp()
-            },
-            createdAt: admin.firestore.FieldValue.serverTimestamp()
+        // 記錄發票信息到 Firestore
+        await db.collection('users').doc(userId).update({
+            'billing.lastInvoiceId': invoice.id,
+            'billing.lastInvoiceCreatedAt': admin.firestore.FieldValue.serverTimestamp(),
+            'billing.lastInvoiceAmount': invoice.amount_due / 100, // 轉換為元
+            'billing.lastInvoiceOverage': overageAmount
         });
         
-        console.log(`✅ 超額使用已成功報告，Stripe 會在發票中包含此費用`);
+        console.log(`✅ 發票信息已記錄到 Firestore`);
         
     } catch (error) {
         console.error(`❌ 處理發票創建失敗:`, error);
@@ -1239,6 +1156,17 @@ async function deductCredits(userId, amount, metadata = {}) {
 /**
  * 向 Stripe 报告使用量（用于按量计费）
  */
+/**
+ * 🆕 使用 Billing Meter Events API 报告使用量到 Stripe
+ * 
+ * 新方法优势：
+ * - 实时报告，无需等待 webhook
+ * - 事件驱动，更可靠
+ * - 自动聚合，简化计费逻辑
+ * 
+ * @param {string} userId - 用户 ID
+ * @param {number} quantity - 使用量（Credits 数量）
+ */
 async function reportUsageToStripe(userId, quantity) {
     console.log(`📡 reportUsageToStripe: userId=${userId}, quantity=${quantity}`);
     
@@ -1246,14 +1174,15 @@ async function reportUsageToStripe(userId, quantity) {
     const userDoc = await db.collection('users').doc(userId).get();
     const userData = userDoc.data();
     const subscription = userData?.subscription;
+    const stripeCustomerId = userData?.stripeCustomerId;
     
-    if (!subscription || !subscription.stripeSubscriptionId) {
-        console.error(`❌ 用户没有活跃的订阅: ${userId}`);
+    if (!stripeCustomerId) {
+        console.error(`❌ 用户没有 Stripe Customer ID: ${userId}`);
         return;
     }
     
     // 🔍 检查是否是测试模式
-    const isTestMode = subscription.stripeSubscriptionId.startsWith('sub_');
+    const isTestMode = userData.isTestMode || false;
     const stripeClient = isTestMode ? stripeTest : stripeLive;
     
     if (!stripeClient) {
@@ -1263,35 +1192,38 @@ async function reportUsageToStripe(userId, quantity) {
     
     console.log(`🔧 使用 ${isTestMode ? '测试' : '生产'} 模式的 Stripe 客户端`);
     
-    // 🔍 查找 metered subscription item
-    // 需要用户在 Stripe 中设置好 metered price，并将 subscription_item_id 存储在用户文档中
-    const meteredItemId = subscription.meteredSubscriptionItemId;
-    
-    if (!meteredItemId) {
-        console.error(`❌ 用户订阅中没有配置 metered subscription item`);
-        console.error(`💡 请在 Stripe 中为订阅添加 metered price，并将 subscription_item_id 存储在用户文档的 subscription.meteredSubscriptionItemId 字段中`);
-        return;
-    }
-    
-    // 🔥 报告使用量
+    // 🔥 使用新的 Billing Meter Events API 报告使用量
     try {
-        const usageRecord = await stripeClient.subscriptionItems.createUsageRecord(
-            meteredItemId,
-            {
-                quantity: quantity,
-                timestamp: Math.floor(Date.now() / 1000),
-                action: 'increment' // 增量报告
-            }
-        );
-        
-        console.log(`✅ 使用量已报告给 Stripe:`, {
-            usageRecordId: usageRecord.id,
-            quantity: quantity,
-            subscriptionItemId: meteredItemId
+        const meterEvent = await stripeClient.billing.meterEvents.create({
+            event_name: 'vaultcaddy_credit_usage',
+            payload: {
+                stripe_customer_id: stripeCustomerId,
+                value: quantity.toString()
+            },
+            timestamp: Math.floor(Date.now() / 1000)
         });
+        
+        console.log(`✅ 使用量已报告给 Stripe Billing Meter:`, {
+            meterEventId: meterEvent.identifier,
+            eventName: 'vaultcaddy_credit_usage',
+            customerId: stripeCustomerId,
+            quantity: quantity,
+            timestamp: meterEvent.created
+        });
+        
+        // 更新用户文档，记录最后一次报告时间
+        await db.collection('users').doc(userId).update({
+            'usageTracking.lastReportedAt': admin.firestore.FieldValue.serverTimestamp(),
+            'usageTracking.lastReportedQuantity': quantity
+        });
+        
     } catch (error) {
-        console.error(`❌ 报告使用量失败:`, error);
-        throw error;
+        console.error(`❌ 报告使用量到 Billing Meter 失败:`, error);
+        // 记录失败事件，但不抛出错误（避免阻塞用户操作）
+        await db.collection('users').doc(userId).update({
+            'usageTracking.lastReportError': error.message,
+            'usageTracking.lastReportErrorAt': admin.firestore.FieldValue.serverTimestamp()
+        });
     }
 }
 
@@ -2174,7 +2106,7 @@ exports.createStripeCheckoutSession = functions.https.onCall(async (data, contex
     const testPriceMapping = {
         monthly: {
             basePriceId: 'price_1Sdn7oJmiQ31C0GT8BSefS3u',  // 測試月費（支持 HKD/USD/GBP/JPY/KRW/EUR）
-            usagePriceId: 'price_1Sdn7pJmiQ31C0GTTK1yVopH'  // 測試月費按量計費（支持多货币）
+            usagePriceId: 'price_15dn7pJmiQ31C0GTK1yVopH'  // 🆕 測試月費按量計費（基於 Billing Meter）
         },
         yearly: {
             basePriceId: 'price_1SdoMxJmiQ31C0GTsgCDQz8n',  // 測試年費 HKD$552（支持 HKD/USD/GBP/JPY/KRW/EUR）
