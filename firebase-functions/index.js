@@ -1228,12 +1228,21 @@ async function reportUsageToStripe(userId, quantity) {
     const userDoc = await db.collection('users').doc(userId).get();
     const userData = userDoc.data();
     const subscription = userData?.subscription;
-    const stripeCustomerId = userData?.stripeCustomerId;
+    
+    // 从多个可能的位置获取 Stripe Customer ID
+    const stripeCustomerId = userData?.stripeCustomerId 
+        || subscription?.stripeCustomerId
+        || subscription?.customerId;
+    
+    console.log(`🔍 查找 Customer ID: userData.stripeCustomerId=${userData?.stripeCustomerId}, subscription.stripeCustomerId=${subscription?.stripeCustomerId}, subscription.customerId=${subscription?.customerId}`);
     
     if (!stripeCustomerId) {
         console.error(`❌ 用户没有 Stripe Customer ID: ${userId}`);
+        console.error(`   请检查 Firestore 中的 stripeCustomerId 字段`);
         return;
     }
+    
+    console.log(`✅ 找到 Stripe Customer ID: ${stripeCustomerId}`);
     
     // 🔍 检查是否是测试模式
     const isTestMode = userData.isTestMode || false;
