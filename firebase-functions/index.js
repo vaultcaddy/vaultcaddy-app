@@ -1074,10 +1074,20 @@ async function deductCredits(userId, amount, metadata = {}) {
         // 检查是否是 Pro Plan
         const isProPlan = planType === 'Pro Plan' && subscription?.status === 'active';
         
-        if (currentCredits < amount && !isProPlan) {
-            // Free Plan 或非订阅用户：Credits 不足，抛出错误
-            console.log(`❌ Credits 不足且非 Pro Plan: ${currentCredits} < ${amount}`);
+        // 检查是否有订阅记录（包括已取消的订阅）
+        const hasSubscription = subscription && subscription.stripeSubscriptionId;
+        
+        // ⚠️ 测试模式：允许负数扣除，用于测试 Stripe Billing Meter
+        const isTestMode = userData.isTestMode || false;
+        
+        if (currentCredits < amount && !isProPlan && !hasSubscription && !isTestMode) {
+            // 只有 Free Plan 且无订阅记录且非测试模式时才拒绝
+            console.log(`❌ Credits 不足且无订阅: ${currentCredits} < ${amount}`);
             throw new Error('Credits 不足');
+        }
+        
+        if (currentCredits < amount && (hasSubscription || isTestMode)) {
+            console.log(`⚠️ Credits 不足，但允许超额使用（${hasSubscription ? '有订阅记录' : '测试模式'}）`);
         }
         
         const newCredits = currentCredits - amount;
