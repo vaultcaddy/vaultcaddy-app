@@ -1230,19 +1230,44 @@ async function reportUsageToStripe(userId, quantity) {
     const subscription = userData?.subscription;
     
     // 从多个可能的位置获取 Stripe Customer ID
-    const stripeCustomerId = userData?.stripeCustomerId 
+    let stripeCustomerId = userData?.stripeCustomerId 
         || subscription?.stripeCustomerId
         || subscription?.customerId;
     
     console.log(`🔍 查找 Customer ID: userData.stripeCustomerId=${userData?.stripeCustomerId}, subscription.stripeCustomerId=${subscription?.stripeCustomerId}, subscription.customerId=${subscription?.customerId}`);
     
+    // 如果没有找到，尝试从 Stripe API 获取
+    if (!stripeCustomerId && subscription?.stripeSubscriptionId) {
+        console.log(`⚠️ 未找到 Customer ID，尝试从 Stripe 订阅中获取: ${subscription.stripeSubscriptionId}`);
+        
+        try {
+            const isTestMode = userData.isTestMode || false;
+            const stripeClient = isTestMode ? stripeTest : stripeLive;
+            
+            if (stripeClient) {
+                const stripeSubscription = await stripeClient.subscriptions.retrieve(subscription.stripeSubscriptionId);
+                stripeCustomerId = stripeSubscription.customer;
+                
+                console.log(`✅ 从 Stripe API 获取到 Customer ID: ${stripeCustomerId}`);
+                
+                // 保存到 Firestore，避免下次再查询
+                await db.collection('users').doc(userId).update({
+                    stripeCustomerId: stripeCustomerId
+                });
+                console.log(`✅ Customer ID 已保存到 Firestore`);
+            }
+        } catch (error) {
+            console.error(`❌ 从 Stripe API 获取 Customer ID 失败:`, error.message);
+        }
+    }
+    
     if (!stripeCustomerId) {
         console.error(`❌ 用户没有 Stripe Customer ID: ${userId}`);
-        console.error(`   请检查 Firestore 中的 stripeCustomerId 字段`);
+        console.error(`   请检查 Firestore 中的 stripeCustomerId 或 subscription.stripeSubscriptionId 字段`);
         return;
     }
     
-    console.log(`✅ 找到 Stripe Customer ID: ${stripeCustomerId}`);
+    console.log(`✅ 使用 Stripe Customer ID: ${stripeCustomerId}`);
     
     // 🔍 检查是否是测试模式
     const isTestMode = userData.isTestMode || false;
