@@ -793,17 +793,42 @@ async function handleInvoiceCreated(invoice, isTestMode = false) {
         console.log(`✅ 找到用戶: ${userId}`);
         
         // 2. 檢查是否有超額使用
+        // 🔥 關鍵修復：使用 totalCreditsUsed 而不是 currentCredits
+        // 因為可能 customer.subscription.deleted 已經先觸發並重置了 currentCredits
         const currentCredits = userData.currentCredits || 0;
-        console.log(`📊 當前 Credits: ${currentCredits}`);
+        const totalCreditsUsed = userData.totalCreditsUsed || 0;
+        const monthlyCredits = userData?.subscription?.monthlyCredits || userData?.includedCredits || 100;
         
-        if (currentCredits >= 0) {
+        console.log(`📊 Credits 狀態:`, {
+            currentCredits,
+            totalCreditsUsed,
+            monthlyCredits
+        });
+        
+        // 計算實際的超額使用量
+        // 如果 currentCredits < 0，使用 currentCredits
+        // 否則，比較 totalCreditsUsed 和 monthlyCredits
+        let overageAmount = 0;
+        
+        if (currentCredits < 0) {
+            // 情況 1：credits 還是負數（webhook 順序正常）
+            overageAmount = Math.abs(currentCredits);
+            console.log(`✅ 從 currentCredits 檢測到超額: ${overageAmount} Credits`);
+        } else if (totalCreditsUsed > monthlyCredits) {
+            // 情況 2：credits 已被重置，但 totalCreditsUsed 顯示有超額（webhook 時序問題）
+            overageAmount = totalCreditsUsed - monthlyCredits;
+            console.log(`✅ 從 totalCreditsUsed 檢測到超額: ${overageAmount} Credits`);
+            console.log(`   （currentCredits 已被重置，但從歷史使用量計算出超額）`);
+        }
+        
+        if (overageAmount === 0) {
             console.log(`✅ 沒有超額使用，無需報告`);
+            console.log(`   - totalCreditsUsed: ${totalCreditsUsed}`);
+            console.log(`   - monthlyCredits: ${monthlyCredits}`);
             return;
         }
         
         // 3. 有超額使用，報告給 Stripe
-        const overageAmount = Math.abs(currentCredits);
-        const monthlyCredits = userData?.subscription?.monthlyCredits || userData?.includedCredits || 100;
         const totalUsage = monthlyCredits + overageAmount;
         
         console.log(`⚠️ 檢測到超額使用: ${overageAmount} Credits`);
