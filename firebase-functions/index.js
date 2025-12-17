@@ -2106,7 +2106,7 @@ exports.createStripeCheckoutSession = functions.https.onCall(async (data, contex
     const testPriceMapping = {
         monthly: {
             basePriceId: 'price_1Sdn7oJmiQ31C0GT8BSefS3u',  // 測試月費（支持 HKD/USD/GBP/JPY/KRW/EUR）
-            usagePriceId: 'price_15dn7pJmiQ31C0GTK1yVopH'  // 🆕 測試月費按量計費（基於 Billing Meter）
+            usagePriceId: 'price_1Sdn7pJmiQ31C0GTTK1yVopH'  // 🆕 測試月費按量計費（基於 Billing Meter）✅ 已修正
         },
         yearly: {
             basePriceId: 'price_1SdoMxJmiQ31C0GTsgCDQz8n',  // 測試年費 HKD$552（支持 HKD/USD/GBP/JPY/KRW/EUR）
