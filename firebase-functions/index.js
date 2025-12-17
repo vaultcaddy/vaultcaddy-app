@@ -759,10 +759,8 @@ async function handleSubscriptionCancelled(subscription) {
                         const finalizedInvoice = await stripeClient.invoices.finalizeInvoice(invoice.id);
                         console.log(`✅ 發票已完成: ${finalizedInvoice.id}`);
                         
-                        // 步驟 2：立即支付發票
-                        const paidInvoice = await stripeClient.invoices.pay(invoice.id, {
-                            paid_out_of_band: false, // 使用 Stripe 支付
-                        });
+                        // 步驟 2：立即支付發票（使用客戶的默認支付方式）
+                        const paidInvoice = await stripeClient.invoices.pay(invoice.id);
                         
                         console.log(`✅ 發票已成功支付: ${paidInvoice.id}`);
                         console.log(`💵 支付金額: HK$${(paidInvoice.amount_paid / 100).toFixed(2)}`);
@@ -2628,10 +2626,8 @@ exports.manualReportOverage = functions.https.onCall(async (data, context) => {
             const finalizedInvoice = await stripeClient.invoices.finalizeInvoice(invoice.id);
             console.log(`✅ 發票已完成: ${finalizedInvoice.id}`);
             
-            // 步驟 2：立即支付發票
-            const paidInvoice = await stripeClient.invoices.pay(invoice.id, {
-                paid_out_of_band: false,
-            });
+            // 步驟 2：立即支付發票（使用客戶的默認支付方式）
+            const paidInvoice = await stripeClient.invoices.pay(invoice.id);
             
             console.log(`✅ 發票已成功支付: ${paidInvoice.id}`);
             console.log(`💵 支付金額: HK$${(paidInvoice.amount_paid / 100).toFixed(2)}`);
