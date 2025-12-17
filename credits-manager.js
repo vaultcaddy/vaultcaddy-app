@@ -328,25 +328,14 @@
             if (transactionResult.planType === 'Pro Plan' && 
                 transactionResult.newTotalCreditsUsed > transactionResult.includedCredits) {
                 
-                console.log(`🔔 Pro Plan 用戶超額使用，準備報告給 Stripe`);
+                console.log(`🔔 Pro Plan 用戶超額使用`);
                 console.log(`   累計使用: ${transactionResult.newTotalCreditsUsed}`);
                 console.log(`   包含 Credits: ${transactionResult.includedCredits}`);
                 console.log(`   超額: ${transactionResult.newTotalCreditsUsed - transactionResult.includedCredits}`);
                 
-                // 調用後端 Cloud Function 報告使用量
-                try {
-                    const reportCreditsUsage = firebase.functions().httpsCallable('reportCreditsUsage');
-                    const result = await reportCreditsUsage({ userId: user.uid });
-                    
-                    if (result.data.success) {
-                        console.log(`✅ 使用量已報告給 Stripe:`, result.data);
-                    } else {
-                        console.warn(`⚠️ 報告使用量失敗:`, result.data.reason);
-                    }
-                } catch (reportError) {
-                    console.error(`❌ 調用報告函數失敗:`, reportError);
-                    // 不抛出错误，不影响用户体验
-                }
+                // ✅ 使用量報告已由後端 deductCredits 函數自動處理（使用 Billing Meter Events API）
+                // 客戶端不再需要手動調用 reportCreditsUsage
+                console.log(`ℹ️ 使用量將由後端自動報告給 Stripe（Billing Meter Events API）`)
             }
             
             return true;
