@@ -156,6 +156,16 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
                 // 🔥 关键事件：必须成功处理（首次订阅）
                 await handleCheckoutCompleted(event.data.object, isTestMode);
                 break;
+            case 'invoice.created':
+                // 🔥 关键事件：在发票创建时报告超额使用（在发票完成之前）
+                try {
+                    await handleInvoiceCreated(event.data.object, isTestMode);
+                } catch (invoiceCreatedError) {
+                    console.error('❌ 处理发票创建失败:', invoiceCreatedError);
+                    console.error('错误详情:', invoiceCreatedError.stack);
+                    // 发票创建失败不影响流程，返回 200 避免重试
+                }
+                break;
             case 'invoice.paid':
                 // 🔥 订阅续费：每月自动续费时添加 Credits
                 try {
@@ -650,145 +660,13 @@ async function handleSubscriptionCancelled(subscription) {
             planType: userData?.planType
         });
         
-        // 🔥 重要：如果有超額使用（負數 Credits），需要先報告給 Stripe
+        // ℹ️ 注意：超額使用的報告現在在 invoice.created webhook 中處理
+        // 這樣可以確保 Stripe 在生成發票時就包含超額費用
         if (currentCredits < 0) {
-            console.log(`💰 檢測到超額使用: ${currentCredits} Credits`);
-            
             const overageAmount = Math.abs(currentCredits);
-            console.log(`📊 超額數量: ${overageAmount} Credits`);
-            
-            // 獲取 Stripe 訂閱信息
-            const meteredItemId = userData?.subscription?.meteredSubscriptionItemId;
-            const stripeSubscriptionId = userData?.subscription?.stripeSubscriptionId;
-            const monthlyCredits = userData?.subscription?.monthlyCredits || userData?.includedCredits || 100;
-            
-            console.log(`🔍 檢查訂閱信息:`, {
-                hasSubscription: !!userData?.subscription,
-                meteredItemId: meteredItemId,
-                stripeSubscriptionId: stripeSubscriptionId,
-                monthlyCredits: monthlyCredits,
-                overageAmount: overageAmount
-            });
-            
-            if (meteredItemId && stripeSubscriptionId) {
-                // 🔥 關鍵修復：計算總使用量而不是超額量
-                // Stripe 的梯度定價是基於總使用量的：
-                // - 0-100個：HK$0.00
-                // - 101+個：HK$0.50/個
-                // 所以我們需要報告 (包含的Credits + 超額量) 作為總使用量
-                const totalUsage = monthlyCredits + overageAmount;
-                
-                console.log(`📡 向 Stripe 報告總使用量...`);
-                console.log(`   - Subscription ID: ${stripeSubscriptionId}`);
-                console.log(`   - Metered Item ID: ${meteredItemId}`);
-                console.log(`   - 包含的 Credits: ${monthlyCredits}`);
-                console.log(`   - 超額數量: ${overageAmount}`);
-                console.log(`   - 總使用量: ${totalUsage}（這是 Stripe 計費的基礎）`);
-                
-                // 🔥 判斷是測試模式還是生產模式（在 try 之前定義，確保 catch 中也能使用）
-                const isTestMode = stripeSubscriptionId.startsWith('sub_') || 
-                                  subscription.id.includes('test') ||
-                                  subscription.livemode === false;
-                const stripeClient = isTestMode ? stripeTest : stripeLive;
-                
-                try {
-                    if (stripeClient) {
-                        // 🔥 報告總使用量（不是超額量！）
-                        // Stripe 會根據梯度定價自動計算：前 monthlyCredits 個免費，超出部分收費
-                        const usageRecord = await stripeClient.subscriptionItems.createUsageRecord(
-                            meteredItemId,
-                            {
-                                quantity: totalUsage,  // ← 報告總使用量，讓 Stripe 自動計算梯度定價
-                                timestamp: Math.floor(Date.now() / 1000),
-                                action: 'set'  // ← 使用 'set' 而不是 'increment'，確保設定的是總量
-                            }
-                        );
-                        
-                        console.log(`✅ 總使用量已報告給 Stripe:`, usageRecord.id);
-                        console.log(`💵 Stripe 會根據梯度定價計算費用:`);
-                        console.log(`   - 前 ${monthlyCredits} 個 Credits: HK$0（已包含在訂閱中）`);
-                        console.log(`   - 第 ${monthlyCredits + 1} 到 ${totalUsage} 個: HK$0.50/個`);
-                        console.log(`   - 預期收費: HK$${(overageAmount * 0.5).toFixed(2)}`);
-                    } else {
-                        console.error(`❌ Stripe 客戶端未配置`);
-                    }
-                } catch (stripeError) {
-                    console.error(`❌ 報告超額使用失敗:`, stripeError.message);
-                    console.error(`錯誤詳情:`, stripeError);
-                    
-                    // 🔥 如果報告 usage record 失敗（訂閱已取消），改為創建獨立發票
-                    console.log(`💡 嘗試創建獨立發票來收取超額費用...`);
-                    
-                    try {
-                        const unitPrice = 0.50; // HK$0.50 per credit
-                        const totalAmount = Math.round(overageAmount * unitPrice * 100); // 轉換為分
-                        
-                        console.log(`📝 創建發票項目:`);
-                        console.log(`   - 超額數量: ${overageAmount} Credits`);
-                        console.log(`   - 單價: HK$${unitPrice}`);
-                        console.log(`   - 總金額: HK$${(totalAmount / 100).toFixed(2)}`);
-                        
-                        // 創建發票項目
-                        const invoiceItem = await stripeClient.invoiceItems.create({
-                            customer: subscription.customer,
-                            amount: totalAmount,
-                            currency: 'hkd',
-                            description: `超額使用 ${overageAmount} Credits（訂閱取消後結算）`,
-                            metadata: {
-                                userId: userId,
-                                overageAmount: overageAmount.toString(),
-                                monthlyCredits: monthlyCredits.toString(),
-                                cancelledAt: new Date().toISOString()
-                            }
-                        });
-                        
-                        console.log(`✅ 發票項目已創建: ${invoiceItem.id}`);
-                        
-                        // 創建新發票（會自動包含上面創建的發票項目）
-                        const invoice = await stripeClient.invoices.create({
-                            customer: subscription.customer,
-                            collection_method: 'charge_automatically',
-                            description: `VaultCaddy 超額使用費用`,
-                            auto_advance: false, // 手動控制支付流程
-                        });
-                        
-                        console.log(`✅ 發票已創建: ${invoice.id}`);
-                        console.log(`📋 發票包含項目: ${invoiceItem.id}，金額: HK$${(totalAmount / 100).toFixed(2)}`);
-                        
-                        // 步驟 1：完成發票
-                        const finalizedInvoice = await stripeClient.invoices.finalizeInvoice(invoice.id);
-                        console.log(`✅ 發票已完成: ${finalizedInvoice.id}`);
-                        
-                        // 步驟 2：立即支付發票（使用客戶的默認支付方式）
-                        const paidInvoice = await stripeClient.invoices.pay(invoice.id);
-                        
-                        console.log(`✅ 發票已成功支付: ${paidInvoice.id}`);
-                        console.log(`💵 支付金額: HK$${(paidInvoice.amount_paid / 100).toFixed(2)}`);
-                        console.log(`💳 支付狀態: ${paidInvoice.status}`);
-                        console.log(`📧 發票已發送給客戶: ${subscription.customer}`);
-                        
-                    } catch (invoiceError) {
-                        console.error(`❌ 創建超額發票失敗:`, invoiceError.message);
-                        console.error(`錯誤詳情:`, invoiceError);
-                        // 記錄到 creditsHistory 以便後續手動處理
-                        await db.collection('users').doc(userId).collection('creditsHistory').add({
-                            type: 'overage_billing_failed',
-                            amount: overageAmount,
-                            description: `超額使用收費失敗，需要手動處理`,
-                            metadata: {
-                                error: invoiceError.message,
-                                customerId: subscription.customer,
-                                expectedCharge: `HK$${(overageAmount * 0.5).toFixed(2)}`
-                            },
-                            createdAt: admin.firestore.FieldValue.serverTimestamp()
-                        });
-                    }
-                }
-            } else {
-                console.warn(`⚠️ 缺少 Stripe 訂閱信息，無法報告超額使用`);
-                console.warn(`   - meteredItemId: ${meteredItemId}`);
-                console.warn(`   - stripeSubscriptionId: ${stripeSubscriptionId}`);
-            }
+            console.log(`💰 訂閱取消時檢測到超額使用: ${overageAmount} Credits`);
+            console.log(`ℹ️ 超額費用應該已經在 invoice.created webhook 中報告給 Stripe`);
+            console.log(`📋 Stripe 會在最終發票中包含這些超額費用`);
         }
         
         // 🔥 重要：訂閱取消後，Credits 處理邏輯
@@ -871,6 +749,135 @@ async function handleSubscriptionCancelled(subscription) {
         
     } catch (error) {
         console.error(`❌ 處理訂閱取消失敗:`, error);
+    }
+}
+
+/**
+ * 處理發票創建（在發票完成之前）
+ * 🔥 關鍵：在這裡報告超額使用，讓 Stripe 將超額費用包含在發票中
+ */
+async function handleInvoiceCreated(invoice, isTestMode = false) {
+    console.log(`📝 發票創建 (${isTestMode ? '測試模式' : '生產模式'}):`, invoice.id);
+    console.log(`📋 Invoice 详情:`, JSON.stringify(invoice, null, 2));
+    
+    // 選擇正確的 Stripe 客戶端
+    const stripeClient = isTestMode ? stripeTest : stripeLive;
+    if (!stripeClient) {
+        console.error(`❌ Stripe 客戶端未配置`);
+        return;
+    }
+    
+    // 只處理訂閱相關的發票
+    if (!invoice.subscription) {
+        console.log(`ℹ️ 非訂閱發票，跳過處理`);
+        return;
+    }
+    
+    try {
+        // 1. 通過 customer ID 查找用戶
+        const customerId = invoice.customer;
+        console.log(`🔍 查找客戶: ${customerId}`);
+        
+        const usersSnapshot = await admin.firestore().collection('users')
+            .where('stripeCustomerId', '==', customerId)
+            .limit(1)
+            .get();
+        
+        if (usersSnapshot.empty) {
+            console.log(`⚠️ 未找到對應的用戶`);
+            return;
+        }
+        
+        const userId = usersSnapshot.docs[0].id;
+        const userData = usersSnapshot.docs[0].data();
+        console.log(`✅ 找到用戶: ${userId}`);
+        
+        // 2. 檢查是否有超額使用
+        const currentCredits = userData.currentCredits || 0;
+        console.log(`📊 當前 Credits: ${currentCredits}`);
+        
+        if (currentCredits >= 0) {
+            console.log(`✅ 沒有超額使用，無需報告`);
+            return;
+        }
+        
+        // 3. 有超額使用，報告給 Stripe
+        const overageAmount = Math.abs(currentCredits);
+        const monthlyCredits = userData?.subscription?.monthlyCredits || userData?.includedCredits || 100;
+        const totalUsage = monthlyCredits + overageAmount;
+        
+        console.log(`⚠️ 檢測到超額使用: ${overageAmount} Credits`);
+        console.log(`📊 包含額度: ${monthlyCredits}, 總使用量: ${totalUsage}`);
+        
+        // 4. 獲取 metered subscription item ID
+        const meteredItemId = userData?.subscription?.meteredSubscriptionItemId;
+        
+        if (!meteredItemId) {
+            console.error(`❌ 未找到 meteredSubscriptionItemId`);
+            return;
+        }
+        
+        // 5. 報告使用量給 Stripe（在發票創建時）
+        const timestamp = Math.floor(Date.now() / 1000);
+        const usageRecord = await stripeClient.subscriptionItems.createUsageRecord(
+            meteredItemId,
+            {
+                quantity: totalUsage,
+                timestamp: timestamp,
+                action: 'set'
+            }
+        );
+        
+        console.log(`✅ 成功報告總使用量給 Stripe:`, usageRecord.id);
+        console.log(`📊 報告的使用量: ${totalUsage} (包含 ${monthlyCredits} + 超額 ${overageAmount})`);
+        
+        // 6. 計算預期收費
+        const tiers = [
+            { max: 100, rate: 0 },        // 0-100: 包含在訂閱中
+            { max: 500, rate: 0.50 },     // 101-500: HK$0.50/頁
+            { max: 1000, rate: 0.45 },    // 501-1000: HK$0.45/頁
+            { max: 2000, rate: 0.40 },    // 1001-2000: HK$0.40/頁
+            { max: Infinity, rate: 0.35 } // 2001+: HK$0.35/頁
+        ];
+        
+        let expectedCharge = 0;
+        let remaining = totalUsage;
+        let prevMax = 0;
+        
+        for (const tier of tiers) {
+            if (remaining <= 0) break;
+            const tierUsage = Math.min(remaining, tier.max - prevMax);
+            expectedCharge += tierUsage * tier.rate;
+            remaining -= tierUsage;
+            prevMax = tier.max;
+        }
+        
+        console.log(`💵 預期 Stripe 會在此發票中收取: HK$${expectedCharge.toFixed(2)}`);
+        console.log(`📧 Stripe 將自動將此費用添加到發票 ${invoice.id} 中`);
+        
+        // 7. 記錄到 creditsHistory
+        await admin.firestore().collection('users').doc(userId).collection('creditsHistory').add({
+            type: 'overage_reported_on_invoice',
+            amount: 0, // 不影響 credits，只是報告
+            description: `在發票創建時報告超額使用: ${overageAmount} Credits（總使用量: ${totalUsage}）`,
+            metadata: {
+                overageAmount,
+                totalUsage,
+                monthlyCredits,
+                usageRecordId: usageRecord.id,
+                invoiceId: invoice.id,
+                expectedCharge: expectedCharge.toFixed(2),
+                reportedAt: admin.firestore.FieldValue.serverTimestamp()
+            },
+            createdAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        
+        console.log(`✅ 超額使用已成功報告，Stripe 會在發票中包含此費用`);
+        
+    } catch (error) {
+        console.error(`❌ 處理發票創建失敗:`, error);
+        console.error(`錯誤詳情:`, error.stack);
+        throw error;
     }
 }
 
