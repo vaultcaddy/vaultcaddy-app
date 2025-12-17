@@ -1138,28 +1138,26 @@ async function deductCredits(userId, amount, metadata = {}) {
         console.log(`✅ Credits 已扣除: ${userId} -${amount} = ${newCredits}`);
     });
     
-    // 🔥 事务完成后，报告使用量给 Stripe（如果需要）
+    // 🔥 事务完成后，无条件报告使用量给 Stripe Billing Meter
+    // Billing Meters 设计：报告每次使用量，由 Stripe 自动计算收费
     const userDoc = await userRef.get();
     const userData = userDoc.data();
-    const pendingOverage = userData?.usageTracking?.pendingOverageReport || 0;
+    const hasSubscription = userData?.subscription?.stripeSubscriptionId;
+    const isTestMode = userData?.isTestMode || false;
     
-    if (pendingOverage > 0) {
-        console.log(`📡 准备向 Stripe 报告超额使用量: ${pendingOverage} Credits`);
+    // 只有有订阅记录或测试模式的用户才报告使用量
+    if (hasSubscription || isTestMode) {
+        console.log(`📡 向 Stripe Billing Meter 报告使用量: ${amount} Credits`);
         
         try {
-            await reportUsageToStripe(userId, pendingOverage);
-            
-            // 清除待报告标记
-            await userRef.update({
-                'usageTracking.pendingOverageReport': 0,
-                'usageTracking.lastReportedAt': admin.firestore.FieldValue.serverTimestamp()
-            });
-            
-            console.log(`✅ 使用量已报告给 Stripe`);
+            await reportUsageToStripe(userId, amount);
+            console.log(`✅ 使用量已报告给 Stripe Billing Meter`);
         } catch (error) {
             console.error(`❌ 报告使用量失败:`, error);
-            // 不抛出错误，下次再试
+            // 不抛出错误，确保 Credits 扣除不受影响
         }
+    } else {
+        console.log(`⚠️ 用户无订阅记录，跳过 Stripe 报告`);
     }
 }
 
