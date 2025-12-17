@@ -233,6 +233,14 @@
      * @param {number} pages - 要扣除的頁數
      * @returns {boolean} - 是否成功
      */
+    /**
+     * 🆕 扣除 Credits（调用后端 Cloud Function）
+     * 
+     * 重要：现在通过后端处理，自动报告使用量到 Stripe Billing Meter
+     * 
+     * @param {number} pages - 要扣除的頁數
+     * @returns {boolean} - 是否成功
+     */
     window.creditsManager.deductCredits = async function(pages) {
         try {
             if (!window.simpleAuth || !window.simpleAuth.isLoggedIn()) {
@@ -246,66 +254,25 @@
                 return false;
             }
             
-            const db = firebase.firestore();
-            const userRef = db.collection('users').doc(user.uid);
+            console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+            console.log(`💰 扣除 Credits (通過後端 Cloud Function)`);
+            console.log(`   用戶 ID: ${user.uid}`);
+            console.log(`   扣除頁數: ${pages}`);
+            console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
             
-            // 用於儲存事務結果的變量
-            let transactionResult = null;
+            // 🔥 调用后端 Cloud Function 扣除 Credits
+            const deductCreditsFunction = firebase.functions().httpsCallable('deductCreditsClient');
+            const result = await deductCreditsFunction({
+                userId: user.uid,
+                amount: pages,
+                metadata: {
+                    source: 'document_upload',
+                    timestamp: new Date().toISOString()
+                }
+            });
             
-            // 使用事務確保原子性
-            await db.runTransaction(async (transaction) => {
-                const userDoc = await transaction.get(userRef);
-                
-                if (!userDoc.exists) {
-                    throw new Error('用戶文檔不存在');
-                }
-                
-                const userData = userDoc.data();
-                // 支持兩種欄位名稱：credits 和 currentCredits
-                const currentCredits = userData.currentCredits || userData.credits || 0;
-                const planType = userData.planType || 'Free Plan';
-                const totalCreditsUsed = userData.totalCreditsUsed || 0; // 累計使用量
-                const includedCredits = userData.includedCredits || 0; // 訂閱包含的 Credits
-                
-                console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
-                console.log(`💰 扣除 Credits (credits-manager.js v3.0)`);
-                console.log(`   當前 Credits: ${currentCredits}`);
-                console.log(`   扣除頁數: ${pages}`);
-                console.log(`   計劃類型: ${planType}`);
-                console.log(`   累計使用: ${totalCreditsUsed}`);
-                console.log(`   包含 Credits: ${includedCredits}`);
-                console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
-                
-                // ✅ Pro Plan 用戶可以使用負數 Credits（按量計費）
-                if (planType === 'Free Plan' && currentCredits < pages) {
-                    console.log(`❌ Free Plan 用戶 Credits 不足`);
-                    throw new Error('Credits 不足');
-                }
-                
-                const newCredits = currentCredits - pages;
-                const newTotalCreditsUsed = totalCreditsUsed + pages; // 累計使用量增加
-                console.log(`   新 Credits: ${newCredits}`);
-                console.log(`   新累計使用: ${newTotalCreditsUsed}`);
-                
-                // 同時更新兩個欄位以確保兼容性
-                transaction.update(userRef, { 
-                    credits: newCredits,
-                    currentCredits: newCredits,
-                    totalCreditsUsed: newTotalCreditsUsed, // ✅ 更新累計使用量
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                
-                // 記錄使用歷史
-                const historyRef = db.collection('users').doc(user.uid).collection('creditsHistory').doc();
-                transaction.set(historyRef, {
-                    type: 'deduction',
-                    amount: -pages,
-                    description: `處理文檔，使用 ${pages} Credits`,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    balanceAfter: newCredits,
-                    planType: planType
-                });
-                
+            if (result.data && result.data.success) {
+                const newCredits = result.data.newCredits;
                 console.log(`✅ Credits 已扣除: ${pages} 頁，剩餘: ${newCredits}`);
                 
                 // 更新本地狀態
@@ -315,32 +282,15 @@
                 updateCreditsDisplay(newCredits);
                 notifyCreditsListeners(newCredits);
                 
-                // 🚀 保存事務結果，供後續使用
-                transactionResult = {
-                    newCredits,
-                    newTotalCreditsUsed,
-                    planType,
-                    includedCredits
-                };
-            });
-            
-            // 📊 如果是 Pro Plan 且超額使用，報告給 Stripe
-            if (transactionResult.planType === 'Pro Plan' && 
-                transactionResult.newTotalCreditsUsed > transactionResult.includedCredits) {
-                
-                console.log(`🔔 Pro Plan 用戶超額使用`);
-                console.log(`   累計使用: ${transactionResult.newTotalCreditsUsed}`);
-                console.log(`   包含 Credits: ${transactionResult.includedCredits}`);
-                console.log(`   超額: ${transactionResult.newTotalCreditsUsed - transactionResult.includedCredits}`);
-                
-                // ✅ 使用量報告已由後端 deductCredits 函數自動處理（使用 Billing Meter Events API）
-                // 客戶端不再需要手動調用 reportCreditsUsage
-                console.log(`ℹ️ 使用量將由後端自動報告給 Stripe（Billing Meter Events API）`)
+                return true;
+            } else {
+                console.error('❌ 扣除 Credits 失敗:', result.data?.error || '未知錯誤');
+                return false;
             }
             
-            return true;
         } catch (error) {
             console.error('❌ 扣除 Credits 失敗:', error);
+            console.error('錯誤詳情:', error.message);
             return false;
         }
     };

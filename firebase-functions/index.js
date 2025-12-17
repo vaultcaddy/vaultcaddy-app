@@ -1154,6 +1154,52 @@ async function deductCredits(userId, amount, metadata = {}) {
 }
 
 /**
+ * 🆕 客户端可调用的 Credits 扣除函数
+ * 
+ * 这个函数供客户端调用，内部会调用 deductCredits 并自动报告使用量
+ */
+exports.deductCreditsClient = functions.https.onCall(async (data, context) => {
+    // 验证用户身份
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', '请先登录');
+    }
+    
+    const { userId, amount, metadata } = data;
+    
+    // 验证参数
+    if (!userId || !amount) {
+        throw new functions.https.HttpsError('invalid-argument', '缺少必要参数');
+    }
+    
+    // 验证用户只能扣除自己的 Credits
+    if (context.auth.uid !== userId) {
+        throw new functions.https.HttpsError('permission-denied', '无权限');
+    }
+    
+    console.log(`📞 客户端调用 deductCreditsClient: userId=${userId}, amount=${amount}`);
+    
+    try {
+        // 调用内部 deductCredits 函数（会自动报告使用量到 Stripe）
+        await deductCredits(userId, amount, metadata || {});
+        
+        // 获取更新后的 Credits
+        const userDoc = await db.collection('users').doc(userId).get();
+        const newCredits = userDoc.data()?.credits || 0;
+        
+        console.log(`✅ Credits 扣除成功: ${userId}, 新余额: ${newCredits}`);
+        
+        return {
+            success: true,
+            newCredits: newCredits
+        };
+        
+    } catch (error) {
+        console.error(`❌ deductCreditsClient 失败:`, error);
+        throw new functions.https.HttpsError('internal', error.message);
+    }
+});
+
+/**
  * 向 Stripe 报告使用量（用于按量计费）
  */
 /**
