@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stripe 计费配置诊断</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            font-size: 2rem;
+        }
+
+        .section {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .issue {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+        }
+
+        .success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+        }
+
+        .error {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+        }
+
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .comparison-item {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+        }
+
+        .comparison-item h3 {
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .comparison-item.wrong {
+            border-color: #dc3545;
+        }
+
+        .comparison-item.correct {
+            border-color: #28a745;
+        }
+
+        .button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-block;
+            text-decoration: none;
+            margin: 0.5rem 0.5rem 0.5rem 0;
+        }
+
+        .button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+
+        .checklist li {
+            padding: 0.5rem 0;
+            padding-left: 2rem;
+            position: relative;
+        }
+
+        .checklist li::before {
+            content: '☐';
+            position: absolute;
+            left: 0;
+            font-size: 1.2rem;
+        }
+
+        .checklist li.checked::before {
+            content: '✓';
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Stripe 计费配置诊断</h1>
+        
+        <div class="error">
+            <strong>🚨 发现关键问题！</strong><br>
+            你的 Stripe 配置可能使用了<strong>新的 Billing Meters API</strong>，<br>
+            但我们的代码使用的是<strong>旧的 Usage Records API</strong>！<br>
+            两者<strong>不兼容</strong>，这就是超额费用没有被收取的原因。
+        </div>
+
+        <div class="section">
+            <h2>📊 Stripe 的两种计量计费方式</h2>
+            
+            <div class="comparison">
+                <div class="comparison-item wrong">
+                    <h3>❌ 新方式：Billing Meters（你可能在用）</h3>
+                    <div class="code-block">
+# 图5中的代码
+POST /v1/billing/meter_events
+event_name: vaultcaddy_credit_usage
+payload[value]: 1
+                    </div>
+                    <strong>问题：</strong> 我们的代码不支持这个！
+                </div>
+
+                <div class="comparison-item correct">
+                    <h3>✅ 旧方式：Usage Records（我们支持）</h3>
+                    <div class="code-block">
+# 我们的代码使用
+POST /v1/subscription_items/{id}/usage_records
+quantity: 150
+action: set
+                    </div>
+                    <strong>兼容：</strong> 代码已完全支持！
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔍 如何检查你的配置</h2>
+            
+            <h3>步骤 1：打开你的产品页面</h3>
+            <a href="https://dashboard.stripe.com/test/products" class="button" target="_blank">
+                打开 Stripe 产品
+            </a>
+
+            <h3 style="margin-top: 1rem;">步骤 2：找到 "VaultCaddy Monthly" 产品</h3>
+            
+            <h3 style="margin-top: 1rem;">步骤 3：查看价格配置，对照下表：</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>配置项</th>
+                        <th>❌ 新方式（不兼容）</th>
+                        <th>✅ 旧方式（兼容）</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>计费模型</strong></td>
+                        <td><span class="highlight">Usage-based with meters</span></td>
+                        <td><span class="highlight">Usage-based / Standard pricing</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Meter</strong></td>
+                        <td>✓ 显示 Meter name</td>
+                        <td>✗ 不显示 Meter</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Event name</strong></td>
+                        <td><code>vaultcaddy_credit_usage</code></td>
+                        <td>✗ 没有这个字段</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Aggregation</strong></td>
+                        <td>通过 Meter 配置</td>
+                        <td>Sum of usage values</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Pricing tiers</strong></td>
+                        <td>在 Meter 中配置</td>
+                        <td>在 Price 中配置</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>✅ 解决方案 A：切换到旧方式（推荐）</h2>
+            
+            <div class="success">
+                <strong>✓ 优点：</strong><br>
+                • 无需修改代码<br>
+                • 立即可用<br>
+                • 更成熟稳定<br>
+                • 我们的代码已完全支持
+            </div>
+
+            <h3>详细步骤：</h3>
+
+            <ol style="padding-left: 2rem; line-height: 2;">
+                <li><strong>创建新的价格：</strong>
+                    <ul style="margin: 0.5rem 0; padding-left: 2rem;">
+                        <li>打开产品 "VaultCaddy Monthly"</li>
+                        <li>点击「Add another price」</li>
+                        <li>选择配置：</li>
+                    </ul>
+                    <div class="code-block">
+产品：VaultCaddy Monthly
+价格模型：Recurring
+计费周期：Monthly  
+基础价格：HK$58.00
+
+☑️ 启用用量计费（Usage is metered）
+Aggregation：Sum of usage values
+Pricing model：Graduated pricing
+
+定价层级：
+• 第 1 层：0 - 100 单位 = HK$0.00
+• 第 2 层：101 - 500 单位 = HK$0.50 per unit
+• 第 3 层：501 - 1000 单位 = HK$0.45 per unit  
+• 第 4 层：1001+ 单位 = HK$0.40 per unit
+                    </div>
+                </li>
+
+                <li><strong>更新测试订阅：</strong>
+                    <ul style="margin: 0.5rem 0; padding-left: 2rem;">
+                        <li>打开客户 1234@gmail.com 的订阅</li>
+                        <li>点击「Update subscription」</li>
+                        <li>替换为新创建的价格</li>
+                        <li>保存</li>
+                    </ul>
+                </li>
+
+                <li><strong>验证配置：</strong>
+                    <ul style="margin: 0.5rem 0; padding-left: 2rem;">
+                        <li>订阅应该包含两个项目：
+                            <ul style="padding-left: 2rem;">
+                                <li>1. 固定订阅费用（HK$58/月）</li>
+                                <li>2. 按量计费项目（Metered usage）</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+
+                <li><strong>重新测试：</strong>
+                    <ul style="margin: 0.5rem 0; padding-left: 2rem;">
+                        <li>设置 credits = -50</li>
+                        <li>取消订阅</li>
+                        <li>查看日志和发票</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <a href="https://dashboard.stripe.com/test/products" class="button" target="_blank">
+                开始配置
+            </a>
+        </div>
+
+        <div class="section">
+            <h2>🔧 解决方案 B：更新代码支持新的 Billing Meters</h2>
+            
+            <div class="issue">
+                <strong>⚠️ 注意：</strong><br>
+                这需要修改代码，并且新的 Billing Meters API 还在 Beta 阶段，<br>
+                <strong>强烈建议先尝试方案 A</strong>。
+            </div>
+
+            <p>如果你坚持使用新的 Billing Meters，需要：</p>
+
+            <ol style="padding-left: 2rem; line-height: 2;">
+                <li>修改 <code>handleInvoiceCreated</code> 函数</li>
+                <li>替换 <code>subscriptionItems.createUsageRecord()</code></li>
+                <li>改用 <code>billing.meterEvents.create()</code></li>
+                <li>更新所有相关逻辑</li>
+            </ol>
+
+            <p><strong>告诉我如果你需要这个方案，我可以帮你实现。</strong></p>
+        </div>
+
+        <div class="section">
+            <h2>📋 诊断检查清单</h2>
+            
+            <ul class="checklist">
+                <li>打开 Stripe Dashboard - Products</li>
+                <li>找到 VaultCaddy Monthly 产品</li>
+                <li>检查价格配置类型</li>
+                <li>确认是否使用了 "Billing Meters"</li>
+                <li>如果是，按照方案 A 创建新价格</li>
+                <li>更新测试订阅到新价格</li>
+                <li>设置 Firestore credits = -50</li>
+                <li>重新测试取消订阅</li>
+                <li>查看 Firebase 日志</li>
+                <li>验证 Stripe 发票包含超额费用</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>🎯 快速诊断</h2>
+            
+            <p><strong>检查你的 Firestore 数据（图2）：</strong></p>
+            <div class="code-block">
+subscription:
+  meteredSubscriptionItemId: "si_TcYeJnOgjEw9lM"  ← 如果有这个，说明使用旧方式
+  stripeSubscriptionId: "sub_1SfJXEJmiQ31C0GT..."
+            </div>
+
+            <p style="margin-top: 1rem;"><strong>如果你有 <code>meteredSubscriptionItemId</code>，那么应该使用旧方式！</strong></p>
+
+            <div class="success">
+                <strong>✓ 好消息：</strong> 从图2看到你有 <code>meteredSubscriptionItemId</code>，<br>
+                说明你的订阅配置是正确的（旧方式）！<br><br>
+                <strong>问题可能是：</strong>
+                <ul style="margin: 0.5rem 0 0 2rem;">
+                    <li>Webhook 时序问题（已修复）</li>
+                    <li>日志中缺少关键检测步骤</li>
+                    <li>需要重新测试验证修复</li>
+                </ul>
+            </div>
+
+            <a href="https://console.firebase.google.com/project/vaultcaddy-production-cbbe2/firestore/data/~2Fusers~2F3bLhZuU9H0b3ExhwFCJuN4vZeGb2" 
+               class="button" target="_blank">
+                查看 Firestore 数据
+            </a>
+            
+            <a href="https://console.cloud.google.com/logs/query;query=resource.type%3D%22cloud_function%22%0Aresource.labels.function_name%3D%22stripeWebhook%22%0Atextpayload%3D~%22invoice.created%22%20OR%20textpayload%3D~%22超额%22?project=vaultcaddy-production-cbbe2" 
+               class="button" target="_blank">
+                查看最新日志
+            </a>
+        </div>
+
+        <div class="error">
+            <h3>🔥 下一步建议</h3>
+            <ol style="padding-left: 2rem; line-height: 1.8;">
+                <li><strong>立即重新测试：</strong>
+                    <ul style="padding-left: 2rem;">
+                        <li>代码已修复（使用 totalCreditsUsed）</li>
+                        <li>设置 credits = -50, totalCreditsUsed = 150</li>
+                        <li>取消订阅</li>
+                        <li>查看日志是否显示：
+                            <div class="code-block" style="font-size: 0.85rem;">
+✅ 从 totalCreditsUsed 检测到超额: 50 Credits
+✅ 成功报告总使用量给 Stripe: 150
+💵 预期收费: HK$25.00
+                            </div>
+                        </li>
+                    </ul>
+                </li>
+                <li><strong>如果还是不行：</strong>
+                    <ul style="padding-left: 2rem;">
+                        <li>截图给我看 Stripe 产品配置</li>
+                        <li>截图给我看最新的 Firebase 日志</li>
+                        <li>我会帮你进一步诊断</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        console.log('🔍 Stripe 计费配置诊断工具已加载');
+        
+        // 高亮显示关键信息
+        document.querySelectorAll('.highlight').forEach(el => {
+            el.style.animation = 'pulse 2s ease-in-out infinite';
+        });
+
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.6; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
+
