@@ -384,7 +384,15 @@
     function initCreditsManager() {
         console.log('🚀 初始化 Credits 管理器...');
         
-        // 等待 Firebase 準備好
+        // 檢查 Firebase 是否已初始化
+        if (typeof firebase === 'undefined' || !firebase.apps || firebase.apps.length === 0) {
+            console.log('⚠️ Firebase 尚未初始化，等待 firebase-ready 事件...');
+            return;
+        }
+        
+        console.log('✅ Firebase 已就緒，開始初始化 Credits 管理器');
+        
+        // 等待用戶登入
         if (window.simpleAuth && window.simpleAuth.isLoggedIn()) {
             loadUserCredits();
             setupCreditsListener();
@@ -397,16 +405,23 @@
         }
     }
     
-    // 當 DOM 準備好時初始化
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initCreditsManager);
-    } else {
+    // ⚠️ 重要：只在 Firebase 準備好後才初始化
+    // 監聽 Firebase 準備好事件（由 firebase-config.js 觸發）
+    window.addEventListener('firebase-ready', () => {
+        console.log('🔥 收到 firebase-ready 事件，初始化 Credits 管理器');
         initCreditsManager();
+    });
+    
+    // 如果 Firebase 已經初始化（頁面重新加載後的情況）
+    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+        console.log('✅ Firebase 已初始化，直接初始化 Credits 管理器');
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initCreditsManager);
+        } else {
+            initCreditsManager();
+        }
     }
     
-    // 監聽 Firebase 準備好事件
-    window.addEventListener('firebase-ready', initCreditsManager);
-    
-    console.log('📦 Credits 管理器已載入');
+    console.log('📦 Credits 管理器已載入，等待 Firebase 初始化...');
 })();
 
