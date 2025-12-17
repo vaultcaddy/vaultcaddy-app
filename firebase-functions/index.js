@@ -1136,25 +1136,49 @@ async function deductCredits(userId, amount, metadata = {}) {
         });
         
         console.log(`✅ Credits 已扣除: ${userId} -${amount} = ${newCredits}`);
+        
+        // 返回扣除前和扣除后的 credits，供事务后使用
+        return { previousCredits: currentCredits, newCredits: newCredits };
     });
     
-    // 🔥 事务完成后，无条件报告使用量给 Stripe Billing Meter
-    // Billing Meters 设计：报告每次使用量，由 Stripe 自动计算收费
+    // 🔥 事务完成后，只在 Credits 为负数时才报告超额使用量
+    // 逻辑：当用户超过免费额度（Credits < 0）时，才向 Stripe 报告
+    const { previousCredits, newCredits } = transactionResult;
+    
     const userDoc = await userRef.get();
     const userData = userDoc.data();
     const hasSubscription = userData?.subscription?.stripeSubscriptionId;
     const isTestMode = userData?.isTestMode || false;
     
-    // 只有有订阅记录或测试模式的用户才报告使用量
+    // 只有有订阅记录或测试模式的用户才考虑报告
     if (hasSubscription || isTestMode) {
-        console.log(`📡 向 Stripe Billing Meter 报告使用量: ${amount} Credits`);
-        
-        try {
-            await reportUsageToStripe(userId, amount);
-            console.log(`✅ 使用量已报告给 Stripe Billing Meter`);
-        } catch (error) {
-            console.error(`❌ 报告使用量失败:`, error);
-            // 不抛出错误，确保 Credits 扣除不受影响
+        if (newCredits < 0) {
+            // Credits 为负数，表示已超过免费额度
+            let reportAmount;
+            
+            if (previousCredits >= 0) {
+                // 第一次超额：从正数变成负数
+                // 报告整个负数部分（即超出免费额度的部分）
+                reportAmount = Math.abs(newCredits);
+                console.log(`💰 首次超额：Credits 从 ${previousCredits} 降至 ${newCredits}`);
+                console.log(`   报告超额使用: ${reportAmount} Credits`);
+            } else {
+                // 继续超额：已经是负数，继续扣除
+                // 只报告本次扣除的数量
+                reportAmount = amount;
+                console.log(`💰 继续超额：Credits 从 ${previousCredits} 降至 ${newCredits}`);
+                console.log(`   报告本次使用: ${reportAmount} Credits`);
+            }
+            
+            try {
+                await reportUsageToStripe(userId, reportAmount);
+                console.log(`✅ 超额使用量已报告给 Stripe Billing Meter`);
+            } catch (error) {
+                console.error(`❌ 报告使用量失败:`, error);
+                // 不抛出错误，确保 Credits 扣除不受影响
+            }
+        } else {
+            console.log(`⚠️ Credits 还为正数 (${newCredits})，在免费额度内，跳过 Stripe 报告`);
         }
     } else {
         console.log(`⚠️ 用户无订阅记录，跳过 Stripe 报告`);
