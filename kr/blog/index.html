@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="VaultCaddy 블로그: AI 문서 처리, 재무 관리, 회계 자동화를 위한 모범 사례 및 전문 가이드. 홍콩 최적화, 98% 정확도, USD $0.06/페이지부터, 안전하고 신뢰할 수 있습니다.">
+    <meta name="keywords" content="AI 문서 처리,재무 관리,회계 자동화,송장 관리,영수증 정리,홍콩 회계,은행 명세서,OCR 기술,VaultCaddy">
+    <title>VaultCaddy 블로그 - AI 문서 처리 전문 가이드</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- 🔥 Firebase SDK（必需！） -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Firebase 配置 -->
+    <script src="../firebase-config.js"></script>
+    <style>
+        .blog-index-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 1rem;
+        }
+        .blog-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        .blog-header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 1rem;
+        }
+        .blog-header p {
+            font-size: 1.25rem;
+            color: #6b7280;
+        }
+        .blog-categories {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 3rem;
+            flex-wrap: wrap;
+        }
+        .category-tag {
+            padding: 0.5rem 1.5rem;
+            border-radius: 24px;
+            background: #f3f4f6;
+            color: #4b5563;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .category-tag:hover, .category-tag.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .blog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        .blog-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+            cursor: pointer; /* 🔥 整個卡片可點擊 */
+        }
+        .blog-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.15);
+        }
+        .blog-card-image {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3rem;
+        }
+        .blog-card-content {
+            padding: 1.5rem;
+        }
+        .blog-card-category {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            background: #eff6ff;
+            color: #1e40af;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+        .blog-card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.75rem;
+            line-height: 1.4;
+        }
+        .blog-card-excerpt {
+            color: #6b7280;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+        .blog-card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #9ca3af;
+            font-size: 0.85rem;
+        }
+        .read-more {
+            color: #7c3aed;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .read-more:hover {
+            text-decoration: underline;
+        }
+        
+        /* 手機版樣式 */
+        @media (max-width: 768px) {
+            /* 🔥 手機版隱藏 V字logo */
+            .desktop-logo {
+                display: none !important;
+            }
+            
+            /* 隱藏桌面版 logo 文字 */
+            .desktop-logo-text {
+                display: none !important;
+            }
+            
+            .vaultcaddy-navbar > div:nth-child(2) > div:first-child {
+                display: none !important;
+            }
+            
+            /* 🔥 手機版顯示漢堡菜單 */
+            @media (max-width: 768px) {
+                #mobile-menu-btn {
+                    display: block !important;
+                }
+            }
+            
+            /* 調整導航欄 padding */
+            .vaultcaddy-navbar {
+                padding: 0 1rem !important;
+            }
+        }
+    </style>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Firebase 配置 -->
+    <script>
+        // Firebase 配置
+        const firebaseConfig = {
+            apiKey: "AIzaSyBpEI7v5ufJhaDdKvYN0HgF_6EvvAYWUaE",
+            authDomain: "vaultcaddy-production-cbbe2.firebaseapp.com",
+            projectId: "vaultcaddy-production-cbbe2",
+            storageBucket: "vaultcaddy-production-cbbe2.firebasestorage.app",
+            messagingSenderId: "510426940354",
+            appId: "1:510426940354:web:cf60fd8f8be5aa6d691c25"
+        };
+        
+        // 初始化 Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+            console.log('✅ Firebase 初始化成功');
+        }
+    </script>
+
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://vaultcaddy.com/kr/blog/index.html">
+    <meta property="og:title" content="VaultCaddy 블로그 - AI 문서 처리 전문 가이드">
+    <meta property="og:description" content="VaultCaddy 블로그: AI 문서 처리, 재무 관리, 회계 자동화를 위한 모범 사례 및 전문 가이드. 홍콩 최적화, 98% 정확도, USD $0.06/페이지부터, 안전하고 신뢰할 수 있습니다.">
+    <meta property="og:image" content="https://vaultcaddy.com/images/blog/blog-cover.jpg">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://vaultcaddy.com/kr/blog/index.html">
+    <meta property="twitter:title" content="VaultCaddy 블로그 - AI 문서 처리 전문 가이드">
+    <meta property="twitter:description" content="VaultCaddy 블로그: AI 문서 처리, 재무 관리, 회계 자동화를 위한 모범 사례 및 전문 가이드. 홍콩 최적화, 98% 정확도, USD $0.06/페이지부터, 안전하고 신뢰할 수 있습니다.">
+    <meta property="twitter:image" content="https://vaultcaddy.com/images/blog/blog-cover.jpg">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://vaultcaddy.com/kr/blog/index.html">
+
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "VaultCaddy 블로그 - AI 문서 처리 전문 가이드",
+      "description": "VaultCaddy 블로그: AI 문서 처리, 재무 관리, 회계 자동화를 위한 모범 사례 및 전문 가이드. 홍콩 최적화, 98% 정확도, USD $0.06/페이지부터, 안전하고 신뢰할 수 있습니다.",
+      "image": "https://vaultcaddy.com/images/blog/blog-cover.jpg",
+      "author": {
+        "@type": "Organization",
+        "name": "VaultCaddy"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "VaultCaddy",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://vaultcaddy.com/logo.png"
+        }
+      },
+      "datePublished": "2025-12-05",
+      "dateModified": "2025-12-05"
+    }
+    </script>
+</head>
+<body>
+    <!-- ✅ 統一導航欄（與 index.html 完全一致）-->
+    <nav class="vaultcaddy-navbar" id="main-navbar" style="position: fixed; top: 0; left: 0; right: 0; height: 60px; background: #ffffff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; z-index: 1000; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <!-- 漢堡菜單按鈕（僅手機顯示）-->
+            <button id="mobile-menu-btn" onclick="openMobileSidebar()" style="display: none; background: none; border: none; cursor: pointer; padding: 0.5rem; color: #1f2937; font-size: 1.5rem;">
+                <i class="fas fa-bars"></i>
+            </button>
+            
+            <a href="../kr/index.html" style="display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: #1f2937; font-weight: 600; font-size: 1.125rem;">
+                <div class="desktop-logo" style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.25rem;">
+                    V
+                </div>
+                <div class="desktop-logo-text">
+                    <div>VaultCaddy</div>
+                    <div style="font-size: 0.75rem; color: #6b7280; font-weight: 400; text-transform: uppercase; letter-spacing: 0.05em;">AI DOCUMENT PROCESSING</div>
+                </div>
+            </a>
+        </div>
+        <div style="display: flex; align-items: center; gap: 2rem;">
+            <div style="display: flex; align-items: center; gap: 2rem;">
+                <a href="../kr/index.html#features" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">기능</a>
+                <a href="../kr/index.html#pricing" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">가격</a>
+                <a href="/kr/blog/" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">학습 센터</a>
+                <a href="../kr/dashboard.html" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">대시보드</a>
+            </div>
+            
+            <div id="user-menu" onclick="toggleDropdown()" style="position: relative; display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+                <div id="user-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">Y</div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- 手機側邊欄菜單 -->
+    <div id="mobile-sidebar" style="position: fixed; top: 0; left: -100%; width: 280px; height: 100vh; background: white; z-index: 2000; transition: left 0.3s ease; box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto;">
+        <div style="padding: 1.5rem;">
+            <!-- 菜單項 -->
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <!-- 🏠 新增홈按鈕 -->
+                <a href="../kr/index.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
+                    <i class="fas fa-home" style="width: 20px; color: #667eea;"></i>
+                    <span>홈</span>
+                </a>
+                <a href="../kr/index.html#features" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
+                    <i class="fas fa-star" style="width: 20px; color: #667eea;"></i>
+                    <span>기능</span>
+                </a>
+                <a href="../kr/index.html#pricing" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
+                    <i class="fas fa-dollar-sign" style="width: 20px; color: #667eea;"></i>
+                    <span>가격</span>
+                </a>
+                <a href="/kr/blog/" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
+                    <i class="fas fa-graduation-cap" style="width: 20px; color: #667eea;"></i>
+                    <span>학습 센터</span>
+                </a>
+                <a href="../kr/dashboard.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
+                    <i class="fas fa-th-large" style="width: 20px; color: #667eea;"></i>
+                    <span>대시보드</span>
+                </a>
+                
+                <div style="height: 1px; background: #e5e7eb; margin: 1rem 0;"></div>
+
+                <div style="height: 1px; background: #e5e7eb; margin: 1rem 0;"></div>
+                
+                <a href="../kr/privacy.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
+                    <i class="fas fa-shield-alt" style="width: 20px; color: #6b7280;"></i>
+                    <span>개인정보 보호정책</span>
+                </a>
+                <a href="../kr/terms.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
+                    <i class="fas fa-file-contract" style="width: 20px; color: #6b7280;"></i>
+                    <span>서비스 약관</span>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 側邊欄遮罩 -->
+    <div id="mobile-sidebar-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; display: none; transition: opacity 0.3s ease; opacity: 0;"></div>
+    
+    <!-- 用戶下拉菜單 -->
+    <div id="user-dropdown" style="display: none; position: fixed; top: 70px; right: 2rem; background: white; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); padding: 1rem; min-width: 220px; z-index: 2000; border: 1px solid #e5e7eb;">
+        <div style="padding: 0.75rem; border-bottom: 1px solid #f3f4f6;">
+            <div style="font-weight: 600; font-size: 1rem; color: #1f2937; margin-bottom: 0.25rem;"><span>Credits</span>: <span id="dropdown-credits">0</span></div>
+            <div style="font-size: 0.875rem; color: #6b7280;" id="dropdown-email">user@example.com</div>
+        </div>
+        <div style="padding: 0.5rem 0;">
+            <a href="../kr/account.html" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; color: #374151; text-decoration: none; border-radius: 6px; transition: background 0.2s; font-size: 0.9375rem;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+                <span><i class="fas fa-user" style="margin-right: 0.75rem; color: #6b7280; width: 16px;"></i><span>계정</span></span>
+                <span style="color: #9ca3af; font-size: 0.875rem;">⌘A</span>
+            </a>
+            <a href="../kr/billing.html" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; color: #374151; text-decoration: none; border-radius: 6px; transition: background 0.2s; font-size: 0.9375rem;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+                <span><i class="fas fa-credit-card" style="margin-right: 0.75rem; color: #6b7280; width: 16px;"></i><span>청구</span></span>
+                <span style="color: #9ca3af; font-size: 0.875rem;">⌘B</span>
+            </a>
+        </div>
+        <div style="border-top: 1px solid #f3f4f6; padding-top: 0.5rem;">
+            <button onclick="handleLogout()" style="width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; color: #ef4444; background: transparent; border: none; border-radius: 6px; cursor: pointer; transition: background 0.2s; font-size: 0.9375rem; text-align: left;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='transparent'">
+                <span><i class="fas fa-sign-out-alt" style="margin-right: 0.75rem; width: 16px;"></i><span>로그아웃</span></span>
+                <span style="color: #fca5a5; font-size: 0.875rem;">⌘Q</span>
+            </button>
+        </div>
+    </div>
+    
+    <script src="../simple-auth.js"></script>
+    <script src="../unified-auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Blog 页面初始化（静默）
+            
+            let userCredits = 0;
+            let userEmail = '';
+            let userDisplayName = '';
+            
+            // 獲取用戶首字母
+            function getUserInitial() {
+                if (userDisplayName && userDisplayName.trim()) {
+                    return userDisplayName.charAt(0).toUpperCase();
+                }
+                if (userEmail && userEmail.trim()) {
+                    return userEmail.charAt(0).toUpperCase();
+                }
+                return 'U';
+            }
+            
+            // 🔥 與 dashboard.html 完全相同的更新方式
+            async function updateUserMenu() {
+                const userMenu = document.getElementById('user-menu');
+                if (!userMenu) return;
+                
+                try {
+                    const isLoggedIn = window.simpleAuth && window.simpleAuth.isLoggedIn();
+                    
+                    const avatar = document.getElementById('user-avatar');
+                    if (!avatar) return;
+                    
+                    if (isLoggedIn) {
+                        // ✅ 已登入：更新用戶頭像
+                        const currentUser = window.simpleAuth.getCurrentUser();
+                        userEmail = currentUser.email || '';
+                        userDisplayName = currentUser.displayName || '';
+                        
+                        const userInitial = getUserInitial();
+                        avatar.textContent = userInitial;
+                    } else {
+                        // ✅ 未登入：顯示"U"
+                        avatar.textContent = 'U';
+                    }
+                } catch (e) {
+                    // 静默处理错误
+                }
+            }
+            
+            // 切換下拉菜單
+            window.toggleDropdown = function() {
+                const dropdown = document.getElementById('user-dropdown');
+                if (dropdown) {
+                    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+                }
+            };
+            
+            // 🔥 優化：只使用一個可靠的檢查方式
+            // 直接監聽 Firebase Auth 狀態變化（最可靠）
+            function initAuthCheck() {
+                if (typeof firebase === 'undefined' || !firebase.auth) {
+                    // Firebase 尚未加載，等待後重試
+                    setTimeout(initAuthCheck, 100);
+                    return;
+                }
+                
+                // Firebase Auth 的 onAuthStateChanged 是最可靠的方式
+                firebase.auth().onAuthStateChanged(function(user) {
+                    if (user) {
+                        // 用戶已登入，更新 UI
+                        updateUserMenu();
+                    } else {
+                        // 用戶未登入，顯示預設狀態
+                        const avatar = document.getElementById('user-avatar');
+                        if (avatar) avatar.textContent = 'U';
+                    }
+                });
+            }
+            
+            // 開始檢查
+            initAuthCheck();
+        });
+    </script>
+    
+    <script>
+        // 漢堡菜單기능
+        function openMobileSidebar() {
+            document.getElementById('mobile-sidebar').style.left = '0';
+            document.getElementById('mobile-sidebar-overlay').style.display = 'block';
+            setTimeout(() => {
+                document.getElementById('mobile-sidebar-overlay').style.opacity = '1';
+            }, 10);
+        }
+        
+        function closeMobileSidebar() {
+            document.getElementById('mobile-sidebar').style.left = '-100%';
+            document.getElementById('mobile-sidebar-overlay').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('mobile-sidebar-overlay').style.display = 'none';
+            }, 300);
+        }
+        
+        const overlay = document.getElementById('mobile-sidebar-overlay');
+        if (overlay) {
+            overlay.addEventListener('click', closeMobileSidebar);
+        }
+        
+        // 로그아웃기능
+        function handleLogout() {
+            if (typeof firebase !== 'undefined' && firebase.auth) {
+                firebase.auth().signOut().then(() => {
+                    window.location.href = '../index.html';
+                });
+            }
+        }
+    </script>
+
+    <div class="blog-index-container" style="padding-top: 80px;">
+        <header class="blog-header">
+            <h1>VaultCaddy 블로그</h1>
+            <p>AI 문서 처리, 재무 관리, 회계 자동화를 위한 전문 가이드</p>
+        </header>
+
+        <div class="blog-categories">
+            <div class="category-tag active" data-category="all">모든 기사</div>
+            <div class="category-tag" data-category="freelancer">프리랜서</div>
+            <div class="category-tag" data-category="smb">중소기업</div>
+            <div class="category-tag" data-category="accountant">회계 사무소</div>
+        </div>
+
+        <div class="blog-grid">
+            <!-- 프리랜서文章 -->
+            <div class="blog-card" data-category="freelancer" onclick="window.location.href='freelancer-invoice-management.html'">
+                <div class="blog-card-image" style="background-image: url('https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&h=400&fit=crop&q=80'); background-size: cover; background-position: center;"></div>
+                <div class="blog-card-content">
+                    <span class="blog-card-category">프리랜서</span>
+                    <h2 class="blog-card-title">프리랜서가 송장과 영수증을 쉽게 관리하는 방법</h2>
+                    <p class="blog-card-excerpt">AI 기술을 사용하여 재무 문서를 쉽게 관리하고 시간을 절약하며 핵심 비즈니스에 집중할 수 있도록 돕는 5가지 실용적인 팁입니다.</p>
+                    <div class="blog-card-meta">
+                        <span><i class="far fa-clock"></i> 8 분</span>
+                        <a href="freelancer-invoice-management.html" class="read-more">더 읽기 →</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="blog-card" data-category="freelancer" onclick="window.location.href='personal-bookkeeping-best-practices.html'">
+                <div class="blog-card-image" style="background-image: url('https://images.unsplash.com/photo-1554224154-26032ffc0d07?w=800&h=400&fit=crop&q=80'); background-size: cover; background-position: center;"></div>
+                <div class="blog-card-content">
+                    <span class="blog-card-category">프리랜서</span>
+                    <h2 class="blog-card-title">개인 부기를 위한 7가지 모범 사례</h2>
+                    <p class="blog-card-excerpt">AI 도구를 사용하여 재무 관리를 자동화하고 수입과 지출을 쉽게 추적하며 재정적 자유를 달성하는 방법을 배웁니다.</p>
+                    <div class="blog-card-meta">
+                        <span><i class="far fa-clock"></i> 10 분</span>
+                        <a href="personal-bookkeeping-best-practices.html" class="read-more">더 읽기 →</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="blog-card" data-category="freelancer" onclick="window.location.href='freelancer-tax-preparation-guide.html'">
+                <div class="blog-card-image" style="background-image: url('https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800&h=400&fit=crop&q=80'); background-size: cover; background-position: center;"></div>
+                <div class="blog-card-content">
+                    <span class="blog-card-category">프리랜서</span>
+                    <h2 class="blog-card-title">프리랜서 세금 신고 가이드</h2>
+                    <p class="blog-card-excerpt">완전한 세금 준비 가이드, 재무 문서 정리 방법, 공제 극대화, 일반적인 실수 방지 방법을 알려드립니다.</p>
+                    <div class="blog-card-meta">
+                        <span><i class="far fa-clock"></i> 12 분</span>
+                        <a href="freelancer-tax-preparation-guide.html" class="read-more">더 읽기 →</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 成本分析文章（精選） -->
+            <div class="blog-card" data-category="all" style="border: 2px solid #667eea;" onclick="window.location.href='manual-vs-ai-cost-analysis.html'">
+                <div class="blog-card-image" style="background-image: url('https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=400&fit=crop&q=80'); background-size: cover; background-position: center;"></div>
+                <div class="blog-card-content">
+                    <span class="blog-card-category" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">주요 기사</span>
+                    <h2 class="blog-card-title">수동 처리 vs AI 자동화: 실제 비용 비교 및 시간 해방 가이드</h2>
+                    <p class="blog-card-excerpt">수동 처리의 숨겨진 비용을 심층 분석합니다. 매월 40시간 이상을 절약하고 반복 작업을 비즈니스 성장과 개인 시간으로 전환하는 방법을 알아보세요.</p>
+                    <div class="blog-card-meta">
+                        <span><i class="far fa-clock"></i> 8 분</span>
+                        <a href="manual-vs-ai-cost-analysis.html" class="read-more">더 읽기 →</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 중소기업文章 -->
+            <div class="blog-card" data-category="smb" onclick="window.location.href='small-business-document-management.html'">
+                <div class="blog-card-image" style="background-image: url('https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&h=400&fit=crop&q=80'); background-size: cover; background-position: center;"></div>
+                <div class="blog-card-content">
+                    <span class="blog-card-category">중소기업</span>
+                    <h2 class="blog-card-title">중소기업文檔管理完全指南</h2>
+                    <p class="blog-card-excerpt">AI 도구를 사용하여 송장, 영수증, 계약서 등의 비즈니스 문서를 효율적으로 관리하고 팀 효율성을 높이며 운영 비용을 절감하는 방법.</p>
+                    <div class="blog-card-meta">
+                        <span><i class="far fa-clock"></i> 10 분</span>
+                        <a href="small-business-document-management.html" class="read-more">더 읽기 →</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="blog-card" data-category="smb" onclick="window.location.href='ai-invoice-processing-for-smb.html'">
+                <div class="blog-card-image" style="background-image: url('https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800&h=400&fit=crop&q=80'); background-size: cover; background-position: center;"></div>
+                <div class="blog-card-content">
+                    <span class="blog-card-category">중소기업</span>
+                    <h2 class="blog-card-title">AI 發票處理如何幫助중소기업節省成本</h2>
+                    <p class="blog-card-excerpt">AI 자동 송장 처리의 ROI를 심층 분석하고 실제 사례 연구를 통해 매월 수천 달러를 절약하는 방법을 보여줍니다.</p>
+                    <div class="blog-card-meta">
+                        <span><i class="far fa-clock"></i> 9 분</span>
+                        <a href="ai-invoice-processing-for-smb.html" class="read-more">더 읽기 →</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="blog-card" data-category="smb" onclick="window.location.href='quickbooks-integration-guide.html'">
+                <div class="blog-card-image" style="background-image: url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=400&fit=crop&q=80'); background-size: cover; background-position: center;"></div>
+                <div class="blog-card-content">
+                    <span class="blog-card-category">중소기업</span>
+                    <h2 class="blog-card-title">QuickBooks 통합 가이드</h2>
+                    <p class="blog-card-excerpt">자세한 튜토리얼: VaultCaddy를 QuickBooks와 통합하여 회계 프로세스를 완전히 자동화하는 방법.</p>
+                    <div class="blog-card-meta">
+                        <span><i class="far fa-clock"></i> 11 분</span>
+                        <a href="quickbooks-integration-guide.html" class="read-more">더 읽기 →</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 회계 사무소文章 -->
+            <div class="blog-card" data-category="accountant" onclick="window.location.href='accounting-firm-automation.html'">
+                <div class="blog-card-image" style="background-image: url('https://images.unsplash.com/photo-1551836022-deb4988cc6c0?w=800&h=400&fit=crop&q=80'); background-size: cover; background-position: center;"></div>
+                <div class="blog-card-content">
+                    <span class="blog-card-category">회계 사무소</span>
+                    <h2 class="blog-card-title">회계 사무소如何使用 AI 提高效率</h2>
+                    <p class="blog-card-excerpt">探索 AI 技術如何幫助회계 사무소自動化重複性工作，讓會計師專注於高價值服務。</p>
+                    <div class="blog-card-meta">
+                        <span><i class="far fa-clock"></i> 13 분</span>
+                        <a href="accounting-firm-automation.html" class="read-more">더 읽기 →</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="blog-card" data-category="accountant" onclick="window.location.href='client-document-management-for-accountants.html'">
+                <div class="blog-card-image" style="background-image: url('https://images.unsplash.com/photo-1521791136064-7986c2920216?w=800&h=400&fit=crop&q=80'); background-size: cover; background-position: center;"></div>
+                <div class="blog-card-content">
+                    <span class="blog-card-category">회계 사무소</span>
+                    <h2 class="blog-card-title">홍콩 회계사를 위한 클라이언트 문서 관리 모범 사례</h2>
+                    <p class="blog-card-excerpt">여러 클라이언트의 재무 문서를 효율적으로 관리하고 데이터 보안 및 규정 준수를 보장하며 고객 만족도를 향상시키는 방법.</p>
+                    <div class="blog-card-meta">
+                        <span><i class="far fa-clock"></i> 10 분</span>
+                        <a href="client-document-management-for-accountants.html" class="read-more">더 읽기 →</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="blog-card" data-category="accountant" onclick="window.location.href='ocr-accuracy-for-accounting.html'">
+                <div class="blog-card-image" style="background-image: url('https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?w=800&h=400&fit=crop&q=80'); background-size: cover; background-position: center;"></div>
+                <div class="blog-card-content">
+                    <span class="blog-card-category">회계 사무소</span>
+                    <h2 class="blog-card-title">홍콩 회계 산업에서의 OCR 기술 응용 및 정확도</h2>
+                    <p class="blog-card-excerpt">OCR 및 AI 문서 인식 기술의 정확도, 한계 및 최적의 응용 시나리오를 심층 분석합니다.</p>
+                    <div class="blog-card-meta">
+                        <span><i class="far fa-clock"></i> 12 분</span>
+                        <a href="ocr-accuracy-for-accounting.html" class="read-more">더 읽기 →</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="blog-card" data-category="accountant" onclick="window.location.href='accounting-workflow-optimization.html'">
+                <div class="blog-card-image" style="background-image: url('https://images.unsplash.com/photo-1507925921958-8a62f3d1a50d?w=800&h=400&fit=crop&q=80'); background-size: cover; background-position: center;"></div>
+                <div class="blog-card-content">
+                    <span class="blog-card-category">회계 사무소</span>
+                    <h2 class="blog-card-title">홍콩 회계 워크플로우 최적화: 엔드투엔드 자동화 가이드</h2>
+                    <p class="blog-card-excerpt">완전한 워크플로우 최적화 가이드, 문서 수령부터 보고서 생성까지의 엔드투엔드 자동화 솔루션.</p>
+                    <div class="blog-card-meta">
+                        <span><i class="far fa-clock"></i> 14 분</span>
+                        <a href="accounting-workflow-optimization.html" class="read-more">더 읽기 →</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 3rem; border-radius: 12px; text-align: center;">
+            <h2 style="font-size: 2rem; margin-bottom: 1rem;">AI 문서 처리를 경험할 준비가 되셨나요?</h2>
+            <p style="font-size: 1.1rem; margin-bottom: 2rem;">지금 VaultCaddy에 가입하고 20 크레딧 무료(20페이지 처리 가능)를 받으세요</p>
+            <a href="https://vaultcaddy.com/kr/register.html" style="display: inline-block; background: white; color: #7c3aed; padding: 1rem 2rem; border-radius: 8px; text-decoration: none; font-weight: 600;">무료로 시작하기</a>
+        </div>
+    </div>
+
+    <script>
+        // 分類篩選기능
+        document.querySelectorAll('.category-tag').forEach(tag => {
+            tag.addEventListener('click', function() {
+                // 更新活動標籤
+                document.querySelectorAll('.category-tag').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+
+                const category = this.dataset.category;
+                
+                // 篩選文章
+                document.querySelectorAll('.blog-card').forEach(card => {
+                    if (category === 'all' || card.dataset.category === category) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>
