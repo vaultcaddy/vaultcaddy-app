@@ -2205,12 +2205,12 @@ exports.createStripeCheckoutSession = functions.https.onCall(async (data, contex
     // 🎯 定義價格 ID（生產模式 - 支持多货币）
     const productionPriceMapping = {
         monthly: {
-            basePriceId: 'price_1SdpzxJmiQ31C0GTLe5rYQn9',  // 月費基礎價格 $58（HKD/USD/GBP/JPY/KRW/EUR）
-            usagePriceId: 'price_1SdpzxJmiQ31C0GTAXBa4vHG'  // 月費用量計費（多货币）
+            basePriceId: 'price_1SfNw5JmiQ31C0GT7SHy0t44',  // 月費基礎價格 HK$58
+            usagePriceId: 'price_1SdpzxJmiQ31C0GTLe5rYQn9'  // 🆕 月費用量計費 HK$0.5/Credit（從負數開始收費）
         },
         yearly: {
-            basePriceId: 'price_1SdpzxJmiQ31C0GTV0iI5GK6',  // 年費基礎價格 $552（HKD/USD/GBP/JPY/KRW/EUR）
-            usagePriceId: 'price_1SdpzyJmiQ31C0GThRVdmVOH'  // 年費用量計費（多货币）
+            basePriceId: 'price_1SfNvfJmiQ31C0GTFY4bhpzK',  // 年費基礎價格 HK$552
+            usagePriceId: 'price_1SdpzxJmiQ31C0GTV0iI5GK6'  // 🆕 年費用量計費 HK$0.5/Credit（從負數開始收費）
         }
     };
     
