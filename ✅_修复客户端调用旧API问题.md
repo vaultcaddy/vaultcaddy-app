@@ -62,3 +62,4 @@ const result = await reportCreditsUsage({ userId: user.uid });
 4. 查看 Firebase Logs（应该只看到 `reportUsageToStripe`，不再看到 `reportCreditsUsage`）
 5. 查看 Stripe Meter Events（应该有新事件）
 
+

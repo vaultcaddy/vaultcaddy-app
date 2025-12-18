@@ -151,3 +151,4 @@ exports.deductCreditsClient = functions.https.onCall(async (data, context) => {
 - Mac: `Cmd + Shift + R`
 - Windows: `Ctrl + Shift + R`
 
+

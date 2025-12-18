@@ -208,3 +208,4 @@ if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0
 3. ✅ **兼容性**：支持页面重新加载后 Firebase 已初始化的情况
 4. ✅ **调试信息**：添加详细的日志，方便问题诊断
 
+

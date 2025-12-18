@@ -103,3 +103,4 @@ const productionPriceMapping = {
 | **报告方式** | 批量（webhook 中） | 实时（每次扣除） |
 | **需要字段** | `meteredSubscriptionItemId` | `stripeCustomerId` |
 
+

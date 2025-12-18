@@ -152,3 +152,4 @@ if (currentCredits < amount && (hasSubscription || isTestMode)) {
 3. ✅ **灵活的权限控制**：三种方式允许超额使用
 4. ✅ **保留 Free Plan 限制**：完全没有订阅的免费用户仍受限制
 
+
