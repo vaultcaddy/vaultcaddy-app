@@ -2203,14 +2203,15 @@ exports.createStripeCheckoutSession = functions.https.onCall(async (data, contex
     }
     
     // 🎯 定義價格 ID（生產模式 - 正式版）
+    // 🆕 2025-12-18 更新：使用新的 Billing Meter 關聯價格（支持多貨幣）
     const productionPriceMapping = {
         monthly: {
             basePriceId: 'price_1SdpzxJmiQ31C0GTLe5rYQn9',  // ✅ 月費基礎價格 HK$58/月
-            usagePriceId: 'price_1SfNw5JmiQ31C0GT7SHy0t44'  // ✅ 月費用量計費 HK$0.5/Credit（從負數開始收費）
+            usagePriceId: 'price_1SfZQQJmiQ31C0GTeUu6TSXE'  // ✅ 月費用量計費 HK$0.5/Credit（關聯到 Billing Meter，支持 HKD/USD/GBP/EUR/JPY/KRW）
         },
         yearly: {
             basePriceId: 'price_1SdpzxJmiQ31C0GTV0iI5GK6',  // ✅ 年費基礎價格 HK$552/年
-            usagePriceId: 'price_1SfNvfJmiQ31C0GTFY4bhpzK'  // ✅ 年費用量計費 HK$0.5/Credit（從負數開始收費）
+            usagePriceId: 'price_1SfZQVJmiQ31C0GTOYgabmaJ'  // ✅ 年費用量計費 HK$0.5/Credit（關聯到 Billing Meter，支持 HKD/USD/GBP/EUR/JPY/KRW）
         }
     };
     
@@ -2243,6 +2244,7 @@ exports.createStripeCheckoutSession = functions.https.onCall(async (data, contex
         // 注意：對於 Billing Meters，只需要包含基礎價格，metered price 會自動關聯到訂閱
         const session = await stripeClient.checkout.sessions.create({
             mode: 'subscription',
+            payment_method_types: ['card'],  // 🆕 只显示信用卡支付，禁用 Link
             line_items: [
                 {
                     price: selectedPlan.basePriceId,  // 基礎訂閱費（月費/年費）

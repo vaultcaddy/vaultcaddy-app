@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     
@@ -24,12 +24,12 @@
     <meta property="og:url" content="https://vaultcaddy.com/billing">
     <meta property="og:type" content="website">
     <link rel="canonical" href="https://vaultcaddy.com/billing">
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="pages.css">
-    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="../pages.css">
+    <link rel="stylesheet" href="../dashboard.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script src="config.js"></script>
-    <script src="translations.js"></script>
+    <script src="../config.js"></script>
+    <script src="../translations.js"></script>
     
     <!-- Firebase SDK -->
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
@@ -39,24 +39,24 @@
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-functions-compat.js"></script>
     
     <!-- Firebase 配置和數據管理器 -->
-    <script defer src="firebase-config.js?v=20251105-force-init"></script>
+    <script defer src="../firebase-config.js?v=20251105-force-init"></script>
     <!-- 🔥 新的簡化系統 -->
-    <script defer src="simple-auth.js?v=20251105-force-init"></script>
-    <script defer src="user-profile-manager.js?v=20251120"></script>
-    <script defer src="simple-data-manager.js?v=20251105-force-init"></script>
+    <script defer src="../simple-auth.js?v=20251105-force-init"></script>
+    <script defer src="../user-profile-manager.js?v=20251120"></script>
+    <script defer src="../simple-data-manager.js?v=20251105-force-init"></script>
     
     <!-- Email 驗證檢查 -->
-    <script defer src="email-verification-check.js"></script>
+    <script defer src="../email-verification-check.js"></script>
     
     <!-- 導航欄交互功能 -->
-    <script defer src="navbar-interactions.js?v=20251108"></script>
+    <script defer src="../navbar-interactions.js?v=20251108"></script>
     
     <!-- ✅ 語言管理器（必須在導航欄之前載入）-->
-    <script src="language-manager.js?v=20251120"></script>
+    <script src="../language-manager.js?v=20251120"></script>
     
     <!-- ✅ 統一導航欄系統：靜態 HTML + navbar-component.js -->
-    <script src="navbar-component.js?v=20251120-unified"></script>
-    <script src="sidebar-component.js?v=20251107-rebuild"></script>
+    <script src="../navbar-component.js?v=20251120-unified"></script>
+    <script src="../sidebar-component.js?v=20251107-rebuild"></script>
     <style>
         body {
             background: #ffffff;
@@ -489,6 +489,21 @@
             left: 100%;
         }
         
+        /* 🧪 測試模式切換按鈕樣式 */
+        #test-mode-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(234, 88, 12, 0.15);
+        }
+        
+        #test-mode-info code {
+            background: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: 600;
+            color: #dc2626;
+        }
+        
         @media (max-width: 1024px) {
             .plans-grid {
                 grid-template-columns: 1fr;
@@ -496,6 +511,24 @@
             
             .billing-overview {
                 grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            /* 🧪 測試模式按鈕在手機上的樣式 */
+            #test-mode-toggle {
+                flex-direction: column;
+                gap: 0.5rem !important;
+                padding: 0.75rem !important;
+            }
+            
+            #test-mode-toggle label {
+                font-size: 0.75rem !important;
+            }
+            
+            #test-mode-info {
+                padding: 0.75rem !important;
+                font-size: 0.75rem !important;
             }
         }
     
@@ -797,8 +830,6 @@
     }
 }
 
-
-        
         /* Billing 特定樣式 */
         @media (max-width: 768px) {
             .billing-header {
@@ -812,6 +843,136 @@
             .payment-method {
                 flex-direction: column !important;
             }
+        }
+        
+        /* ==================== 模態框樣式 ==================== */
+        .modal-overlay {
+            display: none !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            background: rgba(0, 0, 0, 0.5) !important;
+            z-index: 9999 !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        .modal-overlay.active {
+            display: flex !important;
+        }
+
+        .modal-content {
+            background: #ffffff !important;
+            border-radius: 12px !important;
+            padding: 2rem !important;
+            width: 90% !important;
+            max-width: 500px !important;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+            position: relative !important;
+            z-index: 10000 !important;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0;
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            font-size: 1.5rem;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+        }
+
+        .modal-close:hover {
+            background: #f3f4f6;
+            color: #1f2937;
+        }
+
+        .modal-body {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            color: #1f2937;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+
+        .btn-cancel {
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            color: #374151;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .btn-cancel:hover {
+            background: #f9fafb;
+        }
+
+        .btn-create {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: #ffffff;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .btn-create:hover {
+            opacity: 0.9;
         }
         
         </style>
@@ -851,11 +1012,11 @@
     </script>
     
     <!-- Stripe Manager -->
-    <script src="stripe-manager.js"></script>
+    <script src="../stripe-manager.js"></script>
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="alternate icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="mobile-responsive.css">
+    <link rel="stylesheet" href="../mobile-responsive.css">
 </head>
 <body class="auth-checking">
     <!-- 🔒 Auth 加載動畫 -->
@@ -894,8 +1055,7 @@
                 <a href="/blog/" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">學習中心</a>
                 <a href="dashboard.html" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">儀表板</a>
             </div>
-            <!-- 🌍 桌面版語言選擇器 -->
-            <div id="language-selector-desktop"></div>
+            
             <div id="user-menu" style="position: relative; display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;">
                 <div id="user-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">Y</div>
             </div>
@@ -929,10 +1089,7 @@
                 </a>
                 
                 <div style="height: 1px; background: #e5e7eb; margin: 1rem 0;"></div>
-                
-                <!-- 🌍 手機版語言選擇器 -->
-                <div id="language-selector-mobile" style="padding: 0 0.5rem; margin-bottom: 1rem;"></div>
-                
+
                 <div style="height: 1px; background: #e5e7eb; margin: 1rem 0;"></div>
                 
                 <a href="privacy.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
@@ -1199,8 +1356,6 @@
             window.toggleDropdown = toggleDropdown;
         });
     </script>
-    
-    
 
     <!-- 主要內容區域 -->
     <main style="padding-top: 10px;">
@@ -1218,77 +1373,77 @@
                     <p style="font-size: 1rem; color: #6b7280; margin: 0;">與數千家企業一起，節省財務數據錄入的時間。</p>
                 </div>
                 
-                <!-- 月付和年付並列顯示（使用 index.html 的卡片樣式）-->
+                <!-- 月額和年額並列顯示（使用 index.html 的卡片樣式）-->
                 <div id="pricing-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; max-width: 1000px; margin: 2rem auto;">
-                    <!-- 月付方案 -->
+                    <!-- 月額方案 -->
                     <div id="monthly-plan" class="pricing-card" style="border: 2px solid #e5e7eb; border-radius: 16px; padding: 2.5rem; background: white; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); width: 100%;">
                         <!-- 🔥 標題和價格橫向排列 -->
                         <div class="pricing-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                            <h3 data-i18n="pricing.monthly" style="font-size: 1.75rem; font-weight: 700; margin-bottom: 0; color: #1f2937; text-align: left;">月間プラン</h3>
+                            <h3 data-i18n="pricing.monthly" style="font-size: 1.75rem; font-weight: 700; margin-bottom: 0; color: #1f2937; text-align: left;">月額</h3>
                             <div style="display: flex; align-items: baseline; gap: 0.25rem;">
-                                <span style="font-size: 1rem; color: #6b7280;">¥</span>
-                                <span style="font-size: 3rem; font-weight: 700; color: #1f2937; line-height: 1;">1158</span>
+                                <span style="font-size: 1rem; color: #6b7280;">HKD $</span>
+                                <span style="font-size: 3rem; font-weight: 700; color: #1f2937; line-height: 1;">58</span>
                                 <span style="font-size: 1rem; color: #6b7280;">/月</span>
                             </div>
                         </div>
                         
-                        <!-- 頁面包含 -->
+                        <!-- プランに含まれるもの -->
                         <div style="margin-bottom: 1.5rem; padding: 1rem; background: #f9fafb; border-radius: 8px;">
-                            <p style="font-weight: 600; margin-bottom: 0.5rem; color: #1f2937; font-size: 0.875rem;">頁面包含</p>
+                            <p style="font-weight: 600; margin-bottom: 0.5rem; color: #1f2937; font-size: 0.875rem;">プランに含まれるもの</p>
                             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem;">
-                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>每月 100 Credits</span></div>
-                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span><strong>超出後每頁 ¥0.5</strong></span></div>
-                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>批次處理無限制文件</span></div>
-                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>一鍵轉換所有文件</span></div>
-                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>Excel/CSV 匯出</span></div>
-                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>QuickBooks 整合</span></div>
-                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>複合式 AI 處理</span></div>
-                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span><strong>8 種語言支援</strong></span></div>
-                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>電子郵件支援</span></div>
-                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>安全文件上傳</span></div>
-                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>365 天數據保留</span></div>
+                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>毎月100クレジット</span></div>
+                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span><strong>超過分：HKD $0.5/ページ</strong></span></div>
+                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>無制限バッチ処理</span></div>
+                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>ワンクリック一括変換</span></div>
+                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>Excel/CSVエクスポート</span></div>
+                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>QuickBooks統合</span></div>
+                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>ハイブリッドAI処理</span></div>
+                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span><strong>8言語対応</strong></span></div>
+                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>メールサポート</span></div>
+                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>安全なファイルアップロード</span></div>
+                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>365日データ保存</span></div>
                                 <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>30 天圖片保留</span></div>
                             </div>
                         </div>
                         
                         <!-- CTA 按鈕 -->
-                        <button onclick="createCheckoutSession('monthly', event)" data-i18n="pricing.cta" class="cta-btn" style="width: 100%; padding: 1rem; font-size: 1rem; font-weight: 600; background: #8b5cf6; color: white; border: none; border-radius: 8px; cursor: pointer; display: block; text-align: center; text-decoration: none; transition: background 0.2s;">開始使用</button>
+                        <button onclick="createCheckoutSession('monthly', event)" data-i18n="pricing.cta" class="cta-btn" style="width: 100%; padding: 1rem; font-size: 1rem; font-weight: 600; background: #8b5cf6; color: white; border: none; border-radius: 8px; cursor: pointer; display: block; text-align: center; text-decoration: none; transition: background 0.2s;">始める</button>
                     </div>
 
-                    <!-- 年付方案 -->
+                    <!-- 年額方案 -->
                     <div id="yearly-plan" class="pricing-card" style="border: 2px solid #8b5cf6; border-radius: 16px; padding: 2.5rem; background: linear-gradient(135deg, #ffffff 0%, #f3f0ff 100%); box-shadow: 0 4px 20px rgba(139, 92, 246, 0.1); width: 100%; position: relative;">
-                        <div data-i18n="pricing.save" style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #8b5cf6; color: white; padding: 0.25rem 1rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">21%節約</div>
+                        <div data-i18n="pricing.save" style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #8b5cf6; color: white; padding: 0.25rem 1rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">節省 21%</div>
                         <!-- 🔥 標題和價格橫向排列 -->
                         <div class="pricing-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                            <h3 data-i18n="pricing.yearly" style="font-size: 1.75rem; font-weight: 700; margin-bottom: 0; color: #1f2937; text-align: left;">年間プラン</h3>
+                            <h3 data-i18n="pricing.yearly" style="font-size: 1.75rem; font-weight: 700; margin-bottom: 0; color: #1f2937; text-align: left;">年額</h3>
                             <div style="display: flex; align-items: baseline; gap: 0.25rem;">
-                                <span style="font-size: 1rem; color: #6b7280;">¥</span>
-                                <span style="font-size: 3rem; font-weight: 700; color: #1f2937; line-height: 1;">926</span>
+                                <span style="font-size: 1rem; color: #6b7280;">HKD $</span>
+                                <span style="font-size: 3rem; font-weight: 700; color: #1f2937; line-height: 1;">46</span>
                                 <span style="font-size: 1rem; color: #6b7280;">/月</span>
                             </div>
                         </div>
                         
-                        <!-- 頁面包含 -->
+                        <!-- プランに含まれるもの -->
                         <div style="margin-bottom: 1.5rem; padding: 1rem; background: transparent; border-radius: 8px;">
-                            <p style="font-weight: 600; margin-bottom: 0.5rem; color: #1f2937; font-size: 0.875rem;">頁面包含</p>
+                            <p style="font-weight: 600; margin-bottom: 0.5rem; color: #1f2937; font-size: 0.875rem;">プランに含まれるもの</p>
                             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem;">
-                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>每年 1,200 Credits</span></div>
-                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span><strong>超出後每頁 ¥0.5</strong></span></div>
-                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>批次處理無限制文件</span></div>
-                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>一鍵轉換所有文件</span></div>
-                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>Excel/CSV 匯出</span></div>
-                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>QuickBooks 整合</span></div>
-                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>複合式 AI 處理</span></div>
-                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span><strong>8 種語言支援</strong></span></div>
-                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>電子郵件支援</span></div>
-                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>安全文件上傳</span></div>
-                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>365 天數據保留</span></div>
+                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>毎年1,200クレジット</span></div>
+                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span><strong>超過分：HKD $0.5/ページ</strong></span></div>
+                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>無制限バッチ処理</span></div>
+                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>ワンクリック一括変換</span></div>
+                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>Excel/CSVエクスポート</span></div>
+                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>QuickBooks統合</span></div>
+                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>ハイブリッドAI処理</span></div>
+                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span><strong>8言語対応</strong></span></div>
+                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>メールサポート</span></div>
+                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>安全なファイルアップロード</span></div>
+                                <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>365日データ保存</span></div>
                                 <div style="display: flex; align-items: center; font-size: 0.875rem;"><i class="fas fa-check" style="color: #10b981; margin-right: 0.5rem;"></i> <span>30 天圖片保留</span></div>
                             </div>
                         </div>
                         
                         <!-- CTA 按鈕 -->
-                        <button onclick="createCheckoutSession('yearly', event)" data-i18n="pricing.cta" class="cta-btn" style="width: 100%; padding: 1rem; font-size: 1rem; font-weight: 600; background: #8b5cf6; color: white; border: none; border-radius: 8px; cursor: pointer; display: block; text-align: center; text-decoration: none; transition: background 0.2s;">開始使用</button>
+                        <button onclick="createCheckoutSession('yearly', event)" data-i18n="pricing.cta" class="cta-btn" style="width: 100%; padding: 1rem; font-size: 1rem; font-weight: 600; background: #8b5cf6; color: white; border: none; border-radius: 8px; cursor: pointer; display: block; text-align: center; text-decoration: none; transition: background 0.2s;">始める</button>
                     </div>
                 </div>
             </div>
@@ -1341,7 +1496,7 @@
                         monthlyPlan.style.width = '100%';
                         monthlyPlan.style.marginLeft = '0';
                         monthlyPlan.style.marginRight = '0';
-                        console.log('✅ 月付卡片寬度已強制設為 100%');
+                        console.log('✅ 月額卡片寬度已強制設為 100%');
                     }
                     
                     if (yearlyPlan) {
@@ -1349,7 +1504,7 @@
                         yearlyPlan.style.width = '100%';
                         yearlyPlan.style.marginLeft = '0';
                         yearlyPlan.style.marginRight = '0';
-                        console.log('✅ 年付卡片寬度已強制設為 100%');
+                        console.log('✅ 年額卡片寬度已強制設為 100%');
                     }
                     
                     if (pricingContainer) {
@@ -1454,12 +1609,12 @@
             // === 以下是舊邏輯（保留作為參考）===
             
             // ✅ 新定價方案（2025-12-09 更新）
-            // 月費: ¥58/月，包含 100 Credits + 超出後 ¥0.5/頁
-            // 年費: ¥46/月（$552/年），包含 1,200 Credits + 超出後 ¥0.5/頁
+            // 月費: HKD $58/月，包含 100 Credits + 超出後 HKD $0.5/頁
+            // 年費: HKD $46/月（$552/年），包含 1,200 Credits + 超出後 HKD $0.5/頁
             
             // ✅ Stripe 產品映射（2025-12-09 更新）
-            // 月額: prod_TSmKnHeaQVxZXC - ¥1158/月 + 使用量課金
-            // 年額: prod_TSsEWI5bv9pSkz - ¥11112/年 + 使用量課金
+            // 月費: prod_TSmKnHeaQVxZXC - HKD $58/月 + 使用量計費
+            // 年費: prod_TSsEWI5bv9pSkz - HKD $552/年 + 使用量計費
             const stripeProductIds = {
                 'monthly': 'prod_TSmKnHeaQVxZXC',  // VaultCaddy 月費
                 'yearly': 'prod_TSsEWI5bv9pSkz'     // VaultCaddy 年費
@@ -1470,14 +1625,14 @@
                 'monthly': { 
                     credits: 100, 
                     duration: '1個月',
-                    price: '¥58',
-                    displayPrice: '¥58/月'
+                    price: 'HKD $58',
+                    displayPrice: 'HKD $58/月'
                 },
                 'yearly': { 
                     credits: 1200, 
                     duration: '12個月',
-                    price: '¥552',
-                    displayPrice: '¥46/月 (年付 $552)'
+                    price: 'HKD $552',
+                    displayPrice: 'HKD $46/月 (年額 $552)'
                 }
             };
             
@@ -1498,20 +1653,20 @@
             console.log('支付連結:', paymentLink);
             
             // 顯示確認訊息
-            const confirmMessage = `確認訂閱 VaultCaddy Pro (${planType === 'yearly' ? '年費' : '月費'})？
+            const confirmMessage = `VaultCaddy Proサブスクリプションを確認 (${planType === 'yearly' ? '年費' : '月費'})？
 
-您將獲得：
+提供内容：
 • ${creditsInfo.credits} Credits
-• 有效期：${creditsInfo.duration}
-• 超出後每頁 ¥0.5
-• 批次處理無限制文件
-• Excel/CSV 匯出
-• QuickBooks 整合
-• 8 種語言支援
+• 有効期間：${creditsInfo.duration}
+• 超過分：HKD $0.5/ページ
+• 無制限バッチ処理
+• Excel/CSVエクスポート
+• QuickBooks統合
+• 8言語対応
 
-總價：${creditsInfo.displayPrice}
+合計：${creditsInfo.displayPrice}
 
-點擊確認後將前往安全支付頁面。`;
+確認をクリックすると、安全な決済ページに移動します。`;
             
             if (confirm(confirmMessage)) {
                 // 顯示處理訊息
@@ -1828,69 +1983,180 @@
 
     <!-- ✅ Stripe Checkout Session 創建函數 -->
     <script>
-        async function createCheckoutSession(planType, event) {
-            console.log(`🛒 創建 ${planType} 訂閱...`);
+        /**
+         * 創建 Stripe Checkout Session 並跳轉
+         * @param {string} planType - 'monthly' 或 'yearly'
+         * @param {Event} event - 點擊事件
+         * @param {boolean} isTest - 是否為測試模式（可選，默認 false）
+         */
+        async function createCheckoutSession(planType, event, isTest = false) {
+            console.log(`🛒 創建 ${planType} 訂閱...`, { isTest });
             
+            // 檢查用戶是否登錄
             if (!window.simpleAuth || !window.simpleAuth.isLoggedIn()) {
-                alert('ログインしてください');
+                alert('請先登錄');
                 window.location.href = 'auth.html';
                 return;
             }
             
+            // 獲取按鈕元素（在 try 外定義，避免作用域問題）
             const button = event?.target || event?.currentTarget;
-            const originalText = button?.textContent || '開始する';
+            const originalText = button?.textContent || '始める';
             
             try {
+                // 顯示加載狀態
                 if (button) {
                     button.disabled = true;
-                    button.textContent = '支払いページへ移動中...';
+                    button.textContent = '決済ページにリダイレクト中...';
                     button.style.opacity = '0.6';
                 }
                 
+                // 獲取當前用戶
                 const currentUser = window.simpleAuth.getCurrentUser();
                 const userEmail = currentUser.email;
                 const userId = currentUser.uid;
                 
+                console.log(`👤 用戶信息:`, { userEmail, userId });
+                
+                // 調用 Firebase Function 創建 Checkout Session
                 const createSession = firebase.functions().httpsCallable('createStripeCheckoutSession');
                 
-                console.log(`📞 調用 Firebase Function...`, { planType, userId, email: userEmail });
+                console.log(`📞 調用 Firebase Function...`, { planType, userId, email: userEmail, isTest });
                 const result = await createSession({
                     planType: planType,
                     userId: userId,
-                    email: userEmail
+                    email: userEmail,
+                    isTest: isTest  // 🧪 傳遞測試模式標記
                 });
                 
+                console.log(`✅ Checkout Session 創建成功:`, result.data);
+                
+                // 跳轉到 Stripe Checkout
                 if (result.data && result.data.url) {
                     window.location.href = result.data.url;
                 } else {
-                    throw new Error('支払いURLが受信されませんでした');
+                    throw new Error('決済ページURLが受信されませんでした');
                 }
                 
             } catch (error) {
                 console.error('❌ 創建支付會話失敗:', error);
+                console.error('錯誤詳情:', error.code, error.message);
                 
+                // 恢復按鈕狀態
                 if (button) {
                     button.disabled = false;
                     button.textContent = originalText;
                     button.style.opacity = '1';
                 }
                 
+                // 顯示友好的錯誤信息
+                let errorMsg = '創建支付會話失敗，請重試或聯繫客服';
+                
                 if (error.code === 'functions/unauthenticated') {
-                    alert('ログインしてください');
+                    errorMsg = '請先登錄';
+                    alert(errorMsg);
                     window.location.href = 'auth.html';
+                } else if (error.code === 'functions/not-found') {
+                    errorMsg = '訂閱計劃配置錯誤，請聯繫客服';
+                    alert(errorMsg);
                 } else if (error.message) {
-                    alert(`支払いセッションの作成に失敗しました: ${error.message}`);
+                    errorMsg = `創建支付會話失敗: ${error.message}`;
+                    alert(errorMsg);
                 } else {
-                    alert('支払いセッションの作成に失敗しました。もう一度お試しください。');
+                    alert(errorMsg);
                 }
             }
         }
         
+        // 暴露到全局
         window.createCheckoutSession = createCheckoutSession;
     </script>
-    
-    <!-- 🌍 語言選擇器 -->
-    <script src="language-selector.js?v=20251205"></script>
+
+    <!-- 創建項目模態框 -->
+    <div id="createProjectModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 12px; padding: 2rem; width: 90%; max-width: 500px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
+            <h2 style="font-size: 1.5rem; font-weight: 600; color: #1f2937; margin: 0 0 1rem 0;">創建新項目</h2>
+            <p style="color: #6b7280; font-size: 0.875rem; margin: 0 0 1.5rem 0;">輸入項目名稱以創建新的文檔項目</p>
+            
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem;">項目名稱</label>
+                <input 
+                    type="text" 
+                    id="projectName" 
+                    placeholder="例如：2025年1月發票"
+                    style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem; color: #1f2937; box-sizing: border-box;"
+                    onkeypress="if(event.key==='Enter') createProject()">
+            </div>
+            
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button 
+                    onclick="closeCreateProjectModal()" 
+                    style="background: #ffffff; border: 1px solid #d1d5db; color: #374151; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500;">
+                    取消
+                </button>
+                <button 
+                    onclick="createProject()" 
+                    style="background: #3b82f6; border: none; color: white; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500;">
+                    創建
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 打開創建項目模態框
+        function openCreateProjectModal() {
+            const modal = document.getElementById('createProjectModal');
+            const input = document.getElementById('projectName');
+            modal.style.display = 'flex';
+            input.value = '';
+            input.focus();
+        }
+
+        // 關閉創建項目模態框
+        function closeCreateProjectModal() {
+            const modal = document.getElementById('createProjectModal');
+            modal.style.display = 'none';
+        }
+
+        // 創建新項目
+        async function createProject() {
+            const input = document.getElementById('projectName');
+            const projectName = input.value.trim();
+            
+            if (!projectName) {
+                alert('Please enter a project name');
+                return;
+            }
+            
+            // 保存到 Firebase
+            try {
+                const projectData = await window.simpleDataManager.createProject(projectName);
+                console.log('✅ 項目已保存到 Firebase:', projectData);
+                
+                // 關閉模態框
+                closeCreateProjectModal();
+                
+                // 🔥 修復：使用 projectData.id 而非 projectData 本身
+                const projectId = projectData.id;
+                console.log('🚀 跳轉到新項目頁面:', projectId);
+                
+                // 跳轉到新項目頁面
+                window.location.href = `firstproject.html?project=${projectId}`;
+            } catch (error) {
+                console.error('❌ 保存到 Firebase 失敗:', error);
+                alert('創建項目失敗，請重試');
+                return;
+            }
+        }
+
+        // 點擊遮罩關閉模態框
+        document.getElementById('createProjectModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeCreateProjectModal();
+            }
+        });
+    </script>
 
 </body>
 </html>
