@@ -2239,17 +2239,17 @@ exports.createStripeCheckoutSession = functions.https.onCall(async (data, contex
     try {
         console.log('📝 創建 Checkout Session，價格:', selectedPlan, '模式:', isTest ? '測試' : '生產');
         
-        // 創建 Checkout Session（使用對應模式的客戶端）
+        // 🎯 創建 Checkout Session（使用對應模式的客戶端）
+        // 注意：對於 Billing Meters，只需要包含基礎價格，metered price 會自動關聯到訂閱
         const session = await stripeClient.checkout.sessions.create({
             mode: 'subscription',
             line_items: [
                 {
-                    price: selectedPlan.basePriceId,  // 基礎訂閱費
+                    price: selectedPlan.basePriceId,  // 基礎訂閱費（月費/年費）
                     quantity: 1
-                },
-                {
-                    price: selectedPlan.usagePriceId  // 用量計費（metered price 不需要 quantity）
                 }
+                // ⚠️ 注意：不要在這裡包含 metered price
+                // Stripe Billing Meters 會在訂閱創建後自動關聯
             ],
             customer_email: email,  // ← 自動填充 email
             client_reference_id: userId,  // ← 傳遞 userId
