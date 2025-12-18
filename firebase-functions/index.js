@@ -1252,7 +1252,7 @@ async function reportUsageToStripe(userId, quantity) {
     const userDoc = await db.collection('users').doc(userId).get();
     const userData = userDoc.data();
     const subscription = userData?.subscription;
-    
+     
     // 从多个可能的位置获取 Stripe Customer ID
     let stripeCustomerId = userData?.stripeCustomerId 
         || subscription?.stripeCustomerId
@@ -2202,15 +2202,15 @@ exports.createStripeCheckoutSession = functions.https.onCall(async (data, contex
         throw new functions.https.HttpsError('invalid-argument', '缺少必要參數');
     }
     
-    // 🎯 定義價格 ID（生產模式 - 支持多货币）
+    // 🎯 定義價格 ID（生產模式 - 正式版）
     const productionPriceMapping = {
         monthly: {
-            basePriceId: 'price_1SfNw5JmiQ31C0GT7SHy0t44',  // 月費基礎價格 HK$58
-            usagePriceId: 'price_1SdpzxJmiQ31C0GTLe5rYQn9'  // 🆕 月費用量計費 HK$0.5/Credit（從負數開始收費）
+            basePriceId: 'price_1SdpzxJmiQ31C0GTLe5rYQn9',  // ✅ 月費基礎價格 HK$58/月
+            usagePriceId: 'price_1SfNw5JmiQ31C0GT7SHy0t44'  // ✅ 月費用量計費 HK$0.5/Credit（從負數開始收費）
         },
         yearly: {
-            basePriceId: 'price_1SfNvfJmiQ31C0GTFY4bhpzK',  // 年費基礎價格 HK$552
-            usagePriceId: 'price_1SdpzxJmiQ31C0GTV0iI5GK6'  // 🆕 年費用量計費 HK$0.5/Credit（從負數開始收費）
+            basePriceId: 'price_1SdpzxJmiQ31C0GTV0iI5GK6',  // ✅ 年費基礎價格 HK$552/年
+            usagePriceId: 'price_1SfNvfJmiQ31C0GTFY4bhpzK'  // ✅ 年費用量計費 HK$0.5/Credit（從負數開始收費）
         }
     };
     
