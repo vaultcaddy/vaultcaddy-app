@@ -1,0 +1,174 @@
+<!-- Live Chat Widget - 在线客服 -->
+<div id="chat-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
+    <!-- Chat Button -->
+    <button 
+        id="chat-button" 
+        onclick="toggleChat()"
+        style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white; font-size: 1.5rem; cursor: pointer; box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4); transition: transform 0.2s;"
+        onmouseover="this.style.transform='scale(1.1)'"
+        onmouseout="this.style.transform='scale(1)'"
+    >
+        💬
+    </button>
+    
+    <!-- Chat Window -->
+    <div 
+        id="chat-window" 
+        style="display: none; position: absolute; bottom: 80px; right: 0; width: 350px; height: 500px; background: white; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); overflow: hidden; flex-direction: column;"
+    >
+        <!-- Chat Header -->
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h3 style="margin: 0; font-size: 1.125rem; font-weight: 700;">VaultCaddy 客服</h3>
+                <p style="margin: 0; font-size: 0.875rem; opacity: 0.9;">通常在1分钟内回复</p>
+            </div>
+            <button onclick="toggleChat()" style="background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+        
+        <!-- Chat Messages -->
+        <div id="chat-messages" style="flex: 1; padding: 1rem; overflow-y: auto; background: #f9fafb;">
+            <!-- 欢迎消息 -->
+            <div style="margin-bottom: 1rem;">
+                <div style="background: white; padding: 1rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <p style="margin: 0; color: #1f2937; font-size: 0.9375rem;">
+                        👋 您好！我是VaultCaddy客服助手。
+                        <br><br>
+                        我可以帮您：
+                        <br>• 了解产品功能
+                        <br>• 查看定价方案
+                        <br>• 解答技术问题
+                        <br><br>
+                        有什么可以帮您的吗？
+                    </p>
+                </div>
+            </div>
+            
+            <!-- 快速问题按钮 -->
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <button onclick="sendQuickQuestion('价格是多少？')" style="background: white; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer; text-align: left; font-size: 0.875rem; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='white'">
+                    💰 价格是多少？
+                </button>
+                <button onclick="sendQuickQuestion('如何开始免费试用？')" style="background: white; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer; text-align: left; font-size: 0.875rem; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='white'">
+                    🎁 如何开始免费试用？
+                </button>
+                <button onclick="sendQuickQuestion('支持哪些银行？')" style="background: white; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer; text-align: left; font-size: 0.875rem; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='white'">
+                    🏦 支持哪些银行？
+                </button>
+                <button onclick="sendQuickQuestion('数据安全吗？')" style="background: white; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer; text-align: left; font-size: 0.875rem; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='white'">
+                    🔒 数据安全吗？
+                </button>
+            </div>
+        </div>
+        
+        <!-- Chat Input -->
+        <div style="padding: 1rem; border-top: 1px solid #e5e7eb; background: white;">
+            <form id="chat-form" onsubmit="sendChatMessage(event)" style="display: flex; gap: 0.5rem;">
+                <input 
+                    type="text" 
+                    id="chat-input" 
+                    placeholder="输入您的问题..."
+                    style="flex: 1; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 0.9375rem;"
+                >
+                <button 
+                    type="submit"
+                    style="padding: 0.75rem 1.25rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;"
+                >
+                    发送
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Chat Widget Functions
+function toggleChat() {
+    const window = document.getElementById('chat-window');
+    const button = document.getElementById('chat-button');
+    
+    if (window.style.display === 'none' || !window.style.display) {
+        window.style.display = 'flex';
+        button.textContent = '✕';
+        
+        // Google Analytics
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'chat_opened', {
+                'event_category': 'engagement'
+            });
+        }
+    } else {
+        window.style.display = 'none';
+        button.textContent = '💬';
+    }
+}
+
+function sendQuickQuestion(question) {
+    addUserMessage(question);
+    
+    // 模拟AI回复
+    setTimeout(() => {
+        let answer = '';
+        if (question.includes('价格')) {
+            answer = '我们提供极具竞争力的价格：\n• 香港：HK$0.5/页\n• 月付方案：HK$58起\n• 免费试用20页\n\n<a href="#pricing" style="color: #667eea; text-decoration: underline;">查看详细价格</a>';
+        } else if (question.includes('免费试用')) {
+            answer = '很简单！只需3步：\n1. 点击"立即开始"注册\n2. 验证邮箱获得20 Credits\n3. 上传文档开始体验\n\n<a href="auth.html" style="color: #667eea; text-decoration: underline;">立即注册</a>';
+        } else if (question.includes('银行')) {
+            answer = '我们支持所有主要银行：\n• 香港：匯豐、恆生、中銀、渣打\n• 美国：Bank of America、Chase\n• 日本：三菱UFJ、みずほ\n• 韩国：국민은행、신한은행';
+        } else if (question.includes('安全')) {
+            answer = '您的数据安全是我们的首要任务：\n✅ 256位SSL加密\n✅ SOC 2认证\n✅ 银行级安全标准\n✅ 365天数据保留\n\n完全安全可靠！';
+        }
+        
+        addBotMessage(answer);
+    }, 1000);
+    
+    // Google Analytics
+    if (typeof gtag !== 'undefined') {
+        gtag('event', 'chat_question', {
+            'event_category': 'engagement',
+            'event_label': question
+        });
+    }
+}
+
+function addUserMessage(text) {
+    const messages = document.getElementById('chat-messages');
+    const div = document.createElement('div');
+    div.style.cssText = 'margin-bottom: 1rem; display: flex; justify-content: flex-end;';
+    div.innerHTML = `
+        <div style="background: #667eea; color: white; padding: 0.75rem 1rem; border-radius: 12px; max-width: 70%; font-size: 0.9375rem;">
+            ${text}
+        </div>
+    `;
+    messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
+}
+
+function addBotMessage(text) {
+    const messages = document.getElementById('chat-messages');
+    const div = document.createElement('div');
+    div.style.cssText = 'margin-bottom: 1rem;';
+    div.innerHTML = `
+        <div style="background: white; padding: 1rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); font-size: 0.9375rem; color: #1f2937;">
+            ${text.replace(/\n/g, '<br>')}
+        </div>
+    `;
+    messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
+}
+
+function sendChatMessage(e) {
+    e.preventDefault();
+    const input = document.getElementById('chat-input');
+    const message = input.value.trim();
+    
+    if (message) {
+        addUserMessage(message);
+        input.value = '';
+        
+        // 模拟回复
+        setTimeout(() => {
+            addBotMessage('感谢您的提问！我们的客服团队会尽快回复。您也可以：\n\n• <a href="auth.html" style="color: #667eea;">注册免费试用</a>\n• <a href="blog/" style="color: #667eea;">查看帮助文档</a>\n• 发送邮件至 support@vaultcaddy.com');
+        }, 1000);
+    }
+}
+</script>

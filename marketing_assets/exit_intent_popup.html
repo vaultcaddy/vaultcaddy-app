@@ -1,0 +1,134 @@
+<!-- Exit Intent Popup - 挽留访客 -->
+<div id="exit-popup" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; align-items: center; justify-content: center;">
+    <div style="background: white; padding: 3rem; border-radius: 16px; max-width: 500px; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: slideUp 0.3s ease-out;">
+        <!-- 关闭按钮 -->
+        <button onclick="closeExitPopup()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 2rem; color: #9ca3af; cursor: pointer; padding: 0; line-height: 1;">&times;</button>
+        
+        <!-- 内容 -->
+        <div style="text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">🎁</div>
+            <h2 style="font-size: 1.75rem; font-weight: 700; color: #1f2937; margin-bottom: 1rem;">
+                等等！别错过这个优惠
+            </h2>
+            <p style="font-size: 1.125rem; color: #6b7280; margin-bottom: 1.5rem;">
+                首次注册立享 <strong style="color: #667eea; font-size: 1.5rem;">20%折扣</strong>
+                <br>
+                + 免费试用 <strong>20页</strong>
+            </p>
+            
+            <!-- Email输入 -->
+            <form id="exit-email-form" style="margin-bottom: 1rem;" onsubmit="handleExitEmail(event)">
+                <input 
+                    type="email" 
+                    id="exit-email" 
+                    placeholder="输入您的邮箱获取折扣码"
+                    required
+                    style="width: 100%; padding: 1rem; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 1rem; margin-bottom: 1rem;"
+                >
+                <button 
+                    type="submit"
+                    style="width: 100%; padding: 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-size: 1.125rem; font-weight: 700; cursor: pointer; transition: transform 0.2s;"
+                    onmouseover="this.style.transform='scale(1.02)'"
+                    onmouseout="this.style.transform='scale(1)'"
+                >
+                    获取20%折扣码 →
+                </button>
+            </form>
+            
+            <div id="exit-success" style="display: none; padding: 1rem; background: #d1fae5; border-radius: 8px; color: #065f46;">
+                ✅ 折扣码已发送到您的邮箱！
+            </div>
+            
+            <p style="font-size: 0.875rem; color: #9ca3af; margin-top: 1rem;">
+                优惠码有效期24小时 | 仅限首次注册用户
+            </p>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+
+<script>
+// Exit Intent Detection
+let exitPopupShown = false;
+
+document.addEventListener('mouseleave', function(e) {
+    // 检测鼠标离开顶部（准备关闭标签页）
+    if (e.clientY < 10 && !exitPopupShown && !localStorage.getItem('exitPopupShown')) {
+        showExitPopup();
+    }
+});
+
+function showExitPopup() {
+    const popup = document.getElementById('exit-popup');
+    if (popup) {
+        popup.style.display = 'flex';
+        exitPopupShown = true;
+        
+        // 记录已显示，24小时内不再显示
+        localStorage.setItem('exitPopupShown', Date.now());
+        
+        // Google Analytics 追踪
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'exit_intent_shown', {
+                'event_category': 'engagement'
+            });
+        }
+    }
+}
+
+function closeExitPopup() {
+    const popup = document.getElementById('exit-popup');
+    if (popup) {
+        popup.style.display = 'none';
+    }
+}
+
+async function handleExitEmail(e) {
+    e.preventDefault();
+    const email = document.getElementById('exit-email').value;
+    
+    // 这里应该发送到后端API
+    // await fetch('/api/send-discount', { method: 'POST', body: JSON.stringify({email}) });
+    
+    // 显示成功消息
+    document.getElementById('exit-email-form').style.display = 'none';
+    document.getElementById('exit-success').style.display = 'block';
+    
+    // Google Analytics 追踪
+    if (typeof gtag !== 'undefined') {
+        gtag('event', 'exit_email_captured', {
+            'event_category': 'lead_generation',
+            'event_label': email
+        });
+    }
+    
+    // Facebook Pixel
+    if (typeof fbq !== 'undefined') {
+        fbq('track', 'Lead');
+    }
+    
+    // 3秒后自动关闭并跳转到注册页
+    setTimeout(() => {
+        closeExitPopup();
+        window.location.href = 'auth.html?discount=EXIT20';
+    }, 3000);
+}
+
+// 清理过期的localStorage
+const popupTime = localStorage.getItem('exitPopupShown');
+if (popupTime && (Date.now() - popupTime > 24 * 60 * 60 * 1000)) {
+    localStorage.removeItem('exitPopupShown');
+}
+</script>
