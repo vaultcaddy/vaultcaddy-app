@@ -1746,7 +1746,7 @@
             <div style="display: flex; align-items: center; gap: 2rem;">
                 <a href="index.html#features" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">Features</a>
                 <a href="index.html#pricing" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">Pricing</a>
-                <a href="/blog/" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">Learning Center</a>
+                <a href="blog/" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">Learning Center</a>
                 <a href="dashboard.html" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">Dashboard</a>
             </div>
             <!-- 🌍 桌面版語言選擇器 -->
@@ -1774,7 +1774,7 @@
                     <i class="fas fa-dollar-sign" style="width: 20px; color: #667eea;"></i>
                     <span>Pricing</span>
                 </a>
-                <a href="/blog/" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
+                <a href="blog/" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
                     <i class="fas fa-graduation-cap" style="width: 20px; color: #667eea;"></i>
                     <span>Learning Center</span>
                 </a>
@@ -2291,28 +2291,55 @@
 
                 <!-- 文檔表格 -->
                 
-                <!-- 日期筛选器 -->
-                <div class="filter-section" style="margin-bottom: 1rem; padding: 1rem; background: #f9fafb; border-radius: 8px; display: flex; gap: 1rem; align-items: end; flex-wrap: wrap;">
-                    <div style="flex: 1; min-width: 200px;">
-                        <label style="display: block; margin-bottom: 0.5rem; font-size: 0.875rem; font-weight: 500; color: #374151;">Date Range</label>
-                        <div style="display: flex; gap: 0.5rem; align-items: center;">
-                            <input type="date" id="filter-date-from" class="form-input" style="flex: 1;">
-                            <span style="color: #6b7280;">to</span>
-                            <input type="date" id="filter-date-to" class="form-input" style="flex: 1;">
+                <!-- 📅 Date Filter -->
+                <div class="date-filter-container" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    <!-- Date Filter Header -->
+                    <div class="date-filter-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="color: white; font-size: 1rem; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-filter"></i>
+                            <span>Date Filter</span>
+                        </h3>
+                        <button onclick="toggleDateFilter()" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                            <i class="fas fa-chevron-down" id="filter-toggle-icon"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Date Filter Content -->
+                    <div class="date-filter-content" id="date-filter-content" style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <!-- Date Range -->
+                        <div class="date-filter-group" style="flex: 1; min-width: 200px;">
+                            <label style="display: block; font-size: 0.875rem; font-weight: 600; color: white; margin-bottom: 0.5rem;">
+                                <i class="fas fa-calendar-alt" style="margin-right: 0.5rem;"></i>
+                                Date Range
+                            </label>
+                            <div class="date-filter-inputs" style="display: flex; gap: 0.5rem; align-items: center;">
+                                <input type="date" id="date-from" style="flex: 1; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem;" placeholder="Start Date">
+                                <span style="color: white;">to</span>
+                                <input type="date" id="date-to" style="flex: 1; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem;" placeholder="End Date">
+                            </div>
                         </div>
-                    </div>
-                    <div style="flex: 1; min-width: 200px;">
-                        <label style="display: block; margin-bottom: 0.5rem; font-size: 0.875rem; font-weight: 500; color: #374151;">Upload Date Range</label>
-                        <div style="display: flex; gap: 0.5rem; align-items: center;">
-                            <input type="date" id="filter-upload-from" class="form-input" style="flex: 1;">
-                            <span style="color: #6b7280;">to</span>
-                            <input type="date" id="filter-upload-to" class="form-input" style="flex: 1;">
+                        
+                        <!-- Upload Date Range -->
+                        <div class="date-filter-group" style="flex: 1; min-width: 200px;">
+                            <label style="display: block; font-size: 0.875rem; font-weight: 600; color: white; margin-bottom: 0.5rem;">
+                                <i class="fas fa-upload" style="margin-right: 0.5rem;"></i>
+                                Upload Date Range
+                            </label>
+                            <div class="date-filter-inputs" style="display: flex; gap: 0.5rem; align-items: center;">
+                                <input type="date" id="upload-date-from" style="flex: 1; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem;" placeholder="Start Date">
+                                <span style="color: white;">to</span>
+                                <input type="date" id="upload-date-to" style="flex: 1; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem;" placeholder="End Date">
+                            </div>
                         </div>
-                    </div>
-                    <div>
-                        <button onclick="applyFilters()" class="btn btn-primary" style="white-space: nowrap;">Apply Filter</button>
-                        <button onclick="clearFilters()" class="btn btn-secondary" style="white-space: nowrap; margin-left: 0.5rem;">Clear Filter</button>
-                    </div>
+                        
+                        <!-- Clear Button -->
+                        <div class="date-filter-clear-btn" style="align-self: flex-end;">
+                            <button onclick="clearDateFilters()" style="padding: 0.5rem 1rem; background: rgba(255,255,255,0.9); color: #667eea; border: none; border-radius: 6px; font-size: 0.875rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s;" onmouseover="this.style.background='white'" onmouseout="this.style.background='rgba(255,255,255,0.9)'">
+                                <i class="fas fa-times" style="margin-right: 0.5rem;"></i>
+                                Clear Filter
+                            </button>
+                        </div>
+                    </div> <!-- Close date-filter-content -->
                 </div>
 
                 <div class="table-container" style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; overflow-x: auto;">
