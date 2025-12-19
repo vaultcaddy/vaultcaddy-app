@@ -1,0 +1,66 @@
+<!-- 实时社会证明 - 提升转化率 -->
+<div class="social-proof-popup" id="social-proof" style="position: fixed; bottom: 20px; left: 20px; background: white; padding: 1rem 1.5rem; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); max-width: 350px; z-index: 1000; display: none; animation: slideIn 0.3s ease-out;">
+    <div style="display: flex; align-items: center; gap: 1rem;">
+        <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.125rem;">
+            <span id="social-proof-initial">J</span>
+        </div>
+        <div style="flex: 1;">
+            <p style="margin: 0; font-weight: 600; color: #1f2937; font-size: 0.875rem;">
+                <span id="social-proof-name">John M.</span> 刚刚
+            </p>
+            <p style="margin: 0; color: #6b7280; font-size: 0.8125rem;">
+                <span id="social-proof-action">注册了 VaultCaddy</span>
+            </p>
+        </div>
+        <button onclick="document.getElementById('social-proof').style.display='none'" style="border: none; background: none; color: #9ca3af; cursor: pointer; font-size: 1.25rem; padding: 0; line-height: 1;">×</button>
+    </div>
+</div>
+
+<style>
+@keyframes slideIn {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+</style>
+
+<script>
+// 社会证明弹窗
+const socialProofData = [
+    { name: 'Sarah T.', initial: 'S', action: '升级到年付方案' },
+    { name: 'David L.', initial: 'D', action: '处理了 50+ 份文档' },
+    { name: 'Emily R.', initial: 'E', action: '注册了 VaultCaddy' },
+    { name: 'Michael K.', initial: 'M', action: '导出到 QuickBooks' },
+    { name: 'Sophia W.', initial: 'S', action: '完成了首次处理' },
+    { name: 'John M.', initial: 'J', action: '开始免费试用' }
+];
+
+function showSocialProof() {
+    const popup = document.getElementById('social-proof');
+    if (!popup) return;
+    
+    const randomData = socialProofData[Math.floor(Math.random() * socialProofData.length)];
+    
+    document.getElementById('social-proof-name').textContent = randomData.name;
+    document.getElementById('social-proof-initial').textContent = randomData.initial;
+    document.getElementById('social-proof-action').textContent = randomData.action;
+    
+    popup.style.display = 'block';
+    
+    // 5秒后自动关闭
+    setTimeout(() => {
+        popup.style.display = 'none';
+    }, 5000);
+}
+
+// 每30秒显示一次
+setInterval(showSocialProof, 30000);
+
+// 页面加载10秒后首次显示
+setTimeout(showSocialProof, 10000);
+</script>

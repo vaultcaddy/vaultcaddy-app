@@ -1,0 +1,48 @@
+<!-- 限时优惠横幅 - 创造紧迫感 -->
+<div class="urgency-banner" style="background: linear-gradient(90deg, #ff6b6b 0%, #ff8e53 100%); color: white; padding: 1rem; text-align: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+    <div style="display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+        <span style="font-size: 1.5rem;">🎉</span>
+        <div>
+            <strong style="font-size: 1.125rem;">限时优惠！</strong>
+            <span style="margin-left: 0.5rem;">新用户注册立享 20% 折扣</span>
+        </div>
+        <div style="background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 8px; font-family: monospace; font-weight: 700;">
+            <span id="countdown-timer">23:59:59</span>
+        </div>
+        <a href="auth.html" style="background: white; color: #ff6b6b; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 700; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+            立即注册 →
+        </a>
+    </div>
+</div>
+
+<script>
+// 倒计时功能
+function startCountdown() {
+    const timer = document.getElementById('countdown-timer');
+    if (!timer) return;
+    
+    // 设置倒计时到今天午夜
+    function updateCountdown() {
+        const now = new Date();
+        const midnight = new Date();
+        midnight.setHours(24, 0, 0, 0);
+        
+        const diff = midnight - now;
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        
+        timer.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+    
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+}
+
+// 页面加载时启动倒计时
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startCountdown);
+} else {
+    startCountdown();
+}
+</script>
