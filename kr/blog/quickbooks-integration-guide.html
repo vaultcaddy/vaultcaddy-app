@@ -3,515 +3,266 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="詳細教程：如何將 VaultCaddy 與 QuickBooks 整合，實現香港會計流程完全自動化。支持미국 달러交易，安全可靠，낮음至₩80/頁。">
-    <meta name="keywords" content="QuickBooks,會計軟件整合,QuickBooks香港,會計自動化,財務軟件,송장導出,銀行對賬,API整合,미국 달러記賬">
-    <title>QuickBooks 整合指南：實現香港會計流程自動化 | VaultCaddy</title>
-    <link rel="stylesheet" href="../styles.css">
-    <style>
-        .blog-container {
-            padding: 80px 1rem 2rem 1rem;
-            position: relative;
-            z-index: 1;  /* top right bottom left */ max-width: 800px; margin: 0 auto;  line-height: 1.8; }
-        .blog-title { font-size: 2.5rem; font-weight: 700; color: #1f2937; margin-bottom: 1rem; }
-        .blog-content h2 { font-size: 1.8rem; font-weight: 600; color: #1f2937; margin: 2rem 0 1rem; }
-        .blog-content p { margin-bottom: 1.5rem; color: #4b5563; }
-        .blog-content ul, .blog-content ol { margin: 1.5rem 0; padding-left: 2rem; }
-        .blog-content li { margin-bottom: 0.75rem; color: #4b5563; }
-        .highlight-box { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 12px; margin: 2rem 0; }
-        .step-box { background: #f3f4f6; padding: 1.5rem; border-radius: 12px; margin: 1.5rem 0; border-left: 4px solid #7c3aed; }
-        .cta-button { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1rem 2rem; border-radius: 8px; text-decoration: none; font-weight: 600; }
-
-        /* 手機版樣式 */
-        @media (max-width: 768px) {
-            /* 手機版顯示 logo */
-            .desktop-logo {
-                display: none !important; /* 🔥 手機版隱藏 V字logo */
-            }
-            
-            /* 隱藏桌面版 logo 文字 */
-            .desktop-logo-text {
-                display: none !important;
-            }
-            
-            .vaultcaddy-navbar > div:nth-child(2) > div:first-child {
-                display: none !important;
-            }
-            
-            /* 顯示漢堡菜單按鈕 */
-            #mobile-menu-btn {
-                display: block !important;
-            }
-            
-            /* 調整導航欄 padding */
-            .vaultcaddy-navbar {
-                padding: 0 1rem !important;
-            }
-        }
-    </style>
-
-        <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
-    
-    <!-- Firebase 配置 -->
-    <script src="../firebase-config.js"></script>
-        <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
-    
-    <!-- Firebase 配置 -->
-    <script src="../firebase-config.js"></script>
-    
-    <!-- Firebase 配置 -->
-    <script>
-        // Firebase 配置
-        const firebaseConfig = {
-            apiKey: "AIzaSyBpEI7v5ufJhaDdKvYN0HgF_6EvvAYWUaE",
-            authDomain: "vaultcaddy-production-cbbe2.firebaseapp.com",
-            projectId: "vaultcaddy-production-cbbe2",
-            storageBucket: "vaultcaddy-production-cbbe2.firebasestorage.app",
-            messagingSenderId: "510426940354",
-            appId: "1:510426940354:web:cf60fd8f8be5aa6d691c25"
-        };
-        
-        // 初始化 Firebase
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-            console.log('✅ Firebase 初始化成功');
-        }
-    </script>
-
+    <title>QuickBooks 통합 가이드 | 워크플로우 자동화 2024</title>
+    <meta name="description" content="QuickBooks 통합 및 자동화의 완전한 가이드. 도구를 연결하고, 데이터 입력을 자동화하며, 수동 작업 시간을 절약하는 원활한 회계 워크플로우를 만드는 방법을 배우세요.">
+    <meta name="keywords" content="QuickBooks 통합,회계 자동화,QuickBooks API,워크플로우 자동화,회계 소프트웨어,QuickBooks 도구,회계 효율성">
+    <meta name="author" content="VaultCaddy 팀">
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="article">
-    <meta property="og:url" content="https://vaultcaddy.com/blog/quickbooks-integration-guide.html">
-    <meta property="og:title" content="QuickBooks 整合指南：實現香港會計流程自動化 | VaultCaddy">
-    <meta property="og:description" content="詳細教程：如何將 VaultCaddy 與 QuickBooks 整合，實現香港會計流程完全自動化。支持미국 달러交易，安全可靠，낮음至₩80/頁。">
-    <meta property="og:image" content="https://vaultcaddy.com/images/blog/quickbooks-cover.jpg">
+    <meta property="og:url" content="https://vaultcaddy.com/kr/blog/quickbooks-integration-guide.html">
+    <meta property="og:title" content="QuickBooks 통합 가이드: 회계 워크플로우 자동화">
+    <meta property="og:description" content="QuickBooks 통합 및 자동화의 완전한 가이드. 도구를 연결하고, 데이터 입력을 자동화하며, 수동 작업 시간을 절약하는 원활한 회계 워크플로우를 만드는 방법을 배우세요.">
+    <meta property="og:image" content="https://vaultcaddy.com/images/blog/quickbooks-integration-guide-og-kr.jpg">
     
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://vaultcaddy.com/blog/quickbooks-integration-guide.html">
-    <meta property="twitter:title" content="QuickBooks 整合指南：實現香港會計流程自動化 | VaultCaddy">
-    <meta property="twitter:description" content="詳細教程：如何將 VaultCaddy 與 QuickBooks 整合，實現香港會計流程完全自動化。支持미국 달러交易，安全可靠，낮음至₩80/頁。">
-    <meta property="twitter:image" content="https://vaultcaddy.com/images/blog/quickbooks-cover.jpg">
+    <meta property="twitter:url" content="https://vaultcaddy.com/kr/blog/quickbooks-integration-guide.html">
+    <meta property="twitter:title" content="QuickBooks 통합 가이드: 회계 워크플로우 자동화">
+    <meta property="twitter:description" content="QuickBooks 통합 및 자동화의 완전한 가이드. 도구를 연결하고, 데이터 입력을 자동화하며, 수동 작업 시간을 절약하는 원활한 회계 워크플로우를 만드는 방법을 배우세요.">
+    <meta property="twitter:image" content="https://vaultcaddy.com/images/blog/quickbooks-integration-guide-og-kr.jpg">
     
-    <!-- Canonical URL -->
-    <link rel="canonical" href="https://vaultcaddy.com/blog/quickbooks-integration-guide.html">
-
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="canonical" href="https://vaultcaddy.com/kr/blog/quickbooks-integration-guide.html">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
     <!-- Structured Data -->
     <script type="application/ld+json">
     {
-      "@context": "https://schema.org",
-      "@type": "Article",
-      "headline": "QuickBooks 整合指南：實現香港會計流程自動化",
-      "description": "詳細教程：如何將 VaultCaddy 與 QuickBooks 整合，實現香港會計流程完全自動化。支持미국 달러交易，安全可靠，낮음至₩80/頁。",
-      "image": "https://vaultcaddy.com/images/blog/quickbooks-cover.jpg",
-      "author": {
-        "@type": "Organization",
-        "name": "VaultCaddy"
-      },
-      "publisher": {
-        "@type": "Organization",
-        "name": "VaultCaddy",
-        "logo": {
-          "@type": "ImageObject",
-          "url": "https://vaultcaddy.com/logo.png"
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        "headline": "QuickBooks 통합 가이드: 회계 워크플로우 자동화",
+        "description": "QuickBooks 통합 및 자동화의 완전한 가이드. 도구를 연결하고, 데이터 입력을 자동화하며, 수동 작업 시간을 절약하는 원활한 회계 워크플로우를 만드는 방법을 배우세요.",
+        "image": "https://vaultcaddy.com/images/blog/quickbooks-integration-guide-og-kr.jpg",
+        "author": {
+            "@type": "Organization",
+            "name": "VaultCaddy 팀"
+        },
+        "publisher": {
+            "@type": "Organization",
+            "name": "VaultCaddy",
+            "logo": {
+                "@type": "ImageObject",
+                "url": "https://vaultcaddy.com/images/logo.png"
+            }
+        },
+        "datePublished": "2025-12-20T16:59:50.090084",
+        "dateModified": "2025-12-20T16:59:50.090091",
+        "inLanguage": "ko",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https://vaultcaddy.com/kr/blog/quickbooks-integration-guide.html"
         }
-      },
-      "datePublished": "2025-12-05",
-      "dateModified": "2025-12-05"
     }
     </script>
+    
+    <style>
+        body { font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif; }
+        .blog-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6rem 2rem 4rem;
+            text-align: center;
+        }
+        .blog-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            max-width: 1000px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.5;
+        }
+        .blog-meta {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1.5rem;
+            font-size: 1rem;
+            opacity: 0.95;
+        }
+        .blog-content {
+            max-width: 800px;
+            margin: 4rem auto;
+            padding: 0 2rem;
+            font-size: 1.125rem;
+            line-height: 1.8;
+            color: #1f2937;
+        }
+        .blog-content h2 {
+            font-size: 1.875rem;
+            margin: 3rem 0 1.5rem;
+            color: #111827;
+            font-weight: 600;
+            border-left: 4px solid #667eea;
+            padding-left: 1rem;
+        }
+        .blog-content h3 {
+            font-size: 1.5rem;
+            margin: 2rem 0 1rem;
+            color: #1f2937;
+            font-weight: 600;
+        }
+        .highlight-box {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-left: 4px solid #667eea;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border-radius: 8px;
+        }
+        .cta-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 3rem 2rem;
+            border-radius: 12px;
+            text-align: center;
+            margin: 4rem 0;
+        }
+        .cta-button {
+            display: inline-block;
+            background: white;
+            color: #667eea;
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+        @media (max-width: 768px) {
+            .blog-header h1 { font-size: 1.75rem; }
+            .blog-content { font-size: 1rem; }
+        }
+    </style>
 </head>
 <body>
-    <!-- ✅ 統一靜態導航欄（與 firstproject.html 完全一致）-->
-    <nav class="vaultcaddy-navbar" id="main-navbar" style="position: fixed; top: 0; left: 0; right: 0; height: 60px; background: #ffffff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; z-index: 1000; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);">
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <!-- 漢堡菜單按鈕（僅手機顯示）-->
-            <button id="mobile-menu-btn" onclick="openMobileSidebar()" style="display: none; background: none; border: none; cursor: pointer; padding: 0.5rem; color: #1f2937; font-size: 1.5rem;">
-                <i class="fas fa-bars"></i>
-            </button>
-            
-            <a href="../index.html" style="display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: #1f2937; font-weight: 600; font-size: 1.125rem;">
-                <div class="desktop-logo" style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.25rem;">
-                    V
-                </div>
-                <div class="desktop-logo-text">
-                    <div>VaultCaddy</div>
-                    <div style="font-size: 0.75rem; color: #6b7280; font-weight: 400; text-transform: uppercase; letter-spacing: 0.05em;">AI DOCUMENT PROCESSING</div>
-                </div>
+    <div id="navbar-container"></div>
+    
+    <header class="blog-header">
+        <div class="blog-meta">
+            <span><i class="fas fa-folder"></i> 통합</span>
+            <span><i class="fas fa-clock"></i> 11분</span>
+            <span><i class="fas fa-calendar"></i> 2025년 12월 20일</span>
+        </div>
+        <h1>완전한 QuickBooks 통합 가이드</h1>
+    </header>
+    
+    <article class="blog-content">
+        <img src="https://source.unsplash.com/1200x600/?quickbooks,integration,guide,business,finance,korea" 
+             alt="QuickBooks 통합 가이드: 회계 워크플로우 자동화"
+             style="width: 100%; border-radius: 12px; margin-bottom: 2rem;"
+             loading="lazy">
+        
+        <div class="highlight-box">
+            <p><strong>핵심 요점:</strong> QuickBooks 통합 및 자동화의 완전한 가이드. 도구를 연결하고, 데이터 입력을 자동화하며, 수동 작업 시간을 절약하는 원활한 회계 워크플로우를 만드는 방법을 배우세요.</p>
+        </div>
+        
+        <h2>소개</h2>
+        <p>
+            오늘날 빠르게 변화하는 비즈니스 환경에서 재무 문서를 효율적으로 관리하는 것은 성공의 핵심입니다.
+            이 종합 가이드는 quickbooks 통합 가이드: 회계 워크플로우 자동화에 대해 알아야 할 모든 것을 안내합니다.
+        </p>
+        
+        <h2>왜 중요한가</h2>
+        <p>
+            적절한 문서 관리와 자동화의 중요성을 이해하면 비즈니스 운영을 혁신할 수 있습니다.
+            프리랜서, 중소기업 소유주 또는 회계 전문가이든, 이 가이드에서 설명하는 전략은
+            시간을 절약하고, 오류를 줄이며, 정말 중요한 것, 즉 비즈니스 성장에 집중하는 데 도움이 됩니다.
+        </p>
+        
+        <h2>주요 이점</h2>
+        <ul>
+            <li><strong>시간 절약:</strong> 수동 처리 시간을 최대 90% 단축</li>
+            <li><strong>정확도 향상:</strong> AI 기반 추출로 인적 오류 제거</li>
+            <li><strong>비용 효율성:</strong> 운영 비용을 크게 절감</li>
+            <li><strong>더 나은 정리:</strong> 모든 문서를 하나의 안전한 위치에 보관</li>
+            <li><strong>실시간 인사이트:</strong> 필요할 때 재무 데이터에 액세스</li>
+        </ul>
+        
+        <h2>작동 방식</h2>
+        <p>
+            VaultCaddy와 같은 최신 자동화 도구는 고급 AI 및 OCR 기술을 사용하여 문서를 처리합니다:
+        </p>
+        <ol>
+            <li><strong>업로드:</strong> 사진을 찍거나 PDF 문서를 업로드하기만 하면 됩니다</li>
+            <li><strong>추출:</strong> AI가 모든 관련 데이터를 자동으로 추출합니다</li>
+            <li><strong>확인:</strong> 추출된 정보를 검토하고 확인합니다</li>
+            <li><strong>내보내기:</strong> Excel로 다운로드하거나 회계 소프트웨어에 직접 동기화합니다</li>
+        </ol>
+        
+        <div class="cta-box">
+            <h3>워크플로우를 혁신할 준비가 되셨나요?</h3>
+            <p>문서 처리를 자동화한 수천 명의 전문가에 합류하세요</p>
+            <a href="https://vaultcaddy.com/kr/auth.html" class="cta-button">
+                무료 체험 시작 <i class="fas fa-arrow-right"></i>
             </a>
         </div>
-        <div style="display: flex; align-items: center; gap: 2rem;">
-            <div style="display: flex; align-items: center; gap: 2rem;">
-                <a href="../index.html#features" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">기능</a>
-                <a href="../index.html#pricing" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">가격</a>
-                <a href="/kr/blog/" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">학습 센터</a>
-                <a href="../dashboard.html" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">대시보드</a>
-            </div>
-            <div id="user-menu" style="position: relative; display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;">
-                <div id="user-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">U</div>
-            </div>
-        </div>
-    </nav>
-    
-    <!-- 手機側邊欄菜單 -->
-    <div id="mobile-sidebar" style="position: fixed; top: 0; left: -100%; width: 280px; height: 100vh; background: white; z-index: 2000; transition: left 0.3s ease; box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto;">
-        <div style="padding: 1.5rem;">
-            <!-- 菜單項 -->
-            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                <a href="../index.html#features" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
-                    <i class="fas fa-star" style="width: 20px; color: #667eea;"></i>
-                    <span>기능</span>
-                </a>
-                <a href="../index.html#pricing" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
-                    <i class="fas fa-dollar-sign" style="width: 20px; color: #667eea;"></i>
-                    <span>가격</span>
-                </a>
-                <a href="/kr/blog/" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
-                    <i class="fas fa-graduation-cap" style="width: 20px; color: #667eea;"></i>
-                    <span>학습 센터</span>
-                </a>
-                <a href="../dashboard.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
-                    <i class="fas fa-th-large" style="width: 20px; color: #667eea;"></i>
-                    <span>대시보드</span>
-                </a>
-                
-                <div style="height: 1px; background: #e5e7eb; margin: 1rem 0;"></div>
-                
-                <a href="../privacy.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
-                    <i class="fas fa-shield-alt" style="width: 20px; color: #6b7280;"></i>
-                    <span>개인정보 보호정책</span>
-                </a>
-                <a href="../terms.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
-                    <i class="fas fa-file-contract" style="width: 20px; color: #6b7280;"></i>
-                    <span>서비스 약관</span>
-                </a>
-            </div>
-        </div>
-    </div>
-    </div>
-    
-    <!-- 側邊欄遮罩 -->
-    <div id="mobile-sidebar-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; display: none; transition: opacity 0.3s ease; opacity: 0;"></div>
-    
-    <!-- 用戶下拉菜單 -->
-    <div id="user-dropdown" style="display: none; position: fixed; top: 70px; right: 2rem; background: white; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); padding: 1rem; min-width: 220px; z-index: 2000; border: 1px solid #e5e7eb;">
-        <div style="padding: 0.75rem; border-bottom: 1px solid #f3f4f6;">
-            <div style="font-weight: 600; font-size: 1rem; color: #1f2937; margin-bottom: 0.25rem;"><span>Credits</span>: <span id="dropdown-credits">0</span></div>
-            <div style="font-size: 0.875rem; color: #6b7280;" id="dropdown-email">user@example.com</div>
-        </div>
-    </div>
-    
-        <script src="../simple-auth.js"></script>
-    <script src="../unified-auth.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            let userCredits = 0;
-            let userEmail = '';
-            let userDisplayName = '';
-            
-            // 獲取用戶首字母
-            function getUserInitial() {
-                if (userDisplayName && userDisplayName.trim()) {
-                    return userDisplayName.charAt(0).toUpperCase();
-                }
-                if (userEmail && userEmail.trim()) {
-                    return userEmail.charAt(0).toUpperCase();
-                }
-                return 'U';
-            }
-            
-            // 更新用戶菜單
-            async function updateUserMenu() {
-                const userMenu = document.getElementById('user-menu');
-                if (!userMenu) return;
-                
-                try {
-                    const isLoggedIn = window.simpleAuth && window.simpleAuth.isLoggedIn();
-                    const avatar = document.getElementById('user-avatar');
-                    if (!avatar) return;
-                    
-                    if (isLoggedIn) {
-                        const currentUser = window.simpleAuth.getCurrentUser();
-                        userEmail = currentUser.email || '';
-                        userDisplayName = currentUser.displayName || '';
-                        const userInitial = getUserInitial();
-                        avatar.textContent = userInitial;
-                    } else {
-                        avatar.textContent = 'U';
-                    }
-                } catch (e) {
-                    // 静默处理错误
-                }
-            }
-            
-            // 切換下拉菜單
-            window.toggleDropdown = function() {
-                const dropdown = document.getElementById('user-dropdown');
-                if (dropdown) {
-                    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
-                }
-            };
-            
-            // 優化：只使用一個可靠的檢查方式
-            function initAuthCheck() {
-                if (typeof firebase === 'undefined' || !firebase.auth) {
-                    setTimeout(initAuthCheck, 100);
-                    return;
-                }
-                
-                firebase.auth().onAuthStateChanged(function(user) {
-                    if (user) {
-                        updateUserMenu();
-                    } else {
-                        const avatar = document.getElementById('user-avatar');
-                        if (avatar) avatar.textContent = 'U';
-                    }
-                });
-            }
-            
-            initAuthCheck();
-        });
-    </script>
-    
-    <script>
-        function openMobileSidebar() {
-            document.getElementById('mobile-sidebar').style.left = '0';
-            document.getElementById('mobile-sidebar-overlay').style.display = 'block';
-            setTimeout(() => {
-                document.getElementById('mobile-sidebar-overlay').style.opacity = '1';
-            }, 10);
-        }
         
-        function closeMobileSidebar() {
-            document.getElementById('mobile-sidebar').style.left = '-100%';
-            document.getElementById('mobile-sidebar-overlay').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('mobile-sidebar-overlay').style.display = 'none';
-            }, 300);
-        }
+        <h2>모범 사례</h2>
+        <p>문서 자동화를 최대한 활용하려면:</p>
+        <ul>
+            <li>문서에 대한 일관된 명명 규칙 설정</li>
+            <li>쌓이게 두지 말고 정기적으로 문서 처리</li>
+            <li>자동 분류 기능 활용</li>
+            <li>기존 회계 소프트웨어와의 통합 설정</li>
+            <li>재무 데이터를 정기적으로 검토하고 조정</li>
+        </ul>
         
-        const overlay = document.getElementById('mobile-sidebar-overlay');
-        if (overlay) {
-            overlay.addEventListener('click', closeMobileSidebar);
-        }
-    </script>
-
-    <div class="blog-container">
-        <h1 class="blog-title">QuickBooks 整合指南：自動化您的會計流程</h1>
-                <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&h=600&fit=crop&q=80" alt="文章封面圖片" style="width: 100%; height: auto; max-height: 400px; object-fit: cover; border-radius: 12px; margin: 2rem 0;" />
-        <div class="blog-content">
-            <p>您是否厭倦了在 VaultCaddy 和 QuickBooks 之間手動複製數據？好消息！VaultCaddy 提供完整的 QuickBooks 整合，支持 <strong>QuickBooks Desktop（IIF 格式）</strong>和 <strong>QuickBooks Online（QBO 格式）</strong>，讓您一鍵導出財務數據，절약 90% 的數據輸入時間。</p>
-
-            <h2>為什麼需要 QuickBooks 整合？</h2>
-            <ul>
-                <li><strong>절약時間：</strong>不再需要수동 입력송장數據</li>
-                <li><strong>감소오류：</strong>避免수동 입력導致的오류</li>
-                <li><strong>提높음效率：</strong>自動化數據流，專注於分析</li>
-                <li><strong>即時更新：</strong>財務數據始終保持最新</li>
-                <li><strong>完整記錄：</strong>保留所有原始文檔和數據</li>
-            </ul>
-
-            <h2>QuickBooks Desktop 整合（IIF 格式）</h2>
-
-            <h3>什麼是 IIF 格式？</h3>
-            <p>IIF（Intuit Interchange Format）是 QuickBooks Desktop 的標準導入格式。它是一個文本文件，包含交易數據，可以直接導入 QuickBooks。</p>
-
-            <div class="step-box">
-                <h4>📋 步驟 1：從 VaultCaddy 導出 IIF 文件</h4>
-                <ol>
-                    <li>登入 VaultCaddy，進入您的항목</li>
-                    <li>選擇要導出的文檔（可以選擇多個）</li>
-                    <li>點擊「Export」按鈕</li>
-                    <li>選擇「IIF - QuickBooks Desktop」</li>
-                    <li>文件會自動下載到您的電腦</li>
-                </ol>
-            </div>
-
-            <div class="step-box">
-                <h4>📋 步驟 2：導入到 QuickBooks Desktop</h4>
-                <ol>
-                    <li>打開 QuickBooks Desktop</li>
-                    <li>選擇「File」>「Utilities」>「Import」>「IIF Files」</li>
-                    <li>選擇剛才下載的 IIF 文件</li>
-                    <li>QuickBooks 會自動導入所有交易</li>
-                    <li>檢查導入的交易，確認無誤</li>
-                </ol>
-            </div>
-
-            <h3>IIF 文件包含的數據</h3>
-            <ul>
-                <li><strong>交易類型：</strong>BILL（應付賬款）或 GENERAL JOURNAL</li>
-                <li><strong>供應商信息：</strong>供應商名稱和聯絡資訊</li>
-                <li><strong>송장號碼：</strong>原始송장號碼</li>
-                <li><strong>日期：</strong>송장日期</li>
-                <li><strong>金額：</strong>總金額、小計、稅額</li>
-                <li><strong>항목明細：</strong>每個항목的描述和金額</li>
-                <li><strong>會計科目：</strong>Accounts Payable、Expenses、Tax Expense</li>
-            </ul>
-
-            <h2>QuickBooks Online 整合（QBO 格式）</h2>
-
-            <h3>什麼是 QBO 格式？</h3>
-            <p>QBO（QuickBooks Online）格式基於 OFX（Open Financial Exchange）標準，是 QuickBooks Online 的標準導入格式。</p>
-
-            <div class="step-box">
-                <h4>📋 步驟 1：從 VaultCaddy 導出 QBO 文件</h4>
-                <ol>
-                    <li>登入 VaultCaddy，進入您的항목</li>
-                    <li>選擇要導出的文檔</li>
-                    <li>點擊「Export」按鈕</li>
-                    <li>選擇「QBO - QuickBooks Online」</li>
-                    <li>文件會自動下載</li>
-                </ol>
-            </div>
-
-            <div class="step-box">
-                <h4>📋 步驟 2：導入到 QuickBooks Online</h4>
-                <ol>
-                    <li>登入 QuickBooks Online</li>
-                    <li>選擇「Banking」>「Upload」</li>
-                    <li>選擇「Browse」，選擇 QBO 文件</li>
-                    <li>選擇要導入的銀行賬戶</li>
-                    <li>點擊「Upload」</li>
-                    <li>QuickBooks 會自動處理交易</li>
-                    <li>在「For Review」中檢查和分類交易</li>
-                </ol>
-            </div>
-
-            <h3>QBO 文件包含的數據</h3>
-            <ul>
-                <li><strong>交易類型：</strong>DEBIT（支出）、POS（銷售點）、OTHER</li>
-                <li><strong>供應商名稱：</strong>從송장提取的供應商</li>
-                <li><strong>交易日期：</strong>송장或交易日期</li>
-                <li><strong>金額：</strong>交易金額（負數表示支出）</li>
-                <li><strong>송장號碼：</strong>作為 CHECKNUM 字段</li>
-                <li><strong>備註：</strong>包含송장號碼和항목明細</li>
-            </ul>
-
-            <div class="highlight-box">
-                <h3>🚀 VaultCaddy 導出的優勢</h3>
-                <ul>
-                    <li>✅ <strong>完整數據：</strong>22 個字段，包含所有關鍵信息</li>
-                    <li>✅ <strong>항목明細：</strong>支持多항목송장，每個항목單獨記錄</li>
-                    <li>✅ <strong>稅額分離：</strong>自動分離稅額為獨立行</li>
-                    <li>✅ <strong>供應商信息：</strong>包含供應商地址、電話、電郵</li>
-                    <li>✅ <strong>標準格式：</strong>符合 QuickBooks 標準，無需手動調整</li>
-                </ul>
-            </div>
-
-            <h2>CSV 導出（通用格式）</h2>
-
-            <p>除了 IIF 和 QBO，VaultCaddy 還支持 CSV 導出，適合：</p>
-            <ul>
-                <li>使用其他會計軟件（Xero、FreshBooks 等）</li>
-                <li>需要自定義數據分析</li>
-                <li>導入到 Excel 進行進一步處理</li>
-            </ul>
-
-            <h3>CSV 包含的 22 個字段</h3>
-            <ol>
-                <li>文檔名稱</li>
-                <li>文檔類型</li>
-                <li>송장號碼</li>
-                <li>日期</li>
-                <li>供應商/來源</li>
-                <li>供應商地址</li>
-                <li>供應商電話</li>
-                <li>供應商電郵</li>
-                <li>客戶名稱</li>
-                <li>客戶地址</li>
-                <li>항목明細</li>
-                <li>小計</li>
-                <li>稅額</li>
-                <li>稅率</li>
-                <li>總金額</li>
-                <li>幣別</li>
-                <li>付款條款</li>
-                <li>付款方式</li>
-                <li>銀行賬號</li>
-                <li>備註</li>
-                <li>狀態</li>
-                <li>上傳日期</li>
-            </ol>
-
-            <h2>最佳實踐</h2>
-
-            <h3>1. 定期導出</h3>
-            <ul>
-                <li><strong>每週導出：</strong>保持 QuickBooks 數據最新</li>
-                <li><strong>月底導出：</strong>月度結賬前完成所有導入</li>
-                <li><strong>批量處理：</strong>一次導出整月數據</li>
-            </ul>
-
-            <h3>2. 檢查數據</h3>
-            <ul>
-                <li><strong>導入前：</strong>在 VaultCaddy 中檢查數據準確性</li>
-                <li><strong>導入後：</strong>在 QuickBooks 中檢查交易</li>
-                <li><strong>對賬：</strong>定期與銀行對賬單核對</li>
-            </ul>
-
-            <h3>3. 備份數據</h3>
-            <ul>
-                <li><strong>保留原始文檔：</strong>VaultCaddy 自動保存所有原始文檔</li>
-                <li><strong>導出文件備份：</strong>保存所有導出的 IIF/QBO/CSV 文件</li>
-                <li><strong>QuickBooks 備份：</strong>定期備份 QuickBooks 數據</li>
-            </ul>
-
-            <h2>자주 묻는 질문</h2>
-
-            <h3>Q1: IIF 和 QBO 有什麼區別？</h3>
-            <p>IIF 위한 QuickBooks Desktop，QBO 위한 QuickBooks Online。選擇取決於您使用的 QuickBooks 版本。</p>
-
-            <h3>Q2: 可以導入多少筆交易？</h3>
-            <p>沒有限制。您可以一次導出和導入整月或整年的交易。</p>
-
-            <h3>Q3: 導入會覆蓋現有數據嗎？</h3>
-            <p>不會。QuickBooks 會將導入的交易作為新交易添加。如果發現반복적인，可以手動刪除。</p>
-
-            <h3>Q4: 如何處理多幣種交易？</h3>
-            <p>VaultCaddy 會記錄原始幣種。導入 QuickBooks 後，您可以使用 QuickBooks 的多幣種기능進行轉換。</p>
-
-            <h3>Q5: 可以自定義會計科目嗎？</h3>
-            <p>可以。導入後，您可以在 QuickBooks 中重新分類交易到不同的會計科目。</p>
-
-            <h2>實際案例：會計事務所的效率提升</h2>
-
-            <p><strong>背景：</strong>一家小型會計事務所，服務 20 個客戶，每月處理約 500 張송장。</p>
-
-            <p><strong>問題：</strong>會計師需要手動將客戶的송장數據輸入 QuickBooks，每月花費 40시간。</p>
-
-            <p><strong>解決方案：</strong>使用 VaultCaddy + QuickBooks 整合。</p>
-
-            <p><strong>結果：</strong></p>
-            <ul>
-                <li>數據輸入時間감소 90%（從 40시간감소到 4시간）</li>
-                <li>오류율從 12% 降至 2%</li>
-                <li>월간 절약 $18,000 인건비</li>
-                <li>客戶滿意度提升，報表更及時</li>
-            </ul>
-
-            <h2>開始使用 QuickBooks 整合</h2>
-
-            <ol>
-                <li><strong>註冊 VaultCaddy：</strong>免費獲得 10 Credits</li>
-                <li><strong>上傳測試文檔：</strong>上傳 5-10 張송장測試</li>
-                <li><strong>導出測試：</strong>導出 IIF 或 QBO 文件</li>
-                <li><strong>導入 QuickBooks：</strong>測試導入流程</li>
-                <li><strong>全面實施：</strong>將所有송장處理流程遷移到 VaultCaddy</li>
-            </ol>
-
-            <div style="background: #f3f4f6; padding: 2rem; border-radius: 12px; text-align: center; margin: 2rem 0;">
-                <h3>🎁 무료 체험 QuickBooks 整合</h3>
-                <p>立即註冊 VaultCaddy，體驗無縫的 QuickBooks 整合</p>
-                <a href="https://vaultcaddy.com/register.html" class="cta-button">免費開始使用</a>
-            </div>
+        <h2>일반적인 과제 및 해결책</h2>
+        <p>
+            자동화는 엄청난 이점을 제공하지만 일반적인 과제는 다음과 같습니다:
+        </p>
+        <ul>
+            <li><strong>낮은 이미지 품질:</strong> 문서를 촬영할 때 좋은 조명 확보</li>
+            <li><strong>손으로 쓴 메모:</strong> 최신 AI는 대부분의 필기를 처리할 수 있지만 타이핑된 문서가 가장 좋습니다</li>
+            <li><strong>여러 형식:</strong> 다양한 파일 형식을 지원하는 도구 선택</li>
+            <li><strong>보안 문제:</strong> 은행 수준의 암호화를 갖춘 서비스 사용</li>
+        </ul>
+        
+        <h2>ROI 분석</h2>
+        <p>
+            실제 숫자를 살펴보겠습니다. 월 100개의 문서를 처리하는 경우:
+        </p>
+        <ul>
+            <li><strong>수동 처리:</strong> 100개 문서 × 5분 = 월 8.3시간</li>
+            <li><strong>자동화 사용:</strong> 100개 문서 × 30초 = 월 0.8시간</li>
+            <li><strong>절약 시간:</strong> 월 7.5시간 = 연 90시간</li>
+            <li><strong>₩50,000/시간 비용:</strong> 연간 ₩4,500,000 절약</li>
+            <li><strong>자동화 비용:</strong> 월 ₩6,000 = 연 ₩72,000</li>
+            <li><strong>순 절약:</strong> 연간 ₩4,428,000</li>
+        </ul>
+        
+        <h2>결론</h2>
+        <p>
+            QuickBooks 통합 가이드: 회계 워크플로우 자동화는 오늘날 경쟁이 치열한 비즈니스 환경에서 더 이상 선택 사항이 아닙니다.
+            이 가이드에서 논의한 전략과 도구를 구현하면 효율성을 극적으로 향상시키고, 비용을 절감하며,
+            전략적 성장에 집중할 수 있는 귀중한 시간을 확보할 수 있습니다.
+        </p>
+        
+        <p>
+            회계 및 재무 관리의 미래는 자동화되고, 지능적이며, 접근 가능합니다.
+            뒤처지지 마세요 - 오늘 자동화 여정을 시작하세요.
+        </p>
+        
+        <div class="cta-box">
+            <h3>몇 분 안에 시작하세요</h3>
+            <p>신용카드 필요 없습니다. 처음 10개 문서를 무료로 처리할 수 있습니다.</p>
+            <a href="https://vaultcaddy.com/kr/auth.html" class="cta-button">
+                무료 계정 생성 <i class="fas fa-arrow-right"></i>
+            </a>
         </div>
-    </div>
+    </article>
+    
+    <script src="../../load-unified-navbar.js"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-YOUR-GA-ID');
+    </script>
 </body>
 </html>
