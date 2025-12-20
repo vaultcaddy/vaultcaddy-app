@@ -153,3 +153,4 @@ if (currentCredits < amount && (hasSubscription || isTestMode)) {
 4. ✅ **保留 Free Plan 限制**：完全没有订阅的免费用户仍受限制
 
 
+

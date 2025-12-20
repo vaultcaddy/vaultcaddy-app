@@ -36,3 +36,4 @@ return null; // 或 return { success: false, reason: 'deprecated' };
 我会创建一个简单的修改来禁用这些函数。
 
 
+

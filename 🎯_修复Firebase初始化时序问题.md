@@ -209,3 +209,4 @@ if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0
 4. ✅ **调试信息**：添加详细的日志，方便问题诊断
 
 
+
