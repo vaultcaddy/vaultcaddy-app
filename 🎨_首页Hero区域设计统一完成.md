@@ -83,13 +83,18 @@ background: linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 
 
 **修改**：
 ```css
-margin-top: 0;  /* 确保Hero区域紧接导航栏 */
+/* main标签 */
+padding-top: 0;  /* 移除原有的60px padding */
+
+/* Hero section */
+margin-top: -60px;  /* 向上移动60px，覆盖导航栏高度 */
 ```
 
 **效果**：
-- ✅ 导航栏直接衔接Hero区域
-- ✅ 无白色空白
-- ✅ 页面更加连贯流畅
+- ✅ 蓝色背景直接衔接橙色Banner
+- ✅ 完全无白色空白
+- ✅ 导航栏为fixed定位，保持在顶部
+- ✅ 页面流畅连贯
 
 ---
 
