@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     
@@ -17,41 +17,45 @@
     </script>
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ドキュメント詳細 - VaultCaddy</title>
-    <link rel="stylesheet" href="../styles.css">
-    <link rel="stylesheet" href="../dashboard.css">
-    <link rel="stylesheet" href="../pages.css">
+    
+    <!-- 🔇 安全隐藏控制台日志（不删除代码） -->
+    <script defer src="disable-console-safe.js"></script>
+    
+    <title>文檔詳情 - VaultCaddy</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="pages.css">
     <link rel="stylesheet" href="editable-table.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="../config.js"></script>
-    <script src="../translations.js"></script>
+    <script defer src="config.js"></script>
+    <script defer src="translations.js"></script>
     
     <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
     
     <!-- Firebase 配置和數據管理器 -->
-    <script src="../firebase-config.js?v=20251106-editable"></script>
+    <script src="firebase-config.js?v=20251106-editable"></script>
     <!-- 🔥 新的簡化系統 -->
-    <script src="../simple-auth.js?v=20251106-editable"></script>
-    <script src="../user-profile-manager.js?v=20251120"></script>
-    <script src="../simple-data-manager.js?v=20251106-editable"></script>
+    <script defer src="simple-auth.js?v=20251106-editable"></script>
+    <script defer src="user-profile-manager.js?v=20251120"></script>
+    <script defer src="simple-data-manager.js?v=20251106-editable"></script>
     
-    <!-- 導航欄交互功能 -->
-    <script defer src="../navbar-interactions.js?v=20251108"></script>
+    <!-- 導航欄交互機能 -->
+    <script defer src="navbar-interactions.js?v=20251108"></script>
     
     <!-- ✅ 統一導航欄系統：靜態 HTML + navbar-component.js -->
-    <script src="../navbar-component.js?v=20251120-unified"></script>
-    <script src="../sidebar-component.js?v=20251106-editable"></script>
+    <script defer src="navbar-component.js?v=20251120-unified"></script>
+    <script defer src="sidebar-component.js?v=20251106-editable"></script>
     
-    <!-- 功能模块 - 簡化版 -->
-    <script src="export-manager.js?v=20251106-editable"></script>
+    <!-- 機能模块 - 簡化版 -->
+    <script defer src="export-manager.js?v=20251106-editable"></script>
     
     <!-- ✅ 提前定義 goBackToDashboard 函數 -->
     <script>
-        // 返回儀表板（提前定義，避免 ReferenceError）
+        // 返回ダッシュボード（提前定義，避免 ReferenceError）
         function goBackToDashboard() {
             const params = new URLSearchParams(window.location.search);
             const projectId = params.get('project');
@@ -62,9 +66,9 @@
             }
         }
         
-        // 🔥 刪除當前文檔
+        // 🔥 削除當前文檔
         async function deleteCurrentDocument() {
-            const confirmDelete = confirm('確定要刪除此文檔嗎？此操作無法撤銷。');
+            const confirmDelete = confirm('確定要削除此文檔嗎？此操作無法撤銷。');
             if (!confirmDelete) return;
             
             try {
@@ -77,7 +81,7 @@
                     return;
                 }
                 
-                // 從 Firestore 刪除文檔
+                // 從 Firestore 削除文檔
                 if (firebase && firebase.firestore) {
                     await firebase.firestore()
                         .collection('projects')
@@ -86,17 +90,17 @@
                         .doc(documentId)
                         .delete();
                     
-                    console.log('✅ 文檔已刪除:', documentId);
-                    alert('文檔已成功刪除');
+                    console.log('✅ 文檔已削除:', documentId);
+                    alert('文檔已成功削除');
                     
-                    // 返回儀表板
+                    // 返回ダッシュボード
                     goBackToDashboard();
                 } else {
                     alert('無法連接到數據庫');
                 }
             } catch (error) {
-                console.error('❌ 刪除文檔失敗:', error);
-                alert('刪除文檔失敗: ' + error.message);
+                console.error('❌ 削除文檔失敗:', error);
+                alert('削除文檔失敗: ' + error.message);
             }
         }
     </script>
@@ -432,7 +436,7 @@
             color: #1f2937;
         }
         
-        /* 核對狀態卡片 */
+        /* 核對ステータス卡片 */
         .reconciliation-card {
             background: #ffffff;
             border: 1px solid #e5e7eb;
@@ -468,7 +472,7 @@
             font-size: 0.9rem;
         }
         
-        /* 銀行對帳單詳情 */
+        /* 銀行取引明細書詳情 */
         .bank-details-card {
             background: #ffffff;
             border: 1px solid #e5e7eb;
@@ -708,7 +712,7 @@
                 padding: 0 1rem !important;
             }
             
-            /* 隱藏桌面版導航鏈接和語言選擇器 */
+            /* 隱藏桌面版導航鏈接和言語選擇器 */
             .vaultcaddy-navbar > div:nth-child(2) > div:first-child,
             .vaultcaddy-navbar > div:nth-child(2) > #language-dropdown {
                 display: none !important;
@@ -741,7 +745,7 @@
                 height: 50vh !important;
             }
             
-            /* 隱藏語言選擇器 */
+            /* 隱藏言語選擇器 */
             #language-selector {
                 display: none !important;
             }
@@ -837,8 +841,7 @@
             .detail-header .top-actions .icon-btn.delete:hover {
                 background: #fecaca !important;
             }
-            
-            
+
             /* 所有卡片 */
             .card,
             div[style*="border-radius"][style*="padding"] {
@@ -886,7 +889,7 @@
                 touch-action: manipulation !important;
             }
             
-            /* 🔧 Export 菜單在手機版居中顯示（恢復框架設計） */
+            /* 🔧 手機版Export菜單居中顯示 */
             #exportMenu[style*="display: block"] {
                 position: fixed !important;
                 top: 50% !important;
@@ -898,6 +901,7 @@
                 z-index: 2147483647 !important; /* 🔥 32位整數最大值 */
                 width: 90% !important;
                 max-width: 400px !important;
+                display: block !important;
                 height: auto !important;
                 max-height: 80vh !important;
                 background: #ffffff !important;
@@ -906,6 +910,26 @@
                 border: none !important;
                 border-radius: 12px !important;
                 padding: 1.5rem !important;
+            }
+            
+            /* 🔥 桌面版改為右側下拉菜單（與firstproject.html相同） */
+            @media (min-width: 769px) {
+                #exportMenu[style*="display: block"] {
+                    position: absolute !important;
+                    top: 100% !important;
+                    left: auto !important;
+                    right: 0 !important;
+                    transform: none !important;
+                    margin-top: 0.5rem !important;
+                    width: 250px !important;
+                    max-width: 250px !important;
+                    z-index: 9999 !important;
+                }
+                
+                /* 桌面版不需要背景遮罩 */
+                #exportMenuOverlay {
+                    display: none !important;
+                }
             }
             
             /* 🔥 確保菜單所有部分都是白色無邊框 */
@@ -918,7 +942,7 @@
                 border-color: transparent !important;
             }
             
-            /* 🔥 Export 菜單背景遮罩 */
+            /* 🔥 Export 菜單背景遮罩（桌面版和手機版統一） */
             #exportMenuOverlay {
                 position: fixed !important;
                 top: 0 !important;
@@ -927,6 +951,11 @@
                 height: 100vh !important;
                 background: rgba(0, 0, 0, 0.5) !important;
                 z-index: 2147483646 !important;
+                display: none !important;
+            }
+            
+            #exportMenuOverlay[style*="display: block"] {
+                display: block !important;
             }
             
             /* Export 菜單項更大觸控區域 */
@@ -969,53 +998,55 @@
                 object-fit: contain !important;
             }
             
-            /* 🔥 手機版：PDF控制按鈕 - 縮小以適應屏幕 */
+            /* 🔥 手機版：PDF控制按鈕 - 縮小30%以適應屏幕 */
             .pdf-controls {
-                padding: 0.35rem 0.5rem !important;
-                gap: 0.25rem !important;
+                padding: 0.25rem 0.35rem !important;
+                gap: 0.175rem !important;
                 flex-wrap: nowrap !important;
                 justify-content: center !important;
                 background: white !important;
-                border-radius: 6px !important;
-                margin: 0.25rem !important;
+                border-radius: 4px !important;
+                margin: 0.175rem !important;
                 box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
-                max-width: 100% !important;
+                max-width: 70% !important; /* 縮小30% */
                 overflow-x: auto !important;
+                transform: scale(0.7); /* 整體縮小30% */
+                transform-origin: center;
             }
             
             .pdf-controls button {
-                padding: 0.25rem 0.4rem !important;
-                font-size: 0.7rem !important;
-                min-width: 32px !important;
-                border-radius: 4px !important;
+                padding: 0.175rem 0.28rem !important;
+                font-size: 0.49rem !important; /* 0.7 * 0.7 = 0.49 */
+                min-width: 22px !important; /* 32 * 0.7 = 22.4 */
+                border-radius: 3px !important;
                 background: #f3f4f6 !important;
                 border: 1px solid #e5e7eb !important;
             }
             
             .pdf-controls button i {
-                font-size: 0.65rem !important;
+                font-size: 0.455rem !important; /* 0.65 * 0.7 = 0.455 */
             }
             
             /* 🔥 手機版：頁面指示器縮小 */
             .page-indicator {
-                font-size: 0.7rem !important;
-                padding: 0 0.25rem !important;
+                font-size: 0.49rem !important; /* 0.7 * 0.7 = 0.49 */
+                padding: 0 0.175rem !important;
             }
             
             /* 🔥 手機版：縮放按鈕區域 */
             .pdf-zoom-controls {
-                gap: 0.2rem !important;
+                gap: 0.14rem !important; /* 0.2 * 0.7 = 0.14 */
             }
             
             .pdf-zoom-controls button {
-                padding: 0.2rem 0.35rem !important;
-                min-width: 28px !important;
+                padding: 0.14rem 0.245rem !important; /* 0.2 * 0.7, 0.35 * 0.7 */
+                min-width: 19.6px !important; /* 28 * 0.7 */
             }
             
             /* 🔥 手機版：縮放顯示 */
             .zoom-display {
-                font-size: 0.65rem !important;
-                min-width: 35px !important;
+                font-size: 0.455rem !important; /* 0.65 * 0.7 */
+                min-width: 24.5px !important; /* 35 * 0.7 */
             }
             
             /* 🔥 手機版：表格橫向滾動 */
@@ -1037,7 +1068,7 @@
                 white-space: nowrap !important;
             }
             
-            /* 🔥 手機版：表格第一列固定（日期列） */
+            /* 🔥 手機版：表格第一列固定（日付列） */
             table th:first-child,
             table td:first-child {
                 position: sticky !important;
@@ -1084,13 +1115,20 @@
       gtag('config', 'G-LWPEKNC7RQ');
     </script>
 
-</head>
+
+    <!-- 资源提示 - 优化加载速度 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+    <link rel="dns-prefetch" href="https://images.unsplash.com">
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    </head>
 <body class="auth-checking">
     <!-- 🔒 Auth 加載動畫 -->
     <div class="auth-loading">
         <div style="text-align: center;">
             <div style="width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
-            <p style="color: #6b7280; font-size: 0.875rem;">正在驗證身份...</p>
+            <p style="color: #6b7280; font-size: 0.875rem;">本人確認中...</p>
         </div>
     </div>
     
@@ -1114,18 +1152,17 @@
         </div>
         <div style="display: flex; align-items: center; gap: 2rem;">
             <div style="display: flex; align-items: center; gap: 2rem;">
-                <a href="index.html#features" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">功能</a>
-                <a href="index.html#pricing" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">價格</a>
-                <a href="/blog/" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">學習中心</a>
-                <a href="dashboard.html" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">儀表板</a>
+                <a href="index.html#features" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">機能</a>
+                <a href="index.html#pricing" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">価格</a>
+                <a href="/blog/" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">学習センター</a>
+                <a href="dashboard.html" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">ダッシュボード</a>
             </div>
             <div id="language-dropdown" style="position: relative; display: flex; align-items: center; gap: 0.5rem; color: #6b7280; font-size: 0.875rem; cursor: pointer; padding: 0.5rem 0.75rem; border-radius: 6px; transition: background 0.2s;">
                 <i class="fas fa-language"></i>
                 <span id="current-language">繁體中文</span>
                 <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
             </div>
-            <!-- 🌍 桌面版語言選擇器 -->
-            <div id="language-selector-desktop"></div>
+            
             <div id="user-menu" style="position: relative; display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;">
                 <div id="user-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">U</div>
             </div>
@@ -1138,23 +1175,23 @@
             <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                 <a href="index.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
                     <i class="fas fa-home" style="width: 20px; color: #667eea;"></i>
-                    <span>首頁</span>
+                    <span>ホーム</span>
                 </a>
                 <a href="index.html#features" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
                     <i class="fas fa-star" style="width: 20px; color: #667eea;"></i>
-                    <span>功能</span>
+                    <span>機能</span>
                 </a>
                 <a href="index.html#pricing" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
                     <i class="fas fa-dollar-sign" style="width: 20px; color: #667eea;"></i>
-                    <span>價格</span>
+                    <span>価格</span>
                 </a>
                 <a href="/blog/" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
                     <i class="fas fa-graduation-cap" style="width: 20px; color: #667eea;"></i>
-                    <span>學習中心</span>
+                    <span>学習センター</span>
                 </a>
                 <a href="dashboard.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
                     <i class="fas fa-th-large" style="width: 20px; color: #667eea;"></i>
-                    <span>儀表板</span>
+                    <span>ダッシュボード</span>
                 </a>
             </div>
         </div>
@@ -1174,9 +1211,9 @@
             <div class="detail-header">
                 <span class="back-btn" onclick="goBackToDashboard()">
                     <i class="fas fa-arrow-left"></i>
-                    返回儀表板
+                    返回ダッシュボード
                 </span>
-                <h1 class="document-title" id="documentTitle">載入中...</h1>
+                <h1 class="document-title" id="documentTitle">読み込み中...</h1>
                 <div class="top-actions">
                     <!-- 保存指示器（動態顯示） -->
                     <span id="savedIndicator" class="saved-indicator" style="display: none;">
@@ -1187,14 +1224,14 @@
                     <div class="export-dropdown" style="position: relative;">
                         <button onclick="toggleExportMenu()" style="background: #10b981; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
                             <i class="fas fa-download"></i>
-                            <span>エクスポート</span>
+                            <span>Export</span>
                             <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
                         </button>
                         <!-- Export 菜單已移到 body 最後面 -->
                     </div>
-                    <button class="icon-btn delete" onclick="deleteCurrentDocument()" title="刪除文檔" style="background: #fee2e2; border: 1px solid #fecaca; color: #ef4444; padding: 0.5rem 1rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem;">
+                    <button class="icon-btn delete" onclick="deleteCurrentDocument()" title="削除文檔" style="background: #fee2e2; border: 1px solid #fecaca; color: #ef4444; padding: 0.5rem 1rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem;">
                         <i class="fas fa-trash"></i>
-                        <span>削除</span>
+                        <span>Delete</span>
                     </button>
                 </div>
             </div>
@@ -1230,7 +1267,7 @@
             <div class="pdf-viewer" id="pdfViewer">
                 <div class="loading">
                     <div class="loading-spinner"></div>
-                    <div>載入文檔中...</div>
+                    <div>ドキュメントを読み込み中...</div>
                 </div>
             </div>
         </div>
@@ -1239,17 +1276,17 @@
         <div class="data-panel">
             <!-- 🔥 已移除 "Results Export JSON" 標籤頁 -->
             
-            <!-- 文檔詳情（根據類型動態顯示） -->
+            <!-- 文檔詳情（根據タイプ動態顯示） -->
             <div id="documentDetailsSection">
                 <!-- 將由 JavaScript 動態生成 -->
             </div>
             
-            <!-- 數據表格（根據類型動態顯示） -->
+            <!-- 數據表格（根據タイプ動態顯示） -->
             <div id="documentDataSection">
                 <!-- 將由 JavaScript 動態生成 -->
             </div>
             
-            <!-- 原有的銀行對帳單交易記錄表格（保留作為備用） -->
+            <!-- 原有的銀行取引明細書交易記錄表格（保留作為備用） -->
             <div id="bankStatementSection" style="display: none;">
                 <div class="bank-details-card">
                     <div class="card-header">
@@ -1288,7 +1325,7 @@
                     <tbody id="transactionsBody">
                         <tr>
                             <td colspan="6" style="text-align: center; padding: 2rem; color: #94a3b8;">
-                                載入交易記錄中...
+                                取引を読み込み中...
                             </td>
                         </tr>
                     </tbody>
@@ -1301,33 +1338,33 @@
     <div id="pdfModal" class="pdf-modal">
         <span class="pdf-modal-close" onclick="closePdfModal()">&times;</span>
         <div class="pdf-modal-content">
-            <img id="pdfModalImage" class="pdf-modal-image" src="" alt="PDF 放大檢視">
+            <img id="pdfModalImage" class="pdf-modal-image" src="" alt="PDF 放大檢視" loading="lazy">
         </div>
         <div class="pdf-modal-controls">
             <button class="pdf-modal-btn" onclick="previousModalPage()">
-                <i class="fas fa-chevron-left"></i> 上一頁
+                <i class="fas fa-chevron-left"></i> 前へ
             </button>
             <span class="pdf-modal-info">
                 <span id="modalCurrentPage">1</span> / <span id="modalTotalPages">1</span>
             </button>
             <button class="pdf-modal-btn" onclick="nextModalPage()">
-                下一頁 <i class="fas fa-chevron-right"></i>
+                次へ <i class="fas fa-chevron-right"></i>
             </button>
         </div>
     </div>
     
     <!-- Export 模塊 -->
-    <script src="bank-statement-export.js"></script>
-    <script src="invoice-export.js"></script>
+    <script defer src="bank-statement-export.js"></script>
+    <script defer src="invoice-export.js"></script>
     
-    <script src="document-detail-new.js?v=20251107-rewrite"></script>
+    <script defer src="document-detail-new.js?v=20251107-rewrite"></script>
     
-    <!-- PDF 放大查看功能 -->
+    <!-- PDF 放大查看機能 -->
     <script>
         let modalCurrentPageIndex = 0;
         let modalPdfPages = [];
         
-        // 初始化 PDF 放大功能
+        // 初始化 PDF 放大機能
         function initPdfZoom() {
             // 獲取所有 PDF 頁面圖片
             const pdfImages = document.querySelectorAll('.pdf-page img');
@@ -1365,7 +1402,7 @@
             document.body.style.overflow = 'auto';
         }
         
-        // 上一頁
+        // 前へ
         function previousModalPage() {
             if (modalCurrentPageIndex > 0) {
                 modalCurrentPageIndex--;
@@ -1373,7 +1410,7 @@
             }
         }
         
-        // 下一頁
+        // 次へ
         function nextModalPage() {
             if (modalCurrentPageIndex < modalPdfPages.length - 1) {
                 modalCurrentPageIndex++;
@@ -1439,7 +1476,7 @@
             }
         };
         
-        // 🔄 動態生成 Export 菜單（根據文檔類型）
+        // 🔄 動態生成 Export 菜單（根據文檔タイプ）
         window.toggleExportMenu = function() {
             const menu = document.getElementById('exportMenu');
             const overlay = document.getElementById('exportMenuOverlay');
@@ -1451,75 +1488,38 @@
                 return;
             }
             
-            // 根據文檔類型生成菜單
-            updateExportMenuForDocumentDetail();
-            
-            // 🔥 手機版：居中顯示（恢復框架設計）
-            if (window.innerWidth <= 768) {
-                menu.style.position = 'fixed';
-                menu.style.top = '50%';
-                menu.style.left = '50%';
-                menu.style.transform = 'translate(-50%, -50%)';
-                menu.style.right = 'auto';
-                menu.style.bottom = 'auto';
-                menu.style.width = '90%';
-                menu.style.maxWidth = '400px';
-                menu.style.height = 'auto';
-                menu.style.maxHeight = '80vh';
-                menu.style.zIndex = '2147483647'; // 32位整數最大值，確保在最上層
-                menu.style.backgroundColor = '#ffffff';
-                menu.style.border = 'none';
-                menu.style.boxShadow = 'none';
-                menu.style.borderRadius = '12px';
-                menu.style.padding = '1.5rem';
-                menu.style.overflow = 'auto';
-                console.log('📱 手機版：菜單居中顯示');
-                
-                // 顯示遮罩
-                if (overlay) {
-                    overlay.style.display = 'block';
-                    overlay.style.position = 'fixed';
-                    overlay.style.top = '0';
-                    overlay.style.left = '0';
-                    overlay.style.width = '100vw';
-                    overlay.style.height = '100vh';
-                    overlay.style.background = 'rgba(0,0,0,0.5)';
-                    overlay.style.zIndex = '2147483646';
-                }
-            } else {
-                // 桌面版樣式保持不變
-                const exportBtn = document.querySelector('.export-dropdown button');
-                if (exportBtn) {
-                    const rect = exportBtn.getBoundingClientRect();
-                    menu.style.position = 'absolute';
-                    menu.style.top = '100%';
-                    menu.style.right = '0';
-                    menu.style.left = 'auto';
-                    menu.style.transform = 'none';
-                    menu.style.width = 'auto';
-                    menu.style.minWidth = '250px';
-                    menu.style.maxWidth = '400px';
-                    menu.style.height = 'auto';
-                    menu.style.paddingTop = '0.5rem';
-                }
+            // 🔧 總是顯示背景遮罩（CSS會控制桌面版隱藏）
+            if (!overlay) {
+                const newOverlay = document.createElement('div');
+                newOverlay.id = 'exportMenuOverlay';
+                newOverlay.onclick = closeExportMenu;
+                document.body.appendChild(newOverlay);
+            }
+            if (overlay) {
+                overlay.style.display = 'block';
             }
             
+            // 根據文檔タイプ生成菜單
+            updateExportMenuForDocumentDetail();
+            
+            // 顯示菜單（CSS會自動處理桌面版和手機版的不同樣式）
             menu.style.display = 'block';
+            console.log('📤 Export 菜單已顯示');
         };
         
         function updateExportMenuForDocumentDetail() {
             const menu = document.getElementById('exportMenu');
             if (!menu) return;
             
-            // 從 currentDocument 獲取文檔類型（定義在 document-detail-new.js）
+            // 從 currentDocument 獲取文檔タイプ（定義在 document-detail-new.js）
             let docType = 'general';
             if (window.currentDocument) {
                 docType = window.currentDocument.type || window.currentDocument.documentType || 'general';
-                // 🔥 標準化文檔類型
+                // 🔥 標準化文檔タイプ
                 docType = docType.toLowerCase();
-                console.log('📄 Export 菜單 - 文檔類型:', docType);
+                console.log('📄 Export 菜單 - 文檔タイプ:', docType);
             } else {
-                console.warn('⚠️ window.currentDocument 未定義，無法獲取文檔類型');
+                console.warn('⚠️ window.currentDocument 未定義，無法獲取文檔タイプ');
             }
             
             // 🔥 手機版：添加關閉按鈕
@@ -1537,11 +1537,11 @@
             
             menuHTML += '<div style="padding: 0.5rem 0; background: #ffffff;">';
             
-            // 根據文檔類型顯示對應選項
-            if (docType === 'invoice' || docType === '發票' || docType === 'invoices') {
-                // 發票：顯示發票選項 + 其他（IIF/QBO）
+            // 根據文檔タイプ顯示對應選項
+            if (docType === 'invoice' || docType === '請求書' || docType === 'invoices') {
+                // 請求書：顯示請求書選項 + 其他（IIF/QBO）
                 menuHTML += `
-                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">發票</div>
+                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">請求書</div>
                     <button onclick="exportDocument('invoice_summary_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
                         <i class="fas fa-file-invoice" style="color: #f59e0b; width: 20px;"></i>
                         <div>
@@ -1587,9 +1587,9 @@
                     </button>
                 `;
             } else {
-                // 銀行對帳單：顯示銀行對帳單選項 + 其他（Xero/QuickBooks/IIF/QBO）
+                // 銀行取引明細書：顯示銀行取引明細書選項 + 其他（Xero/QuickBooks/IIF/QBO）
                 menuHTML += `
-                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">銀行對帳單</div>
+                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">銀行取引明細書</div>
                     <button onclick="exportDocument('bank_statement_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
                         <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
                         <div>
@@ -1634,7 +1634,7 @@
         }
     </script>
     
-    <!-- 🔥 手機側邊欄功能 -->
+    <!-- 🔥 手機側邊欄機能 -->
     <script>
         // 打開側邊欄
         function openMobileSidebar() {
@@ -1666,9 +1666,6 @@
     
     <!-- 🔥 Export 菜單背景遮罩（z-index 低於菜單）-->
     <div id="exportMenuOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2147483646;" onclick="closeExportMenu()"></div>
-    
-    <!-- 🌍 語言選擇器 -->
-    <script src="language-selector.js?v=20251205"></script>
 
 </body>
 </html>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     
@@ -36,7 +36,7 @@
     </style>
     
     <script>
-        // 立即添加 auth-checking 類，防止未登入用戶看到內容
+        // 立即添加 auth-checking 類，防止未로그인用戶看到內容
         document.documentElement.classList.add('auth-checking');
         if (document.body) {
             document.body.classList.add('auth-checking');
@@ -47,20 +47,24 @@
         }
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>대시보드 - VaultCaddy</title>
-    <meta name="description" content="VaultCaddy AI 文檔處理儀表板">
+    
+    <!-- 🔇 安全隐藏控制台日志（不删除代码） -->
+    <script defer src="disable-console-safe.js"></script>
+    
+    <title>Dashboard - VaultCaddy</title>
+    <meta name="description" content="VaultCaddy AI 文檔處理대시보드">
     <link rel="icon" type="image/png" href="https://vaultcaddy.com/favicon.png">
     <link rel="canonical" href="https://vaultcaddy.com/dashboard">
     
-    <link rel="stylesheet" href="../styles.css">
-    <link rel="stylesheet" href="../dashboard.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dashboard.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
-    <script src="../config.js"></script>
-    <script src="../translations.js?v=20251031"></script>
+    <script defer src="config.js"></script>
+    <script defer src="translations.js?v=20251031"></script>
     <!-- ✅ 統一導航欄系統：靜態 HTML + navbar-component.js -->
-    <script src="../navbar-component.js?v=20251120-unified"></script>
-    <script src="../sidebar-component.js?v=20251105-table-optimize"></script>
+    <script defer src="navbar-component.js?v=20251120-unified"></script>
+    <script defer src="sidebar-component.js?v=20251105-table-optimize"></script>
     
     <!-- Firebase SDK（CDN 版本 - compat）- defer 確保 DOM 載入後才執行 -->
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
@@ -72,17 +76,17 @@
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-functions-compat.js"></script>
     
     <!-- Firebase 配置和數據管理器 - defer 確保按順序執行 -->
-    <script defer src="../firebase-config.js?v=20251105-force-init"></script>
+    <script defer src="firebase-config.js?v=20251105-force-init"></script>
     <!-- 🔥 新的簡化系統 - defer 確保 Firebase 初始化後才執行 -->
-    <script defer src="../simple-auth.js?v=20251105-force-init"></script>
-    <script defer src="../user-profile-manager.js?v=20251120"></script>
-    <script defer src="../simple-data-manager.js?v=20251105-force-init"></script>
+    <script defer src="simple-auth.js?v=20251105-force-init"></script>
+    <script defer src="user-profile-manager.js?v=20251120"></script>
+    <script defer src="simple-data-manager.js?v=20251105-force-init"></script>
     
     <!-- Email 驗證檢查 -->
-    <script defer src="../email-verification-check.js"></script>
+    <script defer src="email-verification-check.js"></script>
     
-    <!-- 導航欄交互功能 -->
-    <script defer src="../navbar-interactions.js?v=20251108"></script>
+    <!-- 導航欄交互기능 -->
+    <script defer src="navbar-interactions.js?v=20251108"></script>
     
     <style>
         body {
@@ -309,7 +313,7 @@
             margin: 0;
         }
 
-        /* 創建項目模態框 */
+        /* 생성프로젝트模態框 */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -517,7 +521,7 @@
     
     /* ==================== Dashboard 專用 ==================== */
     
-    /* 項目列表 */
+    /* 프로젝트列表 */
     .projects-header {
         flex-direction: column !important;
         gap: 1rem !important;
@@ -545,7 +549,7 @@
     
     /* ==================== First Project 專用 ==================== */
     
-    /* 文檔類型選擇器 */
+    /* 文檔유형選擇器 */
     .document-type-selector {
         grid-template-columns: 1fr !important;
         gap: 0.75rem !important;
@@ -576,12 +580,12 @@
     .document-table td:nth-child(4),
     .document-table th:nth-child(5),
     .document-table td:nth-child(5) {
-        display: none !important; /* 隱藏金額和日期列 */
+        display: none !important; /* 隱藏금액和날짜列 */
     }
     
     /* ==================== Account 專用 ==================== */
     
-    /* 個人資料卡片 */
+    /* 프로필卡片 */
     .profile-card {
         flex-direction: column !important;
         text-align: center !important;
@@ -591,7 +595,7 @@
         margin: 0 auto 1rem !important;
     }
     
-    /* Credits 使用情況 */
+    /* 크레딧 사용 현황 */
     .credits-usage {
         flex-direction: column !important;
     }
@@ -612,7 +616,7 @@
     
     /* ==================== Billing 專用 ==================== */
     
-    /* 價格卡片 */
+    /* 가격卡片 */
     .pricing-cards {
         grid-template-columns: 1fr !important;
         gap: 1rem !important;
@@ -625,7 +629,7 @@
     
     .transaction-table th:nth-child(2),
     .transaction-table td:nth-child(2) {
-        display: none !important; /* 隱藏描述列 */
+        display: none !important; /* 隱藏설명列 */
     }
     
     /* ==================== 模態框 ==================== */
@@ -699,8 +703,6 @@
     }
 }
 
-
-        
         /* Dashboard 特定樣式 */
         @media (max-width: 768px) {
             .create-btn {
@@ -721,7 +723,7 @@
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="alternate icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="../mobile-responsive.css">
+    <link rel="stylesheet" href="mobile-responsive.css">
 
     <!-- Google Analytics 4 -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-LWPEKNC7RQ"></script>
@@ -732,13 +734,20 @@
       gtag('config', 'G-LWPEKNC7RQ');
     </script>
 
-</head>
+
+    <!-- 资源提示 - 优化加载速度 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+    <link rel="dns-prefetch" href="https://images.unsplash.com">
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    </head>
 <body class="auth-checking">
     <!-- 🔒 Auth 加載動畫 -->
     <div class="auth-loading">
         <div style="text-align: center;">
             <div style="width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
-            <p style="color: #6b7280; font-size: 0.875rem;">正在驗證身份...</p>
+            <p style="color: #6b7280; font-size: 0.875rem;">신원 확인 중...</p>
         </div>
     </div>
     
@@ -771,13 +780,12 @@
         </div>
         <div style="display: flex; align-items: center; gap: 2rem;">
             <div style="display: flex; align-items: center; gap: 2rem;">
-                <a href="index.html#features" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">功能</a>
-                <a href="index.html#pricing" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">價格</a>
-                <a href="/blog/" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">學習中心</a>
-                <a href="dashboard.html" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">儀表板</a>
+                <a href="index.html#features" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">기능</a>
+                <a href="index.html#pricing" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">가격</a>
+                <a href="/blog/" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">학습 센터</a>
+                <a href="dashboard.html" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">대시보드</a>
             </div>
-            <!-- 🌍 桌面版語言選擇器 -->
-            <div id="language-selector-desktop"></div>
+            
             <div id="user-menu" style="position: relative; display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;">
                 <div id="user-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">Y</div>
             </div>
@@ -791,39 +799,36 @@
             <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                 <a href="index.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
                     <i class="fas fa-home" style="width: 20px; color: #667eea;"></i>
-                    <span>首頁</span>
+                    <span>홈</span>
                 </a>
                 <a href="index.html#features" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
                     <i class="fas fa-star" style="width: 20px; color: #667eea;"></i>
-                    <span>功能</span>
+                    <span>기능</span>
                 </a>
                 <a href="index.html#pricing" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
                     <i class="fas fa-dollar-sign" style="width: 20px; color: #667eea;"></i>
-                    <span>價格</span>
+                    <span>가격</span>
                 </a>
                 <a href="/blog/" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
                     <i class="fas fa-graduation-cap" style="width: 20px; color: #667eea;"></i>
-                    <span>學習中心</span>
+                    <span>학습 센터</span>
                 </a>
                 <a href="dashboard.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
                     <i class="fas fa-th-large" style="width: 20px; color: #667eea;"></i>
-                    <span>儀表板</span>
+                    <span>대시보드</span>
                 </a>
                 
                 <div style="height: 1px; background: #e5e7eb; margin: 1rem 0;"></div>
-                
-                <!-- 🌍 手機版語言選擇器 -->
-                <div id="language-selector-mobile" style="padding: 0 0.5rem; margin-bottom: 1rem;"></div>
-                
+
                 <div style="height: 1px; background: #e5e7eb; margin: 1rem 0;"></div>
                 
                 <a href="privacy.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
                     <i class="fas fa-shield-alt" style="width: 20px; color: #6b7280;"></i>
-                    <span>隱私政策</span>
+                    <span>개인정보 처리방침</span>
                 </a>
                 <a href="terms.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
                     <i class="fas fa-file-contract" style="width: 20px; color: #6b7280;"></i>
-                    <span>服務條款</span>
+                    <span>서비스 약관</span>
                 </a>
             </div>
         </div>
@@ -834,28 +839,28 @@
     
     <div id="user-dropdown" style="display: none; position: fixed; top: 70px; right: 2rem; background: white; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); padding: 1rem; min-width: 220px; z-index: 2000; border: 1px solid #e5e7eb;">
         <div style="padding: 0.75rem; border-bottom: 1px solid #f3f4f6;">
-            <div style="font-weight: 600; font-size: 1rem; color: #1f2937; margin-bottom: 0.25rem;"><span>크레딧</span>: <span id="dropdown-credits">0</span></div>
+            <div style="font-weight: 600; font-size: 1rem; color: #1f2937; margin-bottom: 0.25rem;"><span>Credits</span>: <span id="dropdown-credits">0</span></div>
             <div style="font-size: 0.875rem; color: #6b7280;" id="dropdown-email">user@example.com</div>
         </div>
         <div style="padding: 0.5rem 0;">
             <a href="account.html" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; color: #374151; text-decoration: none; border-radius: 6px; transition: background 0.2s; font-size: 0.9375rem;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
-                <span><i class="fas fa-user" style="margin-right: 0.75rem; color: #6b7280; width: 16px;"></i><span>帳戶</span></span>
+                <span><i class="fas fa-user" style="margin-right: 0.75rem; color: #6b7280; width: 16px;"></i><span>계정</span></span>
                 <span style="color: #9ca3af; font-size: 0.875rem;">⌘A</span>
             </a>
             <a href="billing.html" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; color: #374151; text-decoration: none; border-radius: 6px; transition: background 0.2s; font-size: 0.9375rem;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
-                <span><i class="fas fa-credit-card" style="margin-right: 0.75rem; color: #6b7280; width: 16px;"></i><span>計費</span></span>
+                <span><i class="fas fa-credit-card" style="margin-right: 0.75rem; color: #6b7280; width: 16px;"></i><span>청구</span></span>
                 <span style="color: #9ca3af; font-size: 0.875rem;">⌘B</span>
             </a>
         </div>
         <div style="border-top: 1px solid #f3f4f6; padding-top: 0.5rem;">
             <button onclick="handleLogout()" style="width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; color: #ef4444; background: transparent; border: none; border-radius: 6px; cursor: pointer; transition: background 0.2s; font-size: 0.9375rem; text-align: left;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='transparent'">
-                <span><i class="fas fa-sign-out-alt" style="margin-right: 0.75rem; width: 16px;"></i><span>登出</span></span>
+                <span><i class="fas fa-sign-out-alt" style="margin-right: 0.75rem; width: 16px;"></i><span>로그아웃</span></span>
                 <span style="color: #fca5a5; font-size: 0.875rem;">⌘Q</span>
             </button>
         </div>
     </div>
     
-    <!-- ✅ index.html 動態更新用戶狀態 -->
+    <!-- ✅ index.html 動態更新用戶상태 -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             console.log('✅ index.html 初始化');
@@ -877,7 +882,7 @@
                 return 'U';
             }
             
-            // 🔥 漢堡菜單功能（立即執行，不等待 DOMContentLoaded）
+            // 🔥 漢堡菜單기능（立即執行，不等待 DOMContentLoaded）
             (function() {
                 console.log('🔵 初始化漢堡菜單...');
                 
@@ -914,7 +919,7 @@
                 };
                 
                 // 漢堡菜單按鈕使用 onclick，無需額外綁定
-                console.log('✅ 漢堡菜單功能已就緒（使用 onclick）');
+                console.log('✅ 漢堡菜單기능已就緒（使用 onclick）');
             })();
                 
                 // 手機版自動輪播（僅在手機版啟用）
@@ -935,7 +940,7 @@
                         }, 4000); // 每4秒切換
                     }
                     
-                    // 學習中心輪播
+                    // 학습 센터輪播
                     const learningContainer = document.getElementById('learning-center-container');
                     if (learningContainer) {
                         let learningIndex = 0;
@@ -989,7 +994,7 @@
                 }
             });
             
-            // 登出功能
+            // 로그아웃기능
             window.handleLogout = async function() {
                 try {
                     if (window.simpleAuth) {
@@ -997,8 +1002,8 @@
                         window.location.href = 'index.html';
                     }
                 } catch (error) {
-                    console.error('登出失敗:', error);
-                    alert('登出失敗，請重試');
+                    console.error('로그아웃失敗:', error);
+                    alert('로그아웃失敗，請重試');
                 }
             };
             
@@ -1011,7 +1016,7 @@
                     const isLoggedIn = window.simpleAuth && window.simpleAuth.isLoggedIn();
                     
                     if (isLoggedIn) {
-                        // ✅ 已登入：顯示用戶頭像
+                        // ✅ 已로그인：顯示用戶頭像
                         const currentUser = window.simpleAuth.getCurrentUser();
                         userEmail = currentUser.email || '';
                         userDisplayName = currentUser.displayName || '';
@@ -1051,13 +1056,13 @@
                                 <div style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem; opacity: 1; transition: opacity 0.3s;">${userInitial}</div>
                             </div>
                         `;
-                        console.log('✅ 用戶已登入，顯示頭像');
+                        console.log('✅ 用戶已로그인，顯示頭像');
                     } else {
-                        // ✅ 未登入：顯示登入按鈕
+                        // ✅ 未로그인：顯示로그인按鈕
                         userMenu.innerHTML = `
-                            <button onclick="window.location.href='auth.html'" style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.875rem;" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">登入</button>
+                            <button onclick="window.location.href='auth.html'" style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.875rem;" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">로그인</button>
                         `;
-                        console.log('✅ 用戶未登入，顯示登入按鈕');
+                        console.log('✅ 用戶未로그인，顯示로그인按鈕');
                     }
                 } catch (e) {
                     console.log('❌ 無法更新用戶菜單:', e);
@@ -1080,8 +1085,6 @@
             window.toggleDropdown = toggleDropdown;
         });
     </script>
-    
-    
 
     <!-- 主要內容區域 -->
     <main style="padding-top: 70px;">
@@ -1093,7 +1096,7 @@
 
         <!-- 主要內容區域 -->
         <div class="main-content" style="display: block !important; visibility: visible !important;">
-            <!-- 項目列表標題 -->
+            <!-- 프로젝트列表標題 -->
             <div class="projects-header" style="display: flex; align-items: center; justify-content: flex-end; margin-bottom: 1.5rem;">
                 <!-- Create 按鈕 -->
                 <div class="header-actions">
@@ -1104,7 +1107,7 @@
                 </div>
             </div>
 
-            <!-- 項目表格 -->
+            <!-- 프로젝트表格 -->
             <table class="projects-table">
                 <thead>
                     <tr>
@@ -1115,7 +1118,7 @@
                     </tr>
                 </thead>
                 <tbody id="projects-tbody">
-                    <!-- 項目列表將在這裡動態生成 -->
+                    <!-- 프로젝트列表將在這裡動態生成 -->
                     <tr>
                         <td colspan="4">
                             <div class="empty-state">
@@ -1130,7 +1133,7 @@
         </div>
     </div>
 
-    <!-- 創建項目模態框 -->
+    <!-- 생성프로젝트模態框 -->
     <div class="modal-overlay" id="createProjectModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1158,7 +1161,7 @@
         </div>
     </div>
 
-    <!-- 刪除項目模態框 -->
+    <!-- 삭제프로젝트模態框 -->
     <div id="deleteProjectModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
         <div style="background: white; border-radius: 12px; padding: 2rem; width: 90%; max-width: 500px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
             <div style="display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1.5rem;">
@@ -1166,22 +1169,22 @@
                     <i class="fas fa-exclamation-triangle" style="color: #ef4444; font-size: 1.5rem;"></i>
                 </div>
                 <div style="flex: 1;">
-                    <h2 style="font-size: 1.25rem; font-weight: 600; color: #1f2937; margin: 0 0 0.5rem 0;">刪除項目</h2>
+                    <h2 style="font-size: 1.25rem; font-weight: 600; color: #1f2937; margin: 0 0 0.5rem 0;">삭제프로젝트</h2>
                     <p style="color: #6b7280; font-size: 0.875rem; margin: 0;">
-                        是否刪除文件夾 '<span id="deleteProjectName" style="font-weight: 600; color: #1f2937;"></span>'？<br>
-                        刪除後無法復原文件夾及當中內容。
+                        是否삭제文件夾 '<span id="deleteProjectName" style="font-weight: 600; color: #1f2937;"></span>'？<br>
+                        삭제後無法復原文件夾及當中內容。
                     </p>
                 </div>
             </div>
             
             <div style="margin-bottom: 1.5rem;">
                 <label style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem;">
-                    請輸入項目名稱以確認刪除
+                    請輸入프로젝트名稱以確認삭제
                 </label>
                 <input 
                     type="text" 
                     id="deleteProjectConfirmInput" 
-                    placeholder="輸入項目名稱"
+                    placeholder="輸入프로젝트名稱"
                     style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem; color: #1f2937; box-sizing: border-box;"
                     oninput="validateDeleteInput()">
             </div>
@@ -1190,7 +1193,7 @@
                 <button 
                     onclick="closeDeleteProjectModal()" 
                     style="background: #ffffff; border: 1px solid #d1d5db; color: #374151; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500;">
-                    取消
+                    취소
                 </button>
                 <button 
                     id="confirmDeleteBtn"
@@ -1204,7 +1207,7 @@
     </div>
 
     <script>
-        // 打開創建項目模態框
+        // 打開생성프로젝트模態框
         function openCreateProjectModal() {
             const modal = document.getElementById('createProjectModal');
             const input = document.getElementById('projectName');
@@ -1213,13 +1216,13 @@
             input.focus();
         }
 
-        // 關閉創建項目模態框
+        // 關閉생성프로젝트模態框
         function closeCreateProjectModal() {
             const modal = document.getElementById('createProjectModal');
             modal.classList.remove('active');
         }
 
-        // 創建新項目
+        // 생성新프로젝트
         async function createProject() {
             const input = document.getElementById('projectName');
             const projectName = input.value.trim();
@@ -1229,37 +1232,25 @@
                 return;
             }
             
-            // 創建新項目對象
-            const newProject = {
-                id: 'project-' + Date.now(),
-                name: projectName,
-                thumbnail: null,
-                lastModified: new Date().toISOString(),
-                created: new Date().toISOString()
-            };
-            
             // 保存到 Firebase
             try {
-                await window.simpleDataManager.createProject(projectName);
-                console.log('✅ 項目已保存到 Firebase');
-            } catch (error) {
-                console.error('❌ 保存到 Firebase 失敗:', error);
-                alert('創建項目失敗，請重試');
-                return;
-            }
-            
-            // 觸發項目創建事件，讓側邊欄更新
-            window.dispatchEvent(new CustomEvent('projectCreated', { 
-                detail: newProject 
-            }));
+                const projectData = await window.simpleDataManager.createProject(projectName);
+                console.log('✅ 프로젝트已保存到 Firebase:', projectData);
             
             // 關閉模態框
             closeCreateProjectModal();
             
-            // 重新載入項目列表
-            loadProjects();
-            
-            console.log('✅ 項目已創建:', newProject);
+                // 🔥 修復：使用 Firebase 返回的真實 projectId
+                const projectId = projectData.id;
+                console.log('🚀 跳轉到新프로젝트頁面:', projectId);
+                
+                // 跳轉到新프로젝트頁面
+                window.location.href = `firstproject.html?project=${projectId}`;
+            } catch (error) {
+                console.error('❌ 保存到 Firebase 失敗:', error);
+                alert('생성프로젝트失敗，請重試');
+                return;
+            }
         }
 
         // ✅ 簡化：直接使用 SimpleAuth
@@ -1267,17 +1258,17 @@
             return window.simpleAuth && window.simpleAuth.isLoggedIn();
         }
 
-        // 載入項目列表
+        // 載入프로젝트列表
         async function loadProjects() {
-            console.log('🔄 載入項目列表');
+            console.log('🔄 載入프로젝트列表');
             
-            // 從 Firebase 獲取項目數據
+            // 從 Firebase 獲取프로젝트數據
             let projects = [];
             try {
                 projects = await window.simpleDataManager.getProjects();
-                console.log(`✅ 從 Firebase 加載 ${projects.length} 個項目`);
+                console.log(`✅ 從 Firebase 加載 ${projects.length} 個프로젝트`);
             } catch (error) {
-                console.error('❌ 從 Firebase 加載項目失敗:', error);
+                console.error('❌ 從 Firebase 加載프로젝트失敗:', error);
                 projects = [];
             }
             
@@ -1304,7 +1295,7 @@
                         <div class="project-name">
                             <div class="project-thumbnail">
                                 ${project.thumbnail ? 
-                                    `<img src="${project.thumbnail}" alt="${project.name}">` : 
+                                    `<img src="${project.thumbnail}" alt="${project.name}" loading="lazy">` : 
                                     '<i class="fas fa-file-alt"></i>'
                                 }
                             </div>
@@ -1321,7 +1312,7 @@
                             style="background: none; border: none; color: #9ca3af; cursor: pointer; padding: 0.5rem; border-radius: 4px; transition: all 0.2s;"
                             onmouseover="this.style.color='#ef4444'; this.style.backgroundColor='#fee2e2'"
                             onmouseout="this.style.color='#9ca3af'; this.style.backgroundColor='transparent'"
-                            title="刪除項目">
+                            title="삭제프로젝트">
                             <i class="fas fa-trash" style="font-size: 1rem;"></i>
                         </button>
                     </td>
@@ -1329,7 +1320,7 @@
             `).join('');
         }
 
-        // 格式化日期
+        // 格式化날짜
         function formatDate(dateValue) {
             if (!dateValue) return '-';
             
@@ -1355,12 +1346,12 @@
                 return '-';
             }
             
-            // 檢查日期是否有效
+            // 檢查날짜是否有效
             if (isNaN(date.getTime())) {
                 return '-';
             }
             
-            // 返回格式化的日期
+            // 返回格式化的날짜
             return date.toLocaleDateString('zh-TW', { 
                 year: 'numeric', 
                 month: '2-digit', 
@@ -1368,7 +1359,7 @@
             });
         }
 
-        // ==================== 刪除項目模態框 ====================
+        // ==================== 삭제프로젝트模態框 ====================
         let projectToDelete = null;
 
         function showDeleteProjectModal(projectId, projectName) {
@@ -1412,7 +1403,7 @@
             
             try {
                 await window.simpleDataManager.deleteProject(projectToDelete.id);
-                console.log('✅ 項目已刪除:', projectToDelete.name);
+                console.log('✅ 프로젝트已삭제:', projectToDelete.name);
                 
                 // 觸發側邊欄更新
                 window.dispatchEvent(new Event('projectDeleted'));
@@ -1420,19 +1411,19 @@
                 // 關閉模態框
                 closeDeleteProjectModal();
                 
-                // 重新加載項目列表
+                // 重新加載프로젝트列表
                 loadProjects();
                 
-                alert('項目已成功刪除');
+                alert('프로젝트已成功삭제');
             } catch (error) {
-                console.error('❌ 刪除項目失敗:', error);
-                alert('刪除項目失敗: ' + error.message);
+                console.error('❌ 삭제프로젝트失敗:', error);
+                alert('삭제프로젝트失敗: ' + error.message);
             }
         }
 
-        // 初始化示例項目函數已移除 - 新用戶應該看到空白項目列表
+        // 初始化示例프로젝트函數已移除 - 新用戶應該看到空白프로젝트列表
         // function initializeSampleProjects() {
-        //     新用戶註冊時不應該有任何預設項目
+        //     新用戶註冊時不應該有任何預設프로젝트
         // }
 
         // 🔥 監聽 SimpleAuth 初始化完成事件
@@ -1443,13 +1434,13 @@
             console.log('🔥 收到 auth-state-changed 事件');
             authInitialized = true;
             
-            // 檢查是否已登入
+            // 檢查是否已로그인
             if (!e.detail.user) {
-                console.log('❌ 用戶未登入');
+                console.log('❌ 用戶未로그인');
                 return; // SimpleAuth 會自動處理重定向
             }
             
-            console.log('✅ 用戶已登入:', e.detail.user.email);
+            console.log('✅ 用戶已로그인:', e.detail.user.email);
             
             // 初始化側邊欄
             initializeDashboard();
@@ -1465,9 +1456,9 @@
                 console.log('✅ 側邊欄已初始化');
             }
             
-            // 如果 SimpleDataManager 已初始化，載入項目
+            // 如果 SimpleDataManager 已初始化，載入프로젝트
             if (window.simpleDataManager && window.simpleDataManager.initialized) {
-                console.log('✅ SimpleDataManager 已就緒，載入項目');
+                console.log('✅ SimpleDataManager 已就緒，載入프로젝트');
                 loadProjects();
             }
         }
@@ -1480,9 +1471,9 @@
                 clearInterval(checkDataManager);
                 console.log('✅ SimpleDataManager 已初始化');
                 
-                // 如果用戶已登入，載入項目
+                // 如果用戶已로그인，載入프로젝트
                 if (authInitialized && window.simpleAuth && window.simpleAuth.isLoggedIn()) {
-                    console.log('✅ 用戶已登入 + SimpleDataManager 已就緒，載入項目');
+                    console.log('✅ 用戶已로그인 + SimpleDataManager 已就緒，載入프로젝트');
                     loadProjects();
                 }
             }
@@ -1514,14 +1505,13 @@
                     }, 10000);
                 });
                 
-                // 檢查驗證狀態並顯示提示（不阻擋功能）
+                // 檢查驗證상태並顯示提示（不阻擋기능）
                 await checkEmailVerification({ showNotice: true, blockPage: false });
             } catch (error) {
                 console.error('❌ Email 驗證檢查失敗:', error);
             }
         })();
     </script>
-
 
     <!-- 🔥 漢堡菜單超級簡單修復方案 -->
     <script>
@@ -1611,9 +1601,6 @@
         // 暴露函數供側邊欄內的連結使用
         window.closeMobileSidebar = closeSidebar;
     </script>
-    
-    <!-- 🌍 語言選擇器 -->
-    <script src="language-selector.js?v=20251205"></script>
 
 </body>
 </html>

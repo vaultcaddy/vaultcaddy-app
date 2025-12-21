@@ -1,22 +1,22 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Account - VaultCaddy</title>
+    <title>Account設定 - VaultCaddy</title>
     
     <!-- CSS -->
-    <link rel="stylesheet" href="../styles.css">
-    <link rel="stylesheet" href="../dashboard.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dashboard.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
     <!-- 核心配置 -->
-    <script defer src="../config.js"></script>
-    <script defer src="../translations.js?v=20251102"></script>
+    <script defer src="config.js"></script>
+    <script defer src="translations.js?v=20251102"></script>
     
     <!-- ✅ 統一導航欄系統：靜態 HTML + navbar-component.js -->
-    <script defer src="../navbar-component.js?v=20251120-unified"></script>
-    <script defer src="../sidebar-component.js?v=20251105-table-optimize"></script>
+    <script defer src="navbar-component.js?v=20251120-unified"></script>
+    <script defer src="sidebar-component.js?v=20251105-table-optimize"></script>
     
     <!-- Firebase SDK -->
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
@@ -26,16 +26,16 @@
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-functions-compat.js"></script>
     
     <!-- Firebase 初始化和身份驗證 -->
-    <script defer src="../firebase-config.js?v=20251105-force-init"></script>
-    <script defer src="../simple-auth.js?v=20251105-force-init"></script>
-    <script defer src="../user-profile-manager.js?v=20251120"></script>
-    <script defer src="../simple-data-manager.js?v=20251105-force-init"></script>
+    <script defer src="firebase-config.js?v=20251105-force-init"></script>
+    <script defer src="simple-auth.js?v=20251105-force-init"></script>
+    <script defer src="user-profile-manager.js?v=20251120"></script>
+    <script defer src="simple-data-manager.js?v=20251105-force-init"></script>
     
     <!-- Email 驗證檢查 -->
-    <script defer src="../email-verification-check.js"></script>
+    <script defer src="email-verification-check.js"></script>
     
     <!-- 導航欄交互Features -->
-    <script defer src="../navbar-interactions.js?v=20251108"></script>
+    <script defer src="navbar-interactions.js?v=20251108"></script>
     
     <style>
         body {
@@ -332,7 +332,7 @@
     
     /* ==================== Dashboard 專用 ==================== */
     
-    /* 項目列表 */
+    /* Project列表 */
     .projects-header {
         flex-direction: column !important;
         gap: 1rem !important;
@@ -360,7 +360,7 @@
     
     /* ==================== First Project 專用 ==================== */
     
-    /* 文檔類型選擇器 */
+    /* 文檔Type選擇器 */
     .document-type-selector {
         grid-template-columns: 1fr !important;
         gap: 0.75rem !important;
@@ -391,7 +391,7 @@
     .document-table td:nth-child(4),
     .document-table th:nth-child(5),
     .document-table td:nth-child(5) {
-        display: none !important; /* 隱藏金額和期列 */
+        display: none !important; /* 隱藏Amount和Date列 */
     }
     
     /* ==================== Account 專用 ==================== */
@@ -406,7 +406,7 @@
         margin: 0 auto 1rem !important;
     }
     
-    /* Credits 使用情況 */
+    /* Credits Usage */
     .credits-usage {
         flex-direction: column !important;
     }
@@ -440,7 +440,7 @@
     
     .transaction-table th:nth-child(2),
     .transaction-table td:nth-child(2) {
-        display: none !important; /* 隱藏描述列 */
+        display: none !important; /* 隱藏Description列 */
     }
     
     /* ==================== 模態框 ==================== */
@@ -514,8 +514,6 @@
     }
 }
 
-
-        
         /* Account 特定樣式 */
         @media (max-width: 768px) {
             .account-header {
@@ -531,11 +529,141 @@
             }
         }
         
+        /* ==================== 模態框樣式 ==================== */
+        .modal-overlay {
+            display: none !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            background: rgba(0, 0, 0, 0.5) !important;
+            z-index: 9999 !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        .modal-overlay.active {
+            display: flex !important;
+        }
+
+        .modal-content {
+            background: #ffffff !important;
+            border-radius: 12px !important;
+            padding: 2rem !important;
+            width: 90% !important;
+            max-width: 500px !important;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+            position: relative !important;
+            z-index: 10000 !important;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0;
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            font-size: 1.5rem;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+        }
+
+        .modal-close:hover {
+            background: #f3f4f6;
+            color: #1f2937;
+        }
+
+        .modal-body {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            color: #1f2937;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+
+        .btn-cancel {
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            color: #374151;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .btn-cancel:hover {
+            background: #f9fafb;
+        }
+
+        .btn-create {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: #ffffff;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .btn-create:hover {
+            opacity: 0.9;
+        }
+        
         </style>
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="alternate icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="../mobile-responsive.css">
+    <link rel="stylesheet" href="mobile-responsive.css">
 
     <!-- Google Analytics 4 -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-LWPEKNC7RQ"></script>
@@ -578,11 +706,10 @@
             <div style="display: flex; align-items: center; gap: 2rem;">
                 <a href="index.html#features" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">Features</a>
                 <a href="index.html#pricing" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">Pricing</a>
-                <a href="blog/" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">Learning Center</a>
+                <a href="/blog/" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">Learning Center</a>
                 <a href="dashboard.html" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">Dashboard</a>
             </div>
-            <!-- 🌍 桌面版語言選擇器 -->
-            <div id="language-selector-desktop"></div>
+            
             <div id="user-menu" style="position: relative; display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;">
                 <div id="user-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">Y</div>
             </div>
@@ -596,7 +723,7 @@
             <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                 <a href="index.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
                     <i class="fas fa-home" style="width: 20px; color: #667eea;"></i>
-                    <span>首頁</span>
+                    <span>Home</span>
                 </a>
                 <a href="index.html#features" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
                     <i class="fas fa-star" style="width: 20px; color: #667eea;"></i>
@@ -606,7 +733,7 @@
                     <i class="fas fa-dollar-sign" style="width: 20px; color: #667eea;"></i>
                     <span>Pricing</span>
                 </a>
-                <a href="blog/" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
+                <a href="/blog/" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
                     <i class="fas fa-graduation-cap" style="width: 20px; color: #667eea;"></i>
                     <span>Learning Center</span>
                 </a>
@@ -616,19 +743,16 @@
                 </a>
                 
                 <div style="height: 1px; background: #e5e7eb; margin: 1rem 0;"></div>
-                
-                <!-- 🌍 手機版語言選擇器 -->
-                <div id="language-selector-mobile" style="padding: 0 0.5rem; margin-bottom: 1rem;"></div>
-                
+
                 <div style="height: 1px; background: #e5e7eb; margin: 1rem 0;"></div>
                 
                 <a href="privacy.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
                     <i class="fas fa-shield-alt" style="width: 20px; color: #6b7280;"></i>
-                    <span>隱私政策</span>
+                    <span>Privacy Policy</span>
                 </a>
                 <a href="terms.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
                     <i class="fas fa-file-contract" style="width: 20px; color: #6b7280;"></i>
-                    <span>服務條款</span>
+                    <span>Terms of Service</span>
                 </a>
             </div>
         </div>
@@ -661,7 +785,7 @@
         </div>
     </div>
     
-    <!-- ✅ index.html 動態更新用戶狀態 -->
+    <!-- ✅ index.html 動態更新用戶Status -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             console.log('✅ index.html 初始化');
@@ -795,7 +919,7 @@
                 }
             });
             
-            // 登出Features
+            // LogoutFeatures
             window.handleLogout = async function() {
                 try {
                     if (window.simpleAuth) {
@@ -803,8 +927,8 @@
                         window.location.href = 'index.html';
                     }
                 } catch (error) {
-                    console.error('登出失敗:', error);
-                    alert('登出失敗，請重試');
+                    console.error('Logout失敗:', error);
+                    alert('Logout失敗，請重試');
                 }
             };
             
@@ -817,7 +941,7 @@
                     const isLoggedIn = window.simpleAuth && window.simpleAuth.isLoggedIn();
                     
                     if (isLoggedIn) {
-                        // ✅ 已登入：顯示用戶頭像
+                        // ✅ 已Login：顯示用戶頭像
                         const currentUser = window.simpleAuth.getCurrentUser();
                         userEmail = currentUser.email || '';
                         userDisplayName = currentUser.displayName || '';
@@ -857,13 +981,13 @@
                                 <div style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem; opacity: 1; transition: opacity 0.3s;">${userInitial}</div>
                             </div>
                         `;
-                        console.log('✅ 用戶已登入，顯示頭像');
+                        console.log('✅ 用戶已Login，顯示頭像');
                     } else {
-                        // ✅ 未登入：顯示登入按鈕
+                        // ✅ 未Login：顯示Login按鈕
                         userMenu.innerHTML = `
-                            <button onclick="window.location.href='auth.html'" style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.875rem;" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">登入</button>
+                            <button onclick="window.location.href='auth.html'" style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.875rem;" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">Login</button>
                         `;
-                        console.log('✅ 用戶未登入，顯示登入按鈕');
+                        console.log('✅ 用戶未Login，顯示Login按鈕');
                     }
                 } catch (e) {
                     console.log('❌ 無法更新用戶菜單:', e);
@@ -886,8 +1010,6 @@
             window.toggleDropdown = toggleDropdown;
         });
     </script>
-    
-    
 
     <!-- 主要內容區域 -->
     <main style="padding-top: 10px;">
@@ -899,8 +1021,8 @@
         <!-- 主內容區域 -->
         <main class="main-content">
             <div class="account-header">
-                <h1>Account Settings</h1>
-                <p>Manage your profile and account preferences</p>
+                <h1>Account設定</h1>
+                <p>管理您的Profile和AccountPreferences</p>
             </div>
 
             <div class="settings-container">
@@ -917,12 +1039,29 @@
                                     <i class="fas fa-crown"></i>
                                     <span>Basic Plan</span>
                                 </div>
-                                <a href="billing.html#subscription-plans" style="color: #667eea; font-size: 0.875rem; text-decoration: none; font-weight: 500;">Upgrade Plan →</a>
+                                
+                                <!-- 訂閱管理按鈕（Pro Plan 用戶才顯示）-->
+                                <div id="subscription-management" style="display: none; flex-direction: column; gap: 0.5rem; margin-top: 0.25rem;">
+                                    <!-- 下次BillingDate -->
+                                    <div id="next-billing-date" style="font-size: 0.75rem; color: #6b7280; display: none;">
+                                        <i class="fas fa-calendar-alt" style="margin-right: 0.25rem;"></i>
+                                        下次Billing：<span id="next-billing-date-text"></span>
+                                    </div>
+                                    
+                                    <!-- Manage Subscription按鈕 -->
+                                    <button onclick="openStripeCustomerPortal()" style="padding: 0.5rem 1rem; background: white; color: #667eea; border: 1px solid #667eea; border-radius: 6px; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.5rem;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='white'">
+                                        <i class="fas fa-cog"></i>
+                                        <span>Manage Subscription</span>
+                                    </button>
+                                </div>
+                                
+                                <!-- Upgrade Plan按鈕（Free Plan 用戶才顯示）-->
+                                <a id="upgrade-plan-link" href="billing.html#subscription-plans" style="color: #667eea; font-size: 0.875rem; text-decoration: none; font-weight: 500;">Upgrade Plan →</a>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Credits 使用情況 -->
+                    <!-- Credits Usage -->
                     <div id="credits-usage-card" style="background: white; border-radius: 12px; border: 1px solid #e5e7eb; padding: 1.5rem; margin-top: 1.5rem;">
                         <h3 style="font-size: 1rem; font-weight: 600; color: #1f2937; margin: 0 0 1rem 0;">Credits Usage</h3>
                         
@@ -930,7 +1069,7 @@
                         <div style="margin-bottom: 1rem;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
                                 <span id="credits-used-text" style="font-size: 1.5rem; font-weight: 700; color: #1f2937;">200</span>
-                                <!-- 🔥 刪除了 "/ 總額" 顯示 -->
+                                <!-- 🔥 Delete了 "/ 總額" 顯示 -->
                             </div>
                             
                             <!-- 進度條 -->
@@ -942,13 +1081,18 @@
                         <!-- 使用說明 -->
                         <div style="padding: 0.75rem; background: #f9fafb; border-radius: 8px; margin-bottom: 1rem;">
                             <div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem;">Credits Usage</div>
-                            <div style="font-size: 0.875rem; color: #1f2937;">Each page processed consumes 1 Credit.</div>
-                            <div style="font-size: 0.75rem; color: #9ca3af; margin-top: 0.25rem;">
-                                Reset Date: <span id="credits-reset-date">202511/4</span> ⓘ
+                            <div id="credits-usage-description" style="font-size: 0.875rem; color: #1f2937;">
+                                1 Credit is consumed per page processed
+                            </div>
+                            <div id="overage-info" style="display: none; font-size: 0.8125rem; color: #6366f1; margin-top: 0.375rem; padding: 0.5rem; background: #f0f4ff; border-left: 3px solid #6366f1; border-radius: 4px;">
+                                💡 <strong>超額Billing</strong>：超出月度額度後自動按 <strong>HKD $0.5/頁</strong> Billing
+                            </div>
+                            <div style="font-size: 0.75rem; color: #9ca3af; margin-top: 0.5rem;">
+                                重置Date：<span id="credits-reset-date">2025年11月4日</span> ⓘ
                             </div>
                         </div>
                         
-                        <!-- 操作按鈕 -->
+                        <!-- Actions按鈕 -->
                         <div style="display: flex; gap: 0.75rem;">
                             <a href="billing.html" style="flex: 1; text-align: center; padding: 0.625rem 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; font-weight: 600; font-size: 0.875rem; text-decoration: none; transition: opacity 0.2s;">
                                 Purchase Credits
@@ -965,23 +1109,23 @@
                     <h2 class="section-title">Password</h2>
                     
                     <div class="form-group">
-                        <label class="form-label">Current Password</label>
-                        <input type="password" class="form-input" id="current-password" placeholder="Enter current password">
+                        <label class="form-label">目前Password</label>
+                        <input type="password" class="form-input" id="current-password" placeholder="輸入目前Password">
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">New Password</label>
-                        <input type="password" class="form-input" id="new-password" placeholder="Enter new password">
-                        <p class="form-description">Password must be at least 8 characters</p>
+                        <label class="form-label">新Password</label>
+                        <input type="password" class="form-input" id="new-password" placeholder="輸入新Password">
+                        <p class="form-description">Passwordto少需要 8 個字元</p>
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">Confirm New Password</label>
-                        <input type="password" class="form-input" id="confirm-password" placeholder="Re-enter new password">
+                        <label class="form-label">確認新Password</label>
+                        <input type="password" class="form-input" id="confirm-password" placeholder="再次輸入新Password">
                     </div>
                     
                     <div class="button-group">
-                        <button class="btn btn-primary" onclick="changePassword()">Update Password</button>
+                        <button class="btn btn-primary" onclick="changePassword()">更新Password</button>
                     </div>
                 </div>
 
@@ -992,7 +1136,7 @@
                     <div class="form-group">
                         <label class="form-label">Language</label>
                         <select class="form-input" id="language-select">
-                            <option value="zh-TW">Traditional Chinese</option>
+                            <option value="zh-TW">繁體中文</option>
                             <option value="en">English</option>
                         </select>
                     </div>
@@ -1000,26 +1144,25 @@
                     <div class="form-group">
                         <label class="form-label">Timezone</label>
                         <select class="form-input" id="timezone-select">
-                            <option value="Asia/Taipei">Taipei (GMT+8)</option>
-                            <option value="Asia/Hong_Kong">Hong Kong (GMT+8)</option>
+                            <option value="Asia/Taipei">台北 (GMT+8)</option>
+                            <option value="Asia/Hong_Kong">香港 (GMT+8)</option>
                             <option value="UTC">UTC (GMT+0)</option>
                         </select>
                     </div>
                     
                     <div class="button-group">
-                        <button class="btn btn-primary" onclick="savePreferences()">Save Preferences</button>
+                        <button class="btn btn-primary" onclick="savePreferences()">儲存Preferences</button>
                     </div>
                 </div>
 
-                <!-- 購買記錄 -->
+                <!-- Purchase History -->
                 <div class="settings-section" id="purchase-history">
                     <h2 class="section-title">Purchase History</h2>
                     
                     <div style="margin-bottom: 1.5rem;">
                         <select id="history-month-filter" onchange="filterCreditsHistory()" style="padding: 0.5rem 1rem; border: 1px solid #d1d5db; border-radius: 6px; background: white; cursor: pointer; font-size: 0.875rem;">
                             <option value="all">All Records</option>
-                            <option value="2025-11">202511/</option>
-                            <option value="2025-10">202510/</option>
+                            <!-- 動態生成月份選項 -->
                         </select>
                     </div>
 
@@ -1027,9 +1170,9 @@
                         <table style="width: 100%; border-collapse: collapse;">
                             <thead style="background: #f9fafb; position: sticky; top: 0; z-index: 10;">
                                 <tr>
-                                    <th style="text-align: left; padding: 1rem; font-weight: 600; color: #6b7280; font-size: 0.875rem; border-bottom: 2px solid #e5e7eb;">期</th>
+                                    <th style="text-align: left; padding: 1rem; font-weight: 600; color: #6b7280; font-size: 0.875rem; border-bottom: 2px solid #e5e7eb;">Date</th>
                                     <th style="text-align: left; padding: 1rem; font-weight: 600; color: #6b7280; font-size: 0.875rem; border-bottom: 2px solid #e5e7eb;">Description</th>
-                                    <!-- 🔥 刪除了類型列 -->
+                                    <!-- 🔥 Delete了Type列 -->
                                     <th style="text-align: right; padding: 1rem; font-weight: 600; color: #6b7280; font-size: 0.875rem; border-bottom: 2px solid #e5e7eb;">Credits</th>
                                 </tr>
                             </thead>
@@ -1052,9 +1195,9 @@
                     
                     <div class="form-group">
                         <p style="color: #6b7280; font-size: 0.875rem; margin-bottom: 1rem;">
-                            Deleting your account will permanently remove all data, including projects, documents, and settings. This action cannot be undone.
+                            Delete您的Account將永久移除所有資料，包括Project、文檔和設定。此Actions無法復原。
                         </p>
-                        <button class="btn btn-danger" onclick="deleteAccount()">Delete Account</button>
+                        <button class="btn btn-danger" onclick="deleteAccount()">DeleteAccount</button>
                     </div>
                 </div>
             </div>
@@ -1067,16 +1210,16 @@
             console.log('🔥 收到 auth-state-changed 事件');
             
             if (!e.detail.user) {
-                console.log('❌ 用戶未登入，重定向到首頁');
+                console.log('❌ 用戶未Login，重定向到Home');
                 window.location.href = 'index.html';
                 return;
             }
             
-            console.log('✅ 用戶已登入:', e.detail.user.email);
+            console.log('✅ 用戶已Login:', e.detail.user.email);
             
-            // 創建側邊欄
+            // Create側邊欄
             if (window.VaultCaddySidebar && !window.accountSidebar) {
-                console.log('🎨 創建側邊欄');
+                console.log('🎨 Create側邊欄');
                 window.accountSidebar = new VaultCaddySidebar('account');
             }
             
@@ -1111,7 +1254,7 @@
             document.getElementById('language-select').value = savedLanguage;
             document.getElementById('timezone-select').value = savedTimezone;
             
-            // 載入購買記錄
+            // 載入Purchase History
             loadCreditsHistory();
         }
         
@@ -1119,7 +1262,7 @@
         async function loadUserPlan() {
             const planElement = document.getElementById('user-plan');
             
-            // 檢查是否有購買記錄或訂閱
+            // 檢查是否有Purchase History或訂閱
             let savedPlan = 'Free'; // 默認為 Free Plan
             
             try {
@@ -1134,8 +1277,13 @@
                     if (userDoc.exists) {
                         const userData = userDoc.data();
                         
-                        // 檢查訂閱狀態
-                        if (userData.subscription && userData.subscription.status === 'active') {
+                        // 🔥 優先檢查新的 planType 字段
+                        if (userData.planType) {
+                            savedPlan = userData.planType.replace(' Plan', ''); // 移除 ' Plan' 後綴
+                            console.log('✅ 從 planType 字段獲取計劃:', savedPlan);
+                        }
+                        // 檢查訂閱Status（舊版邏輯）
+                        else if (userData.subscription && userData.subscription.status === 'active') {
                             savedPlan = userData.subscription.planType || 'Free';
                         }
                     }
@@ -1156,7 +1304,7 @@
             
             console.log('📋 用戶計劃:', savedPlan);
             
-            // 根據計劃類型設置不同的樣式和圖標
+            // 根據計劃Type設置不同的樣式和圖標
             const planConfig = {
                 'Free': {
                     name: 'Free Plan',
@@ -1171,7 +1319,7 @@
                 'Pro': {
                     name: 'Pro Plan',
                     icon: 'fa-crown',
-                    gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
+                    gradient: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)'
                 },
                 'Business': {
                     name: 'Business Plan',
@@ -1191,11 +1339,146 @@
             // 保存到 localStorage
             localStorage.setItem('userPlan', savedPlan);
             
-            // 載入 Credits 使用情況
+            // 🔧 根據計劃Type顯示/隱藏訂閱管理按鈕
+            const subscriptionManagement = document.getElementById('subscription-management');
+            const upgradePlanLink = document.getElementById('upgrade-plan-link');
+            
+            // 💡 根據計劃Type顯示/隱藏超額Billing說明
+            const overageInfo = document.getElementById('overage-info');
+            if (savedPlan === 'Pro' || savedPlan === 'Business') {
+                // Pro Plan 或 Business Plan 用戶：顯示超額Billing說明
+                if (overageInfo) {
+                    overageInfo.style.display = 'block';
+                }
+            } else {
+                // Free Plan 或 Basic Plan 用戶：隱藏超額Billing說明
+                if (overageInfo) {
+                    overageInfo.style.display = 'none';
+                }
+            }
+            
+            if (savedPlan === 'Pro' || savedPlan === 'Business') {
+                // Pro Plan 或 Business Plan 用戶：顯示訂閱管理，隱藏升級鏈接
+                subscriptionManagement.style.display = 'flex';
+                upgradePlanLink.style.display = 'none';
+                
+                // 加載訂閱詳情
+                await loadSubscriptionDetails();
+            } else {
+                // Free Plan 或 Basic Plan 用戶：隱藏訂閱管理，顯示升級鏈接
+                subscriptionManagement.style.display = 'none';
+                upgradePlanLink.style.display = 'block';
+            }
+            
+            // 載入 Credits Usage
             loadCreditsUsage();
         }
         
-        // 載入 Credits 使用情況
+        // 載入訂閱詳情
+        async function loadSubscriptionDetails() {
+            try {
+                if (!window.simpleAuth || !window.simpleAuth.currentUser) {
+                    return;
+                }
+                
+                const userId = window.simpleAuth.currentUser.uid;
+                const userDoc = await firebase.firestore()
+                    .collection('users')
+                    .doc(userId)
+                    .get();
+                
+                if (!userDoc.exists) {
+                    return;
+                }
+                
+                const userData = userDoc.data();
+                
+                // 顯示下次BillingDate
+                const nextBillingDateElement = document.getElementById('next-billing-date');
+                const nextBillingDateText = document.getElementById('next-billing-date-text');
+                
+                if (userData.resetDate && !userData.subscriptionCancelAtPeriodEnd) {
+                    nextBillingDateElement.style.display = 'block';
+                    const resetDate = userData.resetDate.toDate();
+                    nextBillingDateText.textContent = resetDate.toLocaleDateString('zh-TW', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                }
+                
+                console.log('✅ 訂閱詳情已加載');
+                
+            } catch (error) {
+                console.error('❌ 加載訂閱詳情失敗:', error);
+            }
+        }
+        
+        // 打開 Stripe Customer Portal（Manage Subscription）
+        async function openStripeCustomerPortal() {
+            const button = event?.target?.closest('button');
+            const originalHTML = button ? button.innerHTML : '';
+            
+            try {
+                console.log('🔧 打開 Stripe Customer Portal');
+                
+                if (!window.simpleAuth || !window.simpleAuth.currentUser) {
+                    alert('請先Login');
+                    return;
+                }
+                
+                // 顯示加載提示
+                if (button) {
+                    button.disabled = true;
+                    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+                }
+                
+                // 調用 Cloud Function Create Customer Portal Session
+                const functions = firebase.functions();
+                const createPortalSession = functions.httpsCallable('createStripeCustomerPortalSession');
+                
+                console.log('📞 調用 createStripeCustomerPortalSession...');
+                
+                const result = await createPortalSession({
+                    returnUrl: window.location.href // 返回當前頁面
+                });
+                
+                console.log('✅ Cloud Function 返回:', result);
+                
+                if (result.data && result.data.url) {
+                    // 跳轉到 Stripe Customer Portal
+                    console.log('🔗 跳轉到:', result.data.url);
+                    window.location.href = result.data.url;
+                } else {
+                    throw new Error('無法Create Customer Portal Session');
+                }
+                
+            } catch (error) {
+                console.error('❌ 打開 Customer Portal 失敗:', error);
+                console.error('錯誤詳情:', error.code, error.message, error.details);
+                
+                // 根據錯誤Type顯示不同的提示
+                let errorMessage = '無法打開訂閱管理頁面';
+                
+                if (error.code === 'unauthenticated') {
+                    errorMessage = '請先Login';
+                } else if (error.code === 'failed-precondition') {
+                    errorMessage = '您還沒有訂閱記錄。請先訂閱 Pro Plan。';
+                } else if (error.message) {
+                    errorMessage = `錯誤：${error.message}`;
+                }
+                
+                alert(errorMessage);
+                
+                // 恢復按鈕Status
+                if (button) {
+                    button.disabled = false;
+                    button.innerHTML = originalHTML;
+                }
+            }
+        }
+        
+        // 載入 Credits Usage
         async function loadCreditsUsage() {
             try {
                 // 計劃對應的 Credits 額度
@@ -1203,14 +1486,14 @@
                     'Free': { monthly: 10, yearly: 10 }, // Free Plan 有 10 個一次性 Credits
                     'Basic': { monthly: 200, yearly: 2400 },
                     'Pro': { monthly: 500, yearly: 6000 },
-                    'Business': { monthly: 2000, yearly: 24000 } // 修正為 2000//
+                    'Business': { monthly: 2000, yearly: 24000 } // 修正為 2000/月
                 };
                 
                 // 獲取當前計劃（優先從 Firestore，然後 localStorage）
                 let currentPlan = 'Free';
                 let planPeriod = 'monthly';
                 
-                // 從 Firestore 獲取實際訂閱狀態
+                // 從 Firestore 獲取實際訂閱Status
                 if (window.simpleAuth && window.simpleAuth.currentUser) {
                     try {
                         const userId = window.simpleAuth.currentUser.uid;
@@ -1266,8 +1549,19 @@
                             const userData = userDoc.data();
                             currentCredits = userData.credits || 0;
                             
-                            // 如果有訂閱信息，獲取重置期
-                            if (userData.subscription && userData.subscription.currentPeriodEnd) {
+                            // 🔥 優先檢查新的 resetDate 字段
+                            if (userData.resetDate) {
+                                const resetDate = userData.resetDate.toDate();
+                                document.getElementById('credits-reset-date').textContent = 
+                                    resetDate.toLocaleDateString('zh-TW', { 
+                                        year: 'numeric', 
+                                        month: 'long', 
+                                        day: 'numeric' 
+                                    });
+                                console.log('✅ 從 resetDate 字段獲取重置Date:', resetDate);
+                            }
+                            // 如果有訂閱信息，獲取重置Date（舊版邏輯）
+                            else if (userData.subscription && userData.subscription.currentPeriodEnd) {
                                 const resetDate = userData.subscription.currentPeriodEnd.toDate();
                                 document.getElementById('credits-reset-date').textContent = 
                                     resetDate.toLocaleDateString('zh-TW', { 
@@ -1276,7 +1570,7 @@
                                         day: 'numeric' 
                                     });
                             } else {
-                                // 如果沒有訂閱信息，計算下個/1號
+                                // 如果沒有訂閱信息，計算下個月1號
                                 const nextMonth = new Date();
                                 nextMonth.setMonth(nextMonth.getMonth() + 1);
                                 nextMonth.setDate(1);
@@ -1293,7 +1587,7 @@
                     }
                 }
                 
-                // 根據計劃類型顯示 Credits
+                // 根據計劃Type顯示 Credits
                 // 所有計劃都顯示 "X / 總額" 格式
                 document.getElementById('credits-used-text').textContent = currentCredits;
                 document.getElementById('credits-total-text').parentElement.style.display = ''; // 顯示 "/ X" 部分
@@ -1313,27 +1607,25 @@
                         'linear-gradient(90deg, #667eea 0%, #764ba2 100%)';
                 }
                 
-                // 更新重置期說明
+                // 更新重置Date說明
                 if (currentPlan === 'Free') {
-                    // 🔥 Free Plan 不顯示任何說明（刪除了"一次性 Credits，用完即止。"）
+                    // 🔥 Free Plan 不顯示任何說明（Delete了"一次性 Credits，用完即止。"）
                     const resetDateElement = document.getElementById('credits-reset-date');
                     if (resetDateElement && resetDateElement.parentElement) {
                         resetDateElement.parentElement.innerHTML = '';
                     }
                 } else {
-                    // 付費計劃顯示重置期
-                    // 重置期已經在上面的代碼中設置
+                    // 付費計劃顯示重置Date
+                    // 重置Date已經在上面的代碼中設置
                 }
                 
                 console.log(`✅ Credits 載入完成: ${currentCredits} / ${totalCredits} (${percentage.toFixed(1)}%)`);
 
-                
             } catch (error) {
-                console.error('載入 Credits 使用情況失敗:', error);
+                console.error('載入 Credits Usage失敗:', error);
             }
         }
-        
-        
+
         // 更改Password
         async function changePassword() {
             const currentPassword = document.getElementById('current-password').value;
@@ -1351,7 +1643,7 @@
             }
             
             if (newPassword.length < 8) {
-                alert('Password must be at least 8 characters');
+                alert('Passwordto少需要 8 個字元');
                 return;
             }
             
@@ -1372,12 +1664,12 @@
                 document.getElementById('new-password').value = '';
                 document.getElementById('confirm-password').value = '';
             } catch (error) {
-                console.error('❌ Update Password失敗:', error);
-                alert('Update Password失敗: ' + error.message);
+                console.error('❌ 更新Password失敗:', error);
+                alert('更新Password失敗: ' + error.message);
             }
         }
         
-        // Save Preferences
+        // 儲存Preferences
         function savePreferences() {
             const language = document.getElementById('language-select').value;
             const timezone = document.getElementById('timezone-select').value;
@@ -1386,7 +1678,7 @@
             localStorage.setItem('userLanguage', language);
             localStorage.setItem('userTimezone', timezone);
             
-            alert('Preferences已儲存');
+            alert('PreferencesSaved');
         }
         
         // 儲存通知設定
@@ -1398,21 +1690,90 @@
             localStorage.setItem('emailNotifications', emailNotifications);
             localStorage.setItem('marketingEmails', marketingEmails);
             
-            alert('通知設定已儲存');
+            alert('通知設定Saved');
         }
         
         // 載入 Credits 歷史記錄
+        // 動態載入月份選項
+        async function loadMonthOptions() {
+            const select = document.getElementById('history-month-filter');
+            
+            try {
+                if (!window.simpleAuth || !window.simpleAuth.currentUser) {
+                    return;
+                }
+                
+                const userId = window.simpleAuth.currentUser.uid;
+                
+                // 獲取All Records
+                const historySnapshot = await firebase.firestore()
+                    .collection('users')
+                    .doc(userId)
+                    .collection('creditsHistory')
+                    .orderBy('createdAt', 'desc')
+                    .get();
+                
+                if (historySnapshot.empty) {
+                    return;
+                }
+                
+                // 提取不重複的年月
+                const months = new Set();
+                historySnapshot.forEach(doc => {
+                    const record = doc.data();
+                    if (record.createdAt) {
+                        const date = record.createdAt.toDate();
+                        const yearMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                        months.add(yearMonth);
+                    }
+                });
+                
+                // 按時間倒序排序
+                const sortedMonths = Array.from(months).sort((a, b) => b.localeCompare(a));
+                
+                // 保存當前選中的值
+                const currentValue = select.value;
+                
+                // 清空現有選項（除了"All Records"）
+                select.innerHTML = '<option value="all">All Records</option>';
+                
+                // 動態生成月份選項
+                sortedMonths.forEach(yearMonth => {
+                    const [year, month] = yearMonth.split('-');
+                    const option = document.createElement('option');
+                    option.value = yearMonth;
+                    option.textContent = `${year}年${parseInt(month)}月`;
+                    select.appendChild(option);
+                });
+                
+                // 恢復選中的值
+                if (sortedMonths.includes(currentValue)) {
+                    select.value = currentValue;
+                } else {
+                    select.value = 'all';
+                }
+                
+                console.log(`✅ 載入了 ${sortedMonths.length} 個月份選項:`, sortedMonths);
+                
+            } catch (error) {
+                console.error('載入月份選項失敗:', error);
+            }
+        }
+        
         async function loadCreditsHistory() {
             const tbody = document.getElementById('credits-history-tbody');
             const filter = document.getElementById('history-month-filter').value;
             
+            // 🔥 首次載入時，動態生成月份選項
+            await loadMonthOptions();
+            
             try {
-                // 檢查是否有登入用戶
+                // 檢查是否有Login用戶
                 if (!window.simpleAuth || !window.simpleAuth.currentUser) {
                     tbody.innerHTML = `
                         <tr>
                             <td colspan="3" style="text-align: center; padding: 2rem; color: #9ca3af;">
-                                請先登入以View History
+                                請先Login以View History
                             </td>
                         </tr>
                     `;
@@ -1421,24 +1782,24 @@
                 
                 const userId = window.simpleAuth.currentUser.uid;
                 
-                // 🔥 構建查詢，支持/份過濾
+                // 🔥 構建查詢，支持月份過濾
                 let query = firebase.firestore()
                     .collection('users')
                     .doc(userId)
                     .collection('creditsHistory')
                     .orderBy('createdAt', 'desc');
                 
-                // 如果選擇了特定/份，添加期範圍過濾
+                // 如果選擇了特定月份，添加Date範圍過濾
                 if (filter !== 'all') {
                     const [year, month] = filter.split('-').map(Number);
-                    const startDate = new Date(year, month - 1, 1); // /份的第一天
-                    const endDate = new Date(year, month, 0, 23, 59, 59); // /份的最後一天
+                    const startDate = new Date(year, month - 1, 1); // 月份的第一天
+                    const endDate = new Date(year, month, 0, 23, 59, 59); // 月份的最後一天
                     
                     query = query
                         .where('createdAt', '>=', startDate)
                         .where('createdAt', '<=', endDate);
                     
-                    console.log(`📅 過濾 ${year}${month}/ 的記錄`);
+                    console.log(`📅 過濾 ${year}年${month}月 的記錄`);
                 }
                 
                 const historySnapshot = await query.limit(50).get();
@@ -1460,13 +1821,15 @@
                 historySnapshot.forEach(doc => {
                     const record = doc.data();
                     const date = record.createdAt ? 
-                        record.createdAt.toDate().toLocaleDateString('zh-TW', { 
-                            year: 'numeric', 
-                            month: '2-digit', 
-                            day: '2-digit' 
+                        record.createdAt.toDate().toLocaleString('en-US', { 
+                            month: 'short',
+                            day: 'numeric', 
+                            hour: 'numeric',
+                            minute: '2-digit',
+                            hour12: true
                         }) : '--';
                     
-                    // 確定類型和描述
+                    // 確定Type和Description
                     let type, typeColor, description, sign;
                     
                     if (record.type === 'add') {
@@ -1485,22 +1848,22 @@
                         type = '使用';
                         typeColor = '#ef4444';
                         sign = '-';
-                        // 🔥 如果是文檔處理，顯示"Document Conversion"
-                        description = record.metadata?.projectName || 'Document Conversion';
+                        // 🔥 如果是文檔處理，顯示"文件轉換"
+                        description = record.metadata?.projectName || '文件轉換';
                     } else if (record.type === 'reset') {
                         type = '重置';
                         typeColor = '#6b7280';
                         sign = '';
-                        description = `每/重置 - ${record.metadata?.planType?.toUpperCase() || 'N/A'}`;
+                        description = `每月重置 - ${record.metadata?.planType?.toUpperCase() || 'N/A'}`;
                     } else {
                         type = '其他';
                         typeColor = '#9ca3af';
                         sign = '';
-                        // 🔥 將"其他操作"改為"Document Conversion"
-                        description = 'Document Conversion';
+                        // 🔥 將"其他Actions"改為"文件轉換"
+                        description = '文件轉換';
                     }
                     
-                    // 🔥 刪除了類型列
+                    // 🔥 Delete了Type列
                     rows.push(`
                         <tr style="border-bottom: 1px solid #e5e7eb;">
                             <td style="padding: 1rem; color: #6b7280; font-size: 0.875rem;">${date}</td>
@@ -1530,7 +1893,7 @@
             }
         }
         
-        // 按/份過濾記錄
+        // 按月份過濾記錄
         function filterCreditsHistory() {
             const filter = document.getElementById('history-month-filter').value;
             console.log('過濾記錄:', filter);
@@ -1539,23 +1902,23 @@
             loadCreditsHistory();
         }
         
-        // 刪除Account
+        // DeleteAccount
         async function deleteAccount() {
-            const confirmed = confirm('您確定要刪除Account嗎？此操作無法復原。');
+            const confirmed = confirm('您確定要DeleteAccount嗎？此Actions無法復原。');
             if (!confirmed) return;
             
-            const doubleConfirm = confirm('這將永久刪除您的所有資料。您確定要繼續嗎？');
+            const doubleConfirm = confirm('這將永久Delete您的所有資料。您確定要繼續嗎？');
             if (!doubleConfirm) return;
             
             try {
                 const user = window.simpleAuth.currentUser;
                 await user.delete();
                 
-                alert('Account已刪除');
+                alert('Account已Delete');
                 window.location.href = 'index.html';
             } catch (error) {
-                console.error('❌ 刪除Account失敗:', error);
-                alert('刪除Account失敗: ' + error.message);
+                console.error('❌ DeleteAccount失敗:', error);
+                alert('DeleteAccount失敗: ' + error.message);
             }
         }
         
@@ -1571,7 +1934,7 @@
                 }, 100);
             });
             
-            // 檢查 email 驗證狀態（顯示提示但不阻止頁面）
+            // 檢查 email 驗證Status（顯示提示但不阻止頁面）
             if (window.checkEmailVerification) {
                 await checkEmailVerification({
                     showNotice: true,  // 顯示提示橫幅
@@ -1669,9 +2032,101 @@
         // 暴露函數供側邊欄內的連結使用
         window.closeMobileSidebar = closeSidebar;
     </script>
-    
-    <!-- 🌍 語言選擇器 -->
-    <script defer src="language-selector.js?v=20251205"></script>
+
+    <!-- CreateProject模態框 -->
+    <div id="createProjectModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 12px; padding: 2rem; width: 90%; max-width: 500px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
+            <h2 style="font-size: 1.5rem; font-weight: 600; color: #1f2937; margin: 0 0 1rem 0;">Create新Project</h2>
+            <p style="color: #6b7280; font-size: 0.875rem; margin: 0 0 1.5rem 0;">輸入Project名稱以Create新的文檔Project</p>
+            
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem;">Project名稱</label>
+                <input 
+                    type="text" 
+                    id="projectName" 
+                    placeholder="例如：2025年1月Invoice"
+                    style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem; color: #1f2937; box-sizing: border-box;"
+                    onkeypress="if(event.key==='Enter') createProject()">
+            </div>
+            
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button 
+                    onclick="closeCreateProjectModal()" 
+                    style="background: #ffffff; border: 1px solid #d1d5db; color: #374151; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500;">
+                    Cancel
+                </button>
+                <button 
+                    onclick="createProject()" 
+                    style="background: #3b82f6; border: none; color: white; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500;">
+                    Create
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 打開CreateProject模態框
+        function openCreateProjectModal() {
+            const modal = document.getElementById('createProjectModal');
+            const input = document.getElementById('projectName');
+            modal.style.display = 'flex';
+            input.value = '';
+            input.focus();
+        }
+
+        // 關閉CreateProject模態框
+        function closeCreateProjectModal() {
+            const modal = document.getElementById('createProjectModal');
+            modal.style.display = 'none';
+        }
+
+        // Create新Project
+        async function createProject() {
+            const input = document.getElementById('projectName');
+            const projectName = input.value.trim();
+            
+            if (!projectName) {
+                alert('Please enter a project name');
+                return;
+            }
+            
+            // Create新Project對象
+            const newProject = {
+                id: 'project-' + Date.now(),
+                name: projectName,
+                thumbnail: null,
+                lastModified: new Date().toISOString(),
+                created: new Date().toISOString()
+            };
+            
+            // 保存到 Firebase
+            try {
+                const projectData = await window.simpleDataManager.createProject(projectName);
+                console.log('✅ Project已保存到 Firebase:', projectData);
+                
+                // 關閉模態框
+                closeCreateProjectModal();
+                
+                // 🔥 修復：使用 projectData.id 而非 projectData 本身
+                const projectId = projectData.id;
+                console.log('🚀 跳轉到新Project頁面:', projectId);
+                
+                // 跳轉到新Project頁面
+                window.location.href = `firstproject.html?project=${projectId}`;
+            } catch (error) {
+                console.error('❌ 保存到 Firebase 失敗:', error);
+                alert('CreateProject失敗，請重試');
+                return;
+            }
+        }
+
+        // 點擊遮罩關閉模態框
+        document.getElementById('createProjectModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeCreateProjectModal();
+            }
+        });
+    </script>
 
 </body>
 </html>
