@@ -202,14 +202,14 @@ class VaultCaddySidebar {
             
             <!-- 配置區塊 (底部) -->
             <div style="border-top: 1px solid #e5e7eb; padding-top: 1rem;">
-                <h3 style="font-size: 0.75rem; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 0.75rem 0;">配置</h3>
+                <h3 style="font-size: 0.75rem; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 0.75rem 0;" data-i18n="settings">Settings</h3>
                 <div onclick="window.location.href='account.html'" style="display: flex; align-items: center; padding: 0.5rem; color: ${isAccountPage ? '#2563eb' : '#6b7280'}; cursor: pointer; border-radius: 4px; transition: background 0.2s; margin-bottom: 0.25rem; ${isAccountPage ? 'background: #eff6ff; border-left: 3px solid #2563eb; margin-left: -1.5rem; padding-left: calc(0.5rem + 1.5rem - 3px);' : ''}">
                     <i class="fas fa-user" style="margin-right: 0.5rem; font-size: 1rem; width: 20px; color: ${isAccountPage ? '#2563eb' : '#6b7280'};"></i>
-                    <span style="font-size: 0.875rem;">帳戶</span>
+                    <span style="font-size: 0.875rem;" data-i18n="account">Account</span>
                 </div>
                 <div onclick="window.location.href='billing.html'" style="display: flex; align-items: center; padding: 0.5rem; color: ${isBillingPage ? '#2563eb' : '#6b7280'}; cursor: pointer; border-radius: 4px; transition: background 0.2s; ${isBillingPage ? 'background: #eff6ff; border-left: 3px solid #2563eb; margin-left: -1.5rem; padding-left: calc(0.5rem + 1.5rem - 3px);' : ''}">
                     <i class="fas fa-credit-card" style="margin-right: 0.5rem; font-size: 1rem; width: 20px; color: ${isBillingPage ? '#2563eb' : '#6b7280'};"></i>
-                    <span style="font-size: 0.875rem;">計費</span>
+                    <span style="font-size: 0.875rem;" data-i18n="billing">Billing</span>
                 </div>
             </div>
         `;
@@ -335,6 +335,51 @@ class VaultCaddySidebar {
         
         console.log('✅ 側邊欄活躍頁面已更新:', activePage);
     }
+
+    
+    /**
+     * 初始化侧边栏翻译
+     */
+    initSidebarTranslations() {
+        const translations = {
+            'zh': {
+                'settings': '配置',
+                'account': '帳戶',
+                'billing': '計費'
+            },
+            'en': {
+                'settings': 'Settings',
+                'account': 'Account',
+                'billing': 'Billing'
+            },
+            'jp': {
+                'settings': '設定',
+                'account': 'アカウント',
+                'billing': '請求'
+            },
+            'kr': {
+                'settings': '설정',
+                'account': '계정',
+                'billing': '결제'
+            }
+        };
+        
+        // 检测当前语言
+        const path = window.location.pathname;
+        let currentLang = 'zh';
+        if (path.startsWith('/en/')) currentLang = 'en';
+        else if (path.startsWith('/jp/')) currentLang = 'jp';
+        else if (path.startsWith('/kr/')) currentLang = 'kr';
+        
+        // 应用翻译
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (translations[currentLang] && translations[currentLang][key]) {
+                el.textContent = translations[currentLang][key];
+            }
+        });
+    }
+
 }
 
 // 導出類
