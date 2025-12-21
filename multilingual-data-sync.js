@@ -240,13 +240,12 @@
             container.innerHTML = `
                 <div style="position: relative; display: inline-block;">
                     <button id="lang-button" onclick="window.multilingualSync.toggleLanguageDropdown()" 
-                            style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; 
+                            style="display: flex; align-items: center; gap: 0.5rem; padding: 0.375rem 0.875rem; 
                                    background: white; border: 1px solid #e5e7eb; border-radius: 6px; 
                                    cursor: pointer; font-size: 0.875rem; transition: all 0.2s;
                                    box-shadow: 0 1px 3px rgba(0,0,0,0.1);"
                             onmouseover="this.style.borderColor='#8b5cf6'; this.style.boxShadow='0 2px 6px rgba(139,92,246,0.2)'"
                             onmouseout="this.style.borderColor='#e5e7eb'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)'">
-                        <span style="font-size: 1.25rem;">${currentLangConfig.flag}</span>
                         <span style="font-weight: 500; color: #374151;">${currentLangConfig.nativeName}</span>
                         <svg style="width: 1rem; height: 1rem; color: #6b7280;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -260,14 +259,13 @@
                                 overflow: hidden;">
                         ${Object.entries(LANGUAGES).map(([code, config]) => `
                             <a href="#" onclick="event.preventDefault(); window.multilingualSync.switchLanguage('${code}')"
-                               style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; 
+                               style="display: flex; align-items: center; padding: 0.625rem 1rem; 
                                       color: ${code === this.currentLang ? '#8b5cf6' : '#374151'}; 
                                       background: ${code === this.currentLang ? '#f5f3ff' : 'white'};
                                       text-decoration: none; transition: background 0.2s;
                                       border-left: 3px solid ${code === this.currentLang ? '#8b5cf6' : 'transparent'};"
                                onmouseover="if ('${code}' !== '${this.currentLang}') this.style.background='#f9fafb'"
                                onmouseout="if ('${code}' !== '${this.currentLang}') this.style.background='white'">
-                                <span style="font-size: 1.25rem;">${config.flag}</span>
                                 <div style="flex: 1;">
                                     <div style="font-weight: ${code === this.currentLang ? '600' : '500'};">
                                         ${config.nativeName}
