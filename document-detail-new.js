@@ -714,6 +714,16 @@ function displayBankStatementContent(data) {
     console.log('🏦 顯示銀行對帳單內容');
     console.log('📊 原始數據:', JSON.stringify(data, null, 2));
     
+    // 🔍 DEBUG - 详细诊断交易记录提取
+    console.log('🔍 DEBUG - 完整数据结构:', data);
+    console.log('🔍 DEBUG - processedData:', currentDocument?.processedData);
+    console.log('🔍 DEBUG - 所有可能的transactions字段:');
+    console.log('   data.transactions:', data.transactions);
+    console.log('   data.transaction:', data.transaction);
+    console.log('   data.items:', data.items);
+    console.log('   currentDocument.transactions:', currentDocument?.transactions);
+    console.log('🔍 DEBUG - currentDocument完整内容:', currentDocument);
+    
     const detailsSection = document.getElementById('documentDetailsSection');
     const dataSection = document.getElementById('documentDataSection');
     
