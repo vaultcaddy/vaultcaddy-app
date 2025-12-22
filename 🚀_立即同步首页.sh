@@ -34,3 +34,4 @@ echo "   1. 查看 sync_index_intelligent.py 配置价格和地区"
 echo "   2. 运行: python3 sync_index_intelligent.py"
 echo ""
 
+

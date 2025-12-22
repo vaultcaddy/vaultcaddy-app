@@ -76,3 +76,4 @@ print("   https://vaultcaddy.com/en/index.html")
 print()
 print("✨ 现在定价区域、评价区域和Learning Center都会自适应屏幕宽度！")
 
+
