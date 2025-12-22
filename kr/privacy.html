@@ -7,16 +7,16 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
     <!-- Firebase SDK（CDN 版本 - compat）-->
-        <!-- ✅ 통일초기화管理器 -->
+        <!-- ✅ 통일초기화관리자 -->
     <script defer src="../init-manager.js?v=20251130"></script>
 
 <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
     
-    <!-- Firebase 설정및數據管理器 -->
+    <!-- Firebase 설정및데이터관리자 -->
     <script defer src="../firebase-config.js?v=20251105"></script>
-    <!-- 🔥 新的簡化系統 -->
+    <!-- 🔥 새로운단순화시스템 -->
     <script defer src="../simple-auth.js?v=20251105-force-init"></script>
     <script defer src="../simple-data-manager.js?v=20251105-force-init"></script>
     <script defer src="unified-auth.js?v=20251129"></script>
@@ -168,7 +168,7 @@
     <!-- ✅ 통일된 정적 네비게이션 바 -->
     <nav class="vaultcaddy-navbar" id="main-navbar" style="position: fixed; top: 0; left: 0; right: 0; height: 60px; background: #ffffff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; z-index: 1000; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);">
         <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <!-- 햄버거 메뉴버튼（僅手機顯示）-->
+            <!-- 햄버거 메뉴버튼（모바일만 표시）-->
             <button id="mobile-menu-btn" onclick="openMobileSidebar()" style="display: none; background: none; border: none; cursor: pointer; padding: 0.5rem; color: #1f2937; font-size: 1.5rem;">
                 <i class="fas fa-bars"></i>
             </button>
@@ -201,10 +201,10 @@
     <!-- 🔥 사이드바마스크 -->
     <div id="mobile-sidebar-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; display: none;" onclick="closeMobileSidebar()"></div>
     
-    <!-- 手機사이드바메뉴 -->
+    <!-- 모바일사이드바메뉴 -->
     <div id="mobile-sidebar" style="position: fixed; top: 0; left: -100%; width: 280px; height: 100vh; background: white; z-index: 2000; transition: left 0.3s ease; box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto;">
         <div style="padding: 1.5rem;">
-            <!-- 메뉴項 -->
+            <!-- 메뉴항목 -->
             <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                 <a href="index.html#features" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
                     <i class="fas fa-star" style="width: 20px; color: #667eea;"></i>
@@ -264,7 +264,7 @@
         </div>
     </div>
     
-    <!-- ✅ index.html 動態업데이트사용자상태 -->
+    <!-- ✅ index.html 동적업데이트사용자상태 -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             console.log('✅ index.html 초기화');
@@ -276,20 +276,20 @@
             // 가져오기사용자첫 글자
             function getUserInitial() {
                 if (!userDisplayName || userDisplayName.trim() === '') {
-                    // 如果없음 displayName，사용 email 의 첫 글자
+                    // 만약없음 displayName，사용 email 의 첫 글자
                     return userEmail ? userEmail.charAt(0).toUpperCase() : 'U';
                 }
                 
-                // 分割名字（支援中英文）
+                // 分割名字（支援중英文）
                 const parts = userDisplayName.trim().split(/\s+/);
                 
                 if (parts.length >= 2) {
-                    // 有 First Name 및 Last Name
+                    // 있음 First Name 및 Last Name
                     const firstInitial = parts[0].charAt(0).toUpperCase();
                     const lastInitial = parts[parts.length - 1].charAt(0).toUpperCase();
                     return firstInitial + lastInitial;
                 } else if (parts.length === 1) {
-                    // 只有一個名字，取前兩個字母
+                    // 只있음一個名字，取앞兩個字母
                     const name = parts[0];
                     if (name.length >= 2) {
                         return name.substring(0, 2).toUpperCase();
@@ -323,7 +323,7 @@
                     }
                 };
                 
-                // 關閉사이드바
+                // 닫기사이드바
                 window.closeMobileSidebar = function() {
                     console.log('🔵 closeMobileSidebar 호출됨');
                     const sidebar = document.getElementById('mobile-sidebar');
@@ -333,48 +333,48 @@
                         sidebar.style.left = '-100%';
                         overlay.style.display = 'none';
                         document.body.style.overflow = 'auto';
-                        console.log('✅ 사이드바已關閉');
+                        console.log('✅ 사이드바이미 닫힘');
                     }
                 };
                 
-                // 綁定버튼（사용多種方式보장綁定成功）
+                // 바인딩버튼（사용多種方式보장바인딩성공）
                 function bindMenuButton() {
                     const menuBtn = document.getElementById('mobile-menu-btn');
                     console.log('🔵 menuBtn:', menuBtn);
                     
                     if (menuBtn) {
-                        // 제거舊的監聽器（있다면）
+                        // 제거舊的리스닝기（있다면）
                         menuBtn.removeEventListener('click', window.openMobileSidebar);
-                        // 添加新的監聽器
+                        // 추가새로운的리스닝기
                         menuBtn.addEventListener('click', function(e) {
-                            console.log('🔵 漢堡버튼被클릭');
+                            console.log('🔵 漢堡버튼의해클릭');
                             e.preventDefault();
                             e.stopPropagation();
                             window.openMobileSidebar();
                         });
-                        console.log('✅ 햄버거 메뉴버튼已綁定');
+                        console.log('✅ 햄버거 메뉴버튼이미바인딩');
                     } else {
                         console.error('❌ 찾을 수 없음햄버거 메뉴버튼');
                     }
                 }
                 
-                // 즉시嘗試綁定
+                // 즉시시도바인딩
                 if (document.readyState === 'loading') {
                     document.addEventListener('DOMContentLoaded', bindMenuButton);
                 } else {
                     bindMenuButton();
                 }
                 
-                // 也에서 window.onload 時再次嘗試
+                // 也에서 window.onload 때다시시도
                 window.addEventListener('load', function() {
-                    console.log('🔵 window.onload - 再次확인綁定');
+                    console.log('🔵 window.onload - 다시확인바인딩');
                     bindMenuButton();
                 });
             })();
                 
-                // 모바일 버전자동캐러셀（僅에서모바일 버전啟用）
+                // 모바일 버전자동캐러셀（만에서모바일 버전활성화）
                 if (window.innerWidth <= 768) {
-                    // 評價캐러셀
+                    // 평가캐러셀
                     const testimonialsContainer = document.getElementById('testimonials-container');
                     if (testimonialsContainer) {
                         let testimonialIndex = 0;
@@ -387,7 +387,7 @@
                                 left: scrollAmount,
                                 behavior: 'smooth'
                             });
-                        }, 4000); // 每4초 전환
+                        }, 4000); // 매4초 전환
                     }
                     
                     // 학습 센터캐러셀
@@ -403,7 +403,7 @@
                                 left: scrollAmount,
                                 behavior: 'smooth'
                             });
-                        }, 5000); // 每5초 전환
+                        }, 5000); // 매5초 전환
                     }
                 }
             });
@@ -414,7 +414,7 @@
                 if (dropdown.style.display === 'none') {
                     dropdown.style.display = 'block';
                     
-                    // 🔥 即時부터 SimpleDataManager 가져오기最新 Credits
+                    // 🔥 즉시때부터 SimpleDataManager 가져오기최새로운 Credits
                     if (window.simpleDataManager && window.simpleDataManager.initialized) {
                         try {
                             userCredits = await window.simpleDataManager.getUserCredits();
@@ -432,7 +432,7 @@
                 }
             }
             
-            // 클릭外部關閉드롭다운 메뉴
+            // 클릭외부 닫기드롭다운 메뉴
             document.addEventListener('click', function(event) {
                 const dropdown = document.getElementById('user-dropdown');
                 const userMenu = document.getElementById('user-menu');
@@ -453,11 +453,11 @@
                     }
                 } catch (error) {
                     console.error('로그아웃실패:', error);
-                    alert('로그아웃실패，請재시도');
+                    alert('로그아웃실패，요청재시도');
                 }
             };
             
-            // 대기 Firebase 및 simpleAuth 加載
+            // 대기 Firebase 및 simpleAuth 로드
             async function updateUserMenu() {
                 const userMenu = document.getElementById('user-menu');
                 if (!userMenu) return;
@@ -466,7 +466,7 @@
                     const isLoggedIn = window.simpleAuth && window.simpleAuth.isLoggedIn();
                     
                     if (isLoggedIn) {
-                        // ✅ 已로그인：顯示사용자頭像
+                        // ✅ 이미로그인：표시사용자아바타
                         const currentUser = window.simpleAuth.getCurrentUser();
                         userEmail = currentUser.email || '';
                         userDisplayName = currentUser.displayName || '';
@@ -481,11 +481,11 @@
                                     console.log('✅ index.html 가져오기 Credits:', userCredits);
                                 }
                             } catch (error) {
-                                console.log('⚠️ 無法부터 Firestore 가져오기사용자資料:', error);
+                                console.log('⚠️ 불가능부터 Firestore 가져오기사용자자료:', error);
                             }
                         } else {
-                            console.log('⏳ SimpleDataManager 尚未초기화，대기中...');
-                            // 延遲재시도
+                            console.log('⏳ SimpleDataManager 아직초기화，대기중...');
+                            // 지연재시도
                             setTimeout(async () => {
                                 if (window.simpleDataManager && window.simpleDataManager.initialized) {
                                     try {
@@ -506,32 +506,32 @@
                                 <div style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">${userInitial}</div>
                             </div>
                         `;
-                        console.log('✅ 사용자已로그인，顯示頭像');
+                        console.log('✅ 사용자이미로그인，표시아바타');
                     } else {
-                        // ✅ 未로그인：顯示로그인버튼
+                        // ✅ 미로그인：표시로그인버튼
                         userMenu.innerHTML = `
                             <button onclick="window.location.href='auth.html'" style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.875rem;" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">로그인</button>
                         `;
-                        console.log('✅ 사용자未로그인，顯示로그인버튼');
+                        console.log('✅ 사용자미로그인，표시로그인버튼');
                     }
                 } catch (e) {
-                    console.log('❌ 無法업데이트사용자메뉴:', e);
+                    console.log('❌ 불가능업데이트사용자메뉴:', e);
                 }
             }
             
-            // 즉시嘗試업데이트
+            // 즉시시도업데이트
             updateUserMenu();
             
-            // 監聽 Firebase 및 Auth 事件
+            // 리스닝 Firebase 및 Auth 이벤트
             window.addEventListener('firebase-ready', updateUserMenu);
             window.addEventListener('user-logged-in', updateUserMenu);
             window.addEventListener('user-logged-out', updateUserMenu);
             
-            // 延遲再次확인（以防事件이미觸發）
+            // 지연다시확인（방지이벤트이미트리거）
             setTimeout(updateUserMenu, 1000);
             setTimeout(updateUserMenu, 2000);
             
-            // 노출 toggleDropdown 까지全局
+            // 노출 toggleDropdown 까지전역
             window.toggleDropdown = toggleDropdown;
         });
     </script>
@@ -540,39 +540,39 @@
         <div class="card">
 <div class="header">
 <h1>🔒 개인정보 처리방침</h1>
-<p class="date">최종 업데이트:2025年1月22日</p>
+<p class="date">최종 업데이트:2025년1월22日</p>
 </div>
 <div class="content">
 <p style="font-size: 1.125rem; color: #64748b; margin-bottom: 2.5rem;">
-                    本개인정보 처리방침說明 VaultCaddy 如何收集、사용및保護您的프로필。我們致力에保護您的隱私安全。
+                    本개인정보 처리방침설명 VaultCaddy 如何收集、사용및보호귀하의프로필。我們致力에보호귀하의隱私安全。
                 </p>
 <div class="section">
 <h2 class="section-title">
 <div class="section-icon"><i class="fas fa-database"></i></div>
-                        我們收集的信息
+                        我們收集的정보
                     </h2>
-<p>我們通過以下方式收集信息：</p>
+<p>我們通過以아래方式收集정보：</p>
 <ul>
-<li><strong>계정信息：</strong>가입時收集您的電子郵件地址</li>
-<li><strong>사용數據：</strong>기록您如何사용我們的服務</li>
-<li><strong>문서처리：</strong>臨時처리您업로드的문서（24小時後자동삭제）</li>
-<li><strong>付款信息：</strong>通過 Stripe 等安全支付平台처리</li>
+<li><strong>계정정보：</strong>가입때收集귀하의電子郵件地址</li>
+<li><strong>사용데이터：</strong>기록귀하如何사용我們的서비스</li>
+<li><strong>문서처리：</strong>臨때처리귀하업로드的문서（24작은때후자동삭제）</li>
+<li><strong>付款정보：</strong>通過 Stripe 等安全支付平台처리</li>
 </ul>
 <div class="highlight-box">
-<strong><i class="fas fa-shield-alt"></i> 重要：</strong>我們아니會永久存儲您的문서，모든파일에서처리後 24 小時內자동삭제。
+<strong><i class="fas fa-shield-alt"></i> 중要：</strong>我們아니會永久存儲귀하의문서，모든파일에서처리후 24 작은때내부자동삭제。
                     </div>
 </div>
 <div class="section">
 <h2 class="section-title">
 <div class="section-icon"><i class="fas fa-tasks"></i></div>
-                        信息사용方式
+                        정보사용方式
                     </h2>
 <ul>
-<li>提供및改進문서처리服務</li>
-<li>처리거래並管理您的계정</li>
-<li>發送服務업데이트（需經您同意）</li>
-<li>回應查詢및지원請求</li>
-<li>보장平台安全並방지欺詐</li>
+<li>提제공및변경進문서처리서비스</li>
+<li>처리거래및관리귀하의계정</li>
+<li>發送서비스업데이트（需經귀하同意）</li>
+<li>回應查詢및지원요청求</li>
+<li>보장平台安全및방지欺詐</li>
 </ul>
 </div>
 <div class="section">
@@ -580,42 +580,42 @@
 <div class="section-icon"><i class="fas fa-lock"></i></div>
                         安全措施
                     </h2>
-<p>我們採取多層級的安全措施保護您的數據：</p>
+<p>我們採取多層級的安全措施보호귀하의데이터：</p>
 <ul>
-<li><strong>SSL/TLS 加密：</strong>모든數據傳輸都經過加密</li>
-<li><strong>數據加密：</strong>敏感信息사용行業標準加密存儲</li>
-<li><strong>定期審計：</strong>持續進行安全審查및漏洞掃描</li>
-<li><strong>訪問제어：</strong>嚴格限制數據訪問權限</li>
+<li><strong>SSL/TLS 加密：</strong>모든데이터傳輸都經過加密</li>
+<li><strong>데이터加密：</strong>敏感정보사용행業표준加密存儲</li>
+<li><strong>설정期審計：</strong>持續進행安全審查및漏洞掃描</li>
+<li><strong>訪問제어：</strong>嚴格限制데이터訪問權限</li>
 </ul>
 </div>
 <div class="section">
 <h2 class="section-title">
 <div class="section-icon"><i class="fas fa-user-shield"></i></div>
-                        您的權利
+                        귀하의權利
                     </h2>
-<p>根據數據保護法律，您擁有以下權利：</p>
+<p>기반데이터보호法律，귀하擁있음以아래權利：</p>
 <ul>
-<li><strong>訪問權：</strong>보기我們持有的您的信息</li>
-<li><strong>更正權：</strong>更正아니準確的信息</li>
-<li><strong>삭제權：</strong>要求삭제您的個人數據</li>
-<li><strong>數據可攜權：</strong>以可攜포맷가져오기您的數據</li>
+<li><strong>訪問權：</strong>보기我們持있음的귀하의정보</li>
+<li><strong>更正權：</strong>更正아니準確的정보</li>
+<li><strong>삭제權：</strong>要求삭제귀하의個人데이터</li>
+<li><strong>데이터가능攜權：</strong>以가능攜포맷가져오기귀하의데이터</li>
 </ul>
 </div>
 <div class="section">
 <h2 class="section-title">
 <div class="section-icon"><i class="fas fa-globe"></i></div>
-                        第三方服務
+                        第三方서비스
                     </h2>
-<p>我們사용以下可信賴的第三方服務：</p>
+<p>我們사용以아래가능信賴的第三方서비스：</p>
 <ul>
 <li><strong>Stripe：</strong>安全的付款처리</li>
-<li><strong>Firebase：</strong>사용자認證및數據存儲</li>
+<li><strong>Firebase：</strong>사용자認證및데이터存儲</li>
 <li><strong>Google Cloud：</strong>AI 문서처리</li>
 </ul>
 </div>
 <div class="contact-card">
-<h3>有疑問？문의하기</h3>
-<p>如果您對我們的개인정보 처리방침有任何疑問，歡迎隨時와我們聯繫</p>
+<h3>있음疑問？문의하기</h3>
+<p>만약귀하대해我們的개인정보 처리방침있음任何疑問，歡迎隨때와我們聯繫</p>
 <a class="contact-link" href="mailto:vaultcaddy@gmail.com">
 <i class="fas fa-envelope"></i>
                         vaultcaddy@gmail.com
@@ -629,7 +629,7 @@
 </div>
     </div>
     
-    <!-- 頁尾 -->
+    <!-- 페이지尾 -->
     <!-- Footer -->
     <footer style="background: linear-gradient(180deg, #f9fafb 0%, #ffffff 100%); padding: 4rem 0 2rem; margin-top: 0; border-top: 1px solid #e5e7eb;">
         <div style="max-width: 1200px; margin: 0 auto; padding: 0 2rem;">
@@ -647,8 +647,8 @@
                         </div>
                     </div>
                     <p style="color: #6b7280; font-size: 0.9375rem; line-height: 1.6; margin: 0;">
-                        專로서會計師及小型公司設計的 AI 문서처리平台，<br>
-                        讓財務문서管理變得簡單高效。
+                        專로서會計師及작은型公司設計的 AI 문서처리平台，<br>
+                        讓財務문서관리變得簡單高效。
                     </p>
                 </div>
                 
@@ -702,27 +702,27 @@
         
         /* 響應式設計 */
         @media (max-width: 768px) {
-            /* 내비게이션欄 */
+            /* 내비게이션열 */
             .vaultcaddy-navbar {
                 padding: 0 0.75rem !important;
             }
             
-            /* 顯示햄버거 메뉴버튼 */
+            /* 표시햄버거 메뉴버튼 */
             #mobile-menu-btn {
                 display: block !important;
             }
             
-            /* 🔥 隱藏모바일 버전 V 字 Logo */
+            /* 🔥 숨김모바일 버전 V 字 Logo */
             .desktop-logo {
                 display: none !important;
             }
             
-            /* 隱藏데스크톱 버전 Logo 텍스트 */
+            /* 숨김데스크톱 버전 Logo 텍스트 */
             .desktop-logo-text {
                 display: none !important;
             }
             
-            /* 隱藏내비게이션欄中的텍스트鏈接 */
+            /* 숨김내비게이션열중的텍스트鏈接 */
             .vaultcaddy-navbar > div:last-child > div:first-child {
                 display: none !important;
             }
@@ -734,7 +734,7 @@
                 min-width: auto !important;
             }
             
-            /* 容器 */
+            /* 컨테이너 */
             .container {
                 padding: 0 0.75rem !important;
             }
@@ -785,7 +785,7 @@
         })();
         
         // ==================== 사용자메뉴기능 ====================
-        // 클릭外部關閉드롭다운 메뉴
+        // 클릭외부 닫기드롭다운 메뉴
         document.addEventListener('click', function(event) {
             const dropdown = document.getElementById('user-dropdown');
             const userMenu = document.getElementById('user-menu');
@@ -857,7 +857,7 @@
                     `;
                 }
             } catch (e) {
-                console.log('❌ 無法업데이트사용자메뉴:', e);
+                console.log('❌ 불가능업데이트사용자메뉴:', e);
             }
         }
         
@@ -878,14 +878,14 @@
         };
     </script>
     
-    <!-- 右下角對話버튼 -->
+    <!-- 오른쪽아래角대해話버튼 -->
     <script src="contact-widget.js?v=20251125"></script>
 
-    <!-- 🔥 햄버거 메뉴超級簡單修復방안 -->
+    <!-- 🔥 햄버거 메뉴매우 간단한 수정방안 -->
     <script>
         console.log('🔥 시작초기화햄버거 메뉴...');
         
-        // 열기사이드바函數
+        // 열기사이드바함수
         function openSidebar() {
             console.log('🔵 열기사이드바');
             const sidebar = document.getElementById('mobile-sidebar');
@@ -900,9 +900,9 @@
             }
         }
         
-        // 關閉사이드바函數
+        // 닫기사이드바함수
         function closeSidebar() {
-            console.log('🔵 關閉사이드바');
+            console.log('🔵 닫기사이드바');
             const sidebar = document.getElementById('mobile-sidebar');
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
@@ -911,62 +911,62 @@
                 overlay.style.opacity = '0';
                 setTimeout(() => {
                     overlay.style.display = 'none';
-                }, 300); // 대기動畫완료（와 CSS transition 일치）
+                }, 300); // 대기애니메이션완료（와 CSS transition 일치）
                 document.body.style.overflow = 'auto';
-                console.log('✅ 사이드바已關閉');
+                console.log('✅ 사이드바이미 닫힘');
             }
         }
         
-        // 超級簡單的초기화函數
+        // 매우 간단한초기화함수
         function simpleInitMenu() {
             const btn = document.getElementById('mobile-menu-btn');
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
             if (!btn || !overlay) {
-                console.log('⏳ 요소未找까지，200ms後재시도');
+                console.log('⏳ 요소미찾기까지，200ms후재시도');
                 setTimeout(simpleInitMenu, 200);
                 return;
             }
             
-            console.log('✅ 找까지모든요소！');
+            console.log('✅ 찾기까지모든요소！');
             
             // 버튼클릭처리
             btn.addEventListener('click', function() {
-                console.log('🔵 버튼被클릭！');
+                console.log('🔵 버튼의해클릭！');
                 openSidebar();
             });
             
             // 터치처리
             btn.addEventListener('touchend', function(e) {
                 e.preventDefault();
-                console.log('🔵 터치事件！');
+                console.log('🔵 터치이벤트！');
                 openSidebar();
             });
             
-            // 마스크클릭關閉
+            // 마스크클릭닫기
             overlay.addEventListener('click', function() {
-                console.log('🔵 클릭마스크關閉');
+                console.log('🔵 클릭마스크닫기');
                 closeSidebar();
             });
             
-            // 마스크터치關閉
+            // 마스크터치닫기
             overlay.addEventListener('touchend', function(e) {
                 e.preventDefault();
-                console.log('🔵 터치마스크關閉');
+                console.log('🔵 터치마스크닫기');
                 closeSidebar();
             });
             
-            console.log('✅ 모든事件監聽器已綁定');
+            console.log('✅ 모든이벤트리스닝기이미바인딩');
         }
         
-        // 즉시嘗試초기화
+        // 즉시시도초기화
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', simpleInitMenu);
         } else {
             setTimeout(simpleInitMenu, 100);
         }
         
-        // 노출函數供사이드바內的連結사용
+        // 노출함수제공사이드바내부링크사용
         window.closeMobileSidebar = closeSidebar;
     </script>
     <script src="load-unified-navbar.js?v=20251129"></script>

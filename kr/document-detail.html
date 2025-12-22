@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     
-    <!-- 🔒 페이지保護 -->
+    <!-- 🔒 페이지보호 -->
     <style>
         body.auth-checking { visibility: hidden !important; }
         .auth-loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; align-items: center; justify-content: center; z-index: 9999; visibility: visible !important; }
@@ -36,9 +36,9 @@
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
     
-    <!-- Firebase 설정및數據管理器 -->
+    <!-- Firebase 설정및데이터관리자 -->
     <script src="../firebase-config.js?v=20251106-editable"></script>
-    <!-- 🔥 新的簡化系統 -->
+    <!-- 🔥 새로운단순화시스템 -->
     <script defer src="../simple-auth.js?v=20251106-editable"></script>
     <script defer src="../user-profile-manager.js?v=20251120"></script>
     <script defer src="../simple-data-manager.js?v=20251106-editable"></script>
@@ -46,16 +46,16 @@
     <!-- 내비게이션 바 인터랙션기능 -->
     <script defer src="../navbar-interactions.js?v=20251108"></script>
     
-    <!-- ✅ 통일내비게이션欄系統：靜態 HTML + navbar-component.js -->
+    <!-- ✅ 통일내비게이션열시스템：靜態 HTML + navbar-component.js -->
     <script defer src="../navbar-component.js?v=20251120-unified"></script>
     <script defer src="../sidebar-component.js?v=20251106-editable"></script>
     
     <!-- 기능模块 - 簡化版 -->
     <script defer src="../export-manager.js?v=20251106-editable"></script>
     
-    <!-- ✅ 提前定義 goBackToDashboard 函數 -->
+    <!-- ✅ 提앞정의 goBackToDashboard 함수 -->
     <script>
-        // 돌아가기대시보드（提前定義，회피 ReferenceError）
+        // 돌아가기대시보드（提앞정의，회피 ReferenceError）
         function goBackToDashboard() {
             const params = new URLSearchParams(window.location.search);
             const projectId = params.get('project');
@@ -66,9 +66,9 @@
             }
         }
         
-        // 🔥 삭제當前문서
+        // 🔥 삭제때앞문서
         async function deleteCurrentDocument() {
-            const confirmDelete = confirm('확인삭제此문서嗎？此작업無法撤銷。');
+            const confirmDelete = confirm('확인삭제이문서嗎？이작업불가능撤銷。');
             if (!confirmDelete) return;
             
             try {
@@ -77,7 +77,7 @@
                 const documentId = params.get('id');
                 
                 if (!projectId || !documentId) {
-                    alert('가져오기 실패문서信息');
+                    alert('가져오기 실패문서정보');
                     return;
                 }
                 
@@ -90,13 +90,13 @@
                         .doc(documentId)
                         .delete();
                     
-                    console.log('✅ 문서已삭제:', documentId);
-                    alert('문서已成功삭제');
+                    console.log('✅ 문서이미삭제:', documentId);
+                    alert('문서이미성공삭제');
                     
                     // 돌아가기대시보드
                     goBackToDashboard();
                 } else {
-                    alert('연결 실패까지數據庫');
+                    alert('연결 실패까지데이터庫');
                 }
             } catch (error) {
                 console.error('❌ 삭제문서실패:', error);
@@ -126,7 +126,7 @@
             display: flex;
             min-height: 100vh;
             background: #ffffff;
-            padding-top: 20px; /* 🔥 電腦版：上移 15pt (60px - 15pt ≈ 45px) */
+            padding-top: 20px; /* 🔥 電腦版：위이동 15pt (60px - 15pt ≈ 45px) */
         }
         
         .sidebar {
@@ -170,21 +170,21 @@
             gap: 0.5rem;
         }
         
-        /* 主콘텐츠 영역 */
+        /* 주콘텐츠 영역 */
         .main-content {
-            margin-left: 280px; /* 左側欄寬度 */
+            margin-left: 280px; /* 왼쪽측열너비 */
             flex: 1;
             background: #ffffff;
             min-height: calc(100vh - 60px);
-            padding-top: 0; /* 🔥 보장無額外間距 */
+            padding-top: 0; /* 🔥 보장無額외부사이거리 */
         }
         
-        /* 詳情페이지頂部 */
+        /* 세부정보페이지頂部 */
         .detail-header {
             background: #ffffff;
             border-bottom: 1px solid #e5e7eb;
             padding: 0.5rem 2rem;
-            margin-top: 5pt; /* 🔥 距離내비게이션欄 5pt */
+            margin-top: 5pt; /* 🔥 거리떨어짐내비게이션열 5pt */
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -220,22 +220,22 @@
             gap: 1rem;
         }
         
-        /* 詳情내용容器 */
+        /* 세부정보내용컨테이너 */
         .detail-container {
             display: grid;
             grid-template-columns: 550px 1fr;
-            gap: 0; /* 제거中間空白 */
+            gap: 0; /* 제거중사이空白 */
             height: calc(100vh - 120px);
-            overflow: hidden; /* 🔥 방지容器本身產生스크롤條 */
+            overflow: hidden; /* 🔥 방지컨테이너本身產生스크롤條 */
         }
         
-        /* 左側 PDF 預覽區 */
+        /* 왼쪽측 PDF 預覽區 */
         .pdf-preview-panel {
             background: #f9fafb;
             border-right: 1px solid #e5e7eb;
             display: flex;
             flex-direction: column;
-            overflow: hidden; /* 🔥 隱藏外層스크롤條，只保留 pdf-viewer 的스크롤 */
+            overflow: hidden; /* 🔥 숨김외부層스크롤條，只保留 pdf-viewer 的스크롤 */
         }
         
         .pdf-controls {
@@ -400,12 +400,12 @@
             font-weight: 600;
         }
         
-        /* 右側數據面板 */
+        /* 오른쪽측데이터面板 */
         .data-panel {
             background: #ffffff;
             overflow-y: auto;
             padding: 2rem;
-            padding-top: calc(2rem + 30pt); /* 🔥 내용向下移 30pt */
+            padding-top: calc(2rem + 30pt); /* 🔥 내용향해아래이동 30pt */
         }
         
         .tabs {
@@ -436,7 +436,7 @@
             color: #1f2937;
         }
         
-        /* 核對상태카드 */
+        /* 核대해상태카드 */
         .reconciliation-card {
             background: #ffffff;
             border: 1px solid #e5e7eb;
@@ -472,7 +472,7 @@
             font-size: 0.9rem;
         }
         
-        /* 은행 명세서詳情 */
+        /* 은행 명세서세부정보 */
         .bank-details-card {
             background: #ffffff;
             border: 1px solid #e5e7eb;
@@ -643,7 +643,7 @@
             color: #ef4444;
         }
         
-        /* 로드動畫 */
+        /* 로드애니메이션 */
         .loading {
             display: flex;
             flex-direction: column;
@@ -669,18 +669,18 @@
         
         /* ==================== 모바일 버전전용스타일 ==================== */
         @media (max-width: 768px) {
-            /* 🔥 모바일 버전：顯示햄버거 메뉴 */
+            /* 🔥 모바일 버전：표시햄버거 메뉴 */
             #mobile-menu-btn {
                 display: block !important;
             }
             
-            /* 🔥 모바일 버전：隱藏데스크톱 버전 logo 및텍스트 */
+            /* 🔥 모바일 버전：숨김데스크톱 버전 logo 및텍스트 */
             .desktop-logo,
             .desktop-logo-text {
                 display: none !important;
             }
             
-            /* 🔥 모바일 버전：隱藏사이드바，主내용全寬 */
+            /* 🔥 모바일 버전：숨김사이드바，주내용全寬 */
             .sidebar {
                 display: none !important;
             }
@@ -691,7 +691,7 @@
                 padding: 0 !important;
             }
             
-            /* 主容器 */
+            /* 메인 컨테이너 */
             body {
                 padding-top: 60px !important;
             }
@@ -707,12 +707,12 @@
                 margin: 0 !important;
             }
             
-            /* 🔥 모바일 버전：내비게이션欄스타일 */
+            /* 🔥 모바일 버전：내비게이션열스타일 */
             .vaultcaddy-navbar {
                 padding: 0 1rem !important;
             }
             
-            /* 隱藏데스크톱 버전내비게이션鏈接및언어선택기 */
+            /* 숨김데스크톱 버전내비게이션鏈接및언어선택기 */
             .vaultcaddy-navbar > div:nth-child(2) > div:first-child,
             .vaultcaddy-navbar > div:nth-child(2) > #language-dropdown {
                 display: none !important;
@@ -725,7 +725,7 @@
                 height: auto !important;
             }
             
-            /* 🔥 모바일 버전布局順序：이미지 > 詳情 > 數據 */
+            /* 🔥 모바일 버전布局順序：이미지 > 세부정보 > 데이터 */
             .pdf-preview-panel {
                 order: 1 !important;
                 width: 100% !important;
@@ -740,22 +740,22 @@
                 border-top: 1px solid #e5e7eb !important;
             }
             
-            /* 🔥 모바일 버전：PDF보기器최적화 */
+            /* 🔥 모바일 버전：PDF보기기최적화 */
             .pdf-viewer {
                 height: 50vh !important;
             }
             
-            /* 隱藏언어선택기 */
+            /* 숨김언어선택기 */
             #language-selector {
                 display: none !important;
             }
             
-            /* 🔥 내비게이션欄之外모든내용向上移 10pt */
+            /* 🔥 내비게이션열之외부모든내용향해위이동 10pt */
             .main-content {
                 margin-top: -10pt !important;
             }
             
-            /* 詳情페이지頂部 - 更現代化 */
+            /* 세부정보페이지頂部 - 更現代化 */
             .detail-header {
                 padding: 0.75rem 1rem !important;
                 padding-top: 0 !important;
@@ -797,7 +797,7 @@
                 width: 100% !important;
             }
             
-            /* 🔥 모바일 버전：버튼 그룹改로서左右排列 */
+            /* 🔥 모바일 버전：버튼 그룹변경로서왼쪽오른쪽排열 */
             .detail-header .top-actions {
                 display: flex !important;
                 flex-direction: row !important;
@@ -859,7 +859,7 @@
                 border-radius: 8px !important;
             }
             
-            /* 제목字體大小 */
+            /* 제목字體大작은 */
             h1 {
                 font-size: 1.25rem !important;
             }
@@ -880,7 +880,7 @@
                 white-space: nowrap !important;
             }
             
-            /* 🔧 보장 Export 버튼可클릭 */
+            /* 🔧 보장 Export 버튼가능클릭 */
             #export-btn,
             #export-dropdown,
             button[onclick*="toggleExportMenu"] {
@@ -898,7 +898,7 @@
                 right: auto !important;
                 bottom: auto !important;
                 margin: 0 !important;
-                z-index: 2147483647 !important; /* 🔥 32位整數最大值 */
+                z-index: 2147483647 !important; /* 🔥 32位整數최大值 */
                 width: 90% !important;
                 max-width: 400px !important;
                 display: block !important;
@@ -912,7 +912,7 @@
                 padding: 1.5rem !important;
             }
             
-            /* 🔥 데스크톱 버전改로서右側드롭다운 메뉴（와firstproject.html같은） */
+            /* 🔥 데스크톱 버전변경로서오른쪽측드롭다운 메뉴（와firstproject.html같은） */
             @media (min-width: 769px) {
                 #exportMenu[style*="display: block"] {
                     position: absolute !important;
@@ -974,13 +974,13 @@
                 padding: 0.75rem !important;
             }
             
-            /* 🔥 모바일 버전：PDF보기器區域 */
+            /* 🔥 모바일 버전：PDF보기기區域 */
             .pdf-viewer {
                 padding: 1rem !important;
                 background: #f9fafb !important;
             }
             
-            /* PDF 預覽容器 - 更大更美觀 */
+            /* PDF 預覽컨테이너 - 更大更美觀 */
             #pdf-container {
                 height: 50vh !important;
                 max-width: 100% !important;
@@ -998,7 +998,7 @@
                 object-fit: contain !important;
             }
             
-            /* 🔥 모바일 버전：PDF제어버튼 - 縮小30%以適應屏幕 */
+            /* 🔥 모바일 버전：PDF제어버튼 - 縮작은30%以適應屏幕 */
             .pdf-controls {
                 padding: 0.25rem 0.35rem !important;
                 gap: 0.175rem !important;
@@ -1008,9 +1008,9 @@
                 border-radius: 4px !important;
                 margin: 0.175rem !important;
                 box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
-                max-width: 70% !important; /* 縮小30% */
+                max-width: 70% !important; /* 縮작은30% */
                 overflow-x: auto !important;
-                transform: scale(0.7); /* 整體縮小30% */
+                transform: scale(0.7); /* 整體縮작은30% */
                 transform-origin: center;
             }
             
@@ -1027,7 +1027,7 @@
                 font-size: 0.455rem !important; /* 0.65 * 0.7 = 0.455 */
             }
             
-            /* 🔥 모바일 버전：페이지指示器縮小 */
+            /* 🔥 모바일 버전：페이지指示기縮작은 */
             .page-indicator {
                 font-size: 0.49rem !important; /* 0.7 * 0.7 = 0.49 */
                 padding: 0 0.175rem !important;
@@ -1043,13 +1043,13 @@
                 min-width: 19.6px !important; /* 28 * 0.7 */
             }
             
-            /* 🔥 모바일 버전：縮放顯示 */
+            /* 🔥 모바일 버전：縮放표시 */
             .zoom-display {
                 font-size: 0.455rem !important; /* 0.65 * 0.7 */
                 min-width: 24.5px !important; /* 35 * 0.7 */
             }
             
-            /* 🔥 모바일 버전：표橫向스크롤 */
+            /* 🔥 모바일 버전：표橫향해스크롤 */
             .table-wrapper,
             .transactions-section {
                 overflow-x: auto !important;
@@ -1059,7 +1059,7 @@
             /* 표 */
             table {
                 font-size: 0.75rem !important;
-                min-width: 600px !important; /* 最小寬度，允許橫向스크롤 */
+                min-width: 600px !important; /* 최작은너비，允許橫향해스크롤 */
             }
             
             table th,
@@ -1068,7 +1068,7 @@
                 white-space: nowrap !important;
             }
             
-            /* 🔥 모바일 버전：표第一列固定（날짜列） */
+            /* 🔥 모바일 버전：표第一열固설정（날짜열） */
             table th:first-child,
             table td:first-child {
                 position: sticky !important;
@@ -1078,7 +1078,7 @@
                 box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05) !important;
             }
             
-            /* 隱藏部分아니重要的列（Balance列） */
+            /* 숨김部分아니중要的열（Balance열） */
             table th:nth-child(5),
             table td:nth-child(5) {
                 display: none !important;
@@ -1116,7 +1116,7 @@
     </script>
 
 
-    <!-- 资源提示 - 优化加载速度 -->
+    <!-- 리소스 힌트 - 로딩 속도 최적화 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://www.googletagmanager.com">
@@ -1125,7 +1125,7 @@
         <script src="/multilingual-data-sync.js"></script>
 </head>
 <body class="auth-checking">
-    <!-- 🔒 Auth 加載動畫 -->
+    <!-- 🔒 Auth 로드애니메이션 -->
     <div class="auth-loading">
         <div style="text-align: center;">
             <div style="width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
@@ -1136,7 +1136,7 @@
     <!-- ✅ 통일된 정적 네비게이션 바 -->
     <nav class="vaultcaddy-navbar" id="main-navbar" style="position: fixed; top: 0; left: 0; right: 0; height: 60px; background: #ffffff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; z-index: 1000; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);">
         <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <!-- 🔥 햄버거 메뉴버튼（僅手機顯示） -->
+            <!-- 🔥 햄버거 메뉴버튼（모바일만 표시） -->
             <button id="mobile-menu-btn" onclick="openMobileSidebar()" style="display: none; background: none; border: none; cursor: pointer; padding: 0.5rem; color: #1f2937; font-size: 1.5rem;">
                 <i class="fas fa-bars"></i>
             </button>
@@ -1160,7 +1160,7 @@
             </div>
             <div id="language-dropdown" style="position: relative; display: flex; align-items: center; gap: 0.5rem; color: #6b7280; font-size: 0.875rem; cursor: pointer; padding: 0.5rem 0.75rem; border-radius: 6px; transition: background 0.2s;">
                 <i class="fas fa-language"></i>
-                <span id="current-language">繁體中文</span>
+                <span id="current-language">繁體중文</span>
                 <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
             </div>
             
@@ -1171,7 +1171,7 @@
         </div>
     </nav>
     
-    <!-- 🔥 手機사이드바메뉴 -->
+    <!-- 🔥 모바일사이드바메뉴 -->
     <div id="mobile-sidebar" style="position: fixed; top: 0; left: -100%; width: 280px; height: 100vh; background: white; z-index: 2000; transition: left 0.3s ease; box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto;">
         <div style="padding: 1.5rem;">
             <div style="display: flex; flex-direction: column; gap: 0.5rem;">
@@ -1202,14 +1202,14 @@
     <!-- 🔥 사이드바마스크 -->
     <div id="mobile-sidebar-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; display: none;" onclick="closeMobileSidebar()"></div>
     
-    <!-- 主容器 -->
+    <!-- 메인 컨테이너 -->
     <div class="dashboard-container">
-        <!-- 左사이드바（由 sidebar-component.js 동적 생성） -->
+        <!-- 왼쪽사이드바（의해 sidebar-component.js 동적 생성） -->
         <aside class="sidebar"></aside>
         
-        <!-- 主콘텐츠 영역 -->
+        <!-- 주콘텐츠 영역 -->
         <div class="main-content">
-            <!-- 詳情페이지頂部 -->
+            <!-- 세부정보페이지頂部 -->
             <div class="detail-header">
                 <span class="back-btn" onclick="goBackToDashboard()">
                     <i class="fas fa-arrow-left"></i>
@@ -1217,19 +1217,19 @@
                 </span>
                 <h1 class="document-title" id="documentTitle">로드 중...</h1>
                 <div class="top-actions">
-                    <!-- 저장指示器（動態顯示） -->
+                    <!-- 저장指示기（동적표시） -->
                     <span id="savedIndicator" class="saved-indicator" style="display: none;">
                         <i class="fas fa-cloud-check"></i>
                         Saved
                     </span>
-                    <!-- 导出按钮（綠色）- 메뉴已移까지 body 最後 -->
+                    <!-- 导出클릭钮（綠色）- 메뉴이미이동까지 body 최후 -->
                     <div class="export-dropdown" style="position: relative;">
                         <button onclick="toggleExportMenu()" style="background: #10b981; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
                             <i class="fas fa-download"></i>
                             <span>Export</span>
                             <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
                         </button>
-                        <!-- Export 메뉴已移까지 body 最後面 -->
+                        <!-- Export 메뉴이미이동까지 body 최후面 -->
                     </div>
                     <button class="icon-btn delete" onclick="deleteCurrentDocument()" title="삭제문서" style="background: #fee2e2; border: 1px solid #fecaca; color: #ef4444; padding: 0.5rem 1rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem;">
                         <i class="fas fa-trash"></i>
@@ -1238,9 +1238,9 @@
                 </div>
             </div>
             
-            <!-- 詳情내용容器 -->
+            <!-- 세부정보내용컨테이너 -->
             <div class="detail-container">
-        <!-- 左側 PDF 預覽 -->
+        <!-- 왼쪽측 PDF 預覽 -->
         <div class="pdf-preview-panel">
             <div class="pdf-controls">
                 <button class="page-nav-btn" id="prevPageBtn" onclick="previousPage()">
@@ -1274,21 +1274,21 @@
             </div>
         </div>
         
-        <!-- 右側數據面板 -->
+        <!-- 오른쪽측데이터面板 -->
         <div class="data-panel">
-            <!-- 🔥 已제거 "Results Export JSON" 標籤頁 -->
+            <!-- 🔥 이미제거 "Results Export JSON" 標籤페이지 -->
             
-            <!-- 문서 세부정보（根據유형動態顯示） -->
+            <!-- 문서 세부정보（기반유형동적표시） -->
             <div id="documentDetailsSection">
-                <!-- 將由 JavaScript 동적 생성 -->
+                <!-- 할의해 JavaScript 동적 생성 -->
             </div>
             
-            <!-- 數據표（根據유형動態顯示） -->
+            <!-- 데이터표（기반유형동적표시） -->
             <div id="documentDataSection">
-                <!-- 將由 JavaScript 동적 생성 -->
+                <!-- 할의해 JavaScript 동적 생성 -->
             </div>
             
-            <!-- 原有的은행 명세서거래기록표（保留作로서備用） -->
+            <!-- 原있음的은행 명세서거래기록표（保留作로서備用） -->
             <div id="bankStatementSection" style="display: none;">
                 <div class="bank-details-card">
                     <div class="card-header">
@@ -1372,7 +1372,7 @@
             const pdfImages = document.querySelectorAll('.pdf-page img');
             modalPdfPages = Array.from(pdfImages);
             
-            // 로서每個이미지添加클릭事件
+            // 로서매個이미지추가클릭이벤트
             pdfImages.forEach((img, index) => {
                 img.addEventListener('click', function() {
                     openPdfModal(index);
@@ -1397,7 +1397,7 @@
             document.body.style.overflow = 'hidden';
         }
         
-        // 關閉모달
+        // 닫기모달
         function closePdfModal() {
             const modal = document.getElementById('pdfModal');
             modal.classList.remove('active');
@@ -1427,7 +1427,7 @@
             updateModalPageInfo();
         }
         
-        // 업데이트頁碼信息
+        // 업데이트페이지碼정보
         function updateModalPageInfo() {
             document.getElementById('modalCurrentPage').textContent = modalCurrentPageIndex + 1;
             document.getElementById('modalTotalPages').textContent = modalPdfPages.length;
@@ -1447,26 +1447,26 @@
             }
         });
         
-        // 클릭背景關閉
+        // 클릭背景닫기
         document.getElementById('pdfModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closePdfModal();
             }
         });
         
-        // 延遲초기화，대기 PDF 加載완료
+        // 지연초기화，대기 PDF 로드완료
         setTimeout(() => {
             initPdfZoom();
         }, 2000);
         
-        // 監聽 PDF 加載완료事件（있다면）
+        // 리스닝 PDF 로드완료이벤트（있다면）
         window.addEventListener('pdfLoaded', function() {
             setTimeout(() => {
                 initPdfZoom();
             }, 500);
         });
         
-        // 🔄 關閉 Export 메뉴
+        // 🔄 닫기 Export 메뉴
         window.closeExportMenu = function() {
             const menu = document.getElementById('exportMenu');
             const overlay = document.getElementById('exportMenuOverlay');
@@ -1484,13 +1484,13 @@
             const overlay = document.getElementById('exportMenuOverlay');
             if (!menu) return;
             
-            // 如果메뉴已顯示，則關閉
+            // 만약메뉴이미표시，則닫기
             if (menu.style.display === 'block') {
                 closeExportMenu();
                 return;
             }
             
-            // 🔧 總是顯示背景마스크（CSS會제어데스크톱 버전隱藏）
+            // 🔧 總是표시背景마스크（CSS會제어데스크톱 버전숨김）
             if (!overlay) {
                 const newOverlay = document.createElement('div');
                 newOverlay.id = 'exportMenuOverlay';
@@ -1504,32 +1504,32 @@
             // 문서에 따라유형생성메뉴
             updateExportMenuForDocumentDetail();
             
-            // 顯示메뉴（CSS會자동처리데스크톱 버전및모바일 버전的다른스타일）
+            // 표시메뉴（CSS會자동처리데스크톱 버전및모바일 버전的다른스타일）
             menu.style.display = 'block';
-            console.log('📤 Export 메뉴已顯示');
+            console.log('📤 Export 메뉴이미표시');
         };
         
         function updateExportMenuForDocumentDetail() {
             const menu = document.getElementById('exportMenu');
             if (!menu) return;
             
-            // 부터 currentDocument 가져오기문서유형（定義에서 document-detail-new.js）
+            // 부터 currentDocument 가져오기문서유형（정의에서 document-detail-new.js）
             let docType = 'general';
             if (window.currentDocument) {
                 docType = window.currentDocument.type || window.currentDocument.documentType || 'general';
-                // 🔥 標準化문서유형
+                // 🔥 표준化문서유형
                 docType = docType.toLowerCase();
                 console.log('📄 Export 메뉴 - 문서유형:', docType);
             } else {
-                console.warn('⚠️ window.currentDocument 未定義，가져오기 실패문서유형');
+                console.warn('⚠️ window.currentDocument 미정의，가져오기 실패문서유형');
             }
             
-            // 🔥 모바일 버전：添加關閉버튼
+            // 🔥 모바일 버전：추가닫기버튼
             let menuHTML = '';
             if (window.innerWidth <= 768) {
                 menuHTML += `
                     <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 1rem; border-bottom: 1px solid #e5e7eb; margin-bottom: 1rem;">
-                        <h2 style="margin: 0; font-size: 1.25rem; font-weight: 600; color: #1f2937;">선택導出포맷</h2>
+                        <h2 style="margin: 0; font-size: 1.25rem; font-weight: 600; color: #1f2937;">선택내보내기포맷</h2>
                         <button onclick="closeExportMenu()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6b7280; padding: 0.5rem;">
                             <i class="fas fa-times"></i>
                         </button>
@@ -1539,22 +1539,22 @@
             
             menuHTML += '<div style="padding: 0.5rem 0; background: #ffffff;">';
             
-            // 문서에 따라유형顯示對應選項
+            // 문서에 따라유형표시대해應선택항목
             if (docType === 'invoice' || docType === '송장' || docType === 'invoices') {
-                // 송장：顯示송장選項 + 기타（IIF/QBO）
+                // 송장：표시송장선택항목 + 기타（IIF/QBO）
                 menuHTML += `
                     <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">송장</div>
                     <button onclick="exportDocument('invoice_summary_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
                         <i class="fas fa-file-invoice" style="color: #f59e0b; width: 20px;"></i>
                         <div>
-                            <div style="font-weight: 500;">標準 CSV（총계）</div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">快速對帳</div>
+                            <div style="font-weight: 500;">표준 CSV（총계）</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">快速대해帳</div>
                         </div>
                     </button>
                     <button onclick="exportDocument('invoice_detailed_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
                         <i class="fas fa-file-invoice" style="color: #f59e0b; width: 20px;"></i>
                         <div>
-                            <div style="font-weight: 500;">完整거래數據 CSV</div>
+                            <div style="font-weight: 500;">完整거래데이터 CSV</div>
                             <div style="font-size: 0.75rem; color: #6b7280;">상세기록</div>
                         </div>
                     </button>
@@ -1563,14 +1563,14 @@
                         <i class="fas fa-file-csv" style="color: #2563eb; width: 20px;"></i>
                         <div>
                             <div style="font-weight: 500;">Xero CSV</div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">官方最小포맷</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">공식 최소포맷</div>
                         </div>
                     </button>
                     <button onclick="exportDocument('quickbooks_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
                         <i class="fas fa-file-csv" style="color: #059669; width: 20px;"></i>
                         <div>
                             <div style="font-weight: 500;">QuickBooks CSV</div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">官方最小포맷</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">공식 최소포맷</div>
                         </div>
                     </button>
                     <button onclick="exportDocument('iif')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
@@ -1589,13 +1589,13 @@
                     </button>
                 `;
             } else {
-                // 은행 명세서：顯示은행 명세서選項 + 기타（Xero/QuickBooks/IIF/QBO）
+                // 은행 명세서：표시은행 명세서선택항목 + 기타（Xero/QuickBooks/IIF/QBO）
                 menuHTML += `
                     <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">은행 명세서</div>
                     <button onclick="exportDocument('bank_statement_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
                         <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
                         <div>
-                            <div style="font-weight: 500;">標準 CSV</div>
+                            <div style="font-weight: 500;">표준 CSV</div>
                             <div style="font-size: 0.75rem; color: #6b7280;">전체 필드포맷</div>
                         </div>
                     </button>
@@ -1604,14 +1604,14 @@
                         <i class="fas fa-file-csv" style="color: #2563eb; width: 20px;"></i>
                         <div>
                             <div style="font-weight: 500;">Xero CSV</div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">官方最小포맷</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">공식 최소포맷</div>
                         </div>
                     </button>
                     <button onclick="exportDocument('quickbooks_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
                         <i class="fas fa-file-csv" style="color: #059669; width: 20px;"></i>
                         <div>
                             <div style="font-weight: 500;">QuickBooks CSV</div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">官方最小포맷</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">공식 최소포맷</div>
                         </div>
                     </button>
                     <button onclick="exportDocument('iif')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
@@ -1636,7 +1636,7 @@
         }
     </script>
     
-    <!-- 🔥 手機사이드바기능 -->
+    <!-- 🔥 모바일사이드바기능 -->
     <script>
         // 열기사이드바
         function openMobileSidebar() {
@@ -1649,7 +1649,7 @@
             }
         }
         
-        // 關閉사이드바
+        // 닫기사이드바
         function closeMobileSidebar() {
             const sidebar = document.getElementById('mobile-sidebar');
             const overlay = document.getElementById('mobile-sidebar-overlay');
@@ -1661,7 +1661,7 @@
         }
     </script>
     
-    <!-- 🔥 Export 메뉴（放에서 body 最後面보장에서最上層）-->
+    <!-- 🔥 Export 메뉴（放에서 body 최후面보장에서최위層）-->
     <div id="exportMenu" class="export-menu" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: none; border-radius: 12px; box-shadow: 0 25px 50px rgba(0,0,0,0.25); min-width: 280px; max-width: 90%; max-height: 80vh; overflow: auto; z-index: 2147483647; padding: 1rem;">
         <!-- 동적 생성的메뉴내용 -->
     </div>
