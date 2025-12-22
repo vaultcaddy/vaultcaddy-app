@@ -267,11 +267,8 @@
                                onmouseover="if ('${code}' !== '${this.currentLang}') this.style.background='#f9fafb'"
                                onmouseout="if ('${code}' !== '${this.currentLang}') this.style.background='white'">
                                 <div style="flex: 1;">
-                                    <div style="font-weight: ${code === this.currentLang ? '600' : '500'};">
+                                    <div style="font-weight: ${code === this.currentLang ? '600' : '500'}; font-size: 0.9375rem;">
                                         ${config.nativeName}
-                                    </div>
-                                    <div style="font-size: 0.75rem; color: #6b7280;">
-                                        ${config.name}
                                     </div>
                                 </div>
                                 ${code === this.currentLang ? '<span style="color: #8b5cf6;">✓</span>' : ''}
