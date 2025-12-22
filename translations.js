@@ -44,8 +44,9 @@ const translations = {
         'feature_error_desc': 'Our advanced AI ensures high-precision data extraction and conversion, minimizing errors and saving you valuable time.',
         
         // 價格區域
-        'pricing_title': 'Reasonable and affordable pricing',
-        'pricing_subtitle': 'Accessible to everyone',
+        'pricing_badge': 'FAIR AND AFFORDABLE PRICING',
+        'pricing_title': 'Easy Bank Statement Processing',
+        'pricing_subtitle': 'Join thousands of businesses saving time on financial data entry. No hidden fees, cancel anytime.',
         'pricing_monthly': 'Monthly bill',
         'pricing_yearly': 'Yearly bill (SAVE 20%)',
         'plan_free': 'Free Plan',
@@ -278,8 +279,9 @@ const translations = {
         'feature_error_desc': '我們的先進AI確保高精度的資料提取和轉換，最大限度減少錯誤，節省您的寶貴時間。',
         
         // 價格區域
-        'pricing_title': '合理且實惠的價格',
-        'pricing_subtitle': '輕鬆處理銀行對帳單',
+        'pricing_badge': '合理且實惠的價格',
+        'pricing_title': '輕鬆處理銀行對帳單',
+        'pricing_subtitle': '與數千家企業一起，節省財務數據錄入的時間。無隱藏費用，隨時取消。',
         'pricing_monthly': '月費',
         'pricing_yearly': '年費 (節省20%)',
         'plan_basic': '基礎方案',
@@ -628,8 +630,9 @@ const translations = {
         'feature_tag_secure': '安全で信頼性',
         
         // 定価エリア
-        'pricing_title': '合理的で手頃な料金',
-        'pricing_subtitle': '誰でもアクセス可能',
+        'pricing_badge': '合理でお手頃な料金',
+        'pricing_title': '簡単な銀行取引明細書処理',
+        'pricing_subtitle': '数千社の企業と共に、財務データ入力の時間を節約。隠れた費用なし、いつでもキャンセル可能。',
         'pricing_monthly': '月額料金',
         'pricing_yearly': '年額料金 (20%節約)',
         'plan_basic': '基礎プラン',
@@ -856,8 +859,9 @@ const translations = {
         'feature_error_desc': '당사의 고급 AI가 높은 정확도의 데이터 추출과 변환을 보장하여 오류를 최소화하고 소중한 시간을 절약합니다.',
         
         // 가격 영역
-        'pricing_title': '합리적이고 저렴한 가격',
-        'pricing_subtitle': '모든 사람이 접근 가능',
+        'pricing_badge': '합리적이고 저렴한 요금',
+        'pricing_title': '간편한 은행 명세서 처리',
+        'pricing_subtitle': '수천 개 기업과 함께 재무 데이터 입력 시간을 절약하세요. 숨겨진 요금 없음, 언제든 취소 가능.',
         'pricing_monthly': '월 요금제',
         'pricing_yearly': '연 요금제 (20% 절약)',
         'plan_free': '무료 플랜',
@@ -998,8 +1002,9 @@ const translations = {
         'processing_success_rate': '처리 성공률',
         
         // 정가 영역
-        'pricing_title': '합리적이고 저렴한 가격',
-        'pricing_subtitle': '모든 사람이 접근 가능',
+        'pricing_badge': '합리적이고 저렴한 요금',
+        'pricing_title': '간편한 은행 명세서 처리',
+        'pricing_subtitle': '수천 개 기업과 함께 재무 데이터 입력 시간을 절약하세요. 숨겨진 요금 없음, 언제든 취소 가능.',
         'pricing_monthly': '월 요금제',
         'pricing_yearly': '연 요금제 (20% 절약)',
         'plan_basic': '기본 플랜',
