@@ -1382,9 +1382,27 @@ class LanguageManager {
     }
     
     detectUserLanguage() {
-        // 首先檢查localStorage中保存的語言偏好
+        // 🔥 最優先：根據URL路徑檢測當前頁面的語言
+        const pathname = window.location.pathname;
+        
+        if (pathname.includes('/en/')) {
+            console.log('🌐 檢測到英文版頁面路徑');
+            return 'en';
+        } else if (pathname.includes('/jp/')) {
+            console.log('🌐 檢測到日文版頁面路徑');
+            return 'ja';
+        } else if (pathname.includes('/kr/')) {
+            console.log('🌐 檢測到韓文版頁面路徑');
+            return 'ko';
+        } else if (pathname === '/' || pathname.includes('/index.html') || pathname === '') {
+            console.log('🌐 檢測到中文版頁面路徑');
+            return 'zh-TW';
+        }
+        
+        // 次優先：檢查localStorage中保存的語言偏好（僅用於語言切換）
         const savedLanguage = localStorage.getItem('language') || localStorage.getItem('preferred_language');
         if (savedLanguage && translations[savedLanguage]) {
+            console.log('🌐 使用已保存的語言偏好:', savedLanguage);
             return savedLanguage;
         }
         
@@ -1422,27 +1440,47 @@ class LanguageManager {
         
         // 精確匹配
         if (languageMap[browserLang]) {
+            console.log('🌐 使用瀏覽器語言:', browserLang, '→', languageMap[browserLang]);
             return languageMap[browserLang];
         }
         
         // 模糊匹配（只匹配語言代碼前兩位）
         const langCode = browserLang.substring(0, 2);
         if (languageMap[langCode]) {
+            console.log('🌐 使用瀏覽器語言代碼:', langCode, '→', languageMap[langCode]);
             return languageMap[langCode];
         }
         
         // 默認返回繁體中文
+        console.log('🌐 使用默認語言: zh-TW');
         return 'zh-TW';
     }
     
     init() {
         // 不創建語言選擇器，讓導航欄組件處理
-        this.loadLanguage(this.currentLanguage);
+        console.log('✅ LanguageManager 初始化，當前語言:', this.currentLanguage);
         
-        // 監聽語言變更事件
+        // 只有當檢測到的語言與當前頁面語言不同時，才需要應用翻譯
+        // 大多數情況下，HTML已經包含了正確的語言內容，無需覆蓋
+        const pathname = window.location.pathname;
+        const pageLanguage = pathname.includes('/en/') ? 'en' 
+                           : pathname.includes('/jp/') ? 'ja'
+                           : pathname.includes('/kr/') ? 'ko'
+                           : 'zh-TW';
+        
+        if (this.currentLanguage === pageLanguage) {
+            console.log('✅ 頁面語言與檢測語言一致，無需應用翻譯');
+            // 不執行 loadLanguage，保留HTML原始內容
+        } else {
+            console.log('⚠️ 頁面語言與檢測語言不一致，應用翻譯:', pageLanguage, '→', this.currentLanguage);
+            this.loadLanguage(this.currentLanguage);
+        }
+        
+        // 監聽語言變更事件（用戶手動切換語言時）
         window.addEventListener('languageChanged', (e) => {
             if (e.detail && e.detail.language) {
                 this.currentLanguage = e.detail.language;
+                console.log('🔄 語言已切換:', this.currentLanguage);
             }
         });
     }
