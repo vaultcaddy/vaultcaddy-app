@@ -52,7 +52,31 @@
             margin-bottom: 0.5rem;
             color: #1f2937;
         }
-  </style>
+  
+/* 響應式設計 */
+@media (max-width: 768px) {
+    /* 導航欄 */
+    .vaultcaddy-navbar {
+        padding: 0 0.75rem !important;
+    }
+    
+    /* 顯示漢堡菜單按鈕 */
+    #mobile-menu-btn {
+        display: block !important;
+    }
+    
+    /* 隱藏桌面導航鏈接 */
+    .vaultcaddy-navbar > div:first-child > div:nth-child(2) {
+        display: none !important;
+    }
+    
+    /* Footer 響應式 */
+    footer > div > div {
+        grid-template-columns: 1fr !important;
+        gap: 2rem !important;
+    }
+}
+</style>
  
     <meta name="geo.region" content="JP-13" />
     <meta name="geo.placename" content="Tokyo" />
@@ -289,5 +313,43 @@
   </div>
   <script src="../../load-unified-navbar.js">
   </script>
- </body>
+ 
+<script>
+    // ==================== 漢堡菜單功能 ====================
+    (function() {
+        window.openMobileSidebar = function() {
+            const sidebar = document.getElementById('mobile-sidebar');
+            const overlay = document.getElementById('mobile-sidebar-overlay');
+            if (sidebar && overlay) {
+                sidebar.style.left = '0';
+                overlay.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+            }
+        };
+
+        window.closeMobileSidebar = function() {
+            const sidebar = document.getElementById('mobile-sidebar');
+            const overlay = document.getElementById('mobile-sidebar-overlay');
+            if (sidebar && overlay) {
+                sidebar.style.left = '-100%';
+                overlay.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+        };
+
+        function bindMenuButton() {
+            const menuBtn = document.getElementById('mobile-menu-btn');
+            if (menuBtn) {
+                menuBtn.addEventListener('click', window.openMobileSidebar);
+            }
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', bindMenuButton);
+        } else {
+            bindMenuButton();
+        }
+    })();
+</script>
+</body>
 </html>
