@@ -188,7 +188,7 @@ class VaultCaddySidebar {
         return `
             <!-- 搜索欄 -->
             <div style="margin-bottom: 1.5rem;">
-                <input type="text" id="project-search-input" placeholder="篩選文檔名稱..." style="width: 100%; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 0.875rem; color: #6b7280;" oninput="if(window.filterProjects){console.log('🔍 觸發搜尋:', this.value); window.filterProjects(this.value);}else{console.error('❌ window.filterProjects 未定義');}">
+                <input type="text" id="project-search-input" placeholder="篩選文檔名稱..." data-i18n-placeholder="search-placeholder" style="width: 100%; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 0.875rem; color: #6b7280;" oninput="if(window.filterProjects){console.log('🔍 觸發搜尋:', this.value); window.filterProjects(this.value);}else{console.error('❌ window.filterProjects 未定義');}">
             </div>
             
             <!-- Project 區塊 -->
@@ -213,6 +213,11 @@ class VaultCaddySidebar {
                 </div>
             </div>
         `;
+        
+        // ✅ 应用侧边栏翻译
+        setTimeout(() => {
+            this.initSidebarTranslations();
+        }, 10);
     }
     
     bindEvents() {
@@ -345,22 +350,26 @@ class VaultCaddySidebar {
             'zh': {
                 'settings': '配置',
                 'account': '帳戶',
-                'billing': '計費'
+                'billing': '計費',
+                'search-placeholder': '篩選文檔名稱...'
             },
             'en': {
                 'settings': 'Settings',
                 'account': 'Account',
-                'billing': 'Billing'
+                'billing': 'Billing',
+                'search-placeholder': 'Filter documents...'
             },
             'jp': {
                 'settings': '設定',
                 'account': 'アカウント',
-                'billing': '請求'
+                'billing': '請求',
+                'search-placeholder': 'ドキュメントをフィルター...'
             },
             'kr': {
                 'settings': '설정',
                 'account': '계정',
-                'billing': '결제'
+                'billing': '결제',
+                'search-placeholder': '문서 필터링...'
             }
         };
         
@@ -371,11 +380,23 @@ class VaultCaddySidebar {
         else if (path.startsWith('/jp/')) currentLang = 'jp';
         else if (path.startsWith('/kr/')) currentLang = 'kr';
         
-        // 应用翻译
+        console.log('🌐 Sidebar: 应用翻译，当前语言:', currentLang);
+        
+        // 应用文本内容翻译
         document.querySelectorAll('[data-i18n]').forEach(el => {
             const key = el.getAttribute('data-i18n');
             if (translations[currentLang] && translations[currentLang][key]) {
                 el.textContent = translations[currentLang][key];
+                console.log(`  ✅ 翻译 [${key}]: ${translations[currentLang][key]}`);
+            }
+        });
+        
+        // 应用placeholder翻译
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+            const key = el.getAttribute('data-i18n-placeholder');
+            if (translations[currentLang] && translations[currentLang][key]) {
+                el.placeholder = translations[currentLang][key];
+                console.log(`  ✅ 翻译 placeholder [${key}]: ${translations[currentLang][key]}`);
             }
         });
     }
