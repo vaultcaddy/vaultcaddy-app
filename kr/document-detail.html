@@ -740,9 +740,8 @@
                 padding: 0 1rem !important;
             }
             
-            /* 숨김데스크톱 버전내비게이션鏈接및언어선택기 */
-            .vaultcaddy-navbar > div:nth-child(2) > div:first-child,
-            .vaultcaddy-navbar > div:nth-child(2) > #language-dropdown {
+            /* 숨김데스크톱 버전내비게이션鏈接 */
+            .vaultcaddy-navbar > div:nth-child(2) > div:first-child {
                 display: none !important;
             }
             
@@ -1186,11 +1185,6 @@
                 <a href="/blog/" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">학습 센터</a>
                 <a href="dashboard.html" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">대시보드</a>
             </div>
-            <div id="language-dropdown" style="position: relative; display: flex; align-items: center; gap: 0.5rem; color: #6b7280; font-size: 0.875rem; cursor: pointer; padding: 0.5rem 0.75rem; border-radius: 6px; transition: background 0.2s;">
-                <i class="fas fa-language"></i>
-                <span id="current-language">繁體중文</span>
-                <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
-            </div>
             
             <div id="language-switcher" style="display: inline-block; margin-right: 1rem;"></div>
                 <div id="user-menu" style="position: relative; display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;">
@@ -1510,7 +1504,10 @@
         window.toggleExportMenu = function() {
             const menu = document.getElementById('exportMenu');
             const overlay = document.getElementById('exportMenuOverlay');
-            if (!menu) return;
+            if (!menu) {
+                console.error('❌ exportMenu 元素不存在');
+                return;
+            }
             
             // 만약메뉴이미표시，則닫기
             if (menu.style.display === 'block') {
@@ -1539,12 +1536,15 @@
         
         function updateExportMenuForDocumentDetail() {
             const menu = document.getElementById('exportMenu');
-            if (!menu) return;
+            if (!menu) {
+                console.error('❌ exportMenu 元素不存在');
+                return;
+            }
             
             // 부터 currentDocument 가져오기문서유형（정의에서 document-detail-new.js）
-            let docType = 'general';
+            let docType = 'bank_statement'; // 默認為銀行對帳單
             if (window.currentDocument) {
-                docType = window.currentDocument.type || window.currentDocument.documentType || 'general';
+                docType = window.currentDocument.type || window.currentDocument.documentType || 'bank_statement';
                 // 🔥 표준化문서유형
                 docType = docType.toLowerCase();
                 console.log('📄 Export 메뉴 - 문서유형:', docType);
@@ -1566,6 +1566,7 @@
             }
             
             menuHTML += '<div style="padding: 0.5rem 0; background: #ffffff;">';
+            console.log('🔍 開始生成 Export 菜單，文檔類型:', docType);
             
             // 문서에 따라유형표시대해應선택항목
             if (docType === 'invoice' || docType === '송장' || docType === 'invoices') {
@@ -1660,7 +1661,9 @@
             }
             
             menuHTML += '</div>';
+            console.log('📝 Export 菜單 HTML 長度:', menuHTML.length);
             menu.innerHTML = menuHTML;
+            console.log('✅ Export 菜單已更新');
         }
     </script>
     

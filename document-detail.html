@@ -1533,17 +1533,20 @@
         
         function updateExportMenuForDocumentDetail() {
             const menu = document.getElementById('exportMenu');
-            if (!menu) return;
+            if (!menu) {
+                console.error('❌ exportMenu 元素不存在');
+                return;
+            }
             
             // 從 currentDocument 獲取文檔類型（定義在 document-detail-new.js）
-            let docType = 'general';
+            let docType = 'bank_statement'; // 默認為銀行對帳單
             if (window.currentDocument) {
-                docType = window.currentDocument.type || window.currentDocument.documentType || 'general';
+                docType = window.currentDocument.type || window.currentDocument.documentType || 'bank_statement';
                 // 🔥 標準化文檔類型
                 docType = docType.toLowerCase();
                 console.log('📄 Export 菜單 - 文檔類型:', docType);
             } else {
-                console.warn('⚠️ window.currentDocument 未定義，無法獲取文檔類型');
+                console.warn('⚠️ window.currentDocument 未定義，使用默認類型: bank_statement');
             }
             
             // 🔥 手機版：添加關閉按鈕
@@ -1560,6 +1563,7 @@
             }
             
             menuHTML += '<div style="padding: 0.5rem 0; background: #ffffff;">';
+            console.log('🔍 開始生成 Export 菜單，文檔類型:', docType);
             
             // 根據文檔類型顯示對應選項
             if (docType === 'invoice' || docType === '發票' || docType === 'invoices') {
@@ -1654,7 +1658,9 @@
             }
             
             menuHTML += '</div>';
+            console.log('📝 Export 菜單 HTML 長度:', menuHTML.length);
             menu.innerHTML = menuHTML;
+            console.log('✅ Export 菜單已更新');
         }
     </script>
     
