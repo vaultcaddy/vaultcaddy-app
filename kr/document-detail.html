@@ -66,9 +66,37 @@
             }
         }
         
-        // 🔥 삭제때앞문서
+        // 🔥 현재 문서 삭제
         async function deleteCurrentDocument() {
-            const confirmDelete = confirm('확인삭제이문서嗎？이작업불가능撤銷。');
+            // 현재 언어 감지
+            const pathname = window.location.pathname;
+            let confirmMessage = '確定要刪除此文檔嗎？此操作無法撤銷。';
+            let errorMessage = '無法獲取文檔信息';
+            let successMessage = '文檔已成功刪除';
+            let connectionMessage = '無法連接到數據庫';
+            let deleteFailMessage = '刪除文檔失敗';
+            
+            if (pathname.includes('/en/')) {
+                confirmMessage = 'Are you sure you want to delete this document? This action cannot be undone.';
+                errorMessage = 'Unable to get document information';
+                successMessage = 'Document deleted successfully';
+                connectionMessage = 'Unable to connect to database';
+                deleteFailMessage = 'Failed to delete document';
+            } else if (pathname.includes('/jp/')) {
+                confirmMessage = 'このドキュメントを削除してもよろしいですか？この操作は元に戻せません。';
+                errorMessage = 'ドキュメント情報を取得できません';
+                successMessage = 'ドキュメントが正常に削除されました';
+                connectionMessage = 'データベースに接続できません';
+                deleteFailMessage = 'ドキュメントの削除に失敗しました';
+            } else if (pathname.includes('/kr/')) {
+                confirmMessage = '이 문서를 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.';
+                errorMessage = '문서 정보를 가져올 수 없습니다';
+                successMessage = '문서가 성공적으로 삭제되었습니다';
+                connectionMessage = '데이터베이스에 연결할 수 없습니다';
+                deleteFailMessage = '문서 삭제 실패';
+            }
+            
+            const confirmDelete = confirm(confirmMessage);
             if (!confirmDelete) return;
             
             try {
@@ -77,11 +105,11 @@
                 const documentId = params.get('id');
                 
                 if (!projectId || !documentId) {
-                    alert('가져오기 실패문서정보');
+                    alert(errorMessage);
                     return;
                 }
                 
-                // 부터 Firestore 삭제문서
+                // Firestore에서 문서 삭제
                 if (firebase && firebase.firestore) {
                     await firebase.firestore()
                         .collection('projects')
@@ -90,17 +118,17 @@
                         .doc(documentId)
                         .delete();
                     
-                    console.log('✅ 문서이미삭제:', documentId);
-                    alert('문서이미성공삭제');
+                    console.log('✅ 문서가 삭제되었습니다:', documentId);
+                    alert(successMessage);
                     
-                    // 돌아가기대시보드
+                    // 대시보드로 돌아가기
                     goBackToDashboard();
                 } else {
-                    alert('연결 실패까지데이터庫');
+                    alert(connectionMessage);
                 }
             } catch (error) {
-                console.error('❌ 삭제문서실패:', error);
-                alert('삭제문서실패: ' + error.message);
+                console.error('❌ 문서 삭제 실패:', error);
+                alert(deleteFailMessage + ': ' + error.message);
             }
         }
     </script>

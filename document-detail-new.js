@@ -6,6 +6,108 @@
 // 調試模式
 const DEBUG_MODE = false;
 
+// 🌐 多語言翻譯支持
+const translations = {
+    'zh': {
+        accountInfo: '${t('accountInfo')}',
+        editable: '可編輯',
+        bankName: '銀行名稱',
+        accountNumber: '帳戶號碼',
+        accountHolder: '帳戶持有人',
+        currency: '貨幣',
+        statementPeriod: '對帳單期間',
+        statementDate: '對帳單日期',
+        openingBalance: '期初餘額',
+        closingBalance: '期末餘額',
+        transactionRecords: '${t('transactionRecords')}',
+        totalTransactions: '共 {count} 筆交易（顯示第 {start}-{end} 筆）',
+        noTransactions: '無${t('transactionRecords')}',
+        date: '日期',
+        description: '描述',
+        amount: '金額',
+        balance: '餘額'
+    },
+    'en': {
+        accountInfo: 'Account Information',
+        editable: 'Editable',
+        bankName: 'Bank Name',
+        accountNumber: 'Account Number',
+        accountHolder: 'Account Holder',
+        currency: 'Currency',
+        statementPeriod: 'Statement Period',
+        statementDate: 'Statement Date',
+        openingBalance: 'Opening Balance',
+        closingBalance: 'Closing Balance',
+        transactionRecords: 'Transaction Records',
+        totalTransactions: 'Total {count} transactions (Showing {start}-{end})',
+        noTransactions: 'No transactions',
+        date: 'Date',
+        description: 'Description',
+        amount: 'Amount',
+        balance: 'Balance'
+    },
+    'ja': {
+        accountInfo: 'アカウント情報',
+        editable: '編集可能',
+        bankName: '銀行名',
+        accountNumber: '口座番号',
+        accountHolder: '口座名義人',
+        currency: '通貨',
+        statementPeriod: '明細期間',
+        statementDate: '明細日付',
+        openingBalance: '期首残高',
+        closingBalance: '期末残高',
+        transactionRecords: '取引記録',
+        totalTransactions: '合計{count}件の取引（{start}-{end}件目を表示）',
+        noTransactions: '取引記録なし',
+        date: '日付',
+        description: '説明',
+        amount: '金額',
+        balance: '残高'
+    },
+    'ko': {
+        accountInfo: '계정 정보',
+        editable: '편집 가능',
+        bankName: '은행 이름',
+        accountNumber: '계좌 번호',
+        accountHolder: '계좌 소유자',
+        currency: '통화',
+        statementPeriod: '명세서 기간',
+        statementDate: '명세서 날짜',
+        openingBalance: '기초 잔액',
+        closingBalance: '기말 잔액',
+        transactionRecords: '거래 기록',
+        totalTransactions: '총 {count}개 거래 ({start}-{end}번째 표시)',
+        noTransactions: '거래 기록 없음',
+        date: '날짜',
+        description: '설명',
+        amount: '금액',
+        balance: '잔액'
+    }
+};
+
+// 獲取當前語言
+function getCurrentLanguage() {
+    const pathname = window.location.pathname;
+    if (pathname.includes('/en/')) return 'en';
+    if (pathname.includes('/jp/')) return 'ja';
+    if (pathname.includes('/kr/')) return 'ko';
+    return 'zh';
+}
+
+// 獲取翻譯文本
+function t(key, replacements = {}) {
+    const lang = getCurrentLanguage();
+    let text = translations[lang]?.[key] || translations['zh'][key] || key;
+    
+    // 替換佔位符 {key}
+    Object.keys(replacements).forEach(key => {
+        text = text.replace(`{${key}}`, replacements[key]);
+    });
+    
+    return text;
+}
+
 // 全局變量（也暴露到 window 對象以便其他腳本訪問）
 let currentDocument = null;
 // 🔥 暴露為全局變量
@@ -19,12 +121,12 @@ let zoomLevel = 100;
 let autoSaveTimeout = null;
 let hasUnsavedChanges = false;
 
-// 交易記錄分頁變量（圖3需求）
+// ${t('transactionRecords')}分頁變量（圖3需求）
 let currentTransactionPage = 1;
 let transactionsPerPage = 10;
 let totalTransactions = 0;
 
-console.log('✅ 交易記錄分頁變量已初始化:', { currentTransactionPage, transactionsPerPage });
+console.log('✅ ${t('transactionRecords')}分頁變量已初始化:', { currentTransactionPage, transactionsPerPage });
 
 // ============================================
 // 初始化函數
@@ -682,13 +784,13 @@ function displayInvoiceContent(data) {
             <h3 class="transactions-title" style="margin-bottom: 1rem;">
                 <i class="fas fa-list" style="color: #8b5cf6; margin-right: 0.5rem;"></i>
                 項目明細
-                <span style="font-size: 0.875rem; color: #6b7280; font-weight: normal; margin-left: 0.5rem;">(可編輯)</span>
+                <span style="font-size: 0.875rem; color: #6b7280; font-weight: normal; margin-left: 0.5rem;">(${t('editable')})</span>
             </h3>
             <table class="transactions-table">
                 <thead>
                     <tr>
                         <th>代碼</th>
-                        <th>描述</th>
+                        <th>${t('description')}</th>
                         <th style="text-align: right;">數量</th>
                         <th style="text-align: right;">單位</th>
                         <th style="text-align: right;">單價</th>
@@ -727,7 +829,7 @@ function displayBankStatementContent(data) {
     const detailsSection = document.getElementById('documentDetailsSection');
     const dataSection = document.getElementById('documentDataSection');
     
-    // ✅ 提取帳戶信息（支持多種字段名稱 + 增強 Fallback）
+    // ✅ 提取${t('accountInfo')}（支持多種字段名稱 + 增強 Fallback）
     const bankName = data.bankName || 
                      data.bank_name || 
                      data.bank || 
@@ -803,62 +905,62 @@ function displayBankStatementContent(data) {
         <div class="bank-details-card">
             <h3 class="card-title" style="margin-bottom: 1.5rem;">
                 <i class="fas fa-university" style="color: #10b981; margin-right: 0.5rem;"></i>
-                帳戶信息
-                <span style="font-size: 0.875rem; color: #6b7280; font-weight: normal; margin-left: 0.5rem;">(可編輯)</span>
+                ${t('accountInfo')}
+                <span style="font-size: 0.875rem; color: #6b7280; font-weight: normal; margin-left: 0.5rem;">(${t('editable')})</span>
             </h3>
             <div class="bank-info-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">銀行名稱</label>
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('bankName')}</label>
                     <input type="text" id="bankName" value="${bankName}" 
                            onchange="autoSaveBankStatementDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">帳戶號碼</label>
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('accountNumber')}</label>
                     <input type="text" id="accountNumber" value="${accountNumber}" 
                            onchange="autoSaveBankStatementDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">帳戶持有人</label>
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('accountHolder')}</label>
                     <input type="text" id="accountHolder" value="${accountHolder}" 
                            onchange="autoSaveBankStatementDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">貨幣</label>
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('currency')}</label>
                     <input type="text" id="currency" value="${currency}" 
                            onchange="autoSaveBankStatementDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">對帳單期間</label>
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('statementPeriod')}</label>
                     <input type="text" id="statementPeriod" value="${statementPeriod}" 
                            onchange="autoSaveBankStatementDetails()"
                            placeholder="例如：2025-02-22 to 2025-03-22"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">對帳單日期</label>
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('statementDate')}</label>
                     <input type="date" id="statementDate" value="${statementDate}" 
                            onchange="autoSaveBankStatementDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white; max-width: 100%; overflow: hidden; text-overflow: ellipsis;">
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">期初餘額</label>
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('openingBalance')}</label>
                     <input type="text" id="openingBalance" value="${formatCurrency(openingBalance)}" 
                            onchange="autoSaveBankStatementDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; font-weight: 600; color: #3b82f6; background: white;">
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">期末餘額</label>
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('closingBalance')}</label>
                     <input type="text" id="closingBalance" value="${formatCurrency(closingBalance)}" 
                            onchange="autoSaveBankStatementDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; font-weight: 600; color: #10b981; background: white;">
                 </div>
             </div>
             <style>
-                /* ✅ 手機版：帳戶信息改為1列顯示 */
+                /* ✅ 手機版：${t('accountInfo')}改為1列顯示 */
                 @media (max-width: 768px) {
                     .bank-info-grid {
                         grid-template-columns: 1fr !important;
@@ -907,7 +1009,7 @@ function displayBankStatementContent(data) {
     totalTransactions = transactions.length;
     const totalPages = Math.ceil(totalTransactions / transactionsPerPage);
     
-    // ✅ 計算當前頁的交易記錄
+    // ✅ 計算當前頁的${t('transactionRecords')}
     const startIndex = (currentTransactionPage - 1) * transactionsPerPage;
     const endIndex = Math.min(startIndex + transactionsPerPage, totalTransactions);
     const currentPageTransactions = transactions.slice(startIndex, endIndex);
@@ -989,31 +1091,31 @@ function displayBankStatementContent(data) {
             <div class="transactions-header">
                 <h3 class="transactions-title">
                     <i class="fas fa-exchange-alt" style="color: #3b82f6; margin-right: 0.5rem;"></i>
-                    交易記錄
+                    ${t('transactionRecords')}
                 </h3>
             </div>
             <div class="transactions-info">
-                共 ${transactions.length} 筆交易（顯示第 ${startIndex + 1}-${endIndex} 筆）
+                ${t('totalTransactions', {count: transactions.length, start: startIndex + 1, end: endIndex})}
             </div>
             <table class="transactions-table">
                 <thead>
                     <tr>
                         <th class="checkbox-cell"><input type="checkbox"></th>
-                        <th>日期</th>
-                        <th>描述</th>
-                        <th>金額</th>
-                        <th>餘額</th>
+                        <th>${t('date')}</th>
+                        <th>${t('description')}</th>
+                        <th>${t('amount')}</th>
+                        <th>${t('balance')}</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${transactionsHTML || '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: #6b7280;">無交易記錄</td></tr>'}
+                    ${transactionsHTML || '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: #6b7280;">無${t('transactionRecords')}</td></tr>'}
                 </tbody>
             </table>
             ${paginationHTML}
         </div>
     `;
     
-    // ✅ 設置交易記錄編輯監聽器
+    // ✅ 設置${t('transactionRecords')}編輯監聽器
     setTimeout(() => setupTransactionEditListeners(), 100);
 }
 
@@ -1558,11 +1660,11 @@ function exportToQBO(data) {
 }
 
 // ============================================
-// 交易記錄分頁函數
+// ${t('transactionRecords')}分頁函數
 // ============================================
 
 /**
- * 切換交易記錄頁面（圖3需求）
+ * 切換${t('transactionRecords')}頁面（圖3需求）
  */
 window.changeTransactionPage = function(newPage) {
     console.log('🔄 changeTransactionPage 被調用:', { 
@@ -1580,13 +1682,13 @@ window.changeTransactionPage = function(newPage) {
     }
     
     currentTransactionPage = newPage;
-    console.log(`✅ 切換到交易記錄第 ${newPage} 頁（共 ${totalPages} 頁）`);
+    console.log(`✅ 切換到${t('transactionRecords')}第 ${newPage} 頁（共 ${totalPages} 頁）`);
     
-    // 重新渲染交易記錄
+    // 重新渲染${t('transactionRecords')}
     if (currentDocument && currentDocument.processedData) {
         displayBankStatementContent(currentDocument.processedData);
         
-        // ✅ 滾動到交易記錄頂部
+        // ✅ 滾動到${t('transactionRecords')}頂部
         const transactionsSection = document.querySelector('.transactions-section');
         if (transactionsSection) {
             transactionsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1597,7 +1699,7 @@ window.changeTransactionPage = function(newPage) {
 };
 
 // ============================================
-// 交易記錄編輯函數
+// ${t('transactionRecords')}編輯函數
 // ============================================
 
 // ✅ 切換交易類型（+/-）
@@ -1648,7 +1750,7 @@ function updateTransactionAmount(index, value, wasIncome) {
     markAsChanged();
 }
 
-// ✅ 處理交易記錄複選框變化
+// ✅ 處理${t('transactionRecords')}複選框變化
 window.handleTransactionCheckbox = function(index, checked) {
     console.log(`✅ 交易 ${index} 複選框變化: ${checked}`);
     
