@@ -1,7 +1,25 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
+    <!-- 资源预连接 - 性能优化 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://www.gstatic.com">
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+
     <meta charset="UTF-8">
+    <!-- 性能优化：关键CSS内联 -->
+    <style>
+        /* 关键CSS - 首屏渲染必需 */
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;line-height:1.6;color:#1f2937}
+        .vaultcaddy-navbar{position:fixed;top:0;width:100%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.1);z-index:1000}
+        .hero-section{min-height:100vh;display:flex;align-items:center;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff}
+        .container{max-width:1200px;margin:0 auto;padding:0 1rem}
+        .loading{opacity:0.5}
+    </style>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>アカウント設定 - VaultCaddy</title>
     
@@ -1024,7 +1042,7 @@
         <main class="main-content">
             <div class="account-header">
                 <h1>アカウント設定</h1>
-                <p>管理您のプロフィールとアカウント設定</p>
+                <p><span data-translate="manage_profile_desc">管理您的個人資料和帳戶設定</span></p>
             </div>
 
             <div class="settings-container">
@@ -1036,7 +1054,7 @@
                         <div class="avatar" id="user-avatar" data-user-avatar>Y</div>
                         <div class="avatar-actions">
                             <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                                <div style="font-weight: 600; color: #1f2937; font-size: 0.875rem;">現でのプラン</div>
+                                <div style="font-weight: 600; color: #1f2937; font-size: 0.875rem;"><span data-translate="current_plan">目前方案</span></div>
                                 <div id="user-plan" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; font-weight: 600; font-size: 0.875rem;">
                                     <i class="fas fa-crown"></i>
                                     <span>Basic Plan</span>
@@ -1047,7 +1065,7 @@
                                     <!-- 下次請求日付 -->
                                     <div id="next-billing-date" style="font-size: 0.75rem; color: #6b7280; display: none;">
                                         <i class="fas fa-calendar-alt" style="margin-right: 0.25rem;"></i>
-                                        下次請求：<span id="next-billing-date-text"></span>
+                                        <span data-translate="next_billing">下次計費：</span><span id="next-billing-date-text"></span>
                                     </div>
                                     
                                     <!-- サブスクリプション管理ボタン -->
@@ -1111,23 +1129,23 @@
                     <h2 class="section-title">パスワード</h2>
                     
                     <div class="form-group">
-                        <label class="form-label">目前パスワード</label>
-                        <input type="password" class="form-input" id="current-password" placeholder="輸入目前パスワード">
+                        <label class="form-label"><span data-translate="current_password">目前密碼</span></label>
+                        <input type="password" class="form-input" id="current-password" placeholder="輸入<span data-translate="current_password">目前密碼</span>">
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">新パスワード</label>
-                        <input type="password" class="form-input" id="new-password" placeholder="輸入新パスワード">
-                        <p class="form-description">パスワード〜少需要 8 個字元</p>
+                        <label class="form-label"><span data-translate="new_password">新密碼</span></label>
+                        <input type="password" class="form-input" id="new-password" placeholder="輸入<span data-translate="new_password">新密碼</span>">
+                        <p class="form-description"><span data-translate="password_requirement">密碼至少需要 8 個字元</span></p>
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">確認新パスワード</label>
-                        <input type="password" class="form-input" id="confirm-password" placeholder="再次輸入新パスワード">
+                        <label class="form-label">確認<span data-translate="new_password">新密碼</span></label>
+                        <input type="password" class="form-input" id="confirm-password" placeholder="再次輸入<span data-translate="new_password">新密碼</span>">
                     </div>
                     
                     <div class="button-group">
-                        <button class="btn btn-primary" onclick="changePassword()">更新パスワード</button>
+                        <button class="btn btn-primary" onclick="changePassword()">更<span data-translate="new_password">新密碼</span></button>
                     </div>
                 </div>
 
@@ -1144,7 +1162,7 @@
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">タイムゾーン</label>
+                        <label class="form-label"><span data-translate="timezone">時區</span></label>
                         <select class="form-input" id="timezone-select">
                             <option value="Asia/Taipei">台北 (GMT+8)</option>
                             <option value="Asia/Hong_Kong">香港 (GMT+8)</option>
@@ -1153,7 +1171,7 @@
                     </div>
                     
                     <div class="button-group">
-                        <button class="btn btn-primary" onclick="savePreferences()">儲存設定</button>
+                        <button class="btn btn-primary" onclick="savePreferences()"><span data-translate="save_settings">儲存設定</span></button>
                     </div>
                 </div>
 
@@ -1183,7 +1201,7 @@
                                 <tr>
                                     <td colspan="3" style="text-align: center; padding: 3rem; color: #9ca3af;">
                                         <i class="fas fa-history" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
-                                        <div>記録を読み込み中...</div>
+                                        <div><span data-translate="loading_records">載入記錄中...</span></div>
                                     </td>
                                 </tr>
                             </tbody>
@@ -1197,9 +1215,9 @@
                     
                     <div class="form-group">
                         <p style="color: #6b7280; font-size: 0.875rem; margin-bottom: 1rem;">
-                            削除您のアカウント將永久削除すべて資料，包括プロジェクト、文書と設定。此操作無法復原。
+                            <span data-translate="delete_account_warning">刪除您的帳戶將永久刪除所有資料，包括專案、文件和設定。此操作無法復原。</span>
                         </p>
-                        <button class="btn btn-danger" onclick="deleteAccount()">削除アカウント</button>
+                        <button class="btn btn-danger" onclick="deleteAccount()"><span data-translate="delete_account">刪除帳戶</span></button>
                     </div>
                 </div>
             </div>
@@ -1640,12 +1658,12 @@
             }
             
             if (newPassword !== confirmPassword) {
-                alert('新パスワードと確認パスワードない符');
+                alert('<span data-translate="new_password">新密碼</span>と確認パスワードない符');
                 return;
             }
             
             if (newPassword.length < 8) {
-                alert('パスワード〜少需要 8 個字元');
+                alert('<span data-translate="password_requirement">密碼至少需要 8 個字元</span>');
                 return;
             }
             
@@ -1666,12 +1684,12 @@
                 document.getElementById('new-password').value = '';
                 document.getElementById('confirm-password').value = '';
             } catch (error) {
-                console.error('❌ 更新パスワード失敗:', error);
-                alert('更新パスワード失敗: ' + error.message);
+                console.error('❌ 更<span data-translate="new_password">新密碼</span>失敗:', error);
+                alert('更<span data-translate="new_password">新密碼</span>失敗: ' + error.message);
             }
         }
         
-        // 儲存設定
+        // <span data-translate="save_settings">儲存設定</span>
         function savePreferences() {
             const language = document.getElementById('language-select').value;
             const timezone = document.getElementById('timezone-select').value;
@@ -1904,9 +1922,9 @@
             loadCreditsHistory();
         }
         
-        // 削除アカウント
+        // <span data-translate="delete_account">刪除帳戶</span>
         async function deleteAccount() {
-            const confirmed = confirm('您確認削除アカウント嗎？此操作無法復原。');
+            const confirmed = confirm('您確認<span data-translate="delete_account">刪除帳戶</span>嗎？此操作無法復原。');
             if (!confirmed) return;
             
             const doubleConfirm = confirm('這將永久削除您のすべて資料。您確認繼續嗎？');
@@ -1919,8 +1937,8 @@
                 alert('アカウント已削除');
                 window.location.href = 'index.html';
             } catch (error) {
-                console.error('❌ 削除アカウント失敗:', error);
-                alert('削除アカウント失敗: ' + error.message);
+                console.error('❌ <span data-translate="delete_account">刪除帳戶</span>失敗:', error);
+                alert('<span data-translate="delete_account">刪除帳戶</span>失敗: ' + error.message);
             }
         }
         
@@ -2038,11 +2056,11 @@
     <!-- 作成プロジェクトモーダル -->
     <div id="createProjectModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
         <div style="background: white; border-radius: 12px; padding: 2rem; width: 90%; max-width: 500px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
-            <h2 style="font-size: 1.5rem; font-weight: 600; color: #1f2937; margin: 0 0 1rem 0;">作成新プロジェクト</h2>
-            <p style="color: #6b7280; font-size: 0.875rem; margin: 0 0 1.5rem 0;">輸入プロジェクト名前以作成新の文書プロジェクト</p>
+            <h2 style="font-size: 1.5rem; font-weight: 600; color: #1f2937; margin: 0 0 1rem 0;"><span data-translate="create_new_project">建立新專案</span></h2>
+            <p style="color: #6b7280; font-size: 0.875rem; margin: 0 0 1.5rem 0;">輸入<span data-translate="project_name">專案名稱</span>以作成新の文書プロジェクト</p>
             
             <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem;">プロジェクト名前</label>
+                <label style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem;"><span data-translate="project_name">專案名稱</span></label>
                 <input 
                     type="text" 
                     id="projectName" 
@@ -2054,14 +2072,10 @@
             <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
                 <button 
                     onclick="closeCreateProjectModal()" 
-                    style="background: #ffffff; border: 1px solid #d1d5db; color: #374151; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500;">
-                    キャンセル
-                </button>
+                    style="background: #ffffff; border: 1px solid #d1d5db; color: #374151; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500;"><span data-translate="cancel">取消</span></button>
                 <button 
                     onclick="createProject()" 
-                    style="background: #3b82f6; border: none; color: white; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500;">
-                    作成
-                </button>
+                    style="background: #3b82f6; border: none; color: white; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500;"><span data-translate="create">建立</span></button>
             </div>
         </div>
     </div>
@@ -2082,7 +2096,7 @@
             modal.style.display = 'none';
         }
 
-        // 作成新プロジェクト
+        // <span data-translate="create_new_project">建立新專案</span>
         async function createProject() {
             const input = document.getElementById('projectName');
             const projectName = input.value.trim();
@@ -2092,7 +2106,7 @@
                 return;
             }
             
-            // 作成新プロジェクト對象
+            // <span data-translate="create_new_project">建立新專案</span>對象
             const newProject = {
                 id: 'project-' + Date.now(),
                 name: projectName,

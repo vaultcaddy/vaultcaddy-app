@@ -1,7 +1,25 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
+    <!-- 资源预连接 - 性能优化 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://www.gstatic.com">
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+
     <meta charset="UTF-8">
+    <!-- 性能优化：关键CSS内联 -->
+    <style>
+        /* 关键CSS - 首屏渲染必需 */
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;line-height:1.6;color:#1f2937}
+        .vaultcaddy-navbar{position:fixed;top:0;width:100%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.1);z-index:1000}
+        .hero-section{min-height:100vh;display:flex;align-items:center;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff}
+        .container{max-width:1200px;margin:0 auto;padding:0 1rem}
+        .loading{opacity:0.5}
+    </style>
+
     
     <!-- 🔒 ページ保護 -->
     <style>
@@ -2094,11 +2112,11 @@
     <!-- 作成プロジェクトモーダル -->
     <div id="createProjectModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
         <div style="background: white; border-radius: 12px; padding: 2rem; width: 90%; max-width: 500px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
-            <h2 style="font-size: 1.5rem; font-weight: 600; color: #1f2937; margin: 0 0 1rem 0;">作成新プロジェクト</h2>
-            <p style="color: #6b7280; font-size: 0.875rem; margin: 0 0 1.5rem 0;">輸入プロジェクト名前以作成新の文書プロジェクト</p>
+            <h2 style="font-size: 1.5rem; font-weight: 600; color: #1f2937; margin: 0 0 1rem 0;"><span data-translate="create_new_project">建立新專案</span></h2>
+            <p style="color: #6b7280; font-size: 0.875rem; margin: 0 0 1.5rem 0;">輸入<span data-translate="project_name">專案名稱</span>以作成新の文書プロジェクト</p>
             
             <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem;">プロジェクト名前</label>
+                <label style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem;"><span data-translate="project_name">專案名稱</span></label>
                 <input 
                     type="text" 
                     id="projectName" 
@@ -2110,14 +2128,10 @@
             <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
                 <button 
                     onclick="closeCreateProjectModal()" 
-                    style="background: #ffffff; border: 1px solid #d1d5db; color: #374151; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500;">
-                    キャンセル
-                </button>
+                    style="background: #ffffff; border: 1px solid #d1d5db; color: #374151; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500;"><span data-translate="cancel">取消</span></button>
                 <button 
                     onclick="createProject()" 
-                    style="background: #3b82f6; border: none; color: white; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500;">
-                    作成
-                </button>
+                    style="background: #3b82f6; border: none; color: white; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500;"><span data-translate="create">建立</span></button>
             </div>
         </div>
     </div>
@@ -2138,7 +2152,7 @@
             modal.style.display = 'none';
         }
 
-        // 作成新プロジェクト
+        // <span data-translate="create_new_project">建立新專案</span>
         async function createProject() {
             const input = document.getElementById('projectName');
             const projectName = input.value.trim();

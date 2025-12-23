@@ -1,7 +1,25 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+    <!-- 资源预连接 - 性能优化 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://www.gstatic.com">
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+
     <meta charset="UTF-8">
+    <!-- 性能优化：关键CSS内联 -->
+    <style>
+        /* 关键CSS - 首屏渲染必需 */
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;line-height:1.6;color:#1f2937}
+        .vaultcaddy-navbar{position:fixed;top:0;width:100%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.1);z-index:1000}
+        .hero-section{min-height:100vh;display:flex;align-items:center;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff}
+        .container{max-width:1200px;margin:0 auto;padding:0 1rem}
+        .loading{opacity:0.5}
+    </style>
+
     
     <!-- 🔒 ページ保護：即座に隱藏コンテンツ，待機 Auth チェック -->
     <style>
@@ -2212,7 +2230,7 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                         <div style="display: flex; align-items: center; gap: 0.75rem;">
                             <h1 id="team-project-title" contenteditable="false" style="font-size: 2rem; font-weight: 700; color: #1f2937; margin: 0; outline: none; border: 2px solid transparent; padding: 0.25rem 0; border-radius: 4px; transition: all 0.2s;">Project</h1>
-                            <button id="edit-project-name-btn" onclick="toggleProjectNameEdit()" style="background: transparent; border: none; cursor: pointer; color: #6b7280; padding: 0.5rem; border-radius: 4px; transition: all 0.2s;" title="編集プロジェクト名前">
+                            <button id="edit-project-name-btn" onclick="toggleProjectNameEdit()" style="background: transparent; border: none; cursor: pointer; color: #6b7280; padding: 0.5rem; border-radius: 4px; transition: all 0.2s;" title="編集<span data-translate="project_name">專案名稱</span>">
                                 <i class="fas fa-pen" style="font-size: 1.25rem;"></i>
                             </button>
                         </div>
@@ -2610,7 +2628,7 @@
                 
                 if (currentProject) {
                     document.getElementById('team-project-title').textContent = currentProject.name;
-                    console.log('✅ プロジェクト名前:', currentProject.name);
+                    console.log('✅ <span data-translate="project_name">專案名稱</span>:', currentProject.name);
                 }
                 
             } catch (error) {
@@ -3840,7 +3858,7 @@
         };
         
         window.toggleProjectNameEdit = function() {
-            console.log('編集プロジェクト名前機能待實現');
+            console.log('編集<span data-translate="project_name">專案名稱</span>機能待實現');
         };
         
         // ==================== 作成プロジェクトモーダル ====================
@@ -3862,7 +3880,7 @@
             const projectName = input.value.trim();
             
             if (!projectName) {
-                alert('入力してくださいプロジェクト名前');
+                alert('入力してください<span data-translate="project_name">專案名稱</span>');
                 return;
             }
             
@@ -4803,11 +4821,11 @@
     <!-- 作成プロジェクトモーダル -->
     <div id="createProjectModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
         <div style="background: white; border-radius: 12px; padding: 2rem; width: 90%; max-width: 500px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
-            <h2 style="font-size: 1.5rem; font-weight: 600; color: #1f2937; margin: 0 0 1rem 0;"><span data-translate="create_new_project">新しいプロジェクトを作成</span></h2>
-            <p style="color: #6b7280; font-size: 0.875rem; margin: 0 0 1.5rem 0;"><span data-translate="project_name_placeholder">プロジェクト名を入力して新しいドキュメントプロジェクトを作成</span></p>
+            <h2 style="font-size: 1.5rem; font-weight: 600; color: #1f2937; margin: 0 0 1rem 0;"><span data-translate="create_new_project"><span data-translate="create_new_project">建立新專案</span></span></h2>
+            <p style="color: #6b7280; font-size: 0.875rem; margin: 0 0 1.5rem 0;"><span data-translate="project_name_placeholder"><span data-translate="create_project_description">輸入專案名稱以建立新的文檔專案</span></span></p>
             
             <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem;">プロジェクト名前</label>
+                <label style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem;"><span data-translate="project_name">專案名稱</span></label>
                 <input 
                     type="text" 
                     id="newProjectName" 
@@ -4819,14 +4837,10 @@
             <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
                 <button 
                     onclick="closeCreateProjectModal()" 
-                    style="background: #ffffff; border: 1px solid #d1d5db; color: #374151; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500;">
-                    キャンセル
-                </button>
+                    style="background: #ffffff; border: 1px solid #d1d5db; color: #374151; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500;"><span data-translate="cancel">取消</span></button>
                 <button 
                     onclick="createNewProject()" 
-                    style="background: #3b82f6; border: none; color: white; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500;">
-                    作成
-                </button>
+                    style="background: #3b82f6; border: none; color: white; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500;"><span data-translate="create">建立</span></button>
             </div>
         </div>
     </div>
