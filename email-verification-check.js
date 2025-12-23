@@ -51,6 +51,22 @@ window.emailVerificationChecker = {
         const user = firebase.auth().currentUser;
         if (!user) return;
         
+        // 檢測當前語言
+        const pathname = window.location.pathname;
+        let message = '立即驗證您的 email 即送 20 Credits 試用！';
+        let buttonText = '立即驗證';
+        
+        if (pathname.includes('/en/')) {
+            message = 'Verify your email now and get 20 Credits free trial!';
+            buttonText = 'Verify Now';
+        } else if (pathname.includes('/jp/')) {
+            message = 'メールを今すぐ確認して20クレジットの無料トライアルをゲット！';
+            buttonText = '今すぐ確認';
+        } else if (pathname.includes('/kr/')) {
+            message = '지금 이메일을 확인하고 20 크레딧 무료 체험을 받으세요!';
+            buttonText = '지금 확인';
+        }
+        
         // 創建提示橫幅（放在頂部欄下方）
         const notice = document.createElement('div');
         notice.id = 'email-verification-notice';
@@ -71,7 +87,7 @@ window.emailVerificationChecker = {
         notice.innerHTML = `
             <div style="max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap;">
                 <span style="font-size: 1.5rem;">🎁</span>
-                <span style="font-weight: 600;">立即驗證您的 email 即送 20 Credits 試用！</span>
+                <span style="font-weight: 600;">${message}</span>
                 <button onclick="emailVerificationChecker.goToVerification()" style="
                     background: white;
                     color: #ef4444;
@@ -82,7 +98,7 @@ window.emailVerificationChecker = {
                     cursor: pointer;
                     transition: transform 0.2s;
                 ">
-                    立即驗證
+                    ${buttonText}
                 </button>
             </div>
         `;
