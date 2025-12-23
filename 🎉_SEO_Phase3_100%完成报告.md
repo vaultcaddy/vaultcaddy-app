@@ -48,7 +48,7 @@
 **H1示例：**
 ```html
 主页：VaultCaddy - 香港銀行對帳單AI處理專家 | 支援匯豐恆生中銀 | QuickBooks整合
-HSBC：VaultCaddy - 匯豐銀行HSBC對帳單AI處理 | 10秒轉QuickBooks | 98%準確率
+HSBC：VaultCaddy - 匯豐銀行HSBC對帳單AI處理 | 3秒轉QuickBooks | 98%準確率
 ```
 
 **预期效果：**

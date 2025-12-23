@@ -152,7 +152,7 @@
 <head>
     <!-- SEO基础 -->
     <title>[行业]专用：VaultCaddy AI 财务管理工具 | 香港 | 低至HK$0.5/页</title>
-    <meta name="description" content="专为[行业]设计的AI财务管理工具。自动处理银行对账单、发票、收据。支持QuickBooks/Xero集成。98%准确率，10秒处理。">
+    <meta name="description" content="专为[行业]设计的AI财务管理工具。自动处理银行对账单、发票、收据。支持QuickBooks/Xero集成。98%准确率，3秒处理。">
     <meta name="keywords" content="[行业关键词],财务管理,银行对账单,QuickBooks,香港">
     
     <!-- Open Graph -->
@@ -193,7 +193,7 @@
     <section class="hero">
         <h1>[行业]专用：AI 财务管理工具</h1>
         <p>专为[行业]设计。自动处理银行对账单、发票、收据。</p>
-        <p>✅ 10秒处理 ✅ 98%准确率 ✅ 支持QuickBooks</p>
+        <p>✅ 3秒处理 ✅ 98%准确率 ✅ 支持QuickBooks</p>
         <button>免费试用 20 页</button>
     </section>
     
@@ -212,7 +212,7 @@
         <h2>VaultCaddy 如何帮助[行业]</h2>
         <div class="feature">
             <h3>✅ 自动处理银行对账单</h3>
-            <p>10秒完成，节省90%时间</p>
+            <p>3秒完成，节省90%时间</p>
         </div>
         <!-- 3-5个核心功能 -->
     </section>

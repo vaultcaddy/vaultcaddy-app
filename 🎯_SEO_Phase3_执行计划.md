@@ -236,7 +236,7 @@ Cache-Control: public, max-age=31536000
   <p>使用VaultCaddy只需3步驟：1. 上傳PDF 2. AI自動識別 3. 一鍵匯出到QuickBooks...</p>
   
   <h3>處理一份銀行對帳單需要多久？</h3>
-  <p>VaultCaddy平均處理時間只需10秒...</p>
+  <p>VaultCaddy平均處理時間只需3秒...</p>
 </section>
 ```
 

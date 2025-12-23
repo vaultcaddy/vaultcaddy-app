@@ -13,7 +13,7 @@
 是時候說再見了！👋
 
 VaultCaddy AI 自動處理：
-✅ 10秒完成一份對帳單
+✅ 3秒完成一份對帳單
 ✅ 98%準確率
 ✅ 支持所有香港主要銀行
 ✅ 每頁只需HK$0.5
@@ -143,7 +143,7 @@ At $150/hour, that's:
 
 What if you could automate 98% of it?
 
-VaultCaddy AI processes bank statements in 10 seconds:
+VaultCaddy AI processes bank statements in 3 seconds:
 ✅ 98% accuracy (better than manual)
 ✅ One-click QuickBooks export
 ✅ $0.06/page (vs $15/page manual)
@@ -213,7 +213,7 @@ But what if you could:
 ✅ Actually sleep during tax season
 
 VaultCaddy AI handles the boring stuff:
-• Bank statement → QuickBooks: 10 seconds
+• Bank statement → QuickBooks: 3 seconds
 • 98% accuracy rate
 • $0.06/page (vs hiring at $25/hour)
 • Works 24/7 (no overtime pay)
@@ -242,7 +242,7 @@ VaultCaddy AI handles the boring stuff:
 手作業によるミスに悩んでいませんか？
 
 VaultCaddy AIなら：
-✅ 10秒で銀行明細書を処理
+✅ 3秒で銀行明細書を処理
 ✅ 98%の認識率
 ✅ 1枚わずか¥10
 
@@ -291,7 +291,7 @@ VaultCaddy AIなら：
 은행명세서 처리, 아직도 수작업으로 하시나요?
 
 VaultCaddy AI로:
-✅ 10초 만에 처리 완료
+✅ 3초 만에 처리 완료
 ✅ 98% 정확도
 ✅ 페이지당 단 ₩80
 
@@ -337,7 +337,7 @@ Hi {{Name}}，
 
 【快速開始3步驟】
 1. 上傳你的第一份銀行對帳單
-2. 等待10秒（真的只需要10秒！）
+2. 等待3秒（真的只需要3秒！）
 3. 下載QuickBooks格式
 
 就這麼簡單！✨

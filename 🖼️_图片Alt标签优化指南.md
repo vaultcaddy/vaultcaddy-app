@@ -90,7 +90,7 @@
 **收据扫描**:
 ```html
 <img src="receipt-scan.png" 
-     alt="Receipt Scanner - Extract Data in 10 Seconds">
+     alt="Receipt Scanner - Extract Data in 3 seconds">
 ```
 
 **餐厅发票示例**（中文版）:

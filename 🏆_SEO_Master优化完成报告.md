@@ -62,7 +62,7 @@ From $0.06/page or $6.99/month 💰 Try 20 pages FREE ✅ 98% Accuracy
 
 **优化后**：
 ```
-🏆 #1 AI-Powered Bank Statement OCR Tool 2025. Convert PDF to QuickBooks/Excel in 10 seconds. 
+🏆 #1 AI-Powered Bank Statement OCR Tool 2025. Convert PDF to QuickBooks/Excel in 3 seconds. 
 Starting at $0.06/page or $6.99/month. 98% accuracy, support all major US banks 
 (Bank of America, Chase, Wells Fargo). Free 20-page trial, no credit card required. 
 Trusted by 200+ accounting professionals.
@@ -72,7 +72,7 @@ Trusted by 200+ accounting professionals.
 - ✅ "#1"排名标记吸引点击
 - ✅ 具体银行名称（Bank of America, Chase, Wells Fargo）
 - ✅ "accounting professionals"更专业定位
-- ✅ "10 seconds"比"10s"更自然
+- ✅ "3 seconds"比"10s"更自然
 - ✅ 保持emoji吸引眼球
 
 **SEO收益**：

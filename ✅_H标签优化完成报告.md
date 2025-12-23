@@ -53,14 +53,14 @@
 #### 银行页面示例（hsbc-bank-statement.html）
 **优化后：**
 ```html
-<h1>VaultCaddy - 匯豐銀行HSBC對帳單AI處理 | 10秒轉QuickBooks | 98%準確率</h1>
+<h1>VaultCaddy - 匯豐銀行HSBC對帳單AI處理 | 3秒轉QuickBooks | 98%準確率</h1>
 ```
 
 **包含的SEO元素：**
 - 品牌：VaultCaddy
 - 目标银行：匯豐銀行 HSBC
 - 核心功能：對帳單AI處理
-- 速度承诺：10秒
+- 速度承诺：3秒
 - 整合软件：QuickBooks
 - 准确率：98%
 
@@ -294,7 +294,7 @@ H1 = 品牌名称 + 目标对象 + 核心功能 + 价值主张
 
 **示例：**
 ```
-VaultCaddy + 匯豐銀行 + 對帳單AI處理 + 10秒轉QuickBooks | 98%準確率
+VaultCaddy + 匯豐銀行 + 對帳單AI處理 + 3秒轉QuickBooks | 98%準確率
 ```
 
 ### H2-H6使用规则

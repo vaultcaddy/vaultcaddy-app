@@ -606,6 +606,19 @@
         }
 
         // Initialize Google Sign In button
+        
+        // 防止未捕获的Promise rejection显示在页面上
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('未处理的Promise rejection:', event.reason);
+            event.preventDefault(); // 阻止默认的错误显示
+        });
+        
+        // 捕获所有未处理的错误
+        window.addEventListener('error', function(event) {
+            console.error('全局错误:', event.error);
+            // 不阻止默认行为，让开发者可以在控制台看到
+        });
+        
         document.addEventListener('DOMContentLoaded', function() {
             // Wait for Google Auth initialization
             const initGoogleButton = () => {
