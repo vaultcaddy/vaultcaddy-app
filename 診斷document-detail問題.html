@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Detail 診斷工具</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            line-height: 1.6;
+        }
+        .status-box {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: white;
+        }
+        .status-box h3 {
+            margin-top: 0;
+            color: #374151;
+        }
+        .success { border-color: #10b981; background: #d1fae5; }
+        .error { border-color: #ef4444; background: #fee2e2; }
+        .warning { border-color: #f59e0b; background: #fef3c7; }
+        .loading { border-color: #3b82f6; background: #dbeafe; }
+        pre {
+            background: #f3f4f6;
+            padding: 0.5rem;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 0.875rem;
+        }
+        .button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 1rem;
+        }
+        .button:hover {
+            background: #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Document Detail 問題診斷</h1>
+    <p>這個工具會檢查 document-detail.html 頁面無法載入的原因。</p>
+    
+    <div id="diagnostics">
+        <div class="status-box loading">
+            <h3>正在檢查...</h3>
+            <p>請稍候，正在診斷問題...</p>
+        </div>
+    </div>
+    
+    <button class="button" onclick="window.location.reload()">🔄 重新診斷</button>
+    <button class="button" onclick="window.location.href='dashboard.html'" style="background: #6b7280;">📊 返回 Dashboard</button>
+    
+    <script defer src="config.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script defer src="simple-auth.js"></script>
+    <script defer src="simple-data-manager.js"></script>
+    
+    <script>
+        const results = [];
+        
+        function addResult(title, status, details) {
+            results.push({ title, status, details });
+            updateDisplay();
+        }
+        
+        function updateDisplay() {
+            const container = document.getElementById('diagnostics');
+            container.innerHTML = results.map(r => `
+                <div class="status-box ${r.status}">
+                    <h3>${r.status === 'success' ? '✅' : r.status === 'error' ? '❌' : r.status === 'warning' ? '⚠️' : '⏳'} ${r.title}</h3>
+                    ${r.details ? `<pre>${r.details}</pre>` : ''}
+                </div>
+            `).join('');
+        }
+        
+        async function runDiagnostics() {
+            // 檢查 1: URL 參數
+            const urlParams = new URLSearchParams(window.location.search);
+            const projectId = urlParams.get('project');
+            const documentId = urlParams.get('id');
+            
+            if (!projectId || !documentId) {
+                addResult('URL 參數檢查', 'warning', 
+                    `⚠️ 缺少URL參數\n請訪問: https://vaultcaddy.com/document-detail.html?project=YOUR_PROJECT&id=YOUR_DOC`);
+            } else {
+                addResult('URL 參數檢查', 'success', 
+                    `Project ID: ${projectId}\nDocument ID: ${documentId}`);
+            }
+            
+            // 檢查 2: Firebase 配置
+            await new Promise(resolve => setTimeout(resolve, 500));
+            if (typeof firebase !== 'undefined') {
+                addResult('Firebase SDK', 'success', 'Firebase SDK 已載入');
+            } else {
+                addResult('Firebase SDK', 'error', 'Firebase SDK 未載入');
+                return;
+            }
+            
+            // 檢查 3: SimpleAuth
+            let attempts = 0;
+            while ((!window.simpleAuth || !window.simpleAuth.initialized) && attempts < 50) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
+            if (window.simpleAuth && window.simpleAuth.initialized) {
+                if (window.simpleAuth.currentUser) {
+                    addResult('SimpleAuth 認證', 'success', 
+                        `✅ 已登入\n用戶: ${window.simpleAuth.currentUser.email}`);
+                } else {
+                    addResult('SimpleAuth 認證', 'error', 
+                        '❌ 未登入\n請先登入 VaultCaddy');
+                    return;
+                }
+            } else {
+                addResult('SimpleAuth 認證', 'error', 
+                    `❌ SimpleAuth 初始化失敗\n等待了 ${attempts * 100}ms`);
+                return;
+            }
+            
+            // 檢查 4: SimpleDataManager
+            attempts = 0;
+            while ((!window.simpleDataManager || !window.simpleDataManager.initialized) && attempts < 50) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
+            if (window.simpleDataManager && window.simpleDataManager.initialized) {
+                addResult('SimpleDataManager', 'success', 'SimpleDataManager 已就緒');
+            } else {
+                addResult('SimpleDataManager', 'error', 
+                    `❌ SimpleDataManager 初始化失敗\n等待了 ${attempts * 100}ms`);
+                return;
+            }
+            
+            // 檢查 5: 文檔數據獲取
+            if (projectId && documentId) {
+                try {
+                    const doc = await window.simpleDataManager.getDocument(projectId, documentId);
+                    if (doc) {
+                        addResult('文檔數據獲取', 'success', 
+                            `✅ 文檔存在\n名稱: ${doc.name || doc.fileName || '未命名'}\n狀態: ${doc.status || '未知'}\n處理進度: ${doc.processingProgress || 0}%`);
+                        
+                        // 檢查處理數據
+                        if (doc.processedData) {
+                            const transCount = doc.processedData.transactions?.length || 0;
+                            addResult('處理數據檢查', 'success', 
+                                `✅ 有處理數據\n交易記錄: ${transCount} 筆`);
+                        } else {
+                            addResult('處理數據檢查', 'warning', 
+                                '⚠️ 文檔尚未處理或處理失敗');
+                        }
+                    } else {
+                        addResult('文檔數據獲取', 'error', 
+                            '❌ 找不到文檔\n可能已被刪除或沒有權限');
+                    }
+                } catch (error) {
+                    addResult('文檔數據獲取', 'error', 
+                        `❌ 獲取文檔失敗\nError: ${error.message}\nStack: ${error.stack}`);
+                }
+            }
+            
+            // 檢查 6: Console 錯誤
+            const errors = [];
+            const originalError = console.error;
+            console.error = function(...args) {
+                errors.push(args.join(' '));
+                originalError.apply(console, args);
+            };
+            
+            if (errors.length > 0) {
+                addResult('Console 錯誤', 'error', 
+                    `發現 ${errors.length} 個錯誤:\n${errors.join('\n')}`);
+            } else {
+                addResult('Console 錯誤', 'success', '✅ 無 Console 錯誤');
+            }
+            
+            // 總結
+            const hasError = results.some(r => r.status === 'error');
+            if (hasError) {
+                addResult('診斷結果', 'error', 
+                    '❌ 發現問題，請根據上面的錯誤信息修復');
+            } else {
+                addResult('診斷結果', 'success', 
+                    '✅ 所有檢查通過！\n如果頁面仍無法顯示，請打開瀏覽器開發者工具(F12)查看 Console 錯誤');
+            }
+        }
+        
+        // 等待所有腳本載入後開始診斷
+        window.addEventListener('load', () => {
+            setTimeout(runDiagnostics, 1000);
+        });
+    </script>
+</body>
+</html>
+

@@ -321,3 +321,4 @@ python3 add-favicon.py
 **状态**: ✅ 完成  
 **影响范围**: vaultcaddy.com 下所有 HTML 页面
 
+
