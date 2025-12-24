@@ -192,6 +192,10 @@ class VaultCaddySidebar {
                     <span style="font-size: 0.875rem; font-weight: 500; color: #6b7280;">project</span>
                     <button onclick="openCreateProjectModal()" style="background: none; border: none; color: #6b7280; cursor: pointer; font-size: 1.25rem; padding: 0; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;">+</button>
                 </div>
+                
+                <!-- 🔍 搜尋框 (保留功能，清空placeholder) -->
+                <input type="text" id="project-search-input" placeholder="" oninput="filterProjects(this.value)" style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem; margin-bottom: 0.75rem; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#d1d5db'">
+                
                 ${projectsHTML}
             </div>
             
