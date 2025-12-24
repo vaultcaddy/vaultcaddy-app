@@ -9,7 +9,7 @@ const DEBUG_MODE = true; // ⚠️ 临时启用，方便调试
 // 🌐 多語言翻譯支持
 const translations = {
     'zh': {
-        accountInfo: '${t('accountInfo')}',
+        accountInfo: '賬戶信息',
         editable: '可編輯',
         bankName: '銀行名稱',
         accountNumber: '帳戶號碼',
@@ -19,9 +19,9 @@ const translations = {
         statementDate: '對帳單日期',
         openingBalance: '期初餘額',
         closingBalance: '期末餘額',
-        transactionRecords: '${t('transactionRecords')}',
+        transactionRecords: '交易記錄',
         totalTransactions: '共 {count} 筆交易（顯示第 {start}-{end} 筆）',
-        noTransactions: '無${t('transactionRecords')}',
+        noTransactions: '無交易記錄',
         date: '日期',
         description: '描述',
         amount: '金額',
