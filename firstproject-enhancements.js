@@ -432,10 +432,13 @@ window.goToPage = function(page) {
 function updatePaginationControls() {
     const totalPages = Math.ceil(window.filteredDocuments.length / window.rowsPerPage) || 1;
     
-    // 更新頁碼顯示
-    const pageDisplay = document.querySelector('.pagination-controls span:last-of-type');
+    // 更新頁碼顯示 - ✅ 修復：使用正確的選擇器 .page-display
+    const pageDisplay = document.querySelector('.page-display');
     if (pageDisplay) {
         pageDisplay.textContent = `Page ${window.currentPage} of ${totalPages}`;
+        console.log(`📄 更新分頁顯示: 第 ${window.currentPage} 頁 / 共 ${totalPages} 頁`);
+    } else {
+        console.warn('⚠️ 找不到 .page-display 元素');
     }
     
     // 更新按鈕狀態

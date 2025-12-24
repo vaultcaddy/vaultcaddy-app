@@ -186,11 +186,6 @@ class VaultCaddySidebar {
         }).join('');
         
         return `
-            <!-- 搜索欄 -->
-            <div style="margin-bottom: 1.5rem;">
-                <input type="text" id="project-search-input" placeholder="篩選文檔名稱..." data-i18n-placeholder="search-placeholder" style="width: 100%; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 0.875rem; color: #6b7280;" oninput="if(window.filterProjects){console.log('🔍 觸發搜尋:', this.value); window.filterProjects(this.value);}else{console.error('❌ window.filterProjects 未定義');}">
-            </div>
-            
             <!-- Project 區塊 -->
             <div style="margin-bottom: auto;">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
