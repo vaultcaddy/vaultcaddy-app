@@ -21,7 +21,7 @@
     const urlParams = new URLSearchParams(window.location.search);
     const debugMode = urlParams.has('debug');
     
-    if (isProduction && !debugMode) {
+    if (false) {  // ✅ 临时禁用日志隐藏，方便调试
         // 🔇 生产环境：隐藏console.log
         console.log = function() {
             // 不输出任何内容

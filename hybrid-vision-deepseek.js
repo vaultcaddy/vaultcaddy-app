@@ -842,6 +842,10 @@ class HybridVisionDeepSeekProcessor {
      */
     mergeChunkedResults(results, documentType) {
         console.log(`🔄 開始合併 ${results.length} 段結果（文檔類型：${documentType}）...`);
+        console.log(`🔍 [DEBUG] mergeChunkedResults 診斷：`);
+        console.log(`   - documentType 類型: ${typeof documentType}`);
+        console.log(`   - documentType 值: "${documentType}"`);
+        console.log(`   - isBankStatement 判斷結果: ${this.isBankStatement(documentType)}`);
         
         // ✅ 檢查 results 是否為空或無效
         if (!results || results.length === 0) {

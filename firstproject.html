@@ -3348,7 +3348,11 @@
                 await loadDocuments();
                 
                 // 7. 後台處理 AI（處理所有頁面）
-                processMultiPageFileWithAI(filesToProcess, docId, documentType).catch(err => {
+                console.log(`🔍 [DEBUG] 準備調用 processMultiPageFileWithAI`);
+                console.log(`   - 文件數量: ${filesToProcess.length}`);
+                console.log(`   - 文檔ID: ${docId}`);
+                console.log(`   - 文檔類型: ${selectedDocumentType}`);
+                processMultiPageFileWithAI(filesToProcess, docId, selectedDocumentType).catch(err => {
                     console.error('❌ AI 處理失敗:', err);
                 });
                 
@@ -3502,6 +3506,10 @@
                     processingDocuments.add(docId);
                     console.log(`🔒 鎖定文檔 ${docId}，開始處理`);
                     console.log(`🤖 開始多頁 AI 處理: ${files.length} 頁（方案 C：批量 OCR + 逐頁 DeepSeek）`);
+                    console.log(`🔍 [DEBUG] processMultiPageFileWithAI 收到的參數：`);
+                    console.log(`   - documentType 類型: ${typeof documentType}`);
+                    console.log(`   - documentType 值: "${documentType}"`);
+                    console.log(`   - documentType 是否為 undefined: ${documentType === undefined}`);
                 
                 if (!window.HybridVisionDeepSeekProcessor) {
                     throw new Error('AI 處理器未載入');
