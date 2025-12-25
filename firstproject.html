@@ -54,6 +54,23 @@
                 document.body.classList.add('auth-checking');
             });
         }
+        
+        // ✅ 超時保護：10秒後強制顯示頁面（防止卡住）
+        setTimeout(function() {
+            if (document.body.classList.contains('auth-checking')) {
+                console.warn('⚠️ Auth 初始化超時（10秒），強制顯示頁面');
+                document.body.classList.remove('auth-checking');
+                document.body.classList.add('auth-ready');
+                
+                // 如果沒有登入，重定向到首頁
+                if (!window.simpleAuth || !window.simpleAuth.currentUser) {
+                    console.log('❌ 超時且未登入，重定向到首頁');
+                    setTimeout(function() {
+                        window.location.href = 'index.html';
+                    }, 1000);
+                }
+            }
+        }, 10000);
     </script>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <!-- 🔇 安全隐藏控制台日志（不删除代码） -->
