@@ -28,7 +28,7 @@
     <link rel="stylesheet" href="../dashboard.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
-    <!-- 核心設定 -->
+    <!-- コア設定 -->
     <script defer src="../config.js"></script>
     <script defer src="../translations.js?v=20251102"></script>
     
@@ -976,7 +976,7 @@
                                     console.log('✅ index.html 取得 Credits:', userCredits);
                                 }
                             } catch (error) {
-                                console.log('⚠️ 無法から Firestore 取得ユーザー資料:', error);
+                                console.log('⚠️ Firestoreからユーザーデータを取得できませんでした:', error);
                             }
                         } else {
                             console.log('⏳ SimpleDataManager 尚未初期化，待機中...');
@@ -1042,7 +1042,7 @@
         <main class="main-content">
             <div class="account-header">
                 <h1>アカウント設定</h1>
-                <p><span data-translate="manage_profile_desc">管理您的個人資料和帳戶設定</span></p>
+                <p><span data-translate="manage_profile_desc">プロフィールとアカウントの設定を管理</span></p>
             </div>
 
             <div class="settings-container">
@@ -1105,7 +1105,7 @@
                                 1ページ処理ごとに1クレジット消費
                             </div>
                             <div id="overage-info" style="display: none; font-size: 0.8125rem; color: #6366f1; margin-top: 0.375rem; padding: 0.5rem; background: #f0f4ff; border-left: 3px solid #6366f1; border-radius: 4px;">
-                                💡 <strong>超額請求</strong>：超出月度額度後自動按 <strong>HKD $0.5/頁</strong> 請求
+                                💡 <strong>超過分請求</strong>：月間上限を超えた場合、自動的に <strong>HKD $0.5/ページ</strong> で請求されます
                             </div>
                             <div style="font-size: 0.75rem; color: #9ca3af; margin-top: 0.5rem;">
                                 重置日付：<span id="credits-reset-date">11/4/2025</span> ⓘ
@@ -1136,7 +1136,7 @@
                     <div class="form-group">
                         <label class="form-label"><span data-translate="new_password">新しいパスワード</span></label>
                         <input type="password" class="form-input" id="new-password">
-                        <p class="form-description"><span data-translate="password_requirement">密碼至少需要 8 個字元</span></p>
+                        <p class="form-description"><span data-translate="password_requirement">パスワードは8文字以上必要です</span></p>
                     </div>
                     
                     <div class="form-group">
@@ -1145,7 +1145,7 @@
                     </div>
                     
                     <div class="button-group">
-                        <button class="btn btn-primary" onclick="changePassword()">更新密碼</button>
+                        <button class="btn btn-primary" onclick="changePassword()">パスワードを更新</button>
                     </div>
                 </div>
 
@@ -1171,7 +1171,7 @@
                     </div>
                     
                     <div class="button-group">
-                        <button class="btn btn-primary" onclick="savePreferences()"><span data-translate="save_settings">儲存設定</span></button>
+                        <button class="btn btn-primary" onclick="savePreferences()"><span data-translate="save_settings">設定を保存</span></button>
                     </div>
                 </div>
 
@@ -1215,9 +1215,9 @@
                     
                     <div class="form-group">
                         <p style="color: #6b7280; font-size: 0.875rem; margin-bottom: 1rem;">
-                            <span data-translate="delete_account_warning">刪除您的帳戶將永久刪除所有資料，包括專案、文件和設定。此操作無法復原。</span>
+                            <span data-translate="delete_account_warning">アカウントを削除すると、プロジェクト、ファイル、設定を含むすべてのデータが完全に削除されます。この操作は元に戻せません。</span>
                         </p>
-                        <button class="btn btn-danger" onclick="deleteAccount()"><span data-translate="delete_account">刪除帳戶</span></button>
+                        <button class="btn btn-danger" onclick="deleteAccount()"><span data-translate="delete_account">アカウントを削除</span></button>
                     </div>
                 </div>
             </div>
@@ -1243,13 +1243,13 @@
                 window.accountSidebar = new VaultCaddySidebar('account');
             }
             
-            // 読み込みユーザー資料
+            // ユーザーデータを読み込み
             loadUserData(e.detail.user);
         });
         
-        // 読み込みユーザー資料
+        // ユーザーデータを読み込み
         function loadUserData(user) {
-            // 設置頭像
+            // アバターを設定
             const avatar = document.getElementById('user-avatar');
             const savedAvatar = localStorage.getItem('userAvatar');
             
@@ -1265,10 +1265,10 @@
                 localStorage.setItem('userAvatar', avatarText);
             }
             
-            // 読み込みユーザー計劃
+            // ユーザープランを読み込み
             loadUserPlan();
             
-            // 読み込み設定
+            // 設定を読み込み
             const savedLanguage = localStorage.getItem('userLanguage') || 'zh-TW';
             const savedTimezone = localStorage.getItem('userTimezone') || 'Asia/Taipei';
             document.getElementById('language-select').value = savedLanguage;
@@ -1363,15 +1363,15 @@
             const subscriptionManagement = document.getElementById('subscription-management');
             const upgradePlanLink = document.getElementById('upgrade-plan-link');
             
-            // 💡 根據計劃タイプ顯示/隱藏超額請求說明
+            // 💡 プランタイプに応じて超過分請求の説明を表示/非表示
             const overageInfo = document.getElementById('overage-info');
             if (savedPlan === 'Pro' || savedPlan === 'Business') {
-                // Pro Plan または Business Plan ユーザー：顯示超額請求說明
+                // Pro Plan または Business Plan ユーザー：超過分請求の説明を表示
                 if (overageInfo) {
                     overageInfo.style.display = 'block';
                 }
             } else {
-                // Free Plan または Basic Plan ユーザー：隱藏超額請求說明
+                // Free Plan または Basic Plan ユーザー：超過分請求の説明を非表示
                 if (overageInfo) {
                     overageInfo.style.display = 'none';
                 }
@@ -1663,7 +1663,7 @@
             }
             
             if (newPassword.length < 8) {
-                alert('<span data-translate="password_requirement">密碼至少需要 8 個字元</span>');
+                alert('パスワードは8文字以上必要です');
                 return;
             }
             
@@ -1689,7 +1689,7 @@
             }
         }
         
-        // <span data-translate="save_settings">儲存設定</span>
+        // 設定を保存
         function savePreferences() {
             const language = document.getElementById('language-select').value;
             const timezone = document.getElementById('timezone-select').value;
@@ -1698,10 +1698,10 @@
             localStorage.setItem('userLanguage', language);
             localStorage.setItem('userTimezone', timezone);
             
-            alert('設定保存済み');
+            alert('設定が保存されました');
         }
         
-        // 儲存通知設定
+        // 通知設定を保存
         function saveNotifications() {
             const emailNotifications = document.getElementById('email-notifications').checked;
             const marketingEmails = document.getElementById('marketing-emails').checked;
@@ -1710,11 +1710,11 @@
             localStorage.setItem('emailNotifications', emailNotifications);
             localStorage.setItem('marketingEmails', marketingEmails);
             
-            alert('通知設定保存済み');
+            alert('通知設定が保存されました');
         }
         
-        // 読み込み Credits 歷史記録
-        // 動態読み込み月份選項
+        // クレジット履歴を読み込み
+        // 月のオプションを動的に読み込み
         async function loadMonthOptions() {
             const select = document.getElementById('history-month-filter');
             
@@ -1900,7 +1900,7 @@
                 console.log(`✅ 読み込み了 ${rows.length} 條 Credits 歷史記録`);
                 
             } catch (error) {
-                console.error('読み込み Credits 歷史記録失敗:', error);
+                console.error('クレジット履歴の読み込みに失敗しました:', error);
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="3" style="text-align: center; padding: 2rem; color: #ef4444;">
@@ -1922,23 +1922,23 @@
             loadCreditsHistory();
         }
         
-        // <span data-translate="delete_account">刪除帳戶</span>
+        // アカウントを削除
         async function deleteAccount() {
-            const confirmed = confirm('您確認<span data-translate="delete_account">刪除帳戶</span>嗎？此操作無法復原。');
+            const confirmed = confirm('アカウントを削除してもよろしいですか？この操作は元に戻せません。');
             if (!confirmed) return;
             
-            const doubleConfirm = confirm('這將永久削除您のすべて資料。您確認繼續嗎？');
+            const doubleConfirm = confirm('すべてのデータが完全に削除されます。本当に続行しますか？');
             if (!doubleConfirm) return;
             
             try {
                 const user = window.simpleAuth.currentUser;
                 await user.delete();
                 
-                alert('アカウント已削除');
+                alert('アカウントが削除されました');
                 window.location.href = 'index.html';
             } catch (error) {
-                console.error('❌ <span data-translate="delete_account">刪除帳戶</span>失敗:', error);
-                alert('<span data-translate="delete_account">刪除帳戶</span>失敗: ' + error.message);
+                console.error('❌ アカウントの削除に失敗しました:', error);
+                alert('アカウントの削除に失敗しました: ' + error.message);
             }
         }
         
@@ -2056,11 +2056,11 @@
     <!-- 作成プロジェクトモーダル -->
     <div id="createProjectModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
         <div style="background: white; border-radius: 12px; padding: 2rem; width: 90%; max-width: 500px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
-            <h2 style="font-size: 1.5rem; font-weight: 600; color: #1f2937; margin: 0 0 1rem 0;"><span data-translate="create_new_project">建立新專案</span></h2>
-            <p style="color: #6b7280; font-size: 0.875rem; margin: 0 0 1.5rem 0;">輸入<span data-translate="project_name">專案名稱</span>以作成新の文書プロジェクト</p>
+            <h2 style="font-size: 1.5rem; font-weight: 600; color: #1f2937; margin: 0 0 1rem 0;"><span data-translate="create_new_project">新しいプロジェクトを作成</span></h2>
+            <p style="color: #6b7280; font-size: 0.875rem; margin: 0 0 1.5rem 0;"><span data-translate="project_name">プロジェクト名</span>を入力して新しいドキュメントプロジェクトを作成</p>
             
             <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem;"><span data-translate="project_name">專案名稱</span></label>
+                <label style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem;"><span data-translate="project_name">プロジェクト名</span></label>
                 <input 
                     type="text" 
                     id="projectName" 
@@ -2096,17 +2096,17 @@
             modal.style.display = 'none';
         }
 
-        // <span data-translate="create_new_project">建立新專案</span>
+        // 新しいプロジェクトを作成
         async function createProject() {
             const input = document.getElementById('projectName');
             const projectName = input.value.trim();
             
             if (!projectName) {
-                alert('Please enter a project name');
+                alert('プロジェクト名を入力してください');
                 return;
             }
             
-            // <span data-translate="create_new_project">建立新專案</span>對象
+            // 新しいプロジェクトオブジェクト
             const newProject = {
                 id: 'project-' + Date.now(),
                 name: projectName,
