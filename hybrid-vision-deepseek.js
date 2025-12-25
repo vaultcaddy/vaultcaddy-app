@@ -895,8 +895,11 @@ class HybridVisionDeepSeekProcessor {
                 accountNumber: firstPage.accountNumber || '',
                 statementDate: firstPage.statementDate || lastPage.statementDate || '',
                 statementPeriod: firstPage.statementPeriod || '',
-                openingBalance: firstPage.openingBalance || 0,  // 第 1 頁的 B/F BALANCE
-                closingBalance: lastPage.closingBalance || 0,   // 最後 1 頁的 C/F BALANCE
+                // ✅ 兼容两种命名方式（驼峰和下划线）
+                openingBalance: firstPage.openingBalance || firstPage.opening_balance || 0,
+                closingBalance: lastPage.closingBalance || lastPage.closing_balance || 0,
+                opening_balance: firstPage.openingBalance || firstPage.opening_balance || 0,  // 向后兼容
+                closing_balance: lastPage.closingBalance || lastPage.closing_balance || 0,    // 向后兼容
                 transactions: [],
                 currency: firstPage.currency || 'HKD'
             };
