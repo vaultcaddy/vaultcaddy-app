@@ -26,28 +26,88 @@ const i18n = {
         date: '日期',
         description: '描述',
         amount: '金額',
-        balance: '餘額'
+        balance: '餘額',
+        account_info: '帳戶信息',
+        editable: '(可編輯)',
+        bank_name: '銀行名稱',
+        account_number: '帳戶號碼',
+        account_holder: '帳戶持有人',
+        statement_period: '對帳單期間',
+        statement_date: '對帳單日期',
+        opening_balance: '期初餘額',
+        closing_balance: '期末餘額',
+        currency: '貨幣',
+        other_accounts: '其他賬戶',
+        no_other_accounts: '暫無其他賬戶信息',
+        transactions: '交易記錄',
+        total_transactions: '共 {count} 筆交易（顯示第 {start}-{end} 筆）',
+        no_transactions: '無交易記錄'
     },
     'en': {
         verified: 'Verified',
         date: 'Date',
         description: 'Description',
         amount: 'Amount',
-        balance: 'Balance'
+        balance: 'Balance',
+        account_info: 'Account Information',
+        editable: '(Editable)',
+        bank_name: 'Bank Name',
+        account_number: 'Account Number',
+        account_holder: 'Account Holder',
+        statement_period: 'Statement Period',
+        statement_date: 'Statement Date',
+        opening_balance: 'Opening Balance',
+        closing_balance: 'Closing Balance',
+        currency: 'Currency',
+        other_accounts: 'Other Accounts',
+        no_other_accounts: 'No other account information',
+        transactions: 'Transactions',
+        total_transactions: '{count} transactions total (showing {start}-{end})',
+        no_transactions: 'No transactions'
     },
     'ja': {
         verified: '確認済',
         date: '日付',
         description: '説明',
         amount: '金額',
-        balance: '残高'
+        balance: '残高',
+        account_info: '口座情報',
+        editable: '(編集可)',
+        bank_name: '銀行名',
+        account_number: '口座番号',
+        account_holder: '口座名義人',
+        statement_period: '明細期間',
+        statement_date: '明細日付',
+        opening_balance: '期首残高',
+        closing_balance: '期末残高',
+        currency: '通貨',
+        other_accounts: 'その他の口座',
+        no_other_accounts: 'その他の口座情報はありません',
+        transactions: '取引記録',
+        total_transactions: '合計{count}件の取引（{start}～{end}件目を表示）',
+        no_transactions: '取引記録がありません'
     },
     'ko': {
         verified: '확인됨',
         date: '날짜',
         description: '설명',
         amount: '금액',
-        balance: '잔액'
+        balance: '잔액',
+        account_info: '계정 정보',
+        editable: '(편집 가능)',
+        bank_name: '은행명',
+        account_number: '계좌 번호',
+        account_holder: '계좌 소유자',
+        statement_period: '명세서 기간',
+        statement_date: '명세서 날짜',
+        opening_balance: '기초 잔액',
+        closing_balance: '기말 잔액',
+        currency: '통화',
+        other_accounts: '기타 계정',
+        no_other_accounts: '다른 계정 정보 없음',
+        transactions: '거래 내역',
+        total_transactions: '총 {count}건의 거래 ({start}~{end}건 표시)',
+        no_transactions: '거래 내역 없음'
     }
 };
 
@@ -1184,55 +1244,55 @@ function displayBankStatementContent(data) {
         <div class="bank-details-card">
             <h3 class="card-title" style="margin-bottom: 1.5rem;">
                 <i class="fas fa-university" style="color: #10b981; margin-right: 0.5rem;"></i>
-                帳戶信息
-                <span style="font-size: 0.875rem; color: #6b7280; font-weight: normal; margin-left: 0.5rem;">(可編輯)</span>
+                ${t('account_info')}
+                <span style="font-size: 0.875rem; color: #6b7280; font-weight: normal; margin-left: 0.5rem;">${t('editable')}</span>
             </h3>
             <div class="bank-info-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">銀行名稱</label>
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('bank_name')}</label>
                     <input type="text" id="bankName" value="${bankName}" 
                            onchange="autoSaveBankStatementDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">帳戶號碼</label>
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('account_number')}</label>
                     <input type="text" id="accountNumber" value="${accountNumber}" 
                            onchange="autoSaveBankStatementDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">帳戶持有人</label>
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('account_holder')}</label>
                     <input type="text" id="accountHolder" value="${accountHolder}" 
                            onchange="autoSaveBankStatementDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">貨幣</label>
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('currency')}</label>
                     <input type="text" id="currency" value="${currency}" 
                            onchange="autoSaveBankStatementDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">對帳單期間</label>
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('statement_period')}</label>
                     <input type="text" id="statementPeriod" value="${statementPeriod}" 
                            onchange="autoSaveBankStatementDetails()"
                            placeholder="例如：2025-02-22 to 2025-03-22"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">對帳單日期</label>
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('statement_date')}</label>
                     <input type="date" id="statementDate" value="${statementDate}" 
                            onchange="autoSaveBankStatementDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white; max-width: 100%; overflow: hidden; text-overflow: ellipsis;">
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">期初餘額</label>
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('opening_balance')}</label>
                     <input type="text" id="openingBalance" value="${formatCurrency(openingBalance)}" 
                            onchange="autoSaveBankStatementDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; font-weight: 600; color: #3b82f6; background: white;">
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">期末餘額</label>
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('closing_balance')}</label>
                     <input type="text" id="closingBalance" value="${formatCurrency(closingBalance)}" 
                            onchange="autoSaveBankStatementDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; font-weight: 600; color: #10b981; background: white;">
@@ -1259,14 +1319,14 @@ function displayBankStatementContent(data) {
             <div style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;" onclick="toggleOtherAccounts()">
                 <h3 class="card-title" style="margin: 0;">
                     <i class="fas fa-credit-card" style="color: #8b5cf6; margin-right: 0.5rem;"></i>
-                    其他賬戶
+                    ${t('other_accounts')}
                     <span style="font-size: 0.875rem; color: #6b7280; font-weight: normal; margin-left: 0.5rem;" id="otherAccountsCount">(0)</span>
                 </h3>
                 <i class="fas fa-chevron-down" id="otherAccountsChevron" style="color: #6b7280; transition: transform 0.3s;"></i>
             </div>
             <div id="otherAccountsContent" style="display: none; margin-top: 1rem;">
                 <div style="color: #6b7280; text-align: center; padding: 2rem;">
-                    暫無其他賬戶信息
+                    ${t('no_other_accounts')}
                 </div>
             </div>
         </div>
@@ -1370,11 +1430,11 @@ function displayBankStatementContent(data) {
             <div class="transactions-header">
                 <h3 class="transactions-title">
                     <i class="fas fa-exchange-alt" style="color: #3b82f6; margin-right: 0.5rem;"></i>
-                    交易記錄
+                    ${t('transactions')}
                 </h3>
             </div>
             <div class="transactions-info">
-                共 ${transactions.length} 筆交易（顯示第 ${startIndex + 1}-${endIndex} 筆）
+                ${t('total_transactions').replace('{count}', transactions.length).replace('{start}', startIndex + 1).replace('{end}', endIndex)}
             </div>
             <table class="transactions-table">
                 <thead>
@@ -1387,7 +1447,7 @@ function displayBankStatementContent(data) {
                     </tr>
                 </thead>
                 <tbody>
-                    ${transactionsHTML || '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: #6b7280;">無交易記錄</td></tr>'}
+                    ${transactionsHTML || `<tr><td colspan="5" style="text-align: center; padding: 2rem; color: #6b7280;">${t('no_transactions')}</td></tr>`}
                 </tbody>
             </table>
             ${paginationHTML}
@@ -2118,7 +2178,7 @@ function extractOtherAccounts(data) {
     if (otherAccounts.length === 0 && cardAccounts.length === 0) {
         console.log('   ℹ️ 沒有找到其他賬戶信息');
         countSpan.textContent = '(0)';
-        content.innerHTML = '<div style="color: #6b7280; text-align: center; padding: 2rem;">暫無其他賬戶信息</div>';
+        content.innerHTML = `<div style="color: #6b7280; text-align: center; padding: 2rem;">${t('no_other_accounts')}</div>`;
         return;
     }
     
