@@ -6,6 +6,57 @@
 // 調試模式
 const DEBUG_MODE = false;
 
+// ============================================
+// 多語言支持
+// ============================================
+
+// 獲取當前語言
+function getCurrentLanguage() {
+    const path = window.location.pathname;
+    if (path.includes('/en/')) return 'en';
+    if (path.includes('/jp/')) return 'ja';
+    if (path.includes('/kr/')) return 'ko';
+    return 'zh-TW'; // 默認中文
+}
+
+// 翻譯文本
+const i18n = {
+    'zh-TW': {
+        verified: '已核對',
+        date: '日期',
+        description: '描述',
+        amount: '金額',
+        balance: '餘額'
+    },
+    'en': {
+        verified: 'Verified',
+        date: 'Date',
+        description: 'Description',
+        amount: 'Amount',
+        balance: 'Balance'
+    },
+    'ja': {
+        verified: '確認済',
+        date: '日付',
+        description: '説明',
+        amount: '金額',
+        balance: '残高'
+    },
+    'ko': {
+        verified: '확인됨',
+        date: '날짜',
+        description: '설명',
+        amount: '금액',
+        balance: '잔액'
+    }
+};
+
+// 獲取翻譯文本
+function t(key) {
+    const lang = getCurrentLanguage();
+    return i18n[lang][key] || i18n['zh-TW'][key] || key;
+}
+
 // 全局變量（也暴露到 window 對象以便其他腳本訪問）
 let currentDocument = null;
 // 🔥 暴露為全局變量
@@ -103,6 +154,9 @@ async function init() {
 // 文檔載入函數
 // ============================================
 
+// ✅ 全局变量：实时监听解除函数
+let documentListener = null;
+
 async function loadDocument() {
     console.log('📄 開始載入文檔...');
     
@@ -144,11 +198,307 @@ async function loadDocument() {
         // 顯示文檔內容
         displayDocumentContent();
         
+        // ✅ 方案1：設置實時監聽（自動更新）
+        setupDocumentListener(projectId, documentId);
+        
     } catch (error) {
         console.error('❌ 載入文檔失敗:', error);
         alert('載入文檔失敗: ' + error.message);
         goBackToDashboard();
     }
+}
+
+// ============================================
+// ✅ 方案1：實時監聽文檔更新
+// ============================================
+
+function setupDocumentListener(projectId, documentId) {
+    console.log('👂 設置實時監聽...');
+    
+    // 如果已經有監聽，先解除
+    if (documentListener) {
+        documentListener();
+        console.log('🔄 解除舊的監聽');
+    }
+    
+    // 使用 Firebase onSnapshot 監聽文檔變化
+    const docRef = window.firebase.firestore()
+        .collection('projects')
+        .doc(projectId)
+        .collection('documents')
+        .doc(documentId);
+    
+    documentListener = docRef.onSnapshot((snapshot) => {
+        if (!snapshot.exists) {
+            console.warn('⚠️ 文檔不存在');
+            return;
+        }
+        
+        const updatedDoc = { id: snapshot.id, ...snapshot.data() };
+        console.log('🔄 文檔已更新:', updatedDoc);
+        
+        // 檢查狀態變化
+        const oldStatus = currentDocument?.status;
+        const newStatus = updatedDoc.status;
+        
+        console.log(`📊 狀態變化: ${oldStatus} → ${newStatus}`);
+        
+        // 更新當前文檔
+        currentDocument = updatedDoc;
+        
+        // 如果從 processing 變為 completed，自動刷新顯示
+        if (oldStatus === 'processing' && newStatus === 'completed') {
+            console.log('🎉 處理完成！自動刷新顯示...');
+            
+            // 顯示成功提示
+            showProcessingCompleteNotification();
+            
+            // 刷新顯示
+            displayDocumentContent();
+        }
+        
+        // 如果當前是 processing，刷新處理狀態
+        if (newStatus === 'processing') {
+            console.log('⏳ 處理中，更新進度顯示...');
+            displayDocumentContent();
+        }
+    }, (error) => {
+        console.error('❌ 監聽失敗:', error);
+    });
+    
+    console.log('✅ 實時監聽已設置');
+}
+
+// ============================================
+// 顯示處理完成通知
+// ============================================
+
+function showProcessingCompleteNotification() {
+    // 創建通知元素
+    const notification = document.createElement('div');
+    notification.innerHTML = `
+        <div style="
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            animation: slideInRight 0.5s ease-out, fadeOut 0.5s ease-in 2.5s;
+        ">
+            <i class="fas fa-check-circle" style="font-size: 1.5rem;"></i>
+            <div>
+                <div style="font-weight: 600; font-size: 1rem;">處理完成！</div>
+                <div style="font-size: 0.875rem; opacity: 0.9;">數據已自動更新</div>
+            </div>
+        </div>
+        <style>
+            @keyframes slideInRight {
+                from {
+                    transform: translateX(400px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            @keyframes fadeOut {
+                from {
+                    opacity: 1;
+                }
+                to {
+                    opacity: 0;
+                }
+            }
+        </style>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // 3秒後自動移除
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+// ============================================
+// 通用：顯示處理中狀態
+// ============================================
+
+function showProcessingStatus(detailsSection, dataSection, docTypeName = '文檔') {
+    detailsSection.innerHTML = `
+        <div style="
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border: 2px solid #3b82f6;
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            animation: pulse 2s ease-in-out infinite;
+        ">
+            <div style="
+                width: 80px;
+                height: 80px;
+                margin: 0 auto 1.5rem;
+                border: 4px solid #3b82f6;
+                border-top-color: transparent;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            "></div>
+            <h3 style="
+                font-size: 1.5rem;
+                font-weight: 600;
+                color: #1e40af;
+                margin-bottom: 0.75rem;
+            ">
+                <i class="fas fa-robot" style="margin-right: 0.5rem;"></i>
+                AI 正在處理您的${docTypeName}...
+            </h3>
+            <p style="
+                font-size: 1rem;
+                color: #3b82f6;
+                margin-bottom: 1.5rem;
+                line-height: 1.6;
+            ">
+                我們正在使用 AI 技術提取${docTypeName}數據<br>
+                預計需要 <strong>15-30 秒</strong>
+            </p>
+            <div style="
+                background: white;
+                border-radius: 12px;
+                padding: 1rem;
+                margin: 1.5rem auto 0;
+                max-width: 400px;
+                box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+            ">
+                <div style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 0.75rem;
+                ">
+                    <span style="font-size: 0.875rem; color: #6b7280;">
+                        <i class="fas fa-check-circle" style="color: #10b981; margin-right: 0.25rem;"></i>
+                        OCR 文字識別
+                    </span>
+                    <span style="font-size: 0.875rem; font-weight: 600; color: #10b981;">完成</span>
+                </div>
+                <div style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 0.75rem;
+                ">
+                    <span style="font-size: 0.875rem; color: #6b7280;">
+                        <i class="fas fa-spinner fa-spin" style="color: #3b82f6; margin-right: 0.25rem;"></i>
+                        AI 數據提取
+                    </span>
+                    <span style="font-size: 0.875rem; font-weight: 600; color: #3b82f6;">處理中...</span>
+                </div>
+                <div style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    color: #9ca3af;
+                ">
+                    <span style="font-size: 0.875rem;">
+                        <i class="far fa-clock" style="margin-right: 0.25rem;"></i>
+                        數據校驗
+                    </span>
+                    <span style="font-size: 0.875rem;">等待中</span>
+                </div>
+            </div>
+            <p style="
+                font-size: 0.875rem;
+                color: #6b7280;
+                margin-top: 1.5rem;
+                font-style: italic;
+            ">
+                <i class="fas fa-info-circle" style="margin-right: 0.25rem;"></i>
+                處理完成後，頁面將自動更新，無需手動刷新
+            </p>
+        </div>
+        <style>
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+            @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.95; }
+            }
+        </style>
+    `;
+    
+    dataSection.innerHTML = '';
+}
+
+// ============================================
+// 通用：顯示處理失敗狀態
+// ============================================
+
+function showFailedStatus(detailsSection, dataSection) {
+    detailsSection.innerHTML = `
+        <div style="
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border: 2px solid #ef4444;
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+        ">
+            <div style="
+                width: 80px;
+                height: 80px;
+                margin: 0 auto 1.5rem;
+                background: #fee2e2;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            ">
+                <i class="fas fa-exclamation-triangle" style="
+                    font-size: 2.5rem;
+                    color: #ef4444;
+                "></i>
+            </div>
+            <h3 style="
+                font-size: 1.5rem;
+                font-weight: 600;
+                color: #b91c1c;
+                margin-bottom: 0.75rem;
+            ">處理失敗</h3>
+            <p style="
+                font-size: 1rem;
+                color: #ef4444;
+                margin-bottom: 1.5rem;
+            ">
+                AI 處理過程中遇到錯誤<br>
+                <span style="font-size: 0.875rem; color: #6b7280;">${currentDocument?.error || '未知錯誤'}</span>
+            </p>
+            <button onclick="location.reload()" style="
+                background: #ef4444;
+                color: white;
+                border: none;
+                padding: 0.75rem 1.5rem;
+                border-radius: 8px;
+                font-weight: 600;
+                cursor: pointer;
+                font-size: 1rem;
+                transition: all 0.2s;
+            " onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
+                <i class="fas fa-redo" style="margin-right: 0.5rem;"></i>
+                重試
+            </button>
+        </div>
+    `;
+    
+    dataSection.innerHTML = '';
 }
 
 // ============================================
@@ -611,6 +961,19 @@ function displayInvoiceContent(data) {
     const detailsSection = document.getElementById('documentDetailsSection');
     const dataSection = document.getElementById('documentDataSection');
     
+    // ✅ 方案2：檢查文檔狀態
+    const docStatus = currentDocument?.status || 'unknown';
+    
+    if (docStatus === 'processing') {
+        showProcessingStatus(detailsSection, dataSection, '發票');
+        return;
+    }
+    
+    if (docStatus === 'failed') {
+        showFailedStatus(detailsSection, dataSection);
+        return;
+    }
+    
     // 發票詳情卡片（桌面版2列，手機版1列）
     detailsSection.innerHTML = `
         <div class="bank-details-card">
@@ -714,6 +1077,27 @@ function displayBankStatementContent(data) {
     console.log('🏦 顯示銀行對帳單內容');
     console.log('📊 原始數據:', JSON.stringify(data, null, 2));
     
+    // ✅ 方案2：檢查文檔狀態
+    const docStatus = currentDocument?.status || 'unknown';
+    console.log('📊 文檔狀態:', docStatus);
+    
+    const detailsSection = document.getElementById('documentDetailsSection');
+    const dataSection = document.getElementById('documentDataSection');
+    
+    // ✅ 如果正在處理中，顯示處理狀態而不是 $0.00
+    if (docStatus === 'processing') {
+        console.log('⏳ 文檔處理中，顯示處理狀態...');
+        showProcessingStatus(detailsSection, dataSection, '銀行對帳單');
+        return;
+    }
+    
+    // ✅ 如果處理失敗，顯示錯誤狀態
+    if (docStatus === 'failed') {
+        console.log('❌ 文檔處理失敗');
+        showFailedStatus(detailsSection, dataSection);
+        return;
+    }
+    
     // 🔍 DEBUG - 详细诊断交易记录提取
     console.log('🔍 DEBUG - 完整数据结构:', data);
     console.log('🔍 DEBUG - processedData:', currentDocument?.processedData);
@@ -723,9 +1107,6 @@ function displayBankStatementContent(data) {
     console.log('   data.items:', data.items);
     console.log('   currentDocument.transactions:', currentDocument?.transactions);
     console.log('🔍 DEBUG - currentDocument完整内容:', currentDocument);
-    
-    const detailsSection = document.getElementById('documentDetailsSection');
-    const dataSection = document.getElementById('documentDataSection');
     
     // ✅ 提取帳戶信息（支持多種字段名稱 + 增強 Fallback）
     const bankName = data.bankName || 
@@ -998,11 +1379,11 @@ function displayBankStatementContent(data) {
             <table class="transactions-table">
                 <thead>
                     <tr>
-                        <th class="checkbox-cell"><input type="checkbox"></th>
-                        <th>日期</th>
-                        <th>描述</th>
-                        <th>金額</th>
-                        <th>餘額</th>
+                        <th class="checkbox-cell" style="font-size: 0.75rem; font-weight: 600; text-align: center;">${t('verified')}</th>
+                        <th>${t('date')}</th>
+                        <th>${t('description')}</th>
+                        <th>${t('amount')}</th>
+                        <th>${t('balance')}</th>
                     </tr>
                 </thead>
                 <tbody>
