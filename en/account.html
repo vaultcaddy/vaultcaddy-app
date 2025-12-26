@@ -915,7 +915,8 @@
                             userCredits = await window.simpleDataManager.getUserCredits();
                             console.log('✅ Fetch immediately Credits:', userCredits);
                         } catch (error) {
-                            console.error('❌ Failed to fetch Credits:', error);
+                                            clearTimeout(timeoutId); // ✅ Clear timeout
+                console.error('❌ Failed to fetch Credits:', error);
                         }
                     }
                     
@@ -947,7 +948,8 @@
                         window.location.href = 'index.html';
                     }
                 } catch (error) {
-                    console.error('LogoutFailed:', error);
+                                    clearTimeout(timeoutId); // ✅ Clear timeout
+                console.error('LogoutFailed:', error);
                     alert('LogoutFailed，pleaseRetry');
                 }
             };
@@ -987,7 +989,8 @@
                                         userCredits = await window.simpleDataManager.getUserCredits();
                                         console.log('✅ Delayed fetch Credits:', userCredits);
                                     } catch (error) {
-                                        console.error('❌ Delayed fetchFailed:', error);
+                                                        clearTimeout(timeoutId); // ✅ Clear timeout
+                console.error('❌ Delayed fetchFailed:', error);
                                     }
                                 }
                             }, 1000);
@@ -1284,6 +1287,7 @@
                     }
                 }
             } catch (error) {
+                                clearTimeout(timeoutId); // ✅ Clear timeout
                 console.error('GetUserplanFailed:', error);
             }
             
@@ -1405,6 +1409,7 @@
                 console.log('✅ subscribeDetailsalreadyLoad');
                 
             } catch (error) {
+                                clearTimeout(timeoutId); // ✅ Clear timeout
                 console.error('❌ LoadsubscribeDetailsFailed:', error);
             }
         }
@@ -1449,6 +1454,7 @@
                 }
                 
             } catch (error) {
+                                clearTimeout(timeoutId); // ✅ Clear timeout
                 console.error('❌ Open Customer Portal Failed:', error);
                 console.error('ErrorDetails:', error.code, error.message, error.details);
                 
@@ -1510,7 +1516,8 @@
                             }
                         }
                     } catch (error) {
-                        console.error('❌ from Firestore GetplanFailed:', error);
+                                        clearTimeout(timeoutId); // ✅ Clear timeout
+                console.error('❌ from Firestore GetplanFailed:', error);
                     }
                 }
                 
@@ -1578,7 +1585,8 @@
                             }
                         }
                     } catch (error) {
-                        console.error('Get Credits Failed:', error);
+                                        clearTimeout(timeoutId); // ✅ Clear timeout
+                console.error('Get Credits Failed:', error);
                     }
                 }
                 
@@ -1617,6 +1625,7 @@
                 console.log(`✅ Credits LoadComplete: ${currentCredits} / ${totalCredits} (${percentage.toFixed(1)}%)`);
 
             } catch (error) {
+                                clearTimeout(timeoutId); // ✅ Clear timeout
                 console.error('Load Credits UsageFailed:', error);
             }
         }
@@ -1659,6 +1668,7 @@
                 document.getElementById('new-password').value = '';
                 document.getElementById('confirm-password').value = '';
             } catch (error) {
+                                clearTimeout(timeoutId); // ✅ Clear timeout
                 console.error('❌ UpdatePasswordFailed:', error);
                 alert('UpdatePasswordFailed: ' + error.message);
             }
@@ -1751,8 +1761,52 @@
                 console.log(`✅ Load了 ${sortedMonths.length} 個monthOptions:`, sortedMonths);
                 
             } catch (error) {
+                                clearTimeout(timeoutId); // ✅ Clear timeout
                 console.error('LoadmonthOptionsFailed:', error);
             }
+        }
+        
+
+        // ✅ 从查询结果生成月份选项（避免重复查询 Firebase）
+        function generateMonthOptionsFromSnapshot(historySnapshot) {
+            const select = document.getElementById('history-month-filter');
+            if (!select || historySnapshot.empty) {
+                return;
+            }
+            
+            const months = new Set();
+            historySnapshot.forEach(doc => {
+                const record = doc.data();
+                if (record.createdAt) {
+                    const date = record.createdAt.toDate();
+                    const yearMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                    months.add(yearMonth);
+                }
+            });
+            
+            const sortedMonths = Array.from(months).sort((a, b) => b.localeCompare(a));
+            const currentValue = select.value;
+            
+            // 保留第一个选项
+            const firstOption = select.options[0];
+            if (!firstOption) return;
+            
+            select.innerHTML = '';
+            select.appendChild(firstOption.cloneNode(true));
+            
+            sortedMonths.forEach(yearMonth => {
+                const [year, month] = yearMonth.split('-');
+                const option = document.createElement('option');
+                option.value = yearMonth;
+                option.textContent = `${parseInt(month)}/${year}`;
+                select.appendChild(option);
+            });
+            
+            if (sortedMonths.includes(currentValue)) {
+                select.value = currentValue;
+            }
+            
+            console.log(`✅ Generated ${sortedMonths.length} month options`);
         }
         
         async function loadCreditsHistory() {
@@ -1798,6 +1852,13 @@
                 }
                 
                 const historySnapshot = await query.limit(50).get();
+                console.log('✅ Query complete, record count:', historySnapshot.size);
+                
+                // ✅ Clear timeout
+                clearTimeout(timeoutId);
+                
+                // ✅ Generate month options from query results
+                generateMonthOptionsFromSnapshot(historySnapshot);
                 
                 if (historySnapshot.empty) {
                     tbody.innerHTML = `
@@ -1875,6 +1936,7 @@
                 console.log(`✅ Load了 ${rows.length} 條 Credits 歷史record`);
                 
             } catch (error) {
+                                clearTimeout(timeoutId); // ✅ Clear timeout
                 console.error('Load Credits 歷史recordFailed:', error);
                 tbody.innerHTML = `
                     <tr>
@@ -1912,6 +1974,7 @@
                 alert('AccountalreadyDelete');
                 window.location.href = 'index.html';
             } catch (error) {
+                                clearTimeout(timeoutId); // ✅ Clear timeout
                 console.error('❌ DeleteAccountFailed:', error);
                 alert('DeleteAccountFailed: ' + error.message);
             }
@@ -2109,6 +2172,7 @@
                 // Jump totonewProjectpage
                 window.location.href = `firstproject.html?project=${projectId}`;
             } catch (error) {
+                                clearTimeout(timeoutId); // ✅ Clear timeout
                 console.error('❌ Saveto Firebase Failed:', error);
                 alert('CreateProjectFailed，pleaseRetry');
                 return;

@@ -915,8 +915,7 @@
                             userCredits = await window.simpleDataManager.getUserCredits();
                             console.log('✅ 即時獲取 Credits:', userCredits);
                         } catch (error) {
-                                            clearTimeout(timeoutId); // ✅ 清除超时
-                console.error('❌ 無法獲取 Credits:', error);
+                            console.error('❌ 無法獲取 Credits:', error);
                         }
                     }
                     
@@ -948,8 +947,7 @@
                         window.location.href = 'index.html';
                     }
                 } catch (error) {
-                                    clearTimeout(timeoutId); // ✅ 清除超时
-                console.error('登出失敗:', error);
+                    console.error('登出失敗:', error);
                     alert('登出失敗，請重試');
                 }
             };
@@ -989,8 +987,7 @@
                                         userCredits = await window.simpleDataManager.getUserCredits();
                                         console.log('✅ 延遲獲取 Credits:', userCredits);
                                     } catch (error) {
-                                                        clearTimeout(timeoutId); // ✅ 清除超时
-                console.error('❌ 延遲獲取失敗:', error);
+                                        console.error('❌ 延遲獲取失敗:', error);
                                     }
                                 }
                             }, 1000);
@@ -1286,7 +1283,6 @@
                     }
                 }
             } catch (error) {
-                                clearTimeout(timeoutId); // ✅ 清除超时
                 console.error('獲取用戶計劃失敗:', error);
             }
             
@@ -1408,7 +1404,6 @@
                 console.log('✅ 訂閱詳情已加載');
                 
             } catch (error) {
-                                clearTimeout(timeoutId); // ✅ 清除超时
                 console.error('❌ 加載訂閱詳情失敗:', error);
             }
         }
@@ -1453,7 +1448,6 @@
                 }
                 
             } catch (error) {
-                                clearTimeout(timeoutId); // ✅ 清除超时
                 console.error('❌ 打開 Customer Portal 失敗:', error);
                 console.error('錯誤詳情:', error.code, error.message, error.details);
                 
@@ -1515,8 +1509,7 @@
                             }
                         }
                     } catch (error) {
-                                        clearTimeout(timeoutId); // ✅ 清除超时
-                console.error('❌ 從 Firestore 獲取計劃失敗:', error);
+                        console.error('❌ 從 Firestore 獲取計劃失敗:', error);
                     }
                 }
                 
@@ -1584,8 +1577,7 @@
                             }
                         }
                     } catch (error) {
-                                        clearTimeout(timeoutId); // ✅ 清除超时
-                console.error('獲取 Credits 失敗:', error);
+                        console.error('獲取 Credits 失敗:', error);
                     }
                 }
                 
@@ -1624,7 +1616,6 @@
                 console.log(`✅ Credits 載入完成: ${currentCredits} / ${totalCredits} (${percentage.toFixed(1)}%)`);
 
             } catch (error) {
-                                clearTimeout(timeoutId); // ✅ 清除超时
                 console.error('載入 Credits 使用情況失敗:', error);
             }
         }
@@ -1667,7 +1658,6 @@
                 document.getElementById('new-password').value = '';
                 document.getElementById('confirm-password').value = '';
             } catch (error) {
-                                clearTimeout(timeoutId); // ✅ 清除超时
                 console.error('❌ 更新密碼失敗:', error);
                 alert('更新密碼失敗: ' + error.message);
             }
@@ -1760,81 +1750,16 @@
                 console.log(`✅ 載入了 ${sortedMonths.length} 個月份選項:`, sortedMonths);
                 
             } catch (error) {
-                                clearTimeout(timeoutId); // ✅ 清除超时
                 console.error('載入月份選項失敗:', error);
             }
         }
         
-
-        // ✅ 从查询结果生成月份选项（避免重复查询 Firebase）
-        function generateMonthOptionsFromSnapshot(historySnapshot) {
-            const select = document.getElementById('history-month-filter');
-            if (!select || historySnapshot.empty) {
-                return;
-            }
-            
-            const months = new Set();
-            historySnapshot.forEach(doc => {
-                const record = doc.data();
-                if (record.createdAt) {
-                    const date = record.createdAt.toDate();
-                    const yearMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-                    months.add(yearMonth);
-                }
-            });
-            
-            const sortedMonths = Array.from(months).sort((a, b) => b.localeCompare(a));
-            const currentValue = select.value;
-            
-            // 保留第一个选项
-            const firstOption = select.options[0];
-            if (!firstOption) return;
-            
-            select.innerHTML = '';
-            select.appendChild(firstOption.cloneNode(true));
-            
-            sortedMonths.forEach(yearMonth => {
-                const [year, month] = yearMonth.split('-');
-                const option = document.createElement('option');
-                option.value = yearMonth;
-                option.textContent = `${parseInt(month)}/${year}`;
-                select.appendChild(option);
-            });
-            
-            if (sortedMonths.includes(currentValue)) {
-                select.value = currentValue;
-            }
-            
-            console.log(`✅ 生成了 ${sortedMonths.length} 个月份选项`);
-        }
-        
         async function loadCreditsHistory() {
-            console.log('🔄 开始加载购买历史...');
             const tbody = document.getElementById('credits-history-tbody');
             const filter = document.getElementById('history-month-filter').value;
             
-            // ✅ 移除了 await loadMonthOptions() 调用
-            // ✅ 改为在查询后从数据中生成月份选项
-            
-            // ✅ 添加超时保护
-            const timeoutId = setTimeout(() => {
-                console.warn('⚠️ 加载超时');
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="3" style="text-align: center; padding: 2rem; color: #f59e0b;">
-                            ⏱️ 加载超时，请检查网络连接
-                            <br>
-                            <button onclick="loadCreditsHistory()" 
-                                    style="margin-top: 1rem; padding: 0.5rem 1rem; 
-                                           background: #3b82f6; color: white; 
-                                           border: none; border-radius: 6px; 
-                                           cursor: pointer;">
-                                重试
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            }, 10000); // 10秒超时
+            // 🔥 首次載入時，動態生成月份選項
+            await loadMonthOptions();
             
             try {
                 // 檢查是否有登入用戶
@@ -1872,13 +1797,6 @@
                 }
                 
                 const historySnapshot = await query.limit(50).get();
-                console.log('✅ 查询完成，记录数量:', historySnapshot.size);
-                
-                // ✅ 清除超时
-                clearTimeout(timeoutId);
-                
-                // ✅ 从查询结果生成月份选项
-                generateMonthOptionsFromSnapshot(historySnapshot);
                 
                 if (historySnapshot.empty) {
                     tbody.innerHTML = `
@@ -1956,7 +1874,6 @@
                 console.log(`✅ 載入了 ${rows.length} 條 Credits 歷史記錄`);
                 
             } catch (error) {
-                                clearTimeout(timeoutId); // ✅ 清除超时
                 console.error('載入 Credits 歷史記錄失敗:', error);
                 tbody.innerHTML = `
                     <tr>
@@ -1994,7 +1911,6 @@
                 alert('帳戶已刪除');
                 window.location.href = 'index.html';
             } catch (error) {
-                                clearTimeout(timeoutId); // ✅ 清除超时
                 console.error('❌ 刪除帳戶失敗:', error);
                 alert('刪除帳戶失敗: ' + error.message);
             }
@@ -2192,7 +2108,6 @@
                 // 跳轉到新項目頁面
                 window.location.href = `firstproject.html?project=${projectId}`;
             } catch (error) {
-                                clearTimeout(timeoutId); // ✅ 清除超时
                 console.error('❌ 保存到 Firebase 失敗:', error);
                 alert('創建項目失敗，請重試');
                 return;
