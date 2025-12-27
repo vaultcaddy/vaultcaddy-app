@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSBC对帐单AI处理 vs 人工处理 - 省钱97%，快600倍 | VaultCaddy</title>
+    
+    <style>
+        /* ====== 全新现代设计系统 ====== */
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5568d3;
+            --success: #10b981;
+            --success-dark: #059669;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1f2937;
+            --gray: #6b7280;
+            --light-gray: #f3f4f6;
+            --white: #ffffff;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow-x: hidden;
+        }
+        
+        /* Hero Section - 超级吸引眼球 */
+        .hero-section {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            padding: 2rem;
+        }
+        
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse"><path d="M 100 0 L 0 0 0 100" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100%" height="100%" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            max-width: 1400px;
+            width: 100%;
+        }
+        
+        .hero-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .hero-title {
+            font-size: 4rem;
+            font-weight: 900;
+            color: white;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .hero-subtitle {
+            font-size: 1.5rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 3rem;
+            font-weight: 500;
+        }
+        
+        /* 对比卡片 - 超级视觉化 */
+        .comparison-container {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 3rem;
+            align-items: start;
+            margin-top: 4rem;
+        }
+        
+        .comparison-card {
+            background: white;
+            border-radius: 30px;
+            padding: 3rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            position: relative;
+            transform: translateY(0);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .comparison-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+        }
+        
+        .comparison-card.winner {
+            background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%);
+            border: 4px solid var(--success);
+            transform: scale(1.05);
+        }
+        
+        .comparison-card.winner:hover {
+            transform: scale(1.05) translateY(-10px);
+        }
+        
+        .winner-badge {
+            position: absolute;
+            top: -15px;
+            right: 30px;
+            background: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%);
+            color: white;
+            padding: 0.75rem 2rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1rem;
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+        }
+        
+        .card-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary) 0%, #764ba2 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            margin: 0 auto 2rem;
+        }
+        
+        .comparison-card.winner .card-icon {
+            background: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%);
+        }
+        
+        .card-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 1rem;
+        }
+        
+        .price-display {
+            font-size: 4rem;
+            font-weight: 900;
+            margin: 2rem 0;
+            line-height: 1;
+        }
+        
+        .comparison-card.winner .price-display {
+            background: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .comparison-card:not(.winner) .price-display {
+            color: var(--danger);
+        }
+        
+        .price-period {
+            font-size: 1.2rem;
+            color: var(--gray);
+            margin-bottom: 2rem;
+        }
+        
+        .features-list {
+            list-style: none;
+            text-align: left;
+        }
+        
+        .features-list li {
+            padding: 1rem 0;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .features-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .feature-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+        
+        .feature-icon.positive {
+            background: var(--success);
+            color: white;
+        }
+        
+        .feature-icon.negative {
+            background: var(--danger);
+            color: white;
+        }
+        
+        /* VS分隔符 - 动画效果 */
+        .vs-divider {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .vs-circle {
+            width: 100px;
+            height: 100px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--primary);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            }
+            50% {
+                transform: scale(1.1);
+                box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4);
+            }
+        }
+        
+        /* CTA按钮 */
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%);
+            color: white;
+            padding: 1.5rem 4rem;
+            border-radius: 60px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            text-decoration: none;
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4);
+            transition: all 0.3s;
+            margin-top: 3rem;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(16, 185, 129, 0.5);
+        }
+        
+        /* 内容区域 */
+        .content-section {
+            background: white;
+            padding: 6rem 2rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* 节省金额超大展示 */
+        .savings-mega {
+            background: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%);
+            border-radius: 30px;
+            padding: 5rem 3rem;
+            text-align: center;
+            color: white;
+            margin: 4rem 0;
+            box-shadow: 0 20px 60px rgba(16, 185, 129, 0.3);
+        }
+        
+        .savings-mega h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+        }
+        
+        .mega-number {
+            font-size: 6rem;
+            font-weight: 900;
+            margin: 2rem 0;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .savings-subtitle {
+            font-size: 1.8rem;
+            opacity: 0.9;
+        }
+        
+        /* 数据可视化卡片 */
+        .viz-card {
+            background: white;
+            border-radius: 24px;
+            padding: 3rem;
+            margin: 3rem 0;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+        }
+        
+        .viz-header {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        
+        .viz-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, var(--primary) 0%, #764ba2 100%);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+        }
+        
+        .viz-header h2 {
+            font-size: 2rem;
+            color: var(--dark);
+        }
+        
+        /* 进度条 */
+        .progress-item {
+            margin: 2.5rem 0;
+        }
+        
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .progress-bar {
+            height: 50px;
+            background: #e5e7eb;
+            border-radius: 25px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary) 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            padding-left: 1.5rem;
+            color: white;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: width 1.5s ease-out;
+            border-radius: 25px;
+        }
+        
+        .progress-fill.winner {
+            background: linear-gradient(90deg, var(--success) 0%, var(--success-dark) 100%);
+        }
+        
+        /* 响应式 */
+        @media (max-width: 1024px) {
+            .comparison-container {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .comparison-card.winner {
+                transform: scale(1);
+            }
+            
+            .vs-divider {
+                transform: rotate(90deg);
+                margin: 2rem 0;
+            }
+            
+            .hero-title {
+                font-size: 2.5rem;
+            }
+            
+            .mega-number {
+                font-size: 4rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-content">
+            <div class="hero-badge">✨ AI驅動 • 香港中小企首選</div>
+            
+            <h1 class="hero-title">
+                省錢97% • 快600倍 • 準13%
+            </h1>
+            
+            <p class="hero-subtitle">
+                HSBC對帳單AI處理 vs 人工處理完全對比
+            </p>
+            
+            <!-- 对比卡片 -->
+            <div class="comparison-container">
+                <!-- VaultCaddy卡片 -->
+                <div class="comparison-card winner">
+                    <div class="winner-badge">✨ 推薦方案</div>
+                    <div class="card-icon">🤖</div>
+                    <h3 class="card-title">VaultCaddy AI</h3>
+                    <div class="price-display">HK$552</div>
+                    <div class="price-period">/年 (HK$46/月)</div>
+                    
+                    <ul class="features-list">
+                        <li>
+                            <span class="feature-icon positive">✓</span>
+                            <span>拍照上傳即可</span>
+                        </li>
+                        <li>
+                            <span class="feature-icon positive">✓</span>
+                            <span>3秒處理完成</span>
+                        </li>
+                        <li>
+                            <span class="feature-icon positive">✓</span>
+                            <span>98%準確率</span>
+                        </li>
+                        <li>
+                            <span class="feature-icon positive">✓</span>
+                            <span>支援HSBC對帳單</span>
+                        </li>
+                        <li>
+                            <span class="feature-icon positive">✓</span>
+                            <span>Excel/QuickBooks/Xero導出</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- VS -->
+                <div class="vs-divider">
+                    <div class="vs-circle">VS</div>
+                </div>
+                
+                <!-- 人工处理卡片 -->
+                <div class="comparison-card">
+                    <div class="card-icon">👤</div>
+                    <h3 class="card-title">人工處理</h3>
+                    <div class="price-display">HK$12,000</div>
+                    <div class="price-period">/年 (HK$1,000/月)</div>
+                    
+                    <ul class="features-list">
+                        <li>
+                            <span class="feature-icon negative">✗</span>
+                            <span>需要專業會計</span>
+                        </li>
+                        <li>
+                            <span class="feature-icon negative">✗</span>
+                            <span>每月耗時100小時</span>
+                        </li>
+                        <li>
+                            <span class="feature-icon negative">✗</span>
+                            <span>85%準確率</span>
+                        </li>
+                        <li>
+                            <span class="feature-icon negative">✗</span>
+                            <span>容易出錯需返工</span>
+                        </li>
+                        <li>
+                            <span class="feature-icon negative">✗</span>
+                            <span>手動輸入會計軟件</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <a href="#" class="cta-button">
+                免費試用20頁 • 3秒看效果 →
+            </a>
+        </div>
+    </section>
+    
+    <!-- 内容区域 -->
+    <section class="content-section">
+        <div class="container">
+            <!-- 节省金额超大展示 -->
+            <div class="savings-mega">
+                <h2>3年總節省</h2>
+                <div class="mega-number">HK$156,652</div>
+                <div class="savings-subtitle">省下 97.0% 成本！</div>
+            </div>
+            
+            <!-- 时间对比 -->
+            <div class="viz-card">
+                <div class="viz-header">
+                    <div class="viz-icon">⏱️</div>
+                    <h2>時間對比（年度時間投入）</h2>
+                </div>
+                
+                <div class="progress-item">
+                    <div class="progress-label">
+                        <span><strong>VaultCaddy AI</strong></span>
+                        <span>30分鐘/年</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill winner" style="width: 0.1%;">0.5小時</div>
+                    </div>
+                </div>
+                
+                <div class="progress-item">
+                    <div class="progress-label">
+                        <span><strong>人工處理（兼職會計）</strong></span>
+                        <span>300小時/年</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 100%;">300小時</div>
+                    </div>
+                </div>
+                
+                <div class="progress-item">
+                    <div class="progress-label">
+                        <span><strong>人工處理（全職會計）</strong></span>
+                        <span>250小時/年</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 83.3%;">250小時</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- CTA -->
+            <div style="text-align: center; margin: 4rem 0;">
+                <a href="#" class="cta-button">
+                    立即體驗AI威力 • 無需信用卡 →
+                </a>
+            </div>
+        </div>
+    </section>
+    
+    <script>
+        // 进度条动画
+        document.addEventListener('DOMContentLoaded', function() {
+            const progressFills = document.querySelectorAll('.progress-fill');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.width = entry.target.getAttribute('style').match(/width:\s*([^;]+)/)[1];
+                    }
+                });
+            });
+            
+            progressFills.forEach(fill => {
+                const targetWidth = fill.style.width;
+                fill.style.width = '0%';
+                observer.observe(fill);
+            });
+        });
+    </script>
+</body>
+</html>
