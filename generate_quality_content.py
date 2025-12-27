@@ -202,7 +202,7 @@ def generate_usage_guide_html(lang='zh'):
             {
                 'title': '步驟 3：導出 Excel（5秒）',
                 'icon': '📊',
-                'formats': [
+                'export_formats': [
                     '<strong>標準 Excel</strong>：適合會計師',
                     '<strong>Dext 格式</strong>：無縫遷移',
                     '<strong>QuickBooks 格式</strong>：直接導入',
@@ -238,7 +238,7 @@ def generate_usage_guide_html(lang='zh'):
             {
                 'title': 'Step 3: Export to Excel (5 seconds)',
                 'icon': '📊',
-                'formats': [
+                'export_formats': [
                     '<strong>Standard Excel</strong>: For accountants',
                     '<strong>Dext Format</strong>: Seamless migration',
                     '<strong>QuickBooks Format</strong>: Direct import',
@@ -271,15 +271,18 @@ def generate_usage_guide_html(lang='zh'):
         if 'methods' in step:
             for method in step['methods']:
                 html += f'<p style="font-size: 15px; line-height: 1.6; color: #4a5568; margin-bottom: 12px;">• {method}</p>'
-            html += f'<div style="margin-top: 16px; padding: 12px; background: white; border-radius: 8px; font-size: 14px; color: #6b7280;">支持格式：{step["formats"]}</div>'
+            # 修复：直接显示支持格式，不要逐字符循环
+            if 'formats' in step:
+                html += f'<div style="margin-top: 16px; padding: 12px; background: white; border-radius: 8px; font-size: 14px; color: #6b7280;">支持格式：{step["formats"]}</div>'
         
         if 'features' in step:
             for feature in step['features']:
                 html += f'<p style="font-size: 15px; line-height: 1.6; color: #4a5568; margin-bottom: 8px;">✅ {feature}</p>'
             html += f'<div style="margin-top: 16px; padding: 12px; background: #f0f9ff; border-radius: 8px; font-size: 16px; font-weight: 600; color: #667eea;">{step["accuracy"]}</div>'
         
-        if 'formats' in step:
-            for fmt in step['formats']:
+        # 修复：这里检查是否有 'export_formats' 而不是 'formats'（避免与步骤1冲突）
+        if 'export_formats' in step:
+            for fmt in step['export_formats']:
                 html += f'<p style="font-size: 15px; line-height: 1.6; color: #4a5568; margin-bottom: 12px;">📊 {fmt}</p>'
         
         html += '''
