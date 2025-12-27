@@ -2914,7 +2914,12 @@
                                  data.endBalance || data.finalBalance || 0;
                         
                         // ✅ 顯示格式：Start: $X,XXX.XX | End: $Y,YYY.YY
-                        amountDisplay = `Start: $${parseFloat(openingBalance).toLocaleString('zh-TW', {minimumFractionDigits: 2, maximumFractionDigits: 2})}<br>End: $${parseFloat(closingBalance).toLocaleString('zh-TW', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                        // 🔧 如果餘額為0，顯示"處理中..."而不是$0.00
+                        if (openingBalance === 0 && closingBalance === 0) {
+                            amountDisplay = `<span style="color: #f59e0b; font-weight: 600;">⏳ 處理中...</span>`;
+                        } else {
+                            amountDisplay = `Start: $${parseFloat(openingBalance).toLocaleString('zh-TW', {minimumFractionDigits: 2, maximumFractionDigits: 2})}<br>End: $${parseFloat(closingBalance).toLocaleString('zh-TW', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                        }
                         
                         // ✅ 提取對帳單期間並轉換格式（22 Feb 2025 to 22 Mar 2025）
                         let statementPeriod = data.statementPeriod || data.statement_period || data.period || '';

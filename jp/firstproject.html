@@ -2902,7 +2902,12 @@
                                  data.endBalance || data.finalBalance || 0;
                         
                         // ✅ 顯示フォーマット：Start: $X,XXX.XX | End: $Y,YYY.YY
-                        amountDisplay = `Start: $${parseFloat(openingBalance).toLocaleString('zh-TW', {minimumFractionDigits: 2, maximumFractionDigits: 2})}<br>End: $${parseFloat(closingBalance).toLocaleString('zh-TW', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                        // 🔧 残高が0の場合は「処理中...」と表示する
+                        if (openingBalance === 0 && closingBalance === 0) {
+                            amountDisplay = `<span style="color: #f59e0b; font-weight: 600;">⏳ 処理中...</span>`;
+                        } else {
+                            amountDisplay = `Start: $${parseFloat(openingBalance).toLocaleString('zh-TW', {minimumFractionDigits: 2, maximumFractionDigits: 2})}<br>End: $${parseFloat(closingBalance).toLocaleString('zh-TW', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                        }
                         
                         // ✅ 抽出對帳單期間並変換フォーマット（22 Feb 2025 to 22 Mar 2025）
                         let statementPeriod = data.statementPeriod || data.statement_period || data.period || '';

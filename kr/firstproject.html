@@ -2902,7 +2902,12 @@
                                  data.endBalance || data.finalBalance || 0;
                         
                         // ✅ 표시포맷：Start: $X,XXX.XX | End: $Y,YYY.YY
-                        amountDisplay = `Start: $${parseFloat(openingBalance).toLocaleString('zh-TW', {minimumFractionDigits: 2, maximumFractionDigits: 2})}<br>End: $${parseFloat(closingBalance).toLocaleString('zh-TW', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                        // 🔧 잔액이 0일 경우 "처리 중..."으로 표시
+                        if (openingBalance === 0 && closingBalance === 0) {
+                            amountDisplay = `<span style="color: #f59e0b; font-weight: 600;">⏳ 처리 중...</span>`;
+                        } else {
+                            amountDisplay = `Start: $${parseFloat(openingBalance).toLocaleString('zh-TW', {minimumFractionDigits: 2, maximumFractionDigits: 2})}<br>End: $${parseFloat(closingBalance).toLocaleString('zh-TW', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                        }
                         
                         // ✅ 추출대해帳單期사이및변환포맷（22 Feb 2025 to 22 Mar 2025）
                         let statementPeriod = data.statementPeriod || data.statement_period || data.period || '';

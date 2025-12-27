@@ -2919,7 +2919,12 @@
                                  data.endBalance || data.finalBalance || 0;
                         
                         // ✅ ShowFormat：Start: $X,XXX.XX | End: $Y,YYY.YY
-                        amountDisplay = `Start: $${parseFloat(openingBalance).toLocaleString('zh-TW', {minimumFractionDigits: 2, maximumFractionDigits: 2})}<br>End: $${parseFloat(closingBalance).toLocaleString('zh-TW', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                        // 🔧 Show "Processing..." instead of $0.00 when balance is 0
+                        if (openingBalance === 0 && closingBalance === 0) {
+                            amountDisplay = `<span style="color: #f59e0b; font-weight: 600;">⏳ Processing...</span>`;
+                        } else {
+                            amountDisplay = `Start: $${parseFloat(openingBalance).toLocaleString('zh-TW', {minimumFractionDigits: 2, maximumFractionDigits: 2})}<br>End: $${parseFloat(closingBalance).toLocaleString('zh-TW', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                        }
                         
                         // ✅ extractPairaccountsingleduring andConvertFormat（22 Feb 2025 to 22 Mar 2025）
                         let statementPeriod = data.statementPeriod || data.statement_period || data.period || '';
