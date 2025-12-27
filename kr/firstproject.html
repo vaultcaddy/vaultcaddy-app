@@ -69,6 +69,11 @@
 <!-- ✅ UI 組件 -->
 <script defer="" src="../navbar-component.js?v=20251106-final-fix"></script>
 <script defer="" src="../sidebar-component.js?v=20251106-final-fix"></script>
+<!-- ✅ Flatpickr 날짜 선택기 (CDN) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/themes/light.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/ko.js"></script>
 <!-- ✅ 은행 명세서내보내기模塊 -->
 <script defer="" src="../bank-statement-export.js"></script>
 <script defer="" src="../invoice-export.js"></script>
@@ -4885,19 +4890,43 @@
 </div>
 <!-- Export 메뉴 배경 마스크 -->
 <div id="exportMenuOverlay" onclick="closeExportMenu()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999998;"></div>
-<!-- 🌐 날짜 입력 필드 언어 설정 강제 -->
+<!-- 🌐 Flatpickr 날짜 선택기 초기화 -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // 모든 날짜 입력 필드에 lang 속성 설정
-    const dateInputs = document.querySelectorAll('input[type="date"]');
-    dateInputs.forEach(input => {
-        input.setAttribute('lang', 'ko-KR');
-        input.setAttribute('data-lang', 'ko');
-    });
+    // Flatpickr 설정
+    const flatpickrConfig = {
+        locale: 'ko',  // 한국어
+        dateFormat: 'Y-m-d',  // ISO 8601 형식
+        allowInput: true,  // 수동 입력 허용
+        disableMobile: false,  // 모바일에서도 Flatpickr 사용
+        onChange: function(selectedDates, dateStr, instance) {
+            // 날짜가 변경되면 필터링 실행
+            if (window.filterDocumentsByDate) {
+                window.filterDocumentsByDate();
+            }
+        }
+    };
     
-    // HTML 요소 언어 확인
-    document.documentElement.lang = 'ko';
-    console.log('✅ 날짜 입력 필드 언어 설정 완료: ko-KR');
+    // 모든 날짜 입력 필드에 Flatpickr 적용
+    const dateFrom = document.getElementById('date-from');
+    const dateTo = document.getElementById('date-to');
+    const uploadDateFrom = document.getElementById('upload-date-from');
+    const uploadDateTo = document.getElementById('upload-date-to');
+    
+    if (dateFrom) {
+        flatpickr(dateFrom, flatpickrConfig);
+    }
+    if (dateTo) {
+        flatpickr(dateTo, flatpickrConfig);
+    }
+    if (uploadDateFrom) {
+        flatpickr(uploadDateFrom, flatpickrConfig);
+    }
+    if (uploadDateTo) {
+        flatpickr(uploadDateTo, flatpickrConfig);
+    }
+    
+    console.log('✅ Flatpickr 날짜 선택기 초기화 완료 (한국어)');
 });
 </script>
 </main></body>

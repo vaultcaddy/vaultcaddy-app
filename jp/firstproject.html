@@ -69,6 +69,11 @@
 <!-- ✅ UI 組件 -->
 <script defer="" src="../navbar-component.js?v=20251106-final-fix"></script>
 <script defer="" src="../sidebar-component.js?v=20251106-final-fix"></script>
+<!-- ✅ Flatpickr日付選択器（CDN）-->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/themes/light.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/ja.js"></script>
 <!-- ✅ 銀行取引明細書導出模塊 -->
 <script defer="" src="../bank-statement-export.js"></script>
 <script defer="" src="../invoice-export.js"></script>
@@ -4881,19 +4886,43 @@
 </div>
 <!-- Export メニュー背景マスク -->
 <div id="exportMenuOverlay" onclick="closeExportMenu()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999998;"></div>
-<!-- 🌐 日付入力フィールドの言語設定を強制 -->
+<!-- 🌐 Flatpickr日付選択器初期化 -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // すべての日付入力フィールドにlang属性を設定
-    const dateInputs = document.querySelectorAll('input[type="date"]');
-    dateInputs.forEach(input => {
-        input.setAttribute('lang', 'ja-JP');
-        input.setAttribute('data-lang', 'ja');
-    });
+    // Flatpickr設定
+    const flatpickrConfig = {
+        locale: 'ja',  // 日本語
+        dateFormat: 'Y-m-d',  // ISO 8601形式
+        allowInput: true,  // 手動入力を許可
+        disableMobile: false,  // モバイルでもFlatpickrを使用
+        onChange: function(selectedDates, dateStr, instance) {
+            // 日付が変更されたらフィルタリングを実行
+            if (window.filterDocumentsByDate) {
+                window.filterDocumentsByDate();
+            }
+        }
+    };
     
-    // HTML要素の言語も確認
-    document.documentElement.lang = 'ja';
-    console.log('✅ 日付入力フィールドの言語設定完了: ja-JP');
+    // すべての日付入力フィールドにFlatpickrを適用
+    const dateFrom = document.getElementById('date-from');
+    const dateTo = document.getElementById('date-to');
+    const uploadDateFrom = document.getElementById('upload-date-from');
+    const uploadDateTo = document.getElementById('upload-date-to');
+    
+    if (dateFrom) {
+        flatpickr(dateFrom, flatpickrConfig);
+    }
+    if (dateTo) {
+        flatpickr(dateTo, flatpickrConfig);
+    }
+    if (uploadDateFrom) {
+        flatpickr(uploadDateFrom, flatpickrConfig);
+    }
+    if (uploadDateTo) {
+        flatpickr(uploadDateTo, flatpickrConfig);
+    }
+    
+    console.log('✅ Flatpickr日付選択器初期化完了（日本語）');
 });
 </script>
 </main></body>
