@@ -114,6 +114,139 @@
 <script defer="" src="firstproject-enhancements.js?v=20251110"></script>
 <!-- ✅ Credits 管理器（修复 Firebase 初始化时序问题）-->
 <script defer="" src="credits-manager.js?v=20251217-v3-firebase-ready"></script>
+<!-- ✅ Flatpickr 日期選擇器（繁體中文版）-->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/themes/light.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/zh-tw.js"></script>
+<!-- ✅ Flatpickr 移動端優化樣式 -->
+<style>
+    /* 移動端日期選擇器優化 */
+    @media (max-width: 768px) {
+        /* Flatpickr 容器優化 */
+        .flatpickr-calendar {
+            width: 90vw !important;
+            max-width: 340px !important;
+            font-size: 16px !important;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3) !important;
+        }
+        
+        /* 月份選擇器 */
+        .flatpickr-months {
+            padding: 12px 0 !important;
+        }
+        
+        .flatpickr-current-month {
+            font-size: 18px !important;
+            padding: 8px 0 !important;
+        }
+        
+        /* 增大月份切換按鈕 */
+        .flatpickr-prev-month,
+        .flatpickr-next-month {
+            padding: 12px !important;
+        }
+        
+        .flatpickr-prev-month svg,
+        .flatpickr-next-month svg {
+            width: 20px !important;
+            height: 20px !important;
+        }
+        
+        /* 星期標題 */
+        .flatpickr-weekdays {
+            height: 40px !important;
+        }
+        
+        .flatpickr-weekday {
+            font-size: 14px !important;
+            font-weight: 600 !important;
+        }
+        
+        /* 日期格子 */
+        .flatpickr-day {
+            height: 44px !important;
+            line-height: 44px !important;
+            max-width: 44px !important;
+            font-size: 16px !important;
+            border-radius: 8px !important;
+            margin: 2px !important;
+        }
+        
+        /* 選中的日期 */
+        .flatpickr-day.selected,
+        .flatpickr-day.selected:hover {
+            background: #8b5cf6 !important;
+            border-color: #8b5cf6 !important;
+            font-weight: 600 !important;
+        }
+        
+        /* 今天的日期 */
+        .flatpickr-day.today {
+            border: 2px solid #8b5cf6 !important;
+            font-weight: 600 !important;
+        }
+        
+        /* 輸入框優化 */
+        input[type="date"].flatpickr-input {
+            font-size: 16px !important;
+            padding: 12px !important;
+            min-height: 44px !important;
+            -webkit-appearance: none !important;
+            appearance: none !important;
+        }
+        
+        /* 日期範圍篩選區域優化 */
+        .date-filter-content {
+            flex-direction: column !important;
+            gap: 1rem !important;
+        }
+        
+        .date-filter-group {
+            width: 100% !important;
+            min-width: unset !important;
+        }
+        
+        .date-filter-inputs {
+            flex-direction: column !important;
+            gap: 0.75rem !important;
+        }
+        
+        .date-filter-inputs input {
+            width: 100% !important;
+            font-size: 16px !important;
+            padding: 12px !important;
+            min-height: 44px !important;
+        }
+        
+        .date-filter-inputs span {
+            display: none !important;
+        }
+        
+        /* 清除按鈕優化 */
+        .date-filter-clear-btn button {
+            width: 100% !important;
+            padding: 12px 16px !important;
+            font-size: 16px !important;
+            min-height: 44px !important;
+        }
+    }
+    
+    /* 小屏幕（手機豎屏）特別優化 */
+    @media (max-width: 480px) {
+        .flatpickr-calendar {
+            width: 95vw !important;
+            max-width: 320px !important;
+        }
+        
+        .flatpickr-day {
+            height: 40px !important;
+            line-height: 40px !important;
+            max-width: 40px !important;
+            font-size: 15px !important;
+        }
+    }
+</style>
 <style>
         /* 白色主題樣式 */
         body {
@@ -4901,5 +5034,34 @@
 </div>
 <!-- Export 菜單背景遮罩 -->
 <div id="exportMenuOverlay" onclick="closeExportMenu()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999998;"></div>
-</main></body>
+</main>
+<!-- ✅ Flatpickr 日期選擇器初始化（繁體中文）-->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 初始化所有日期輸入框
+        const dateInputs = document.querySelectorAll('input[type="date"]');
+        
+        // Flatpickr 配置（繁體中文）
+        const flatpickrConfig = {
+            locale: 'zh_tw',  // 繁體中文
+            dateFormat: 'Y-m-d',
+            allowInput: true,
+            disableMobile: false,
+            onChange: function(selectedDates, dateStr, instance) {
+                // 日期變更時觸發過濾
+                if (window.filterDocumentsByDate) {
+                    window.filterDocumentsByDate();
+                }
+            }
+        };
+        
+        // 為每個日期輸入框初始化 Flatpickr
+        dateInputs.forEach(input => {
+            flatpickr(input, flatpickrConfig);
+        });
+        
+        console.log("✅ Flatpickr 日期選擇器初始化完成（繁體中文）");
+    });
+</script>
+</body>
 </html>
