@@ -1,230 +1,266 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-生成完整的Sitemap - 包含所有144个优化的页面
-"""
+"""生成完整的sitemap.xml"""
 
+import glob
 import os
-from pathlib import Path
 from datetime import datetime
 
-def generate_sitemap():
-    """生成完整的sitemap.xml"""
+def get_all_landing_pages():
+    """获取所有landing page"""
+    pages = []
     
+    # 1. 主页（4个版本）
+    for path in ['index.html', 'en/index.html', 'ja/index.html', 'kr/index.html']:
+        if os.path.exists(path):
+            pages.append({
+                'loc': 'https://vaultcaddy.com/' + path.replace('index.html', ''),
+                'priority': '1.0',
+                'changefreq': 'daily'
+            })
+    
+    # 2. Resources页面（4个版本）
+    for path in ['resources.html', 'en/resources.html', 'ja/resources.html', 'kr/resources.html']:
+        if os.path.exists(path):
+            url = 'https://vaultcaddy.com/' + path
+            pages.append({
+                'loc': url,
+                'priority': '0.9',
+                'changefreq': 'weekly'
+            })
+    
+    # 3. 银行页面
+    # 中文版
+    for file in glob.glob('*-bank-statement.html'):
+        pages.append({
+            'loc': f'https://vaultcaddy.com/{file}',
+            'priority': '0.9',
+            'changefreq': 'weekly'
+        })
+    
+    # 英文版
+    for file in glob.glob('en/*-bank-statement.html'):
+        pages.append({
+            'loc': f'https://vaultcaddy.com/{file}',
+            'priority': '0.8',
+            'changefreq': 'weekly'
+        })
+    
+    # 日文版
+    for file in glob.glob('ja/*-bank-statement.html'):
+        pages.append({
+            'loc': f'https://vaultcaddy.com/{file}',
+            'priority': '0.8',
+            'changefreq': 'weekly'
+        })
+    
+    # 韩文版
+    for file in glob.glob('kr/*-bank-statement.html'):
+        pages.append({
+            'loc': f'https://vaultcaddy.com/{file}',
+            'priority': '0.8',
+            'changefreq': 'weekly'
+        })
+    
+    # 4. Solutions页面
+    # 中文版
+    for file in glob.glob('solutions/*/index.html'):
+        dir_name = file.replace('solutions/', '').replace('/index.html', '')
+        pages.append({
+            'loc': f'https://vaultcaddy.com/solutions/{dir_name}/',
+            'priority': '0.85',
+            'changefreq': 'weekly'
+        })
+    
+    # 英文版
+    for file in glob.glob('en/solutions/*/index.html'):
+        dir_name = file.replace('en/solutions/', '').replace('/index.html', '')
+        pages.append({
+            'loc': f'https://vaultcaddy.com/en/solutions/{dir_name}/',
+            'priority': '0.75',
+            'changefreq': 'weekly'
+        })
+    
+    # 日文版
+    for file in glob.glob('ja/solutions/*/index.html'):
+        dir_name = file.replace('ja/solutions/', '').replace('/index.html', '')
+        pages.append({
+            'loc': f'https://vaultcaddy.com/ja/solutions/{dir_name}/',
+            'priority': '0.75',
+            'changefreq': 'weekly'
+        })
+    
+    # 韩文版
+    for file in glob.glob('kr/solutions/*/index.html'):
+        dir_name = file.replace('kr/solutions/', '').replace('/index.html', '')
+        pages.append({
+            'loc': f'https://vaultcaddy.com/kr/solutions/{dir_name}/',
+            'priority': '0.75',
+            'changefreq': 'weekly'
+        })
+    
+    # 5. Blog页面
+    # 中文版
+    for file in glob.glob('blog/*.html'):
+        if 'index.html' not in file:
+            pages.append({
+                'loc': f'https://vaultcaddy.com/{file}',
+                'priority': '0.7',
+                'changefreq': 'monthly'
+            })
+    
+    # Blog主页
+    if os.path.exists('blog/index.html'):
+        pages.append({
+            'loc': 'https://vaultcaddy.com/blog/',
+            'priority': '0.85',
+            'changefreq': 'weekly'
+        })
+    
+    # 英文版
+    for file in glob.glob('en/blog/*.html'):
+        if 'index.html' not in file:
+            pages.append({
+                'loc': f'https://vaultcaddy.com/{file}',
+                'priority': '0.65',
+                'changefreq': 'monthly'
+            })
+    
+    if os.path.exists('en/blog/index.html'):
+        pages.append({
+            'loc': 'https://vaultcaddy.com/en/blog/',
+            'priority': '0.8',
+            'changefreq': 'weekly'
+        })
+    
+    # 日文版
+    for file in glob.glob('ja/blog/*.html'):
+        if 'index.html' not in file:
+            pages.append({
+                'loc': f'https://vaultcaddy.com/{file}',
+                'priority': '0.65',
+                'changefreq': 'monthly'
+            })
+    
+    if os.path.exists('ja/blog/index.html'):
+        pages.append({
+            'loc': 'https://vaultcaddy.com/ja/blog/',
+            'priority': '0.8',
+            'changefreq': 'weekly'
+        })
+    
+    # 韩文版
+    for file in glob.glob('kr/blog/*.html'):
+        if 'index.html' not in file:
+            pages.append({
+                'loc': f'https://vaultcaddy.com/{file}',
+                'priority': '0.65',
+                'changefreq': 'monthly'
+            })
+    
+    if os.path.exists('kr/blog/index.html'):
+        pages.append({
+            'loc': 'https://vaultcaddy.com/kr/blog/',
+            'priority': '0.8',
+            'changefreq': 'weekly'
+        })
+    
+    return pages
+
+def generate_sitemap(pages):
+    """生成sitemap XML"""
     today = datetime.now().strftime('%Y-%m-%d')
     
-    sitemap_content = '''<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+    xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
     
-'''
+    for page in pages:
+        xml += '  <url>\n'
+        xml += f'    <loc>{page["loc"]}</loc>\n'
+        xml += f'    <lastmod>{today}</lastmod>\n'
+        xml += f'    <changefreq>{page["changefreq"]}</changefreq>\n'
+        xml += f'    <priority>{page["priority"]}</priority>\n'
+        xml += '  </url>\n'
     
-    urls = []
+    xml += '</urlset>'
     
-    # 1. 主页（4个）
-    print("📝 添加主页...")
-    urls.append({
-        'loc': 'https://vaultcaddy.com/',
-        'priority': '1.0',
-        'changefreq': 'weekly',
-        'lastmod': today
-    })
-    urls.append({
-        'loc': 'https://vaultcaddy.com/en/index.html',
-        'priority': '0.9',
-        'changefreq': 'weekly',
-        'lastmod': today
-    })
-    urls.append({
-        'loc': 'https://vaultcaddy.com/jp/index.html',
-        'priority': '0.9',
-        'changefreq': 'weekly',
-        'lastmod': today
-    })
-    urls.append({
-        'loc': 'https://vaultcaddy.com/kr/index.html',
-        'priority': '0.9',
-        'changefreq': 'weekly',
-        'lastmod': today
-    })
-    
-    # 2. 博客索引页（4个）
-    print("📝 添加博客索引页...")
-    for lang in ['', 'en/', 'jp/', 'kr/']:
-        urls.append({
-            'loc': f'https://vaultcaddy.com/{lang}blog/',
-            'priority': '0.8',
-            'changefreq': 'weekly',
-            'lastmod': today
-        })
-    
-    # 3. 博客文章（48篇）
-    print("📝 添加博客文章...")
-    for lang in ['en', 'jp', 'kr']:
-        blog_dir = Path(f'{lang}/blog')
-        if blog_dir.exists():
-            blog_files = [f for f in blog_dir.glob('*.html') if f.name != 'index.html']
-            print(f"   - {lang.upper()}: {len(blog_files)}篇文章")
-            
-            for blog_file in sorted(blog_files):
-                urls.append({
-                    'loc': f'https://vaultcaddy.com/{lang}/blog/{blog_file.name}',
-                    'priority': '0.7',
-                    'changefreq': 'monthly',
-                    'lastmod': today
-                })
-    
-    # 4. Solutions索引页（3个）
-    print("📝 添加Solutions索引页...")
-    for lang in ['en', 'jp', 'kr']:
-        urls.append({
-            'loc': f'https://vaultcaddy.com/{lang}/solutions/',
-            'priority': '0.8',
-            'changefreq': 'weekly',
-            'lastmod': today
-        })
-    
-    # 5. Landing Pages（93个）
-    print("📝 添加Landing Pages...")
-    for lang in ['en', 'jp', 'kr']:
-        solutions_dir = Path(f'{lang}/solutions')
-        if solutions_dir.exists():
-            # 获取所有子目录
-            subdirs = [d for d in solutions_dir.iterdir() if d.is_dir()]
-            print(f"   - {lang.upper()}: {len(subdirs)}个Landing Pages")
-            
-            for subdir in sorted(subdirs):
-                urls.append({
-                    'loc': f'https://vaultcaddy.com/{lang}/solutions/{subdir.name}/',
-                    'priority': '0.7',
-                    'changefreq': 'monthly',
-                    'lastmod': today
-                })
-    
-    # 6. 其他重要页面
-    print("📝 添加其他页面...")
-    other_pages = [
-        {'loc': 'https://vaultcaddy.com/auth.html', 'priority': '0.6'},
-        {'loc': 'https://vaultcaddy.com/privacy.html', 'priority': '0.5'},
-        {'loc': 'https://vaultcaddy.com/terms.html', 'priority': '0.5'},
-    ]
-    
-    for page in other_pages:
-        urls.append({
-            'loc': page['loc'],
-            'priority': page['priority'],
-            'changefreq': 'monthly',
-            'lastmod': today
-        })
-    
-    # 生成XML
-    print("\n🔨 生成Sitemap XML...")
-    for url_data in urls:
-        sitemap_content += f'''    <url>
-        <loc>{url_data['loc']}</loc>
-        <lastmod>{url_data['lastmod']}</lastmod>
-        <changefreq>{url_data['changefreq']}</changefreq>
-        <priority>{url_data['priority']}</priority>
-    </url>
-    
-'''
-    
-    sitemap_content += '</urlset>\n'
-    
-    # 写入文件
-    with open('sitemap.xml', 'w', encoding='utf-8') as f:
-        f.write(sitemap_content)
-    
-    print(f"\n✅ Sitemap生成完成！")
-    print(f"   总URL数：{len(urls)}")
-    print(f"   文件：sitemap.xml")
-    
-    return len(urls)
+    return xml
 
-def generate_url_list():
-    """生成URL列表用于Google Search Console提交"""
-    
-    print("\n📋 生成URL列表...")
-    
-    urls = []
-    
-    # 主页
-    urls.extend([
-        'https://vaultcaddy.com/',
-        'https://vaultcaddy.com/en/index.html',
-        'https://vaultcaddy.com/jp/index.html',
-        'https://vaultcaddy.com/kr/index.html',
-    ])
-    
-    # 博客索引
-    urls.extend([
-        'https://vaultcaddy.com/blog/',
-        'https://vaultcaddy.com/en/blog/',
-        'https://vaultcaddy.com/jp/blog/',
-        'https://vaultcaddy.com/kr/blog/',
-    ])
-    
-    # 博客文章
-    for lang in ['en', 'jp', 'kr']:
-        blog_dir = Path(f'{lang}/blog')
-        if blog_dir.exists():
-            for blog_file in sorted(blog_dir.glob('*.html')):
-                if blog_file.name != 'index.html':
-                    urls.append(f'https://vaultcaddy.com/{lang}/blog/{blog_file.name}')
-    
-    # Solutions索引
-    for lang in ['en', 'jp', 'kr']:
-        urls.append(f'https://vaultcaddy.com/{lang}/solutions/')
-    
-    # Landing Pages
-    for lang in ['en', 'jp', 'kr']:
-        solutions_dir = Path(f'{lang}/solutions')
-        if solutions_dir.exists():
-            for subdir in sorted(solutions_dir.iterdir()):
-                if subdir.is_dir():
-                    urls.append(f'https://vaultcaddy.com/{lang}/solutions/{subdir.name}/')
-    
-    # 写入文件
-    with open('sitemap-urls.txt', 'w', encoding='utf-8') as f:
-        for url in urls:
-            f.write(url + '\n')
-    
-    print(f"✅ URL列表生成完成！")
-    print(f"   文件：sitemap-urls.txt")
-    print(f"   总URL数：{len(urls)}")
-    
-    return len(urls)
+# 获取所有页面
+pages = get_all_landing_pages()
 
-def main():
-    """主函数"""
-    
-    print("╔══════════════════════════════════════════════════════════════════════╗")
-    print("║              📋 生成完整Sitemap - 包含所有144个页面                    ║")
-    print("╚══════════════════════════════════════════════════════════════════════╝")
-    print()
-    
-    # 生成sitemap
-    total_urls = generate_sitemap()
-    
-    # 生成URL列表
-    total_list = generate_url_list()
-    
-    # 总结
-    print("\n" + "="*70)
-    print("🎉 完成！")
-    print("="*70)
-    print(f"\n📊 统计：")
-    print(f"   Sitemap URL数：{total_urls}")
-    print(f"   URL列表数：{total_list}")
-    print(f"\n📁 生成的文件：")
-    print(f"   ✅ sitemap.xml - 完整的sitemap")
-    print(f"   ✅ sitemap-urls.txt - URL列表（用于批量提交）")
-    print(f"\n🚀 下一步：")
-    print(f"   1. 访问 https://search.google.com/search-console")
-    print(f"   2. 在「索引」→「Sitemap」中提交：")
-    print(f"      https://vaultcaddy.com/sitemap.xml")
-    print(f"   3. 使用sitemap-urls.txt批量请求索引")
+# 按priority降序排序
+pages.sort(key=lambda x: float(x['priority']), reverse=True)
 
-if __name__ == '__main__':
-    main()
+# 生成sitemap
+sitemap_xml = generate_sitemap(pages)
+
+# 保存
+with open('sitemap.xml', 'w', encoding='utf-8') as f:
+    f.write(sitemap_xml)
+
+# 保存旧版本为备份
+if os.path.exists('sitemap.xml.old'):
+    os.remove('sitemap.xml.old')
+os.system('cp sitemap.xml.backup sitemap.xml.old 2>/dev/null || true')
+
+# 创建新备份
+with open('sitemap.xml.backup', 'w', encoding='utf-8') as f:
+    f.write(sitemap_xml)
+
+print("=" * 70)
+print("🎉 完整Sitemap生成成功！")
+print("=" * 70)
+print()
+print(f"✅ 总计: {len(pages)} 个URL")
+print()
+
+# 统计
+by_type = {}
+by_lang = {'zh': 0, 'en': 0, 'ja': 0, 'kr': 0}
+
+for page in pages:
+    url = page['loc']
+    
+    # 统计语言
+    if '/en/' in url:
+        by_lang['en'] += 1
+    elif '/ja/' in url:
+        by_lang['ja'] += 1
+    elif '/kr/' in url:
+        by_lang['kr'] += 1
+    else:
+        by_lang['zh'] += 1
+    
+    # 统计类型
+    if 'bank-statement' in url:
+        by_type['银行页面'] = by_type.get('银行页面', 0) + 1
+    elif 'solutions' in url:
+        by_type['Solutions页面'] = by_type.get('Solutions页面', 0) + 1
+    elif 'blog' in url:
+        by_type['Blog页面'] = by_type.get('Blog页面', 0) + 1
+    elif 'resources' in url:
+        by_type['Resources页面'] = by_type.get('Resources页面', 0) + 1
+    else:
+        by_type['主页/其他'] = by_type.get('主页/其他', 0) + 1
+
+print("📊 按类型统计:")
+for type_name, count in by_type.items():
+    print(f"  {type_name}: {count} 个")
+
+print()
+print("📊 按语言统计:")
+print(f"  中文: {by_lang['zh']} 个")
+print(f"  英文: {by_lang['en']} 个")
+print(f"  日文: {by_lang['ja']} 个")
+print(f"  韩文: {by_lang['kr']} 个")
+
+print()
+print("=" * 70)
+print("📝 下一步:")
+print("=" * 70)
+print("1. 上传 sitemap.xml 到服务器")
+print("2. 在 Google Search Console 提交新sitemap")
+print("3. 在 robots.txt 中确保有: Sitemap: https://vaultcaddy.com/sitemap.xml")
+print()
 
