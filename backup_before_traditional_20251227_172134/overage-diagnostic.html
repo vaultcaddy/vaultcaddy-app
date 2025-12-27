@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <!-- 资源预连接 - 性能优化 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://www.gstatic.com">
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+
+    <meta charset="UTF-8">
+    <!-- 性能优化：关键CSS内联 -->
+    <style>
+        /* 关键CSS - 首屏渲染必需 */
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;line-height:1.6;color:#1f2937}
+        .vaultcaddy-navbar{position:fixed;top:0;width:100%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.1);z-index:1000}
+        .hero-section{min-height:100vh;display:flex;align-items:center;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff}
+        .container{max-width:1200px;margin:0 auto;padding:0 1rem}
+        .loading{opacity:0.5}
+    </style>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="alternate icon" type="image/png" href="favicon.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>超额计费诊断工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            font-size: 2rem;
+        }
+        
+        .section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .section h2 {
+            color: #495057;
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+        }
+        
+        .input-group {
+            margin-bottom: 1rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #495057;
+            font-weight: 600;
+        }
+        
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            background: #adb5bd;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .result {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .result pre {
+            margin: 0;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            color: #212529;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .loading {
+            display: none;
+            color: #667eea;
+            margin-left: 0.5rem;
+        }
+        
+        .loading.active {
+            display: inline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 超额计费诊断工具</h1>
+        
+        <!-- 诊断部分 -->
+        <div class="section">
+            <h2>1. 诊断超额计费问题</h2>
+            <div class="input-group">
+                <label for="diagnoseEmail">用户邮箱：</label>
+                <input type="email" id="diagnoseEmail" placeholder="例如：1234@gmail.com" value="1234@gmail.com">
+            </div>
+            <button onclick="diagnoseOverage()">🔍 开始诊断</button>
+            <span class="loading" id="diagnoseLoading">诊断中...</span>
+            <div class="result" id="diagnoseResult" style="display: none;"></div>
+        </div>
+        
+        <!-- 手动报告部分 -->
+        <div class="section">
+            <h2>2. 手动报告超额使用（仅用于修复）</h2>
+            <div class="input-group">
+                <label for="reportEmail">用户邮箱：</label>
+                <input type="email" id="reportEmail" placeholder="例如：1234@gmail.com" value="1234@gmail.com">
+            </div>
+            <div class="input-group">
+                <label for="overageAmount">超额数量：</label>
+                <input type="number" id="overageAmount" placeholder="例如：6" value="6">
+            </div>
+            <button onclick="manualReport()">📡 手动报告</button>
+            <span class="loading" id="reportLoading">报告中...</span>
+            <div class="result" id="reportResult" style="display: none;"></div>
+        </div>
+        
+        <!-- 说明 -->
+        <div class="section" style="background: #fff3cd;">
+            <h2>⚠️ 使用说明</h2>
+            <p style="color: #856404; line-height: 1.6;">
+                <strong>步骤 1：</strong> 先点击「开始诊断」，查看用户是否有 <code>meteredSubscriptionItemId</code> 和 <code>stripeSubscriptionId</code>。<br><br>
+                <strong>步骤 2：</strong> 如果诊断结果显示 <code>canReportUsage: true</code>，但 Stripe 中没有使用记录，说明之前的报告失败了。<br><br>
+                <strong>步骤 3：</strong> 点击「手动报告」，手动向 Stripe 提交超额使用记录。<br><br>
+                <strong>步骤 4：</strong> 报告成功后，可以在 Stripe Dashboard 中手动生成发票（Create Invoice）来收取费用。
+            </p>
+        </div>
+    </div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
+    
+    <script>
+        // Firebase 配置（从你的 Firebase 项目获取）
+        const firebaseConfig = {
+            apiKey: "AIzaSyBeqaslSjzVeE1uENdGVMeF-dDPx_gJf78",
+            authDomain: "vaultcaddy-production-cbbe2.firebaseapp.com",
+            projectId: "vaultcaddy-production-cbbe2",
+            storageBucket: "vaultcaddy-production-cbbe2.firebasestorage.app",
+            messagingSenderId: "887906761502",
+            appId: "1:887906761502:web:a18da3d8f8ed33dab4a63e"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const functions = firebase.functions();
+        
+        // 诊断函数
+        async function diagnoseOverage() {
+            const email = document.getElementById('diagnoseEmail').value.trim();
+            const resultDiv = document.getElementById('diagnoseResult');
+            const loading = document.getElementById('diagnoseLoading');
+            
+            if (!email) {
+                alert('请输入邮箱地址');
+                return;
+            }
+            
+            loading.classList.add('active');
+            resultDiv.style.display = 'none';
+            
+            try {
+                const diagnoseOverageCharging = functions.httpsCallable('diagnoseOverageCharging');
+                const result = await diagnoseOverageCharging({ email });
+                
+                loading.classList.remove('active');
+                resultDiv.style.display = 'block';
+                
+                // 生成结果HTML
+                let html = '';
+                
+                // 关键信息
+                if (result.data.checks.canReportUsage) {
+                    html += '<span class="status success">✅ 可以报告超额使用</span><br><br>';
+                } else {
+                    html += '<span class="status error">❌ 无法报告超额使用（缺少必要信息）</span><br><br>';
+                }
+                
+                // 详细信息
+                html += '<pre>' + JSON.stringify(result.data, null, 2) + '</pre>';
+                
+                resultDiv.innerHTML = html;
+                
+            } catch (error) {
+                loading.classList.remove('active');
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = '<span class="status error">❌ 诊断失败</span><br><pre>' + 
+                                     JSON.stringify({ error: error.message, details: error }, null, 2) + 
+                                     '</pre>';
+            }
+        }
+        
+        // 手动报告函数
+        async function manualReport() {
+            const email = document.getElementById('reportEmail').value.trim();
+            const overageAmount = parseInt(document.getElementById('overageAmount').value);
+            const resultDiv = document.getElementById('reportResult');
+            const loading = document.getElementById('reportLoading');
+            
+            if (!email) {
+                alert('请输入邮箱地址');
+                return;
+            }
+            
+            if (!overageAmount || overageAmount <= 0) {
+                alert('请输入有效的超额数量');
+                return;
+            }
+            
+            if (!confirm(`确定要向 Stripe 报告 ${overageAmount} Credits 的超额使用吗？`)) {
+                return;
+            }
+            
+            loading.classList.add('active');
+            resultDiv.style.display = 'none';
+            
+            try {
+                const manualReportOverage = functions.httpsCallable('manualReportOverage');
+                const result = await manualReportOverage({ email, overageAmount });
+                
+                loading.classList.remove('active');
+                resultDiv.style.display = 'block';
+                
+                resultDiv.innerHTML = '<span class="status success">✅ 报告成功</span><br><pre>' + 
+                                     JSON.stringify(result.data, null, 2) + 
+                                     '</pre>';
+                
+            } catch (error) {
+                loading.classList.remove('active');
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = '<span class="status error">❌ 报告失败</span><br><pre>' + 
+                                     JSON.stringify({ error: error.message, details: error }, null, 2) + 
+                                     '</pre>';
+            }
+        }
+        
+        // 快捷键
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                diagnoseOverage();
+            }
+        });
+    </script>
+</body>
+</html>
+

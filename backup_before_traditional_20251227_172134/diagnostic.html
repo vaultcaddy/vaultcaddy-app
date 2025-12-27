@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <!-- 资源预连接 - 性能优化 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://www.gstatic.com">
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+
+    <meta charset="UTF-8">
+    <!-- 性能优化：关键CSS内联 -->
+    <style>
+        /* 关键CSS - 首屏渲染必需 */
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;line-height:1.6;color:#1f2937}
+        .vaultcaddy-navbar{position:fixed;top:0;width:100%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.1);z-index:1000}
+        .hero-section{min-height:100vh;display:flex;align-items:center;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff}
+        .container{max-width:1200px;margin:0 auto;padding:0 1rem}
+        .loading{opacity:0.5}
+    </style>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="alternate icon" type="image/png" href="favicon.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VaultCaddy 診斷工具</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .status-item {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #ccc;
+        }
+        .status-item.success {
+            background: #e8f5e9;
+            border-left-color: #4CAF50;
+        }
+        .status-item.error {
+            background: #ffebee;
+            border-left-color: #f44336;
+        }
+        .status-item.warning {
+            background: #fff3e0;
+            border-left-color: #ff9800;
+        }
+        .code {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .danger {
+            background: #f44336;
+        }
+        .danger:hover {
+            background: #da190b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 VaultCaddy 系統診斷</h1>
+        
+        <div id="diagnostics"></div>
+        
+        <h2>🛠️ 快速修復</h2>
+        <button onclick="clearAllCache()">清除所有快取</button>
+        <button onclick="unregisterServiceWorkers()">註銷 Service Workers</button>
+        <button onclick="location.reload(true)" class="danger">強制重新載入</button>
+        <button onclick="window.location.href='firstproject.html?project=' + new URLSearchParams(window.location.search).get('project')">返回項目頁面</button>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    
+    <!-- Firebase 配置 -->
+    <script defer src="firebase-config.js?v=20251105-ultimate"></script>
+    <script defer src="simple-auth.js?v=20251105-ultimate"></script>
+    <script defer src="simple-data-manager.js?v=20251105-ultimate"></script>
+
+    <script>
+        const diagnosticsDiv = document.getElementById('diagnostics');
+
+        function addStatus(title, status, message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `status-item ${type}`;
+            div.innerHTML = `
+                <strong>${title}</strong>: ${status}<br>
+                <small>${message}</small>
+            `;
+            diagnosticsDiv.appendChild(div);
+        }
+
+        function addCode(title, code) {
+            const div = document.createElement('div');
+            div.className = 'status-item';
+            div.innerHTML = `
+                <strong>${title}</strong>
+                <div class="code">${code}</div>
+            `;
+            diagnosticsDiv.appendChild(div);
+        }
+
+        async function runDiagnostics() {
+            diagnosticsDiv.innerHTML = '<h2>🔄 正在診斷...</h2>';
+
+            // 1. 檢查 Firebase
+            setTimeout(() => {
+                if (window.firebaseInitialized) {
+                    addStatus('Firebase', '✅ 已初始化', 'Firebase SDK 正常載入', 'success');
+                } else {
+                    addStatus('Firebase', '❌ 未初始化', 'Firebase SDK 未載入或初始化失敗', 'error');
+                }
+
+                // 2. 檢查 SimpleAuth
+                if (window.simpleAuth) {
+                    if (window.simpleAuth.initialized) {
+                        const user = window.simpleAuth.currentUser;
+                        if (user) {
+                            addStatus('SimpleAuth', '✅ 已初始化並登入', `用戶: ${user.email}`, 'success');
+                        } else {
+                            addStatus('SimpleAuth', '⚠️ 已初始化但未登入', '請先登入', 'warning');
+                        }
+                    } else {
+                        addStatus('SimpleAuth', '⚠️ 未初始化', 'SimpleAuth 尚未完成初始化', 'warning');
+                    }
+                } else {
+                    addStatus('SimpleAuth', '❌ 不存在', 'SimpleAuth 未載入', 'error');
+                }
+
+                // 3. 檢查 SimpleDataManager
+                if (window.simpleDataManager) {
+                    if (window.simpleDataManager.initialized) {
+                        const user = window.simpleDataManager.currentUser;
+                        if (user) {
+                            addStatus('SimpleDataManager', '✅ 已初始化', `currentUser: ${user.email}`, 'success');
+                            
+                            // 測試獲取項目
+                            testGetProjects();
+                        } else {
+                            addStatus('SimpleDataManager', '❌ currentUser 為 null', '這是主要問題！', 'error');
+                        }
+                    } else {
+                        addStatus('SimpleDataManager', '⚠️ 未初始化', 'SimpleDataManager 尚未完成初始化', 'warning');
+                    }
+                } else {
+                    addStatus('SimpleDataManager', '❌ 不存在', 'SimpleDataManager 未載入', 'error');
+                }
+
+                // 4. 檢查 Service Workers
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(registrations => {
+                        if (registrations.length > 0) {
+                            addStatus('Service Workers', `⚠️ 找到 ${registrations.length} 個`, '可能導致快取問題', 'warning');
+                            registrations.forEach((reg, i) => {
+                                addCode(`Service Worker ${i + 1}`, reg.scope);
+                            });
+                        } else {
+                            addStatus('Service Workers', '✅ 無', '沒有 Service Workers', 'success');
+                        }
+                    });
+                }
+
+                // 5. 檢查腳本版本
+                const scripts = document.querySelectorAll('script[src*="simple-data-manager"]');
+                scripts.forEach(script => {
+                    const src = script.getAttribute('src');
+                    addCode('SimpleDataManager 腳本', src);
+                });
+
+            }, 2000); // 等待 2 秒讓所有腳本載入
+        }
+
+        async function testGetProjects() {
+            try {
+                console.log('🧪 測試 getProjects()...');
+                const projects = await window.simpleDataManager.getProjects();
+                addStatus('getProjects() 測試', `✅ 成功`, `找到 ${projects.length} 個項目`, 'success');
+                
+                if (projects.length > 0) {
+                    addCode('項目列表', JSON.stringify(projects, null, 2));
+                } else {
+                    addStatus('項目數據', '⚠️ 無項目', '請檢查 Firebase Console', 'warning');
+                }
+            } catch (error) {
+                addStatus('getProjects() 測試', '❌ 失敗', error.message, 'error');
+            }
+        }
+
+        async function clearAllCache() {
+            if (confirm('確定要清除所有快取嗎？這將刪除所有網站數據。')) {
+                try {
+                    // 清除 Cache Storage
+                    if ('caches' in window) {
+                        const cacheNames = await caches.keys();
+                        await Promise.all(cacheNames.map(name => caches.delete(name)));
+                        console.log('✅ Cache Storage 已清除');
+                    }
+
+                    // 清除 LocalStorage
+                    localStorage.clear();
+                    console.log('✅ LocalStorage 已清除');
+
+                    // 清除 SessionStorage
+                    sessionStorage.clear();
+                    console.log('✅ SessionStorage 已清除');
+
+                    alert('✅ 快取已清除！頁面將重新載入。');
+                    location.reload(true);
+                } catch (error) {
+                    alert('❌ 清除快取失敗: ' + error.message);
+                }
+            }
+        }
+
+        async function unregisterServiceWorkers() {
+            if ('serviceWorker' in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                if (registrations.length === 0) {
+                    alert('ℹ️ 沒有找到 Service Workers');
+                    return;
+                }
+
+                for (let registration of registrations) {
+                    await registration.unregister();
+                    console.log('✅ Service Worker 已註銷:', registration.scope);
+                }
+
+                alert(`✅ 已註銷 ${registrations.length} 個 Service Workers！頁面將重新載入。`);
+                location.reload(true);
+            } else {
+                alert('ℹ️ 此瀏覽器不支持 Service Workers');
+            }
+        }
+
+        // 頁面載入後運行診斷
+        window.addEventListener('load', () => {
+            setTimeout(runDiagnostics, 1000);
+        });
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <!-- 资源预连接 - 性能优化 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://www.gstatic.com">
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+
+    <meta charset="UTF-8">
+    <!-- 性能优化：关键CSS内联 -->
+    <style>
+        /* 关键CSS - 首屏渲染必需 */
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;line-height:1.6;color:#1f2937}
+        .vaultcaddy-navbar{position:fixed;top:0;width:100%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.1);z-index:1000}
+        .hero-section{min-height:100vh;display:flex;align-items:center;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff}
+        .container{max-width:1200px;margin:0 auto;padding:0 1rem}
+        .loading{opacity:0.5}
+    </style>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="alternate icon" type="image/png" href="favicon.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VaultCaddy 手機版設計對比工具</title>
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel=\'stylesheet\'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f3f4f6;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1rem;
+            color: #6b7280;
+        }
+
+        .compare-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section-row {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .preview-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .preview-box {
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1.5rem;
+            position: relative;
+        }
+
+        .preview-box.selected {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+
+        .preview-label {
+            position: absolute;
+            top: -12px;
+            left: 1rem;
+            background: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #6b7280;
+        }
+
+        .preview-box.selected .preview-label {
+            background: #10b981;
+            color: white;
+        }
+
+        .preview-content {
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .preview-content img {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .select-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-left {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-left:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .btn-right {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-right:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        .btn-reset {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .btn-reset:hover {
+            background: #e5e7eb;
+        }
+
+        .action-bar {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            z-index: 1000;
+        }
+
+        .action-btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .action-btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .action-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .action-btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .action-btn-secondary:hover {
+            background: #f3f4f6;
+        }
+
+        .code-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .code-modal.active {
+            display: flex;
+        }
+
+        .code-modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 800px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .code-output {
+            background: #1f2937;
+            color: #10b981;
+            padding: 1.5rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            white-space: pre-wrap;
+            word-break: break-all;
+            margin-top: 1rem;
+        }
+
+        .selection-summary {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .selection-summary h3 {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 1rem;
+        }
+
+        .selection-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .selection-item:last-child {
+            border-bottom: none;
+        }
+
+        .selection-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-left {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-right {
+            background: #d1fae5;
+            color: #065f46;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎨 VaultCaddy 手機版設計對比工具</h1>
+        <p>左邊是編輯器預覽版，右邊是真實手機版 - 選擇你喜歡的設計！</p>
+    </div>
+
+    <div class="compare-container">
+        <!-- Hero 區域 -->
+        <div class="section-row" data-section="hero">
+            <div class="section-title">
+                <i class="fas fa-rocket"></i>
+                Hero 區域 - 主標題和 CTA
+            </div>
+            <div class="preview-grid">
+                <div class="preview-box" data-version="left">
+                    <div class="preview-label">編輯器預覽版</div>
+                    <div class="preview-content">
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem; border-radius: 12px; color: white;">
+                            <h2 style="font-size: 2rem; font-weight: 800; text-align: center; margin-bottom: 0.5rem;">針對香港銀行對帳單處理<br><span style="color: #fbbf24;">低至 HKD 0.5/頁</span></h2>
+                            <div style="text-align: center; background: rgba(255,255,255,0.2); border-radius: 9999px; padding: 0.5rem 1rem; display: inline-block; width: 100%; margin: 1rem 0;">
+                                <i class="fas fa-star" style="color: #fbbf24;"></i> 超過 200+ 企業信賴
+                            </div>
+                            <p style="text-align: center; margin-bottom: 1rem;">專為會計師及小型公司設計的 AI 文檔處理平台</p>
+                            <p style="text-align: center; margin-bottom: 1.5rem;"><strong>自動轉換 Excel/CSV/QuickBooks/Xero<br>• 準確率 98% • 節省 90% 時間</strong></p>
+                            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                <button style="background: white; color: #667eea; padding: 0.875rem; border-radius: 12px; border: none; font-weight: 600;"><i class="fas fa-rocket"></i> 免費試用 20 頁</button>
+                                <button style="background: rgba(255,255,255,0.2); color: white; padding: 0.875rem; border-radius: 12px; border: 2px solid rgba(255,255,255,0.3); font-weight: 600;"><i class="fas fa-dollar-sign"></i> 無需預約</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="preview-box" data-version="right">
+                    <div class="preview-label">真實手機版</div>
+                    <div class="preview-content">
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem; border-radius: 12px; color: white;">
+                            <div style="text-align: center; background: rgba(255,255,255,0.2); border-radius: 9999px; padding: 0.5rem 1rem; display: inline-block; width: 100%; margin-bottom: 1rem;">
+                                <i class="fas fa-star" style="color: #fbbf24;"></i> 超過 200+ 企業信賴
+                            </div>
+                            <h2 style="font-size: 2rem; font-weight: 800; text-align: center; margin-bottom: 1rem;">針對香港銀行對帳單處理<br><span style="color: #fbbf24;">低至 HKD 0.5/頁</span></h2>
+                            <p style="text-align: center; margin-bottom: 0.5rem;">專為會計師及小型公司設計的 AI 文檔處理平台</p>
+                            <p style="text-align: center; margin-bottom: 1.5rem;"><strong>自動轉換 Excel/CSV/QuickBooks/Xero<br>• 準確率 98% • 節省 90% 時間</strong></p>
+                            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                <button style="background: white; color: #667eea; padding: 0.875rem; border-radius: 12px; border: none; font-weight: 600;"><i class="fas fa-rocket"></i> 免費試用 20 頁</button>
+                                <button style="background: rgba(255,255,255,0.2); color: white; padding: 0.875rem; border-radius: 12px; border: 2px solid rgba(255,255,255,0.3); font-weight: 600;"><i class="fas fa-dollar-sign"></i> 無需預約</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="select-buttons">
+                <button class="btn btn-left" onclick="selectVersion('hero', 'left')">
+                    <i class="fas fa-check"></i> 選擇左邊（編輯器版）
+                </button>
+                <button class="btn btn-right" onclick="selectVersion('hero', 'right')">
+                    <i class="fas fa-check"></i> 選擇右邊（真實版）
+                </button>
+            </div>
+        </div>
+
+        <!-- 統計數據區域 -->
+        <div class="section-row" data-section="stats">
+            <div class="section-title">
+                <i class="fas fa-chart-bar"></i>
+                統計數據區域
+            </div>
+            <div class="preview-grid">
+                <div class="preview-box" data-version="left">
+                    <div class="preview-label">編輯器預覽版</div>
+                    <div class="preview-content">
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.5rem; border-radius: 12px;">
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; color: white; text-align: center;">
+                                <div>
+                                    <div style="font-size: 1.5rem; font-weight: 700;">3秒</div>
+                                    <div style="font-size: 0.7rem; opacity: 0.8;">平均處理時間</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 1.5rem; font-weight: 700;">98%</div>
+                                    <div style="font-size: 0.7rem; opacity: 0.8;">數據準確率</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 1.5rem; font-weight: 700;">200+</div>
+                                    <div style="font-size: 0.7rem; opacity: 0.8;">企業客戶</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="preview-box" data-version="right">
+                    <div class="preview-label">真實手機版</div>
+                    <div class="preview-content">
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.5rem; border-radius: 12px;">
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; color: white; text-align: center;">
+                                <div>
+                                    <div style="font-size: 1.5rem; font-weight: 700;">3秒</div>
+                                    <div style="font-size: 0.7rem; opacity: 0.8;">平均處理時間</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 1.5rem; font-weight: 700;">98%</div>
+                                    <div style="font-size: 0.7rem; opacity: 0.8;">數據準確率</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 1.5rem; font-weight: 700;">200+</div>
+                                    <div style="font-size: 0.7rem; opacity: 0.8;">企業客戶</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="select-buttons">
+                <button class="btn btn-left" onclick="selectVersion('stats', 'left')">
+                    <i class="fas fa-check"></i> 選擇左邊
+                </button>
+                <button class="btn btn-right" onclick="selectVersion('stats', 'right')">
+                    <i class="fas fa-check"></i> 選擇右邊
+                </button>
+            </div>
+        </div>
+
+        <!-- 功能卡片區域 -->
+        <div class="section-row" data-section="features">
+            <div class="section-title">
+                <i class="fas fa-star"></i>
+                強大功能 - 發票和銀行卡片
+            </div>
+            <div class="preview-grid">
+                <div class="preview-box" data-version="left">
+                    <div class="preview-label">編輯器預覽版（圖1）</div>
+                    <div class="preview-content">
+                        <p style="text-align: center; color: #6b7280; font-size: 0.875rem; margin-bottom: 1rem;">發票卡片和銀行卡片在灰色背景中</p>
+                    </div>
+                </div>
+                <div class="preview-box" data-version="right">
+                    <div class="preview-label">真實手機版（圖6-7）</div>
+                    <div class="preview-content">
+                        <p style="text-align: center; color: #6b7280; font-size: 0.875rem; margin-bottom: 1rem;">發票卡片和銀行卡片有完整的特點列表（打勾圖標）</p>
+                    </div>
+                </div>
+            </div>
+            <div class="select-buttons">
+                <button class="btn btn-left" onclick="selectVersion('features', 'left')">
+                    <i class="fas fa-check"></i> 選擇左邊
+                </button>
+                <button class="btn btn-right" onclick="selectVersion('features', 'right')">
+                    <i class="fas fa-check"></i> 選擇右邊
+                </button>
+            </div>
+        </div>
+
+        <!-- 價格區域 -->
+        <div class="section-row" data-section="pricing">
+            <div class="section-title">
+                <i class="fas fa-dollar-sign"></i>
+                價格卡片區域
+            </div>
+            <div class="preview-grid">
+                <div class="preview-box" data-version="left">
+                    <div class="preview-label">編輯器預覽版（圖3）</div>
+                    <div class="preview-content">
+                        <div style="background: white; border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem;">
+                            <h3 style="font-weight: 700; margin-bottom: 0.5rem;">月付</h3>
+                            <div style="display: flex; align-items: baseline; gap: 0.25rem; margin-bottom: 1rem;">
+                                <span style="color: #6b7280;">HKD $</span>
+                                <span style="font-size: 2rem; font-weight: 700;">78</span>
+                                <span style="color: #6b7280;">/月</span>
+                            </div>
+                            <p style="color: #6b7280; font-size: 0.875rem;">每月 100 Credits</p>
+                        </div>
+                        <div style="background: white; border: 2px solid #8b5cf6; border-radius: 12px; padding: 1.5rem; position: relative;">
+                            <div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #8b5cf6; color: white; padding: 0.25rem 1rem; border-radius: 12px; font-size: 0.75rem;">節省 20%</div>
+                            <h3 style="font-weight: 700; margin-bottom: 0.5rem;">年付</h3>
+                            <div style="display: flex; align-items: baseline; gap: 0.25rem; margin-bottom: 1rem;">
+                                <span style="color: #6b7280;">HKD $</span>
+                                <span style="font-size: 2rem; font-weight: 700;">62</span>
+                                <span style="color: #6b7280;">/月</span>
+                            </div>
+                            <p style="color: #6b7280; font-size: 0.875rem;">每年 1,200 Credits</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="preview-box" data-version="right">
+                    <div class="preview-label">真實手機版（圖8-9）</div>
+                    <div class="preview-content">
+                        <div style="background: white; border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem;">
+                            <h3 style="font-weight: 700; margin-bottom: 0.5rem;">月付</h3>
+                            <div style="display: flex; align-items: baseline; gap: 0.25rem; margin-bottom: 1rem;">
+                                <span style="color: #6b7280;">HKD $</span>
+                                <span style="font-size: 2rem; font-weight: 700;">78</span>
+                                <span style="color: #6b7280;">/月</span>
+                            </div>
+                            <div style="border-top: 1px solid #e5e7eb; padding-top: 1rem;">
+                                <p style="font-weight: 600; margin-bottom: 0.5rem;">頁面包含</p>
+                                <div style="font-size: 0.875rem; color: #6b7280;">
+                                    <div style="margin-bottom: 0.25rem;">✓ 每月 100 Credits</div>
+                                    <div style="margin-bottom: 0.25rem;">✓ 超出後每頁 HKD $0.5</div>
+                                    <div style="margin-bottom: 0.25rem;">✓ 批次處理無限制文件</div>
+                                    <div style="margin-bottom: 0.25rem;">✓ Excel/CSV 匯出</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="background: white; border: 2px solid #8b5cf6; border-radius: 12px; padding: 1.5rem; position: relative;">
+                            <div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #8b5cf6; color: white; padding: 0.25rem 1rem; border-radius: 12px; font-size: 0.75rem;">節省 20%</div>
+                            <h3 style="font-weight: 700; margin-bottom: 0.5rem;">年付</h3>
+                            <div style="display: flex; align-items: baseline; gap: 0.25rem; margin-bottom: 1rem;">
+                                <span style="color: #6b7280;">HKD $</span>
+                                <span style="font-size: 2rem; font-weight: 700;">62</span>
+                                <span style="color: #6b7280;">/月</span>
+                            </div>
+                            <div style="border-top: 1px solid #e5e7eb; padding-top: 1rem;">
+                                <p style="font-weight: 600; margin-bottom: 0.5rem;">頁面包含</p>
+                                <div style="font-size: 0.875rem; color: #6b7280;">
+                                    <div style="margin-bottom: 0.25rem;">✓ 每年 1,200 Credits</div>
+                                    <div style="margin-bottom: 0.25rem;">✓ 超出後每頁 HKD $0.5</div>
+                                    <div style="margin-bottom: 0.25rem;">✓ 批次處理無限制文件</div>
+                                    <div style="margin-bottom: 0.25rem;">✓ Excel/CSV 匯出</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="select-buttons">
+                <button class="btn btn-left" onclick="selectVersion('pricing', 'left')">
+                    <i class="fas fa-check"></i> 選擇左邊（簡潔版）
+                </button>
+                <button class="btn btn-right" onclick="selectVersion('pricing', 'right')">
+                    <i class="fas fa-check"></i> 選擇右邊（詳細版）
+                </button>
+            </div>
+        </div>
+
+        <!-- 評價區域 -->
+        <div class="section-row" data-section="testimonials">
+            <div class="section-title">
+                <i class="fas fa-comments"></i>
+                使用者評價區域
+            </div>
+            <div class="preview-grid">
+                <div class="preview-box" data-version="left">
+                    <div class="preview-label">編輯器預覽版（圖4）</div>
+                    <div class="preview-content">
+                        <div style="background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                            <p style="color: #4b5563; font-size: 0.875rem; margin-bottom: 1rem;">"VaultCaddy 完全改變了我處理銀行對賬單的方式..."</p>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div style="width: 40px; height: 40px; background: #667eea; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700;">JM</div>
+                                <div>
+                                    <div style="font-weight: 600;">John M.</div>
+                                    <div style="font-size: 0.75rem; color: #6b7280;">Financial Analyst</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="preview-box" data-version="right">
+                    <div class="preview-label">真實手機版（圖10）</div>
+                    <div class="preview-content">
+                        <div style="background: white; border: 2px solid #667eea; border-radius: 12px; padding: 1.5rem;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50'%3E%3Ccircle cx='25' cy='25' r='25' fill='%23667eea'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='white' font-family='Arial' font-size='20' font-weight='bold'%3EST%3C/text%3E%3C/svg%3E" style="width: 50px; height: 50px; border-radius: 50%;" alt="Sarah T." loading="lazy" decoding="async">
+                                <div>
+                                    <div style="font-weight: 700;">Sarah T.</div>
+                                    <div style="font-size: 0.875rem; color: #6b7280;">Accountant at a CPA Firm</div>
+                                </div>
+                            </div>
+                            <p style="color: #4b5563; font-size: 0.875rem;">"我們事務所每月需處理數百張發票。使用 VaultCaddy，我們將處理時間減少了 70% 以上..."</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="select-buttons">
+                <button class="btn btn-left" onclick="selectVersion('testimonials', 'left')">
+                    <i class="fas fa-check"></i> 選擇左邊
+                </button>
+                <button class="btn btn-right" onclick="selectVersion('testimonials', 'right')">
+                    <i class="fas fa-check"></i> 選擇右邊
+                </button>
+            </div>
+        </div>
+
+        <!-- 學習中心區域 -->
+        <div class="section-row" data-section="learning">
+            <div class="section-title">
+                <i class="fas fa-graduation-cap"></i>
+                學習中心區域
+            </div>
+            <div class="preview-grid">
+                <div class="preview-box" data-version="left">
+                    <div class="preview-label">編輯器預覽版（圖5）</div>
+                    <div class="preview-content">
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem; border-radius: 12px; color: white; text-align: center;">
+                            <h2 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 1rem;">📚 學習中心</h2>
+                            <p style="margin-bottom: 1.5rem;">了解如何最大化利用 VaultCaddy</p>
+                            <div style="background: white; border-radius: 12px; padding: 1.5rem; color: #1f2937;">
+                                <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                                    <i class="fas fa-file-excel" style="color: white; font-size: 1.5rem;"></i>
+                                </div>
+                                <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom: 0.5rem;">如何將 PDF 銀行對帳單轉換為 Excel</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="preview-box" data-version="right">
+                    <div class="preview-label">真實手機版（圖10）</div>
+                    <div class="preview-content">
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem; border-radius: 12px; color: white;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                                <i class="fas fa-book" style="font-size: 1.5rem;"></i>
+                                <h2 style="font-size: 1.5rem; font-weight: 700;">學習中心</h2>
+                            </div>
+                            <p style="margin-bottom: 1.5rem;">了解如何最大化利用 VaultCaddy 處理您的財務文檔</p>
+                            <div style="background: white; border-radius: 12px; padding: 1.5rem; color: #1f2937; margin-bottom: 1rem;">
+                                <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
+                                    <i class="fas fa-file-excel" style="color: white; font-size: 1.5rem;"></i>
+                                </div>
+                                <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem;">如何將 PDF 銀行對帳單轉換為 Excel</h3>
+                                <p style="font-size: 0.875rem; color: #6b7280;">完整指南教您使用 AI 技術快速轉換</p>
+                            </div>
+                            <div style="background: white; border-radius: 12px; padding: 1.5rem; color: #1f2937;">
+                                <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #ec4899 0%, #db2777 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
+                                    <i class="fas fa-file-invoice" style="color: white; font-size: 1.5rem;"></i>
+                                </div>
+                                <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem;">AI 發票處理完整指南</h3>
+                                <p style="font-size: 0.875rem; color: #6b7280;">了解如何使用 AI 自動化發票處理流程</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="select-buttons">
+                <button class="btn btn-left" onclick="selectVersion('learning', 'left')">
+                    <i class="fas fa-check"></i> 選擇左邊（單卡片）
+                </button>
+                <button class="btn btn-right" onclick="selectVersion('learning', 'right')">
+                    <i class="fas fa-check"></i> 選擇右邊（多卡片）
+                </button>
+            </div>
+        </div>
+
+        <!-- 選擇總結 -->
+        <div class="selection-summary">
+            <h3>你的選擇總結</h3>
+            <div id="summary-list"></div>
+        </div>
+    </div>
+
+    <!-- 浮動操作按鈕 -->
+    <div class="action-bar">
+        <button class="action-btn action-btn-primary" onclick="generateFinalCSS()">
+            <i class="fas fa-code"></i> 生成最終 CSS 代碼
+        </button>
+        <button class="action-btn action-btn-secondary" onclick="resetAllSelections()">
+            <i class="fas fa-undo"></i> 重置所有選擇
+        </button>
+    </div>
+
+    <!-- CSS 代碼模態框 -->
+    <div class="code-modal" id="codeModal">
+        <div class="code-modal-content">
+            <h2 style="margin-bottom: 1rem;">生成的 CSS 代碼</h2>
+            <p style="color: #6b7280; margin-bottom: 1rem;">複製以下代碼並告訴我，我會立即應用到 index.html！</p>
+            <div class="code-output" id="finalCSSOutput">/* 點擊「生成最終 CSS 代碼」按鈕查看結果 */</div>
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button class="btn btn-primary" onclick="copyFinalCSS()" style="flex: 1; background: #10b981; padding: 1rem;">
+                    <i class="fas fa-copy"></i> 複製 CSS
+                </button>
+                <button class="btn btn-reset" onclick="closeModal()" style="flex: 1; padding: 1rem;">
+                    <i class="fas fa-times"></i> 關閉
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const selections = {};
+
+        function selectVersion(section, version) {
+            selections[section] = version;
+            
+            // 更新視覺效果
+            const sectionRow = document.querySelector(`[data-section="${section}"]`);
+            sectionRow.querySelectorAll('.preview-box').forEach(box => {
+                box.classList.remove('selected');
+            });
+            sectionRow.querySelector(`[data-version="${version}"]`).classList.add('selected');
+            
+            // 更新總結
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const summaryList = document.getElementById('summary-list');
+            summaryList.innerHTML = '';
+            
+            const sectionNames = {
+                hero: 'Hero 區域',
+                stats: '統計數據',
+                features: '功能卡片',
+                pricing: '價格卡片',
+                testimonials: '使用者評價',
+                learning: '學習中心'
+            };
+            
+            for (const [section, version] of Object.entries(selections)) {
+                const item = document.createElement('div');
+                item.className = 'selection-item';
+                item.innerHTML = `
+                    <span>${sectionNames[section]}</span>
+                    <span class="selection-badge ${version === 'left' ? 'badge-left' : 'badge-right'}">
+                        ${version === 'left' ? '編輯器版' : '真實版'}
+                    </span>
+                `;
+                summaryList.appendChild(item);
+            }
+        }
+
+        function resetAllSelections() {
+            if (!confirm('確定要重置所有選擇嗎？')) return;
+            
+            for (const section in selections) {
+                delete selections[section];
+            }
+            
+            document.querySelectorAll('.preview-box').forEach(box => {
+                box.classList.remove('selected');
+            });
+            
+            updateSummary();
+        }
+
+        function generateFinalCSS() {
+            let css = '/* VaultCaddy 手機版最終設計 CSS - 基於你的選擇 */\n\n@media (max-width: 768px) {\n';
+            
+            // 根據選擇生成對應的 CSS
+            for (const [section, version] of Object.entries(selections)) {
+                css += `\n    /* ${section.toUpperCase()} - 使用${version === 'left' ? '編輯器版' : '真實版'}設計 */\n`;
+                
+                // 這裡添加每個 section 對應的 CSS
+                if (section === 'hero' && version === 'right') {
+                    css += `    /* Hero: 信任標籤在標題上方 */\n`;
+                    css += `    #trust-badge {\n        order: -1;\n    }\n`;
+                }
+                
+                if (section === 'pricing' && version === 'right') {
+                    css += `    /* 價格: 顯示詳細功能列表 */\n`;
+                    css += `    .pricing-card .feature-list {\n        display: block !important;\n    }\n`;
+                }
+                
+                if (section === 'learning' && version === 'right') {
+                    css += `    /* 學習中心: 顯示多個卡片 */\n`;
+                    css += `    #learning-cards {\n        display: grid !important;\n        grid-template-columns: 1fr !important;\n        gap: 1rem !important;\n    }\n`;
+                }
+            }
+            
+            css += '\n}\n';
+            
+            document.getElementById('finalCSSOutput').textContent = css;
+            document.getElementById('codeModal').classList.add('active');
+        }
+
+        function copyFinalCSS() {
+            const cssText = document.getElementById('finalCSSOutput').textContent;
+            navigator.clipboard.writeText(cssText).then(() => {
+                alert('✅ CSS 代碼已複製到剪貼板！現在可以發給我了！');
+            }).catch(() => {
+                alert('❌ 複製失敗，請手動複製');
+            });
+        }
+
+        function closeModal() {
+            document.getElementById('codeModal').classList.remove('active');
+        }
+
+        // 關閉模態框（點擊背景）
+        document.getElementById('codeModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
+

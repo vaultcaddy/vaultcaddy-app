@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <!-- 资源预连接 - 性能优化 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://www.gstatic.com">
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+
+    <meta charset="UTF-8">
+    <!-- 性能优化：关键CSS内联 -->
+    <style>
+        /* 关键CSS - 首屏渲染必需 */
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;line-height:1.6;color:#1f2937}
+        .vaultcaddy-navbar{position:fixed;top:0;width:100%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.1);z-index:1000}
+        .hero-section{min-height:100vh;display:flex;align-items:center;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff}
+        .container{max-width:1200px;margin:0 auto;padding:0 1rem}
+        .loading{opacity:0.5}
+    </style>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="alternate icon" type="image/png" href="favicon.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VaultCaddy 手機版 UI 編輯器</title>
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel=\'stylesheet\'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f3f4f6;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 左側控制面板 */
+        .control-panel {
+            width: 350px;
+            background: white;
+            border-right: 1px solid #e5e7eb;
+            overflow-y: auto;
+            padding: 1.5rem;
+        }
+
+        .control-panel h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .control-section {
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .control-section:last-child {
+            border-bottom: none;
+        }
+
+        .control-section h3 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+        }
+
+        .control-item {
+            margin-bottom: 1rem;
+        }
+
+        .control-item label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .control-item input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e5e7eb;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .control-item input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        .control-item input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+        }
+
+        .value-display {
+            display: inline-block;
+            background: #f3f4f6;
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #667eea;
+            margin-left: 0.5rem;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            margin-top: 0.5rem;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        /* 右側手機預覽 */
+        .preview-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            overflow: auto;
+        }
+
+        .phone-frame {
+            width: 375px;
+            height: 812px;
+            background: white;
+            border-radius: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            position: relative;
+            border: 12px solid #1f2937;
+        }
+
+        .phone-notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 30px;
+            background: #1f2937;
+            border-radius: 0 0 20px 20px;
+            z-index: 1000;
+        }
+
+        .phone-content {
+            height: 100%;
+            overflow-y: auto;
+            background: white;
+            padding: 40px 0 2rem;
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2rem 1rem;
+        }
+        
+        .content-section {
+            padding: 2rem 1rem;
+            background: white;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1f2937;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 1rem;
+        }
+        
+        .feature-card {
+            background: #f9fafb;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        /* 可編輯元素樣式 */
+        .editable-element {
+            position: relative;
+            cursor: move;
+            transition: all 0.3s ease;
+        }
+
+        .editable-element:hover {
+            outline: 2px dashed #667eea;
+            outline-offset: 4px;
+        }
+
+        .editable-element.selected {
+            outline: 2px solid #667eea;
+            outline-offset: 4px;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        /* Hero 區域元素 */
+        #hero-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: white;
+            text-align: center;
+            line-height: 1.2;
+            margin-bottom: 0.5rem;
+        }
+
+        #hero-subtitle-line1 {
+            font-size: 1.25rem;
+            color: white;
+            text-align: center;
+            opacity: 0.95;
+            margin-bottom: 0.5rem;
+        }
+
+        #hero-trust-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 9999px;
+            padding: 0.5rem 1.5rem;
+            margin: 1rem auto;
+            width: fit-content;
+        }
+
+        #hero-subtitle-line2 {
+            font-size: 1rem;
+            color: white;
+            text-align: center;
+            opacity: 0.95;
+            margin-bottom: 1rem;
+        }
+
+        #hero-cta-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .cta-btn {
+            padding: 0.875rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .cta-btn-primary {
+            background: white;
+            color: #667eea;
+        }
+
+        .cta-btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        #hero-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: white;
+            opacity: 0.8;
+        }
+
+        /* 代碼輸出區 */
+        .code-output {
+            background: #1f2937;
+            color: #10b981;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 1rem;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .element-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .element-tag {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .element-tag:hover {
+            background: #e5e7eb;
+        }
+
+        .element-tag.active {
+            background: #667eea;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- 左側控制面板 -->
+    <div class="control-panel">
+        <h2>
+            <i class="fas fa-sliders-h"></i>
+            手機版 UI 編輯器
+        </h2>
+
+        <!-- 元素選擇器 -->
+        <div class="control-section">
+            <h3>選擇要編輯的元素</h3>
+            
+            <h4 style="font-size: 0.75rem; color: #9ca3af; margin-top: 1rem; margin-bottom: 0.5rem;">🎯 Hero 區域</h4>
+            <div class="element-selector">
+                <div class="element-tag active" data-element="hero-title">主標題</div>
+                <div class="element-tag" data-element="hero-trust-badge">信任標籤</div>
+                <div class="element-tag" data-element="hero-subtitle-line1">副標題1</div>
+                <div class="element-tag" data-element="hero-subtitle-line2">副標題2</div>
+                <div class="element-tag" data-element="hero-cta-buttons">CTA按鈕</div>
+                <div class="element-tag" data-element="hero-stats">統計數據</div>
+            </div>
+            
+            <h4 style="font-size: 0.75rem; color: #9ca3af; margin-top: 1rem; margin-bottom: 0.5rem;">⚡ 強大功能區域</h4>
+            <div class="element-selector">
+                <div class="element-tag" data-element="features-title">功能標題</div>
+                <div class="element-tag" data-element="invoice-card">發票卡片</div>
+                <div class="element-tag" data-element="bank-card">銀行卡片</div>
+                <div class="element-tag" data-element="feature-text">功能文字</div>
+            </div>
+            
+            <h4 style="font-size: 0.75rem; color: #9ca3af; margin-top: 1rem; margin-bottom: 0.5rem;">🎯 為什麼選擇區域</h4>
+            <div class="element-selector">
+                <div class="element-tag" data-element="why-title">Why標題</div>
+                <div class="element-tag" data-element="why-cards">Why卡片</div>
+            </div>
+            
+            <h4 style="font-size: 0.75rem; color: #9ca3af; margin-top: 1rem; margin-bottom: 0.5rem;">💰 價格區域</h4>
+            <div class="element-selector">
+                <div class="element-tag" data-element="pricing-title">價格標題</div>
+                <div class="element-tag" data-element="pricing-cards">價格卡片</div>
+            </div>
+            
+            <h4 style="font-size: 0.75rem; color: #9ca3af; margin-top: 1rem; margin-bottom: 0.5rem;">💬 評價區域</h4>
+            <div class="element-selector">
+                <div class="element-tag" data-element="testimonials-title">評價標題</div>
+                <div class="element-tag" data-element="testimonials-cards">評價卡片</div>
+            </div>
+            
+            <h4 style="font-size: 0.75rem; color: #9ca3af; margin-top: 1rem; margin-bottom: 0.5rem;">📚 學習中心區域</h4>
+            <div class="element-selector">
+                <div class="element-tag" data-element="learning-title">學習標題</div>
+                <div class="element-tag" data-element="learning-cards">學習卡片</div>
+            </div>
+        </div>
+
+        <!-- 間距控制 -->
+        <div class="control-section">
+            <h3>間距調整</h3>
+            <div class="control-item">
+                <label>
+                    上方間距 (margin-top)
+                    <span class="value-display" id="margin-top-value">0pt</span>
+                </label>
+                <input type="range" id="margin-top" min="-50" max="50" value="0" step="1">
+            </div>
+            <div class="control-item">
+                <label>
+                    下方間距 (margin-bottom)
+                    <span class="value-display" id="margin-bottom-value">0pt</span>
+                </label>
+                <input type="range" id="margin-bottom" min="-50" max="50" value="0" step="1">
+            </div>
+            <div class="control-item">
+                <label>
+                    內距 (padding)
+                    <span class="value-display" id="padding-value">0pt</span>
+                </label>
+                <input type="range" id="padding" min="0" max="50" value="0" step="1">
+            </div>
+        </div>
+
+        <!-- 字體大小控制 -->
+        <div class="control-section">
+            <h3>字體大小</h3>
+            <div class="control-item">
+                <label>
+                    字體大小 (font-size)
+                    <span class="value-display" id="font-size-value">16px</span>
+                </label>
+                <input type="range" id="font-size" min="10" max="48" value="16" step="1">
+            </div>
+        </div>
+
+        <!-- 操作按鈕 -->
+        <div class="control-section">
+            <button class="btn btn-primary" onclick="generateCSS()">
+                <i class="fas fa-code"></i> 生成 CSS 代碼
+            </button>
+            <button class="btn btn-secondary" onclick="resetStyles()">
+                <i class="fas fa-undo"></i> 重置所有樣式
+            </button>
+            <button class="btn btn-secondary" onclick="copyCSS()">
+                <i class="fas fa-copy"></i> 複製 CSS 到剪貼板
+            </button>
+        </div>
+
+        <!-- CSS 代碼輸出 -->
+        <div class="control-section">
+            <h3>生成的 CSS 代碼</h3>
+            <div class="code-output" id="css-output">/* 點擊「生成 CSS 代碼」按鈕查看結果 */</div>
+        </div>
+    </div>
+
+    <!-- 右側手機預覽 -->
+    <div class="preview-container">
+        <div class="phone-frame">
+            <div class="phone-notch"></div>
+            <div class="phone-content">
+                <!-- Hero 區域 -->
+                <div class="hero-section">
+                    <div id="hero-title" class="editable-element selected">
+                        針對香港銀行對帳單處理<br>
+                        <span style="font-size: 2.5rem; color: #fbbf24;">低至 HKD 0.5/頁</span>
+                    </div>
+
+                    <div id="hero-trust-badge" class="editable-element">
+                        <i class="fas fa-star" style="color: #fbbf24;"></i>
+                        <span style="font-weight: 600; font-size: 0.875rem; color: white;">超過 200+ 企業信賴</span>
+                    </div>
+
+                    <div id="hero-subtitle-line1" class="editable-element">
+                        專為會計師及小型公司設計的 AI 文檔處理平台
+                    </div>
+
+                    <div id="hero-subtitle-line2" class="editable-element">
+                        <strong>自動轉換 Excel/CSV/QuickBooks/Xero</strong><br>
+                        <strong>• 準確率 98% • 節省 90% 時間</strong>
+                    </div>
+
+                    <div id="hero-cta-buttons" class="editable-element">
+                        <div class="cta-btn cta-btn-primary">
+                            <i class="fas fa-rocket"></i> 免費試用 20 頁
+                        </div>
+                        <div class="cta-btn cta-btn-secondary">
+                            <i class="fas fa-calendar-check"></i> 無需預約
+                        </div>
+                    </div>
+
+                    <div id="hero-stats" class="editable-element">
+                        <div class="stat-item">
+                            <div class="stat-number">3秒</div>
+                            <div class="stat-label">平均處理時間</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">98%</div>
+                            <div class="stat-label">數據準確率</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">200+</div>
+                            <div class="stat-label">企業客戶</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 強大功能區域 -->
+                <div class="content-section">
+                    <div id="features-title" class="editable-element section-title">
+                        <p style="font-size: 0.875rem; color: #667eea; text-transform: uppercase; margin-bottom: 0.5rem;">強大功能</p>
+                        <h2 style="font-size: 1.75rem; margin-bottom: 0.5rem;">一站式 AI 文檔處理平台</h2>
+                        <p style="font-size: 1rem; color: #6b7280;">支援發票、收據、銀行對賬單等多種財務文檔</p>
+                    </div>
+
+                    <div id="invoice-card" class="editable-element feature-card">
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.5rem 1rem; border-radius: 9999px; display: inline-block; margin-bottom: 1rem; font-size: 0.875rem; font-weight: 700;">智能發票收據處理</div>
+                        <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">自動提取發票數據<br>秒速完成分類歸檔</h3>
+                        <div style="background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                            <div style="text-align: center; font-weight: 700; margin-bottom: 1rem;">香港茶餐廳</div>
+                            <div style="border-top: 2px dashed #e5e7eb; padding-top: 1rem;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                    <span>蛋撻 x5</span>
+                                    <span>$60</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                    <span>鴛鴦奶茶 x3</span>
+                                    <span>$54</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                    <span>菠蘿包 x4</span>
+                                    <span>$32</span>
+                                </div>
+                                <div style="border-top: 2px solid #667eea; padding-top: 0.5rem; display: flex; justify-content: space-between; font-weight: 700; color: #667eea;">
+                                    <span>總計</span>
+                                    <span>$146</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="bank-card" class="editable-element feature-card">
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.5rem 1rem; border-radius: 9999px; display: inline-block; margin-bottom: 1rem; font-size: 0.875rem; font-weight: 700;">銀行對賬單智能分析</div>
+                        <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">自動識別收支類別<br>即時生成財務報表</h3>
+                        <div style="background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                            <div style="font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-university" style="color: #667eea;"></i>
+                                <span>中國銀行（香港）2025-03</span>
+                            </div>
+                            <div style="border-top: 2px dashed #e5e7eb; padding-top: 1rem;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                    <span>客戶收款</span>
+                                    <span style="color: #10b981; font-weight: 700;">+$12,500</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                    <span>員工薪酬</span>
+                                    <span style="color: #ef4444; font-weight: 700;">-$15,000</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                    <span>辦公用品</span>
+                                    <span style="color: #ef4444; font-weight: 700;">-$2,800</span>
+                                </div>
+                                <div style="border-top: 2px solid #667eea; padding-top: 0.5rem; display: flex; justify-content: space-between; font-weight: 700; color: #667eea; font-size: 1.125rem;">
+                                    <span>月結餘額</span>
+                                    <span>$28,600</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="feature-text" class="editable-element" style="margin-top: 1rem;">
+                        <div style="display: flex; align-items: start; gap: 1rem; margin-bottom: 1rem;">
+                            <div style="width: 32px; height: 32px; min-width: 32px; background: #10b981; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.25rem;">✓</div>
+                            <div>
+                                <strong style="color: #1f2937; font-size: 1rem; display: block; margin-bottom: 0.25rem;">OCR 光學辨識技術</strong>
+                                <p style="color: #6b7280; font-size: 0.875rem;">準確擷取商家、日期、金額、稅項等關鍵資料</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: start; gap: 1rem; margin-bottom: 1rem;">
+                            <div style="width: 32px; height: 32px; min-width: 32px; background: #10b981; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.25rem;">✓</div>
+                            <div>
+                                <strong style="color: #1f2937; font-size: 1rem; display: block; margin-bottom: 0.25rem;">智能分類歸檔</strong>
+                                <p style="color: #6b7280; font-size: 0.875rem;">自動識別發票類型並歸類到對應會計科目</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: start; gap: 1rem;">
+                            <div style="width: 32px; height: 32px; min-width: 32px; background: #10b981; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.25rem;">✓</div>
+                            <div>
+                                <strong style="color: #1f2937; font-size: 1rem; display: block; margin-bottom: 0.25rem;">即時同步到會計軟件</strong>
+                                <p style="color: #6b7280; font-size: 0.875rem;">一鍵匯出QuickBooks、Xero 等主流平台格式</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 為什麼選擇區域 -->
+                <div class="content-section" style="background: #f9fafb;">
+                    <div id="why-title" class="editable-element section-title">
+                        <h2 style="font-size: 1.75rem; margin-bottom: 0.5rem;">為什麼選擇 VaultCaddy</h2>
+                        <p style="font-size: 1rem; color: #6b7280;">專為香港會計師打造</p>
+                    </div>
+
+                    <div id="why-cards" class="editable-element">
+                        <div class="card">
+                            <div style="width: 64px; height: 64px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                                <i class="fas fa-bolt" style="color: white; font-size: 1.5rem;"></i>
+                            </div>
+                            <h3 style="font-size: 1.25rem; font-weight: 700; text-align: center; margin-bottom: 0.5rem;">極速處理</h3>
+                            <p style="text-align: center; color: #6b7280; font-size: 0.875rem;">平均 3秒完成一份文檔<br>節省 90% 人工輸入時間</p>
+                        </div>
+                        <div class="card">
+                            <div style="width: 64px; height: 64px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                                <i class="fas fa-bullseye" style="color: white; font-size: 1.5rem;"></i>
+                            </div>
+                            <h3 style="font-size: 1.25rem; font-weight: 700; text-align: center; margin-bottom: 0.5rem;">超高準確率</h3>
+                            <p style="text-align: center; color: #6b7280; font-size: 0.875rem;">AI 辨識準確率達 98%<br>大幅降低人為失誤風險</p>
+                        </div>
+                        <div class="card">
+                            <div style="width: 64px; height: 64px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                                <i class="fas fa-hand-holding-usd" style="color: white; font-size: 1.5rem;"></i>
+                            </div>
+                            <h3 style="font-size: 1.25rem; font-weight: 700; text-align: center; margin-bottom: 0.5rem;">性價比最高</h3>
+                            <p style="text-align: center; color: #6b7280; font-size: 0.875rem;">每頁低至 HKD 0.5<br>用多少付多少最靈活</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 價格區域 -->
+                <div class="content-section">
+                    <div id="pricing-title" class="editable-element section-title">
+                        <h2 style="font-size: 1.75rem; margin-bottom: 0.5rem;">合理且實惠的價格</h2>
+                        <p style="font-size: 1rem; color: #6b7280;">輕鬆處理銀行對帳單</p>
+                    </div>
+
+                    <div id="pricing-cards" class="editable-element">
+                        <div class="card" style="border: 2px solid #e5e7eb;">
+                            <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem;">月付</h3>
+                            <p style="color: #6b7280; font-size: 0.875rem; margin-bottom: 1rem;">小型企業和會計事務所。</p>
+                            <div style="display: flex; align-items: baseline; gap: 0.25rem; margin-bottom: 1rem;">
+                                <span style="font-size: 1rem; color: #6b7280;">HKD $</span>
+                                <span style="font-size: 2.5rem; font-weight: 700; color: #1f2937;">78</span>
+                                <span style="font-size: 1rem; color: #6b7280;">/月</span>
+                            </div>
+                            <div style="border-top: 1px solid #e5e7eb; padding-top: 1rem; margin-bottom: 1rem;">
+                                <p style="font-weight: 600; margin-bottom: 0.75rem;">頁面包含</p>
+                                <ul style="list-style: none; padding: 0; font-size: 0.875rem; color: #4b5563;">
+                                    <li style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;"><span style="color: #10b981; font-weight: 700;">✓</span> 每月 100 Credits</li>
+                                    <li style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;"><span style="color: #10b981; font-weight: 700;">✓</span> 超出後每頁 HKD $0.5</li>
+                                    <li style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;"><span style="color: #10b981; font-weight: 700;">✓</span> 批次處理無限制文件</li>
+                                    <li style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;"><span style="color: #10b981; font-weight: 700;">✓</span> Excel/CSV 匯出</li>
+                                    <li style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;"><span style="color: #10b981; font-weight: 700;">✓</span> QuickBooks 整合</li>
+                                    <li style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;"><span style="color: #10b981; font-weight: 700;">✓</span> 8 種語言支援</li>
+                                </ul>
+                            </div>
+                            <button style="width: 100%; padding: 0.75rem; background: #667eea; color: white; border: none; border-radius: 8px; font-weight: 600;">開始使用</button>
+                        </div>
+                        <div class="card" style="border: 2px solid #8b5cf6; position: relative; margin-top: 1.5rem;">
+                            <div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #8b5cf6; color: white; padding: 0.25rem 1rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">節省 20%</div>
+                            <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem;">年付</h3>
+                            <p style="color: #6b7280; font-size: 0.875rem; margin-bottom: 1rem;">小型企業和會計事務所。</p>
+                            <div style="display: flex; align-items: baseline; gap: 0.25rem; margin-bottom: 1rem;">
+                                <span style="font-size: 1rem; color: #6b7280;">HKD $</span>
+                                <span style="font-size: 2.5rem; font-weight: 700; color: #1f2937;">62</span>
+                                <span style="font-size: 1rem; color: #6b7280;">/月</span>
+                            </div>
+                            <div style="border-top: 1px solid #e5e7eb; padding-top: 1rem; margin-bottom: 1rem;">
+                                <p style="font-weight: 600; margin-bottom: 0.75rem;">頁面包含</p>
+                                <ul style="list-style: none; padding: 0; font-size: 0.875rem; color: #4b5563;">
+                                    <li style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;"><span style="color: #10b981; font-weight: 700;">✓</span> 每年 1,200 Credits</li>
+                                    <li style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;"><span style="color: #10b981; font-weight: 700;">✓</span> 超出後每頁 HKD $0.5</li>
+                                    <li style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;"><span style="color: #10b981; font-weight: 700;">✓</span> 批次處理無限制文件</li>
+                                    <li style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;"><span style="color: #10b981; font-weight: 700;">✓</span> Excel/CSV 匯出</li>
+                                    <li style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;"><span style="color: #10b981; font-weight: 700;">✓</span> QuickBooks 整合</li>
+                                    <li style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;"><span style="color: #10b981; font-weight: 700;">✓</span> 8 種語言支援</li>
+                                </ul>
+                            </div>
+                            <button style="width: 100%; padding: 0.75rem; background: #8b5cf6; color: white; border: none; border-radius: 8px; font-weight: 600;">開始使用</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 評價區域 -->
+                <div class="content-section" style="background: #f9fafb;">
+                    <div id="testimonials-title" class="editable-element section-title">
+                        <h2 style="font-size: 1.75rem; margin-bottom: 0.5rem;">VaultCaddy 使用者評價</h2>
+                    </div>
+
+                    <div id="testimonials-cards" class="editable-element">
+                        <div class="card" style="border: 2px solid #667eea;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                                <div style="width: 50px; height: 50px; background: #667eea; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.125rem;">ST</div>
+                                <div>
+                                    <div style="font-weight: 700; color: #1f2937; font-size: 1rem;">Sarah T.</div>
+                                    <div style="font-size: 0.875rem; color: #6b7280;">Accountant at a CPA Firm</div>
+                                </div>
+                            </div>
+                            <p style="color: #4b5563; font-size: 0.875rem; line-height: 1.6;">"我們事務所每月需處理數百張發票。使用 VaultCaddy，我們將處理時間減少了 70% 以上。它首發、可靠，幫我們團隊省去大量時間。"</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 學習中心區域 -->
+                <div class="content-section">
+                    <div id="learning-title" class="editable-element section-title">
+                        <h2 style="font-size: 1.75rem; margin-bottom: 0.5rem;">📚 學習中心</h2>
+                        <p style="font-size: 1rem; color: #6b7280;">了解如何最大化利用 VaultCaddy</p>
+                    </div>
+
+                    <div id="learning-cards" class="editable-element">
+                        <div class="card">
+                            <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                                <i class="fas fa-file-excel" style="color: white; font-size: 1.5rem;"></i>
+                            </div>
+                            <h3 style="font-size: 1.125rem; font-weight: 700; text-align: center; margin-bottom: 0.5rem;">如何將 PDF 銀行對帳單轉換為 Excel</h3>
+                            <p style="text-align: center; color: #6b7280; font-size: 0.875rem;">完整指南教您使用 AI 技術快速轉換</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentElement = 'hero-title';
+        const styles = {};
+
+        // 初始化
+        document.querySelectorAll('.element-tag').forEach(tag => {
+            tag.addEventListener('click', function() {
+                document.querySelectorAll('.element-tag').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                currentElement = this.dataset.element;
+                
+                // 更新選中狀態
+                document.querySelectorAll('.editable-element').forEach(el => el.classList.remove('selected'));
+                document.getElementById(currentElement).classList.add('selected');
+                
+                // 加載當前元素的樣式
+                loadElementStyles();
+            });
+        });
+
+        // 加載元素當前樣式
+        function loadElementStyles() {
+            const element = document.getElementById(currentElement);
+            const computedStyle = window.getComputedStyle(element);
+            
+            // 更新滑桿值
+            const marginTop = parseInt(styles[currentElement]?.marginTop || 0);
+            const marginBottom = parseInt(styles[currentElement]?.marginBottom || 0);
+            const padding = parseInt(styles[currentElement]?.padding || 0);
+            const fontSize = parseInt(styles[currentElement]?.fontSize || computedStyle.fontSize);
+            
+            document.getElementById('margin-top').value = marginTop;
+            document.getElementById('margin-bottom').value = marginBottom;
+            document.getElementById('padding').value = padding;
+            document.getElementById('font-size').value = fontSize;
+            
+            updateValueDisplays();
+        }
+
+        // 更新數值顯示
+        function updateValueDisplays() {
+            document.getElementById('margin-top-value').textContent = document.getElementById('margin-top').value + 'pt';
+            document.getElementById('margin-bottom-value').textContent = document.getElementById('margin-bottom').value + 'pt';
+            document.getElementById('padding-value').textContent = document.getElementById('padding').value + 'pt';
+            document.getElementById('font-size-value').textContent = document.getElementById('font-size').value + 'px';
+        }
+
+        // 監聽滑桿變化
+        ['margin-top', 'margin-bottom', 'padding', 'font-size'].forEach(id => {
+            document.getElementById(id).addEventListener('input', function() {
+                updateValueDisplays();
+                applyStyles();
+            });
+        });
+
+        // 應用樣式
+        function applyStyles() {
+            const element = document.getElementById(currentElement);
+            const marginTop = document.getElementById('margin-top').value;
+            const marginBottom = document.getElementById('margin-bottom').value;
+            const padding = document.getElementById('padding').value;
+            const fontSize = document.getElementById('font-size').value;
+            
+            element.style.marginTop = marginTop + 'pt';
+            element.style.marginBottom = marginBottom + 'pt';
+            element.style.padding = padding + 'pt';
+            element.style.fontSize = fontSize + 'px';
+            
+            // 保存樣式
+            styles[currentElement] = {
+                marginTop,
+                marginBottom,
+                padding,
+                fontSize
+            };
+        }
+
+        // 生成 CSS 代碼
+        function generateCSS() {
+            let css = '/* VaultCaddy 手機版 UI 調整 - 添加到 @media (max-width: 768px) 內 */\n\n';
+            
+            for (const [elementId, style] of Object.entries(styles)) {
+                if (Object.keys(style).length === 0) continue;
+                
+                css += `#${elementId} {\n`;
+                if (style.marginTop && style.marginTop !== '0') {
+                    css += `    margin-top: ${style.marginTop}pt !important;\n`;
+                }
+                if (style.marginBottom && style.marginBottom !== '0') {
+                    css += `    margin-bottom: ${style.marginBottom}pt !important;\n`;
+                }
+                if (style.padding && style.padding !== '0') {
+                    css += `    padding: ${style.padding}pt !important;\n`;
+                }
+                if (style.fontSize) {
+                    css += `    font-size: ${style.fontSize}px !important;\n`;
+                }
+                css += `}\n\n`;
+            }
+            
+            document.getElementById('css-output').textContent = css || '/* 沒有樣式變更 */';
+        }
+
+        // 重置樣式
+        function resetStyles() {
+            if (!confirm('確定要重置所有樣式嗎？')) return;
+            
+            Object.keys(styles).forEach(key => {
+                styles[key] = {};
+            });
+            
+            document.querySelectorAll('.editable-element').forEach(el => {
+                el.style.marginTop = '';
+                el.style.marginBottom = '';
+                el.style.padding = '';
+                el.style.fontSize = '';
+            });
+            
+            loadElementStyles();
+            document.getElementById('css-output').textContent = '/* 已重置所有樣式 */';
+        }
+
+        // 複製 CSS
+        function copyCSS() {
+            const cssText = document.getElementById('css-output').textContent;
+            navigator.clipboard.writeText(cssText).then(() => {
+                alert('✅ CSS 代碼已複製到剪貼板！');
+            }).catch(() => {
+                alert('❌ 複製失敗，請手動複製');
+            });
+        }
+
+        // 初始化數值顯示
+        updateValueDisplays();
+    </script>
+</body>
+</html>
+

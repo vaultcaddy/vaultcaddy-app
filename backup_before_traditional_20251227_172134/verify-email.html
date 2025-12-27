@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <!-- 资源预连接 - 性能优化 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://www.gstatic.com">
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+
+    <meta charset="UTF-8">
+    <!-- 性能优化：关键CSS内联 -->
+    <style>
+        /* 关键CSS - 首屏渲染必需 */
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;line-height:1.6;color:#1f2937}
+        .vaultcaddy-navbar{position:fixed;top:0;width:100%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.1);z-index:1000}
+        .hero-section{min-height:100vh;display:flex;align-items:center;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff}
+        .container{max-width:1200px;margin:0 auto;padding:0 1rem}
+        .loading{opacity:0.5}
+    </style>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="alternate icon" type="image/png" href="favicon.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>驗證您的電子郵件 - VaultCaddy</title>
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel=\'stylesheet\'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .verification-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 3rem;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .email-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem;
+        }
+
+        .email-icon i {
+            font-size: 2rem;
+            color: white;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            color: #1f2937;
+            margin-bottom: 1rem;
+        }
+
+        .email-display {
+            color: #6b7280;
+            font-size: 0.9375rem;
+            margin-bottom: 2rem;
+        }
+
+        .code-inputs {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            margin: 2rem 0;
+        }
+
+        .code-input {
+            width: 50px;
+            height: 60px;
+            font-size: 1.5rem;
+            text-align: center;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .code-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .verify-button, .resend-button {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: white;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .verify-button:hover:not(:disabled), .resend-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+
+        .verify-button:disabled, .resend-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .resend-button {
+            margin-top: 1rem;
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .timer {
+            margin: 1rem 0;
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        .message {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            display: none;
+        }
+
+        .error-message {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+
+        .success-message {
+            background: #d1fae5;
+            color: #065f46;
+            border: 2px solid #10b981;
+            font-weight: 500;
+        }
+        
+        .paste-hint {
+            display: inline-block;
+            margin-top: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #d1fae5;
+            color: #065f46;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            border: 1px solid #10b981;
+        }
+    </style>
+</head>
+<body>
+    <div class="verification-container">
+        <div class="email-icon">
+            <i class="fas fa-envelope"></i>
+        </div>
+
+        <h1>驗證您的電子郵件</h1>
+        
+        <p class="email-display">
+            我們已經發送一個 6 位數驗證碼到您的郵箱。<br>
+            請輸入驗證碼以完成註冊。<br><br>
+            <strong id="emailDisplay"></strong>
+        </p>
+        
+        <div class="paste-hint">
+            <i class="fas fa-clipboard" style="margin-right: 0.5rem;"></i>
+            <strong>提示：</strong>可直接複製驗證碼並貼上到任意輸入框
+        </div>
+
+        <div id="errorMessage" class="message error-message"></div>
+        <div id="successMessage" class="message success-message"></div>
+
+        <div class="code-inputs">
+            <input type="text" class="code-input" maxlength="1" id="code1" inputmode="numeric" pattern="[0-9]">
+            <input type="text" class="code-input" maxlength="1" id="code2" inputmode="numeric" pattern="[0-9]">
+            <input type="text" class="code-input" maxlength="1" id="code3" inputmode="numeric" pattern="[0-9]">
+            <input type="text" class="code-input" maxlength="1" id="code4" inputmode="numeric" pattern="[0-9]">
+            <input type="text" class="code-input" maxlength="1" id="code5" inputmode="numeric" pattern="[0-9]">
+            <input type="text" class="code-input" maxlength="1" id="code6" inputmode="numeric" pattern="[0-9]">
+        </div>
+
+        <button class="verify-button" id="verifyButton" onclick="verifyCode()">
+            驗證
+        </button>
+
+        <div class="timer" id="timer">驗證碼將在 <span id="countdown">10:00</span> 後過期</div>
+
+        <button class="resend-button" id="resendButton" onclick="resendCode()">
+            重新發送驗證碼
+        </button>
+
+        <p style="margin-top: 2rem; color: #6b7280; font-size: 0.9rem;">
+            沒有收到郵件？請檢查垃圾郵件資料夾
+        </p>
+        
+        <a href="index.html" style="display: inline-block; margin-top: 1.5rem; color: #667eea; text-decoration: none; font-weight: 600; transition: all 0.2s;">
+            <i class="fas fa-arrow-left" style="margin-right: 0.5rem;"></i>回到首頁
+        </a>
+    </div>
+
+    <!-- ✅ Firebase SDK（必須包含 Firestore）-->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script>
+        // ✅ 全局變量（簡化版本）
+        let userEmail = '';
+        let codeInputs = [];
+        let countdownInterval = null;
+
+        // ✅ 頁面載入時初始化
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('🔄 頁面載入完成，開始初始化...');
+            
+            // 從 URL 獲取 email
+            const urlParams = new URLSearchParams(window.location.search);
+            userEmail = urlParams.get('email');
+            
+            // ✅ 如果URL中沒有email，嘗試從localStorage獲取
+            if (!userEmail) {
+                userEmail = localStorage.getItem('pendingVerificationEmail');
+            }
+            
+            // ✅ 如果還是沒有email，嘗試從sessionStorage獲取
+            if (!userEmail) {
+                userEmail = sessionStorage.getItem('registrationEmail');
+            }
+            
+            console.log('📧 Email:', userEmail);
+
+            if (!userEmail) {
+                console.error('❌ 沒有 email，顯示輸入框');
+                // ✅ 顯示輸入框讓用戶輸入email，而不是直接跳轉
+                showEmailInputPrompt();
+                return;
+            }
+
+            // 顯示 email
+            document.getElementById('emailDisplay').textContent = userEmail;
+            
+            // 獲取輸入框
+            codeInputs = document.querySelectorAll('.code-input');
+            
+            // 設置輸入框事件
+            codeInputs.forEach((input, index) => {
+                // ✅ 粘貼事件（所有輸入框都監聽）
+                input.addEventListener('paste', (e) => {
+                    e.preventDefault();
+                    const pastedData = e.clipboardData.getData('text').trim();
+                    console.log('📋 粘貼內容:', pastedData);
+                    
+                    // 只取前6位數字
+                    const numbers = pastedData.replace(/\D/g, '').slice(0, 6);
+                    
+                    if (numbers.length === 6) {
+                        // 自動填充到各個輸入框（從第一個開始）
+                        numbers.split('').forEach((digit, i) => {
+                            if (codeInputs[i]) {
+                                codeInputs[i].value = digit;
+                            }
+                        });
+                        
+                        // 聚焦到最後一個輸入框
+                        codeInputs[5].focus();
+                        
+                        // 自動驗證
+                        setTimeout(() => {
+                            verifyCode();
+                        }, 100);
+                        
+                        showSuccess('驗證碼已自動填入');
+                    } else if (numbers.length > 0) {
+                        // 如果粘貼的不是完整的6位數字，從當前位置開始填充
+                        numbers.split('').forEach((digit, i) => {
+                            const targetIndex = index + i;
+                            if (targetIndex < 6 && codeInputs[targetIndex]) {
+                                codeInputs[targetIndex].value = digit;
+                            }
+                        });
+                        
+                        // 聚焦到下一個空白輸入框
+                        const nextEmptyIndex = index + numbers.length;
+                        if (nextEmptyIndex < 6) {
+                            codeInputs[nextEmptyIndex].focus();
+                        } else {
+                            codeInputs[5].focus();
+                        }
+                    } else {
+                        showError('粘貼內容中沒有找到數字');
+                    }
+                });
+                
+                // 輸入事件 - 只允許數字
+                input.addEventListener('input', (e) => {
+                    // 過濾非數字字符
+                    const value = e.target.value;
+                    const numericValue = value.replace(/\D/g, '');
+                    
+                    if (value !== numericValue) {
+                        e.target.value = numericValue;
+                    }
+                    
+                    if (e.target.value.length === 1 && index < 5) {
+                        codeInputs[index + 1].focus();
+                    } else if (e.target.value.length === 1 && index === 5) {
+                        // 最後一個輸入框，自動驗證
+                        verifyCode();
+                    }
+                });
+
+                // 退格鍵
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                        codeInputs[index - 1].focus();
+                    }
+                });
+
+                // 只允許數字（keypress 事件作為額外保護）
+                input.addEventListener('keypress', (e) => {
+                    if (!/[0-9]/.test(e.key)) {
+                        e.preventDefault();
+                    }
+                });
+            });
+            
+            // 開始倒計時
+            startCountdown();
+            
+            // 自動聚焦第一個輸入框
+            codeInputs[0].focus();
+            
+            console.log('✅ 初始化完成');
+        });
+
+        // ✅ 倒計時（10 分鐘）
+        function startCountdown() {
+            let timeLeft = 600; // 10 分鐘
+            countdownInterval = setInterval(() => {
+                timeLeft--;
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                document.getElementById('countdown').textContent = 
+                    `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    showError('驗證碼已過期，請重新發送');
+                    document.getElementById('resendButton').disabled = false;
+                }
+            }, 1000);
+        }
+
+        // ✅ 驗證碼
+        async function verifyCode() {
+            console.log('🔍 開始驗證...');
+            
+            const code = Array.from(codeInputs).map(input => input.value).join('');
+            
+            if (code.length !== 6) {
+                showError('請輸入完整的 6 位數驗證碼');
+                return;
+            }
+
+            const button = document.getElementById('verifyButton');
+            button.disabled = true;
+            button.textContent = '驗證中...';
+
+            try {
+                console.log('📧 驗證碼:', code, '| Email:', userEmail);
+                const functions = firebase.functions();
+                const verifyCodeFunc = functions.httpsCallable('verifyCode');
+                const result = await verifyCodeFunc({ email: userEmail, code: code });
+                console.log('✅ 驗證結果:', result);
+
+                if (result.data.success) {
+                    showSuccess('驗證成功！正在跳轉...');
+                    clearInterval(countdownInterval);
+                    
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1000);
+                }
+            } catch (error) {
+                console.error('❌ 驗證失敗:', error);
+                
+                let errorMsg = '驗證失敗，請重試';
+                if (error.code === 'functions/invalid-argument') {
+                    errorMsg = '驗證碼錯誤，請重試';
+                } else if (error.message) {
+                    errorMsg = error.message;
+                }
+                
+                showError(errorMsg);
+                button.disabled = false;
+                button.textContent = '驗證';
+                
+                // 清空輸入
+                codeInputs.forEach(input => input.value = '');
+                codeInputs[0].focus();
+            }
+        }
+
+        // ✅ 重新發送驗證碼（簡化版本）
+        async function resendCode() {
+            console.log('📧 準備重新發送驗證碼到:', userEmail);
+            
+            const button = document.getElementById('resendButton');
+            button.disabled = true;
+            button.textContent = '發送中...';
+
+            try {
+                const functions = firebase.functions();
+                const sendCodeFunc = functions.httpsCallable('sendVerificationCode');
+                const result = await sendCodeFunc({ 
+                    email: userEmail, 
+                    displayName: userEmail.split('@')[0] 
+                });
+                
+                console.log('✅ 發送結果:', result);
+
+                if (result && result.data && result.data.success) {
+                    showSuccess('驗證碼已重新發送到您的郵箱');
+                    
+                    // 重新開始倒計時
+                    clearInterval(countdownInterval);
+                    startCountdown();
+                    
+                    // 60 秒後才能再次發送
+                    let countdown = 60;
+                    const interval = setInterval(() => {
+                        countdown--;
+                        button.textContent = `${countdown} 秒後可重新發送`;
+                        
+                        if (countdown <= 0) {
+                            clearInterval(interval);
+                            button.disabled = false;
+                            button.textContent = '重新發送驗證碼';
+                        }
+                    }, 1000);
+                    
+                    // 清空輸入
+                    codeInputs.forEach(input => input.value = '');
+                    codeInputs[0].focus();
+                } else {
+                    throw new Error('未收到成功響應');
+                }
+            } catch (error) {
+                console.error('❌ 重新發送失敗:', error);
+                console.error('錯誤代碼:', error.code);
+                console.error('錯誤消息:', error.message);
+                
+                let errorMsg = '發送失敗，請稍後重試';
+                if (error.code) {
+                    errorMsg += ` (${error.code})`;
+                }
+                if (error.message) {
+                    errorMsg = error.message;
+                }
+                
+                showError(errorMsg);
+                button.disabled = false;
+                button.textContent = '重新發送驗證碼';
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            const successDiv = document.getElementById('successMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            successDiv.style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            errorDiv.style.display = 'none';
+        }
+        
+        // ✅ 顯示email輸入提示
+        function showEmailInputPrompt() {
+            const emailDisplay = document.getElementById('emailDisplay');
+            emailDisplay.innerHTML = `
+                <div style="margin: 1rem 0;">
+                    <label style="display: block; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">請輸入您註冊時使用的 Email：</label>
+                    <input type="email" id="manualEmailInput" placeholder="your@email.com" 
+                           style="width: 100%; padding: 0.75rem; border: 2px solid #d1d5db; border-radius: 8px; font-size: 1rem; margin-bottom: 0.5rem;">
+                    <button onclick="confirmEmail()" 
+                            style="width: 100%; padding: 0.75rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 0.5rem;">
+                        確認
+                    </button>
+                </div>
+            `;
+            
+            // 聚焦到輸入框
+            setTimeout(() => {
+                document.getElementById('manualEmailInput')?.focus();
+            }, 100);
+        }
+        
+        // ✅ 確認手動輸入的email
+        function confirmEmail() {
+            const input = document.getElementById('manualEmailInput');
+            const email = input?.value.trim();
+            
+            if (!email) {
+                showError('請輸入 Email 地址');
+                return;
+            }
+            
+            // 簡單的email驗證
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showError('請輸入有效的 Email 地址');
+                return;
+            }
+            
+            // 設置userEmail並刷新頁面
+            userEmail = email;
+            localStorage.setItem('pendingVerificationEmail', email);
+            window.location.href = `verify-email.html?email=${encodeURIComponent(email)}`;
+        }
+    </script>
+</body>
+</html>
+

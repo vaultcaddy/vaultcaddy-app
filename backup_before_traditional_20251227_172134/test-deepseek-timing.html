@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <!-- 资源预连接 - 性能优化 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://www.gstatic.com">
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+
+    <meta charset="UTF-8">
+    <!-- 性能优化：关键CSS内联 -->
+    <style>
+        /* 关键CSS - 首屏渲染必需 */
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;line-height:1.6;color:#1f2937}
+        .vaultcaddy-navbar{position:fixed;top:0;width:100%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.1);z-index:1000}
+        .hero-section{min-height:100vh;display:flex;align-items:center;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff}
+        .container{max-width:1200px;margin:0 auto;padding:0 1rem}
+        .loading{opacity:0.5}
+    </style>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="alternate icon" type="image/png" href="favicon.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepSeek 處理時間測試</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        
+        .test-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .test-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .test-description {
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .result.info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        
+        .timing {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+            margin: 10px 0;
+        }
+        
+        .chart {
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .bar-label {
+            width: 150px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .bar-fill {
+            height: 30px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            color: white;
+            font-weight: 600;
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⏱️ DeepSeek 處理時間測試</h1>
+        <p class="subtitle">測試不同文本長度的 DeepSeek API 處理時間</p>
+        
+        <!-- 測試 1：短文本 -->
+        <div class="test-section">
+            <div class="test-title">測試 1：短文本（500 字符）</div>
+            <div class="test-description">
+                模擬簡單發票，預期處理時間：<strong>5-3秒</strong>
+            </div>
+            <button onclick="testShortText()" id="test1-btn">開始測試</button>
+            <div id="test1-result"></div>
+        </div>
+        
+        <!-- 測試 2：中等文本 -->
+        <div class="test-section">
+            <div class="test-title">測試 2：中等文本（1000 字符）</div>
+            <div class="test-description">
+                模擬複雜發票，預期處理時間：<strong>8-15 秒</strong>
+            </div>
+            <button onclick="testMediumText()" id="test2-btn">開始測試</button>
+            <div id="test2-result"></div>
+        </div>
+        
+        <!-- 測試 3：長文本 -->
+        <div class="test-section">
+            <div class="test-title">測試 3：長文本（2000 字符）</div>
+            <div class="test-description">
+                模擬銀行對帳單（過濾後），預期處理時間：<strong>15-25 秒</strong>
+            </div>
+            <button onclick="testLongText()" id="test3-btn">開始測試</button>
+            <div id="test3-result"></div>
+        </div>
+        
+        <!-- 測試 4：超長文本 -->
+        <div class="test-section">
+            <div class="test-title">測試 4：超長文本（2521 字符，未過濾）</div>
+            <div class="test-description">
+                模擬未過濾的銀行對帳單，預期處理時間：<strong>20-35 秒</strong>（可能超時）
+            </div>
+            <button onclick="testVeryLongText()" id="test4-btn">開始測試</button>
+            <div id="test4-result"></div>
+        </div>
+        
+        <!-- 結果對比 -->
+        <div class="test-section">
+            <div class="test-title">📊 處理時間對比</div>
+            <div class="chart" id="chart">
+                <p style="color: #999; text-align: center;">請先運行測試</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const WORKER_URL = 'https://deepseek-proxy.vaultcaddy.workers.dev/';
+        const results = {};
+        
+        // 生成測試文本
+        function generateText(length) {
+            const template = '這是一個測試文本，用於測試 DeepSeek API 的處理時間。';
+            let text = '';
+            while (text.length < length) {
+                text += template;
+            }
+            return text.substring(0, length);
+        }
+        
+        // 測試函數
+        async function testDeepSeek(textLength, testId, buttonId) {
+            const button = document.getElementById(buttonId);
+            const resultDiv = document.getElementById(testId + '-result');
+            
+            button.disabled = true;
+            resultDiv.innerHTML = '<div class="result info">⏳ 測試進行中，請稍候...</div>';
+            
+            const text = generateText(textLength);
+            const startTime = Date.now();
+            
+            try {
+                const response = await fetch(WORKER_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: 'deepseek-chat',
+                        messages: [
+                            {
+                                role: 'system',
+                                content: '你是一個專業的會計 AI 助手。請提取以下文本中的關鍵信息。'
+                            },
+                            {
+                                role: 'user',
+                                content: `請分析以下文本：\n\n${text}`
+                            }
+                        ],
+                        temperature: 0.1,
+                        max_tokens: 500
+                    })
+                });
+                
+                const endTime = Date.now();
+                const duration = (endTime - startTime) / 1000;
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    results[testId] = duration;
+                    
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            ✅ 測試成功！
+                            <div class="timing">${duration.toFixed(2)} 秒</div>
+                            <strong>詳細信息：</strong>
+                            - 文本長度：${textLength} 字符
+                            - 輸入 tokens：${data.usage?.prompt_tokens || 'N/A'}
+                            - 輸出 tokens：${data.usage?.completion_tokens || 'N/A'}
+                            - 總 tokens：${data.usage?.total_tokens || 'N/A'}
+                        </div>
+                    `;
+                    
+                    updateChart();
+                } else {
+                    const errorText = await response.text();
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            ❌ 測試失敗
+                            <strong>錯誤：</strong>${response.status} - ${errorText}
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                const endTime = Date.now();
+                const duration = (endTime - startTime) / 1000;
+                
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        ❌ 測試失敗（${duration.toFixed(2)} 秒後超時）
+                        <strong>錯誤：</strong>${error.message}
+                        
+                        <strong>可能原因：</strong>
+                        - DeepSeek API 處理時間過長
+                        - 網絡連接問題
+                        - Worker 超時（120 秒）
+                    </div>
+                `;
+            } finally {
+                button.disabled = false;
+            }
+        }
+        
+        // 更新圖表
+        function updateChart() {
+            const chartDiv = document.getElementById('chart');
+            
+            const maxTime = Math.max(...Object.values(results));
+            
+            let html = '';
+            const tests = [
+                { id: 'test1', label: '500 字符', expected: '5-3秒' },
+                { id: 'test2', label: '1000 字符', expected: '8-15 秒' },
+                { id: 'test3', label: '2000 字符', expected: '15-25 秒' },
+                { id: 'test4', label: '2521 字符', expected: '20-35 秒' }
+            ];
+            
+            for (const test of tests) {
+                if (results[test.id]) {
+                    const width = (results[test.id] / maxTime) * 100;
+                    html += `
+                        <div class="bar">
+                            <div class="bar-label">${test.label}</div>
+                            <div class="bar-fill" style="width: ${width}%;">
+                                ${results[test.id].toFixed(2)} 秒
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            
+            if (html) {
+                chartDiv.innerHTML = html;
+            }
+        }
+        
+        // 測試函數
+        function testShortText() {
+            testDeepSeek(500, 'test1', 'test1-btn');
+        }
+        
+        function testMediumText() {
+            testDeepSeek(1000, 'test2', 'test2-btn');
+        }
+        
+        function testLongText() {
+            testDeepSeek(2000, 'test3', 'test3-btn');
+        }
+        
+        function testVeryLongText() {
+            testDeepSeek(2521, 'test4', 'test4-btn');
+        }
+    </script>
+</body>
+</html>
+
