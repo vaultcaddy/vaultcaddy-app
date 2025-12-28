@@ -3137,6 +3137,37 @@
                 setTimeout(() => {
                     updateDocumentTotal();
                 }, 100);
+                
+                // ==================== ページネーション表示の更新 ====================
+                const totalPages = Math.ceil(sortedDocs.length / rowsPerPage);
+                const pageDisplay = document.querySelector('.page-display');
+                if (pageDisplay) {
+                    pageDisplay.textContent = `Page ${currentPage} of ${totalPages}`;
+                }
+                
+                // ページネーションボタンの状態を更新
+                const paginationButtons = document.querySelectorAll('.pagination-controls button');
+                if (paginationButtons.length === 4) {
+                    // 最初のページボタン
+                    paginationButtons[0].disabled = currentPage === 1;
+                    paginationButtons[0].style.cursor = currentPage === 1 ? 'not-allowed' : 'pointer';
+                    paginationButtons[0].style.color = currentPage === 1 ? '#9ca3af' : '#374151';
+                    
+                    // 前のページボタン
+                    paginationButtons[1].disabled = currentPage === 1;
+                    paginationButtons[1].style.cursor = currentPage === 1 ? 'not-allowed' : 'pointer';
+                    paginationButtons[1].style.color = currentPage === 1 ? '#9ca3af' : '#374151';
+                    
+                    // 次のページボタン
+                    paginationButtons[2].disabled = currentPage === totalPages || totalPages === 0;
+                    paginationButtons[2].style.cursor = (currentPage === totalPages || totalPages === 0) ? 'not-allowed' : 'pointer';
+                    paginationButtons[2].style.color = (currentPage === totalPages || totalPages === 0) ? '#9ca3af' : '#374151';
+                    
+                    // 最後のページボタン
+                    paginationButtons[3].disabled = currentPage === totalPages || totalPages === 0;
+                    paginationButtons[3].style.cursor = (currentPage === totalPages || totalPages === 0) ? 'not-allowed' : 'pointer';
+                    paginationButtons[3].style.color = (currentPage === totalPages || totalPages === 0) ? '#9ca3af' : '#374151';
+                }
         }
         
         // ==================== 読み込み文書 ====================
@@ -5051,6 +5082,78 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     console.log('✅ Flatpickr日付選択器初期化完了（日本語）');
+    
+    // ==================== ページネーション機能初期化 ====================
+    // ページネーションパラメータ初期化
+    window.currentPage = 1;
+    window.rowsPerPage = 10;  // デフォルト: ページあたり10行
+    
+    // Rows per page ドロップダウンを監視
+    const rowsPerPageSelect = document.querySelector('select[style*="padding: 0.25rem 0.5rem"]');
+    if (rowsPerPageSelect) {
+        // デフォルト値を設定
+        rowsPerPageSelect.value = window.rowsPerPage;
+        
+        // 変更を監視
+        rowsPerPageSelect.addEventListener('change', function(e) {
+            window.rowsPerPage = parseInt(e.target.value);
+            window.currentPage = 1;  // 最初のページにリセット
+            console.log('📄 ページあたりの行数変更:', window.rowsPerPage);
+            
+            // ドキュメントリストを再レンダリング
+            if (window.renderDocuments) {
+                window.renderDocuments();
+            }
+        });
+    }
+    
+    // ページネーションボタンを監視
+    const paginationButtons = document.querySelectorAll('.pagination-controls button');
+    if (paginationButtons.length === 4) {
+        // 最初のページ
+        paginationButtons[0].addEventListener('click', function() {
+            if (window.currentPage !== 1) {
+                window.currentPage = 1;
+                if (window.renderDocuments) {
+                    window.renderDocuments();
+                }
+            }
+        });
+        
+        // 前のページ
+        paginationButtons[1].addEventListener('click', function() {
+            if (window.currentPage > 1) {
+                window.currentPage--;
+                if (window.renderDocuments) {
+                    window.renderDocuments();
+                }
+            }
+        });
+        
+        // 次のページ
+        paginationButtons[2].addEventListener('click', function() {
+            const totalPages = Math.ceil((window.allDocuments || []).length / window.rowsPerPage);
+            if (window.currentPage < totalPages) {
+                window.currentPage++;
+                if (window.renderDocuments) {
+                    window.renderDocuments();
+                }
+            }
+        });
+        
+        // 最後のページ
+        paginationButtons[3].addEventListener('click', function() {
+            const totalPages = Math.ceil((window.allDocuments || []).length / window.rowsPerPage);
+            if (window.currentPage !== totalPages && totalPages > 0) {
+                window.currentPage = totalPages;
+                if (window.renderDocuments) {
+                    window.renderDocuments();
+                }
+            }
+        });
+    }
+    
+    console.log('✅ ページネーション機能初期化完了');
 });
 </script>
 </main></body>

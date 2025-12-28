@@ -3149,6 +3149,37 @@
                 setTimeout(() => {
                     updateDocumentTotal();
                 }, 100);
+                
+                // ==================== 更新分頁顯示 ====================
+                const totalPages = Math.ceil(sortedDocs.length / rowsPerPage);
+                const pageDisplay = document.querySelector('.page-display');
+                if (pageDisplay) {
+                    pageDisplay.textContent = `Page ${currentPage} of ${totalPages}`;
+                }
+                
+                // 更新分頁按鈕狀態
+                const paginationButtons = document.querySelectorAll('.pagination-controls button');
+                if (paginationButtons.length === 4) {
+                    // 第一頁按鈕
+                    paginationButtons[0].disabled = currentPage === 1;
+                    paginationButtons[0].style.cursor = currentPage === 1 ? 'not-allowed' : 'pointer';
+                    paginationButtons[0].style.color = currentPage === 1 ? '#9ca3af' : '#374151';
+                    
+                    // 上一頁按鈕
+                    paginationButtons[1].disabled = currentPage === 1;
+                    paginationButtons[1].style.cursor = currentPage === 1 ? 'not-allowed' : 'pointer';
+                    paginationButtons[1].style.color = currentPage === 1 ? '#9ca3af' : '#374151';
+                    
+                    // 下一頁按鈕
+                    paginationButtons[2].disabled = currentPage === totalPages || totalPages === 0;
+                    paginationButtons[2].style.cursor = (currentPage === totalPages || totalPages === 0) ? 'not-allowed' : 'pointer';
+                    paginationButtons[2].style.color = (currentPage === totalPages || totalPages === 0) ? '#9ca3af' : '#374151';
+                    
+                    // 最後一頁按鈕
+                    paginationButtons[3].disabled = currentPage === totalPages || totalPages === 0;
+                    paginationButtons[3].style.cursor = (currentPage === totalPages || totalPages === 0) ? 'not-allowed' : 'pointer';
+                    paginationButtons[3].style.color = (currentPage === totalPages || totalPages === 0) ? '#9ca3af' : '#374151';
+                }
         }
         
         // ==================== 載入文檔 ====================
@@ -5061,6 +5092,78 @@
         });
         
         console.log("✅ Flatpickr 日期選擇器初始化完成（繁體中文）");
+        
+        // ==================== 分頁功能初始化 ====================
+        // 初始化分頁參數
+        window.currentPage = 1;
+        window.rowsPerPage = 10;  // 默認每頁10行
+        
+        // 監聽 Rows per page 下拉選單
+        const rowsPerPageSelect = document.querySelector('select[style*="padding: 0.25rem 0.5rem"]');
+        if (rowsPerPageSelect) {
+            // 設置默認值
+            rowsPerPageSelect.value = window.rowsPerPage;
+            
+            // 監聽變化
+            rowsPerPageSelect.addEventListener('change', function(e) {
+                window.rowsPerPage = parseInt(e.target.value);
+                window.currentPage = 1;  // 重置到第一頁
+                console.log('📄 每頁行數改變:', window.rowsPerPage);
+                
+                // 重新渲染文檔列表
+                if (window.renderDocuments) {
+                    window.renderDocuments();
+                }
+            });
+        }
+        
+        // 監聽分頁按鈕
+        const paginationButtons = document.querySelectorAll('.pagination-controls button');
+        if (paginationButtons.length === 4) {
+            // 第一頁
+            paginationButtons[0].addEventListener('click', function() {
+                if (window.currentPage !== 1) {
+                    window.currentPage = 1;
+                    if (window.renderDocuments) {
+                        window.renderDocuments();
+                    }
+                }
+            });
+            
+            // 上一頁
+            paginationButtons[1].addEventListener('click', function() {
+                if (window.currentPage > 1) {
+                    window.currentPage--;
+                    if (window.renderDocuments) {
+                        window.renderDocuments();
+                    }
+                }
+            });
+            
+            // 下一頁
+            paginationButtons[2].addEventListener('click', function() {
+                const totalPages = Math.ceil((window.allDocuments || []).length / window.rowsPerPage);
+                if (window.currentPage < totalPages) {
+                    window.currentPage++;
+                    if (window.renderDocuments) {
+                        window.renderDocuments();
+                    }
+                }
+            });
+            
+            // 最後一頁
+            paginationButtons[3].addEventListener('click', function() {
+                const totalPages = Math.ceil((window.allDocuments || []).length / window.rowsPerPage);
+                if (window.currentPage !== totalPages && totalPages > 0) {
+                    window.currentPage = totalPages;
+                    if (window.renderDocuments) {
+                        window.renderDocuments();
+                    }
+                }
+            });
+        }
+        
+        console.log("✅ 分頁功能初始化完成");
     });
 </script>
 </body>

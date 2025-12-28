@@ -3137,6 +3137,37 @@
                 setTimeout(() => {
                     updateDocumentTotal();
                 }, 100);
+                
+                // ==================== 페이지네이션 표시 업데이트 ====================
+                const totalPages = Math.ceil(sortedDocs.length / rowsPerPage);
+                const pageDisplay = document.querySelector('.page-display');
+                if (pageDisplay) {
+                    pageDisplay.textContent = `Page ${currentPage} of ${totalPages}`;
+                }
+                
+                // 페이지네이션 버튼 상태 업데이트
+                const paginationButtons = document.querySelectorAll('.pagination-controls button');
+                if (paginationButtons.length === 4) {
+                    // 첫 페이지 버튼
+                    paginationButtons[0].disabled = currentPage === 1;
+                    paginationButtons[0].style.cursor = currentPage === 1 ? 'not-allowed' : 'pointer';
+                    paginationButtons[0].style.color = currentPage === 1 ? '#9ca3af' : '#374151';
+                    
+                    // 이전 페이지 버튼
+                    paginationButtons[1].disabled = currentPage === 1;
+                    paginationButtons[1].style.cursor = currentPage === 1 ? 'not-allowed' : 'pointer';
+                    paginationButtons[1].style.color = currentPage === 1 ? '#9ca3af' : '#374151';
+                    
+                    // 다음 페이지 버튼
+                    paginationButtons[2].disabled = currentPage === totalPages || totalPages === 0;
+                    paginationButtons[2].style.cursor = (currentPage === totalPages || totalPages === 0) ? 'not-allowed' : 'pointer';
+                    paginationButtons[2].style.color = (currentPage === totalPages || totalPages === 0) ? '#9ca3af' : '#374151';
+                    
+                    // 마지막 페이지 버튼
+                    paginationButtons[3].disabled = currentPage === totalPages || totalPages === 0;
+                    paginationButtons[3].style.cursor = (currentPage === totalPages || totalPages === 0) ? 'not-allowed' : 'pointer';
+                    paginationButtons[3].style.color = (currentPage === totalPages || totalPages === 0) ? '#9ca3af' : '#374151';
+                }
         }
         
         // ==================== 로드문서 ====================
@@ -5055,6 +5086,78 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     console.log('✅ Flatpickr 날짜 선택기 초기화 완료 (한국어)');
+    
+    // ==================== 페이지네이션 기능 초기화 ====================
+    // 페이지네이션 매개변수 초기화
+    window.currentPage = 1;
+    window.rowsPerPage = 10;  // 기본값: 페이지당 10행
+    
+    // Rows per page 드롭다운 모니터링
+    const rowsPerPageSelect = document.querySelector('select[style*="padding: 0.25rem 0.5rem"]');
+    if (rowsPerPageSelect) {
+        // 기본값 설정
+        rowsPerPageSelect.value = window.rowsPerPage;
+        
+        // 변경 모니터링
+        rowsPerPageSelect.addEventListener('change', function(e) {
+            window.rowsPerPage = parseInt(e.target.value);
+            window.currentPage = 1;  // 첫 페이지로 재설정
+            console.log('📄 페이지당 행 수 변경:', window.rowsPerPage);
+            
+            // 문서 목록 다시 렌더링
+            if (window.renderDocuments) {
+                window.renderDocuments();
+            }
+        });
+    }
+    
+    // 페이지네이션 버튼 모니터링
+    const paginationButtons = document.querySelectorAll('.pagination-controls button');
+    if (paginationButtons.length === 4) {
+        // 첫 페이지
+        paginationButtons[0].addEventListener('click', function() {
+            if (window.currentPage !== 1) {
+                window.currentPage = 1;
+                if (window.renderDocuments) {
+                    window.renderDocuments();
+                }
+            }
+        });
+        
+        // 이전 페이지
+        paginationButtons[1].addEventListener('click', function() {
+            if (window.currentPage > 1) {
+                window.currentPage--;
+                if (window.renderDocuments) {
+                    window.renderDocuments();
+                }
+            }
+        });
+        
+        // 다음 페이지
+        paginationButtons[2].addEventListener('click', function() {
+            const totalPages = Math.ceil((window.allDocuments || []).length / window.rowsPerPage);
+            if (window.currentPage < totalPages) {
+                window.currentPage++;
+                if (window.renderDocuments) {
+                    window.renderDocuments();
+                }
+            }
+        });
+        
+        // 마지막 페이지
+        paginationButtons[3].addEventListener('click', function() {
+            const totalPages = Math.ceil((window.allDocuments || []).length / window.rowsPerPage);
+            if (window.currentPage !== totalPages && totalPages > 0) {
+                window.currentPage = totalPages;
+                if (window.renderDocuments) {
+                    window.renderDocuments();
+                }
+            }
+        });
+    }
+    
+    console.log('✅ 페이지네이션 기능 초기화 완료');
 });
 </script>
 </main></body>

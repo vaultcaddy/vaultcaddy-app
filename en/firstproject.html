@@ -3153,6 +3153,37 @@
                 setTimeout(() => {
                     updateDocumentTotal();
                 }, 100);
+                
+                // ==================== Update Pagination Display ====================
+                const totalPages = Math.ceil(sortedDocs.length / rowsPerPage);
+                const pageDisplay = document.querySelector('.page-display');
+                if (pageDisplay) {
+                    pageDisplay.textContent = `Page ${currentPage} of ${totalPages}`;
+                }
+                
+                // Update pagination button status
+                const paginationButtons = document.querySelectorAll('.pagination-controls button');
+                if (paginationButtons.length === 4) {
+                    // First page button
+                    paginationButtons[0].disabled = currentPage === 1;
+                    paginationButtons[0].style.cursor = currentPage === 1 ? 'not-allowed' : 'pointer';
+                    paginationButtons[0].style.color = currentPage === 1 ? '#9ca3af' : '#374151';
+                    
+                    // Previous page button
+                    paginationButtons[1].disabled = currentPage === 1;
+                    paginationButtons[1].style.cursor = currentPage === 1 ? 'not-allowed' : 'pointer';
+                    paginationButtons[1].style.color = currentPage === 1 ? '#9ca3af' : '#374151';
+                    
+                    // Next page button
+                    paginationButtons[2].disabled = currentPage === totalPages || totalPages === 0;
+                    paginationButtons[2].style.cursor = (currentPage === totalPages || totalPages === 0) ? 'not-allowed' : 'pointer';
+                    paginationButtons[2].style.color = (currentPage === totalPages || totalPages === 0) ? '#9ca3af' : '#374151';
+                    
+                    // Last page button
+                    paginationButtons[3].disabled = currentPage === totalPages || totalPages === 0;
+                    paginationButtons[3].style.cursor = (currentPage === totalPages || totalPages === 0) ? 'not-allowed' : 'pointer';
+                    paginationButtons[3].style.color = (currentPage === totalPages || totalPages === 0) ? '#9ca3af' : '#374151';
+                }
         }
         
         // ==================== LoadDocument ====================
@@ -5071,6 +5102,78 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     console.log('✅ Flatpickr date picker initialized (English)');
+    
+    // ==================== Pagination Feature Initialization ====================
+    // Initialize pagination parameters
+    window.currentPage = 1;
+    window.rowsPerPage = 10;  // Default: 10 rows per page
+    
+    // Monitor Rows per page dropdown
+    const rowsPerPageSelect = document.querySelector('select[style*="padding: 0.25rem 0.5rem"]');
+    if (rowsPerPageSelect) {
+        // Set default value
+        rowsPerPageSelect.value = window.rowsPerPage;
+        
+        // Monitor changes
+        rowsPerPageSelect.addEventListener('change', function(e) {
+            window.rowsPerPage = parseInt(e.target.value);
+            window.currentPage = 1;  // Reset to first page
+            console.log('📄 Rows per page changed:', window.rowsPerPage);
+            
+            // Re-render document list
+            if (window.renderDocuments) {
+                window.renderDocuments();
+            }
+        });
+    }
+    
+    // Monitor pagination buttons
+    const paginationButtons = document.querySelectorAll('.pagination-controls button');
+    if (paginationButtons.length === 4) {
+        // First page
+        paginationButtons[0].addEventListener('click', function() {
+            if (window.currentPage !== 1) {
+                window.currentPage = 1;
+                if (window.renderDocuments) {
+                    window.renderDocuments();
+                }
+            }
+        });
+        
+        // Previous page
+        paginationButtons[1].addEventListener('click', function() {
+            if (window.currentPage > 1) {
+                window.currentPage--;
+                if (window.renderDocuments) {
+                    window.renderDocuments();
+                }
+            }
+        });
+        
+        // Next page
+        paginationButtons[2].addEventListener('click', function() {
+            const totalPages = Math.ceil((window.allDocuments || []).length / window.rowsPerPage);
+            if (window.currentPage < totalPages) {
+                window.currentPage++;
+                if (window.renderDocuments) {
+                    window.renderDocuments();
+                }
+            }
+        });
+        
+        // Last page
+        paginationButtons[3].addEventListener('click', function() {
+            const totalPages = Math.ceil((window.allDocuments || []).length / window.rowsPerPage);
+            if (window.currentPage !== totalPages && totalPages > 0) {
+                window.currentPage = totalPages;
+                if (window.renderDocuments) {
+                    window.renderDocuments();
+                }
+            }
+        });
+    }
+    
+    console.log('✅ Pagination feature initialized');
 });
 </script>
 </main></body>
