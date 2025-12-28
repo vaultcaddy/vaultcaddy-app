@@ -201,7 +201,7 @@ class VaultCaddyConfig {
     }
     
     /**
-     * 顯示 API Key 設置說明
+     * 顯示 API Key 設置說明（已禁用弹窗）
      */
     showApiKeySetupInstructions() {
         if (this.isDevelopment) {
@@ -212,92 +212,7 @@ class VaultCaddyConfig {
             console.log('4. 在控制台執行：localStorage.setItem("google_ai_api_key", "您的API Key")');
             console.log('5. 重新載入頁面');
             console.groupEnd();
-            
-            // 在頁面上顯示友好提示
-            this.showApiKeyPrompt();
         }
-    }
-    
-    /**
-     * 顯示 API Key 輸入提示
-     */
-    showApiKeyPrompt() {
-        // 只在開發環境顯示
-        if (!this.isDevelopment) return;
-        
-        const existingPrompt = document.getElementById('api-key-prompt');
-        if (existingPrompt) return; // 避免重複顯示
-        
-        const promptHTML = `
-            <div id="api-key-prompt" style="
-                position: fixed; 
-                top: 20px; 
-                right: 20px; 
-                background: #fff3cd; 
-                border: 1px solid #ffeaa7; 
-                padding: 1rem; 
-                border-radius: 8px; 
-                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-                z-index: 10000;
-                max-width: 400px;
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            ">
-                <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
-                    <span style="font-size: 1.2rem; margin-right: 0.5rem;">🔑</span>
-                    <strong>需要設置 Google AI API Key</strong>
-                </div>
-                <p style="margin: 0.5rem 0; font-size: 0.9rem; color: #856404;">
-                    為了使用 AI 文檔處理功能，請設置您的 Google AI API Key。
-                </p>
-                <input type="text" id="api-key-input" placeholder="輸入您的 Google AI API Key" style="
-                    width: 100%; 
-                    padding: 0.5rem; 
-                    border: 1px solid #ddd; 
-                    border-radius: 4px; 
-                    margin: 0.5rem 0;
-                    font-size: 0.9rem;
-                ">
-                <div style="display: flex; gap: 0.5rem;">
-                    <button id="save-api-key" style="
-                        flex: 1;
-                        background: #28a745; 
-                        color: white; 
-                        border: none; 
-                        padding: 0.5rem; 
-                        border-radius: 4px; 
-                        cursor: pointer;
-                        font-size: 0.9rem;
-                    ">保存</button>
-                    <button id="close-prompt" style="
-                        background: #6c757d; 
-                        color: white; 
-                        border: none; 
-                        padding: 0.5rem 1rem; 
-                        border-radius: 4px; 
-                        cursor: pointer;
-                        font-size: 0.9rem;
-                    ">關閉</button>
-                </div>
-            </div>
-        `;
-        
-        document.body.insertAdjacentHTML('beforeend', promptHTML);
-        
-        // 綁定事件
-        document.getElementById('save-api-key').onclick = () => {
-            const apiKey = document.getElementById('api-key-input').value.trim();
-            if (apiKey) {
-                localStorage.setItem('google_ai_api_key', apiKey);
-                document.getElementById('api-key-prompt').remove();
-                location.reload();
-            } else {
-                alert('請輸入有效的 API Key');
-            }
-        };
-        
-        document.getElementById('close-prompt').onclick = () => {
-            document.getElementById('api-key-prompt').remove();
-        };
     }
     
     /**
