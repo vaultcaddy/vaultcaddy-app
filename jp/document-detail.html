@@ -1218,7 +1218,7 @@
                     </span>
                     <!-- 导出按钮（綠色）- メニュー已移まで body 最後 -->
                     <div class="export-dropdown" style="position: relative;">
-                        <button onclick="toggleExportMenu()" style="background: #10b981; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
+                        <button onclick="toggleExportMenu(event)" style="background: #10b981; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
                             <i class="fas fa-download"></i>
                             <span>Export</span>
                             <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
@@ -1473,7 +1473,7 @@
         };
         
         // 🔄 動の生成 Export メニュー（文書に基づいてタイプ）
-        window.toggleExportMenu = function() {
+        window.toggleExportMenu = function(event) {
             const menu = document.getElementById('exportMenu');
             const overlay = document.getElementById('exportMenuOverlay');
             if (!menu) return;
@@ -1498,8 +1498,44 @@
             // 文書に基づいてタイプ生成メニュー
             updateExportMenuForDocumentDetail();
             
-            // 顯示メニュー（CSS會自動処理デスクトップ版とモバイル版の異なるスタイル）
+            // 顯示メニュー
             menu.style.display = 'block';
+            
+            // 🔥 デスクトップ版：動的位置メニュー至ExportボタンDown
+            if (window.innerWidth > 768) {
+                const exportBtn = event ? event.currentTarget : document.querySelector('button[onclick*="toggleExportMenu"]');
+                if (exportBtn) {
+                    const btnRect = exportBtn.getBoundingClientRect();
+                    const exportDropdown = exportBtn.closest('.export-dropdown');
+                    
+                    if (exportDropdown) {
+                        // 相対にexport-dropdown位置
+                        menu.style.position = 'absolute';
+                        menu.style.top = 'auto';
+                        menu.style.left = 'auto';
+                        menu.style.right = '0';
+                        menu.style.bottom = 'auto';
+                        menu.style.transform = 'none';
+                        menu.style.marginTop = '0.5rem';
+                        
+                        // 將メニュー移動至export-dropdown内
+                        exportDropdown.appendChild(menu);
+                    }
+                }
+            } else {
+                // モバイル版：確保メニュー在body中と中央顯示
+                if (menu.parentElement !== document.body) {
+                    document.body.appendChild(menu);
+                }
+                menu.style.position = 'fixed';
+                menu.style.top = '50%';
+                menu.style.left = '50%';
+                menu.style.right = 'auto';
+                menu.style.bottom = 'auto';
+                menu.style.transform = 'translate(-50%, -50%)';
+                menu.style.marginTop = '0';
+            }
+            
             console.log('📤 Export メニュー已顯示');
         };
         

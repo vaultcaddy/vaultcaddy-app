@@ -1218,7 +1218,7 @@
                     </span>
                     <!-- 导exitpress钮（綠色）- Menualreadymoveto body Finally -->
                     <div class="export-dropdown" style="position: relative;">
-                        <button onclick="toggleExportMenu()" style="background: #10b981; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
+                        <button onclick="toggleExportMenu(event)" style="background: #10b981; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
                             <i class="fas fa-download"></i>
                             <span>Export</span>
                             <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
@@ -1473,7 +1473,7 @@
         };
         
         // 🔄 Dynamically generated Export Menu（Based on documentType）
-        window.toggleExportMenu = function() {
+        window.toggleExportMenu = function(event) {
             const menu = document.getElementById('exportMenu');
             const overlay = document.getElementById('exportMenuOverlay');
             if (!menu) return;
@@ -1498,8 +1498,44 @@
             // Based on documentTypeGenerateMenu
             updateExportMenuForDocumentDetail();
             
-            // ShowMenu（CSSwillautoProcessDesktopandMobile的differentStyle）
+            // ShowMenu
             menu.style.display = 'block';
+            
+            // 🔥 Desktop version: Dynamic position menu to Export button below
+            if (window.innerWidth > 768) {
+                const exportBtn = event ? event.currentTarget : document.querySelector('button[onclick*="toggleExportMenu"]');
+                if (exportBtn) {
+                    const btnRect = exportBtn.getBoundingClientRect();
+                    const exportDropdown = exportBtn.closest('.export-dropdown');
+                    
+                    if (exportDropdown) {
+                        // Relative to export-dropdown position
+                        menu.style.position = 'absolute';
+                        menu.style.top = 'auto';
+                        menu.style.left = 'auto';
+                        menu.style.right = '0';
+                        menu.style.bottom = 'auto';
+                        menu.style.transform = 'none';
+                        menu.style.marginTop = '0.5rem';
+                        
+                        // Move menu to export-dropdown inside
+                        exportDropdown.appendChild(menu);
+                    }
+                }
+            } else {
+                // Mobile version: Ensure menu in body and centered display
+                if (menu.parentElement !== document.body) {
+                    document.body.appendChild(menu);
+                }
+                menu.style.position = 'fixed';
+                menu.style.top = '50%';
+                menu.style.left = '50%';
+                menu.style.right = 'auto';
+                menu.style.bottom = 'auto';
+                menu.style.transform = 'translate(-50%, -50%)';
+                menu.style.marginTop = '0';
+            }
+            
             console.log('📤 Export MenualreadyShow');
         };
         
