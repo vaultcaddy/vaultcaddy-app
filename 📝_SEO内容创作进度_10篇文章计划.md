@@ -17,11 +17,11 @@
 | ✅ 5 | 恒生銀行月結單轉Excel教學 | **已完成** | 3600+ | 恒生月結單Excel<br>Hang Seng statement | 🔥 400/月 | 💰 12% |
 | ✅ 6 | PDF銀行對帳單無法複製文字？3種解決方法 | **已完成** | 4200+ | PDF無法複製<br>銀行對帳單PDF | 🔥 800/月 | 💰 10% |
 | ✅ 7 | 香港餐廳會計完整指南2025 | **已完成** | 4600+ | 餐廳會計<br>餐廳記帳報稅 | 🔥 600/月 | 💰 12% |
-| ⏳ 8 | QuickBooks匯入銀行對帳單失敗？完整排查指南 | 待开始 | 3000+ | QuickBooks匯入失敗<br>QuickBooks香港 | 🔥 450/月 | 💰 13% |
-| ⏳ 9 | VaultCaddy vs QuickBooks Online對比 | 待开始 | 4200+ | VaultCaddy vs QuickBooks<br>QuickBooks替代品 | 🔥 800/月 | 💰 11% |
+| ✅ 8 | QuickBooks匯入銀行對帳單失敗？完整排查指南 | **已完成** | 4500+ | QuickBooks匯入失敗<br>QuickBooks香港 | 🔥 450/月 | 💰 13% |
+| ✅ 9 | VaultCaddy vs QuickBooks Online對比 | **已完成** | 5200+ | VaultCaddy vs QuickBooks<br>QuickBooks替代品 | 🔥 800/月 | 💰 11% |
 | ⏳ 10 | 人工錄入 vs AI自動化：會計師時間成本對比 | 待开始 | 3500+ | 人工錄入 vs AI<br>會計自動化 | 🔥 400/月 | 💰 16% |
 
-**总计**: 7/10 完成 | 预期总搜索量: 6,250/月 | 平均转化率: 12.5%
+**总计**: 9/10 完成 | 预期总搜索量: 6,250/月 | 平均转化率: 12.5%
 
 ---
 
