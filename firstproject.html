@@ -2709,6 +2709,8 @@
                 
                 if (!currentProjectId) {
                     console.error('❌ 沒有項目 ID');
+                    // 跳轉回首頁
+                    window.location.href = 'index.html';
                     return;
                 }
                 
@@ -2720,10 +2722,17 @@
                 if (currentProject) {
                     document.getElementById('team-project-title').textContent = currentProject.name;
                     console.log('✅ 項目名稱:', currentProject.name);
+                } else {
+                    // 項目不存在，可能已被刪除
+                    console.warn('⚠️ 項目不存在，可能已被刪除:', currentProjectId);
+                    alert('此項目不存在或已被刪除，將返回首頁');
+                    window.location.href = 'index.html';
                 }
                 
             } catch (error) {
                 console.error('❌ 載入項目失敗:', error);
+                alert('載入項目失敗，將返回首頁');
+                window.location.href = 'index.html';
             }
         }
         

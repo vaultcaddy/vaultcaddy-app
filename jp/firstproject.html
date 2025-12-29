@@ -2696,22 +2696,31 @@
                 currentProjectId = urlParams.get('project');
                 
                 if (!currentProjectId) {
-                    console.error('❌ なしプロジェクト ID');
+                    console.error('❌ プロジェクトIDがありません');
+                    // ホームページにリダイレクト
+                    window.location.href = 'index.html';
                     return;
                 }
                 
-                console.log('📂 読み込みプロジェクト:', currentProjectId);
+                console.log('📂 プロジェクト読み込み:', currentProjectId);
                 
                 const projects = await window.simpleDataManager.getProjects();
                 currentProject = projects.find(p => p.id === currentProjectId);
                 
                 if (currentProject) {
                     document.getElementById('team-project-title').textContent = currentProject.name;
-                    console.log('✅ <span data-translate="project_name">專案名稱</span>:', currentProject.name);
+                    console.log('✅ プロジェクト名:', currentProject.name);
+                } else {
+                    // プロジェクトが存在しない、削除された可能性があります
+                    console.warn('⚠️ プロジェクトが見つかりません。削除された可能性があります:', currentProjectId);
+                    alert('このプロジェクトは存在しないか削除されました。ホームページに戻ります。');
+                    window.location.href = 'index.html';
                 }
                 
             } catch (error) {
-                console.error('❌ 読み込みプロジェクト失敗:', error);
+                console.error('❌ プロジェクト読み込み失敗:', error);
+                alert('プロジェクトの読み込みに失敗しました。ホームページに戻ります。');
+                window.location.href = 'index.html';
             }
         }
         

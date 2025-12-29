@@ -2696,22 +2696,31 @@
                 currentProjectId = urlParams.get('project');
                 
                 if (!currentProjectId) {
-                    console.error('❌ 없음프로젝트 ID');
+                    console.error('❌ 프로젝트 ID가 없습니다');
+                    // 홈페이지로 리다이렉트
+                    window.location.href = 'index.html';
                     return;
                 }
                 
-                console.log('📂 로드프로젝트:', currentProjectId);
+                console.log('📂 프로젝트 로드:', currentProjectId);
                 
                 const projects = await window.simpleDataManager.getProjects();
                 currentProject = projects.find(p => p.id === currentProjectId);
                 
                 if (currentProject) {
                     document.getElementById('team-project-title').textContent = currentProject.name;
-                    console.log('✅ 프로젝트이름:', currentProject.name);
+                    console.log('✅ 프로젝트 이름:', currentProject.name);
+                } else {
+                    // 프로젝트가 존재하지 않음, 삭제되었을 가능성
+                    console.warn('⚠️ 프로젝트를 찾을 수 없습니다. 삭제되었을 가능성:', currentProjectId);
+                    alert('이 프로젝트는 존재하지 않거나 삭제되었습니다. 홈페이지로 돌아갑니다.');
+                    window.location.href = 'index.html';
                 }
                 
             } catch (error) {
-                console.error('❌ 로드프로젝트실패:', error);
+                console.error('❌ 프로젝트 로드 실패:', error);
+                alert('프로젝트 로드에 실패했습니다. 홈페이지로 돌아갑니다.');
+                window.location.href = 'index.html';
             }
         }
         

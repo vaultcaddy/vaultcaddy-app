@@ -2712,22 +2712,31 @@
                 currentProjectId = urlParams.get('project');
                 
                 if (!currentProjectId) {
-                    console.error('❌ NoneProject ID');
+                    console.error('❌ No Project ID');
+                    // Redirect to home page
+                    window.location.href = 'index.html';
                     return;
                 }
                 
-                console.log('📂 LoadProject:', currentProjectId);
+                console.log('📂 Load Project:', currentProjectId);
                 
                 const projects = await window.simpleDataManager.getProjects();
                 currentProject = projects.find(p => p.id === currentProjectId);
                 
                 if (currentProject) {
                     document.getElementById('team-project-title').textContent = currentProject.name;
-                    console.log('✅ ProjectName:', currentProject.name);
+                    console.log('✅ Project Name:', currentProject.name);
+                } else {
+                    // Project doesn't exist, may have been deleted
+                    console.warn('⚠️ Project not found, may have been deleted:', currentProjectId);
+                    alert('This project does not exist or has been deleted. Returning to home page.');
+                    window.location.href = 'index.html';
                 }
                 
             } catch (error) {
-                console.error('❌ LoadProjectFailed:', error);
+                console.error('❌ Load Project Failed:', error);
+                alert('Failed to load project. Returning to home page.');
+                window.location.href = 'index.html';
             }
         }
         
