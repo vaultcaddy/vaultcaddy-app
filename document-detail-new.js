@@ -34,6 +34,7 @@ const i18n = {
         account_holder: '帳戶持有人',
         statement_period: '對帳單期間',
         statement_date: '對帳單日期',
+        statement_date_placeholder: 'YYYY-MM-DD',
         opening_balance: '期初餘額',
         closing_balance: '期末餘額',
         currency: '貨幣',
@@ -56,6 +57,7 @@ const i18n = {
         account_holder: 'Account Holder',
         statement_period: 'Statement Period',
         statement_date: 'Statement Date',
+        statement_date_placeholder: 'YYYY-MM-DD',
         opening_balance: 'Opening Balance',
         closing_balance: 'Closing Balance',
         currency: 'Currency',
@@ -78,6 +80,7 @@ const i18n = {
         account_holder: '口座名義人',
         statement_period: '明細期間',
         statement_date: '明細日付',
+        statement_date_placeholder: 'YYYY年MM月DD日',
         opening_balance: '期首残高',
         closing_balance: '期末残高',
         currency: '通貨',
@@ -100,6 +103,7 @@ const i18n = {
         account_holder: '계좌 소유자',
         statement_period: '명세서 기간',
         statement_date: '명세서 날짜',
+        statement_date_placeholder: 'YYYY-MM-DD',
         opening_balance: '기초 잔액',
         closing_balance: '기말 잔액',
         currency: '통화',
@@ -1189,14 +1193,74 @@ function displayBankStatementContent(data) {
                         data.statementdate ||
                         '';
     
-    // 如果沒有單獨的日期，從 statement_period 提取結束日期
+    // 🔥 增強日期提取邏輯：從 statement_period 提取結束日期（支持多種格式）
     if (!statementDate && (data.statementPeriod || data.statement_period)) {
         const period = data.statementPeriod || data.statement_period;
-        const match = period.match(/to\s+(\d{2}\/\d{2}\/\d{4})/);
+        console.log('📅 嘗試從 period 提取日期:', period);
+        
+        // 嘗試多種日期格式
+        let extractedDate = null;
+        
+        // 格式1: "to MM/DD/YYYY" 或 "to DD/MM/YYYY"
+        let match = period.match(/to\s+(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/i);
         if (match) {
-            // 轉換 MM/DD/YYYY 為 YYYY-MM-DD
-            const [month, day, year] = match[1].split('/');
-            statementDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+            const dateStr = match[1];
+            const parts = dateStr.split(/[\/\-]/);
+            
+            // 判斷是 MM/DD/YYYY 還是 DD/MM/YYYY
+            // 如果第一個數字 > 12，則為 DD/MM/YYYY
+            if (parseInt(parts[0]) > 12) {
+                // DD/MM/YYYY 格式
+                extractedDate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+            } else {
+                // MM/DD/YYYY 格式
+                extractedDate = `${parts[2]}-${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}`;
+            }
+            console.log('✅ 從 "to MM/DD/YYYY" 提取:', extractedDate);
+        }
+        
+        // 格式2: "至 YYYY-MM-DD"
+        if (!extractedDate) {
+            match = period.match(/[至to]\s+(\d{4}[\-\/]\d{1,2}[\-\/]\d{1,2})/i);
+            if (match) {
+                extractedDate = match[1].replace(/\//g, '-');
+                // 確保格式為 YYYY-MM-DD
+                const parts = extractedDate.split('-');
+                extractedDate = `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+                console.log('✅ 從 "至 YYYY-MM-DD" 提取:', extractedDate);
+            }
+        }
+        
+        // 格式3: "2018-12-03 to 2019-01-01"（完整格式）
+        if (!extractedDate) {
+            match = period.match(/(\d{4}[\-\/]\d{1,2}[\-\/]\d{1,2})\s+to\s+(\d{4}[\-\/]\d{1,2}[\-\/]\d{1,2})/i);
+            if (match) {
+                extractedDate = match[2].replace(/\//g, '-');
+                // 確保格式為 YYYY-MM-DD
+                const parts = extractedDate.split('-');
+                extractedDate = `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+                console.log('✅ 從完整日期範圍提取結束日期:', extractedDate);
+            }
+        }
+        
+        // 格式4: 只有一個日期 "YYYY-MM-DD" 或 "MM/DD/YYYY"
+        if (!extractedDate) {
+            match = period.match(/(\d{4}[\-\/]\d{1,2}[\-\/]\d{1,2})/);
+            if (match) {
+                extractedDate = match[1].replace(/\//g, '-');
+                const parts = extractedDate.split('-');
+                if (parts[0].length === 4) {
+                    // YYYY-MM-DD
+                    extractedDate = `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+                }
+                console.log('✅ 從單個日期提取:', extractedDate);
+            }
+        }
+        
+        if (extractedDate) {
+            statementDate = extractedDate;
+        } else {
+            console.warn('⚠️ 無法從 period 提取日期:', period);
         }
     }
     
@@ -1281,9 +1345,12 @@ function displayBankStatementContent(data) {
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
                     <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('statement_date')}</label>
-                    <input type="date" id="statementDate" value="${statementDate}" 
+                    <input type="date" id="statementDate" value="${statementDate === '—' ? '' : statementDate}" 
                            onchange="autoSaveBankStatementDetails()"
-                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white; max-width: 100%; overflow: hidden; text-overflow: ellipsis;">
+                           lang="${currentLang}"
+                           placeholder="${t('statement_date_placeholder')}"
+                           data-placeholder="${t('statement_date_placeholder')}"
+                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white; max-width: 100%; overflow: hidden; text-overflow: ellipsis; color-scheme: ${currentLang === 'en' ? 'light' : 'auto'};">
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
                     <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('opening_balance')}</label>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Statement Date 提取测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .test-case { border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 8px; }
+        .test-case.pass { background: #d1fae5; border-color: #10b981; }
+        .test-case.fail { background: #fee2e2; border-color: #ef4444; }
+        .label { font-weight: bold; color: #666; }
+        .value { font-family: monospace; color: #333; }
+        h1 { color: #1f2937; }
+        h2 { color: #4b5563; margin-top: 30px; }
+        .status { font-weight: bold; font-size: 1.2em; }
+        .status.pass { color: #10b981; }
+        .status.fail { color: #ef4444; }
+    </style>
+</head>
+<body>
+    <h1>📅 Statement Date 提取测试工具</h1>
+    <p>测试多种日期格式的提取逻辑</p>
+    
+    <div id="testResults"></div>
+    
+    <script>
+        // 🔥 复制自 document-detail-new.js 的日期提取逻辑
+        function extractStatementDate(period) {
+            console.log('📅 嘗試從 period 提取日期:', period);
+            
+            let extractedDate = null;
+            
+            // 格式1: "to MM/DD/YYYY" 或 "to DD/MM/YYYY"
+            let match = period.match(/to\s+(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/i);
+            if (match) {
+                const dateStr = match[1];
+                const parts = dateStr.split(/[\/\-]/);
+                
+                if (parseInt(parts[0]) > 12) {
+                    extractedDate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                } else {
+                    extractedDate = `${parts[2]}-${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}`;
+                }
+                console.log('✅ 從 "to MM/DD/YYYY" 提取:', extractedDate);
+            }
+            
+            // 格式2: "至 YYYY-MM-DD"
+            if (!extractedDate) {
+                match = period.match(/[至to]\s+(\d{4}[\-\/]\d{1,2}[\-\/]\d{1,2})/i);
+                if (match) {
+                    extractedDate = match[1].replace(/\//g, '-');
+                    const parts = extractedDate.split('-');
+                    extractedDate = `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+                    console.log('✅ 從 "至 YYYY-MM-DD" 提取:', extractedDate);
+                }
+            }
+            
+            // 格式3: "2018-12-03 to 2019-01-01"（完整格式）
+            if (!extractedDate) {
+                match = period.match(/(\d{4}[\-\/]\d{1,2}[\-\/]\d{1,2})\s+to\s+(\d{4}[\-\/]\d{1,2}[\-\/]\d{1,2})/i);
+                if (match) {
+                    extractedDate = match[2].replace(/\//g, '-');
+                    const parts = extractedDate.split('-');
+                    extractedDate = `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+                    console.log('✅ 從完整日期範圍提取結束日期:', extractedDate);
+                }
+            }
+            
+            // 格式4: 只有一個日期
+            if (!extractedDate) {
+                match = period.match(/(\d{4}[\-\/]\d{1,2}[\-\/]\d{1,2})/);
+                if (match) {
+                    extractedDate = match[1].replace(/\//g, '-');
+                    const parts = extractedDate.split('-');
+                    if (parts[0].length === 4) {
+                        extractedDate = `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+                    }
+                    console.log('✅ 從單個日期提取:', extractedDate);
+                }
+            }
+            
+            return extractedDate || null;
+        }
+        
+        // 测试用例
+        const testCases = [
+            {
+                name: '用户实际数据（Chase Bank）',
+                input: '2018-12-03 to 2019-01-01',
+                expected: '2019-01-01',
+                priority: 'HIGH'
+            },
+            {
+                name: 'MM/DD/YYYY 格式',
+                input: '12/03/2018 to 01/25/2019',
+                expected: '2019-01-25',
+                priority: 'MEDIUM'
+            },
+            {
+                name: 'DD/MM/YYYY 格式',
+                input: '03/12/2018 to 25/01/2019',
+                expected: '2019-01-25',
+                priority: 'MEDIUM'
+            },
+            {
+                name: '中文格式',
+                input: '2018-12-03 至 2019-01-25',
+                expected: '2019-01-25',
+                priority: 'MEDIUM'
+            },
+            {
+                name: '单个日期',
+                input: '2019-01-25',
+                expected: '2019-01-25',
+                priority: 'LOW'
+            },
+            {
+                name: '短格式（月/日不补零）',
+                input: '2018-12-3 to 2019-1-5',
+                expected: '2019-01-05',
+                priority: 'LOW'
+            }
+        ];
+        
+        // 运行测试
+        let passCount = 0;
+        let failCount = 0;
+        const resultsContainer = document.getElementById('testResults');
+        
+        testCases.forEach((testCase, index) => {
+            const result = extractStatementDate(testCase.input);
+            const pass = result === testCase.expected;
+            
+            if (pass) passCount++;
+            else failCount++;
+            
+            const div = document.createElement('div');
+            div.className = `test-case ${pass ? 'pass' : 'fail'}`;
+            div.innerHTML = `
+                <h3>测试 ${index + 1}: ${testCase.name} ${testCase.priority === 'HIGH' ? '⭐⭐⭐' : testCase.priority === 'MEDIUM' ? '⭐⭐' : '⭐'}</h3>
+                <p><span class="label">输入:</span> <span class="value">${testCase.input}</span></p>
+                <p><span class="label">预期:</span> <span class="value">${testCase.expected}</span></p>
+                <p><span class="label">实际:</span> <span class="value">${result || 'null'}</span></p>
+                <p class="status ${pass ? 'pass' : 'fail'}">${pass ? '✅ 通过' : '❌ 失败'}</p>
+            `;
+            resultsContainer.appendChild(div);
+        });
+        
+        // 总结
+        const summary = document.createElement('div');
+        summary.innerHTML = `
+            <h2>📊 测试总结</h2>
+            <p><span class="label">通过:</span> <span class="status pass">${passCount}/${testCases.length}</span></p>
+            <p><span class="label">失败:</span> <span class="status fail">${failCount}/${testCases.length}</span></p>
+            <p><span class="label">成功率:</span> <span class="status ${passCount === testCases.length ? 'pass' : 'fail'}">${Math.round(passCount / testCases.length * 100)}%</span></p>
+        `;
+        resultsContainer.insertBefore(summary, resultsContainer.firstChild);
+        
+        console.log(`\n📊 测试完成: ${passCount}/${testCases.length} 通过`);
+    </script>
+</body>
+</html>
