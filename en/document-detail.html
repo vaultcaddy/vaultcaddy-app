@@ -68,7 +68,7 @@
         
         // 🔥 DeleteWhenfrontDocument
         async function deleteCurrentDocument() {
-            const confirmDelete = confirm('Confirm toDeletethisDocument嗎？thisActionsCannot be undone。');
+            const confirmDelete = confirm('確定要刪除此文檔嗎？此操作無法撤銷。');
             if (!confirmDelete) return;
             
             try {
@@ -77,31 +77,41 @@
                 const documentId = params.get('id');
                 
                 if (!projectId || !documentId) {
-                    alert('Failed to fetchDocumentInformation');
+                    alert('無法獲取文檔信息');
                     return;
                 }
                 
-                // from Firestore DeleteDocument
-                if (firebase && firebase.firestore) {
+                console.log('🗑️ 開始刪除文檔:', { projectId, documentId });
+                
+                // 🔥 使用與 firstproject.html 相同的刪除方法
+                if (window.simpleDataManager && typeof window.simpleDataManager.deleteDocument === 'function') {
+                    // 方法1：使用 simpleDataManager
+                    await window.simpleDataManager.deleteDocument(projectId, documentId);
+                    console.log('✅ 文檔已刪除 (simpleDataManager)');
+                } else if (firebase && firebase.firestore) {
+                    // 方法2：直接使用 Firestore（備用）
                     await firebase.firestore()
                         .collection('projects')
                         .doc(projectId)
                         .collection('documents')
                         .doc(documentId)
                         .delete();
-                    
-                    console.log('✅ DocumentalreadyDelete:', documentId);
-                    alert('DocumentalreadySuccessDelete');
-                    
-                    // BackDashboard
-                    goBackToDashboard();
+                    console.log('✅ 文檔已刪除 (Firestore)');
                 } else {
-                    alert('Connection failedtoData庫');
+                    throw new Error('無法連接到數據庫');
                 }
+                
+                alert('文檔已成功刪除');
+                
+                // 🎯 刪除成功後，返回項目頁面（與 firstproject.html 一致）
+                console.log('📍 返回項目頁面:', projectId);
+                window.location.href = `firstproject.html?project=${projectId}`;
+                
             } catch (error) {
-                console.error('❌ DeleteDocumentFailed:', error);
-                alert('DeleteDocumentFailed: ' + error.message);
+                console.error('❌ 刪除文檔失敗:', error);
+                alert('刪除文檔失敗: ' + error.message);
             }
+        
         }
     </script>
     
