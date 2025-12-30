@@ -610,13 +610,42 @@
     <!-- Hero Section -->
     <section class="hero">
         <div class="hero-content">
-                    <!-- Bank Logo -->
-        <div class="bank-logo-container floating">
-            <img src="https://logo.clearbit.com/citibank.com" 
-                 alt="Citibank Logo" 
-                 class="bank-logo"
-                 onerror="this.style.display='none'">
-        </div>
+
+        <!-- Sticky Free Trial Banner -->
+        <a href="/signup.html" style="text-decoration: none;">
+            <div id="stickyBanner" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; width: 90%; max-width: 600px; cursor: pointer; transition: all 0.3s ease;">
+                <div style="background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(20px); padding: 16px 24px; border-radius: 50px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; gap: 12px; border: 2px solid rgba(102, 126, 234, 0.4); transition: all 0.3s ease;">
+                    <i class="fas fa-gift" style="color: #ec4899; font-size: 24px;"></i>
+                    <div style="font-size: 16px; font-weight: 700; color: #0f172a;">
+                        <span style="color: #ec4899;">FREE:</span> Try 20 pages · No credit card required
+                    </div>
+                </div>
+            </div>
+        </a>
+
+        <style>
+            #stickyBanner:hover > div {
+                transform: scale(1.02);
+                box-shadow: 0 15px 50px rgba(0,0,0,0.25);
+            }
+            
+            @media (max-width: 768px) {
+                #stickyBanner {
+                    top: 10px;
+                    width: 95%;
+                    max-width: none;
+                }
+                #stickyBanner > div {
+                    padding: 12px 16px;
+                }
+                #stickyBanner .fas {
+                    font-size: 20px !important;
+                }
+                #stickyBanner > div > div {
+                    font-size: 14px !important;
+                }
+            }
+        </style>
         
             <div class="hero-badge">
                 🚀 500개 이상의 기업이 신뢰 in the USA
@@ -759,7 +788,7 @@
     </section>
     
     
-    <!-- Trust & Security Section -->
+    <!-- Trust & Security Section (No Borders) -->
     <section style="padding: var(--space-16) var(--space-6); background: white;">
         <div style="max-width: 1200px; margin: 0 auto; text-align: center;">
             <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 40px; margin-top: 40px;">
@@ -979,142 +1008,77 @@
     </section>
     
     <!-- FAQ JavaScript -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const faqItems = document.querySelectorAll('.faq-item');
-            
-            faqItems.forEach(item => {
-                const question = item.querySelector('.faq-question');
-                const answer = item.querySelector('.faq-answer');
-                const icon = item.querySelector('.faq-icon');
-                
-                question.addEventListener('click', () => {
-                    const isActive = item.classList.contains('active');
+    
+        <script>
+            // 增强的Logo显示方案 - 立即尝试显示
+            (function() {
+                function ensureBankLogo() {
+                    const bankLogo = document.querySelector('.bank-logo');
+                    if (!bankLogo) return;
                     
-                    // Close all items
-                    faqItems.forEach(otherItem => {
-                        otherItem.classList.remove('active');
-                        otherItem.querySelector('.faq-answer').style.maxHeight = '0';
-                    });
+                    let attemptCount = 0;
+                    const maxAttempts = 3;
                     
-                    // Open clicked item if it wasn't active
-                    if (!isActive) {
-                        item.classList.add('active');
-                        answer.style.maxHeight = answer.scrollHeight + 'px';
+                    function tryLoadLogo() {
+                        attemptCount++;
+                        console.log(`尝试加载Logo (第${attemptCount}次)...`);
+                        
+                        // 检查Logo是否成功加载
+                        if (bankLogo.complete && bankLogo.naturalHeight > 0) {
+                            console.log('✅ Logo加载成功！');
+                            return true;
+                        }
+                        
+                        // 如果加载失败，尝试备用方案
+                        if (attemptCount === 1) {
+                            // 尝试Google Favicon
+                            const currentSrc = bankLogo.src;
+                            const domain = currentSrc.split('clearbit.com/')[1];
+                            bankLogo.src = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+                            console.log('⚠️ Clearbit失败，尝试Google Favicon...');
+                            
+                            setTimeout(tryLoadLogo, 500);
+                            return false;
+                        }
+                        
+                        if (attemptCount === 2) {
+                            // 检查Google Favicon是否成功
+                            if (bankLogo.complete && bankLogo.naturalHeight > 0) {
+                                console.log('✅ Google Favicon加载成功！');
+                                return true;
+                            }
+                            
+                            // 最后使用文字Logo
+                            const container = bankLogo.parentElement;
+                            const bankName = bankLogo.alt.replace(' Logo', '');
+                            container.innerHTML = `<div style="font-size: 32px; font-weight: 900; color: white; text-transform: uppercase; letter-spacing: 3px; opacity: 0.95; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">${bankName}</div>`;
+                            console.log('ℹ️ 使用文字Logo');
+                            return true;
+                        }
+                        
+                        return false;
                     }
-                });
-            });
-        });
-    </script>
+                    
+                    // 立即检查
+                    if (!tryLoadLogo()) {
+                        // 如果不成功，500ms后再试
+                        setTimeout(() => {
+                            if (attemptCount < maxAttempts) {
+                                tryLoadLogo();
+                            }
+                        }, 500);
+                    }
+                }
+                
+                // 页面加载完成后立即执行
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', ensureBankLogo);
+                } else {
+                    ensureBankLogo();
+                }
+            })();
+        </script>
 
-    <!-- Testimonials Section -->
-    <section style="padding: 80px 24px; background: white;">
-        <div style="max-width: 1200px; margin: 0 auto;">
-            <h2 style="text-align: center; font-size: 48px; font-weight: 900; margin-bottom: 16px; color: #0f172a;">
-                전 세계 2,500명 이상의 사용자가 신뢰
-            </h2>
-            <p style="text-align: center; font-size: 20px; color: #64748b; margin-bottom: 64px;">
-                VaultCaddy에 대한 고객의 의견을 확인하세요
-            </p>
-            
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
-                <!-- Testimonial 1 -->
-                <div style="background: white; padding: 40px; border-radius: 20px; border: 2px solid #e2e8f0; transition: all 0.3s;">
-                    <div style="font-size: 28px; margin-bottom: 20px;">⭐⭐⭐⭐⭐</div>
-                    <p style="font-size: 18px; line-height: 1.7; color: #475569; margin-bottom: 24px; font-style: italic;">
-                        "VaultCaddy saves me 10+ hours every 월. The 정확도 is incredible and it handles all my bank 명세서 perfectly."
-                    </p>
-                    <div style="display: flex; flex-direction: column; gap: 4px;">
-                        <strong style="font-size: 18px; color: #1e293b;">Sarah Johnson</strong>
-                        <span style="font-size: 14px; color: #64748b;">중소기업 소유주, 미국</span>
-                    </div>
-                </div>
-                
-                <!-- Testimonial 2 -->
-                <div style="background: white; padding: 40px; border-radius: 20px; border: 2px solid #e2e8f0; transition: all 0.3s;">
-                    <div style="font-size: 28px; margin-bottom: 20px;">⭐⭐⭐⭐⭐</div>
-                    <p style="font-size: 18px; line-height: 1.7; color: #475569; margin-bottom: 24px; font-style: italic;">
-                        "Best investment for my accounting practice. Processes 50+ bank 명세서 in 분 instead of hours."
-                    </p>
-                    <div style="display: flex; flex-direction: column; gap: 4px;">
-                        <strong style="font-size: 18px; color: #1e293b;">Michael Chen</strong>
-                        <span style="font-size: 14px; color: #64748b;">공인회계사, 뉴욕</span>
-                    </div>
-                </div>
-                
-                <!-- Testimonial 3 -->
-                <div style="background: white; padding: 40px; border-radius: 20px; border: 2px solid #e2e8f0; transition: all 0.3s;">
-                    <div style="font-size: 28px; margin-bottom: 20px;">⭐⭐⭐⭐⭐</div>
-                    <p style="font-size: 18px; line-height: 1.7; color: #475569; margin-bottom: 24px; font-style: italic;">
-                        "Incredibly accurate. 아니오 more manual data entry errors. My clients love the fast turnaround time."
-                    </p>
-                    <div style="display: flex; flex-direction: column; gap: 4px;">
-                        <strong style="font-size: 18px; color: #1e293b;">Emily Rodriguez</strong>
-                        <span style="font-size: 14px; color: #64748b;">경리 담당자, 캘리포니아</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-
-    <!-- Use Cases Section -->
-    <section style="padding: 80px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-        <div style="max-width: 1200px; margin: 0 auto;">
-            <h2 style="text-align: center; font-size: 48px; font-weight: 900; margin-bottom: 16px; color: white;">
-                모든 비즈니스에 완벽
-            </h2>
-            <p style="text-align: center; font-size: 20px; color: rgba(255,255,255,0.9); margin-bottom: 64px;">
-                다양한 전문가들이 VaultCaddy를 어떻게 사용하는지 확인하세요
-            </p>
-            
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px;">
-                <!-- Use Case 1 -->
-                <div style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding: 40px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); text-align: center;">
-                    <div style="width: 80px; height: 80px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; margin: 0 auto 24px;">
-                        👔
-                    </div>
-                    <h3 style="font-size: 24px; font-weight: 700; color: white; margin-bottom: 16px;">회계사 및 공인회계사</h3>
-                    <p style="font-size: 16px; line-height: 1.6; color: rgba(255,255,255,0.9);">
-                        Batch process 50+ client 명세서 in 분. Free up time for advisory services.
-                    </p>
-                </div>
-                
-                <!-- Use Case 2 -->
-                <div style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding: 40px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); text-align: center;">
-                    <div style="width: 80px; height: 80px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; margin: 0 auto 24px;">
-                        🏢
-                    </div>
-                    <h3 style="font-size: 24px; font-weight: 700; color: white; margin-bottom: 16px;">중소기업 소유주</h3>
-                    <p style="font-size: 16px; line-height: 1.6; color: rgba(255,255,255,0.9);">
-                        Reconcile accounts monthly in 초. Focus on growing your business, not data entry.
-                    </p>
-                </div>
-                
-                <!-- Use Case 3 -->
-                <div style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding: 40px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); text-align: center;">
-                    <div style="width: 80px; height: 80px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; margin: 0 auto 24px;">
-                        💼
-                    </div>
-                    <h3 style="font-size: 24px; font-weight: 700; color: white; margin-bottom: 16px;">프리랜서</h3>
-                    <p style="font-size: 16px; line-height: 1.6; color: rgba(255,255,255,0.9);">
-                        Organize expenses and receipts for tax time. Export directly to your accounting software.
-                    </p>
-                </div>
-                
-                <!-- Use Case 4 -->
-                <div style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding: 40px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); text-align: center;">
-                    <div style="width: 80px; height: 80px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; margin: 0 auto 24px;">
-                        🏪
-                    </div>
-                    <h3 style="font-size: 24px; font-weight: 700; color: white; margin-bottom: 16px;">소매 및 전자상거래</h3>
-                    <p style="font-size: 16px; line-height: 1.6; color: rgba(255,255,255,0.9);">
-                        Manage multiple payment accounts and platforms. Keep perfect records for inventory management.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
 
 </body>
 </html>
