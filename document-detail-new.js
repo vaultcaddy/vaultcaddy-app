@@ -1141,6 +1141,10 @@ function displayBankStatementContent(data) {
     console.log('🏦 顯示銀行對帳單內容');
     console.log('📊 原始數據:', JSON.stringify(data, null, 2));
     
+    // 🌐 獲取當前語言
+    const currentLang = getCurrentLanguage();
+    console.log('🌐 當前語言:', currentLang);
+    
     // ✅ 方案2：檢查文檔狀態
     const docStatus = currentDocument?.status || 'unknown';
     console.log('📊 文檔狀態:', docStatus);
