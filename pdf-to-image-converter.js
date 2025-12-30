@@ -102,12 +102,12 @@ class PDFToImageConverter {
             const quality = options.quality || 0.85; // ✅ 85% 質量（視覺無差異，文件小50%）
             
             console.log(`🎯 PDF轉換優化參數: scale=${scale}, quality=${quality}, format=${format}`);
+            console.log(`🚀 使用並行處理模式（最多3頁同時處理）`);
             
-            // 轉換每一頁
-            const imageFiles = [];
-            
-            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-                console.log(`📄 正在轉換第 ${pageNum}/${pdf.numPages} 頁...`);
+            // 🚀 單頁轉換函數（用於並行處理）
+            const convertSinglePage = async (pageNum) => {
+                const startTime = Date.now();
+                console.log(`📄 [頁${pageNum}] 開始轉換...`);
                 
                 const page = await pdf.getPage(pageNum);
                 const viewport = page.getViewport({ scale });
@@ -133,11 +133,46 @@ class PDFToImageConverter {
                 const imageFileName = file.name.replace('.pdf', `_page${pageNum}.jpg`);
                 const imageFile = new File([blob], imageFileName, { type: format });
                 
-                imageFiles.push(imageFile);
-                console.log(`✅ 第 ${pageNum} 頁轉換完成: ${imageFileName} (${(blob.size / 1024).toFixed(2)} KB)`);
+                const duration = Date.now() - startTime;
+                console.log(`✅ [頁${pageNum}] 轉換完成: ${(blob.size / 1024).toFixed(2)} KB (耗時 ${duration}ms)`);
+                
+                return imageFile;
+            };
+            
+            // 🚀 並行處理所有頁面（批量處理，每批最多3頁）
+            const maxConcurrent = 3; // 最多同時處理3頁
+            const imageFiles = [];
+            const totalPages = pdf.numPages;
+            
+            console.log(`📊 總共 ${totalPages} 頁，將分 ${Math.ceil(totalPages / maxConcurrent)} 批處理`);
+            
+            for (let i = 0; i < totalPages; i += maxConcurrent) {
+                const batchNum = Math.floor(i / maxConcurrent) + 1;
+                const batchStart = i + 1;
+                const batchEnd = Math.min(i + maxConcurrent, totalPages);
+                const batchSize = batchEnd - batchStart + 1;
+                
+                console.log(`🔄 [批次${batchNum}] 處理第 ${batchStart}-${batchEnd} 頁（共 ${batchSize} 頁）...`);
+                
+                // 創建當前批次的任務數組
+                const batchTasks = [];
+                for (let j = 0; j < batchSize; j++) {
+                    const pageNum = batchStart + j;
+                    batchTasks.push(convertSinglePage(pageNum));
+                }
+                
+                // ✅ 並行執行當前批次
+                const batchStartTime = Date.now();
+                const batchResults = await Promise.all(batchTasks);
+                const batchDuration = Date.now() - batchStartTime;
+                
+                imageFiles.push(...batchResults);
+                
+                console.log(`✅ [批次${batchNum}] 完成！處理 ${batchSize} 頁，耗時 ${batchDuration}ms（平均 ${Math.round(batchDuration/batchSize)}ms/頁）`);
+                console.log(`📊 總進度: ${imageFiles.length}/${totalPages} 頁 (${Math.round(imageFiles.length/totalPages*100)}%)`);
             }
             
-            console.log(`🎉 PDF 轉換完成，共生成 ${imageFiles.length} 張圖片`);
+            console.log(`🎉 PDF 轉換完成！共生成 ${imageFiles.length} 張圖片`);
             return imageFiles;
             
         } catch (error) {
