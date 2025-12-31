@@ -1,4 +1,17 @@
-<!DOCTYPE html>
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+创建针对Restaurant行业的v3页面
+明确说明为餐厅行业解决什么痛点
+"""
+
+from pathlib import Path
+
+def create_restaurant_v3():
+    root_dir = Path('/Users/cavlinyeung/ai-bank-parser')
+    
+    # 餐厅行业专属内容
+    restaurant_html = '''<!DOCTYPE html>
 <html lang="en-US">
 <head>
     <meta charset="UTF-8">
@@ -518,4 +531,23 @@
         </div>
     </section>
 </body>
-</html>
+</html>'''
+    
+    # 写入文件
+    output_path = root_dir / 'restaurant-accounting-v3-test.html'
+    with open(output_path, 'w', encoding='utf-8') as f:
+        f.write(restaurant_html)
+    
+    print("✅ 餐厅行业v3页面创建成功！")
+    print("=" * 80)
+    print("\n📄 文件: restaurant-accounting-v3-test.html")
+    print("🔗 访问: https://vaultcaddy.com/restaurant-accounting-v3-test.html")
+    print("\n✨ 新增内容:")
+    print("  ✅ 餐厅行业4大痛点（手动发票、外卖对账、多种支付、小费计算）")
+    print("  ✅ 针对性解决方案（自动化处理、平台整合、支付合并、小费自动化）")
+    print("  ✅ 餐厅专属功能（供应商发票、外卖平台、POS系统、酒水发票等）")
+    print("  ✅ 行业数据（节省10+小时/周、98%准确率、3秒处理）")
+
+if __name__ == '__main__':
+    create_restaurant_v3()
+
