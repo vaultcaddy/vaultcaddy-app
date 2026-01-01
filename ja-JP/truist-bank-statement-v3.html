@@ -38,7 +38,7 @@
         
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--dark);
+            background: #ffffff;
             color: #1e293b;
             overflow-x: hidden;
         }
@@ -1249,7 +1249,7 @@
                         <span>日本の銀行に対応していますか？</span>
                         <span class="faq-icon" style="font-size: 24px; color: #6366f1; transition: transform 0.3s;">+</span>
                     </div>
-                    <div class="faq-answer" style="display: none; margin-top: 15px; padding-left: 10px; color: #4a5568; line-height: 1.8;">
+                    <div class="faq-answer" style=" margin-top: 15px; padding-left: 10px; color: #4a5568; line-height: 1.8;">
                         はい、みずほ銀行、三菱UFJ銀行、三井住友銀行、りそな銀行、ゆうちょ銀行など、日本の主要銀行すべてに対応しています。日本語形式の明細書も正確に処理できます。
                     </div>
                 </div>
@@ -1258,7 +1258,7 @@
                         <span>料金は円建てですか？</span>
                         <span class="faq-icon" style="font-size: 24px; color: #6366f1; transition: transform 0.3s;">+</span>
                     </div>
-                    <div class="faq-answer" style="display: none; margin-top: 15px; padding-left: 10px; color: #4a5568; line-height: 1.8;">
+                    <div class="faq-answer" style=" margin-top: 15px; padding-left: 10px; color: #4a5568; line-height: 1.8;">
                         はい、すべて日本円（¥）で表示されます。スターター版は月払い¥926、年払い¥741/月（20%割引）。プロフェッショナル版は月払い¥1,852、年払い¥1,481/月。追加ページは¥10/ページです。
                     </div>
                 </div>
@@ -1267,7 +1267,7 @@
                         <span>日本の会計基準に対応していますか？</span>
                         <span class="faq-icon" style="font-size: 24px; color: #6366f1; transition: transform 0.3s;">+</span>
                     </div>
-                    <div class="faq-answer" style="display: none; margin-top: 15px; padding-left: 10px; color: #4a5568; line-height: 1.8;">
+                    <div class="faq-answer" style=" margin-top: 15px; padding-left: 10px; color: #4a5568; line-height: 1.8;">
                         はい、日本の会計基準（企業会計基準）に完全対応しています。出力形式は確定申告や法人税申告に必要な書類として直接使用できます。
                     </div>
                 </div>
@@ -1276,7 +1276,7 @@
                         <span>日本語の明細書も処理できますか？</span>
                         <span class="faq-icon" style="font-size: 24px; color: #6366f1; transition: transform 0.3s;">+</span>
                     </div>
-                    <div class="faq-answer" style="display: none; margin-top: 15px; padding-left: 10px; color: #4a5568; line-height: 1.8;">
+                    <div class="faq-answer" style=" margin-top: 15px; padding-left: 10px; color: #4a5568; line-height: 1.8;">
                         VaultCaddyのAIエンジンは日本語の銀行明細書を正確に処理するよう訓練されています。取引内容、金額、日付形式など、98%以上の精度で認識します。
                     </div>
                 </div>
@@ -1285,7 +1285,7 @@
                         <span>どの会計ソフトに対応していますか？</span>
                         <span class="faq-icon" style="font-size: 24px; color: #6366f1; transition: transform 0.3s;">+</span>
                     </div>
-                    <div class="faq-answer" style="display: none; margin-top: 15px; padding-left: 10px; color: #4a5568; line-height: 1.8;">
+                    <div class="faq-answer" style=" margin-top: 15px; padding-left: 10px; color: #4a5568; line-height: 1.8;">
                         QuickBooks、Xero、Excel、CSV形式に対応しています。出力データは日本で一般的に使用される会計ソフトに直接インポートできます。
                     </div>
                 </div>
@@ -1294,44 +1294,50 @@
     </section>
 
     <script>
-        // FAQ Toggle Functionality - 支持所有FAQ结构
+        // FAQ Toggle Functionality - 正确版本
         document.addEventListener('DOMContentLoaded', function() {
-            // 处理所有 .faq-question 元素（无论是button还是div）
+            // 处理所有 .faq-question 元素（button和div都支持）
             document.querySelectorAll('.faq-question').forEach(question => {
-                question.addEventListener('click', function() {
+                question.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
                     const faqItem = this.closest('.faq-item');
                     if (!faqItem) return;
                     
-                    // 查找答案元素（可能是nextElementSibling或者在同一个faq-item下）
+                    // 查找答案元素
                     let answer = this.nextElementSibling;
                     if (!answer || !answer.classList.contains('faq-answer')) {
                         answer = faqItem.querySelector('.faq-answer');
                     }
                     
-                    // 查找图标元素（可能是div或span）
+                    // 查找图标元素
                     let icon = this.querySelector('.faq-icon');
                     
                     if (answer) {
-                        const isHidden = answer.style.display === 'none' || answer.style.display === '' || 
-                                       window.getComputedStyle(answer).display === 'none';
+                        const isOpen = answer.style.maxHeight && answer.style.maxHeight !== '0px';
                         
-                        if (isHidden) {
-                            answer.style.display = 'block';
-                            if (icon) {
-                                icon.textContent = '−';
-                                icon.style.transform = 'rotate(180deg)';
-                            }
-                        } else {
-                            answer.style.display = 'none';
+                        if (isOpen) {
+                            // 关闭
+                            answer.style.maxHeight = '0';
+                            answer.style.paddingTop = '0';
+                            answer.style.paddingBottom = '0';
                             if (icon) {
                                 icon.textContent = '+';
                                 icon.style.transform = 'rotate(0deg)';
+                            }
+                        } else {
+                            // 打开
+                            answer.style.maxHeight = answer.scrollHeight + 100 + 'px';
+                            answer.style.paddingTop = '15px';
+                            answer.style.paddingBottom = '0';
+                            if (icon) {
+                                icon.textContent = '−';
+                                icon.style.transform = 'rotate(180deg)';
                             }
                         }
                     }
                 });
             });
-        });
         });
     </script>
 </body>

@@ -38,7 +38,7 @@
         
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--dark);
+            background: #ffffff;
             color: #1e293b;
             overflow-x: hidden;
         }
@@ -451,7 +451,7 @@
                         <span>한국 은행을 지원합니까？</span>
                         <span class="faq-icon" style="font-size: 24px; color: #6366f1; transition: transform 0.3s;">+</span>
                     </div>
-                    <div class="faq-answer" style="display: none; margin-top: 15px; padding-left: 10px; color: #4a5568; line-height: 1.8;">
+                    <div class="faq-answer" style=" margin-top: 15px; padding-left: 10px; color: #4a5568; line-height: 1.8;">
                         네, 신한은행, 우리은행, KB국민은행, 하나은행, NH농협은행, IBK기업은행, 카카오뱅크 등 한국의 모든 주요 은행을 지원합니다. 한글 형식의 명세서도 정확하게 처리합니다.
                     </div>
                 </div>
@@ -460,7 +460,7 @@
                         <span>가격은 원화로 계산됩니까？</span>
                         <span class="faq-icon" style="font-size: 24px; color: #6366f1; transition: transform 0.3s;">+</span>
                     </div>
-                    <div class="faq-answer" style="display: none; margin-top: 15px; padding-left: 10px; color: #4a5568; line-height: 1.8;">
+                    <div class="faq-answer" style=" margin-top: 15px; padding-left: 10px; color: #4a5568; line-height: 1.8;">
                         네, 모든 가격은 한국 원화（₩）로 표시됩니다. 스타터 플랜은 월 ₩7,998, 연간 ₩6,398/월（20% 할인）. 프로페셔널 플랜은 월 ₩15,996, 연간 ₩12,797/월. 추가 페이지는 ₩80/페이지입니다.
                     </div>
                 </div>
@@ -469,7 +469,7 @@
                         <span>한국 회계 기준을 준수합니까？</span>
                         <span class="faq-icon" style="font-size: 24px; color: #6366f1; transition: transform 0.3s;">+</span>
                     </div>
-                    <div class="faq-answer" style="display: none; margin-top: 15px; padding-left: 10px; color: #4a5568; line-height: 1.8;">
+                    <div class="faq-answer" style=" margin-top: 15px; padding-left: 10px; color: #4a5568; line-height: 1.8;">
                         네, 한국 회계 기준（K-IFRS）을 완전히 준수합니다. 출력 형식은 법인세 신고 및 부가가치세 신고에 필요한 서류로 직접 사용할 수 있습니다.
                     </div>
                 </div>
@@ -478,7 +478,7 @@
                         <span>한글 명세서도 처리할 수 있나요？</span>
                         <span class="faq-icon" style="font-size: 24px; color: #6366f1; transition: transform 0.3s;">+</span>
                     </div>
-                    <div class="faq-answer" style="display: none; margin-top: 15px; padding-left: 10px; color: #4a5568; line-height: 1.8;">
+                    <div class="faq-answer" style=" margin-top: 15px; padding-left: 10px; color: #4a5568; line-height: 1.8;">
                         VaultCaddy의 AI 엔진은 한글 은행 명세서를 정확하게 처리하도록 훈련되었습니다. 거래 내용, 금액, 날짜 형식 등을 98% 이상의 정확도로 인식합니다.
                     </div>
                 </div>
@@ -487,7 +487,7 @@
                         <span>어떤 회계 소프트웨어를 지원합니까？</span>
                         <span class="faq-icon" style="font-size: 24px; color: #6366f1; transition: transform 0.3s;">+</span>
                     </div>
-                    <div class="faq-answer" style="display: none; margin-top: 15px; padding-left: 10px; color: #4a5568; line-height: 1.8;">
+                    <div class="faq-answer" style=" margin-top: 15px; padding-left: 10px; color: #4a5568; line-height: 1.8;">
                         QuickBooks, Xero, Excel, CSV 형식을 지원합니다. 출력 데이터는 한국에서 일반적으로 사용되는 회계 소프트웨어에 직접 가져올 수 있습니다.
                     </div>
                 </div>
@@ -496,44 +496,50 @@
     </section>
 
     <script>
-        // FAQ Toggle Functionality - 支持所有FAQ结构
+        // FAQ Toggle Functionality - 正确版本
         document.addEventListener('DOMContentLoaded', function() {
-            // 处理所有 .faq-question 元素（无论是button还是div）
+            // 处理所有 .faq-question 元素（button和div都支持）
             document.querySelectorAll('.faq-question').forEach(question => {
-                question.addEventListener('click', function() {
+                question.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
                     const faqItem = this.closest('.faq-item');
                     if (!faqItem) return;
                     
-                    // 查找答案元素（可能是nextElementSibling或者在同一个faq-item下）
+                    // 查找答案元素
                     let answer = this.nextElementSibling;
                     if (!answer || !answer.classList.contains('faq-answer')) {
                         answer = faqItem.querySelector('.faq-answer');
                     }
                     
-                    // 查找图标元素（可能是div或span）
+                    // 查找图标元素
                     let icon = this.querySelector('.faq-icon');
                     
                     if (answer) {
-                        const isHidden = answer.style.display === 'none' || answer.style.display === '' || 
-                                       window.getComputedStyle(answer).display === 'none';
+                        const isOpen = answer.style.maxHeight && answer.style.maxHeight !== '0px';
                         
-                        if (isHidden) {
-                            answer.style.display = 'block';
-                            if (icon) {
-                                icon.textContent = '−';
-                                icon.style.transform = 'rotate(180deg)';
-                            }
-                        } else {
-                            answer.style.display = 'none';
+                        if (isOpen) {
+                            // 关闭
+                            answer.style.maxHeight = '0';
+                            answer.style.paddingTop = '0';
+                            answer.style.paddingBottom = '0';
                             if (icon) {
                                 icon.textContent = '+';
                                 icon.style.transform = 'rotate(0deg)';
+                            }
+                        } else {
+                            // 打开
+                            answer.style.maxHeight = answer.scrollHeight + 100 + 'px';
+                            answer.style.paddingTop = '15px';
+                            answer.style.paddingBottom = '0';
+                            if (icon) {
+                                icon.textContent = '−';
+                                icon.style.transform = 'rotate(180deg)';
                             }
                         }
                     }
                 });
             });
-        });
         });
     </script>
 <section class="hero">

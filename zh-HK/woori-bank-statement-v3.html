@@ -38,7 +38,7 @@
         
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--dark);
+            background: #ffffff;
             color: #1e293b;
             overflow-x: hidden;
         }
@@ -1249,7 +1249,7 @@
                         <span>支援香港的銀行嗎？</span>
                         <span class="faq-icon" style="font-size: 24px; color: #6366f1; transition: transform 0.3s;">+</span>
                     </div>
-                    <div class="faq-answer" style="display: none; margin-top: 15px; padding-left: 10px; color: #4a5568; line-height: 1.8;">
+                    <div class="faq-answer" style=" margin-top: 15px; padding-left: 10px; color: #4a5568; line-height: 1.8;">
                         我們支援所有香港主要銀行，包括匯豐銀行（HSBC）、恒生銀行、中國銀行（香港）、渣打銀行、東亞銀行、花旗銀行、星展銀行等。系統能準確處理繁體中文和英文混合格式的對帳單。
                     </div>
                 </div>
@@ -1258,7 +1258,7 @@
                         <span>價格以港幣計算嗎？</span>
                         <span class="faq-icon" style="font-size: 24px; color: #6366f1; transition: transform 0.3s;">+</span>
                     </div>
-                    <div class="faq-answer" style="display: none; margin-top: 15px; padding-left: 10px; color: #4a5568; line-height: 1.8;">
+                    <div class="faq-answer" style=" margin-top: 15px; padding-left: 10px; color: #4a5568; line-height: 1.8;">
                         是的，所有價格以港幣（HK$）顯示。入門版月付HK$46，年付HK$37/月（節省20%）。專業版月付HK$92，年付HK$74/月。額外頁數收費HK$0.5/頁。
                     </div>
                 </div>
@@ -1267,7 +1267,7 @@
                         <span>符合香港會計準則嗎？</span>
                         <span class="faq-icon" style="font-size: 24px; color: #6366f1; transition: transform 0.3s;">+</span>
                     </div>
-                    <div class="faq-answer" style="display: none; margin-top: 15px; padding-left: 10px; color: #4a5568; line-height: 1.8;">
+                    <div class="faq-answer" style=" margin-top: 15px; padding-left: 10px; color: #4a5568; line-height: 1.8;">
                         完全符合香港財務報告準則（HKFRS）。我們的匯出格式可直接用於香港稅務申報，包括利得稅和薪俸稅所需的文檔。
                     </div>
                 </div>
@@ -1276,7 +1276,7 @@
                         <span>如何處理中英文混合的對帳單？</span>
                         <span class="faq-icon" style="font-size: 24px; color: #6366f1; transition: transform 0.3s;">+</span>
                     </div>
-                    <div class="faq-answer" style="display: none; margin-top: 15px; padding-left: 10px; color: #4a5568; line-height: 1.8;">
+                    <div class="faq-answer" style=" margin-top: 15px; padding-left: 10px; color: #4a5568; line-height: 1.8;">
                         VaultCaddy能智能識別中英文混合格式的銀行對帳單。無論交易描述是中文、英文還是兩者混合，系統都能準確提取和分類。
                     </div>
                 </div>
@@ -1285,7 +1285,7 @@
                         <span>支援哪些會計軟體？</span>
                         <span class="faq-icon" style="font-size: 24px; color: #6366f1; transition: transform 0.3s;">+</span>
                     </div>
-                    <div class="faq-answer" style="display: none; margin-top: 15px; padding-left: 10px; color: #4a5568; line-height: 1.8;">
+                    <div class="faq-answer" style=" margin-top: 15px; padding-left: 10px; color: #4a5568; line-height: 1.8;">
                         支援QuickBooks、Xero、Excel和CSV格式。匯出的數據可直接導入香港常用的會計系統，無需額外處理。
                     </div>
                 </div>
@@ -1294,44 +1294,50 @@
     </section>
 
     <script>
-        // FAQ Toggle Functionality - 支持所有FAQ结构
+        // FAQ Toggle Functionality - 正确版本
         document.addEventListener('DOMContentLoaded', function() {
-            // 处理所有 .faq-question 元素（无论是button还是div）
+            // 处理所有 .faq-question 元素（button和div都支持）
             document.querySelectorAll('.faq-question').forEach(question => {
-                question.addEventListener('click', function() {
+                question.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
                     const faqItem = this.closest('.faq-item');
                     if (!faqItem) return;
                     
-                    // 查找答案元素（可能是nextElementSibling或者在同一个faq-item下）
+                    // 查找答案元素
                     let answer = this.nextElementSibling;
                     if (!answer || !answer.classList.contains('faq-answer')) {
                         answer = faqItem.querySelector('.faq-answer');
                     }
                     
-                    // 查找图标元素（可能是div或span）
+                    // 查找图标元素
                     let icon = this.querySelector('.faq-icon');
                     
                     if (answer) {
-                        const isHidden = answer.style.display === 'none' || answer.style.display === '' || 
-                                       window.getComputedStyle(answer).display === 'none';
+                        const isOpen = answer.style.maxHeight && answer.style.maxHeight !== '0px';
                         
-                        if (isHidden) {
-                            answer.style.display = 'block';
-                            if (icon) {
-                                icon.textContent = '−';
-                                icon.style.transform = 'rotate(180deg)';
-                            }
-                        } else {
-                            answer.style.display = 'none';
+                        if (isOpen) {
+                            // 关闭
+                            answer.style.maxHeight = '0';
+                            answer.style.paddingTop = '0';
+                            answer.style.paddingBottom = '0';
                             if (icon) {
                                 icon.textContent = '+';
                                 icon.style.transform = 'rotate(0deg)';
+                            }
+                        } else {
+                            // 打开
+                            answer.style.maxHeight = answer.scrollHeight + 100 + 'px';
+                            answer.style.paddingTop = '15px';
+                            answer.style.paddingBottom = '0';
+                            if (icon) {
+                                icon.textContent = '−';
+                                icon.style.transform = 'rotate(180deg)';
                             }
                         }
                     }
                 });
             });
-        });
         });
     </script>
 </body>
