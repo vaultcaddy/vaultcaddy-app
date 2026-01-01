@@ -1294,22 +1294,44 @@
     </section>
 
     <script>
-        // FAQ Toggle Functionality
-        document.querySelectorAll('.faq-question').forEach(question => {
-            question.addEventListener('click', () => {
-                const answer = question.nextElementSibling;
-                const icon = question.querySelector('.faq-icon');
-                
-                if (answer.style.display === 'none' || answer.style.display === '') {
-                    answer.style.display = 'block';
-                    icon.textContent = '−';
-                    icon.style.transform = 'rotate(180deg)';
-                } else {
-                    answer.style.display = 'none';
-                    icon.textContent = '+';
-                    icon.style.transform = 'rotate(0deg)';
-                }
+        // FAQ Toggle Functionality - 支持所有FAQ结构
+        document.addEventListener('DOMContentLoaded', function() {
+            // 处理所有 .faq-question 元素（无论是button还是div）
+            document.querySelectorAll('.faq-question').forEach(question => {
+                question.addEventListener('click', function() {
+                    const faqItem = this.closest('.faq-item');
+                    if (!faqItem) return;
+                    
+                    // 查找答案元素（可能是nextElementSibling或者在同一个faq-item下）
+                    let answer = this.nextElementSibling;
+                    if (!answer || !answer.classList.contains('faq-answer')) {
+                        answer = faqItem.querySelector('.faq-answer');
+                    }
+                    
+                    // 查找图标元素（可能是div或span）
+                    let icon = this.querySelector('.faq-icon');
+                    
+                    if (answer) {
+                        const isHidden = answer.style.display === 'none' || answer.style.display === '' || 
+                                       window.getComputedStyle(answer).display === 'none';
+                        
+                        if (isHidden) {
+                            answer.style.display = 'block';
+                            if (icon) {
+                                icon.textContent = '−';
+                                icon.style.transform = 'rotate(180deg)';
+                            }
+                        } else {
+                            answer.style.display = 'none';
+                            if (icon) {
+                                icon.textContent = '+';
+                                icon.style.transform = 'rotate(0deg)';
+                            }
+                        }
+                    }
+                });
             });
+        });
         });
     </script>
 </body>
