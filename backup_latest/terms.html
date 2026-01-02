@@ -259,7 +259,7 @@
             
             // 獲取用戶首字母
             function getUserInitial() {
-                if (!userDisplayName || userDisplayName.trim() === '') {
+                if (!userDisplayName | userDisplayName.trim() === '') {
                     // 如果沒有 displayName，使用 email 的第一個字母
                     return userEmail ? userEmail.charAt(0).toUpperCase() : 'U';
                 }
@@ -452,16 +452,16 @@
                     if (isLoggedIn) {
                         // ✅ 已登入：顯示用戶頭像
                         const currentUser = window.simpleAuth.getCurrentUser();
-                        userEmail = currentUser.email || '';
-                        userDisplayName = currentUser.displayName || '';
+                        userEmail = currentUser.email | '';
+                        userDisplayName = currentUser.displayName | '';
                         
                         // 🔥 從 Firestore 獲取 displayName 和 credits
                         if (window.simpleDataManager && window.simpleDataManager.initialized) {
                             try {
                                 const userDoc = await window.simpleDataManager.getUserDocument();
                                 if (userDoc) {
-                                    userDisplayName = userDoc.displayName || userDisplayName;
-                                    userCredits = userDoc.credits || 0;
+                                    userDisplayName = userDoc.displayName | userDisplayName;
+                                    userCredits = userDoc.credits | 0;
                                     console.log('✅ index.html 獲取 Credits:', userCredits);
                                 }
                             } catch (error) {
@@ -812,7 +812,7 @@
         
         window.toggleDropdown = async function() {
             const dropdown = document.getElementById('user-dropdown');
-            if (dropdown.style.display === 'none' || !dropdown.style.display) {
+            if (dropdown.style.display === 'none' | !dropdown.style.display) {
                 dropdown.style.display = 'block';
                 
                 if (window.simpleDataManager && window.simpleDataManager.initialized) {
@@ -827,7 +827,7 @@
         function getUserInitial() {
             if (window.simpleAuth && window.simpleAuth.getCurrentUser()) {
                 const user = window.simpleAuth.getCurrentUser();
-                const displayName = user.displayName || user.email || 'U';
+                const displayName = user.displayName | user.email | 'U';
                 const names = displayName.split(' ');
                 if (names.length >= 2) {
                     return (names[0][0] + names[1][0]).toUpperCase();
@@ -846,7 +846,7 @@
                 
                 if (isLoggedIn) {
                     const currentUser = window.simpleAuth.getCurrentUser();
-                    const userEmail = currentUser.email || '';
+                    const userEmail = currentUser.email | '';
                     let userCredits = 0;
                     
                     if (window.simpleDataManager && window.simpleDataManager.initialized) {

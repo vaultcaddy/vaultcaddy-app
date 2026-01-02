@@ -63,7 +63,7 @@
                 document.body.classList.add('auth-ready');
                 
                 // 如果沒有登入，重定向到首頁
-                if (!window.simpleAuth || !window.simpleAuth.currentUser) {
+                if (!window.simpleAuth | !window.simpleAuth.currentUser) {
                     console.log('❌ 超時且未登入，重定向到首頁');
                     setTimeout(function() {
                         window.location.href = 'index.html';
@@ -1865,7 +1865,7 @@
 <!-- Google Analytics 4 -->
 <script async="" src="https://www.googletagmanager.com/gtag/js?id=G-LWPEKNC7RQ"></script>
 <script>
-      window.dataLayer = window.dataLayer || [];
+      window.dataLayer = window.dataLayer | [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'G-LWPEKNC7RQ');
@@ -2175,16 +2175,16 @@
                     if (isLoggedIn) {
                         // ✅ 已登入：顯示用戶頭像
                         const currentUser = window.simpleAuth.getCurrentUser();
-                        userEmail = currentUser.email || '';
-                        userDisplayName = currentUser.displayName || '';
+                        userEmail = currentUser.email | '';
+                        userDisplayName = currentUser.displayName | '';
                         
                         // 🔥 從 Firestore 獲取 displayName 和 credits
                         if (window.simpleDataManager && window.simpleDataManager.initialized) {
                             try {
                                 const userDoc = await window.simpleDataManager.getUserDocument();
                                 if (userDoc) {
-                                    userDisplayName = userDoc.displayName || userDisplayName;
-                                    userCredits = userDoc.credits || 0;
+                                    userDisplayName = userDoc.displayName | userDisplayName;
+                                    userCredits = userDoc.credits | 0;
                                     console.log('✅ index.html 獲取 Credits:', userCredits);
                                 }
                             } catch (error) {
@@ -2785,9 +2785,9 @@
             let filtered = [...allDocuments];
             
             // 篩選日期
-            if (dateFilters.dateFrom || dateFilters.dateTo) {
+            if (dateFilters.dateFrom | dateFilters.dateTo) {
                 filtered = filtered.filter(doc => {
-                    const docDate = doc.processedData?.invoiceDate || doc.processedData?.transactionDate || doc.processedData?.date;
+                    const docDate = doc.processedData?.invoiceDate | doc.processedData?.transactionDate | doc.processedData?.date;
                     if (!docDate) return false;
                     
                     const date = new Date(docDate);
@@ -2802,9 +2802,9 @@
             }
             
             // 篩選上傳日期
-            if (dateFilters.uploadDateFrom || dateFilters.uploadDateTo) {
+            if (dateFilters.uploadDateFrom | dateFilters.uploadDateTo) {
                 filtered = filtered.filter(doc => {
-                    const uploadDate = doc.uploadDate || doc.createdAt;
+                    const uploadDate = doc.uploadDate | doc.createdAt;
                     if (!uploadDate) return false;
                     
                     // 轉換 Firestore Timestamp 或 Date 對象
@@ -2925,7 +2925,7 @@
             }
             
             // 使用過濾後的文檔（支持搜索功能和日期篩選）
-            const docsToRender = window.filteredDocuments || allDocuments;
+            const docsToRender = window.filteredDocuments | allDocuments;
             
             // 複製並排序文檔
             const sortedDocs = [...docsToRender].sort((a, b) => {
@@ -2933,35 +2933,35 @@
                 
                 switch (currentSortColumn) {
                     case 'name':
-                        aVal = (a.name || a.fileName || '').toLowerCase();
-                        bVal = (b.name || b.fileName || '').toLowerCase();
+                        aVal = (a.name | a.fileName | '').toLowerCase();
+                        bVal = (b.name | b.fileName | '').toLowerCase();
                         break;
                     case 'type':
-                        aVal = (a.documentType || a.type || '').toLowerCase();
-                        bVal = (b.documentType || b.type || '').toLowerCase();
+                        aVal = (a.documentType | a.type | '').toLowerCase();
+                        bVal = (b.documentType | b.type | '').toLowerCase();
                         break;
                     case 'vendor':
-                        const aData = a.processedData || {};
-                        const bData = b.processedData || {};
-                        aVal = (aData.vendor || aData.supplier || aData.merchantName || '-').toLowerCase();
-                        bVal = (bData.vendor || bData.supplier || bData.merchantName || '-').toLowerCase();
+                        const aData = a.processedData | {};
+                        const bData = b.processedData | {};
+                        aVal = (aData.vendor | aData.supplier | aData.merchantName | '-').toLowerCase();
+                        bVal = (bData.vendor | bData.supplier | bData.merchantName | '-').toLowerCase();
                         break;
                     case 'amount':
-                        const aAmount = (a.processedData?.totalAmount || a.processedData?.amount || a.processedData?.total || 0);
-                        const bAmount = (b.processedData?.totalAmount || b.processedData?.amount || b.processedData?.total || 0);
-                        aVal = parseFloat(aAmount) || 0;
-                        bVal = parseFloat(bAmount) || 0;
+                        const aAmount = (a.processedData?.totalAmount | a.processedData?.amount | a.processedData?.total | 0);
+                        const bAmount = (b.processedData?.totalAmount | b.processedData?.amount | b.processedData?.total | 0);
+                        aVal = parseFloat(aAmount) | 0;
+                        bVal = parseFloat(bAmount) | 0;
                         break;
                     case 'date':
-                        const aDate = a.processedData?.invoiceDate || a.processedData?.transactionDate || a.processedData?.date || '';
-                        const bDate = b.processedData?.invoiceDate || b.processedData?.transactionDate || b.processedData?.date || '';
+                        const aDate = a.processedData?.invoiceDate | a.processedData?.transactionDate | a.processedData?.date | '';
+                        const bDate = b.processedData?.invoiceDate | b.processedData?.transactionDate | b.processedData?.date | '';
                         aVal = aDate ? new Date(aDate).getTime() : 0;
                         bVal = bDate ? new Date(bDate).getTime() : 0;
                         break;
                     case 'status':
                         const statusOrder = { 'processing': 1, 'failed': 2, 'completed': 3 };
-                        aVal = statusOrder[a.status] || 999;
-                        bVal = statusOrder[b.status] || 999;
+                        aVal = statusOrder[a.status] | 999;
+                        bVal = statusOrder[b.status] | 999;
                         break;
                     case 'uploadDate':
                         aVal = a.createdAt ? (typeof a.createdAt === 'object' && a.createdAt.seconds ? a.createdAt.seconds * 1000 : new Date(a.createdAt).getTime()) : 0;
@@ -2980,8 +2980,8 @@
             });
             
             // 支持分頁（如果有分頁參數）
-            const currentPage = window.currentPage || 1;
-            const rowsPerPage = window.rowsPerPage || sortedDocs.length;
+            const currentPage = window.currentPage | 1;
+            const rowsPerPage = window.rowsPerPage | sortedDocs.length;
             const startIndex = (currentPage - 1) * rowsPerPage;
             const endIndex = startIndex + rowsPerPage;
             const pageDocuments = sortedDocs.slice(startIndex, endIndex);
@@ -3005,7 +3005,7 @@
             tbody.innerHTML = pageDocuments.map(doc => {
                 const isProcessing = doc.status === 'processing';
                 const isFailed = doc.status === 'failed';
-                const data = doc.processedData || {};
+                const data = doc.processedData | {};
                 
                 // ✅ 修復：正確處理 Firebase Timestamp
                 let uploadDate = 'Invalid Date';
@@ -3013,7 +3013,7 @@
                     if (typeof doc.createdAt === 'object' && doc.createdAt.seconds) {
                         // Firebase Timestamp 對象
                         uploadDate = new Date(doc.createdAt.seconds * 1000).toLocaleDateString('zh-TW');
-                    } else if (typeof doc.createdAt === 'string' || typeof doc.createdAt === 'number') {
+                    } else if (typeof doc.createdAt === 'string' | typeof doc.createdAt === 'number') {
                         // 字符串或時間戳
                         uploadDate = new Date(doc.createdAt).toLocaleDateString('zh-TW');
                     }
@@ -3027,21 +3027,21 @@
                             'receipt': { icon: 'fa-receipt', color: '#8b5cf6', label: '收據' },
                             'general': { icon: 'fa-file-alt', color: '#6b7280', label: '一般' }
                         };
-                        return types[type] || types['general'];
+                        return types[type] | types['general'];
                     };
                     
-                    const typeInfo = getTypeIcon(doc.documentType || doc.type);
+                    const typeInfo = getTypeIcon(doc.documentType | doc.type);
                     
                     // 提取關鍵數據（根據文檔類型）
                     let vendor, amount, amountDisplay, date;
                     
                     // ✅ 修復：支持 bank_statement 和 bank_statements
-                    const docType = doc.documentType || doc.type || '';
-                    if (docType === 'bank_statement' || docType === 'bank_statements') {
+                    const docType = doc.documentType | doc.type | '';
+                    if (docType === 'bank_statement' | docType === 'bank_statements') {
                         // 銀行對帳單：顯示銀行名稱 + 持有人 + 帳號、結餘、對帳單期間
-                        const bankName = data.bankName || data.bank_name || data.bank || '';
-                        const accountHolder = data.accountHolder || data.account_holder || '';
-                        const accountNumber = data.accountNumber || data.account_number || '';
+                        const bankName = data.bankName | data.bank_name | data.bank | '';
+                        const accountHolder = data.accountHolder | data.account_holder | '';
+                        const accountNumber = data.accountNumber | data.account_number | '';
                         
                         // ✅ 組合顯示格式（3行顯示）
                         const vendorLines = [];
@@ -3051,9 +3051,8 @@
                         vendor = vendorLines.length > 0 ? vendorLines.join('<br>') : '-';
                         
                         // ✅ 提取期初和期末餘額
-                        const openingBalance = data.openingBalance || data.opening_balance || 0;
-                        const closingBalance = data.closingBalance || data.closing_balance || data.balance || 
-                                 data.endBalance || data.finalBalance || 0;
+                        const openingBalance = data.openingBalance | data.opening_balance | 0;
+                        const closingBalance = data.closingBalance | data.closing_balance | data.balance | data.endBalance | data.finalBalance | 0;
                         
                         // ✅ 顯示格式：Start: $X,XXX.XX | End: $Y,YYY.YY
                         // 🔧 如果餘額為0，顯示"處理中..."而不是$0.00
@@ -3064,7 +3063,7 @@
                         }
                         
                         // ✅ 提取對帳單期間並轉換格式（22 Feb 2025 to 22 Mar 2025）
-                        let statementPeriod = data.statementPeriod || data.statement_period || data.period || '';
+                        let statementPeriod = data.statementPeriod | data.statement_period | data.period | '';
                         if (statementPeriod && statementPeriod.includes('to')) {
                             // 如果是 "2025-02-22 to 2025-03-22" 格式，轉換為 "22 Feb 2025 to 22 Mar 2025"
                             const parts = statementPeriod.split(' to ');
@@ -3080,13 +3079,13 @@
                                 }
                             }
                         }
-                        date = statementPeriod || data.statementDate || data.statement_date || data.date || '-';
+                        date = statementPeriod | data.statementDate | data.statement_date | data.date | '-';
                     } else {
                         // 發票/收據/一般文檔：顯示供應商、總金額、日期
-                        vendor = data.vendor || data.supplier || data.merchantName || data.source || '-';
-                        amount = data.totalAmount || data.amount || data.total;
+                        vendor = data.vendor | data.supplier | data.merchantName | data.source | '-';
+                        amount = data.totalAmount | data.amount | data.total;
                         amountDisplay = amount ? `$${parseFloat(amount).toLocaleString('zh-TW', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '-';
-                        date = data.invoiceDate || data.transactionDate || data.date || '-';
+                        date = data.invoiceDate | data.transactionDate | data.date | '-';
                     }
                     
                     return `
@@ -3097,7 +3096,7 @@
                             <td class="document-name-cell" style="padding: 1rem;">
                                 <div style="display: flex; align-items: center; gap: 0.75rem; ${!isProcessing && !isFailed ? 'cursor: pointer;' : 'cursor: default;'}" ${!isProcessing && !isFailed ? `onclick="viewDocument('${doc.id}')"` : ''}>
                                     <i class="fas fa-file-pdf" style="color: #ef4444; font-size: 1.25rem;"></i>
-                                    <span style="font-weight: 500; color: #1f2937;">${doc.name || doc.fileName || '未命名'}</span>
+                                    <span style="font-weight: 500; color: #1f2937;">${doc.name | doc.fileName | '未命名'}</span>
                                 </div>
                             </td>
                             
@@ -3180,14 +3179,14 @@
                     paginationButtons[1].style.color = currentPage === 1 ? '#9ca3af' : '#374151';
                     
                     // 下一頁按鈕
-                    paginationButtons[2].disabled = currentPage === totalPages || totalPages === 0;
-                    paginationButtons[2].style.cursor = (currentPage === totalPages || totalPages === 0) ? 'not-allowed' : 'pointer';
-                    paginationButtons[2].style.color = (currentPage === totalPages || totalPages === 0) ? '#9ca3af' : '#374151';
+                    paginationButtons[2].disabled = currentPage === totalPages | totalPages === 0;
+                    paginationButtons[2].style.cursor = (currentPage === totalPages | totalPages === 0) ? 'not-allowed' : 'pointer';
+                    paginationButtons[2].style.color = (currentPage === totalPages | totalPages === 0) ? '#9ca3af' : '#374151';
                     
                     // 最後一頁按鈕
-                    paginationButtons[3].disabled = currentPage === totalPages || totalPages === 0;
-                    paginationButtons[3].style.cursor = (currentPage === totalPages || totalPages === 0) ? 'not-allowed' : 'pointer';
-                    paginationButtons[3].style.color = (currentPage === totalPages || totalPages === 0) ? '#9ca3af' : '#374151';
+                    paginationButtons[3].disabled = currentPage === totalPages | totalPages === 0;
+                    paginationButtons[3].style.cursor = (currentPage === totalPages | totalPages === 0) ? 'not-allowed' : 'pointer';
+                    paginationButtons[3].style.color = (currentPage === totalPages | totalPages === 0) ? '#9ca3af' : '#374151';
                 }
         }
         
@@ -3258,7 +3257,7 @@
                     const blob = await response.blob();
                     const file = new File([blob], doc.fileName, { type: blob.type });
                     
-                    const pages = doc.pages || 1;
+                    const pages = doc.pages | 1;
                     
                     console.log(`🔄 恢復處理: ${doc.fileName} (${pages} 頁)`);
                     
@@ -3296,7 +3295,7 @@
             const fileInput = document.getElementById('aiFileInput');
             const uploadArea = document.getElementById('aiUploadArea');
             
-            if (!fileInput || !uploadArea) {
+            if (!fileInput | !uploadArea) {
                 console.error('❌ 找不到上傳元素');
                 return;
             }
@@ -3650,7 +3649,7 @@
                 
                 await window.simpleDataManager.updateDocument(currentProjectId, docId, {
                     status: 'completed',
-                    processedData: result.data || result.extractedData
+                    processedData: result.data | result.extractedData
                 });
                 
                 console.log('✅ 文檔狀態已更新');
@@ -3694,7 +3693,7 @@
             }
             
             // ✅ 使用排隊系統（混合並發，最多 3 個）
-            const fileName = files[0]?.name || docId;
+            const fileName = files[0]?.name | docId;
             return aiQueue.add(async () => {
                 try {
                     // ✅ 添加到處理鎖
@@ -3798,13 +3797,13 @@
         // ✅ 合併多頁結果的函數
         function mergeMultiPageResults(results, documentType) {
             if (results.length === 1) {
-                return results[0].data || results[0].extractedData;
+                return results[0].data | results[0].extractedData;
             }
             
             // 根據文檔類型合併
             if (documentType === 'bank_statement') {
                 return mergeBankStatementPages(results);
-            } else if (documentType === 'invoice' || documentType === 'receipt') {
+            } else if (documentType === 'invoice' | documentType === 'receipt') {
                 return mergeInvoiceReceiptPages(results);
             } else {
                 return mergeGeneralPages(results);
@@ -3816,19 +3815,19 @@
             const allTransactions = [];
             let totalOpeningBalance = 0;
             let totalClosingBalance = 0;
-            const firstPage = results[0].data || results[0].extractedData;
+            const firstPage = results[0].data | results[0].extractedData;
             
             results.forEach((result, index) => {
-                const data = result.data || result.extractedData;
+                const data = result.data | result.extractedData;
                 if (data.transactions) {
                     allTransactions.push(...data.transactions);
                 }
                 // ✅ 兼容两种命名方式（驼峰和下划线）
                 if (index === 0) {
-                    totalOpeningBalance = parseFloat(data.openingBalance || data.opening_balance) || 0;
+                    totalOpeningBalance = parseFloat(data.openingBalance | data.opening_balance) | 0;
                 }
                 if (index === results.length - 1) {
-                    totalClosingBalance = parseFloat(data.closingBalance || data.closing_balance) || 0;
+                    totalClosingBalance = parseFloat(data.closingBalance | data.closing_balance) | 0;
                 }
             });
             
@@ -3845,15 +3844,15 @@
         function mergeInvoiceReceiptPages(results) {
             const allItems = [];
             let totalAmount = 0;
-            const firstPage = results[0].data || results[0].extractedData;
+            const firstPage = results[0].data | results[0].extractedData;
             
             results.forEach(result => {
-                const data = result.data || result.extractedData;
+                const data = result.data | result.extractedData;
                 if (data.items) {
                     allItems.push(...data.items);
                 }
                 if (data.totalAmount) {
-                    totalAmount += parseFloat(data.totalAmount) || 0;
+                    totalAmount += parseFloat(data.totalAmount) | 0;
                 }
             });
             
@@ -3868,11 +3867,11 @@
         // ✅ 合併通用文檔多頁結果
         function mergeGeneralPages(results) {
             const allText = results.map((r, i) => {
-                const data = r.data || r.extractedData;
-                return `--- Page ${i + 1} ---\n${data.full_text || data.text || ''}`;
+                const data = r.data | r.extractedData;
+                return `--- Page ${i + 1} ---\n${data.full_text | data.text | ''}`;
             }).join('\n\n');
             
-            const firstPage = results[0].data || results[0].extractedData;
+            const firstPage = results[0].data | results[0].extractedData;
             
             return {
                 ...firstPage,
@@ -4069,9 +4068,9 @@
                 if (!typeCell) return;
                 
                 const typeText = typeCell.textContent.trim();
-                if (typeText === '發票' || typeText.includes('發票')) {
+                if (typeText === '發票' | typeText.includes('發票')) {
                     hasInvoice = true;
-                } else if (typeText === '銀行對帳單' || typeText.includes('銀行')) {
+                } else if (typeText === '銀行對帳單' | typeText.includes('銀行')) {
                     hasBankStatement = true;
                 }
             });
@@ -4259,7 +4258,7 @@
         
         // ✅ 按類型導出文檔（內部輔助函數）
         async function exportByType(docs, format) {
-            if (!docs || docs.length === 0) {
+            if (!docs | docs.length === 0) {
                 console.log('⚠️ 沒有文檔需要導出');
                 return;
             }
@@ -4351,12 +4350,12 @@
                 };
                 
                 docsToExport.forEach(doc => {
-                    const docType = (doc.documentType || '').toLowerCase();
-                    if (docType === 'bank_statement' || docType === 'bank_statements') {
+                    const docType = (doc.documentType | '').toLowerCase();
+                    if (docType === 'bank_statement' | docType === 'bank_statements') {
                         groupedDocs.bank_statements.push(doc);
-                    } else if (docType === 'invoice' || docType === 'invoices') {
+                    } else if (docType === 'invoice' | docType === 'invoices') {
                         groupedDocs.invoices.push(doc);
-                    } else if (docType === 'receipt' || docType === 'receipts') {
+                    } else if (docType === 'receipt' | docType === 'receipts') {
                         groupedDocs.receipts.push(doc);
                     } else {
                         groupedDocs.general.push(doc);
@@ -4384,7 +4383,7 @@
                         exportedCount++;
                     }
                     
-                    if (groupedDocs.receipts.length > 0 || groupedDocs.general.length > 0) {
+                    if (groupedDocs.receipts.length > 0 | groupedDocs.general.length > 0) {
                         const otherDocs = [...groupedDocs.receipts, ...groupedDocs.general];
                         await exportByType(otherDocs, 'general_csv');
                         exportedCount++;
@@ -4430,10 +4429,10 @@
                         // Xero CSV（根據文檔類型導出）
                         // 分離銀行對帳單和發票
                         const xeroBankDocs = docsToExport.filter(d => 
-                            (d.documentType || d.type || '').toLowerCase().includes('bank')
+                            (d.documentType | d.type | '').toLowerCase().includes('bank')
                         );
                         const xeroInvoiceDocs = docsToExport.filter(d => 
-                            (d.documentType || d.type || '').toLowerCase().includes('invoice')
+                            (d.documentType | d.type | '').toLowerCase().includes('invoice')
                         );
                         
                         if (xeroBankDocs.length > 0 && window.BankStatementExport) {
@@ -4457,10 +4456,10 @@
                     case 'quickbooks_csv':
                         // QuickBooks CSV（根據文檔類型導出）
                         const qbBankDocs = docsToExport.filter(d => 
-                            (d.documentType || d.type || '').toLowerCase().includes('bank')
+                            (d.documentType | d.type | '').toLowerCase().includes('bank')
                         );
                         const qbInvoiceDocs = docsToExport.filter(d => 
-                            (d.documentType || d.type || '').toLowerCase().includes('invoice')
+                            (d.documentType | d.type | '').toLowerCase().includes('invoice')
                         );
                         
                         if (qbBankDocs.length > 0 && window.BankStatementExport) {
@@ -4510,10 +4509,10 @@
                     case 'iif':
                         // IIF 格式（根據文檔類型導出）
                         const iifBankDocs = docsToExport.filter(d => 
-                            (d.documentType || d.type || '').toLowerCase().includes('bank')
+                            (d.documentType | d.type | '').toLowerCase().includes('bank')
                         );
                         const iifInvoiceDocs = docsToExport.filter(d => 
-                            (d.documentType || d.type || '').toLowerCase().includes('invoice')
+                            (d.documentType | d.type | '').toLowerCase().includes('invoice')
                         );
                         
                         if (iifBankDocs.length > 0) {
@@ -4535,10 +4534,10 @@
                     case 'qbo':
                         // QBO 格式（根據文檔類型導出）
                         const qboBankDocs = docsToExport.filter(d => 
-                            (d.documentType || d.type || '').toLowerCase().includes('bank')
+                            (d.documentType | d.type | '').toLowerCase().includes('bank')
                         );
                         const qboInvoiceDocs = docsToExport.filter(d => 
-                            (d.documentType || d.type || '').toLowerCase().includes('invoice')
+                            (d.documentType | d.type | '').toLowerCase().includes('invoice')
                         );
                         
                         if (qboBankDocs.length > 0) {
@@ -4609,13 +4608,13 @@
             const rows = [headers.join(',')];
             
             docs.forEach(doc => {
-                const data = doc.processedData || {};
+                const data = doc.processedData | {};
                 
                 // 提取項目明細
                 let itemsDetails = '';
                 if (data.items && Array.isArray(data.items)) {
                     itemsDetails = data.items.map(item => {
-                        return `${item.description || item.name || ''} x${item.quantity || 1} @ $${item.unitPrice || item.price || 0}`;
+                        return `${item.description | item.name | ''} x${item.quantity | 1} @ $${item.unitPrice | item.price | 0}`;
                     }).join('; ');
                 }
                 
@@ -4623,27 +4622,27 @@
                 const uploadDate = doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleDateString('zh-TW') : '';
                 
                 const row = [
-                    `"${(doc.fileName || doc.name || '').replace(/"/g, '""')}"`,
-                    data.documentType || doc.type || '',
-                    data.invoiceNumber || data.receiptNumber || data.documentNumber || '',
-                    data.invoiceDate || data.transactionDate || data.date || '',
-                    `"${(data.vendor || data.supplier || data.merchantName || data.source || '').replace(/"/g, '""')}"`,
-                    `"${(data.vendorAddress || data.supplierAddress || '').replace(/"/g, '""')}"`,
-                    data.vendorPhone || data.supplierPhone || '',
-                    data.vendorEmail || data.supplierEmail || '',
-                    `"${(data.customerName || data.billTo || '').replace(/"/g, '""')}"`,
-                    `"${(data.customerAddress || data.billToAddress || '').replace(/"/g, '""')}"`,
+                    `"${(doc.fileName | doc.name | '').replace(/"/g, '""')}"`,
+                    data.documentType | doc.type | '',
+                    data.invoiceNumber | data.receiptNumber | data.documentNumber | '',
+                    data.invoiceDate | data.transactionDate | data.date | '',
+                    `"${(data.vendor | data.supplier | data.merchantName | data.source | '').replace(/"/g, '""')}"`,
+                    `"${(data.vendorAddress | data.supplierAddress | '').replace(/"/g, '""')}"`,
+                    data.vendorPhone | data.supplierPhone | '',
+                    data.vendorEmail | data.supplierEmail | '',
+                    `"${(data.customerName | data.billTo | '').replace(/"/g, '""')}"`,
+                    `"${(data.customerAddress | data.billToAddress | '').replace(/"/g, '""')}"`,
                     `"${itemsDetails.replace(/"/g, '""')}"`,
-                    data.subtotal || data.subTotal || '',
-                    data.tax || data.taxAmount || '',
-                    data.taxRate || '',
-                    data.totalAmount || data.total || data.amount || '',
-                    data.currency || 'HKD',
-                    `"${(data.paymentTerms || '').replace(/"/g, '""')}"`,
-                    data.paymentMethod || '',
-                    data.bankAccount || data.accountNumber || '',
-                    `"${(data.notes || data.memo || '').replace(/"/g, '""')}"`,
-                    doc.status || '',
+                    data.subtotal | data.subTotal | '',
+                    data.tax | data.taxAmount | '',
+                    data.taxRate | '',
+                    data.totalAmount | data.total | data.amount | '',
+                    data.currency | 'HKD',
+                    `"${(data.paymentTerms | '').replace(/"/g, '""')}"`,
+                    data.paymentMethod | '',
+                    data.bankAccount | data.accountNumber | '',
+                    `"${(data.notes | data.memo | '').replace(/"/g, '""')}"`,
+                    doc.status | '',
                     uploadDate
                 ];
                 rows.push(row.join(','));
@@ -4660,26 +4659,26 @@
             iif += '!ENDTRNS\n';
             
             docs.forEach((doc, index) => {
-                const data = doc.processedData || {};
+                const data = doc.processedData | {};
                 const trnsId = `TRNS-${index + 1}`;
                 
                 // 格式化日期為 MM/DD/YYYY
                 let date = new Date().toLocaleDateString('en-US');
-                if (data.invoiceDate || data.transactionDate || data.date) {
-                    const dateStr = data.invoiceDate || data.transactionDate || data.date;
+                if (data.invoiceDate | data.transactionDate | data.date) {
+                    const dateStr = data.invoiceDate | data.transactionDate | data.date;
                     date = new Date(dateStr).toLocaleDateString('en-US');
                 }
                 
-                const vendor = data.vendor || data.supplier || data.merchantName || data.source || 'Unknown Vendor';
-                const totalAmount = data.totalAmount || data.total || data.amount || '0.00';
-                const subtotal = data.subtotal || data.subTotal || totalAmount;
-                const taxAmount = data.tax || data.taxAmount || '0.00';
-                const invoiceNumber = data.invoiceNumber || data.receiptNumber || data.documentNumber || `INV-${index + 1}`;
+                const vendor = data.vendor | data.supplier | data.merchantName | data.source | 'Unknown Vendor';
+                const totalAmount = data.totalAmount | data.total | data.amount | '0.00';
+                const subtotal = data.subtotal | data.subTotal | totalAmount;
+                const taxAmount = data.tax | data.taxAmount | '0.00';
+                const invoiceNumber = data.invoiceNumber | data.receiptNumber | data.documentNumber | `INV-${index + 1}`;
                 
                 // 構建備註
-                let memo = data.notes || data.memo || doc.fileName || '';
+                let memo = data.notes | data.memo | doc.fileName | '';
                 if (data.items && Array.isArray(data.items) && data.items.length > 0) {
-                    const itemsSummary = data.items.map(item => item.description || item.name).join(', ');
+                    const itemsSummary = data.items.map(item => item.description | item.name).join(', ');
                     memo = itemsSummary.substring(0, 100); // 限制長度
                 }
                 
@@ -4692,8 +4691,8 @@
                 if (data.items && Array.isArray(data.items) && data.items.length > 0) {
                     // 如果有項目明細，為每個項目創建一行
                     data.items.forEach((item, itemIndex) => {
-                        const itemAmount = item.total || (item.quantity * item.unitPrice) || item.price || '0.00';
-                        const itemMemo = item.description || item.name || `Item ${itemIndex + 1}`;
+                        const itemAmount = item.total | (item.quantity * item.unitPrice) | item.price | '0.00';
+                        const itemMemo = item.description | item.name | `Item ${itemIndex + 1}`;
                         iif += `SPL\t${trnsId}-${itemIndex}\t${transactionType}\t${date}\tExpenses\t-${itemAmount}\t${invoiceNumber}\t${itemMemo}\tN\n`;
                     });
                     
@@ -4759,19 +4758,19 @@
             qbo += `<DTEND>${dtserver}</DTEND>\n`;
             
             docs.forEach((doc, index) => {
-                const data = doc.processedData || {};
+                const data = doc.processedData | {};
                 const fitid = `${now.getTime()}${index}`;
                 
                 // 格式化日期為 YYYYMMDDHHMMSS
                 let dtposted = dtserver;
-                if (data.invoiceDate || data.transactionDate || data.date) {
-                    const dateStr = data.invoiceDate || data.transactionDate || data.date;
+                if (data.invoiceDate | data.transactionDate | data.date) {
+                    const dateStr = data.invoiceDate | data.transactionDate | data.date;
                     dtposted = new Date(dateStr).toISOString().replace(/[-:]/g, '').split('.')[0];
                 }
                 
-                const trnamt = -(parseFloat(data.totalAmount || data.total || data.amount || '0.00')); // 負數表示支出
-                const name = data.vendor || data.supplier || data.merchantName || data.source || 'Unknown Vendor';
-                const invoiceNumber = data.invoiceNumber || data.receiptNumber || data.documentNumber || '';
+                const trnamt = -(parseFloat(data.totalAmount | data.total | data.amount | '0.00')); // 負數表示支出
+                const name = data.vendor | data.supplier | data.merchantName | data.source | 'Unknown Vendor';
+                const invoiceNumber = data.invoiceNumber | data.receiptNumber | data.documentNumber | '';
                 
                 // 構建備註 - 包含發票號碼和項目信息
                 let memo = '';
@@ -4779,11 +4778,11 @@
                     memo += `Invoice: ${invoiceNumber}`;
                 }
                 if (data.items && Array.isArray(data.items) && data.items.length > 0) {
-                    const itemsSummary = data.items.map(item => item.description || item.name).join(', ');
+                    const itemsSummary = data.items.map(item => item.description | item.name).join(', ');
                     memo += (memo ? ' | ' : '') + itemsSummary.substring(0, 100);
                 }
                 if (!memo) {
-                    memo = data.notes || data.memo || doc.fileName || '';
+                    memo = data.notes | data.memo | doc.fileName | '';
                 }
                 
                 // 確定交易類型
@@ -4869,7 +4868,7 @@
             let visibleCount = 0;
             for (let row of rows) {
                 // 跳過沒有 cells 的行（例如空狀態行）
-                if (!row.cells || row.cells.length === 0) {
+                if (!row.cells | row.cells.length === 0) {
                     row.style.display = 'none';
                     continue;
                 }
@@ -4909,7 +4908,7 @@
             const tbody = document.getElementById('team-project-tbody');
             const summaryDiv = document.getElementById('invoice-summary');
             
-            if (!tbody || !summaryDiv) {
+            if (!tbody | !summaryDiv) {
                 console.log('⚠️ 找不到表格或總計元素');
                 return;
             }
@@ -4935,7 +4934,7 @@
                     if (amountCell) {
                         const amountText = amountCell.textContent.trim();
                         // 移除 $ 和逗號，轉換為數字
-                        const amount = parseFloat(amountText.replace(/[$,]/g, '')) || 0;
+                        const amount = parseFloat(amountText.replace(/[$,]/g, '')) | 0;
                         totalAmount += amount;
                     }
                 }
@@ -5021,7 +5020,7 @@
             const btn = document.getElementById('mobile-menu-btn');
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
-            if (!btn || !overlay) {
+            if (!btn | !overlay) {
                 console.log('⏳ 元素未找到，200ms後重試');
                 setTimeout(simpleInitMenu, 200);
                 return;
@@ -5151,7 +5150,7 @@
             
             // 下一頁
             paginationButtons[2].addEventListener('click', function() {
-                const totalPages = Math.ceil((window.allDocuments || []).length / window.rowsPerPage);
+                const totalPages = Math.ceil((window.allDocuments | []).length / window.rowsPerPage);
                 if (window.currentPage < totalPages) {
                     window.currentPage++;
                     if (window.renderDocuments) {
@@ -5162,7 +5161,7 @@
             
             // 最後一頁
             paginationButtons[3].addEventListener('click', function() {
-                const totalPages = Math.ceil((window.allDocuments || []).length / window.rowsPerPage);
+                const totalPages = Math.ceil((window.allDocuments | []).length / window.rowsPerPage);
                 if (window.currentPage !== totalPages && totalPages > 0) {
                     window.currentPage = totalPages;
                     if (window.renderDocuments) {

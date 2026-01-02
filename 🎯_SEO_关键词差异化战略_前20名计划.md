@@ -36,16 +36,7 @@
 
 ### 策略：每个银行页面攻克2-3个主关键词 + 10-15个长尾关键词
 
-| 银行 | 主关键词(1-3个) | 独特卖点关键词 | 长尾关键词 | 月搜索量预估 |
-|------|----------------|--------------|-----------|------------|
-| **HSBC 滙豐** | 滙豐銀行對帳單AI<br>HSBC statement OCR<br>滙豐網銀PDF處理 | 個人+商業帳戶<br>國際轉賬記錄 | 滙豐銀行月結單轉Excel<br>HSBC statement to QuickBooks<br>滙豐信用卡賬單整理<br>HSBC商業帳戶對帳<br>滙豐Savings account statement | 🔥 1200/月 |
-| **Hang Seng 恒生** | 恒生銀行對帳單處理<br>恒生月結單轉Excel<br>Hang Seng statement | 中小企業首選<br>優越理財支持 | 恒生銀行企業戶口對帳<br>恒生優越理財月結單<br>Hang Seng business account<br>恒生信用卡賬單管理<br>恒生網銀PDF讀取 | 🔥 800/月 |
-| **BOCHK 中銀** | 中銀香港對帳單AI<br>BOCHK statement OCR<br>中銀網銀PDF | 官方背景<br>多幣種支持 | 中國銀行香港月結單<br>BOCHK corporate statement<br>中銀多幣種賬戶對帳<br>中銀香港企業帳戶<br>BOCHK iBanking statement | 🔥 600/月 |
-| **SC 渣打** | 渣打銀行對帳單處理<br>Standard Chartered OCR<br>渣打月結單 | 外資銀行<br>國際業務 | 渣打銀行企業對帳單<br>SC business banking statement<br>渣打Priority Banking<br>Standard Chartered PDF<br>渣打外幣帳戶 | 🔥 400/月 |
-| **DBS 星展** | 星展銀行對帳單AI<br>DBS statement OCR<br>星展網銀處理 | 新加坡最大<br>數字化領先 | DBS business account statement<br>星展銀行月結單轉Excel<br>DBS ideal對帳單<br>星展企業戶口管理<br>DBS SME banking | 🔥 500/月 |
-| **BEA 東亞** | 東亞銀行對帳單處理<br>BEA statement OCR<br>東亞月結單 | 本地銀行<br>中小企業 | 東亞銀行企業對帳單<br>BEA business banking<br>東亞Cyberbanking statement<br>東亞銀行月結單轉CSV<br>BEA corporate account | 🔥 350/月 |
-| **Citibank 花旗** | 花旗銀行對帳單AI<br>Citibank statement OCR<br>花旗月結單處理 | 美資銀行<br>卡類業務 | 花旗銀行信用卡賬單<br>Citibank business account<br>花旗網銀對帳單<br>Citi corporate card<br>花旗月結單轉QuickBooks | 🔥 450/月 |
-
+| 银行 | 主关键词(1-3个) | 独特卖点关键词 | 长尾关键词 | 月搜索量预估 | ------|----------------|--------------|-----------|------------ | **HSBC 滙豐** | 滙豐銀行對帳單AI<br>HSBC statement OCR<br>滙豐網銀PDF處理 | 個人+商業帳戶<br>國際轉賬記錄 | 滙豐銀行月結單轉Excel<br>HSBC statement to QuickBooks<br>滙豐信用卡賬單整理<br>HSBC商業帳戶對帳<br>滙豐Savings account statement | 🔥 1200/月 | **Hang Seng 恒生** | 恒生銀行對帳單處理<br>恒生月結單轉Excel<br>Hang Seng statement | 中小企業首選<br>優越理財支持 | 恒生銀行企業戶口對帳<br>恒生優越理財月結單<br>Hang Seng business account<br>恒生信用卡賬單管理<br>恒生網銀PDF讀取 | 🔥 800/月 | **BOCHK 中銀** | 中銀香港對帳單AI<br>BOCHK statement OCR<br>中銀網銀PDF | 官方背景<br>多幣種支持 | 中國銀行香港月結單<br>BOCHK corporate statement<br>中銀多幣種賬戶對帳<br>中銀香港企業帳戶<br>BOCHK iBanking statement | 🔥 600/月 | **SC 渣打** | 渣打銀行對帳單處理<br>Standard Chartered OCR<br>渣打月結單 | 外資銀行<br>國際業務 | 渣打銀行企業對帳單<br>SC business banking statement<br>渣打Priority Banking<br>Standard Chartered PDF<br>渣打外幣帳戶 | 🔥 400/月 | **DBS 星展** | 星展銀行對帳單AI<br>DBS statement OCR<br>星展網銀處理 | 新加坡最大<br>數字化領先 | DBS business account statement<br>星展銀行月結單轉Excel<br>DBS ideal對帳單<br>星展企業戶口管理<br>DBS SME banking | 🔥 500/月 | **BEA 東亞** | 東亞銀行對帳單處理<br>BEA statement OCR<br>東亞月結單 | 本地銀行<br>中小企業 | 東亞銀行企業對帳單<br>BEA business banking<br>東亞Cyberbanking statement<br>東亞銀行月結單轉CSV<br>BEA corporate account | 🔥 350/月 | **Citibank 花旗** | 花旗銀行對帳單AI<br>Citibank statement OCR<br>花旗月結單處理 | 美資銀行<br>卡類業務 | 花旗銀行信用卡賬單<br>Citibank business account<br>花旗網銀對帳單<br>Citi corporate card<br>花旗月結單轉QuickBooks | 🔥 450/月
 ---
 
 ## 📝 Title/Meta/H1 差异化模板
@@ -128,13 +119,7 @@
 
 ### 策略：每个行业页面聚焦特定场景关键词
 
-| 行业 | 主关键词 | 场景关键词 | 长尾关键词 | 月搜索量 |
-|------|---------|-----------|-----------|---------|
-| **餐廳** | 餐廳會計軟件香港<br>餐廳收據管理 | 食材成本控制<br>員工報稅 | 餐廳記帳App推薦<br>香港餐廳會計師<br>餐飲業QuickBooks<br>餐廳收據掃描<br>F&B accounting software | 🔥 600/月 |
-| **零售店** | 零售店會計系統<br>商店收據管理 | 庫存管理<br>POS對帳 | 零售業記帳軟件<br>小型零售會計<br>Retail accounting HK<br>商店發票管理<br>零售店報稅 | 🔥 450/月 |
-| **美容院** | 美容院會計軟件<br>美容業記帳 | 療程收據<br>產品銷售 | 美容院QuickBooks<br>Salon accounting<br>美容業報稅指南<br>美容院收據管理<br>Beauty salon bookkeeping | 🔥 300/月 |
-| **清潔服務** | 清潔公司會計<br>清潔服務記帳 | 合約管理<br>員工薪酬 | 清潔公司QuickBooks<br>Cleaning service accounting<br>清潔業報稅<br>清潔服務發票<br>清潔公司對帳 | 🔥 250/月 |
-
+| 行业 | 主关键词 | 场景关键词 | 长尾关键词 | 月搜索量 | ------|---------|-----------|-----------|--------- | **餐廳** | 餐廳會計軟件香港<br>餐廳收據管理 | 食材成本控制<br>員工報稅 | 餐廳記帳App推薦<br>香港餐廳會計師<br>餐飲業QuickBooks<br>餐廳收據掃描<br>F&B accounting software | 🔥 600/月 | **零售店** | 零售店會計系統<br>商店收據管理 | 庫存管理<br>POS對帳 | 零售業記帳軟件<br>小型零售會計<br>Retail accounting HK<br>商店發票管理<br>零售店報稅 | 🔥 450/月 | **美容院** | 美容院會計軟件<br>美容業記帳 | 療程收據<br>產品銷售 | 美容院QuickBooks<br>Salon accounting<br>美容業報稅指南<br>美容院收據管理<br>Beauty salon bookkeeping | 🔥 300/月 | **清潔服務** | 清潔公司會計<br>清潔服務記帳 | 合約管理<br>員工薪酬 | 清潔公司QuickBooks<br>Cleaning service accounting<br>清潔業報稅<br>清潔服務發票<br>清潔公司對帳 | 🔥 250/月
 ---
 
 ## 🔗 内链策略（避免关键词竞食）
@@ -289,14 +274,7 @@
 3. **本地会计师事务所** - 传统服务
 
 ### 差异化竞争策略
-| 竞争点 | Dext | VaultCaddy | 优势 |
-|--------|------|-----------|------|
-| 价格 | HK$280/月 | HK$46/月 | ✅ 便宜83% |
-| 香港银行 | 10+ | **12+** | ✅ 更全面 |
-| 处理速度 | 15-20秒 | **3秒** | ✅ 快5-7倍 |
-| 本地化 | 英文为主 | **繁體中文+廣東話** | ✅ 更親切 |
-| QuickBooks | ✅ | ✅ | ✅ 同样支持 |
-
+| 竞争点 | Dext | VaultCaddy | 优势 | --------|------|-----------|------ | 价格 | HK$280/月 | HK$46/月 | ✅ 便宜83% | 香港银行 | 10+ | **12+** | ✅ 更全面 | 处理速度 | 15-20秒 | **3秒** | ✅ 快5-7倍 | 本地化 | 英文为主 | **繁體中文+廣東話** | ✅ 更親切 | QuickBooks | ✅ | ✅ | ✅ 同样支持
 ### SEO关键词避开策略
 ```
 ❌ 不攻击 "Dext替代品"（品牌词，难度高）
@@ -355,13 +333,7 @@
 
 ### 目标设定（12周后）
 
-| 页面类型 | 目标排名 | 目标流量 | 目标转化 |
-|---------|---------|---------|---------|
-| HSBC页面 | 前10名 | 500访客/月 | 20注册/月 |
-| Hang Seng页面 | 前15名 | 300访客/月 | 12注册/月 |
-| 其他银行页面 | 前20名 | 150访客/月 | 6注册/月 |
-| 行业页面 | 前15名 | 200访客/月 | 8注册/月 |
-
+| 页面类型 | 目标排名 | 目标流量 | 目标转化 | ---------|---------|---------|--------- | HSBC页面 | 前10名 | 500访客/月 | 20注册/月 | Hang Seng页面 | 前15名 | 300访客/月 | 12注册/月 | 其他银行页面 | 前20名 | 150访客/月 | 6注册/月 | 行业页面 | 前15名 | 200访客/月 | 8注册/月
 **总目标**：
 - 📊 总流量：3000访客/月
 - 💰 总注册：120用户/月

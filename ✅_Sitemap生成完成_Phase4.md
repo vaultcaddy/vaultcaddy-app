@@ -8,30 +8,12 @@
 
 ## 📊 Sitemap统计
 
-| 指标 | 数量 |
-|------|------|
-| **总URL数** | 795 |
-| **优先级1.0** | 5 |
-| **优先级0.9** | 250 |
-| **优先级0.8** | 115 |
-| **优先级0.7** | 293 |
-| **优先级≤0.6** | 132 |
-
+| 指标 | 数量 | ------|------ | **总URL数** | 795 | **优先级1.0** | 5 | **优先级0.9** | 250 | **优先级0.8** | 115 | **优先级0.7** | 293 | **优先级≤0.6** | 132
 ---
 
 ## 📂 页面分类统计
 
-| 类型 | 数量 | 示例 |
-|------|------|------|
-| **主页** | 5 | index.html |
-| **v3页面** | 250 | chase-bank-statement-v3.html |
-| **v2页面** | 85 | dz-bank-statement-v2.html |
-| **simple页面** | 169 | smbc-bank-statement-simple.html |
-| **解决方案** | 150 | restaurant-accounting-solution.html |
-| **对比页面** | 24 | vaultcaddy-vs-nanonets.html |
-| **博客文章** | 31 | blog/*.html |
-| **其他** | 142 | - |
-
+| 类型 | 数量 | 示例 | ------|------|------ | **主页** | 5 | index.html | **v3页面** | 250 | chase-bank-statement-v3.html | **v2页面** | 85 | dz-bank-statement-v2.html | **simple页面** | 169 | smbc-bank-statement-simple.html | **解决方案** | 150 | restaurant-accounting-solution.html | **对比页面** | 24 | vaultcaddy-vs-nanonets.html | **博客文章** | 31 | blog/*.html | **其他** | 142 | -
 ---
 
 ## 🎯 优先级页面列表 (Top 20)
@@ -130,7 +112,7 @@ jobs:
       - name: Generate Sitemap
         run: python3 generate_sitemap.py
       - name: Commit changes
-        run: |
+        run:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add sitemap.xml robots.txt

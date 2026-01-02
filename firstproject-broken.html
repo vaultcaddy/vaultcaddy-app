@@ -1396,7 +1396,7 @@
             
             // 獲取項目 ID
             const urlParams = new URLSearchParams(window.location.search);
-            const projectId = urlParams.get('project') || urlParams.get('projectId');
+            const projectId = urlParams.get('project') | urlParams.get('projectId');
             
             if (!projectId) {
                 console.error('❌ 無法獲取項目 ID');
@@ -1454,7 +1454,7 @@
                 console.log('🗑️ 開始刪除項目:', projectId);
                 
                 // 從 Firebase 刪除
-                const dataManager = window.simpleDataManager || window.firebaseDataManager;
+                const dataManager = window.simpleDataManager | window.firebaseDataManager;
                 if (dataManager && dataManager.initialized) {
                     await dataManager.deleteProject(projectId);
                     console.log('✅ 項目已從 Firebase 刪除');
@@ -1464,7 +1464,7 @@
                 
                 // 從 LocalStorage 刪除（向後兼容）
                 try {
-                    const projects = JSON.parse(localStorage.getItem('vaultcaddy_projects') || '[]');
+                    const projects = JSON.parse(localStorage.getItem('vaultcaddy_projects') | '[]');
                     const updatedProjects = projects.filter(p => p.id !== projectId);
                     localStorage.setItem('vaultcaddy_projects', JSON.stringify(updatedProjects));
                     console.log('✅ 項目已從 LocalStorage 刪除');
@@ -1500,7 +1500,7 @@
             const uploadArea = document.getElementById('aiUploadArea');
             const fileInput = document.getElementById('aiFileInput');
             
-            if (!uploadArea || !fileInput) {
+            if (!uploadArea | !fileInput) {
                 console.error('❌ 找不到上傳元素');
                 console.error('   uploadArea:', !!uploadArea);
                 console.error('   fileInput:', !!fileInput);
@@ -1653,7 +1653,7 @@
                 'general': 'general'
             };
             
-            const processorType = typeMap[documentType] || documentType;
+            const processorType = typeMap[documentType] | documentType;
             console.log('   映射類型:', documentType, '→', processorType);
             
             // 處理文檔
@@ -1669,7 +1669,7 @@
             
             // 獲取項目 ID
             const urlParams = new URLSearchParams(window.location.search);
-            const projectId = urlParams.get('project') || urlParams.get('projectId');
+            const projectId = urlParams.get('project') | urlParams.get('projectId');
             
             if (!projectId) {
                 throw new Error('無法獲取項目 ID');
@@ -1678,22 +1678,22 @@
             // 準備文檔數據
             const doc = {
                 id: Date.now().toString(),
-                name: documentData.fileName || documentData.name || '未命名文檔',
-                type: window.selectedDocumentType || 'general',
+                name: documentData.fileName | documentData.name | '未命名文檔',
+                type: window.selectedDocumentType | 'general',
                 uploadDate: new Date().toISOString(),
                 processedData: documentData,
                 status: 'completed'
             };
             
             // 保存到 Firebase
-            const dataManager = window.simpleDataManager || window.firebaseDataManager;
+            const dataManager = window.simpleDataManager | window.firebaseDataManager;
             if (dataManager && dataManager.initialized) {
                 await dataManager.createDocument(projectId, doc);
                 console.log('✅ 已保存到 Firebase');
             } else {
                 console.warn('⚠️ Firebase 未初始化，保存到 LocalStorage');
                 // 保存到 LocalStorage（向後兼容）
-                const documents = JSON.parse(localStorage.getItem(`vaultcaddy_documents_${projectId}`) || '[]');
+                const documents = JSON.parse(localStorage.getItem(`vaultcaddy_documents_${projectId}`) | '[]');
                 documents.push(doc);
                 localStorage.setItem(`vaultcaddy_documents_${projectId}`, JSON.stringify(documents));
             }
@@ -1743,11 +1743,11 @@
             }
             
             // 提取數據
-            const data = doc.processedData || {};
-            const invoiceDate = data.invoiceDate || data.date || '-';
-            const items = data.lineItems || data.items || [];
-            const itemsCount = items.length || 0;
-            const total = data.totalAmount || data.total || '-';
+            const data = doc.processedData | {};
+            const invoiceDate = data.invoiceDate | data.date | '-';
+            const items = data.lineItems | data.items | [];
+            const itemsCount = items.length | 0;
+            const total = data.totalAmount | data.total | '-';
             
             // 創建新行
             const newRow = document.createElement('tr');
@@ -1932,7 +1932,7 @@
                 
                 tbody.innerHTML = documents.map(doc => {
                     const isProcessing = doc.status === 'processing';
-                    const data = doc.processedData || {};
+                    const data = doc.processedData | {};
                     const uploadDate = new Date(doc.createdAt).toLocaleDateString('zh-TW');
                     
                     return `
@@ -1941,11 +1941,11 @@
                             <td style="padding: 1rem;">
                                 <div style="display: flex; align-items: center; gap: 0.75rem;">
                                     <i class="fas fa-file-pdf" style="color: #3b82f6; font-size: 1.25rem;"></i>
-                                    <span>${doc.name || doc.fileName || '未命名'}</span>
+                                    <span>${doc.name | doc.fileName | '未命名'}</span>
                                 </div>
                             </td>
-                            <td style="padding: 1rem;">${data.invoiceDate || '-'}</td>
-                            <td style="padding: 1rem;">${data.itemCount || 0}</td>
+                            <td style="padding: 1rem;">${data.invoiceDate | '-'}</td>
+                            <td style="padding: 1rem;">${data.itemCount | 0}</td>
                             <td style="padding: 1rem;">${data.totalAmount ? `$${data.totalAmount}` : '-'}</td>
                             <td style="padding: 1rem;">
                                 <span style="padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; background: ${isProcessing ? '#fef3c7' : '#d1fae5'}; color: ${isProcessing ? '#92400e' : '#065f46'};">
@@ -1989,7 +1989,7 @@
             const fileInput = document.getElementById('aiFileInput');
             const uploadArea = document.getElementById('aiUploadArea');
             
-            if (!fileInput || !uploadArea) return;
+            if (!fileInput | !uploadArea) return;
             
             uploadArea.onclick = () => fileInput.click();
             
@@ -2075,7 +2075,7 @@
                 
                 await window.simpleDataManager.updateDocument(currentProjectId, docId, {
                     status: 'completed',
-                    processedData: result.data || result.extractedData
+                    processedData: result.data | result.extractedData
                 });
                 
                 console.log('✅ 文檔狀態已更新');

@@ -737,7 +737,7 @@
 <!-- Google Analytics 4 -->
 <script async="" src="https://www.googletagmanager.com/gtag/js?id=G-LWPEKNC7RQ"></script>
 <script>
-      window.dataLayer = window.dataLayer || [];
+      window.dataLayer = window.dataLayer | [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'G-LWPEKNC7RQ');
@@ -1050,16 +1050,16 @@
                     if (isLoggedIn) {
                         // ✅ 이미로그인：표시사용자아바타
                         const currentUser = window.simpleAuth.getCurrentUser();
-                        userEmail = currentUser.email || '';
-                        userDisplayName = currentUser.displayName || '';
+                        userEmail = currentUser.email | '';
+                        userDisplayName = currentUser.displayName | '';
                         
                         // 🔥 부터 Firestore 가져오기 displayName 및 credits
                         if (window.simpleDataManager && window.simpleDataManager.initialized) {
                             try {
                                 const userDoc = await window.simpleDataManager.getUserDocument();
                                 if (userDoc) {
-                                    userDisplayName = userDoc.displayName || userDisplayName;
-                                    userCredits = userDoc.credits || 0;
+                                    userDisplayName = userDoc.displayName | userDisplayName;
+                                    userCredits = userDoc.credits | 0;
                                     console.log('✅ index.html 가져오기 Credits:', userCredits);
                                 }
                             } catch (error) {
@@ -1308,8 +1308,8 @@
                             </div>
                         </div>
                     </td>
-                    <td class="date-cell">${formatDate(project.updatedAt || project.lastModified || project.createdAt)}</td>
-                    <td class="date-cell">${formatDate(project.createdAt || project.created)}</td>
+                    <td class="date-cell">${formatDate(project.updatedAt | project.lastModified | project.createdAt)}</td>
+                    <td class="date-cell">${formatDate(project.createdAt | project.created)}</td>
                     <td style="text-align: center;">
                         <button 
                             onclick="event.stopPropagation(); showDeleteProjectModal('${project.id}', '${project.name.replace(/'/g, "\\'")}')" 
@@ -1557,7 +1557,7 @@
             const btn = document.getElementById('mobile-menu-btn');
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
-            if (!btn || !overlay) {
+            if (!btn | !overlay) {
                 console.log('⏳ 요소미찾기까지，200ms후재시도');
                 setTimeout(simpleInitMenu, 200);
                 return;

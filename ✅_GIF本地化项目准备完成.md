@@ -109,14 +109,7 @@ TODO清单:
 
 ### 5个GIF版本
 
-| 版本 | 语言 | 价格 | 文件名 | 状态 |
-|------|------|------|--------|------|
-| 韩文 | 한국어 | ₩7998/월 | chase-bank-demo-ko.gif | ☐ 待录制 |
-| 日文 | 日本語 | ¥926/月 | chase-bank-demo-ja.gif | ☐ 待录制 |
-| 繁中HK | 繁體中文 | HK$46/月 | chase-bank-demo-zh-hk.gif | ☐ 待录制 |
-| 繁中TW | 繁體中文 | NT$195/月 | chase-bank-demo-zh-tw.gif | ☐ 待录制 |
-| 英文 | English | $5.59/month | chase-bank-demo-en.gif | ✅ 已有 |
-
+| 版本 | 语言 | 价格 | 文件名 | 状态 | ------|------|------|--------|------ | 韩文 | 한국어 | ₩7998/월 | chase-bank-demo-ko.gif | ☐ 待录制 | 日文 | 日本語 | ¥926/月 | chase-bank-demo-ja.gif | ☐ 待录制 | 繁中HK | 繁體中文 | HK$46/月 | chase-bank-demo-zh-hk.gif | ☐ 待录制 | 繁中TW | 繁體中文 | NT$195/月 | chase-bank-demo-zh-tw.gif | ☐ 待录制 | 英文 | English | $5.59/month | chase-bank-demo-en.gif | ✅ 已有
 ---
 
 ### 技术规格

@@ -39,18 +39,7 @@
 
 **Sheet 1: 反向链接追踪**
 
-| 列 | 说明 | 格式 |
-|---|---|---|
-| A | 日期 | 日期格式 (MM/DD/YYYY) |
-| B | 平台 | 文本 |
-| C | 类型 | 下拉选单（Q&A, 主帖, 评论, 目录, 文章, 产品） |
-| D | URL | 超链接 |
-| E | 标题/描述 | 文本 |
-| F | Domain Authority | 数字 (0-100) |
-| G | 状态 | 下拉选单（✅ Live, ⏳ 审核中, ❌ 被拒, 🔄 待跟进） |
-| H | 预估流量/月 | 数字 |
-| I | 备注 | 文本 |
-
+| 列 | 说明 | 格式 | ---|---|--- | A | 日期 | 日期格式 (MM/DD/YYYY) | B | 平台 | 文本 | C | 类型 | 下拉选单（Q&A, 主帖, 评论, 目录, 文章, 产品） | D | URL | 超链接 | E | 标题/描述 | 文本 | F | Domain Authority | 数字 (0-100) | G | 状态 | 下拉选单（✅ Live, ⏳ 审核中, ❌ 被拒, 🔄 待跟进） | H | 预估流量/月 | 数字 | I | 备注 | 文本
 ---
 
 **Sheet 2: 统计仪表板**
@@ -175,27 +164,7 @@ Week 4	月度总结	报告	⏳	待开始
 
 常见平台的DA值（供填写参考）：
 
-| 平台 | DA |
-|---|---|
-| Quora | 90 |
-| Reddit | 95 |
-| Medium | 95 |
-| LinkedIn | 98 |
-| YouTube | 100 |
-| Facebook | 96 |
-| Twitter | 94 |
-| Product Hunt | 92 |
-| G2 | 85 |
-| Capterra | 82 |
-| Yelp | 93 |
-| Google My Business | 100 |
-| Tech in Asia | 78 |
-| AccountingWEB | 72 |
-| HK88DB | 35 |
-| Discuss.com.hk | 42 |
-| 地区商业目录 | 20-40 |
-| 个人博客 | 10-30 |
-
+| 平台 | DA | ---|--- | Quora | 90 | Reddit | 95 | Medium | 95 | LinkedIn | 98 | YouTube | 100 | Facebook | 96 | Twitter | 94 | Product Hunt | 92 | G2 | 85 | Capterra | 82 | Yelp | 93 | Google My Business | 100 | Tech in Asia | 78 | AccountingWEB | 72 | HK88DB | 35 | Discuss.com.hk | 42 | 地区商业目录 | 20-40 | 个人博客 | 10-30
 ---
 
 ## 自动化建议

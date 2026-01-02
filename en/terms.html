@@ -324,7 +324,7 @@
             
             // GetUserFirst letter
             function getUserInitial() {
-                if (!userDisplayName || userDisplayName.trim() === '') {
+                if (!userDisplayName | userDisplayName.trim() === '') {
                     // IfNone displayName，Use email First letter of
                     return userEmail ? userEmail.charAt(0).toUpperCase() : 'U';
                 }
@@ -517,16 +517,16 @@
                     if (isLoggedIn) {
                         // ✅ alreadyLogin：ShowUseravatar
                         const currentUser = window.simpleAuth.getCurrentUser();
-                        userEmail = currentUser.email || '';
-                        userDisplayName = currentUser.displayName || '';
+                        userEmail = currentUser.email | '';
+                        userDisplayName = currentUser.displayName | '';
                         
                         // 🔥 from Firestore Get displayName and credits
                         if (window.simpleDataManager && window.simpleDataManager.initialized) {
                             try {
                                 const userDoc = await window.simpleDataManager.getUserDocument();
                                 if (userDoc) {
-                                    userDisplayName = userDoc.displayName || userDisplayName;
-                                    userCredits = userDoc.credits || 0;
+                                    userDisplayName = userDoc.displayName | userDisplayName;
+                                    userCredits = userDoc.credits | 0;
                                     console.log('✅ index.html Get Credits:', userCredits);
                                 }
                             } catch (error) {
@@ -872,7 +872,7 @@
         
         window.toggleDropdown = async function() {
             const dropdown = document.getElementById('user-dropdown');
-            if (dropdown.style.display === 'none' || !dropdown.style.display) {
+            if (dropdown.style.display === 'none' | !dropdown.style.display) {
                 dropdown.style.display = 'block';
                 
                 if (window.simpleDataManager && window.simpleDataManager.initialized) {
@@ -887,7 +887,7 @@
         function getUserInitial() {
             if (window.simpleAuth && window.simpleAuth.getCurrentUser()) {
                 const user = window.simpleAuth.getCurrentUser();
-                const displayName = user.displayName || user.email || 'U';
+                const displayName = user.displayName | user.email | 'U';
                 const names = displayName.split(' ');
                 if (names.length >= 2) {
                     return (names[0][0] + names[1][0]).toUpperCase();
@@ -906,7 +906,7 @@
                 
                 if (isLoggedIn) {
                     const currentUser = window.simpleAuth.getCurrentUser();
-                    const userEmail = currentUser.email || '';
+                    const userEmail = currentUser.email | '';
                     let userCredits = 0;
                     
                     if (window.simpleDataManager && window.simpleDataManager.initialized) {
@@ -993,7 +993,7 @@
             const btn = document.getElementById('mobile-menu-btn');
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
-            if (!btn || !overlay) {
+            if (!btn | !overlay) {
                 console.log('⏳ ElementNot found，200msbackRetry');
                 setTimeout(simpleInitMenu, 200);
                 return;

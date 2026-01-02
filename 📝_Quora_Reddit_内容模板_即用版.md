@@ -484,7 +484,7 @@ Happy to answer questions about the process!
 A: It supports 300+ banks. If it's a major bank, yes.
 
 **Q: What about security?**
-A: Files auto-delete after 24 hours. No bank login required.
+A: . No bank login required.
 
 **Q: What if there's an error?**
 A: You can edit in the dashboard before export. I spot-check every 10th statement.
@@ -696,11 +696,7 @@ Reddit (每周发1-2个主帖):
 
 **Google Sheet模板**:
 
-| 日期 | 平台 | 类型 | 链接 | Upvotes/Views | 预估流量 |
-|------|------|------|------|---------------|---------|
-| 01/02 | Quora | 回答 | [URL] | 127 views | 5-10访客 |
-| 01/03 | Reddit | 帖子 | [URL] | 45 upvotes | 20-30访客 |
-
+| 日期 | 平台 | 类型 | 链接 | Upvotes/Views | 预估流量 | ------|------|------|------|---------------|--------- | 01/02 | Quora | 回答 | [URL] | 127 views | 5-10访客 | 01/03 | Reddit | 帖子 | [URL] | 45 upvotes | 20-30访客
 ---
 
 ## 🎯 30天目标

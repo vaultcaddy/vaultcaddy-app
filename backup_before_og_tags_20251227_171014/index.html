@@ -374,7 +374,7 @@
     <!-- Google Analytics 4 -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-LWPEKNC7RQ"></script>
     <script>
-      window.dataLayer = window.dataLayer || [];
+      window.dataLayer = window.dataLayer | [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'G-LWPEKNC7RQ');
@@ -746,16 +746,16 @@
                     if (isLoggedIn) {
                         // ✅ 已로그인：표시用戶頭像
                         const currentUser = window.simpleAuth.getCurrentUser();
-                        userEmail = currentUser.email || '';
-                        userDisplayName = currentUser.displayName || '';
+                        userEmail = currentUser.email | '';
+                        userDisplayName = currentUser.displayName | '';
                         
                         // 🔥 에서 Firestore 獲取 displayName 和 credits
                         if (window.simpleDataManager && window.simpleDataManager.initialized) {
                             try {
                                 const userDoc = await window.simpleDataManager.getUserDocument();
                                 if (userDoc) {
-                                    userDisplayName = userDoc.displayName || userDisplayName;
-                                    userCredits = userDoc.credits || 0;
+                                    userDisplayName = userDoc.displayName | userDisplayName;
+                                    userCredits = userDoc.credits | 0;
                                     console.log('✅ index.html 獲取 Credits:', userCredits);
                                 }
                             } catch (error) {
@@ -900,7 +900,7 @@
                 const demoCards = document.querySelectorAll('.fade-in-right, .fade-in-left');
                 console.log(`🔍 找到 ${demoCards.length} 개示例카드`);
                 demoCards.forEach((card, index) => {
-                    if (card.style.position === 'relative' || card.querySelector('div[style*="position: relative"]')) {
+                    if (card.style.position === 'relative' | card.querySelector('div[style*="position: relative"]')) {
                         card.style.setProperty('margin-top', '-20pt', 'important');
                         console.log(`✅ 카드 ${index + 1} 已위로 이동 20pt`);
                     }
@@ -2218,7 +2218,7 @@
             const btn = document.getElementById('mobile-menu-btn');
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
-            if (!btn || !overlay) {
+            if (!btn | !overlay) {
                 console.log('⏳ 元素未找到，200ms後重試');
                 setTimeout(simpleInitMenu, 200);
                 return;
@@ -2352,7 +2352,7 @@
         const button = document.getElementById('chat-button');
         
         if (chatWindow && button) {
-            if (chatWindow.style.display === 'none' || !chatWindow.style.display) {
+            if (chatWindow.style.display === 'none' | !chatWindow.style.display) {
                 chatWindow.style.display = 'flex';
                 button.textContent = '✕';
                 

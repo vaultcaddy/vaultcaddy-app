@@ -496,7 +496,7 @@
             
             // 獲取用戶首字母
             function getUserInitial() {
-                if (!userDisplayName || userDisplayName.trim() === '') {
+                if (!userDisplayName | userDisplayName.trim() === '') {
                     return userEmail ? userEmail.charAt(0).toUpperCase() : 'U';
                 }
                 
@@ -565,15 +565,15 @@
                     
                     if (isLoggedIn) {
                         const currentUser = window.simpleAuth.getCurrentUser();
-                        userEmail = currentUser.email || '';
-                        userDisplayName = currentUser.displayName || '';
+                        userEmail = currentUser.email | '';
+                        userDisplayName = currentUser.displayName | '';
                         
                         if (window.simpleDataManager && window.simpleDataManager.initialized) {
                             try {
                                 const userDoc = await window.simpleDataManager.getUserDocument();
                                 if (userDoc) {
-                                    userDisplayName = userDoc.displayName || userDisplayName;
-                                    userCredits = userDoc.credits || 0;
+                                    userDisplayName = userDoc.displayName | userDisplayName;
+                                    userCredits = userDoc.credits | 0;
                                 }
                             } catch (error) {
                                 console.log('⚠️ 無法從 Firestore 獲取用戶資料:', error);

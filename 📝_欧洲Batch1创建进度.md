@@ -7,15 +7,7 @@
 
 ## 📋 创建清单
 
-| # | 银行 | 国家 | 进度 | 文件 |
-|---|------|------|------|------|
-| 1 | Deutsche Bank | 🇩🇪 德国 | ⏳ 准备中 | deutsche-bank-statement-v2.html |
-| 2 | ING Bank | 🇳🇱 荷兰 | ⏳ 准备中 | ing-bank-statement-v2.html |
-| 3 | Commerzbank | 🇩🇪 德国 | ⏳ 等待 | commerzbank-statement-v2.html |
-| 4 | Rabobank | 🇳🇱 荷兰 | ⏳ 等待 | rabobank-statement-v2.html |
-| 5 | ABN AMRO | 🇳🇱 荷兰 | ⏳ 等待 | abn-amro-statement-v2.html |
-| 6 | DZ Bank | 🇩🇪 德国 | ⏳ 等待 | dz-bank-statement-v2.html |
-
+| # | 银行 | 国家 | 进度 | 文件 | ---|------|------|------|------ | 1 | Deutsche Bank | 🇩🇪 德国 | ⏳ 准备中 | deutsche-bank-statement-v2.html | 2 | ING Bank | 🇳🇱 荷兰 | ⏳ 准备中 | ing-bank-statement-v2.html | 3 | Commerzbank | 🇩🇪 德国 | ⏳ 等待 | commerzbank-statement-v2.html | 4 | Rabobank | 🇳🇱 荷兰 | ⏳ 等待 | rabobank-statement-v2.html | 5 | ABN AMRO | 🇳🇱 荷兰 | ⏳ 等待 | abn-amro-statement-v2.html | 6 | DZ Bank | 🇩🇪 德国 | ⏳ 等待 | dz-bank-statement-v2.html
 ---
 
 ## 🎯 技术规格

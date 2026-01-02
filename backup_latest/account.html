@@ -635,7 +635,7 @@
             
             // 獲取用戶首字母
             function getUserInitial() {
-                if (!userDisplayName || userDisplayName.trim() === '') {
+                if (!userDisplayName | userDisplayName.trim() === '') {
                     // 如果沒有 displayName，使用 email 的第一個字母
                     return userEmail ? userEmail.charAt(0).toUpperCase() : 'U';
                 }
@@ -797,16 +797,16 @@
                     if (isLoggedIn) {
                         // ✅ 已登入：顯示用戶頭像
                         const currentUser = window.simpleAuth.getCurrentUser();
-                        userEmail = currentUser.email || '';
-                        userDisplayName = currentUser.displayName || '';
+                        userEmail = currentUser.email | '';
+                        userDisplayName = currentUser.displayName | '';
                         
                         // 🔥 從 Firestore 獲取 displayName 和 credits
                         if (window.simpleDataManager && window.simpleDataManager.initialized) {
                             try {
                                 const userDoc = await window.simpleDataManager.getUserDocument();
                                 if (userDoc) {
-                                    userDisplayName = userDoc.displayName || userDisplayName;
-                                    userCredits = userDoc.credits || 0;
+                                    userDisplayName = userDoc.displayName | userDisplayName;
+                                    userCredits = userDoc.credits | 0;
                                     console.log('✅ index.html 獲取 Credits:', userCredits);
                                 }
                             } catch (error) {
@@ -1096,8 +1096,8 @@
             loadUserPlan();
             
             // 載入偏好設定
-            const savedLanguage = localStorage.getItem('userLanguage') || 'zh-TW';
-            const savedTimezone = localStorage.getItem('userTimezone') || 'Asia/Taipei';
+            const savedLanguage = localStorage.getItem('userLanguage') | 'zh-TW';
+            const savedTimezone = localStorage.getItem('userTimezone') | 'Asia/Taipei';
             document.getElementById('language-select').value = savedLanguage;
             document.getElementById('timezone-select').value = savedTimezone;
             
@@ -1126,7 +1126,7 @@
                         
                         // 檢查訂閱狀態
                         if (userData.subscription && userData.subscription.status === 'active') {
-                            savedPlan = userData.subscription.planType || 'Free';
+                            savedPlan = userData.subscription.planType | 'Free';
                         }
                     }
                 }
@@ -1170,7 +1170,7 @@
                 }
             };
             
-            const config = planConfig[savedPlan] || planConfig['Free'];
+            const config = planConfig[savedPlan] | planConfig['Free'];
             
             planElement.innerHTML = `
                 <i class="fas ${config.icon}"></i>
@@ -1214,8 +1214,8 @@
                             
                             // 檢查是否有活躍訂閱
                             if (userData.subscription && userData.subscription.status === 'active') {
-                                currentPlan = userData.subscription.planType || 'Free';
-                                planPeriod = userData.subscription.period || 'monthly';
+                                currentPlan = userData.subscription.planType | 'Free';
+                                planPeriod = userData.subscription.period | 'monthly';
                                 console.log('✅ 從 Firestore 獲取計劃:', currentPlan, planPeriod);
                             } else {
                                 console.log('⚠️ Firestore 中沒有活躍訂閱，使用 Free Plan');
@@ -1239,7 +1239,7 @@
                 console.log('📊 最終使用計劃:', currentPlan, planPeriod);
                 
                 // 獲取計劃的 Credits 額度
-                const totalCredits = planCredits[currentPlan][planPeriod] || 0;
+                const totalCredits = planCredits[currentPlan][planPeriod] | 0;
                 
                 // 從 Firebase 獲取當前 Credits
                 let currentCredits = 0;
@@ -1254,7 +1254,7 @@
                         
                         if (userDoc.exists) {
                             const userData = userDoc.data();
-                            currentCredits = userData.credits || 0;
+                            currentCredits = userData.credits | 0;
                             
                             // 如果有訂閱信息，獲取重置日期
                             if (userData.subscription && userData.subscription.currentPeriodEnd) {
@@ -1330,7 +1330,7 @@
             const newPassword = document.getElementById('new-password').value;
             const confirmPassword = document.getElementById('confirm-password').value;
             
-            if (!currentPassword || !newPassword || !confirmPassword) {
+            if (!currentPassword | !newPassword | !confirmPassword) {
                 alert('請填寫所有密碼欄位');
                 return;
             }
@@ -1397,7 +1397,7 @@
             
             try {
                 // 檢查是否有登入用戶
-                if (!window.simpleAuth || !window.simpleAuth.currentUser) {
+                if (!window.simpleAuth | !window.simpleAuth.currentUser) {
                     tbody.innerHTML = `
                         <tr>
                             <td colspan="4" style="text-align: center; padding: 2rem; color: #9ca3af;">
@@ -1451,9 +1451,9 @@
                         sign = '+';
                         
                         if (record.metadata?.source === 'subscription') {
-                            description = `訂閱計劃 - ${record.metadata.planType?.toUpperCase() || 'N/A'}`;
+                            description = `訂閱計劃 - ${record.metadata.planType?.toUpperCase() | 'N/A'}`;
                         } else if (record.metadata?.source === 'purchase') {
-                            description = record.metadata.productName || '購買 Credits';
+                            description = record.metadata.productName | '購買 Credits';
                         } else {
                             description = '添加 Credits';
                         }
@@ -1461,12 +1461,12 @@
                         type = '使用';
                         typeColor = '#ef4444';
                         sign = '-';
-                        description = record.metadata?.projectName || '文檔處理';
+                        description = record.metadata?.projectName | '文檔處理';
                     } else if (record.type === 'reset') {
                         type = '重置';
                         typeColor = '#6b7280';
                         sign = '';
-                        description = `每月重置 - ${record.metadata?.planType?.toUpperCase() || 'N/A'}`;
+                        description = `每月重置 - ${record.metadata?.planType?.toUpperCase() | 'N/A'}`;
                     } else {
                         type = '其他';
                         typeColor = '#9ca3af';
@@ -1484,7 +1484,7 @@
                                 </span>
                             </td>
                             <td style="padding: 1rem; text-align: right; font-weight: 600; color: ${typeColor};">
-                                ${sign}${record.amount || 0}
+                                ${sign}${record.amount | 0}
                             </td>
                         </tr>
                     `);

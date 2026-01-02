@@ -686,7 +686,7 @@
     <!-- Google Analytics 4 -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-LWPEKNC7RQ"></script>
     <script>
-      window.dataLayer = window.dataLayer || [];
+      window.dataLayer = window.dataLayer | [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'G-LWPEKNC7RQ');
@@ -997,16 +997,16 @@
                     if (isLoggedIn) {
                         // ✅ 已ログイン：顯示ユーザー頭像
                         const currentUser = window.simpleAuth.getCurrentUser();
-                        userEmail = currentUser.email || '';
-                        userDisplayName = currentUser.displayName || '';
+                        userEmail = currentUser.email | '';
+                        userDisplayName = currentUser.displayName | '';
                         
                         // 🔥 から Firestore 取得 displayName と credits
                         if (window.simpleDataManager && window.simpleDataManager.initialized) {
                             try {
                                 const userDoc = await window.simpleDataManager.getUserDocument();
                                 if (userDoc) {
-                                    userDisplayName = userDoc.displayName || userDisplayName;
-                                    userCredits = userDoc.credits || 0;
+                                    userDisplayName = userDoc.displayName | userDisplayName;
+                                    userCredits = userDoc.credits | 0;
                                     console.log('✅ index.html 取得 Credits:', userCredits);
                                 }
                             } catch (error) {
@@ -1306,7 +1306,7 @@
                         }
                         // チェック訂閱ステータス（舊版邏輯）
                         else if (userData.subscription && userData.subscription.status === 'active') {
-                            savedPlan = userData.subscription.planType || 'Free';
+                            savedPlan = userData.subscription.planType | 'Free';
                         }
                     }
                 }
@@ -1350,7 +1350,7 @@
                 }
             };
             
-            const config = planConfig[savedPlan] || planConfig['Free'];
+            const config = planConfig[savedPlan] | planConfig['Free'];
             
             planElement.innerHTML = `
                 <i class="fas ${config.icon}"></i>
@@ -1367,7 +1367,7 @@
             
             // 💡 プランタイプに応じて超過分請求の説明を表示/非表示
             const overageInfo = document.getElementById('overage-info');
-            if (savedPlan === 'Pro' || savedPlan === 'Business') {
+            if (savedPlan === 'Pro' | savedPlan === 'Business') {
                 // Pro Plan または Business Plan ユーザー：超過分請求の説明を表示
                 if (overageInfo) {
                     overageInfo.style.display = 'block';
@@ -1379,7 +1379,7 @@
                 }
             }
             
-            if (savedPlan === 'Pro' || savedPlan === 'Business') {
+            if (savedPlan === 'Pro' | savedPlan === 'Business') {
                 // Pro Plan または Business Plan ユーザー：顯示訂閱管理，隱藏升級鏈接
                 subscriptionManagement.style.display = 'flex';
                 upgradePlanLink.style.display = 'none';
@@ -1399,7 +1399,7 @@
         // 読み込み訂閱詳情
         async function loadSubscriptionDetails() {
             try {
-                if (!window.simpleAuth || !window.simpleAuth.currentUser) {
+                if (!window.simpleAuth | !window.simpleAuth.currentUser) {
                     return;
                 }
                 
@@ -1444,7 +1444,7 @@
             try {
                 console.log('🔧 開く Stripe Customer Portal');
                 
-                if (!window.simpleAuth || !window.simpleAuth.currentUser) {
+                if (!window.simpleAuth | !window.simpleAuth.currentUser) {
                     alert('請先ログイン');
                     return;
                 }
@@ -1529,8 +1529,8 @@
                             
                             // チェック是否有活躍訂閱
                             if (userData.subscription && userData.subscription.status === 'active') {
-                                currentPlan = userData.subscription.planType || 'Free';
-                                planPeriod = userData.subscription.period || 'monthly';
+                                currentPlan = userData.subscription.planType | 'Free';
+                                planPeriod = userData.subscription.period | 'monthly';
                                 console.log('✅ から Firestore 取得計劃:', currentPlan, planPeriod);
                             } else {
                                 console.log('⚠️ Firestore 中なし活躍訂閱，使用 Free Plan');
@@ -1554,7 +1554,7 @@
                 console.log('📊 最終使用計劃:', currentPlan, planPeriod);
                 
                 // 取得計劃の Credits 額度
-                const totalCredits = planCredits[currentPlan][planPeriod] || 0;
+                const totalCredits = planCredits[currentPlan][planPeriod] | 0;
                 
                 // から Firebase 取得當前 Credits
                 let currentCredits = 0;
@@ -1569,7 +1569,7 @@
                         
                         if (userDoc.exists) {
                             const userData = userDoc.data();
-                            currentCredits = userData.credits || 0;
+                            currentCredits = userData.credits | 0;
                             
                             // 🔥 優先チェック新の resetDate 字段
                             if (userData.resetDate) {
@@ -1654,7 +1654,7 @@
             const newPassword = document.getElementById('new-password').value;
             const confirmPassword = document.getElementById('confirm-password').value;
             
-            if (!currentPassword || !newPassword || !confirmPassword) {
+            if (!currentPassword | !newPassword | !confirmPassword) {
                 alert('請填寫すべてパスワードフィールド');
                 return;
             }
@@ -1709,7 +1709,7 @@
             const select = document.getElementById('history-month-filter');
             
             try {
-                if (!window.simpleAuth || !window.simpleAuth.currentUser) {
+                if (!window.simpleAuth | !window.simpleAuth.currentUser) {
                     return;
                 }
                 
@@ -1779,7 +1779,7 @@
             
             try {
                 // チェック是否有ログインユーザー
-                if (!window.simpleAuth || !window.simpleAuth.currentUser) {
+                if (!window.simpleAuth | !window.simpleAuth.currentUser) {
                     tbody.innerHTML = `
                         <tr>
                             <td colspan="3" style="text-align: center; padding: 2rem; color: #9ca3af;">
@@ -1848,9 +1848,9 @@
                         sign = '+';
                         
                         if (record.metadata?.source === 'subscription') {
-                            description = `訂閱計劃 - ${record.metadata.planType?.toUpperCase() || 'N/A'}`;
+                            description = `訂閱計劃 - ${record.metadata.planType?.toUpperCase() | 'N/A'}`;
                         } else if (record.metadata?.source === 'purchase') {
-                            description = record.metadata.productName || 'クレジット購入';
+                            description = record.metadata.productName | 'クレジット購入';
                         } else {
                             description = '添加 Credits';
                         }
@@ -1859,12 +1859,12 @@
                         typeColor = '#ef4444';
                         sign = '-';
                         // 🔥 もし文書処理，顯示"ファイル変換"
-                        description = record.metadata?.projectName || 'ファイル変換';
+                        description = record.metadata?.projectName | 'ファイル変換';
                     } else if (record.type === 'reset') {
                         type = '重置';
                         typeColor = '#6b7280';
                         sign = '';
-                        description = `每月重置 - ${record.metadata?.planType?.toUpperCase() || 'N/A'}`;
+                        description = `每月重置 - ${record.metadata?.planType?.toUpperCase() | 'N/A'}`;
                     } else {
                         type = 'その他';
                         typeColor = '#9ca3af';
@@ -1879,7 +1879,7 @@
                             <td style="padding: 1rem; color: #6b7280; font-size: 0.875rem;">${date}</td>
                             <td style="padding: 1rem; color: #1f2937;">${description}</td>
                             <td style="padding: 1rem; text-align: right; font-weight: 600; color: ${typeColor};">
-                                ${sign}${record.amount || 0}
+                                ${sign}${record.amount | 0}
                             </td>
                         </tr>
                     `);
@@ -1995,7 +1995,7 @@
             const btn = document.getElementById('mobile-menu-btn');
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
-            if (!btn || !overlay) {
+            if (!btn | !overlay) {
                 console.log('⏳ 要素未找まで，200ms後再試行');
                 setTimeout(simpleInitMenu, 200);
                 return;

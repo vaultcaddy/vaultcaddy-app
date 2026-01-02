@@ -191,14 +191,7 @@
 
 ### **5个FAQ全部修改**
 
-| # | FAQ问题 | 修改前 | 修改后 |
-|---|---------|--------|--------|
-| 1 | 如何從匯豐銀行網上銀行下載對帳單？ | button + flex | div + absolute |
-| 2 | VaultCaddy支援匯豐銀行所有帳戶類型嗎？ | button + flex | div + absolute |
-| 3 | 處理匯豐銀行對帳單需要多少費用？ | button + flex | div + absolute |
-| 4 | 數據安全嗎？會不會泄露？ | button + flex | div + absolute |
-| 5 | 可以導出到QuickBooks和Xero嗎？ | button + flex | div + absolute |
-
+| # | FAQ问题 | 修改前 | 修改后 | ---|---------|--------|-------- | 1 | 如何從匯豐銀行網上銀行下載對帳單？ | button + flex | div + absolute | 2 | VaultCaddy支援匯豐銀行所有帳戶類型嗎？ | button + flex | div + absolute | 3 | 處理匯豐銀行對帳單需要多少費用？ | button + flex | div + absolute | 4 | 數據安全嗎？會不會泄露？ | button + flex | div + absolute | 5 | 可以導出到QuickBooks和Xero嗎？ | button + flex | div + absolute
 ---
 
 ## 💻 **JavaScript更新**
@@ -232,14 +225,7 @@ icon.innerHTML = '−';  // 关闭状态
 
 ### **绝对定位的优势**
 
-| 特性 | Flexbox | 绝对定位 |
-|------|---------|----------|
-| **位置控制** | 相对的 | 绝对的 |
-| **受其他元素影响** | 是 | 否 |
-| **空白节点影响** | 是 | 否 |
-| **浏览器兼容** | 较新 | 非常好 |
-| **可靠性** | 中等 | 非常高 |
-
+| 特性 | Flexbox | 绝对定位 | ------|---------|---------- | **位置控制** | 相对的 | 绝对的 | **受其他元素影响** | 是 | 否 | **空白节点影响** | 是 | 否 | **浏览器兼容** | 较新 | 非常好 | **可靠性** | 中等 | 非常高
 ### **为什么这次一定能成功？**
 
 1. **+号完全独立**

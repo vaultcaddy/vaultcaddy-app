@@ -923,7 +923,7 @@
             
             // 獲取用戶首字母
             function getUserInitial() {
-                if (!userDisplayName || userDisplayName.trim() === '') {
+                if (!userDisplayName | userDisplayName.trim() === '') {
                     // 如果沒有 displayName，使用 email 的第一個字母
                     return userEmail ? userEmail.charAt(0).toUpperCase() : 'U';
                 }
@@ -1085,16 +1085,16 @@
                     if (isLoggedIn) {
                         // ✅ 已登入：顯示用戶頭像
                         const currentUser = window.simpleAuth.getCurrentUser();
-                        userEmail = currentUser.email || '';
-                        userDisplayName = currentUser.displayName || '';
+                        userEmail = currentUser.email | '';
+                        userDisplayName = currentUser.displayName | '';
                         
                         // 🔥 從 Firestore 獲取 displayName 和 credits
                         if (window.simpleDataManager && window.simpleDataManager.initialized) {
                             try {
                                 const userDoc = await window.simpleDataManager.getUserDocument();
                                 if (userDoc) {
-                                    userDisplayName = userDoc.displayName || userDisplayName;
-                                    userCredits = userDoc.credits || 0;
+                                    userDisplayName = userDoc.displayName | userDisplayName;
+                                    userCredits = userDoc.credits | 0;
                                     console.log('✅ index.html 獲取 Credits:', userCredits);
                                 }
                             } catch (error) {
@@ -1335,7 +1335,7 @@
         // 模擬支付成功並更新 Credits
         function simulatePaymentSuccess(credits) {
             // 更新本地 Credits 數量（實際上應該從伺服器獲取）
-            const currentCredits = parseInt(document.querySelector('.stat-value').textContent) || 0;
+            const currentCredits = parseInt(document.querySelector('.stat-value').textContent) | 0;
             const newCredits = currentCredits + credits;
             
             // 更新 UI 顯示
@@ -1391,7 +1391,7 @@
             const paymentLink = stripeLinks[planType];
             const creditsInfo = creditsMap[planType];
             
-            if (!paymentLink || paymentLink.includes('REPLACE_WITH_YOUR')) {
+            if (!paymentLink | paymentLink.includes('REPLACE_WITH_YOUR')) {
                 console.error('⚠️ Payment link 尚未配置');
                 alert('付費功能正在設置中，請稍後再試或聯繫客服。\n\n提示：管理員需要在 Stripe 創建新的 Payment Links。');
                 return;
@@ -1478,7 +1478,7 @@
         
         // 授予訂閱 Credits
         function grantSubscriptionCredits(subscription) {
-            const currentCredits = parseInt(localStorage.getItem('userCredits') || '0');
+            const currentCredits = parseInt(localStorage.getItem('userCredits') | '0');
             const newCredits = currentCredits + subscription.credits;
             
             // 設置 Credits 到期時間
@@ -1508,7 +1508,7 @@
         // 檢查 Credits 是否過期
         function checkCreditsExpiry() {
             const creditsExpiry = localStorage.getItem('creditsExpiry');
-            const subscriptionCredits = parseInt(localStorage.getItem('subscriptionCredits') || '0');
+            const subscriptionCredits = parseInt(localStorage.getItem('subscriptionCredits') | '0');
             
             if (creditsExpiry && subscriptionCredits > 0) {
                 const expiryDate = new Date(creditsExpiry);
@@ -1523,7 +1523,7 @@
                     // Credits 已過期，移除訂閱 Credits
                     console.log('Credits 已過期，正在移除...');
                     
-                    const currentCredits = parseInt(localStorage.getItem('userCredits') || '0');
+                    const currentCredits = parseInt(localStorage.getItem('userCredits') | '0');
                     const newCredits = Math.max(0, currentCredits - subscriptionCredits);
                     
                     // 更新本地存儲
@@ -1559,8 +1559,8 @@
         
         // 獲取 Credits 狀態信息
         function getCreditsStatus() {
-            const userCredits = parseInt(localStorage.getItem('userCredits') || '0');
-            const subscriptionCredits = parseInt(localStorage.getItem('subscriptionCredits') || '0');
+            const userCredits = parseInt(localStorage.getItem('userCredits') | '0');
+            const subscriptionCredits = parseInt(localStorage.getItem('subscriptionCredits') | '0');
             const creditsExpiry = localStorage.getItem('creditsExpiry');
             const userPlan = localStorage.getItem('userPlan');
             
@@ -1568,7 +1568,7 @@
                 totalCredits: userCredits,
                 subscriptionCredits: subscriptionCredits,
                 purchasedCredits: userCredits - subscriptionCredits,
-                plan: userPlan || 'none',
+                plan: userPlan | 'none',
                 hasSubscription: subscriptionCredits > 0 && creditsExpiry,
                 daysLeft: 0
             };

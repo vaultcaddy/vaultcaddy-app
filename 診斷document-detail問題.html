@@ -99,7 +99,7 @@
             const projectId = urlParams.get('project');
             const documentId = urlParams.get('id');
             
-            if (!projectId || !documentId) {
+            if (!projectId | !documentId) {
                 addResult('URL 參數檢查', 'warning', 
                     `⚠️ 缺少URL參數\n請訪問: https://vaultcaddy.com/document-detail.html?project=YOUR_PROJECT&id=YOUR_DOC`);
             } else {
@@ -118,7 +118,7 @@
             
             // 檢查 3: SimpleAuth
             let attempts = 0;
-            while ((!window.simpleAuth || !window.simpleAuth.initialized) && attempts < 50) {
+            while ((!window.simpleAuth | !window.simpleAuth.initialized) && attempts < 50) {
                 await new Promise(resolve => setTimeout(resolve, 100));
                 attempts++;
             }
@@ -140,7 +140,7 @@
             
             // 檢查 4: SimpleDataManager
             attempts = 0;
-            while ((!window.simpleDataManager || !window.simpleDataManager.initialized) && attempts < 50) {
+            while ((!window.simpleDataManager | !window.simpleDataManager.initialized) && attempts < 50) {
                 await new Promise(resolve => setTimeout(resolve, 100));
                 attempts++;
             }
@@ -159,11 +159,11 @@
                     const doc = await window.simpleDataManager.getDocument(projectId, documentId);
                     if (doc) {
                         addResult('文檔數據獲取', 'success', 
-                            `✅ 文檔存在\n名稱: ${doc.name || doc.fileName || '未命名'}\n狀態: ${doc.status || '未知'}\n處理進度: ${doc.processingProgress || 0}%`);
+                            `✅ 文檔存在\n名稱: ${doc.name | doc.fileName | '未命名'}\n狀態: ${doc.status | '未知'}\n處理進度: ${doc.processingProgress | 0}%`);
                         
                         // 檢查處理數據
                         if (doc.processedData) {
-                            const transCount = doc.processedData.transactions?.length || 0;
+                            const transCount = doc.processedData.transactions?.length | 0;
                             addResult('處理數據檢查', 'success', 
                                 `✅ 有處理數據\n交易記錄: ${transCount} 筆`);
                         } else {

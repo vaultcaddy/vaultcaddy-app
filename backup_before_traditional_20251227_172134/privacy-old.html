@@ -423,7 +423,7 @@
 
         // 獲取用戶首字母
         function getUserInitial() {
-            if (!userDisplayName || userDisplayName.trim() === '') {
+            if (!userDisplayName | userDisplayName.trim() === '') {
                 return userEmail ? userEmail.charAt(0).toUpperCase() : 'U';
             }
             
@@ -488,7 +488,7 @@
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 userEmail = user.email;
-                userDisplayName = user.displayName || '';
+                userDisplayName = user.displayName | '';
                 
                 const userAvatar = document.getElementById('user-avatar');
                 if (userAvatar) {
@@ -498,7 +498,7 @@
                 try {
                     const userDoc = await getDoc(doc(db, 'users', user.uid));
                     if (userDoc.exists()) {
-                        userCredits = userDoc.data().credits || 0;
+                        userCredits = userDoc.data().credits | 0;
                     }
                 } catch (error) {
                     console.error('獲取用戶數據失敗:', error);
