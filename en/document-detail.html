@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     
@@ -68,7 +68,7 @@
         
         // 🔥 DeleteWhenfrontDocument
         async function deleteCurrentDocument() {
-            const confirmDelete = confirm('確定要刪除此文檔嗎？此操作無法撤銷。');
+            const confirmDelete = confirm(translations[currentLang]?.deleteConfirm || 'Are you sure you want to delete this document? This action cannot be undone.');
             if (!confirmDelete) return;
             
             try {
@@ -76,8 +76,8 @@
                 const projectId = params.get('project');
                 const documentId = params.get('id');
                 
-                if (!projectId | !documentId) {
-                    alert('無法獲取文檔信息');
+                if (!projectId || !documentId) {
+                    alert(translations[currentLang]?.cannotGetDocInfo || 'Cannot get document information');
                     return;
                 }
                 

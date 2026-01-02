@@ -1663,35 +1663,30 @@ class LanguageManager {
             return languageMap[langCode];
         }
         
-        // ✅ 最終默認：根據路徑決定
-        if (pathname === '/' || pathname.includes('index.html')) {
-            console.log('🌐 根目錄，使用默認語言: zh-TW');
-            return 'zh-TW';
-        } else {
-            console.log('🌐 子目錄，使用默認語言: en');
-            return 'en';
-        }
+        // 默認返回繁體中文
+        console.log('🌐 使用默認語言: zh-TW');
+        return 'zh-TW';
     }
     
     init() {
         // 不創建語言選擇器，讓導航欄組件處理
         console.log('✅ LanguageManager 初始化，當前語言:', this.currentLanguage);
         
-        // ✅ 頁面語言應該始終與路徑一致
-        // 如果當前語言與頁面路徑不一致，優先使用頁面路徑的語言
+        // 只有當檢測到的語言與當前頁面語言不同時，才需要應用翻譯
+        // 大多數情況下，HTML已經包含了正確的語言內容，無需覆蓋
         const pathname = window.location.pathname;
         const pageLanguage = pathname.includes('/en/') ? 'en' 
                            : pathname.includes('/jp/') ? 'ja'
                            : pathname.includes('/kr/') ? 'ko'
                            : 'zh-TW';
         
-        if (this.currentLanguage !== pageLanguage) {
-            console.log('⚠️ 修正語言:', this.currentLanguage, '→', pageLanguage);
-            this.currentLanguage = pageLanguage;
+        if (this.currentLanguage === pageLanguage) {
+            console.log('✅ 頁面語言與檢測語言一致，無需應用翻譯');
+            // 不執行 loadLanguage，保留HTML原始內容
+        } else {
+            console.log('⚠️ 頁面語言與檢測語言不一致，應用翻譯:', pageLanguage, '→', this.currentLanguage);
+            this.loadLanguage(this.currentLanguage);
         }
-        
-        console.log('✅ 頁面語言已確認:', this.currentLanguage);
-        // 不執行 loadLanguage，保留HTML原始內容（HTML已經是正確的語言）
         
         // 監聽語言變更事件（用戶手動切換語言時）
         window.addEventListener('languageChanged', (e) => {

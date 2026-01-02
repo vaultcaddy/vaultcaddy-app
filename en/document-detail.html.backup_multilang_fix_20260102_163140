@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     
-    <!-- 🔒 ページ保護 -->
+    <!-- 🔒 pageprotected -->
     <style>
         body.auth-checking { visibility: hidden !important; }
         .auth-loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; align-items: center; justify-content: center; z-index: 9999; visibility: visible !important; }
@@ -18,10 +18,10 @@
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <!-- 🔇 安全隐藏制御台日志（ない删除代码） -->
+    <!-- 🔇 safeallhiddencontrolconsole log（do not delete code） -->
     <script defer src="../disable-console-safe.js"></script>
     
-    <title>文書詳細 - VaultCaddy明細書変換 | PDFからExcel/QuickBooks | 精度98% | VaultCaddy</title>
+    <title>Document details - VaultCaddy Statement Converter | PDF to Excel/QuickBooks | 98% Accuracy</title>
     <link rel="stylesheet" href="../styles.css">
     <link rel="stylesheet" href="../dashboard.css">
     <link rel="stylesheet" href="../pages.css">
@@ -36,26 +36,26 @@
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
     
-    <!-- Firebase 設定と數據管理器 -->
+    <!-- Firebase SettingsandDatamanager -->
     <script src="../firebase-config.js?v=20251106-editable"></script>
-    <!-- 🔥 新の簡化系統 -->
+    <!-- 🔥 newsimplified system -->
     <script defer src="../simple-auth.js?v=20251106-editable"></script>
     <script defer src="../user-profile-manager.js?v=20251120"></script>
     <script defer src="../simple-data-manager.js?v=20251106-editable"></script>
     
-    <!-- ナビゲーションバーのインタラクション機能 -->
+    <!-- Navigation bar interactionFeatures -->
     <script defer src="../navbar-interactions.js?v=20251108"></script>
     
-    <!-- ✅ 統一ナビゲーション欄系統：靜態 HTML + navbar-component.js -->
+    <!-- ✅ unifiednavigationcolumnsystem：static HTML + navbar-component.js -->
     <script defer src="../navbar-component.js?v=20251120-unified"></script>
     <script defer src="../sidebar-component.js?v=20251106-editable"></script>
     
-    <!-- 機能模块 - 簡化版 -->
+    <!-- Features模块 - 簡化version -->
     <script defer src="../export-manager.js?v=20251106-editable"></script>
     
-    <!-- ✅ 提前定義 goBackToDashboard 函數 -->
+    <!-- ✅ 提frontdefinition goBackToDashboard Function -->
     <script>
-        // 戻るダッシュボード（提前定義，回避 ReferenceError）
+        // BackDashboard（提frontdefinition，avoid ReferenceError）
         function goBackToDashboard() {
             const params = new URLSearchParams(window.location.search);
             const projectId = params.get('project');
@@ -66,9 +66,9 @@
             }
         }
         
-        // 🔥 削除當前文書
+        // 🔥 DeleteWhenfrontDocument
         async function deleteCurrentDocument() {
-            const confirmDelete = confirm(translations[currentLang]?.deleteConfirm || 'Are you sure you want to delete this document? This action cannot be undone.');
+            const confirmDelete = confirm('確定要刪除此文檔嗎？此操作無法撤銷。');
             if (!confirmDelete) return;
             
             try {
@@ -76,8 +76,8 @@
                 const projectId = params.get('project');
                 const documentId = params.get('id');
                 
-                if (!projectId || !documentId) {
-                    alert(translations[currentLang]?.cannotGetDocInfo || 'Cannot get document information');
+                if (!projectId | !documentId) {
+                    alert('無法獲取文檔信息');
                     return;
                 }
                 
@@ -131,12 +131,12 @@
             padding: 0;
         }
         
-        /* 使用と firstproject.html 同じの布局結構 */
+        /* Useand firstproject.html same的布bureaustructure */
         .dashboard-container {
             display: flex;
             min-height: 100vh;
             background: #ffffff;
-            padding-top: 20px; /* 🔥 電腦版：上移 15pt (60px - 15pt ≈ 45px) */
+            padding-top: 20px; /* 🔥 desktop：upmove 15pt (60px - 15pt ≈ 45px) */
         }
         
         .sidebar {
@@ -180,21 +180,21 @@
             gap: 0.5rem;
         }
         
-        /* 主コンテンツエリア */
+        /* mainContent area */
         .main-content {
-            margin-left: 280px; /* 左側欄寬度 */
+            margin-left: 280px; /* Left sidecolumnWidth */
             flex: 1;
             background: #ffffff;
             min-height: calc(100vh - 60px);
-            padding-top: 0; /* 🔥 確保無額外間距 */
+            padding-top: 0; /* 🔥 ensureNoneamountouterspacing */
         }
         
-        /* 詳情ページ頂部 */
+        /* DetailspageTop */
         .detail-header {
             background: #ffffff;
             border-bottom: 1px solid #e5e7eb;
             padding: 0.5rem 2rem;
-            margin-top: 5pt; /* 🔥 距離ナビゲーション欄 5pt */
+            margin-top: 5pt; /* 🔥 距離navigationcolumn 5pt */
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -230,22 +230,22 @@
             gap: 1rem;
         }
         
-        /* 詳情コンテンツ容器 */
+        /* DetailsContentContainer */
         .detail-container {
             display: grid;
             grid-template-columns: 550px 1fr;
-            gap: 0; /* 削除中間空白 */
+            gap: 0; /* RemoveMiddleempty白 */
             height: calc(100vh - 120px);
-            overflow: hidden; /* 🔥 防止容器本身產生スクロール條 */
+            overflow: hidden; /* 🔥 preventContainer本身產生scroll條 */
         }
         
-        /* 左側 PDF 預覽區 */
+        /* Left side PDF Preview區 */
         .pdf-preview-panel {
             background: #f9fafb;
             border-right: 1px solid #e5e7eb;
             display: flex;
             flex-direction: column;
-            overflow: hidden; /* 🔥 隱藏外層スクロール條，只保留 pdf-viewer のスクロール */
+            overflow: hidden; /* 🔥 Hideouterlayerscroll條，onlyreserve pdf-viewer 的scroll */
         }
         
         .pdf-controls {
@@ -320,7 +320,7 @@
             transform: scale(1.02);
         }
         
-        /* PDF 放大モーダル */
+        /* PDF Zoom inModal */
         .pdf-modal {
             display: none;
             position: fixed;
@@ -410,12 +410,12 @@
             font-weight: 600;
         }
         
-        /* 右側數據面板 */
+        /* Right sideDatapage板 */
         .data-panel {
             background: #ffffff;
             overflow-y: auto;
             padding: 2rem;
-            padding-top: calc(2rem + 30pt); /* 🔥 コンテンツ向下移 30pt */
+            padding-top: calc(2rem + 30pt); /* 🔥 ContentFloormove 30pt */
         }
         
         .tabs {
@@ -446,7 +446,7 @@
             color: #1f2937;
         }
         
-        /* 核對ステータスカード */
+        /* 核PairStatuscard */
         .reconciliation-card {
             background: #ffffff;
             border: 1px solid #e5e7eb;
@@ -482,7 +482,7 @@
             font-size: 0.9rem;
         }
         
-        /* 銀行取引明細書詳情 */
+        /* Bank StatementDetails */
         .bank-details-card {
             background: #ffffff;
             border: 1px solid #e5e7eb;
@@ -514,7 +514,7 @@
             color: #1f2937;
         }
         
-        /* 取引テーブル */
+        /* transactionTable */
         .transactions-section {
             background: #ffffff;
             border: 1px solid #e5e7eb;
@@ -653,7 +653,7 @@
             color: #ef4444;
         }
         
-        /* 読み込み動畫 */
+        /* LoadAnimation */
         .loading {
             display: flex;
             flex-direction: column;
@@ -677,20 +677,20 @@
             to { transform: rotate(360deg); }
         }
         
-        /* ==================== モバイル版専用スタイル ==================== */
+        /* ==================== MobileDedicatedStyle ==================== */
         @media (max-width: 768px) {
-            /* 🔥 モバイル版：顯示ハンバーガーメニュー */
+            /* 🔥 Mobile：ShowHamburger menu */
             #mobile-menu-btn {
                 display: block !important;
             }
             
-            /* 🔥 モバイル版：隱藏デスクトップ版 logo とテキスト */
+            /* 🔥 Mobile：HideDesktop logo andText */
             .desktop-logo,
             .desktop-logo-text {
                 display: none !important;
             }
             
-            /* 🔥 モバイル版：隱藏サイドバー，主コンテンツ全寬 */
+            /* 🔥 Mobile：HideSidebar，mainContentallwide */
             .sidebar {
                 display: none !important;
             }
@@ -701,7 +701,7 @@
                 padding: 0 !important;
             }
             
-            /* 主容器 */
+            /* mainContainer */
             body {
                 padding-top: 60px !important;
             }
@@ -717,25 +717,25 @@
                 margin: 0 !important;
             }
             
-            /* 🔥 モバイル版：ナビゲーション欄スタイル */
+            /* 🔥 Mobile：navigationcolumnStyle */
             .vaultcaddy-navbar {
                 padding: 0 1rem !important;
             }
             
-            /* 隱藏デスクトップ版ナビゲーション鏈接と言語セレクタ */
+            /* HideDesktopnavigationlinkandLanguageSelector */
             .vaultcaddy-navbar > div:nth-child(2) > div:first-child,
             .vaultcaddy-navbar > div:nth-child(2) > #language-dropdown {
                 display: none !important;
             }
             
-            /* 🔥 モバイル版：調整布局順序 */
+            /* 🔥 Mobile：adjust布bureauOrder */
             .detail-container {
                 display: flex !important;
                 flex-direction: column !important;
                 height: auto !important;
             }
             
-            /* 🔥 モバイル版布局順序：画像 > 詳情 > 數據 */
+            /* 🔥 Mobile布bureauOrder：Image > Details > Data */
             .pdf-preview-panel {
                 order: 1 !important;
                 width: 100% !important;
@@ -750,22 +750,22 @@
                 border-top: 1px solid #e5e7eb !important;
             }
             
-            /* 🔥 モバイル版：PDF表示器最適化 */
+            /* 🔥 Mobile：PDFViewdeviceoptimize */
             .pdf-viewer {
                 height: 50vh !important;
             }
             
-            /* 隱藏言語セレクタ */
+            /* HideLanguageSelector */
             #language-selector {
                 display: none !important;
             }
             
-            /* 🔥 ナビゲーション欄之外すべてコンテンツ向上移 10pt */
+            /* 🔥 navigationcolumn之outer所HasContentCeilmove 10pt */
             .main-content {
                 margin-top: -10pt !important;
             }
             
-            /* 詳情ページ頂部 - 更現代化 */
+            /* DetailspageTop - update現代化 */
             .detail-header {
                 padding: 0.75rem 1rem !important;
                 padding-top: 0 !important;
@@ -796,7 +796,7 @@
                 background: #e5e7eb !important;
             }
             
-            /* 🔥 モバイル版：文書タイトル美化 */
+            /* 🔥 Mobile：DocumentTitle美化 */
             .detail-header .document-title {
                 font-size: 1rem !important;
                 font-weight: 600 !important;
@@ -807,7 +807,7 @@
                 width: 100% !important;
             }
             
-            /* 🔥 モバイル版：ボタングループ改として左右排列 */
+            /* 🔥 Mobile：Button groupmodifyasleftrightarrangecolumn */
             .detail-header .top-actions {
                 display: flex !important;
                 flex-direction: row !important;
@@ -852,14 +852,14 @@
                 background: #fecaca !important;
             }
 
-            /* すべてカード */
+            /* 所Hascard */
             .card,
             div[style*="border-radius"][style*="padding"] {
                 padding: 1rem !important;
                 margin-bottom: 1rem !important;
             }
             
-            /* 🔥 モバイル版：コンテンツエリア */
+            /* 🔥 Mobile：Content area */
             .content-section {
                 padding: 0.75rem !important;
             }
@@ -869,7 +869,7 @@
                 border-radius: 8px !important;
             }
             
-            /* タイトル字體大小 */
+            /* TitleFontSize */
             h1 {
                 font-size: 1.25rem !important;
             }
@@ -882,7 +882,7 @@
                 font-size: 1rem !important;
             }
             
-            /* ボタン */
+            /* Button */
             button,
             .btn {
                 padding: 0.75rem 1rem !important;
@@ -890,7 +890,7 @@
                 white-space: nowrap !important;
             }
             
-            /* 🔧 確保 Export ボタン可クリック */
+            /* 🔧 ensure Export Buttoncanclick */
             #export-btn,
             #export-dropdown,
             button[onclick*="toggleExportMenu"] {
@@ -899,7 +899,7 @@
                 touch-action: manipulation !important;
             }
             
-            /* 🔧 モバイル版Exportメニュー中央表示 */
+            /* 🔧 MobileExportMenuCenter display */
             #exportMenu[style*="display: block"] {
                 position: fixed !important;
                 top: 50% !important;
@@ -908,7 +908,7 @@
                 right: auto !important;
                 bottom: auto !important;
                 margin: 0 !important;
-                z-index: 2147483647 !important; /* 🔥 32位整數最大值 */
+                z-index: 2147483647 !important; /* 🔥 32位whole數MaximumValue */
                 width: 90% !important;
                 max-width: 400px !important;
                 display: block !important;
@@ -922,7 +922,7 @@
                 padding: 1.5rem !important;
             }
             
-            /* 🔥 デスクトップ版改として右側ドロップダウンメニュー（とfirstproject.html同じ） */
+            /* 🔥 DesktopmodifyasRight sideDropdown menu（andfirstproject.htmlsame） */
             @media (min-width: 769px) {
                 #exportMenu[style*="display: block"] {
                     position: absolute !important;
@@ -936,13 +936,13 @@
                     z-index: 9999 !important;
                 }
                 
-                /* デスクトップ版ない需要背景マスク */
+                /* DesktopnotneedneedbackgroundMask */
                 #exportMenuOverlay {
                     display: none !important;
                 }
             }
             
-            /* 🔥 メニュー全体を白色に枠なし */
+            /* 🔥 Ensure all menu parts are whiteNo border */
             #exportMenu[style*="display: block"] > *,
             #exportMenu[style*="display: block"] > div,
             #exportMenu[style*="display: block"] .export-menu-item,
@@ -952,7 +952,7 @@
                 border-color: transparent !important;
             }
             
-            /* 🔥 Export メニュー背景マスク（デスクトップ版とモバイル版統一） */
+            /* 🔥 Export Menu background mask（DesktopandMobileunified） */
             #exportMenuOverlay {
                 position: fixed !important;
                 top: 0 !important;
@@ -968,15 +968,15 @@
                 display: block !important;
             }
             
-            /* Export メニュー項目のタッチ領域拡大 */
+            /* Export Menu items larger touch area */
             .export-menu-item,
             #exportMenu button {
                 padding: 1rem !important;
-                min-height: 50px !important; /* iOS 推薦觸控區域 */
+                min-height: 50px !important; /* iOS Recommended觸控Area */
                 touch-action: manipulation !important;
             }
             
-            /* 入力ボックス */
+            /* Input box */
             input,
             select,
             textarea {
@@ -984,13 +984,13 @@
                 padding: 0.75rem !important;
             }
             
-            /* 🔥 モバイル版：PDF表示器區域 */
+            /* 🔥 Mobile：PDFViewdeviceArea */
             .pdf-viewer {
                 padding: 1rem !important;
                 background: #f9fafb !important;
             }
             
-            /* PDF 預覽容器 - 更大更美觀 */
+            /* PDF PreviewContainer - updatelargeupdate美觀 */
             #pdf-container {
                 height: 50vh !important;
                 max-width: 100% !important;
@@ -1008,7 +1008,7 @@
                 object-fit: contain !important;
             }
             
-            /* 🔥 モバイル版：PDF制御ボタン - 縮小30%以適應屏幕 */
+            /* 🔥 Mobile：PDFcontrolButton - Zoom out30%toFit to screen */
             .pdf-controls {
                 padding: 0.25rem 0.35rem !important;
                 gap: 0.175rem !important;
@@ -1018,9 +1018,9 @@
                 border-radius: 4px !important;
                 margin: 0.175rem !important;
                 box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
-                max-width: 70% !important; /* 縮小30% */
+                max-width: 70% !important; /* Zoom out30% */
                 overflow-x: auto !important;
-                transform: scale(0.7); /* 整體縮小30% */
+                transform: scale(0.7); /* whole體Zoom out30% */
                 transform-origin: center;
             }
             
@@ -1037,13 +1037,13 @@
                 font-size: 0.455rem !important; /* 0.65 * 0.7 = 0.455 */
             }
             
-            /* 🔥 モバイル版：ページ指示器縮小 */
+            /* 🔥 Mobile：page指示deviceZoom out */
             .page-indicator {
                 font-size: 0.49rem !important; /* 0.7 * 0.7 = 0.49 */
                 padding: 0 0.175rem !important;
             }
             
-            /* 🔥 モバイル版：縮放ボタン區域 */
+            /* 🔥 Mobile：ZoomButtonArea */
             .pdf-zoom-controls {
                 gap: 0.14rem !important; /* 0.2 * 0.7 = 0.14 */
             }
@@ -1053,23 +1053,23 @@
                 min-width: 19.6px !important; /* 28 * 0.7 */
             }
             
-            /* 🔥 モバイル版：縮放顯示 */
+            /* 🔥 Mobile：ZoomShow */
             .zoom-display {
                 font-size: 0.455rem !important; /* 0.65 * 0.7 */
                 min-width: 24.5px !important; /* 35 * 0.7 */
             }
             
-            /* 🔥 モバイル版：テーブル橫向スクロール */
+            /* 🔥 Mobile：Tablehorizontaltoscroll */
             .table-wrapper,
             .transactions-section {
                 overflow-x: auto !important;
                 -webkit-overflow-scrolling: touch !important;
             }
             
-            /* テーブル */
+            /* Table */
             table {
                 font-size: 0.75rem !important;
-                min-width: 600px !important; /* 最小寬度，允許橫向スクロール */
+                min-width: 600px !important; /* MinimumWidth，allowhorizontaltoscroll */
             }
             
             table th,
@@ -1078,7 +1078,7 @@
                 white-space: nowrap !important;
             }
             
-            /* 🔥 モバイル版：テーブル第一列固定（日付列） */
+            /* 🔥 Mobile：TableNo.onecolumnfixed（Datecolumn） */
             table th:first-child,
             table td:first-child {
                 position: sticky !important;
@@ -1088,13 +1088,13 @@
                 box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05) !important;
             }
             
-            /* 隱藏部分ない重要の列（Balance列） */
+            /* Hidepartialnotheavyneed的column（Balancecolumn） */
             table th:nth-child(5),
             table td:nth-child(5) {
                 display: none !important;
             }
             
-            /* 🔥 モバイル版：PDF Modal全屏 */
+            /* 🔥 Mobile：PDF ModalFullscreen */
             .pdf-modal-content {
                 width: 95% !important;
                 max-width: 95% !important;
@@ -1126,7 +1126,7 @@
     </script>
 
 
-    <!-- 资源提示 - 优化加载速度 -->
+    <!-- resourcesTips - optimize loading speed -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://www.googletagmanager.com">
@@ -1134,7 +1134,7 @@
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
         <script src="/multilingual-data-sync.js"></script>
 
-    <meta name="description" content="AI搭載の文書詳細 - VaultCaddy明細書変換ツール。3秒でPDFをExcel/QuickBooks/Xeroに変換、精度98%。20ページ無料試用、クレジットカード不要。¥926/月から、日本200+企業が信頼。">
+    <meta name="description" content="AI-powered Document details - VaultCaddy statement converter. Convert PDF to Excel/QuickBooks/Xero in 3 seconds with 98% accuracy. Free 20-page trial, no credit card required. From $5.59/month, trusted by 500+ businesses.">
 
     <link rel="canonical" href="https://vaultcaddy.com/document-detail.html">
 
@@ -1142,13 +1142,13 @@
 {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  "name": "VaultCaddy - 文書詳細 - VaultCaddy Statement Converter",
+  "name": "VaultCaddy - Document details - VaultCaddy Statement Converter",
   "applicationCategory": "FinanceApplication",
   "operatingSystem": "Web, iOS, Android",
   "offers": {
     "@type": "Offer",
-    "price": "926",
-    "priceCurrency": "JPY",
+    "price": "5.59",
+    "priceCurrency": "USD",
     "priceValidUntil": "2026-12-31"
   },
   "aggregateRating": {
@@ -1169,18 +1169,18 @@
 </script>
     </head>
 <body class="auth-checking">
-    <!-- 🔒 Auth 加載動畫 -->
+    <!-- 🔒 Auth LoadAnimation -->
     <div class="auth-loading">
         <div style="text-align: center;">
             <div style="width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
-            <p style="color: #6b7280; font-size: 0.875rem;">本人確認中...</p>
+            <p style="color: #6b7280; font-size: 0.875rem;">Verifying identity...</p>
         </div>
     </div>
     
-    <!-- ✅ 統一された静のナビゲーションバー -->
+    <!-- ✅ Unified static navbar -->
     <nav class="vaultcaddy-navbar" id="main-navbar" style="position: fixed; top: 0; left: 0; right: 0; height: 60px; background: #ffffff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; z-index: 1000; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);">
         <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <!-- 🔥 ハンバーガーメニューボタン（僅手機顯示） -->
+            <!-- 🔥 Hamburger menuButton（mobile onlyShow） -->
             <button id="mobile-menu-btn" onclick="openMobileSidebar()" style="display: none; background: none; border: none; cursor: pointer; padding: 0.5rem; color: #1f2937; font-size: 1.5rem;">
                 <i class="fas fa-bars"></i>
             </button>
@@ -1197,10 +1197,10 @@
         </div>
         <div style="display: flex; align-items: center; gap: 2rem;">
             <div style="display: flex; align-items: center; gap: 2rem;">
-                <a href="index.html#features" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">機能</a>
-                <a href="index.html#pricing" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">価格</a>
-                <a href="blog/" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">学習センター</a>
-                <a href="dashboard.html" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">ダッシュボード</a>
+                <a href="index.html#features" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">Features</a>
+                <a href="index.html#pricing" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">Pricing</a>
+                <a href="blog/" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">Learning Center</a>
+                <a href="dashboard.html" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">Dashboard</a>
             </div>
             <div id="language-switcher" style="display: inline-block; margin-right: 1rem;"></div>
                 <div id="user-menu" style="position: relative; display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;">
@@ -1209,76 +1209,76 @@
         </div>
     </nav>
     
-    <!-- 🔥 手機サイドバーメニュー -->
+    <!-- 🔥 mobileSidebarMenu -->
     <div id="mobile-sidebar" style="position: fixed; top: 0; left: -100%; width: 280px; height: 100vh; background: white; z-index: 2000; transition: left 0.3s ease; box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto;">
         <div style="padding: 1.5rem;">
             <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                 <a href="index.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
                     <i class="fas fa-home" style="width: 20px; color: #667eea;"></i>
-                    <span>ホーム</span>
+                    <span>Home</span>
                 </a>
                 <a href="index.html#features" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
                     <i class="fas fa-star" style="width: 20px; color: #667eea;"></i>
-                    <span>機能</span>
+                    <span>Features</span>
                 </a>
                 <a href="index.html#pricing" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
                     <i class="fas fa-dollar-sign" style="width: 20px; color: #667eea;"></i>
-                    <span>価格</span>
+                    <span>Pricing</span>
                 </a>
                 <a href="blog/" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
                     <i class="fas fa-graduation-cap" style="width: 20px; color: #667eea;"></i>
-                    <span>学習センター</span>
+                    <span>Learning Center</span>
                 </a>
                 <a href="dashboard.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
                     <i class="fas fa-th-large" style="width: 20px; color: #667eea;"></i>
-                    <span>ダッシュボード</span>
+                    <span>Dashboard</span>
                 </a>
             </div>
         </div>
     </div>
     
-    <!-- 🔥 サイドバーマスク -->
+    <!-- 🔥 SidebarMask -->
     <div id="mobile-sidebar-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; display: none;" onclick="closeMobileSidebar()"></div>
     
-    <!-- 主容器 -->
+    <!-- mainContainer -->
     <div class="dashboard-container">
-        <!-- 左サイドバー（由 sidebar-component.js 動の生成） -->
+        <!-- leftSidebar（by sidebar-component.js Dynamically generated） -->
         <aside class="sidebar"></aside>
         
-        <!-- 主コンテンツエリア -->
+        <!-- mainContent area -->
         <div class="main-content">
-            <!-- 詳情ページ頂部 -->
+            <!-- DetailspageTop -->
             <div class="detail-header">
                 <span class="back-btn" onclick="goBackToDashboard()">
                     <i class="fas fa-arrow-left"></i>
-                    戻るダッシュボード
+                    BackDashboard
                 </span>
-                <h1 class="document-title" id="documentTitle">読み込み中...</h1>
+                <h1 class="document-title" id="documentTitle">Loading...</h1>
                 <div class="top-actions">
-                    <!-- 保存指示器（動態顯示） -->
+                    <!-- Save指示device（dynamicShow） -->
                     <span id="savedIndicator" class="saved-indicator" style="display: none;">
                         <i class="fas fa-cloud-check"></i>
                         Saved
                     </span>
-                    <!-- 导出按钮（綠色）- メニュー已移まで body 最後 -->
+                    <!-- 导exitpress钮（綠色）- Menualreadymoveto body Finally -->
                     <div class="export-dropdown" style="position: relative;">
                         <button onclick="toggleExportMenu(event)" style="background: #10b981; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
                             <i class="fas fa-download"></i>
                             <span>Export</span>
                             <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
                         </button>
-                        <!-- Export メニュー已移まで body 最後面 -->
+                        <!-- Export Menualreadymoveto body Finallypage -->
                     </div>
-                    <button class="icon-btn delete" onclick="deleteCurrentDocument()" title="削除文書" style="background: #fee2e2; border: 1px solid #fecaca; color: #ef4444; padding: 0.5rem 1rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem;">
+                    <button class="icon-btn delete" onclick="deleteCurrentDocument()" title="DeleteDocument" style="background: #fee2e2; border: 1px solid #fecaca; color: #ef4444; padding: 0.5rem 1rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem;">
                         <i class="fas fa-trash"></i>
                         <span>Delete</span>
                     </button>
                 </div>
             </div>
             
-            <!-- 詳情コンテンツ容器 -->
+            <!-- DetailsContentContainer -->
             <div class="detail-container">
-        <!-- 左側 PDF 預覽 -->
+        <!-- Left side PDF Preview -->
         <div class="pdf-preview-panel">
             <div class="pdf-controls">
                 <button class="page-nav-btn" id="prevPageBtn" onclick="previousPage()">
@@ -1307,26 +1307,26 @@
             <div class="pdf-viewer" id="pdfViewer">
                 <div class="loading">
                     <div class="loading-spinner"></div>
-                    <div>ドキュメントを読み込み中...</div>
+                    <div>Loading document...</div>
                 </div>
             </div>
         </div>
         
-        <!-- 右側數據面板 -->
+        <!-- Right sideDatapage板 -->
         <div class="data-panel">
-            <!-- 🔥 已削除 "Results Export JSON" 標籤頁 -->
+            <!-- 🔥 alreadyRemove "Results Export JSON" marksignpage -->
             
-            <!-- 文書詳細（根據タイプ動態顯示） -->
+            <!-- Document details（Root據TypedynamicShow） -->
             <div id="documentDetailsSection">
-                <!-- 將由 JavaScript 動の生成 -->
+                <!-- willby JavaScript Dynamically generated -->
             </div>
             
-            <!-- 數據テーブル（根據タイプ動態顯示） -->
+            <!-- DataTable（Root據TypedynamicShow） -->
             <div id="documentDataSection">
-                <!-- 將由 JavaScript 動の生成 -->
+                <!-- willby JavaScript Dynamically generated -->
             </div>
             
-            <!-- 原有の銀行取引明細書取引記録テーブル（保留作として備用） -->
+            <!-- originalHas的Bank StatementtransactionrecordTable（reserve作as備use） -->
             <div id="bankStatementSection" style="display: none;">
                 <div class="bank-details-card">
                     <div class="card-header">
@@ -1365,7 +1365,7 @@
                     <tbody id="transactionsBody">
                         <tr>
                             <td colspan="6" style="text-align: center; padding: 2rem; color: #94a3b8;">
-                                取引を読み込み中...
+                                Loading transactions...
                             </td>
                         </tr>
                     </tbody>
@@ -1374,43 +1374,43 @@
         </div>
     </div>
     
-    <!-- PDF 放大モーダル -->
+    <!-- PDF Zoom inModal -->
     <div id="pdfModal" class="pdf-modal">
         <span class="pdf-modal-close" onclick="closePdfModal()">&times;</span>
         <div class="pdf-modal-content">
-            <img id="pdfModalImage" class="pdf-modal-image" src="" alt="PDF 放大檢視" loading="lazy">
+            <img id="pdfModalImage" class="pdf-modal-image" src="" alt="PDF Zoom in檢視" loading="lazy">
         </div>
         <div class="pdf-modal-controls">
             <button class="pdf-modal-btn" onclick="previousModalPage()">
-                <i class="fas fa-chevron-left"></i> 前へ
+                <i class="fas fa-chevron-left"></i> Previous
             </button>
             <span class="pdf-modal-info">
                 <span id="modalCurrentPage">1</span> / <span id="modalTotalPages">1</span>
             </button>
             <button class="pdf-modal-btn" onclick="nextModalPage()">
-                次へ <i class="fas fa-chevron-right"></i>
+                Next <i class="fas fa-chevron-right"></i>
             </button>
         </div>
     </div>
     
-    <!-- Export 模塊 -->
+    <!-- Export module -->
     <script defer src="bank-statement-export.js"></script>
     <script defer src="invoice-export.js"></script>
     
     <script defer src="../document-detail-new.js?v=20251107-rewrite"></script>
     
-    <!-- PDF 放大表示機能 -->
+    <!-- PDF Zoom inViewFeatures -->
     <script>
         let modalCurrentPageIndex = 0;
         let modalPdfPages = [];
         
-        // 初期化 PDF 放大機能
+        // Initialize PDF Zoom inFeatures
         function initPdfZoom() {
-            // 取得すべて PDF ページ画像
+            // Get所Has PDF pageImage
             const pdfImages = document.querySelectorAll('.pdf-page img');
             modalPdfPages = Array.from(pdfImages);
             
-            // として每個画像添加クリック事件
+            // asper個ImageAddclickEvent
             pdfImages.forEach((img, index) => {
                 img.addEventListener('click', function() {
                     openPdfModal(index);
@@ -1418,7 +1418,7 @@
             });
         }
         
-        // 開くモーダル
+        // OpenModal
         function openPdfModal(pageIndex) {
             const modal = document.getElementById('pdfModal');
             const modalImage = document.getElementById('pdfModalImage');
@@ -1431,18 +1431,18 @@
             
             updateModalPageInfo();
             
-            // 防止背景スクロール
+            // preventbackgroundscroll
             document.body.style.overflow = 'hidden';
         }
         
-        // 關閉モーダル
+        // CloseModal
         function closePdfModal() {
             const modal = document.getElementById('pdfModal');
             modal.classList.remove('active');
             document.body.style.overflow = 'auto';
         }
         
-        // 前へ
+        // Previous
         function previousModalPage() {
             if (modalCurrentPageIndex > 0) {
                 modalCurrentPageIndex--;
@@ -1450,7 +1450,7 @@
             }
         }
         
-        // 次へ
+        // Next
         function nextModalPage() {
             if (modalCurrentPageIndex < modalPdfPages.length - 1) {
                 modalCurrentPageIndex++;
@@ -1458,20 +1458,20 @@
             }
         }
         
-        // 更新モーダル画像
+        // UpdateModalImage
         function updateModalImage() {
             const modalImage = document.getElementById('pdfModalImage');
             modalImage.src = modalPdfPages[modalCurrentPageIndex].src;
             updateModalPageInfo();
         }
         
-        // 更新頁碼信息
+        // UpdatePage numberInformation
         function updateModalPageInfo() {
             document.getElementById('modalCurrentPage').textContent = modalCurrentPageIndex + 1;
             document.getElementById('modalTotalPages').textContent = modalPdfPages.length;
         }
         
-        // 鍵盤ナビゲーション
+        // Key盤navigation
         document.addEventListener('keydown', function(e) {
             const modal = document.getElementById('pdfModal');
             if (!modal.classList.contains('active')) return;
@@ -1485,26 +1485,26 @@
             }
         });
         
-        // クリック背景關閉
+        // clickbackgroundClose
         document.getElementById('pdfModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closePdfModal();
             }
         });
         
-        // 延遲初期化，待機 PDF 加載完了
+        // DelayInitialize，Wait PDF LoadComplete
         setTimeout(() => {
             initPdfZoom();
         }, 2000);
         
-        // 監聽 PDF 加載完了事件（もしあれば）
+        // Listen PDF LoadCompleteEvent（If any）
         window.addEventListener('pdfLoaded', function() {
             setTimeout(() => {
                 initPdfZoom();
             }, 500);
         });
         
-        // 🔄 關閉 Export メニュー
+        // 🔄 Close Export Menu
         window.closeExportMenu = function() {
             const menu = document.getElementById('exportMenu');
             const overlay = document.getElementById('exportMenuOverlay');
@@ -1516,19 +1516,19 @@
             }
         };
         
-        // 🔄 動の生成 Export メニュー（文書に基づいてタイプ）
+        // 🔄 Dynamically generated Export Menu（Based on documentType）
         window.toggleExportMenu = function(event) {
             const menu = document.getElementById('exportMenu');
             const overlay = document.getElementById('exportMenuOverlay');
             if (!menu) return;
             
-            // 如果メニュー已顯示，則關閉
+            // IfMenualreadyShow，則Close
             if (menu.style.display === 'block') {
                 closeExportMenu();
                 return;
             }
             
-            // 🔧 總是顯示背景マスク（CSS會制御デスクトップ版隱藏）
+            // 🔧 totalYesShowbackgroundMask（CSSwillcontrolDesktopHide）
             if (!overlay) {
                 const newOverlay = document.createElement('div');
                 newOverlay.id = 'exportMenuOverlay';
@@ -1539,13 +1539,13 @@
                 overlay.style.display = 'block';
             }
             
-            // 文書に基づいてタイプ生成メニュー
+            // Based on documentTypeGenerateMenu
             updateExportMenuForDocumentDetail();
             
-            // 顯示メニュー
+            // ShowMenu
             menu.style.display = 'block';
             
-            // 🔥 デスクトップ版：動的位置メニュー至ExportボタンDown
+            // 🔥 Desktop version: Dynamic position menu to Export button below
             if (window.innerWidth > 768) {
                 const exportBtn = event ? event.currentTarget : document.querySelector('button[onclick*="toggleExportMenu"]');
                 if (exportBtn) {
@@ -1553,7 +1553,7 @@
                     const exportDropdown = exportBtn.closest('.export-dropdown');
                     
                     if (exportDropdown) {
-                        // 相対にexport-dropdown位置
+                        // Relative to export-dropdown position
                         menu.style.position = 'absolute';
                         menu.style.top = 'auto';
                         menu.style.left = 'auto';
@@ -1562,12 +1562,12 @@
                         menu.style.transform = 'none';
                         menu.style.marginTop = '0.5rem';
                         
-                        // 將メニュー移動至export-dropdown内
+                        // Move menu to export-dropdown inside
                         exportDropdown.appendChild(menu);
                     }
                 }
             } else {
-                // モバイル版：確保メニュー在body中と中央顯示
+                // Mobile version: Ensure menu in body and centered display
                 if (menu.parentElement !== document.body) {
                     document.body.appendChild(menu);
                 }
@@ -1580,30 +1580,30 @@
                 menu.style.marginTop = '0';
             }
             
-            console.log('📤 Export メニュー已顯示');
+            console.log('📤 Export MenualreadyShow');
         };
         
         function updateExportMenuForDocumentDetail() {
             const menu = document.getElementById('exportMenu');
             if (!menu) return;
             
-            // から currentDocument 取得文書タイプ（定義で document-detail-new.js）
+            // from currentDocument GetDocumentType（definitionin document-detail-new.js）
             let docType = 'general';
             if (window.currentDocument) {
                 docType = window.currentDocument.type | window.currentDocument.documentType | 'general';
-                // 🔥 標準化文書タイプ
+                // 🔥 Standard化DocumentType
                 docType = docType.toLowerCase();
-                console.log('📄 Export メニュー - 文書タイプ:', docType);
+                console.log('📄 Export Menu - DocumentType:', docType);
             } else {
-                console.warn('⚠️ window.currentDocument 未定義，取得失敗文書タイプ');
+                console.warn('⚠️ window.currentDocument Undefined，Failed to fetchDocumentType');
             }
             
-            // 🔥 モバイル版：添加關閉ボタン
+            // 🔥 Mobile：AddCloseButton
             let menuHTML = '';
             if (window.innerWidth <= 768) {
                 menuHTML += `
                     <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 1rem; border-bottom: 1px solid #e5e7eb; margin-bottom: 1rem;">
-                        <h2 style="margin: 0; font-size: 1.25rem; font-weight: 600; color: #1f2937;">選択導出フォーマット</h2>
+                        <h2 style="margin: 0; font-size: 1.25rem; font-weight: 600; color: #1f2937;">SelectExportFormat</h2>
                         <button onclick="closeExportMenu()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6b7280; padding: 0.5rem;">
                             <i class="fas fa-times"></i>
                         </button>
@@ -1613,38 +1613,38 @@
             
             menuHTML += '<div style="padding: 0.5rem 0; background: #ffffff;">';
             
-            // 文書に基づいてタイプ顯示對應選項
-            if (docType === 'invoice' | docType === '請求書' | docType === 'invoices') {
-                // 請求書：顯示請求書選項 + その他（IIF/QBO）
+            // Based on documentTypeShowPairshouldOptions
+            if (docType === 'invoice' | docType === 'Invoice' | docType === 'invoices') {
+                // Invoice：ShowInvoiceOptions + Other（IIF/QBO）
                 menuHTML += `
-                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">請求書</div>
+                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">Invoice</div>
                     <button onclick="exportDocument('invoice_summary_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
                         <i class="fas fa-file-invoice" style="color: #f59e0b; width: 20px;"></i>
                         <div>
-                            <div style="font-weight: 500;">標準 CSV（合計）</div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">快速對帳</div>
+                            <div style="font-weight: 500;">Standard CSV（Total）</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">fastPairaccount</div>
                         </div>
                     </button>
                     <button onclick="exportDocument('invoice_detailed_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
                         <i class="fas fa-file-invoice" style="color: #f59e0b; width: 20px;"></i>
                         <div>
-                            <div style="font-weight: 500;">完整取引數據 CSV</div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">詳細記録</div>
+                            <div style="font-weight: 500;">completewholetransactionData CSV</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">detailsrecord</div>
                         </div>
                     </button>
-                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">その他</div>
+                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">Other</div>
                     <button onclick="exportDocument('xero_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
                         <i class="fas fa-file-csv" style="color: #2563eb; width: 20px;"></i>
                         <div>
                             <div style="font-weight: 500;">Xero CSV</div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">官方最小フォーマット</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">officialMinimumFormat</div>
                         </div>
                     </button>
                     <button onclick="exportDocument('quickbooks_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
                         <i class="fas fa-file-csv" style="color: #059669; width: 20px;"></i>
                         <div>
                             <div style="font-weight: 500;">QuickBooks CSV</div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">官方最小フォーマット</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">officialMinimumFormat</div>
                         </div>
                     </button>
                     <button onclick="exportDocument('iif')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
@@ -1663,29 +1663,29 @@
                     </button>
                 `;
             } else {
-                // 銀行取引明細書：顯示銀行取引明細書選項 + その他（Xero/QuickBooks/IIF/QBO）
+                // Bank Statement：ShowBank StatementOptions + Other（Xero/QuickBooks/IIF/QBO）
                 menuHTML += `
-                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">銀行取引明細書</div>
+                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">Bank Statement</div>
                     <button onclick="exportDocument('bank_statement_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
                         <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
                         <div>
-                            <div style="font-weight: 500;">標準 CSV</div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">完全フィールドフォーマット</div>
+                            <div style="font-weight: 500;">Standard CSV</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">complete fieldsFormat</div>
                         </div>
                     </button>
-                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">その他</div>
+                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">Other</div>
                     <button onclick="exportDocument('xero_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
                         <i class="fas fa-file-csv" style="color: #2563eb; width: 20px;"></i>
                         <div>
                             <div style="font-weight: 500;">Xero CSV</div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">官方最小フォーマット</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">officialMinimumFormat</div>
                         </div>
                     </button>
                     <button onclick="exportDocument('quickbooks_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
                         <i class="fas fa-file-csv" style="color: #059669; width: 20px;"></i>
                         <div>
                             <div style="font-weight: 500;">QuickBooks CSV</div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">官方最小フォーマット</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">officialMinimumFormat</div>
                         </div>
                     </button>
                     <button onclick="exportDocument('iif')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
@@ -1710,9 +1710,9 @@
         }
     </script>
     
-    <!-- 🔥 手機サイドバー機能 -->
+    <!-- 🔥 mobileSidebarFeatures -->
     <script>
-        // 開くサイドバー
+        // OpenSidebar
         function openMobileSidebar() {
             const sidebar = document.getElementById('mobile-sidebar');
             const overlay = document.getElementById('mobile-sidebar-overlay');
@@ -1723,7 +1723,7 @@
             }
         }
         
-        // 關閉サイドバー
+        // CloseSidebar
         function closeMobileSidebar() {
             const sidebar = document.getElementById('mobile-sidebar');
             const overlay = document.getElementById('mobile-sidebar-overlay');
@@ -1735,12 +1735,12 @@
         }
     </script>
     
-    <!-- 🔥 Export メニュー（放で body 最後面確保で最上層）-->
+    <!-- 🔥 Export Menu（placein body Finallypageensureinmostuplayer）-->
     <div id="exportMenu" class="export-menu" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: none; border-radius: 12px; box-shadow: 0 25px 50px rgba(0,0,0,0.25); min-width: 280px; max-width: 90%; max-height: 80vh; overflow: auto; z-index: 2147483647; padding: 1rem;">
-        <!-- 動の生成のメニューコンテンツ -->
+        <!-- Dynamically generated的MenuContent -->
     </div>
     
-    <!-- 🔥 Export メニュー背景マスク（z-index 低にメニュー）-->
+    <!-- 🔥 Export Menu background mask（z-index lowatMenu）-->
     <div id="exportMenuOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2147483646;" onclick="closeExportMenu()"></div>
 
 
