@@ -1,3 +1,85 @@
+// 🌏 多语言支持 - Invoice 详情
+function getInvoiceText(key) {
+    const path = window.location.pathname;
+    let lang = 'en';
+    if (path.includes('/jp/')) lang = 'ja';
+    else if (path.includes('/kr/')) lang = 'ko';
+    else if (!path.includes('/en/')) lang = 'zh-TW';
+    
+    const translations = {
+        en: {
+            invoiceDetails: 'Invoice Details',
+            invoiceNumber: 'Invoice Number',
+            date: 'Date',
+            vendor: 'Vendor',
+            totalAmount: 'Total Amount',
+            lineItems: 'Line Items',
+            editable: '(Editable)',
+            code: 'Code',
+            description: 'Description',
+            quantity: 'Quantity',
+            unit: 'Unit',
+            unitPrice: 'Unit Price',
+            amount: 'Amount',
+            unitDefault: 'pcs',
+            noItems: 'No item data'
+        },
+        ja: {
+            invoiceDetails: '請求書詳細',
+            invoiceNumber: '請求書番号',
+            date: '日付',
+            vendor: '仕入先',
+            totalAmount: '合計金額',
+            lineItems: '明細項目',
+            editable: '(編集可能)',
+            code: 'コード',
+            description: '説明',
+            quantity: '数量',
+            unit: '単位',
+            unitPrice: '単価',
+            amount: '金額',
+            unitDefault: '個',
+            noItems: '項目データなし'
+        },
+        ko: {
+            invoiceDetails: '송장 상세',
+            invoiceNumber: '송장 번호',
+            date: '날짜',
+            vendor: '공급업체',
+            totalAmount: '총액',
+            lineItems: '항목 명세',
+            editable: '(편집 가능)',
+            code: '코드',
+            description: '설명',
+            quantity: '수량',
+            unit: '단위',
+            unitPrice: '단가',
+            amount: '금액',
+            unitDefault: '개',
+            noItems: '항목 데이터 없음'
+        },
+        'zh-TW': {
+            invoiceDetails: '發票詳情',
+            invoiceNumber: '發票號碼',
+            date: '日期',
+            vendor: '供應商',
+            totalAmount: '總金額',
+            lineItems: '項目明細',
+            editable: '(可編輯)',
+            code: '代碼',
+            description: '描述',
+            quantity: '數量',
+            unit: '單位',
+            unitPrice: '單價',
+            amount: '金額',
+            unitDefault: '件',
+            noItems: '' + getInvoiceText('noItems') + ''
+        }
+    };
+    
+    return translations[lang][key] || translations['en'][key] || key;
+}
+
 // ============================================
 // VaultCaddy Document Detail Page
 // 完全重寫的簡化版本
@@ -1043,29 +1125,29 @@ function displayInvoiceContent(data) {
         <div class="bank-details-card">
             <h3 class="card-title" style="margin-bottom: 1.5rem;">
                 <i class="fas fa-file-invoice" style="color: #3b82f6; margin-right: 0.5rem;"></i>
-                Invoice Details
+                ' + getInvoiceText('invoiceDetails') + '
             </h3>
             <div class="invoice-details-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">Invoice Number</label>
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">' + getInvoiceText('invoiceNumber') + '</label>
                     <input type="text" id="invoiceNumber" value="${data.invoiceNumber || data.invoice_number || '—'}" 
                            onchange="autoSaveInvoiceDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">Date</label>
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">' + getInvoiceText('date') + '</label>
                     <input type="date" id="invoiceDate" value="${data.date || data.invoice_date || ''}" 
                            onchange="autoSaveInvoiceDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">Vendor</label>
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">' + getInvoiceText('vendor') + '</label>
                     <input type="text" id="vendor" value="${data.vendor || data.supplier || data.merchantName || '—'}" 
                            onchange="autoSaveInvoiceDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">Total Amount</label>
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">' + getInvoiceText('totalAmount') + '</label>
                     <input type="text" id="totalAmount" value="${formatCurrency(data.total || data.totalAmount || 0)}" 
                            onchange="autoSaveInvoiceDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; font-weight: 600; color: #10b981; background: white;">
@@ -1097,7 +1179,7 @@ function displayInvoiceContent(data) {
                 <td contenteditable="true" data-field="code" data-index="${index}" style="padding: 0.75rem; color: #6b7280; cursor: text;">${item.code || item.itemCode || '—'}</td>
                 <td contenteditable="true" data-field="description" data-index="${index}" style="padding: 0.75rem; color: #1f2937; font-weight: 500; cursor: text;">${item.description || '—'}</td>
                 <td contenteditable="true" data-field="quantity" data-index="${index}" style="padding: 0.75rem; text-align: right; color: #1f2937; cursor: text;">${quantity}</td>
-                <td contenteditable="true" data-field="unit" data-index="${index}" style="padding: 0.75rem; text-align: right; color: #6b7280; cursor: text;">${item.unit || 'pcs'}</td>
+                <td contenteditable="true" data-field="unit" data-index="${index}" style="padding: 0.75rem; text-align: right; color: #6b7280; cursor: text;">${item.unit || getInvoiceText('unitDefault')}</td>
                 <td contenteditable="true" data-field="unit_price" data-index="${index}" style="padding: 0.75rem; text-align: right; color: #1f2937; cursor: text;">${unitPrice.toFixed(2)}</td>
                 <td contenteditable="true" data-field="amount" data-index="${index}" style="padding: 0.75rem; text-align: right; color: #1f2937; font-weight: 500; cursor: text;">${amount.toFixed(2)}</td>
             </tr>
@@ -1108,22 +1190,22 @@ function displayInvoiceContent(data) {
         <div class="transactions-section">
             <h3 class="transactions-title" style="margin-bottom: 1rem;">
                 <i class="fas fa-list" style="color: #8b5cf6; margin-right: 0.5rem;"></i>
-                Line Items
-                <span style="font-size: 0.875rem; color: #6b7280; font-weight: normal; margin-left: 0.5rem;">(Editable)</span>
+                ' + getInvoiceText('lineItems') + '
+                <span style="font-size: 0.875rem; color: #6b7280; font-weight: normal; margin-left: 0.5rem;">' + getInvoiceText('editable') + '</span>
             </h3>
             <table class="transactions-table">
                 <thead>
                     <tr>
-                        <th>Code</th>
-                        <th>Description</th>
-                        <th style="text-align: right;">Quantity</th>
-                        <th style="text-align: right;">Unit</th>
-                        <th style="text-align: right;">Unit Price</th>
-                        <th style="text-align: right;">Amount</th>
+                        <th>' + getInvoiceText('code') + '</th>
+                        <th>' + getInvoiceText('description') + '</th>
+                        <th style="text-align: right;">' + getInvoiceText('quantity') + '</th>
+                        <th style="text-align: right;">' + getInvoiceText('unit') + '</th>
+                        <th style="text-align: right;">' + getInvoiceText('unitPrice') + '</th>
+                        <th style="text-align: right;">' + getInvoiceText('amount') + '</th>
                     </tr>
                 </thead>
                 <tbody id="itemsTableBody">
-                    ${itemsHTML || '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: #6b7280;">無項目數據</td></tr>'}
+                    ${itemsHTML || '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: #6b7280;">' + getInvoiceText('noItems') + '</td></tr>'}
                 </tbody>
             </table>
         </div>
@@ -1551,11 +1633,11 @@ function displayReceiptContent(data) {
                     <div style="padding: 0.5rem; background: #f9fafb; border-radius: 6px; font-size: 0.9rem;">${data.merchantName || data.vendor || '—'}</div>
                 </div>
                 <div>
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">Date</label>
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">' + getInvoiceText('date') + '</label>
                     <div style="padding: 0.5rem; background: #f9fafb; border-radius: 6px; font-size: 0.9rem;">${data.date || '—'}</div>
                 </div>
                 <div>
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">Total Amount</label>
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">' + getInvoiceText('totalAmount') + '</label>
                     <div style="padding: 0.5rem; background: #f9fafb; border-radius: 6px; font-size: 0.9rem; font-weight: 600; color: #10b981;">${formatCurrency(data.total || data.totalAmount || 0)}</div>
                 </div>
                 <div>

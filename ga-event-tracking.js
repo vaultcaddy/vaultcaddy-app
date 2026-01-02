@@ -146,7 +146,7 @@
     // ============================================
     // 5. Free Trial Banner点击跟踪 ⭐⭐⭐⭐⭐
     // ============================================
-    function trackFreeTrial BannerClicks() {
+    function trackFreeTrialBannerClicks() {
         const banners = document.querySelectorAll('.free-trial-banner-container, [href*="signup"]');
         
         banners.forEach(banner => {
