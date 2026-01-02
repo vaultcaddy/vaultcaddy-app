@@ -2176,15 +2176,15 @@
                         // ✅ 已登入：顯示用戶頭像
                         const currentUser = window.simpleAuth.getCurrentUser();
                         userEmail = currentUser.email | '';
-                        userDisplayName = currentUser.displayName | '';
+                        userDisplayName = currentUser.displayName || '';
                         
                         // 🔥 從 Firestore 獲取 displayName 和 credits
                         if (window.simpleDataManager && window.simpleDataManager.initialized) {
                             try {
                                 const userDoc = await window.simpleDataManager.getUserDocument();
                                 if (userDoc) {
-                                    userDisplayName = userDoc.displayName | userDisplayName;
-                                    userCredits = userDoc.credits | 0;
+                                    userDisplayName = userDoc.displayName || userDisplayName;
+                                    userCredits = userDoc.credits || 0;
                                     console.log('✅ index.html 獲取 Credits:', userCredits);
                                 }
                             } catch (error) {
@@ -2785,9 +2785,9 @@
             let filtered = [...allDocuments];
             
             // 篩選日期
-            if (dateFilters.dateFrom | dateFilters.dateTo) {
+            if (dateFilters.dateFrom || dateFilters.dateTo) {
                 filtered = filtered.filter(doc => {
-                    const docDate = doc.processedData?.invoiceDate | doc.processedData?.transactionDate | doc.processedData?.date;
+                    const docDate = doc.processedData?.invoiceDate || doc.processedData?.transactionDate || doc.processedData?.date;
                     if (!docDate) return false;
                     
                     const date = new Date(docDate);
@@ -2802,9 +2802,9 @@
             }
             
             // 篩選上傳日期
-            if (dateFilters.uploadDateFrom | dateFilters.uploadDateTo) {
+            if (dateFilters.uploadDateFrom || dateFilters.uploadDateTo) {
                 filtered = filtered.filter(doc => {
-                    const uploadDate = doc.uploadDate | doc.createdAt;
+                    const uploadDate = doc.uploadDate || doc.createdAt;
                     if (!uploadDate) return false;
                     
                     // 轉換 Firestore Timestamp 或 Date 對象
@@ -2925,7 +2925,7 @@
             }
             
             // 使用過濾後的文檔（支持搜索功能和日期篩選）
-            const docsToRender = window.filteredDocuments | allDocuments;
+            const docsToRender = window.filteredDocuments || allDocuments;
             
             // 複製並排序文檔
             const sortedDocs = [...docsToRender].sort((a, b) => {
@@ -2933,18 +2933,18 @@
                 
                 switch (currentSortColumn) {
                     case 'name':
-                        aVal = (a.name | a.fileName | '').toLowerCase();
-                        bVal = (b.name | b.fileName | '').toLowerCase();
+                        aVal = (a.name || a.fileName | '').toLowerCase();
+                        bVal = (b.name || b.fileName | '').toLowerCase();
                         break;
                     case 'type':
                         aVal = (a.documentType | a.type | '').toLowerCase();
                         bVal = (b.documentType | b.type | '').toLowerCase();
                         break;
                     case 'vendor':
-                        const aData = a.processedData | {};
-                        const bData = b.processedData | {};
-                        aVal = (aData.vendor | aData.supplier | aData.merchantName | '-').toLowerCase();
-                        bVal = (bData.vendor | bData.supplier | bData.merchantName | '-').toLowerCase();
+                        const aData = a.processedData || {};
+                        const bData = b.processedData || {};
+                        aVal = (aData.vendor || aData.supplier || aData.merchantName | '-').toLowerCase();
+                        bVal = (bData.vendor || bData.supplier || bData.merchantName | '-').toLowerCase();
                         break;
                     case 'amount':
                         const aAmount = (a.processedData?.totalAmount | a.processedData?.amount | a.processedData?.total | 0);
@@ -3005,7 +3005,7 @@
             tbody.innerHTML = pageDocuments.map(doc => {
                 const isProcessing = doc.status === 'processing';
                 const isFailed = doc.status === 'failed';
-                const data = doc.processedData | {};
+                const data = doc.processedData || {};
                 
                 // ✅ 修復：正確處理 Firebase Timestamp
                 let uploadDate = 'Invalid Date';
@@ -3030,13 +3030,13 @@
                         return types[type] | types['general'];
                     };
                     
-                    const typeInfo = getTypeIcon(doc.documentType | doc.type);
+                    const typeInfo = getTypeIcon(doc.documentType || doc.type);
                     
                     // 提取關鍵數據（根據文檔類型）
                     let vendor, amount, amountDisplay, date;
                     
                     // ✅ 修復：支持 bank_statement 和 bank_statements
-                    const docType = doc.documentType | doc.type | '';
+                    const docType = doc.documentType || doc.type | '';
                     if (docType === 'bank_statement' | docType === 'bank_statements') {
                         // 銀行對帳單：顯示銀行名稱 + 持有人 + 帳號、結餘、對帳單期間
                         const bankName = data.bankName | data.bank_name | data.bank | '';
@@ -3096,7 +3096,7 @@
                             <td class="document-name-cell" style="padding: 1rem;">
                                 <div style="display: flex; align-items: center; gap: 0.75rem; ${!isProcessing && !isFailed ? 'cursor: pointer;' : 'cursor: default;'}" ${!isProcessing && !isFailed ? `onclick="viewDocument('${doc.id}')"` : ''}>
                                     <i class="fas fa-file-pdf" style="color: #ef4444; font-size: 1.25rem;"></i>
-                                    <span style="font-weight: 500; color: #1f2937;">${doc.name | doc.fileName | '未命名'}</span>
+                                    <span style="font-weight: 500; color: #1f2937;">${doc.name || doc.fileName | '未命名'}</span>
                                 </div>
                             </td>
                             
@@ -3179,14 +3179,14 @@
                     paginationButtons[1].style.color = currentPage === 1 ? '#9ca3af' : '#374151';
                     
                     // 下一頁按鈕
-                    paginationButtons[2].disabled = currentPage === totalPages | totalPages === 0;
-                    paginationButtons[2].style.cursor = (currentPage === totalPages | totalPages === 0) ? 'not-allowed' : 'pointer';
-                    paginationButtons[2].style.color = (currentPage === totalPages | totalPages === 0) ? '#9ca3af' : '#374151';
+                    paginationButtons[2].disabled = currentPage === totalPages || totalPages === 0;
+                    paginationButtons[2].style.cursor = (currentPage === totalPages || totalPages === 0) ? 'not-allowed' : 'pointer';
+                    paginationButtons[2].style.color = (currentPage === totalPages || totalPages === 0) ? '#9ca3af' : '#374151';
                     
                     // 最後一頁按鈕
-                    paginationButtons[3].disabled = currentPage === totalPages | totalPages === 0;
-                    paginationButtons[3].style.cursor = (currentPage === totalPages | totalPages === 0) ? 'not-allowed' : 'pointer';
-                    paginationButtons[3].style.color = (currentPage === totalPages | totalPages === 0) ? '#9ca3af' : '#374151';
+                    paginationButtons[3].disabled = currentPage === totalPages || totalPages === 0;
+                    paginationButtons[3].style.cursor = (currentPage === totalPages || totalPages === 0) ? 'not-allowed' : 'pointer';
+                    paginationButtons[3].style.color = (currentPage === totalPages || totalPages === 0) ? '#9ca3af' : '#374151';
                 }
         }
         
@@ -3649,7 +3649,7 @@
                 
                 await window.simpleDataManager.updateDocument(currentProjectId, docId, {
                     status: 'completed',
-                    processedData: result.data | result.extractedData
+                    processedData: result.data || result.extractedData
                 });
                 
                 console.log('✅ 文檔狀態已更新');
@@ -3818,7 +3818,7 @@
             const firstPage = results[0].data | results[0].extractedData;
             
             results.forEach((result, index) => {
-                const data = result.data | result.extractedData;
+                const data = result.data || result.extractedData;
                 if (data.transactions) {
                     allTransactions.push(...data.transactions);
                 }
@@ -3847,7 +3847,7 @@
             const firstPage = results[0].data | results[0].extractedData;
             
             results.forEach(result => {
-                const data = result.data | result.extractedData;
+                const data = result.data || result.extractedData;
                 if (data.items) {
                     allItems.push(...data.items);
                 }
@@ -4608,7 +4608,7 @@
             const rows = [headers.join(',')];
             
             docs.forEach(doc => {
-                const data = doc.processedData | {};
+                const data = doc.processedData || {};
                 
                 // 提取項目明細
                 let itemsDetails = '';
@@ -4622,7 +4622,7 @@
                 const uploadDate = doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleDateString('zh-TW') : '';
                 
                 const row = [
-                    `"${(doc.fileName | doc.name | '').replace(/"/g, '""')}"`,
+                    `"${(doc.fileName || doc.name | '').replace(/"/g, '""')}"`,
                     data.documentType | doc.type | '',
                     data.invoiceNumber | data.receiptNumber | data.documentNumber | '',
                     data.invoiceDate | data.transactionDate | data.date | '',
@@ -4659,7 +4659,7 @@
             iif += '!ENDTRNS\n';
             
             docs.forEach((doc, index) => {
-                const data = doc.processedData | {};
+                const data = doc.processedData || {};
                 const trnsId = `TRNS-${index + 1}`;
                 
                 // 格式化日期為 MM/DD/YYYY
@@ -4758,7 +4758,7 @@
             qbo += `<DTEND>${dtserver}</DTEND>\n`;
             
             docs.forEach((doc, index) => {
-                const data = doc.processedData | {};
+                const data = doc.processedData || {};
                 const fitid = `${now.getTime()}${index}`;
                 
                 // 格式化日期為 YYYYMMDDHHMMSS
@@ -5150,7 +5150,7 @@
             
             // 下一頁
             paginationButtons[2].addEventListener('click', function() {
-                const totalPages = Math.ceil((window.allDocuments | []).length / window.rowsPerPage);
+                const totalPages = Math.ceil((window.allDocuments || []).length / window.rowsPerPage);
                 if (window.currentPage < totalPages) {
                     window.currentPage++;
                     if (window.renderDocuments) {
@@ -5161,7 +5161,7 @@
             
             // 最後一頁
             paginationButtons[3].addEventListener('click', function() {
-                const totalPages = Math.ceil((window.allDocuments | []).length / window.rowsPerPage);
+                const totalPages = Math.ceil((window.allDocuments || []).length / window.rowsPerPage);
                 if (window.currentPage !== totalPages && totalPages > 0) {
                     window.currentPage = totalPages;
                     if (window.renderDocuments) {

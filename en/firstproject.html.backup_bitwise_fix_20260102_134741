@@ -2214,15 +2214,15 @@
                         // ✅ alreadyLogin：ShowUseravatar
                         const currentUser = window.simpleAuth.getCurrentUser();
                         userEmail = currentUser.email | '';
-                        userDisplayName = currentUser.displayName || '';
+                        userDisplayName = currentUser.displayName | '';
                         
                         // 🔥 from Firestore Get displayName and credits
                         if (window.simpleDataManager && window.simpleDataManager.initialized) {
                             try {
                                 const userDoc = await window.simpleDataManager.getUserDocument();
                                 if (userDoc) {
-                                    userDisplayName = userDoc.displayName || userDisplayName;
-                                    userCredits = userDoc.credits || 0;
+                                    userDisplayName = userDoc.displayName | userDisplayName;
+                                    userCredits = userDoc.credits | 0;
                                     console.log('✅ index.html Get Credits:', userCredits);
                                 }
                             } catch (error) {
@@ -2823,9 +2823,9 @@
             let filtered = [...allDocuments];
             
             // FilterDate
-            if (dateFilters.dateFrom || dateFilters.dateTo) {
+            if (dateFilters.dateFrom | dateFilters.dateTo) {
                 filtered = filtered.filter(doc => {
-                    const docDate = doc.processedData?.invoiceDate || doc.processedData?.transactionDate || doc.processedData?.date;
+                    const docDate = doc.processedData?.invoiceDate | doc.processedData?.transactionDate | doc.processedData?.date;
                     if (!docDate) return false;
                     
                     const date = new Date(docDate);
@@ -2840,9 +2840,9 @@
             }
             
             // FilterUpload Date
-            if (dateFilters.uploadDateFrom || dateFilters.uploadDateTo) {
+            if (dateFilters.uploadDateFrom | dateFilters.uploadDateTo) {
                 filtered = filtered.filter(doc => {
-                    const uploadDate = doc.uploadDate || doc.createdAt;
+                    const uploadDate = doc.uploadDate | doc.createdAt;
                     if (!uploadDate) return false;
                     
                     // Convert Firestore Timestamp or Date Object
@@ -2963,7 +2963,7 @@
             }
             
             // Usefilterback的Document（SupportSearchFeaturesandDateFilter）
-            const docsToRender = window.filteredDocuments || allDocuments;
+            const docsToRender = window.filteredDocuments | allDocuments;
             
             // DuplicateandSortDocument
             const sortedDocs = [...docsToRender].sort((a, b) => {
@@ -2971,18 +2971,18 @@
                 
                 switch (currentSortColumn) {
                     case 'name':
-                        aVal = (a.name || a.fileName | '').toLowerCase();
-                        bVal = (b.name || b.fileName | '').toLowerCase();
+                        aVal = (a.name | a.fileName | '').toLowerCase();
+                        bVal = (b.name | b.fileName | '').toLowerCase();
                         break;
                     case 'type':
                         aVal = (a.documentType | a.type | '').toLowerCase();
                         bVal = (b.documentType | b.type | '').toLowerCase();
                         break;
                     case 'vendor':
-                        const aData = a.processedData || {};
-                        const bData = b.processedData || {};
-                        aVal = (aData.vendor || aData.supplier || aData.merchantName | '-').toLowerCase();
-                        bVal = (bData.vendor || bData.supplier || bData.merchantName | '-').toLowerCase();
+                        const aData = a.processedData | {};
+                        const bData = b.processedData | {};
+                        aVal = (aData.vendor | aData.supplier | aData.merchantName | '-').toLowerCase();
+                        bVal = (bData.vendor | bData.supplier | bData.merchantName | '-').toLowerCase();
                         break;
                     case 'amount':
                         const aAmount = (a.processedData?.totalAmount | a.processedData?.amount | a.processedData?.total | 0);
@@ -3043,7 +3043,7 @@
             tbody.innerHTML = pageDocuments.map(doc => {
                 const isProcessing = doc.status === 'processing';
                 const isFailed = doc.status === 'failed';
-                const data = doc.processedData || {};
+                const data = doc.processedData | {};
                 
                 // ✅ repair：correctProcess Firebase Timestamp
                 let uploadDate = 'Invalid Date';
@@ -3068,13 +3068,13 @@
                         return types[type] | types['general'];
                     };
                     
-                    const typeInfo = getTypeIcon(doc.documentType || doc.type);
+                    const typeInfo = getTypeIcon(doc.documentType | doc.type);
                     
                     // extractcloseKeyData（Based on documentType）
                     let vendor, amount, amountDisplay, date;
                     
                     // ✅ repair：Support bank_statement and bank_statements
-                    const docType = doc.documentType || doc.type | '';
+                    const docType = doc.documentType | doc.type | '';
                     if (docType === 'bank_statement' | docType === 'bank_statements') {
                         // Bank Statement：ShowbanklineName + 持Has人 + account號、結餘、Pairaccountsingleduring
                         const bankName = data.bankName | data.bank_name | data.bank | '';
@@ -3134,7 +3134,7 @@
                             <td class="document-name-cell" style="padding: 1rem;">
                                 <div style="display: flex; align-items: center; gap: 0.75rem; ${!isProcessing && !isFailed ? 'cursor: pointer;' : 'cursor: default;'}" ${!isProcessing && !isFailed ? `onclick="viewDocument('${doc.id}')"` : ''}>
                                     <i class="fas fa-file-pdf" style="color: #ef4444; font-size: 1.25rem;"></i>
-                                    <span style="font-weight: 500; color: #1f2937;">${doc.name || doc.fileName | 'not命名'}</span>
+                                    <span style="font-weight: 500; color: #1f2937;">${doc.name | doc.fileName | 'not命名'}</span>
                                 </div>
                             </td>
                             
@@ -3217,14 +3217,14 @@
                     paginationButtons[1].style.color = currentPage === 1 ? '#9ca3af' : '#374151';
                     
                     // Next page button
-                    paginationButtons[2].disabled = currentPage === totalPages || totalPages === 0;
-                    paginationButtons[2].style.cursor = (currentPage === totalPages || totalPages === 0) ? 'not-allowed' : 'pointer';
-                    paginationButtons[2].style.color = (currentPage === totalPages || totalPages === 0) ? '#9ca3af' : '#374151';
+                    paginationButtons[2].disabled = currentPage === totalPages | totalPages === 0;
+                    paginationButtons[2].style.cursor = (currentPage === totalPages | totalPages === 0) ? 'not-allowed' : 'pointer';
+                    paginationButtons[2].style.color = (currentPage === totalPages | totalPages === 0) ? '#9ca3af' : '#374151';
                     
                     // Last page button
-                    paginationButtons[3].disabled = currentPage === totalPages || totalPages === 0;
-                    paginationButtons[3].style.cursor = (currentPage === totalPages || totalPages === 0) ? 'not-allowed' : 'pointer';
-                    paginationButtons[3].style.color = (currentPage === totalPages || totalPages === 0) ? '#9ca3af' : '#374151';
+                    paginationButtons[3].disabled = currentPage === totalPages | totalPages === 0;
+                    paginationButtons[3].style.cursor = (currentPage === totalPages | totalPages === 0) ? 'not-allowed' : 'pointer';
+                    paginationButtons[3].style.color = (currentPage === totalPages | totalPages === 0) ? '#9ca3af' : '#374151';
                 }
         }
         
@@ -3687,7 +3687,7 @@
                 
                 await window.simpleDataManager.updateDocument(currentProjectId, docId, {
                     status: 'completed',
-                    processedData: result.data || result.extractedData
+                    processedData: result.data | result.extractedData
                 });
                 
                 console.log('✅ DocumentStatusUpdated');
@@ -3852,7 +3852,7 @@
             const firstPage = results[0].data | results[0].extractedData;
             
             results.forEach((result, index) => {
-                const data = result.data || result.extractedData;
+                const data = result.data | result.extractedData;
                 if (data.transactions) {
                     allTransactions.push(...data.transactions);
                 }
@@ -3881,7 +3881,7 @@
             const firstPage = results[0].data | results[0].extractedData;
             
             results.forEach(result => {
-                const data = result.data || result.extractedData;
+                const data = result.data | result.extractedData;
                 if (data.items) {
                     allItems.push(...data.items);
                 }
@@ -4642,7 +4642,7 @@
             const rows = [headers.join(',')];
             
             docs.forEach(doc => {
-                const data = doc.processedData || {};
+                const data = doc.processedData | {};
                 
                 // extractProjectDetails
                 let itemsDetails = '';
@@ -4656,7 +4656,7 @@
                 const uploadDate = doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleDateString('zh-TW') : '';
                 
                 const row = [
-                    `"${(doc.fileName || doc.name | '').replace(/"/g, '""')}"`,
+                    `"${(doc.fileName | doc.name | '').replace(/"/g, '""')}"`,
                     data.documentType | doc.type | '',
                     data.invoiceNumber | data.receiptNumber | data.documentNumber | '',
                     data.invoiceDate | data.transactionDate | data.date | '',
@@ -4693,7 +4693,7 @@
             iif += '!ENDTRNS\n';
             
             docs.forEach((doc, index) => {
-                const data = doc.processedData || {};
+                const data = doc.processedData | {};
                 const trnsId = `TRNS-${index + 1}`;
                 
                 // FormatDateas MM/DD/YYYY
@@ -4792,7 +4792,7 @@
             qbo += `<DTEND>${dtserver}</DTEND>\n`;
             
             docs.forEach((doc, index) => {
-                const data = doc.processedData || {};
+                const data = doc.processedData | {};
                 const fitid = `${now.getTime()}${index}`;
                 
                 // FormatDateas YYYYMMDDHHMMSS
@@ -5194,7 +5194,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Next page
         paginationButtons[2].addEventListener('click', function() {
-            const totalPages = Math.ceil((window.allDocuments || []).length / window.rowsPerPage);
+            const totalPages = Math.ceil((window.allDocuments | []).length / window.rowsPerPage);
             if (window.currentPage < totalPages) {
                 window.currentPage++;
                 if (window.renderDocuments) {
@@ -5205,7 +5205,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Last page
         paginationButtons[3].addEventListener('click', function() {
-            const totalPages = Math.ceil((window.allDocuments || []).length / window.rowsPerPage);
+            const totalPages = Math.ceil((window.allDocuments | []).length / window.rowsPerPage);
             if (window.currentPage !== totalPages && totalPages > 0) {
                 window.currentPage = totalPages;
                 if (window.renderDocuments) {

@@ -2825,7 +2825,7 @@
             // FilterDate
             if (dateFilters.dateFrom || dateFilters.dateTo) {
                 filtered = filtered.filter(doc => {
-                    const docDate = doc.processedData?.invoiceDate || doc.processedData?.transactionDate || doc.processedData?.date;
+                    const docDate = doc.processedData?.invoiceDate | doc.processedData?.transactionDate | doc.processedData?.date;
                     if (!docDate) return false;
                     
                     const date = new Date(docDate);
@@ -2842,7 +2842,7 @@
             // FilterUpload Date
             if (dateFilters.uploadDateFrom || dateFilters.uploadDateTo) {
                 filtered = filtered.filter(doc => {
-                    const uploadDate = doc.uploadDate || doc.createdAt;
+                    const uploadDate = doc.uploadDate | doc.createdAt;
                     if (!uploadDate) return false;
                     
                     // Convert Firestore Timestamp or Date Object
@@ -2979,8 +2979,8 @@
                         bVal = (b.documentType | b.type | '').toLowerCase();
                         break;
                     case 'vendor':
-                        const aData = a.processedData || {};
-                        const bData = b.processedData || {};
+                        const aData = a.processedData | {};
+                        const bData = b.processedData | {};
                         aVal = (aData.vendor || aData.supplier || aData.merchantName | '-').toLowerCase();
                         bVal = (bData.vendor || bData.supplier || bData.merchantName | '-').toLowerCase();
                         break;
@@ -3217,14 +3217,14 @@
                     paginationButtons[1].style.color = currentPage === 1 ? '#9ca3af' : '#374151';
                     
                     // Next page button
-                    paginationButtons[2].disabled = currentPage === totalPages || totalPages === 0;
-                    paginationButtons[2].style.cursor = (currentPage === totalPages || totalPages === 0) ? 'not-allowed' : 'pointer';
-                    paginationButtons[2].style.color = (currentPage === totalPages || totalPages === 0) ? '#9ca3af' : '#374151';
+                    paginationButtons[2].disabled = currentPage === totalPages | totalPages === 0;
+                    paginationButtons[2].style.cursor = (currentPage === totalPages | totalPages === 0) ? 'not-allowed' : 'pointer';
+                    paginationButtons[2].style.color = (currentPage === totalPages | totalPages === 0) ? '#9ca3af' : '#374151';
                     
                     // Last page button
-                    paginationButtons[3].disabled = currentPage === totalPages || totalPages === 0;
-                    paginationButtons[3].style.cursor = (currentPage === totalPages || totalPages === 0) ? 'not-allowed' : 'pointer';
-                    paginationButtons[3].style.color = (currentPage === totalPages || totalPages === 0) ? '#9ca3af' : '#374151';
+                    paginationButtons[3].disabled = currentPage === totalPages | totalPages === 0;
+                    paginationButtons[3].style.cursor = (currentPage === totalPages | totalPages === 0) ? 'not-allowed' : 'pointer';
+                    paginationButtons[3].style.color = (currentPage === totalPages | totalPages === 0) ? '#9ca3af' : '#374151';
                 }
         }
         
@@ -4656,7 +4656,7 @@
                 const uploadDate = doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleDateString('zh-TW') : '';
                 
                 const row = [
-                    `"${(doc.fileName || doc.name | '').replace(/"/g, '""')}"`,
+                    `"${(doc.fileName | doc.name | '').replace(/"/g, '""')}"`,
                     data.documentType | doc.type | '',
                     data.invoiceNumber | data.receiptNumber | data.documentNumber | '',
                     data.invoiceDate | data.transactionDate | data.date | '',
