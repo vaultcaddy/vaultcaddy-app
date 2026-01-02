@@ -2987,8 +2987,8 @@
                     case 'amount':
                         const aAmount = (a.processedData?.totalAmount | a.processedData?.amount | a.processedData?.total | 0);
                         const bAmount = (b.processedData?.totalAmount | b.processedData?.amount | b.processedData?.total | 0);
-                        aVal = parseFloat(aAmount) || 0;
-                        bVal = parseFloat(bAmount) || 0;
+                        aVal = parseFloat(aAmount) | 0;
+                        bVal = parseFloat(bAmount) | 0;
                         break;
                     case 'date':
                         const aDate = a.processedData?.invoiceDate | a.processedData?.transactionDate | a.processedData?.date | '';
@@ -3051,7 +3051,7 @@
                     if (typeof doc.createdAt === 'object' && doc.createdAt.seconds) {
                         // Firebase Timestamp Object
                         uploadDate = new Date(doc.createdAt.seconds * 1000).toLocaleDateString('zh-TW');
-                    } else if (typeof doc.createdAt === 'string' || typeof doc.createdAt === 'number') {
+                    } else if (typeof doc.createdAt === 'string' | typeof doc.createdAt === 'number') {
                         // Stringortimestamp
                         uploadDate = new Date(doc.createdAt).toLocaleDateString('zh-TW');
                     }
@@ -3089,8 +3089,8 @@
                         vendor = vendorLines.length > 0 ? vendorLines.join('<br>') : '-';
                         
                         // ✅ extractperiod初andperiod末Balance
-                        const openingBalance = data.openingBalance || data.opening_balance || 0;
-                        const closingBalance = data.closingBalance || data.closing_balance || data.balance || data.endBalance || data.finalBalance || 0;
+                        const openingBalance = data.openingBalance | data.opening_balance | 0;
+                        const closingBalance = data.closingBalance | data.closing_balance | data.balance | data.endBalance | data.finalBalance | 0;
                         
                         // ✅ ShowFormat：Start: $X,XXX.XX | End: $Y,YYY.YY
                         // 🔧 Show "Processing..." instead of $0.00 when balance is 0
@@ -3101,7 +3101,7 @@
                         }
                         
                         // ✅ extractPairaccountsingleduring andConvertFormat（22 Feb 2025 to 22 Mar 2025）
-                        let statementPeriod = data.statementPeriod || data.statement_period || data.period || '';
+                        let statementPeriod = data.statementPeriod | data.statement_period | data.period || '';
                         if (statementPeriod && statementPeriod.includes('to')) {
                             // If "2025-02-22 to 2025-03-22" Format，Convert to "22 Feb 2025 to 22 Mar 2025"
                             const parts = statementPeriod.split(' to ');
@@ -3117,13 +3117,13 @@
                                 }
                             }
                         }
-                        date = statementPeriod || data.statementDate || data.statement_date || data.date || '-';
+                        date = statementPeriod | data.statementDate | data.statement_date | data.date || '-';
                     } else {
                         // Invoice/Receipt/onegeneralDocument：Showsupply商、totalAmount、Date
-                        vendor = data.vendor || data.supplier || data.merchantName || data.source || '-';
-                        amount = data.totalAmount || data.amount || data.total;
+                        vendor = data.vendor | data.supplier | data.merchantName | data.source || '-';
+                        amount = data.totalAmount | data.amount | data.total;
                         amountDisplay = amount ? `$${parseFloat(amount).toLocaleString('zh-TW', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '-';
-                        date = data.invoiceDate || data.transactionDate || data.date || '-';
+                        date = data.invoiceDate | data.transactionDate | data.date || '-';
                     }
                     
                     return `
@@ -3134,7 +3134,7 @@
                             <td class="document-name-cell" style="padding: 1rem;">
                                 <div style="display: flex; align-items: center; gap: 0.75rem; ${!isProcessing && !isFailed ? 'cursor: pointer;' : 'cursor: default;'}" ${!isProcessing && !isFailed ? `onclick="viewDocument('${doc.id}')"` : ''}>
                                     <i class="fas fa-file-pdf" style="color: #ef4444; font-size: 1.25rem;"></i>
-                                    <span style="font-weight: 500; color: #1f2937;">${doc.name || doc.fileName || 'not命名'}</span>
+                                    <span style="font-weight: 500; color: #1f2937;">${doc.name || doc.fileName | 'not命名'}</span>
                                 </div>
                             </td>
                             
@@ -3858,10 +3858,10 @@
                 }
                 // ✅ Compatible兩種Naming method（camelCase and snake_case）
                 if (index === 0) {
-                    totalOpeningBalance = parseFloat(data.openingBalance || data.opening_balance) || 0;
+                    totalOpeningBalance = parseFloat(data.openingBalance | data.opening_balance) | 0;
                 }
                 if (index === results.length - 1) {
-                    totalClosingBalance = parseFloat(data.closingBalance || data.closing_balance) || 0;
+                    totalClosingBalance = parseFloat(data.closingBalance | data.closing_balance) | 0;
                 }
             });
             
@@ -3886,7 +3886,7 @@
                     allItems.push(...data.items);
                 }
                 if (data.totalAmount) {
-                    totalAmount += parseFloat(data.totalAmount) || 0;
+                    totalAmount += parseFloat(data.totalAmount) | 0;
                 }
             });
             
@@ -3902,7 +3902,7 @@
         function mergeGeneralPages(results) {
             const allText = results.map((r, i) => {
                 const data = r.data | r.extractedData;
-                return `--- Page ${i + 1} ---\n${data.full_text || data.text || ''}`;
+                return `--- Page ${i + 1} ---\n${data.full_text | data.text || ''}`;
             }).join('\n\n');
             
             const firstPage = results[0].data || results[0].extractedData;
@@ -4387,9 +4387,9 @@
                     const docType = (doc.documentType || '').toLowerCase();
                     if (docType === 'bank_statement' || docType === 'bank_statements') {
                         groupedDocs.bank_statements.push(doc);
-                    } else if (docType === 'invoice' || docType === 'invoices') {
+                    } else if (docType === 'invoice' | docType === 'invoices') {
                         groupedDocs.invoices.push(doc);
-                    } else if (docType === 'receipt' || docType === 'receipts') {
+                    } else if (docType === 'receipt' | docType === 'receipts') {
                         groupedDocs.receipts.push(doc);
                     } else {
                         groupedDocs.general.push(doc);
@@ -4658,24 +4658,24 @@
                 const row = [
                     `"${(doc.fileName || doc.name || '').replace(/"/g, '""')}"`,
                     data.documentType | doc.type || '',
-                    data.invoiceNumber || data.receiptNumber || data.documentNumber || '',
-                    data.invoiceDate || data.transactionDate || data.date || '',
-                    `"${(data.vendor || data.supplier || data.merchantName || data.source || '').replace(/"/g, '""')}"`,
-                    `"${(data.vendorAddress || data.supplierAddress || '').replace(/"/g, '""')}"`,
-                    data.vendorPhone || data.supplierPhone || '',
-                    data.vendorEmail || data.supplierEmail || '',
-                    `"${(data.customerName || data.billTo || '').replace(/"/g, '""')}"`,
-                    `"${(data.customerAddress || data.billToAddress || '').replace(/"/g, '""')}"`,
+                    data.invoiceNumber | data.receiptNumber | data.documentNumber || '',
+                    data.invoiceDate | data.transactionDate | data.date || '',
+                    `"${(data.vendor | data.supplier | data.merchantName | data.source || '').replace(/"/g, '""')}"`,
+                    `"${(data.vendorAddress | data.supplierAddress || '').replace(/"/g, '""')}"`,
+                    data.vendorPhone | data.supplierPhone || '',
+                    data.vendorEmail | data.supplierEmail || '',
+                    `"${(data.customerName | data.billTo || '').replace(/"/g, '""')}"`,
+                    `"${(data.customerAddress | data.billToAddress || '').replace(/"/g, '""')}"`,
                     `"${itemsDetails.replace(/"/g, '""')}"`,
-                    data.subtotal || data.subTotal || '',
-                    data.tax || data.taxAmount || '',
+                    data.subtotal | data.subTotal || '',
+                    data.tax | data.taxAmount || '',
                     data.taxRate || '',
-                    data.totalAmount || data.total || data.amount || '',
+                    data.totalAmount | data.total | data.amount || '',
                     data.currency | 'HKD',
                     `"${(data.paymentTerms || '').replace(/"/g, '""')}"`,
                     data.paymentMethod || '',
-                    data.bankAccount || data.accountNumber || '',
-                    `"${(data.notes || data.memo || '').replace(/"/g, '""')}"`,
+                    data.bankAccount | data.accountNumber || '',
+                    `"${(data.notes | data.memo || '').replace(/"/g, '""')}"`,
                     doc.status || '',
                     uploadDate
                 ];
@@ -4698,19 +4698,19 @@
                 
                 // FormatDateas MM/DD/YYYY
                 let date = new Date().toLocaleDateString('en-US');
-                if (data.invoiceDate || data.transactionDate || data.date) {
-                    const dateStr = data.invoiceDate || data.transactionDate || data.date;
+                if (data.invoiceDate | data.transactionDate | data.date) {
+                    const dateStr = data.invoiceDate | data.transactionDate | data.date;
                     date = new Date(dateStr).toLocaleDateString('en-US');
                 }
                 
-                const vendor = data.vendor || data.supplier || data.merchantName || data.source | 'Unknown Vendor';
-                const totalAmount = data.totalAmount || data.total || data.amount | '0.00';
-                const subtotal = data.subtotal || data.subTotal | totalAmount;
-                const taxAmount = data.tax || data.taxAmount | '0.00';
-                const invoiceNumber = data.invoiceNumber || data.receiptNumber || data.documentNumber | `INV-${index + 1}`;
+                const vendor = data.vendor | data.supplier | data.merchantName | data.source | 'Unknown Vendor';
+                const totalAmount = data.totalAmount | data.total | data.amount | '0.00';
+                const subtotal = data.subtotal | data.subTotal | totalAmount;
+                const taxAmount = data.tax | data.taxAmount | '0.00';
+                const invoiceNumber = data.invoiceNumber | data.receiptNumber | data.documentNumber | `INV-${index + 1}`;
                 
                 // buildnote
-                let memo = data.notes || data.memo | doc.fileName || '';
+                let memo = data.notes | data.memo | doc.fileName || '';
                 if (data.items && Array.isArray(data.items) && data.items.length > 0) {
                     const itemsSummary = data.items.map(item => item.description | item.name).join(', ');
                     memo = itemsSummary.substring(0, 100); // limitLength
@@ -4797,14 +4797,14 @@
                 
                 // FormatDateas YYYYMMDDHHMMSS
                 let dtposted = dtserver;
-                if (data.invoiceDate || data.transactionDate || data.date) {
-                    const dateStr = data.invoiceDate || data.transactionDate || data.date;
+                if (data.invoiceDate | data.transactionDate | data.date) {
+                    const dateStr = data.invoiceDate | data.transactionDate | data.date;
                     dtposted = new Date(dateStr).toISOString().replace(/[-:]/g, '').split('.')[0];
                 }
                 
-                const trnamt = -(parseFloat(data.totalAmount || data.total || data.amount | '0.00')); // Negative表示支exit
-                const name = data.vendor || data.supplier || data.merchantName || data.source | 'Unknown Vendor';
-                const invoiceNumber = data.invoiceNumber || data.receiptNumber || data.documentNumber || '';
+                const trnamt = -(parseFloat(data.totalAmount | data.total | data.amount | '0.00')); // Negative表示支exit
+                const name = data.vendor | data.supplier | data.merchantName | data.source | 'Unknown Vendor';
+                const invoiceNumber = data.invoiceNumber | data.receiptNumber | data.documentNumber || '';
                 
                 // buildnote - ContainsInvoice號碼andProjectInformation
                 let memo = '';
@@ -4816,7 +4816,7 @@
                     memo += (memo ? ' | ' : '') + itemsSummary.substring(0, 100);
                 }
                 if (!memo) {
-                    memo = data.notes || data.memo | doc.fileName || '';
+                    memo = data.notes | data.memo | doc.fileName || '';
                 }
                 
                 // certaintransactionType
