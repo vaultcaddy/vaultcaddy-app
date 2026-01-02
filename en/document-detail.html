@@ -1808,5 +1808,190 @@
 
     <!-- Google Analytics 事件跟踪 -->
     <script src="/ga-event-tracking.js"></script>
+
+    <!-- 🔥 新的独立 Export 功能 -->
+    <button id="newExportBtn" style="
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 999999;
+        padding: 1rem 1.5rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 50px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 1rem;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+    " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 15px 40px rgba(102, 126, 234, 0.5)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px rgba(102, 126, 234, 0.4)';">
+        <i class="fas fa-download"></i>
+        <span>New Export</span>
+    </button>
+    
+    <div id="newExportMenu" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 999998; background: rgba(0,0,0,0.5);">
+        <div style="
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 400px;
+            padding: 2rem;
+        ">
+            <h2 style="margin: 0 0 1.5rem 0; font-size: 1.5rem; color: #1f2937; text-align: center;">Export Options</h2>
+            
+            <button onclick="newExportCSV()" style="width: 100%; text-align: left; padding: 1rem; margin-bottom: 0.75rem; border: 2px solid #e5e7eb; background: white; cursor: pointer; border-radius: 12px; display: flex; align-items: center; gap: 1rem; transition: all 0.2s; font-size: 1rem;" onmouseover="this.style.borderColor='#10b981'; this.style.background='#f0fdf4';" onmouseout="this.style.borderColor='#e5e7eb'; this.style.background='white';">
+                <div style="width: 40px; height: 40px; background: #10b981; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-file-csv" style="color: white; font-size: 1.2rem;"></i>
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; color: #1f2937;">Standard CSV</div>
+                    <div style="font-size: 0.85rem; color: #6b7280;">Universal format</div>
+                </div>
+            </button>
+            
+            <button onclick="newExportXero()" style="width: 100%; text-align: left; padding: 1rem; margin-bottom: 0.75rem; border: 2px solid #e5e7eb; background: white; cursor: pointer; border-radius: 12px; display: flex; align-items: center; gap: 1rem; transition: all 0.2s; font-size: 1rem;" onmouseover="this.style.borderColor='#2563eb'; this.style.background='#eff6ff';" onmouseout="this.style.borderColor='#e5e7eb'; this.style.background='white';">
+                <div style="width: 40px; height: 40px; background: #2563eb; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-file-csv" style="color: white; font-size: 1.2rem;"></i>
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; color: #1f2937;">Xero CSV</div>
+                    <div style="font-size: 0.85rem; color: #6b7280;">Xero software</div>
+                </div>
+            </button>
+            
+            <button onclick="newExportQB()" style="width: 100%; text-align: left; padding: 1rem; margin-bottom: 0.75rem; border: 2px solid #e5e7eb; background: white; cursor: pointer; border-radius: 12px; display: flex; align-items: center; gap: 1rem; transition: all 0.2s; font-size: 1rem;" onmouseover="this.style.borderColor='#059669'; this.style.background='#f0fdf4';" onmouseout="this.style.borderColor='#e5e7eb'; this.style.background='white';">
+                <div style="width: 40px; height: 40px; background: #059669; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-file-csv" style="color: white; font-size: 1.2rem;"></i>
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; color: #1f2937;">QuickBooks CSV</div>
+                    <div style="font-size: 0.85rem; color: #6b7280;">QuickBooks</div>
+                </div>
+            </button>
+            
+            <button onclick="newExportQBO()" style="width: 100%; text-align: left; padding: 1rem; margin-bottom: 1.5rem; border: 2px solid #e5e7eb; background: white; cursor: pointer; border-radius: 12px; display: flex; align-items: center; gap: 1rem; transition: all 0.2s; font-size: 1rem;" onmouseover="this.style.borderColor='#8b5cf6'; this.style.background='#faf5ff';" onmouseout="this.style.borderColor='#e5e7eb'; this.style.background='white';">
+                <div style="width: 40px; height: 40px; background: #8b5cf6; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-cloud" style="color: white; font-size: 1.2rem;"></i>
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; color: #1f2937;">QBO Format</div>
+                    <div style="font-size: 0.85rem; color: #6b7280;">QB Online</div>
+                </div>
+            </button>
+            
+            <button onclick="closeNewExportMenu()" style="width: 100%; padding: 1rem; border: none; background: #ef4444; color: white; cursor: pointer; border-radius: 12px; font-weight: 600; font-size: 1rem; transition: all 0.2s;" onmouseover="this.style.background='#dc2626';" onmouseout="this.style.background='#ef4444';">
+                Close
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        // 打开新Export菜单
+        document.getElementById('newExportBtn').addEventListener('click', function() {
+            console.log('🟢 新 Export 按钮被点击');
+            document.getElementById('newExportMenu').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        });
+        
+        // 关闭菜单
+        function closeNewExportMenu() {
+            document.getElementById('newExportMenu').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+        // 点击背景关闭
+        document.getElementById('newExportMenu').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeNewExportMenu();
+            }
+        });
+        
+        // 导出CSV
+        function newExportCSV() {
+            console.log('📥 导出 CSV');
+            closeNewExportMenu();
+            
+            try {
+                const doc = window.currentDocument;
+                if (!doc) {
+                    alert('Document data not available');
+                    return;
+                }
+                
+                let csv = '';
+                const data = doc.processedData || {};
+                
+                // 银行对账单
+                if (data.transactions && data.transactions.length > 0) {
+                    csv = 'Date,Description,Amount,Balance\n';
+                    data.transactions.forEach(t => {
+                        csv += `"${t.date || ''}","${t.description || ''}","${t.amount || 0}","${t.balance || 0}"\n`;
+                    });
+                }
+                // 发票
+                else if (data.items && data.items.length > 0) {
+                    csv = 'Code,Description,Quantity,Unit Price,Amount\n';
+                    data.items.forEach(item => {
+                        csv += `"${item.code || ''}","${item.description || ''}","${item.quantity || 0}","${item.unit_price || item.unitPrice || 0}","${item.amount || 0}"\n`;
+                    });
+                }
+                else {
+                    csv = 'No data available';
+                }
+                
+                downloadFile(csv, `export_${Date.now()}.csv`, 'text/csv');
+            } catch(e) {
+                console.error('Export error:', e);
+                alert('Export failed: ' + e.message);
+            }
+        }
+        
+        // 导出Xero
+        function newExportXero() {
+            console.log('📥 导出 Xero');
+            alert('Xero export coming soon...');
+            closeNewExportMenu();
+        }
+        
+        // 导出QuickBooks
+        function newExportQB() {
+            console.log('📥 导出 QuickBooks');
+            alert('QuickBooks export coming soon...');
+            closeNewExportMenu();
+        }
+        
+        // 导出QBO
+        function newExportQBO() {
+            console.log('📥 导出 QBO');
+            alert('QBO export coming soon...');
+            closeNewExportMenu();
+        }
+        
+        // 下载文件
+        function downloadFile(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            console.log('✅ 已下载:', filename);
+        }
+        
+        console.log('✅ 新Export功能已加载');
+    </script>
+
 </body>
 </html>
