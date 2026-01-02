@@ -1569,6 +1569,7 @@
         };
         
         function updateExportMenuForDocumentDetail() {
+            console.log('🔧 updateExportMenuForDocumentDetail 被调用');
             const menu = document.getElementById('exportMenu');
             if (!menu) return;
             
@@ -1579,6 +1580,7 @@
                 // 🔥 Standard化DocumentType
                 docType = docType.toLowerCase();
                 console.log('📄 Export Menu - DocumentType:', docType);
+            console.log('📄 文档对象:', window.currentDocument);
             } else {
                 console.warn('⚠️ window.currentDocument Undefined，Failed to fetchDocumentType');
             }
@@ -1691,7 +1693,31 @@
             }
             
             menuHTML += '</div>';
+            
+            // 🔥 检查是否生成了内容
+            if (menuHTML.trim() === '<div style="padding: 0.5rem 0; background: #ffffff;"></div>' || menuHTML.length < 100) {
+                console.warn('⚠️ 菜单内容为空，添加默认选项');
+                menuHTML = `
+                    <div style="padding: 1rem;">
+                        <h3 style="margin: 0 0 1rem 0; font-size: 1.1rem;">Export Options</h3>
+                        <button onclick="exportDocument('csv')" style="width: 100%; padding: 0.75rem; margin-bottom: 0.5rem; border: 1px solid #ddd; background: white; cursor: pointer; border-radius: 6px; text-align: left;">
+                            <i class="fas fa-file-csv" style="color: #10b981; margin-right: 0.5rem;"></i>
+                            Standard CSV
+                        </button>
+                        <button onclick="exportDocument('json')" style="width: 100%; padding: 0.75rem; margin-bottom: 0.5rem; border: 1px solid #ddd; background: white; cursor: pointer; border-radius: 6px; text-align: left;">
+                            <i class="fas fa-file-code" style="color: #3b82f6; margin-right: 0.5rem;"></i>
+                            JSON Format
+                        </button>
+                        <button onclick="closeExportMenu()" style="width: 100%; padding: 0.75rem; margin-top: 1rem; border: none; background: #ef4444; color: white; cursor: pointer; border-radius: 6px;">
+                            Close
+                        </button>
+                    </div>
+                `;
+            }
+            
             menu.innerHTML = menuHTML;
+            console.log('📋 菜单 HTML 已设置, 长度:', menuHTML.length);
+            console.log('📋 菜单内容预览:', menuHTML.substring(0, 200));
         }
     </script>
     
