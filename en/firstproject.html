@@ -2213,7 +2213,7 @@
                     if (isLoggedIn) {
                         // ✅ alreadyLogin：ShowUseravatar
                         const currentUser = window.simpleAuth.getCurrentUser();
-                        userEmail = currentUser.email | '';
+                        userEmail = currentUser.email || '';
                         userDisplayName = currentUser.displayName || '';
                         
                         // 🔥 from Firestore Get displayName and credits
@@ -2971,18 +2971,18 @@
                 
                 switch (currentSortColumn) {
                     case 'name':
-                        aVal = (a.name || a.fileName | '').toLowerCase();
-                        bVal = (b.name || b.fileName | '').toLowerCase();
+                        aVal = (a.name || a.fileName || '').toLowerCase();
+                        bVal = (b.name || b.fileName || '').toLowerCase();
                         break;
                     case 'type':
-                        aVal = (a.documentType | a.type | '').toLowerCase();
-                        bVal = (b.documentType | b.type | '').toLowerCase();
+                        aVal = (a.documentType || a.type || '').toLowerCase();
+                        bVal = (b.documentType || b.type || '').toLowerCase();
                         break;
                     case 'vendor':
                         const aData = a.processedData || {};
                         const bData = b.processedData || {};
-                        aVal = (aData.vendor || aData.supplier || aData.merchantName | '-').toLowerCase();
-                        bVal = (bData.vendor || bData.supplier || bData.merchantName | '-').toLowerCase();
+                        aVal = (aData.vendor || aData.supplier || aData.merchantName || '-').toLowerCase();
+                        bVal = (bData.vendor || bData.supplier || bData.merchantName || '-').toLowerCase();
                         break;
                     case 'amount':
                         const aAmount = (a.processedData?.totalAmount | a.processedData?.amount | a.processedData?.total | 0);
@@ -3065,7 +3065,7 @@
                             'receipt': { icon: 'fa-receipt', color: '#8b5cf6', label: 'Receipt' },
                             'general': { icon: 'fa-file-alt', color: '#6b7280', label: 'onegeneral' }
                         };
-                        return types[type] | types['general'];
+                        return types[type] || types['general'];
                     };
                     
                     const typeInfo = getTypeIcon(doc.documentType || doc.type);
@@ -3074,12 +3074,12 @@
                     let vendor, amount, amountDisplay, date;
                     
                     // ✅ repair：Support bank_statement and bank_statements
-                    const docType = doc.documentType || doc.type | '';
-                    if (docType === 'bank_statement' | docType === 'bank_statements') {
+                    const docType = doc.documentType || doc.type || '';
+                    if (docType === 'bank_statement' || docType === 'bank_statements') {
                         // Bank Statement：ShowbanklineName + 持Has人 + account號、結餘、Pairaccountsingleduring
-                        const bankName = data.bankName | data.bank_name | data.bank | '';
-                        const accountHolder = data.accountHolder | data.account_holder | '';
-                        const accountNumber = data.accountNumber | data.account_number | '';
+                        const bankName = data.bankName || data.bank_name || data.bank || '';
+                        const accountHolder = data.accountHolder || data.account_holder || '';
+                        const accountNumber = data.accountNumber || data.account_number || '';
                         
                         // ✅ groupcombineShowFormat（3lineShow）
                         const vendorLines = [];
@@ -3101,7 +3101,7 @@
                         }
                         
                         // ✅ extractPairaccountsingleduring andConvertFormat（22 Feb 2025 to 22 Mar 2025）
-                        let statementPeriod = data.statementPeriod | data.statement_period | data.period | '';
+                        let statementPeriod = data.statementPeriod | data.statement_period | data.period || '';
                         if (statementPeriod && statementPeriod.includes('to')) {
                             // If "2025-02-22 to 2025-03-22" Format，Convert to "22 Feb 2025 to 22 Mar 2025"
                             const parts = statementPeriod.split(' to ');
@@ -3117,13 +3117,13 @@
                                 }
                             }
                         }
-                        date = statementPeriod | data.statementDate | data.statement_date | data.date | '-';
+                        date = statementPeriod | data.statementDate | data.statement_date | data.date || '-';
                     } else {
                         // Invoice/Receipt/onegeneralDocument：Showsupply商、totalAmount、Date
-                        vendor = data.vendor | data.supplier | data.merchantName | data.source | '-';
+                        vendor = data.vendor | data.supplier | data.merchantName | data.source || '-';
                         amount = data.totalAmount | data.amount | data.total;
                         amountDisplay = amount ? `$${parseFloat(amount).toLocaleString('zh-TW', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '-';
-                        date = data.invoiceDate | data.transactionDate | data.date | '-';
+                        date = data.invoiceDate | data.transactionDate | data.date || '-';
                     }
                     
                     return `
@@ -3831,13 +3831,13 @@
         // ✅ MergeMulti-page results的Function
         function mergeMultiPageResults(results, documentType) {
             if (results.length === 1) {
-                return results[0].data | results[0].extractedData;
+                return results[0].data || results[0].extractedData;
             }
             
             // Based on documentTypeMerge
             if (documentType === 'bank_statement') {
                 return mergeBankStatementPages(results);
-            } else if (documentType === 'invoice' | documentType === 'receipt') {
+            } else if (documentType === 'invoice' || documentType === 'receipt') {
                 return mergeInvoiceReceiptPages(results);
             } else {
                 return mergeGeneralPages(results);
@@ -3849,7 +3849,7 @@
             const allTransactions = [];
             let totalOpeningBalance = 0;
             let totalClosingBalance = 0;
-            const firstPage = results[0].data | results[0].extractedData;
+            const firstPage = results[0].data || results[0].extractedData;
             
             results.forEach((result, index) => {
                 const data = result.data || result.extractedData;
@@ -3878,7 +3878,7 @@
         function mergeInvoiceReceiptPages(results) {
             const allItems = [];
             let totalAmount = 0;
-            const firstPage = results[0].data | results[0].extractedData;
+            const firstPage = results[0].data || results[0].extractedData;
             
             results.forEach(result => {
                 const data = result.data || result.extractedData;
@@ -3902,10 +3902,10 @@
         function mergeGeneralPages(results) {
             const allText = results.map((r, i) => {
                 const data = r.data | r.extractedData;
-                return `--- Page ${i + 1} ---\n${data.full_text | data.text | ''}`;
+                return `--- Page ${i + 1} ---\n${data.full_text | data.text || ''}`;
             }).join('\n\n');
             
-            const firstPage = results[0].data | results[0].extractedData;
+            const firstPage = results[0].data || results[0].extractedData;
             
             return {
                 ...firstPage,
@@ -4384,8 +4384,8 @@
                 };
                 
                 docsToExport.forEach(doc => {
-                    const docType = (doc.documentType | '').toLowerCase();
-                    if (docType === 'bank_statement' | docType === 'bank_statements') {
+                    const docType = (doc.documentType || '').toLowerCase();
+                    if (docType === 'bank_statement' || docType === 'bank_statements') {
                         groupedDocs.bank_statements.push(doc);
                     } else if (docType === 'invoice' | docType === 'invoices') {
                         groupedDocs.invoices.push(doc);
@@ -4463,10 +4463,10 @@
                         // Xero CSV（Based on documentTypeExport）
                         // divide離Bank StatementandInvoice
                         const xeroBankDocs = docsToExport.filter(d => 
-                            (d.documentType | d.type | '').toLowerCase().includes('bank')
+                            (d.documentType || d.type || '').toLowerCase().includes('bank')
                         );
                         const xeroInvoiceDocs = docsToExport.filter(d => 
-                            (d.documentType | d.type | '').toLowerCase().includes('invoice')
+                            (d.documentType || d.type || '').toLowerCase().includes('invoice')
                         );
                         
                         if (xeroBankDocs.length > 0 && window.BankStatementExport) {
@@ -4490,10 +4490,10 @@
                     case 'quickbooks_csv':
                         // QuickBooks CSV（Based on documentTypeExport）
                         const qbBankDocs = docsToExport.filter(d => 
-                            (d.documentType | d.type | '').toLowerCase().includes('bank')
+                            (d.documentType || d.type || '').toLowerCase().includes('bank')
                         );
                         const qbInvoiceDocs = docsToExport.filter(d => 
-                            (d.documentType | d.type | '').toLowerCase().includes('invoice')
+                            (d.documentType || d.type || '').toLowerCase().includes('invoice')
                         );
                         
                         if (qbBankDocs.length > 0 && window.BankStatementExport) {
@@ -4543,10 +4543,10 @@
                     case 'iif':
                         // IIF Format（Based on documentTypeExport）
                         const iifBankDocs = docsToExport.filter(d => 
-                            (d.documentType | d.type | '').toLowerCase().includes('bank')
+                            (d.documentType || d.type || '').toLowerCase().includes('bank')
                         );
                         const iifInvoiceDocs = docsToExport.filter(d => 
-                            (d.documentType | d.type | '').toLowerCase().includes('invoice')
+                            (d.documentType || d.type || '').toLowerCase().includes('invoice')
                         );
                         
                         if (iifBankDocs.length > 0) {
@@ -4568,10 +4568,10 @@
                     case 'qbo':
                         // QBO Format（Based on documentTypeExport）
                         const qboBankDocs = docsToExport.filter(d => 
-                            (d.documentType | d.type | '').toLowerCase().includes('bank')
+                            (d.documentType || d.type || '').toLowerCase().includes('bank')
                         );
                         const qboInvoiceDocs = docsToExport.filter(d => 
-                            (d.documentType | d.type | '').toLowerCase().includes('invoice')
+                            (d.documentType || d.type || '').toLowerCase().includes('invoice')
                         );
                         
                         if (qboBankDocs.length > 0) {
@@ -4648,7 +4648,7 @@
                 let itemsDetails = '';
                 if (data.items && Array.isArray(data.items)) {
                     itemsDetails = data.items.map(item => {
-                        return `${item.description | item.name | ''} x${item.quantity | 1} @ $${item.unitPrice | item.price | 0}`;
+                        return `${item.description | item.name || ''} x${item.quantity | 1} @ $${item.unitPrice | item.price | 0}`;
                     }).join('; ');
                 }
                 
@@ -4656,27 +4656,27 @@
                 const uploadDate = doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleDateString('zh-TW') : '';
                 
                 const row = [
-                    `"${(doc.fileName || doc.name | '').replace(/"/g, '""')}"`,
-                    data.documentType | doc.type | '',
-                    data.invoiceNumber | data.receiptNumber | data.documentNumber | '',
-                    data.invoiceDate | data.transactionDate | data.date | '',
-                    `"${(data.vendor | data.supplier | data.merchantName | data.source | '').replace(/"/g, '""')}"`,
-                    `"${(data.vendorAddress | data.supplierAddress | '').replace(/"/g, '""')}"`,
-                    data.vendorPhone | data.supplierPhone | '',
-                    data.vendorEmail | data.supplierEmail | '',
-                    `"${(data.customerName | data.billTo | '').replace(/"/g, '""')}"`,
-                    `"${(data.customerAddress | data.billToAddress | '').replace(/"/g, '""')}"`,
+                    `"${(doc.fileName || doc.name || '').replace(/"/g, '""')}"`,
+                    data.documentType | doc.type || '',
+                    data.invoiceNumber | data.receiptNumber | data.documentNumber || '',
+                    data.invoiceDate | data.transactionDate | data.date || '',
+                    `"${(data.vendor | data.supplier | data.merchantName | data.source || '').replace(/"/g, '""')}"`,
+                    `"${(data.vendorAddress | data.supplierAddress || '').replace(/"/g, '""')}"`,
+                    data.vendorPhone | data.supplierPhone || '',
+                    data.vendorEmail | data.supplierEmail || '',
+                    `"${(data.customerName | data.billTo || '').replace(/"/g, '""')}"`,
+                    `"${(data.customerAddress | data.billToAddress || '').replace(/"/g, '""')}"`,
                     `"${itemsDetails.replace(/"/g, '""')}"`,
-                    data.subtotal | data.subTotal | '',
-                    data.tax | data.taxAmount | '',
-                    data.taxRate | '',
-                    data.totalAmount | data.total | data.amount | '',
+                    data.subtotal | data.subTotal || '',
+                    data.tax | data.taxAmount || '',
+                    data.taxRate || '',
+                    data.totalAmount | data.total | data.amount || '',
                     data.currency | 'HKD',
-                    `"${(data.paymentTerms | '').replace(/"/g, '""')}"`,
-                    data.paymentMethod | '',
-                    data.bankAccount | data.accountNumber | '',
-                    `"${(data.notes | data.memo | '').replace(/"/g, '""')}"`,
-                    doc.status | '',
+                    `"${(data.paymentTerms || '').replace(/"/g, '""')}"`,
+                    data.paymentMethod || '',
+                    data.bankAccount | data.accountNumber || '',
+                    `"${(data.notes | data.memo || '').replace(/"/g, '""')}"`,
+                    doc.status || '',
                     uploadDate
                 ];
                 rows.push(row.join(','));
@@ -4710,7 +4710,7 @@
                 const invoiceNumber = data.invoiceNumber | data.receiptNumber | data.documentNumber | `INV-${index + 1}`;
                 
                 // buildnote
-                let memo = data.notes | data.memo | doc.fileName | '';
+                let memo = data.notes | data.memo | doc.fileName || '';
                 if (data.items && Array.isArray(data.items) && data.items.length > 0) {
                     const itemsSummary = data.items.map(item => item.description | item.name).join(', ');
                     memo = itemsSummary.substring(0, 100); // limitLength
@@ -4804,7 +4804,7 @@
                 
                 const trnamt = -(parseFloat(data.totalAmount | data.total | data.amount | '0.00')); // Negative表示支exit
                 const name = data.vendor | data.supplier | data.merchantName | data.source | 'Unknown Vendor';
-                const invoiceNumber = data.invoiceNumber | data.receiptNumber | data.documentNumber | '';
+                const invoiceNumber = data.invoiceNumber | data.receiptNumber | data.documentNumber || '';
                 
                 // buildnote - ContainsInvoice號碼andProjectInformation
                 let memo = '';
@@ -4816,7 +4816,7 @@
                     memo += (memo ? ' | ' : '') + itemsSummary.substring(0, 100);
                 }
                 if (!memo) {
-                    memo = data.notes | data.memo | doc.fileName | '';
+                    memo = data.notes | data.memo | doc.fileName || '';
                 }
                 
                 // certaintransactionType

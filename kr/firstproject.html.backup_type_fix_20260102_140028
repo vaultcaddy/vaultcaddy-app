@@ -2197,7 +2197,7 @@
                     if (isLoggedIn) {
                         // ✅ 이미로그인：표시사용자아바타
                         const currentUser = window.simpleAuth.getCurrentUser();
-                        userEmail = currentUser.email || '';
+                        userEmail = currentUser.email | '';
                         userDisplayName = currentUser.displayName || '';
                         
                         // 🔥 부터 Firestore 가져오기 displayName 및 credits
@@ -2955,18 +2955,18 @@
                 
                 switch (currentSortColumn) {
                     case 'name':
-                        aVal = (a.name || a.fileName || '').toLowerCase();
-                        bVal = (b.name || b.fileName || '').toLowerCase();
+                        aVal = (a.name || a.fileName | '').toLowerCase();
+                        bVal = (b.name || b.fileName | '').toLowerCase();
                         break;
                     case 'type':
-                        aVal = (a.documentType || a.type || '').toLowerCase();
-                        bVal = (b.documentType || b.type || '').toLowerCase();
+                        aVal = (a.documentType | a.type | '').toLowerCase();
+                        bVal = (b.documentType | b.type | '').toLowerCase();
                         break;
                     case 'vendor':
                         const aData = a.processedData || {};
                         const bData = b.processedData || {};
-                        aVal = (aData.vendor || aData.supplier || aData.merchantName || '-').toLowerCase();
-                        bVal = (bData.vendor || bData.supplier || bData.merchantName || '-').toLowerCase();
+                        aVal = (aData.vendor || aData.supplier || aData.merchantName | '-').toLowerCase();
+                        bVal = (bData.vendor || bData.supplier || bData.merchantName | '-').toLowerCase();
                         break;
                     case 'amount':
                         const aAmount = (a.processedData?.totalAmount | a.processedData?.amount | a.processedData?.total | 0);
@@ -3049,7 +3049,7 @@
                             'receipt': { icon: 'fa-receipt', color: '#8b5cf6', label: '영수증' },
                             'general': { icon: 'fa-file-alt', color: '#6b7280', label: '一般' }
                         };
-                        return types[type] || types['general'];
+                        return types[type] | types['general'];
                     };
                     
                     const typeInfo = getTypeIcon(doc.documentType || doc.type);
@@ -3058,12 +3058,12 @@
                     let vendor, amount, amountDisplay, date;
                     
                     // ✅ 수정：지원 bank_statement 및 bank_statements
-                    const docType = doc.documentType || doc.type || '';
-                    if (docType === 'bank_statement' || docType === 'bank_statements') {
+                    const docType = doc.documentType || doc.type | '';
+                    if (docType === 'bank_statement' | docType === 'bank_statements') {
                         // 은행 명세서：표시銀행이름 + 持있음人 + 帳號、結餘、대해帳單期사이
-                        const bankName = data.bankName || data.bank_name || data.bank || '';
-                        const accountHolder = data.accountHolder || data.account_holder || '';
-                        const accountNumber = data.accountNumber || data.account_number || '';
+                        const bankName = data.bankName | data.bank_name | data.bank | '';
+                        const accountHolder = data.accountHolder | data.account_holder | '';
+                        const accountNumber = data.accountNumber | data.account_number | '';
                         
                         // ✅ 組合표시포맷（3행표시）
                         const vendorLines = [];
@@ -3085,7 +3085,7 @@
                         }
                         
                         // ✅ 추출대해帳單期사이및변환포맷（22 Feb 2025 to 22 Mar 2025）
-                        let statementPeriod = data.statementPeriod | data.statement_period | data.period || '';
+                        let statementPeriod = data.statementPeriod | data.statement_period | data.period | '';
                         if (statementPeriod && statementPeriod.includes('to')) {
                             // 만약 "2025-02-22 to 2025-03-22" 포맷，변환 "22 Feb 2025 to 22 Mar 2025"
                             const parts = statementPeriod.split(' to ');
@@ -3101,13 +3101,13 @@
                                 }
                             }
                         }
-                        date = statementPeriod | data.statementDate | data.statement_date | data.date || '-';
+                        date = statementPeriod | data.statementDate | data.statement_date | data.date | '-';
                     } else {
                         // 송장/영수증/一般문서：표시공급商、總금액、날짜
-                        vendor = data.vendor | data.supplier | data.merchantName | data.source || '-';
+                        vendor = data.vendor | data.supplier | data.merchantName | data.source | '-';
                         amount = data.totalAmount | data.amount | data.total;
                         amountDisplay = amount ? `$${parseFloat(amount).toLocaleString('zh-TW', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '-';
-                        date = data.invoiceDate | data.transactionDate | data.date || '-';
+                        date = data.invoiceDate | data.transactionDate | data.date | '-';
                     }
                     
                     return `
@@ -3815,13 +3815,13 @@
         // ✅ 병합다중 페이지 결과的함수
         function mergeMultiPageResults(results, documentType) {
             if (results.length === 1) {
-                return results[0].data || results[0].extractedData;
+                return results[0].data | results[0].extractedData;
             }
             
             // 문서에 따라유형병합
             if (documentType === 'bank_statement') {
                 return mergeBankStatementPages(results);
-            } else if (documentType === 'invoice' || documentType === 'receipt') {
+            } else if (documentType === 'invoice' | documentType === 'receipt') {
                 return mergeInvoiceReceiptPages(results);
             } else {
                 return mergeGeneralPages(results);
@@ -3833,7 +3833,7 @@
             const allTransactions = [];
             let totalOpeningBalance = 0;
             let totalClosingBalance = 0;
-            const firstPage = results[0].data || results[0].extractedData;
+            const firstPage = results[0].data | results[0].extractedData;
             
             results.forEach((result, index) => {
                 const data = result.data || result.extractedData;
@@ -3862,7 +3862,7 @@
         function mergeInvoiceReceiptPages(results) {
             const allItems = [];
             let totalAmount = 0;
-            const firstPage = results[0].data || results[0].extractedData;
+            const firstPage = results[0].data | results[0].extractedData;
             
             results.forEach(result => {
                 const data = result.data || result.extractedData;
@@ -3886,10 +3886,10 @@
         function mergeGeneralPages(results) {
             const allText = results.map((r, i) => {
                 const data = r.data | r.extractedData;
-                return `--- Page ${i + 1} ---\n${data.full_text | data.text || ''}`;
+                return `--- Page ${i + 1} ---\n${data.full_text | data.text | ''}`;
             }).join('\n\n');
             
-            const firstPage = results[0].data || results[0].extractedData;
+            const firstPage = results[0].data | results[0].extractedData;
             
             return {
                 ...firstPage,
@@ -4368,8 +4368,8 @@
                 };
                 
                 docsToExport.forEach(doc => {
-                    const docType = (doc.documentType || '').toLowerCase();
-                    if (docType === 'bank_statement' || docType === 'bank_statements') {
+                    const docType = (doc.documentType | '').toLowerCase();
+                    if (docType === 'bank_statement' | docType === 'bank_statements') {
                         groupedDocs.bank_statements.push(doc);
                     } else if (docType === 'invoice' | docType === 'invoices') {
                         groupedDocs.invoices.push(doc);
@@ -4447,10 +4447,10 @@
                         // Xero CSV（문서에 따라유형내보내기）
                         // 分떨어짐은행 명세서및송장
                         const xeroBankDocs = docsToExport.filter(d => 
-                            (d.documentType || d.type || '').toLowerCase().includes('bank')
+                            (d.documentType | d.type | '').toLowerCase().includes('bank')
                         );
                         const xeroInvoiceDocs = docsToExport.filter(d => 
-                            (d.documentType || d.type || '').toLowerCase().includes('invoice')
+                            (d.documentType | d.type | '').toLowerCase().includes('invoice')
                         );
                         
                         if (xeroBankDocs.length > 0 && window.BankStatementExport) {
@@ -4474,10 +4474,10 @@
                     case 'quickbooks_csv':
                         // QuickBooks CSV（문서에 따라유형내보내기）
                         const qbBankDocs = docsToExport.filter(d => 
-                            (d.documentType || d.type || '').toLowerCase().includes('bank')
+                            (d.documentType | d.type | '').toLowerCase().includes('bank')
                         );
                         const qbInvoiceDocs = docsToExport.filter(d => 
-                            (d.documentType || d.type || '').toLowerCase().includes('invoice')
+                            (d.documentType | d.type | '').toLowerCase().includes('invoice')
                         );
                         
                         if (qbBankDocs.length > 0 && window.BankStatementExport) {
@@ -4527,10 +4527,10 @@
                     case 'iif':
                         // IIF 포맷（문서에 따라유형내보내기）
                         const iifBankDocs = docsToExport.filter(d => 
-                            (d.documentType || d.type || '').toLowerCase().includes('bank')
+                            (d.documentType | d.type | '').toLowerCase().includes('bank')
                         );
                         const iifInvoiceDocs = docsToExport.filter(d => 
-                            (d.documentType || d.type || '').toLowerCase().includes('invoice')
+                            (d.documentType | d.type | '').toLowerCase().includes('invoice')
                         );
                         
                         if (iifBankDocs.length > 0) {
@@ -4552,10 +4552,10 @@
                     case 'qbo':
                         // QBO 포맷（문서에 따라유형내보내기）
                         const qboBankDocs = docsToExport.filter(d => 
-                            (d.documentType || d.type || '').toLowerCase().includes('bank')
+                            (d.documentType | d.type | '').toLowerCase().includes('bank')
                         );
                         const qboInvoiceDocs = docsToExport.filter(d => 
-                            (d.documentType || d.type || '').toLowerCase().includes('invoice')
+                            (d.documentType | d.type | '').toLowerCase().includes('invoice')
                         );
                         
                         if (qboBankDocs.length > 0) {
@@ -4632,7 +4632,7 @@
                 let itemsDetails = '';
                 if (data.items && Array.isArray(data.items)) {
                     itemsDetails = data.items.map(item => {
-                        return `${item.description | item.name || ''} x${item.quantity | 1} @ $${item.unitPrice | item.price | 0}`;
+                        return `${item.description | item.name | ''} x${item.quantity | 1} @ $${item.unitPrice | item.price | 0}`;
                     }).join('; ');
                 }
                 
@@ -4640,27 +4640,27 @@
                 const uploadDate = doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleDateString('zh-TW') : '';
                 
                 const row = [
-                    `"${(doc.fileName || doc.name || '').replace(/"/g, '""')}"`,
-                    data.documentType | doc.type || '',
-                    data.invoiceNumber | data.receiptNumber | data.documentNumber || '',
-                    data.invoiceDate | data.transactionDate | data.date || '',
-                    `"${(data.vendor | data.supplier | data.merchantName | data.source || '').replace(/"/g, '""')}"`,
-                    `"${(data.vendorAddress | data.supplierAddress || '').replace(/"/g, '""')}"`,
-                    data.vendorPhone | data.supplierPhone || '',
-                    data.vendorEmail | data.supplierEmail || '',
-                    `"${(data.customerName | data.billTo || '').replace(/"/g, '""')}"`,
-                    `"${(data.customerAddress | data.billToAddress || '').replace(/"/g, '""')}"`,
+                    `"${(doc.fileName || doc.name | '').replace(/"/g, '""')}"`,
+                    data.documentType | doc.type | '',
+                    data.invoiceNumber | data.receiptNumber | data.documentNumber | '',
+                    data.invoiceDate | data.transactionDate | data.date | '',
+                    `"${(data.vendor | data.supplier | data.merchantName | data.source | '').replace(/"/g, '""')}"`,
+                    `"${(data.vendorAddress | data.supplierAddress | '').replace(/"/g, '""')}"`,
+                    data.vendorPhone | data.supplierPhone | '',
+                    data.vendorEmail | data.supplierEmail | '',
+                    `"${(data.customerName | data.billTo | '').replace(/"/g, '""')}"`,
+                    `"${(data.customerAddress | data.billToAddress | '').replace(/"/g, '""')}"`,
                     `"${itemsDetails.replace(/"/g, '""')}"`,
-                    data.subtotal | data.subTotal || '',
-                    data.tax | data.taxAmount || '',
-                    data.taxRate || '',
-                    data.totalAmount | data.total | data.amount || '',
+                    data.subtotal | data.subTotal | '',
+                    data.tax | data.taxAmount | '',
+                    data.taxRate | '',
+                    data.totalAmount | data.total | data.amount | '',
                     data.currency | 'HKD',
-                    `"${(data.paymentTerms || '').replace(/"/g, '""')}"`,
-                    data.paymentMethod || '',
-                    data.bankAccount | data.accountNumber || '',
-                    `"${(data.notes | data.memo || '').replace(/"/g, '""')}"`,
-                    doc.status || '',
+                    `"${(data.paymentTerms | '').replace(/"/g, '""')}"`,
+                    data.paymentMethod | '',
+                    data.bankAccount | data.accountNumber | '',
+                    `"${(data.notes | data.memo | '').replace(/"/g, '""')}"`,
+                    doc.status | '',
                     uploadDate
                 ];
                 rows.push(row.join(','));
@@ -4694,7 +4694,7 @@
                 const invoiceNumber = data.invoiceNumber | data.receiptNumber | data.documentNumber | `INV-${index + 1}`;
                 
                 // 構建備註
-                let memo = data.notes | data.memo | doc.fileName || '';
+                let memo = data.notes | data.memo | doc.fileName | '';
                 if (data.items && Array.isArray(data.items) && data.items.length > 0) {
                     const itemsSummary = data.items.map(item => item.description | item.name).join(', ');
                     memo = itemsSummary.substring(0, 100); // 限制長度
@@ -4788,7 +4788,7 @@
                 
                 const trnamt = -(parseFloat(data.totalAmount | data.total | data.amount | '0.00')); // 負數表示支出
                 const name = data.vendor | data.supplier | data.merchantName | data.source | 'Unknown Vendor';
-                const invoiceNumber = data.invoiceNumber | data.receiptNumber | data.documentNumber || '';
+                const invoiceNumber = data.invoiceNumber | data.receiptNumber | data.documentNumber | '';
                 
                 // 構建備註 - 포함송장號碼및프로젝트정보
                 let memo = '';
@@ -4800,7 +4800,7 @@
                     memo += (memo ? ' | ' : '') + itemsSummary.substring(0, 100);
                 }
                 if (!memo) {
-                    memo = data.notes | data.memo | doc.fileName || '';
+                    memo = data.notes | data.memo | doc.fileName | '';
                 }
                 
                 // 確설정거래유형
