@@ -1262,7 +1262,7 @@
                     </span>
                     <!-- 导出按钮（綠色）- メニュー已移まで body 最後 -->
                     <div class="export-dropdown" style="position: relative;">
-                        <button onclick="toggleExportMenu(event)" style="background: #10b981; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
+                        <button onclick="console.log(\'🔥 Export 按钮被点击\'); console.log(\'toggleExportMenu 类型:\', typeof window.toggleExportMenu); if(typeof window.toggleExportMenu === \'function\') { toggleExportMenu(event); } else { alert(\'错误：toggleExportMenu 函数不存在！\'); }" style="background: #10b981; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
                             <i class="fas fa-download"></i>
                             <span>Export</span>
                             <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
@@ -1518,69 +1518,54 @@
         
         // 🔄 動の生成 Export メニュー（文書に基づいてタイプ）
         window.toggleExportMenu = function(event) {
+            console.log('🎯 toggleExportMenu 被调用');
+            console.log('  - event:', event);
+            console.log('  - window.exportDocument:', typeof window.exportDocument);
+            console.log('  - window.currentDocument:', window.currentDocument);
+            
             const menu = document.getElementById('exportMenu');
             const overlay = document.getElementById('exportMenuOverlay');
-            if (!menu) return;
             
-            // 如果メニュー已顯示，則關閉
-            if (menu.style.display === 'block') {
-                closeExportMenu();
+            if (!menu) {
+                console.error('❌ Export 菜单元素不存在！');
+                alert('错误：Export 菜单元素不存在');
                 return;
             }
             
-            // 🔧 總是顯示背景マスク（CSS會制御デスクトップ版隱藏）
-            if (!overlay) {
-                const newOverlay = document.createElement('div');
-                newOverlay.id = 'exportMenuOverlay';
-                newOverlay.onclick = closeExportMenu;
-                document.body.appendChild(newOverlay);
+            console.log('✅ Export 菜单元素存在');
+            
+            // 如果菜单已显示，则关闭
+            if (menu.style.display === 'block') {
+                console.log('🔄 关闭菜单');
+                menu.style.display = 'none';
+                if (overlay) overlay.style.display = 'none';
+                return;
             }
+            
+            // 显示遮罩
             if (overlay) {
                 overlay.style.display = 'block';
             }
             
-            // 文書に基づいてタイプ生成メニュー
+            // 更新菜单内容
+            console.log('🔄 更新菜单内容...');
             updateExportMenuForDocumentDetail();
             
-            // 顯示メニュー
+            // 显示菜单（简化版 - 固定居中显示）
             menu.style.display = 'block';
+            menu.style.position = 'fixed';
+            menu.style.top = '50%';
+            menu.style.left = '50%';
+            menu.style.transform = 'translate(-50%, -50%)';
+            menu.style.zIndex = '2147483647';
+            menu.style.background = 'white';
+            menu.style.borderRadius = '12px';
+            menu.style.boxShadow = '0 25px 50px rgba(0,0,0,0.25)';
+            menu.style.minWidth = '280px';
+            menu.style.maxWidth = '90%';
+            menu.style.padding = '1rem';
             
-            // 🔥 デスクトップ版：動的位置メニュー至ExportボタンDown
-            if (window.innerWidth > 768) {
-                const exportBtn = event ? event.currentTarget : document.querySelector('button[onclick*="toggleExportMenu"]');
-                if (exportBtn) {
-                    const btnRect = exportBtn.getBoundingClientRect();
-                    const exportDropdown = exportBtn.closest('.export-dropdown');
-                    
-                    if (exportDropdown) {
-                        // 相対にexport-dropdown位置
-                        menu.style.position = 'absolute';
-                        menu.style.top = 'auto';
-                        menu.style.left = 'auto';
-                        menu.style.right = '0';
-                        menu.style.bottom = 'auto';
-                        menu.style.transform = 'none';
-                        menu.style.marginTop = '0.5rem';
-                        
-                        // 將メニュー移動至export-dropdown内
-                        exportDropdown.appendChild(menu);
-                    }
-                }
-            } else {
-                // モバイル版：確保メニュー在body中と中央顯示
-                if (menu.parentElement !== document.body) {
-                    document.body.appendChild(menu);
-                }
-                menu.style.position = 'fixed';
-                menu.style.top = '50%';
-                menu.style.left = '50%';
-                menu.style.right = 'auto';
-                menu.style.bottom = 'auto';
-                menu.style.transform = 'translate(-50%, -50%)';
-                menu.style.marginTop = '0';
-            }
-            
-            console.log('📤 Export メニュー已顯示');
+            console.log('✅ Export 菜单已显示');
         };
         
         function updateExportMenuForDocumentDetail() {
