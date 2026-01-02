@@ -42,7 +42,19 @@ const i18n = {
         no_other_accounts: '暫無其他賬戶信息',
         transactions: '交易記錄',
         total_transactions: '共 {count} 筆交易（顯示第 {start}-{end} 筆）',
-        no_transactions: '無交易記錄'
+                no_transactions: '無交易記錄',
+        // 發票相關翻譯
+        invoice_details: '發票詳情',
+        invoice_number: '發票號碼',
+        vendor: '供應商',
+        total_amount: '總金額',
+        line_items: '項目明細',
+        code: '代碼',
+        quantity: '數量',
+        unit: '單位',
+        unit_price: '單價',
+        unit_default: '件',
+        no_items: '無項目數據'
     },
     'en': {
         verified: 'Verified',
@@ -65,7 +77,19 @@ const i18n = {
         no_other_accounts: 'No other account information',
         transactions: 'Transactions',
         total_transactions: '{count} transactions total (showing {start}-{end})',
-        no_transactions: 'No transactions'
+                no_transactions: 'No transactions',
+        // Invoice translations
+        invoice_details: '${t('invoice_details')}',
+        invoice_number: '${t('invoice_number')}',
+        vendor: 'Vendor',
+        total_amount: '${t('total_amount')}',
+        line_items: '${t('line_items')}',
+        code: 'Code',
+        quantity: 'Quantity',
+        unit: 'Unit',
+        unit_price: 'Unit Price',
+        unit_default: t('unit_default'),
+        no_items: t('no_items')
     },
     'ja': {
         verified: '確認済',
@@ -88,7 +112,19 @@ const i18n = {
         no_other_accounts: 'その他の口座情報はありません',
         transactions: '取引記録',
         total_transactions: '合計{count}件の取引（{start}～{end}件目を表示）',
-        no_transactions: '取引記録がありません'
+                no_transactions: '取引記録がありません',
+        // 請求書関連の翻訳
+        invoice_details: '請求書詳細',
+        invoice_number: '請求書番号',
+        vendor: '仕入先',
+        total_amount: '合計金額',
+        line_items: '明細項目',
+        code: 'コード',
+        quantity: '数量',
+        unit: '単位',
+        unit_price: '単価',
+        unit_default: '個',
+        no_items: '項目データなし'
     },
     'ko': {
         verified: '확인됨',
@@ -111,7 +147,19 @@ const i18n = {
         no_other_accounts: '다른 계정 정보 없음',
         transactions: '거래 내역',
         total_transactions: '총 {count}건의 거래 ({start}~{end}건 표시)',
-        no_transactions: '거래 내역 없음'
+                no_transactions: '거래 내역 없음',
+        // 송장 관련 번역
+        invoice_details: '송장 상세',
+        invoice_number: '송장 번호',
+        vendor: '공급업체',
+        total_amount: '총액',
+        line_items: '항목 명세',
+        code: '코드',
+        quantity: '수량',
+        unit: '단위',
+        unit_price: '단가',
+        unit_default: '개',
+        no_items: '항목 데이터 없음'
     }
 };
 
@@ -1043,29 +1091,29 @@ function displayInvoiceContent(data) {
         <div class="bank-details-card">
             <h3 class="card-title" style="margin-bottom: 1.5rem;">
                 <i class="fas fa-file-invoice" style="color: #3b82f6; margin-right: 0.5rem;"></i>
-                Invoice Details
+                ${t('invoice_details')}
             </h3>
             <div class="invoice-details-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">Invoice Number</label>
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('invoice_number')}</label>
                     <input type="text" id="invoiceNumber" value="${data.invoiceNumber || data.invoice_number || '—'}" 
                            onchange="autoSaveInvoiceDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">Date</label>
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('date')}</label>
                     <input type="date" id="invoiceDate" value="${data.date || data.invoice_date || ''}" 
                            onchange="autoSaveInvoiceDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">Vendor</label>
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('vendor')}</label>
                     <input type="text" id="vendor" value="${data.vendor || data.supplier || data.merchantName || '—'}" 
                            onchange="autoSaveInvoiceDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">Total Amount</label>
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('total_amount')}</label>
                     <input type="text" id="totalAmount" value="${formatCurrency(data.total || data.totalAmount || 0)}" 
                            onchange="autoSaveInvoiceDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; font-weight: 600; color: #10b981; background: white;">
@@ -1097,7 +1145,7 @@ function displayInvoiceContent(data) {
                 <td contenteditable="true" data-field="code" data-index="${index}" style="padding: 0.75rem; color: #6b7280; cursor: text;">${item.code || item.itemCode || '—'}</td>
                 <td contenteditable="true" data-field="description" data-index="${index}" style="padding: 0.75rem; color: #1f2937; font-weight: 500; cursor: text;">${item.description || '—'}</td>
                 <td contenteditable="true" data-field="quantity" data-index="${index}" style="padding: 0.75rem; text-align: right; color: #1f2937; cursor: text;">${quantity}</td>
-                <td contenteditable="true" data-field="unit" data-index="${index}" style="padding: 0.75rem; text-align: right; color: #6b7280; cursor: text;">${item.unit || 'pcs'}</td>
+                <td contenteditable="true" data-field="unit" data-index="${index}" style="padding: 0.75rem; text-align: right; color: #6b7280; cursor: text;">${item.unit || t('unit_default')}</td>
                 <td contenteditable="true" data-field="unit_price" data-index="${index}" style="padding: 0.75rem; text-align: right; color: #1f2937; cursor: text;">${unitPrice.toFixed(2)}</td>
                 <td contenteditable="true" data-field="amount" data-index="${index}" style="padding: 0.75rem; text-align: right; color: #1f2937; font-weight: 500; cursor: text;">${amount.toFixed(2)}</td>
             </tr>
@@ -1108,18 +1156,18 @@ function displayInvoiceContent(data) {
         <div class="transactions-section">
             <h3 class="transactions-title" style="margin-bottom: 1rem;">
                 <i class="fas fa-list" style="color: #8b5cf6; margin-right: 0.5rem;"></i>
-                Line Items
-                <span style="font-size: 0.875rem; color: #6b7280; font-weight: normal; margin-left: 0.5rem;">(Editable)</span>
+                ${t('line_items')}
+                <span style="font-size: 0.875rem; color: #6b7280; font-weight: normal; margin-left: 0.5rem;">${t('editable')}</span>
             </h3>
             <table class="transactions-table">
                 <thead>
                     <tr>
-                        <th>Code</th>
-                        <th>Description</th>
-                        <th style="text-align: right;">Quantity</th>
-                        <th style="text-align: right;">Unit</th>
-                        <th style="text-align: right;">Unit Price</th>
-                        <th style="text-align: right;">Amount</th>
+                        <th>${t('code')}</th>
+                        <th>${t('description')}</th>
+                        <th style="text-align: right;">${t('quantity')}</th>
+                        <th style="text-align: right;">${t('unit')}</th>
+                        <th style="text-align: right;">${t('unit_price')}</th>
+                        <th style="text-align: right;">${t('amount')}</th>
                     </tr>
                 </thead>
                 <tbody id="itemsTableBody">
@@ -1551,11 +1599,11 @@ function displayReceiptContent(data) {
                     <div style="padding: 0.5rem; background: #f9fafb; border-radius: 6px; font-size: 0.9rem;">${data.merchantName || data.vendor || '—'}</div>
                 </div>
                 <div>
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">Date</label>
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('date')}</label>
                     <div style="padding: 0.5rem; background: #f9fafb; border-radius: 6px; font-size: 0.9rem;">${data.date || '—'}</div>
                 </div>
                 <div>
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">Total Amount</label>
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('total_amount')}</label>
                     <div style="padding: 0.5rem; background: #f9fafb; border-radius: 6px; font-size: 0.9rem; font-weight: 600; color: #10b981;">${formatCurrency(data.total || data.totalAmount || 0)}</div>
                 </div>
                 <div>
