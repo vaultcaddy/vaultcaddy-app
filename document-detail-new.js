@@ -42,7 +42,7 @@ const i18n = {
         no_other_accounts: '暫無其他賬戶信息',
         transactions: '交易記錄',
         total_transactions: '共 {count} 筆交易（顯示第 {start}-{end} 筆）',
-                no_transactions: '無交易記錄',
+        no_transactions: '無交易記錄',
         // 發票相關翻譯
         invoice_details: '發票詳情',
         invoice_number: '發票號碼',
@@ -77,19 +77,19 @@ const i18n = {
         no_other_accounts: 'No other account information',
         transactions: 'Transactions',
         total_transactions: '{count} transactions total (showing {start}-{end})',
-                no_transactions: 'No transactions',
+        no_transactions: 'No transactions',
         // Invoice translations
-        invoice_details: '${t('invoice_details')}',
-        invoice_number: '${t('invoice_number')}',
+        invoice_details: 'Invoice Details',
+        invoice_number: 'Invoice Number',
         vendor: 'Vendor',
-        total_amount: '${t('total_amount')}',
-        line_items: '${t('line_items')}',
+        total_amount: 'Total Amount',
+        line_items: 'Line Items',
         code: 'Code',
         quantity: 'Quantity',
         unit: 'Unit',
         unit_price: 'Unit Price',
-        unit_default: t('unit_default'),
-        no_items: t('no_items')
+        unit_default: 'pcs',
+        no_items: 'No item data'
     },
     'ja': {
         verified: '確認済',
@@ -112,7 +112,7 @@ const i18n = {
         no_other_accounts: 'その他の口座情報はありません',
         transactions: '取引記録',
         total_transactions: '合計{count}件の取引（{start}～{end}件目を表示）',
-                no_transactions: '取引記録がありません',
+        no_transactions: '取引記録がありません',
         // 請求書関連の翻訳
         invoice_details: '請求書詳細',
         invoice_number: '請求書番号',
@@ -147,7 +147,7 @@ const i18n = {
         no_other_accounts: '다른 계정 정보 없음',
         transactions: '거래 내역',
         total_transactions: '총 {count}건의 거래 ({start}~{end}건 표시)',
-                no_transactions: '거래 내역 없음',
+        no_transactions: '거래 내역 없음',
         // 송장 관련 번역
         invoice_details: '송장 상세',
         invoice_number: '송장 번호',
