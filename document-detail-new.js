@@ -1043,29 +1043,29 @@ function displayInvoiceContent(data) {
         <div class="bank-details-card">
             <h3 class="card-title" style="margin-bottom: 1.5rem;">
                 <i class="fas fa-file-invoice" style="color: #3b82f6; margin-right: 0.5rem;"></i>
-                發票詳情
+                Invoice Details
             </h3>
             <div class="invoice-details-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">發票號碼</label>
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">Invoice Number</label>
                     <input type="text" id="invoiceNumber" value="${data.invoiceNumber || data.invoice_number || '—'}" 
                            onchange="autoSaveInvoiceDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">日期</label>
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">Date</label>
                     <input type="date" id="invoiceDate" value="${data.date || data.invoice_date || ''}" 
                            onchange="autoSaveInvoiceDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">供應商</label>
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">Vendor</label>
                     <input type="text" id="vendor" value="${data.vendor || data.supplier || data.merchantName || '—'}" 
                            onchange="autoSaveInvoiceDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">總金額</label>
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">Total Amount</label>
                     <input type="text" id="totalAmount" value="${formatCurrency(data.total || data.totalAmount || 0)}" 
                            onchange="autoSaveInvoiceDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; font-weight: 600; color: #10b981; background: white;">
@@ -1097,7 +1097,7 @@ function displayInvoiceContent(data) {
                 <td contenteditable="true" data-field="code" data-index="${index}" style="padding: 0.75rem; color: #6b7280; cursor: text;">${item.code || item.itemCode || '—'}</td>
                 <td contenteditable="true" data-field="description" data-index="${index}" style="padding: 0.75rem; color: #1f2937; font-weight: 500; cursor: text;">${item.description || '—'}</td>
                 <td contenteditable="true" data-field="quantity" data-index="${index}" style="padding: 0.75rem; text-align: right; color: #1f2937; cursor: text;">${quantity}</td>
-                <td contenteditable="true" data-field="unit" data-index="${index}" style="padding: 0.75rem; text-align: right; color: #6b7280; cursor: text;">${item.unit || '件'}</td>
+                <td contenteditable="true" data-field="unit" data-index="${index}" style="padding: 0.75rem; text-align: right; color: #6b7280; cursor: text;">${item.unit || 'pcs'}</td>
                 <td contenteditable="true" data-field="unit_price" data-index="${index}" style="padding: 0.75rem; text-align: right; color: #1f2937; cursor: text;">${unitPrice.toFixed(2)}</td>
                 <td contenteditable="true" data-field="amount" data-index="${index}" style="padding: 0.75rem; text-align: right; color: #1f2937; font-weight: 500; cursor: text;">${amount.toFixed(2)}</td>
             </tr>
@@ -1108,18 +1108,18 @@ function displayInvoiceContent(data) {
         <div class="transactions-section">
             <h3 class="transactions-title" style="margin-bottom: 1rem;">
                 <i class="fas fa-list" style="color: #8b5cf6; margin-right: 0.5rem;"></i>
-                項目明細
-                <span style="font-size: 0.875rem; color: #6b7280; font-weight: normal; margin-left: 0.5rem;">(可編輯)</span>
+                Line Items
+                <span style="font-size: 0.875rem; color: #6b7280; font-weight: normal; margin-left: 0.5rem;">(Editable)</span>
             </h3>
             <table class="transactions-table">
                 <thead>
                     <tr>
-                        <th>代碼</th>
-                        <th>描述</th>
-                        <th style="text-align: right;">數量</th>
-                        <th style="text-align: right;">單位</th>
-                        <th style="text-align: right;">單價</th>
-                        <th style="text-align: right;">金額</th>
+                        <th>Code</th>
+                        <th>Description</th>
+                        <th style="text-align: right;">Quantity</th>
+                        <th style="text-align: right;">Unit</th>
+                        <th style="text-align: right;">Unit Price</th>
+                        <th style="text-align: right;">Amount</th>
                     </tr>
                 </thead>
                 <tbody id="itemsTableBody">
@@ -1551,11 +1551,11 @@ function displayReceiptContent(data) {
                     <div style="padding: 0.5rem; background: #f9fafb; border-radius: 6px; font-size: 0.9rem;">${data.merchantName || data.vendor || '—'}</div>
                 </div>
                 <div>
-                    <label style="display: block; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">日期</label>
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">Date</label>
                     <div style="padding: 0.5rem; background: #f9fafb; border-radius: 6px; font-size: 0.9rem;">${data.date || '—'}</div>
                 </div>
                 <div>
-                    <label style="display: block; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">總金額</label>
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">Total Amount</label>
                     <div style="padding: 0.5rem; background: #f9fafb; border-radius: 6px; font-size: 0.9rem; font-weight: 600; color: #10b981;">${formatCurrency(data.total || data.totalAmount || 0)}</div>
                 </div>
                 <div>
