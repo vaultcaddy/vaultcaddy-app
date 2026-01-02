@@ -2026,6 +2026,10 @@ async function exportDocument(format) {
     }
 }
 
+// 暴露到全局作用域
+window.exportDocument = exportDocument;
+
+
 // CSV 導出
 function exportToCSV(data) {
     const docType = currentDocument.type || currentDocument.documentType || 'general';
