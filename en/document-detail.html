@@ -1972,6 +1972,88 @@
         });
         
         console.log('✅ Export 功能已加载（全新版本 + 备用 listener）');
+        
+        // 🔍 终极诊断：找出为什么点击不工作
+        setTimeout(function() {
+            console.log('');
+            console.log('🔍🔍🔍 开始终极诊断 🔍🔍🔍');
+            console.log('');
+            
+            const exportBtn = document.querySelector('button[onclick*="toggleExportMenu"]');
+            
+            if (!exportBtn) {
+                console.error('❌ Export 按钮不存在');
+                return;
+            }
+            
+            console.log('✅ Export 按钮存在:', exportBtn);
+            
+            // 1. 检查按钮的 CSS 属性
+            const computedStyle = window.getComputedStyle(exportBtn);
+            console.log('📊 按钮样式:');
+            console.log('  - display:', computedStyle.display);
+            console.log('  - visibility:', computedStyle.visibility);
+            console.log('  - opacity:', computedStyle.opacity);
+            console.log('  - pointer-events:', computedStyle.pointerEvents);
+            console.log('  - z-index:', computedStyle.zIndex);
+            console.log('  - position:', computedStyle.position);
+            
+            // 2. 检查按钮的位置
+            const rect = exportBtn.getBoundingClientRect();
+            console.log('📍 按钮位置:');
+            console.log('  - top:', rect.top);
+            console.log('  - left:', rect.left);
+            console.log('  - width:', rect.width);
+            console.log('  - height:', rect.height);
+            
+            // 3. 检查按钮中心点的元素
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const elementAtCenter = document.elementFromPoint(centerX, centerY);
+            
+            console.log('🎯 按钮中心点 (' + centerX + ', ' + centerY + ') 的元素:');
+            console.log('  - 元素:', elementAtCenter);
+            console.log('  - 是否是按钮本身?', elementAtCenter === exportBtn);
+            console.log('  - 是否在按钮内部?', exportBtn.contains(elementAtCenter));
+            
+            if (elementAtCenter !== exportBtn && !exportBtn.contains(elementAtCenter)) {
+                console.error('❌❌❌ 发现问题！按钮被其他元素覆盖了！');
+                console.error('覆盖元素:', elementAtCenter);
+                console.error('覆盖元素的 class:', elementAtCenter.className);
+                console.error('覆盖元素的 id:', elementAtCenter.id);
+                
+                // 检查覆盖元素的 z-index
+                const overlayStyle = window.getComputedStyle(elementAtCenter);
+                console.error('覆盖元素的 z-index:', overlayStyle.zIndex);
+                console.error('覆盖元素的 position:', overlayStyle.position);
+            }
+            
+            // 4. 手动触发点击测试
+            console.log('');
+            console.log('🧪 测试：手动触发点击事件...');
+            
+            // 测试 1: 直接调用函数
+            if (typeof window.toggleExportMenu === 'function') {
+                console.log('✅ toggleExportMenu 函数存在');
+                console.log('🧪 测试 1: 直接调用 window.toggleExportMenu()...');
+                try {
+                    window.toggleExportMenu();
+                    console.log('✅ 函数调用成功');
+                } catch (e) {
+                    console.error('❌ 函数调用失败:', e);
+                }
+            } else {
+                console.error('❌ toggleExportMenu 函数不存在');
+            }
+            
+            console.log('');
+            console.log('🔍🔍🔍 诊断完成 🔍🔍🔍');
+            console.log('');
+            console.log('📋 如果看到 "按钮被其他元素覆盖"，请告诉我覆盖元素的信息');
+            console.log('📋 如果没有看到菜单弹出，请截图整个 Console');
+            
+        }, 2000);  // 等待2秒后执行，确保页面完全加载
+
 
     </script>
     
