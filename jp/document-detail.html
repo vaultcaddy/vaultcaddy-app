@@ -1523,6 +1523,7 @@
             // 🔥 モバイル版：添加關閉ボタン
             let menuHTML = '';
             if (window.innerWidth <= 768) {
+                console.log('📱 检测到移动端');
                 menuHTML += `
                     <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 1rem; border-bottom: 1px solid #e5e7eb; margin-bottom: 1rem;">
                         <h2 style="margin: 0; font-size: 1.25rem; font-weight: 600; color: #1f2937;">選択導出フォーマット</h2>
@@ -1839,6 +1840,7 @@
             
             // 🔥 使用简化的、确保有效的样式设置（参考强制显示测试）
             menu.style.display = 'block';
+            console.log('✅ 已设置 display: block');
             menu.style.position = 'fixed';
             menu.style.zIndex = '9999999';
             menu.style.backgroundColor = '#ffffff';
@@ -1848,6 +1850,7 @@
             menu.style.maxWidth = '90%';
             
             if (window.innerWidth <= 768) {
+                console.log('📱 检测到移动端');
                 // 📱 移动端：居中显示
                 menu.style.top = '50%';
                 menu.style.left = '50%';
@@ -1896,6 +1899,31 @@
             menu.classList.add('active');
             
             console.log('✅ 菜单已显示');
+            
+            // 🔍 最终状态检查
+            const finalStyle = window.getComputedStyle(menu);
+            console.log('🔍 最终菜单状态:');
+            console.log('  - display:', finalStyle.display);
+            console.log('  - position:', finalStyle.position);
+            console.log('  - top:', finalStyle.top);
+            console.log('  - left:', finalStyle.left);
+            console.log('  - zIndex:', finalStyle.zIndex);
+            console.log('  - width:', finalStyle.width);
+            console.log('  - height:', finalStyle.height);
+            console.log('  - innerHTML length:', menu.innerHTML.length);
+            
+            const finalRect = menu.getBoundingClientRect();
+            console.log('  - rect:', finalRect);
+            
+            if (finalStyle.display === 'none') {
+                console.error('❌❌❌ display 还是 none！');
+            }
+            if (finalRect.width === 0 || finalRect.height === 0) {
+                console.error('❌❌❌ 菜单尺寸是 0！');
+            }
+            if (menu.innerHTML.length === 0) {
+                console.error('❌❌❌ 菜单内容为空！');
+            }
             console.log('📊 最终样式: display=' + menu.style.display + ', position=' + menu.style.position + ', zIndex=' + menu.style.zIndex);
         };
         
