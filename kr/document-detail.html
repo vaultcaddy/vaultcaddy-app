@@ -1523,7 +1523,6 @@
             // 🔥 모바일 버전：추가닫기버튼
             let menuHTML = '';
             if (window.innerWidth <= 768) {
-                console.log('📱 检测到移动端');
                 menuHTML += `
                     <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 1rem; border-bottom: 1px solid #e5e7eb; margin-bottom: 1rem;">
                         <h2 style="margin: 0; font-size: 1.25rem; font-weight: 600; color: #1f2937;">선택내보내기포맷</h2>
@@ -1840,7 +1839,6 @@
             
             // 🔥 使用简化的、确保有效的样式设置（参考强制显示测试）
             menu.style.display = 'block';
-            console.log('✅ 已设置 display: block');
             menu.style.position = 'fixed';
             menu.style.zIndex = '9999999';
             menu.style.backgroundColor = '#ffffff';
@@ -1850,7 +1848,6 @@
             menu.style.maxWidth = '90%';
             
             if (window.innerWidth <= 768) {
-                console.log('📱 检测到移动端');
                 // 📱 移动端：居中显示
                 menu.style.top = '50%';
                 menu.style.left = '50%';
@@ -1899,31 +1896,6 @@
             menu.classList.add('active');
             
             console.log('✅ 菜单已显示');
-            
-            // 🔍 最终状态检查
-            const finalStyle = window.getComputedStyle(menu);
-            console.log('🔍 最终菜单状态:');
-            console.log('  - display:', finalStyle.display);
-            console.log('  - position:', finalStyle.position);
-            console.log('  - top:', finalStyle.top);
-            console.log('  - left:', finalStyle.left);
-            console.log('  - zIndex:', finalStyle.zIndex);
-            console.log('  - width:', finalStyle.width);
-            console.log('  - height:', finalStyle.height);
-            console.log('  - innerHTML length:', menu.innerHTML.length);
-            
-            const finalRect = menu.getBoundingClientRect();
-            console.log('  - rect:', finalRect);
-            
-            if (finalStyle.display === 'none') {
-                console.error('❌❌❌ display 还是 none！');
-            }
-            if (finalRect.width === 0 || finalRect.height === 0) {
-                console.error('❌❌❌ 菜单尺寸是 0！');
-            }
-            if (menu.innerHTML.length === 0) {
-                console.error('❌❌❌ 菜单内容为空！');
-            }
             console.log('📊 最终样式: display=' + menu.style.display + ', position=' + menu.style.position + ', zIndex=' + menu.style.zIndex);
         };
         
@@ -2038,7 +2010,194 @@
         
         console.log('✅ Export 功能已加载（全新版本 + 备用 listener）');
         
-        // 等待2秒后执行，确保页面完全加载
+        // 🔍 终极诊断：找出为什么点击不工作
+        setTimeout(function() {
+            console.log('');
+            console.log('🔍🔍🔍 开始终极诊断 🔍🔍🔍');
+            console.log('');
+            
+            const exportBtn = document.querySelector('button[onclick*="toggleExportMenu"]');
+            
+            if (!exportBtn) {
+                console.error('❌ Export 按钮不存在');
+                return;
+            }
+            
+            console.log('✅ Export 按钮存在:', exportBtn);
+            
+            // 1. 检查按钮的 CSS 属性
+            const computedStyle = window.getComputedStyle(exportBtn);
+            console.log('📊 按钮样式:');
+            console.log('  - display:', computedStyle.display);
+            console.log('  - visibility:', computedStyle.visibility);
+            console.log('  - opacity:', computedStyle.opacity);
+            console.log('  - pointer-events:', computedStyle.pointerEvents);
+            console.log('  - z-index:', computedStyle.zIndex);
+            console.log('  - position:', computedStyle.position);
+            
+            // 2. 检查按钮的位置
+            const rect = exportBtn.getBoundingClientRect();
+            console.log('📍 按钮位置:');
+            console.log('  - top:', rect.top);
+            console.log('  - left:', rect.left);
+            console.log('  - width:', rect.width);
+            console.log('  - height:', rect.height);
+            
+            // 3. 检查按钮中心点的元素
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const elementAtCenter = document.elementFromPoint(centerX, centerY);
+            
+            console.log('🎯 按钮中心点 (' + centerX + ', ' + centerY + ') 的元素:');
+            console.log('  - 元素:', elementAtCenter);
+            console.log('  - 是否是按钮本身?', elementAtCenter === exportBtn);
+            console.log('  - 是否在按钮内部?', exportBtn.contains(elementAtCenter));
+            
+            if (elementAtCenter !== exportBtn && !exportBtn.contains(elementAtCenter)) {
+                console.error('❌❌❌ 发现问题！按钮被其他元素覆盖了！');
+                console.error('覆盖元素:', elementAtCenter);
+                console.error('覆盖元素的 class:', elementAtCenter.className);
+                console.error('覆盖元素的 id:', elementAtCenter.id);
+                
+                // 检查覆盖元素的 z-index
+                const overlayStyle = window.getComputedStyle(elementAtCenter);
+                console.error('覆盖元素的 z-index:', overlayStyle.zIndex);
+                console.error('覆盖元素的 position:', overlayStyle.position);
+            }
+            
+            // 4. 手动触发点击测试
+            console.log('');
+            console.log('🧪 测试：手动触发点击事件...');
+            
+            // 测试 1: 直接调用函数
+            if (typeof window.toggleExportMenu === 'function') {
+                console.log('✅ toggleExportMenu 函数存在');
+                console.log('🧪 测试 1: 直接调用 window.toggleExportMenu()...');
+                try {
+                    window.toggleExportMenu();
+                    console.log('✅ 函数调用成功');
+                } catch (e) {
+                    console.error('❌ 函数调用失败:', e);
+                }
+            } else {
+                console.error('❌ toggleExportMenu 函数不存在');
+            }
+            
+            console.log('');
+            
+            
+            // 🔍 深度诊断：检查 exportMenu 元素
+            console.log('');
+            console.log('🔍🔍🔍 exportMenu 元素深度检查 🔍🔍🔍');
+            
+            const menu = document.getElementById('exportMenu');
+            const overlay = document.getElementById('exportMenuOverlay');
+            
+            console.log('1️⃣ exportMenu 存在?', menu !== null);
+            console.log('   元素:', menu);
+            
+            if (menu) {
+                console.log('2️⃣ exportMenu 的样式:');
+                const menuStyle = window.getComputedStyle(menu);
+                console.log('   - display:', menuStyle.display);
+                console.log('   - visibility:', menuStyle.visibility);
+                console.log('   - opacity:', menuStyle.opacity);
+                console.log('   - position:', menuStyle.position);
+                console.log('   - top:', menuStyle.top);
+                console.log('   - left:', menuStyle.left);
+                console.log('   - transform:', menuStyle.transform);
+                console.log('   - z-index:', menuStyle.zIndex);
+                console.log('   - width:', menuStyle.width);
+                console.log('   - height:', menuStyle.height);
+                
+                console.log('3️⃣ exportMenu 的位置:');
+                const menuRect = menu.getBoundingClientRect();
+                console.log('   - top:', menuRect.top);
+                console.log('   - left:', menuRect.left);
+                console.log('   - right:', menuRect.right);
+                console.log('   - bottom:', menuRect.bottom);
+                console.log('   - width:', menuRect.width);
+                console.log('   - height:', menuRect.height);
+                
+                console.log('4️⃣ exportMenu 的内容:');
+                console.log('   - innerHTML 长度:', menu.innerHTML.length);
+                console.log('   - innerHTML 前 100 字符:', menu.innerHTML.substring(0, 100));
+                
+                if (menu.innerHTML.length === 0 || menu.innerHTML.trim() === '') {
+                    console.error('❌❌❌ exportMenu 没有内容！');
+                }
+            } else {
+                console.error('❌❌❌ exportMenu 元素不存在！');
+            }
+            
+            console.log('5️⃣ exportMenuOverlay 存在?', overlay !== null);
+            if (overlay) {
+                const overlayStyle = window.getComputedStyle(overlay);
+                console.log('   - display:', overlayStyle.display);
+                console.log('   - z-index:', overlayStyle.zIndex);
+            }
+            
+            console.log('');
+            console.log('🧪 手动测试：强制显示菜单...');
+            
+            if (menu) {
+                // 保存原始样式
+                console.log('📝 原始 inline style:', menu.getAttribute('style'));
+                
+                // 强制设置样式
+                menu.style.display = 'block';
+                menu.style.position = 'fixed';
+                menu.style.top = '50%';
+                menu.style.left = '50%';
+                menu.style.transform = 'translate(-50%, -50%)';
+                menu.style.zIndex = '9999999';
+                menu.style.backgroundColor = '#ffffff';
+                menu.style.border = '5px solid red';  // 红色边框用于调试
+                menu.style.padding = '2rem';
+                menu.style.minWidth = '300px';
+                menu.style.minHeight = '200px';
+                
+                console.log('✅ 已强制设置样式，菜单应该在屏幕中央显示（红色边框）');
+                console.log('👀 请查看页面，是否看到红色边框的菜单？');
+                
+                setTimeout(function() {
+                    const newMenuStyle = window.getComputedStyle(menu);
+                    console.log('🔍 强制设置后的样式:');
+                    console.log('   - display:', newMenuStyle.display);
+                    console.log('   - position:', newMenuStyle.position);
+                    console.log('   - top:', newMenuStyle.top);
+                    console.log('   - left:', newMenuStyle.left);
+                    console.log('   - z-index:', newMenuStyle.zIndex);
+                    
+                    const newRect = menu.getBoundingClientRect();
+                    console.log('   - 位置: top=' + newRect.top + ', left=' + newRect.left);
+                    console.log('   - 尺寸: width=' + newRect.width + ', height=' + newRect.height);
+                    
+                    if (newRect.width === 0 || newRect.height === 0) {
+                        console.error('❌❌❌ 菜单的尺寸是 0！可能是内容为空或 CSS 问题');
+                    }
+                    
+                    if (newMenuStyle.display === 'none') {
+                        console.error('❌❌❌ display 还是 none！可能被其他 CSS 规则覆盖');
+                    }
+                }, 100);
+            }
+            
+            console.log('');
+            console.log('🔍🔍🔍 深度检查完成 🔍🔍🔍');
+            console.log('');
+            console.log('📋 请告诉我：');
+            console.log('1. exportMenu 存在吗？');
+            console.log('2. exportMenu 的 display 是什么？');
+            console.log('3. exportMenu 的内容长度是多少？');
+            console.log('4. 是否看到红色边框的菜单？');
+
+            console.log('🔍🔍🔍 诊断完成 🔍🔍🔍');
+            console.log('');
+            console.log('📋 如果看到 "按钮被其他元素覆盖"，请告诉我覆盖元素的信息');
+            console.log('📋 如果没有看到菜单弹出，请截图整个 Console');
+            
+        }, 2000);  // 等待2秒后执行，确保页面完全加载
 
 
     </script>
