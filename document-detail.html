@@ -71,1069 +71,7 @@
     <script defer src="export-manager.js?v=20251106-editable"></script>
     
     <!-- ✅ 提前定義 goBackToDashboard 函數 -->
-    <script>
-        // 返回儀表板（提前定義，避免 ReferenceError）
-        function goBackToDashboard() {
-            const params = new URLSearchParams(window.location.search);
-            const projectId = params.get('project');
-            if (projectId) {
-                window.location.href = `firstproject.html?project=${projectId}`;
-            } else {
-                window.location.href = 'dashboard.html';
-            }
-        }
-        
-        // 🔥 刪除當前文檔（使用與 firstproject.html 相同的方法）
-        async function deleteCurrentDocument() {
-            const confirmDelete = confirm('確定要刪除此文檔嗎？此操作無法撤銷。');
-            if (!confirmDelete) return;
-            
-            try {
-                const params = new URLSearchParams(window.location.search);
-                const projectId = params.get('project');
-                const documentId = params.get('id');
-                
-                if (!projectId | !documentId) {
-                    alert('無法獲取文檔信息');
-                    return;
-                }
-                
-                console.log('🗑️ 開始刪除文檔:', { projectId, documentId });
-                
-                // 🔥 使用與 firstproject.html 相同的刪除方法
-                if (window.simpleDataManager && typeof window.simpleDataManager.deleteDocument === 'function') {
-                    // 方法1：使用 simpleDataManager
-                    await window.simpleDataManager.deleteDocument(projectId, documentId);
-                    console.log('✅ 文檔已刪除 (simpleDataManager)');
-                } else if (firebase && firebase.firestore) {
-                    // 方法2：直接使用 Firestore（備用）
-                    await firebase.firestore()
-                        .collection('projects')
-                        .doc(projectId)
-                        .collection('documents')
-                        .doc(documentId)
-                        .delete();
-                    console.log('✅ 文檔已刪除 (Firestore)');
-                } else {
-                    throw new Error('無法連接到數據庫');
-                }
-                
-                alert('文檔已成功刪除');
-                
-                // 🎯 刪除成功後，返回項目頁面（與 firstproject.html 一致）
-                console.log('📍 返回項目頁面:', projectId);
-                window.location.href = `firstproject.html?project=${projectId}`;
-                
-            } catch (error) {
-                console.error('❌ 刪除文檔失敗:', error);
-                alert('刪除文檔失敗: ' + error.message);
-            }
-        
-        }
-    </script>
     
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #ffffff;
-            color: #1f2937;
-            min-height: 100vh;
-            margin: 0;
-            padding: 0;
-        }
-        
-        /* 使用與 firstproject.html 相同的布局結構 */
-        .dashboard-container {
-            display: flex;
-            min-height: 100vh;
-            background: #ffffff;
-            padding-top: 20px; /* 🔥 電腦版：上移 15pt (60px - 15pt ≈ 45px) */
-        }
-        
-        .sidebar {
-            width: 280px;
-            background: #ffffff;
-            border-right: 1px solid #e5e7eb;
-            flex-shrink: 0;
-            position: fixed;
-            top: 60px;
-            bottom: 0;
-            left: 0;
-            overflow-y: auto;
-        }
-        
-        .btn {
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            border: none;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .btn-primary {
-            background: #3b82f6;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: #2563eb;
-        }
-        
-        .saved-indicator {
-            color: #10b981;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        /* 主內容區域 */
-        .main-content {
-            margin-left: 280px; /* 左側欄寬度 */
-            flex: 1;
-            background: #ffffff;
-            min-height: calc(100vh - 60px);
-            padding-top: 0; /* 🔥 確保無額外間距 */
-        }
-        
-        /* 詳情頁面頂部 */
-        .detail-header {
-            background: #ffffff;
-            border-bottom: 1px solid #e5e7eb;
-            padding: 0.5rem 2rem;
-            margin-top: 5pt; /* 🔥 距離導航欄 5pt */
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: sticky;
-            top: 60px;
-            z-index: 10;
-        }
-        
-        .back-btn {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: #6b7280;
-            text-decoration: none;
-            font-size: 0.9rem;
-            transition: color 0.2s;
-            cursor: pointer;
-        }
-        
-        .back-btn:hover {
-            color: #1f2937;
-        }
-        
-        .document-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #1f2937;
-        }
-        
-        .top-actions {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-        
-        /* 詳情內容容器 */
-        .detail-container {
-            display: grid;
-            grid-template-columns: 550px 1fr;
-            gap: 0; /* 移除中間空白 */
-            height: calc(100vh - 120px);
-            overflow: hidden; /* 🔥 防止容器本身產生滾動條 */
-        }
-        
-        /* 左側 PDF 預覽區 */
-        .pdf-preview-panel {
-            background: #f9fafb;
-            border-right: 1px solid #e5e7eb;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden; /* 🔥 隱藏外層滾動條，只保留 pdf-viewer 的滾動 */
-        }
-        
-        .pdf-controls {
-            padding: 1rem;
-            border-bottom: 1px solid #e5e7eb;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 1rem;
-        }
-        
-        .page-nav-btn {
-            background: #ffffff;
-            color: #1f2937;
-            border: 1px solid #d1d5db;
-            width: 32px;
-            height: 32px;
-            border-radius: 4px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-        }
-        
-        .page-nav-btn:hover:not(:disabled) {
-            background: #f3f4f6;
-            border-color: #9ca3af;
-        }
-        
-        .page-nav-btn:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-        
-        .page-indicator {
-            color: #6b7280;
-            font-size: 0.9rem;
-        }
-        
-        .pdf-zoom-controls {
-            display: flex;
-            gap: 0.5rem;
-        }
-        
-        .pdf-viewer {
-            flex: 1;
-            overflow-y: auto;
-            padding: 1rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 1rem;
-        }
-        
-        .pdf-page {
-            background: white;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            border-radius: 4px;
-            max-width: 100%;
-        }
-        
-        .pdf-page img {
-            width: 100%;
-            display: block;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        
-        .pdf-page img:hover {
-            transform: scale(1.02);
-        }
-        
-        /* PDF 放大模態框 */
-        .pdf-modal {
-            display: none;
-            position: fixed;
-            z-index: 10000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.95);
-            overflow: auto;
-        }
-        
-        .pdf-modal.active {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .pdf-modal-content {
-            position: relative;
-            max-width: 95%;
-            max-height: 95vh;
-            overflow: auto;
-        }
-        
-        .pdf-modal-image {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
-        
-        .pdf-modal-close {
-            position: fixed;
-            top: 20px;
-            right: 40px;
-            color: white;
-            font-size: 40px;
-            font-weight: bold;
-            cursor: pointer;
-            z-index: 10001;
-            background: rgba(0, 0, 0, 0.5);
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.3s;
-        }
-        
-        .pdf-modal-close:hover {
-            background: rgba(0, 0, 0, 0.8);
-        }
-        
-        .pdf-modal-controls {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.7);
-            padding: 15px 25px;
-            border-radius: 50px;
-            display: flex;
-            gap: 20px;
-            align-items: center;
-            z-index: 10001;
-        }
-        
-        .pdf-modal-btn {
-            background: white;
-            color: #1f2937;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-        
-        .pdf-modal-btn:hover {
-            background: #667eea;
-            color: white;
-        }
-        
-        .pdf-modal-info {
-            color: white;
-            font-weight: 600;
-        }
-        
-        /* 右側數據面板 */
-        .data-panel {
-            background: #ffffff;
-            overflow-y: auto;
-            padding: 2rem;
-            padding-top: calc(2rem + 30pt); /* 🔥 內容向下移 30pt */
-        }
-        
-        .tabs {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        
-        .tab {
-            padding: 0.75rem 1rem;
-            background: none;
-            border: none;
-            color: #6b7280;
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-            transition: all 0.2s;
-            font-size: 0.95rem;
-            font-weight: 500;
-        }
-        
-        .tab.active {
-            color: #3b82f6;
-            border-bottom-color: #3b82f6;
-        }
-        
-        .tab:hover {
-            color: #1f2937;
-        }
-        
-        /* 核對狀態卡片 */
-        .reconciliation-card {
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        
-        .reconciliation-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 0.5rem;
-        }
-        
-        .reconciliation-title {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #1f2937;
-        }
-        
-        .progress-badge {
-            background: #dbeafe;
-            color: #1e40af;
-            padding: 0.25rem 0.75rem;
-            border-radius: 12px;
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-        
-        .reconciliation-subtitle {
-            color: #6b7280;
-            font-size: 0.9rem;
-        }
-        
-        /* 銀行對帳單詳情 */
-        .bank-details-card {
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        
-        .card-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1rem;
-            cursor: pointer;
-        }
-        
-        .card-title {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #1f2937;
-        }
-        
-        .expand-icon {
-            color: #6b7280;
-            transition: transform 0.2s;
-        }
-        
-        .card-header:hover .expand-icon {
-            color: #1f2937;
-        }
-        
-        /* 交易表格 */
-        .transactions-section {
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 1.5rem;
-        }
-        
-        .transactions-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1.5rem;
-        }
-        
-        .transactions-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #1f2937;
-        }
-        
-        .transaction-controls {
-            display: flex;
-            gap: 0.75rem;
-        }
-        
-        .control-btn {
-            padding: 0.5rem 1rem;
-            background: #f3f4f6;
-            color: #1f2937;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .control-btn:hover {
-            background: #e5e7eb;
-        }
-        
-        .control-btn.add {
-            background: #7c3aed;
-            color: white;
-            border-color: #7c3aed;
-        }
-        
-        .control-btn.add:hover {
-            background: #6d28d9;
-        }
-        
-        .transactions-info {
-            color: #6b7280;
-            font-size: 0.9rem;
-            margin-bottom: 1rem;
-        }
-        
-        .transactions-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        .transactions-table thead {
-            background: #f9fafb;
-        }
-        
-        .transactions-table th {
-            padding: 0.75rem;
-            text-align: left;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #6b7280;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        
-        .transactions-table tbody tr {
-            border-bottom: 1px solid #e5e7eb;
-            transition: background 0.2s;
-        }
-        
-        .transactions-table tbody tr:hover {
-            background: #f9fafb;
-        }
-        
-        .transactions-table td {
-            padding: 0.75rem;
-            font-size: 0.9rem;
-            color: #1f2937;
-        }
-        
-        .checkbox-cell {
-            width: 40px;
-        }
-        
-        .checkbox-cell input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            cursor: pointer;
-        }
-        
-        .amount-cell {
-            font-family: 'Courier New', monospace;
-            font-weight: 500;
-        }
-        
-        .amount-positive {
-            color: #10b981;
-        }
-        
-        .amount-negative {
-            color: #ef4444;
-        }
-        
-        .action-cell {
-            width: 100px;
-        }
-        
-        .action-btns {
-            display: flex;
-            gap: 0.5rem;
-        }
-        
-        .icon-btn {
-            background: none;
-            border: none;
-            color: #6b7280;
-            cursor: pointer;
-            padding: 0.25rem;
-            transition: color 0.2s;
-        }
-        
-        .icon-btn:hover {
-            color: #1f2937;
-        }
-        
-        .icon-btn.delete:hover {
-            color: #ef4444;
-        }
-        
-        /* 載入動畫 */
-        .loading {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 3rem;
-            color: #6b7280;
-        }
-        
-        .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid #e5e7eb;
-            border-top-color: #3b82f6;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 1rem;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        /* ==================== 手機版專用樣式 ==================== */
-        @media (max-width: 768px) {
-            /* 🔥 手機版：顯示漢堡菜單 */
-            #mobile-menu-btn {
-                display: block !important;
-            }
-            
-            /* 🔥 手機版：隱藏桌面版 logo 和文字 */
-            .desktop-logo,
-            .desktop-logo-text {
-                display: none !important;
-            }
-            
-            /* 🔥 手機版：隱藏側邊欄，主內容全寬 */
-            .sidebar {
-                display: none !important;
-            }
-            
-            .main-content {
-                margin-left: 0 !important;
-                width: 100% !important;
-                padding: 0 !important;
-            }
-            
-            /* 主容器 */
-            body {
-                padding-top: 60px !important;
-            }
-            
-            .dashboard-container {
-                display: block !important;
-                padding: 0 !important;
-            }
-            
-            .main-container,
-            .content-wrapper {
-                padding: 0.75rem !important;
-                margin: 0 !important;
-            }
-            
-            /* 🔥 手機版：導航欄樣式 */
-            .vaultcaddy-navbar {
-                padding: 0 1rem !important;
-            }
-            
-            /* 隱藏桌面版導航鏈接 */
-            .vaultcaddy-navbar > div:nth-child(2) > div:first-child {
-                display: none !important;
-            }
-            
-            /* 🔥 手機版：調整布局順序 */
-            .detail-container {
-                display: flex !important;
-                flex-direction: column !important;
-                height: auto !important;
-            }
-            
-            /* 🔥 手機版布局順序：圖片 > 詳情 > 數據 */
-            .pdf-preview-panel {
-                order: 1 !important;
-                width: 100% !important;
-                height: auto !important;
-                min-height: 50vh !important;
-            }
-            
-            .data-panel {
-                order: 2 !important;
-                width: 100% !important;
-                border-left: none !important;
-                border-top: 1px solid #e5e7eb !important;
-            }
-            
-            /* 🔥 手機版：PDF查看器優化 */
-            .pdf-viewer {
-                height: 50vh !important;
-            }
-            
-            /* 隱藏語言選擇器 */
-            #language-selector {
-                display: none !important;
-            }
-            
-            /* 🔥 導航欄之外所有內容向上移 10pt */
-            .main-content {
-                margin-top: -10pt !important;
-            }
-            
-            /* 詳情頁面頂部 - 更現代化 */
-            .detail-header {
-                padding: 0.75rem 1rem !important;
-                padding-top: 0 !important;
-                flex-direction: column !important;
-                align-items: flex-start !important;
-                gap: 0.75rem !important;
-                position: sticky !important;
-                top: 60px !important;
-                background: white !important;
-                z-index: 100 !important;
-                border-bottom: 1px solid #e5e7eb !important;
-                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
-            }
-            
-            .detail-header .back-btn {
-                width: 100% !important;
-                font-size: 0.875rem !important;
-                padding: 0.75rem 1rem !important;
-                border-radius: 8px !important;
-                background: #f3f4f6 !important;
-                border: 1px solid #e5e7eb !important;
-                font-weight: 500 !important;
-                color: #374151 !important;
-                transition: all 0.2s !important;
-            }
-            
-            .detail-header .back-btn:hover {
-                background: #e5e7eb !important;
-            }
-            
-            /* 🔥 手機版：文檔標題美化 */
-            .detail-header .document-title {
-                font-size: 1rem !important;
-                font-weight: 600 !important;
-                color: #1f2937 !important;
-                word-break: break-all !important;
-                line-height: 1.5 !important;
-                margin: 0 !important;
-                width: 100% !important;
-            }
-            
-            /* 🔥 手機版：按鈕組改為左右排列 */
-            .detail-header .top-actions {
-                display: flex !important;
-                flex-direction: row !important;
-                width: 100% !important;
-                gap: 0.5rem !important;
-            }
-            
-            .detail-header .top-actions .saved-indicator {
-                width: 100% !important;
-                justify-content: center !important;
-                padding: 0.5rem !important;
-                font-size: 0.875rem !important;
-            }
-            
-            .detail-header .top-actions .export-dropdown {
-                flex: 1 !important;
-            }
-            
-            .detail-header .top-actions .export-dropdown button {
-                width: 100% !important;
-                justify-content: center !important;
-                padding: 0.75rem 0.5rem !important;
-                font-size: 0.875rem !important;
-                border-radius: 8px !important;
-            }
-            
-            .detail-header .top-actions .icon-btn {
-                flex: 1 !important;
-                padding: 0.75rem 0.5rem !important;
-                font-size: 0.875rem !important;
-                border-radius: 8px !important;
-            }
-            
-            .detail-header .top-actions .icon-btn.delete {
-                background: #fee2e2 !important;
-                border: 1px solid #fecaca !important;
-                color: #ef4444 !important;
-                justify-content: center !important;
-            }
-            
-            .detail-header .top-actions .icon-btn.delete:hover {
-                background: #fecaca !important;
-            }
-
-            /* 所有卡片 */
-            .card,
-            div[style*="border-radius"][style*="padding"] {
-                padding: 1rem !important;
-                margin-bottom: 1rem !important;
-            }
-            
-            /* 🔥 手機版：內容區域 */
-            .content-section {
-                padding: 0.75rem !important;
-            }
-            
-            .data-panel {
-                margin: 0.75rem !important;
-                border-radius: 8px !important;
-            }
-            
-            /* 標題字體大小 */
-            h1 {
-                font-size: 1.25rem !important;
-            }
-            
-            h2 {
-                font-size: 1.125rem !important;
-            }
-            
-            h3 {
-                font-size: 1rem !important;
-            }
-            
-            /* 按鈕 */
-            button,
-            .btn {
-                padding: 0.75rem 1rem !important;
-                font-size: 0.875rem !important;
-                white-space: nowrap !important;
-            }
-            
-            /* 🔧 確保 Export 按鈕可點擊 */
-            #export-btn,
-            #export-dropdown,
-            button[onclick*="toggleExportMenu"] {
-                pointer-events: auto !important;
-                z-index: 9999 !important;
-                touch-action: manipulation !important;
-            }
-            
-            /* 🔧 手機版Export菜單居中顯示 */
-            #exportMenu[style*="display: block"] {
-                position: fixed !important;
-                top: 50% !important;
-                left: 50% !important;
-                transform: translate(-50%, -50%) !important;
-                right: auto !important;
-                bottom: auto !important;
-                margin: 0 !important;
-                z-index: 2147483647 !important; /* 🔥 32位整數最大值 */
-                width: 90% !important;
-                max-width: 400px !important;
-                display: block !important;
-                height: auto !important;
-                max-height: 80vh !important;
-                background: #ffffff !important;
-                overflow: auto !important;
-                box-shadow: none !important;
-                border: none !important;
-                border-radius: 12px !important;
-                padding: 1.5rem !important;
-            }
-            
-            /* 🔥 桌面版改為右側下拉菜單（與firstproject.html相同） */
-            @media (min-width: 769px) {
-                #exportMenu[style*="display: block"] {
-                    position: absolute !important;
-                    top: 100% !important;
-                    left: auto !important;
-                    right: 0 !important;
-                    transform: none !important;
-                    margin-top: 0.5rem !important;
-                    width: 250px !important;
-                    max-width: 250px !important;
-                    z-index: 9999 !important;
-                }
-                
-                /* 桌面版不需要背景遮罩 */
-                #exportMenuOverlay {
-                    display: none !important;
-                }
-            }
-            
-            /* 🔥 確保菜單所有部分都是白色無邊框 */
-            #exportMenu[style*="display: block"] > *,
-            #exportMenu[style*="display: block"] > div,
-            #exportMenu[style*="display: block"] .export-menu-item,
-            #exportMenu[style*="display: block"] button {
-                background-color: #ffffff !important;
-                border: none !important;
-                border-color: transparent !important;
-            }
-            
-            /* 🔥 Export 菜單背景遮罩（桌面版和手機版統一） */
-            #exportMenuOverlay {
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                width: 100vw !important;
-                height: 100vh !important;
-                background: rgba(0, 0, 0, 0.5) !important;
-                z-index: 2147483646 !important;
-                display: none !important;
-            }
-            
-            #exportMenuOverlay[style*="display: block"] {
-                display: block !important;
-            }
-            
-            /* Export 菜單項更大觸控區域 */
-            .export-menu-item,
-            #exportMenu button {
-                padding: 1rem !important;
-                min-height: 50px !important; /* iOS 推薦觸控區域 */
-                touch-action: manipulation !important;
-            }
-            
-            /* 輸入框 */
-            input,
-            select,
-            textarea {
-                font-size: 1rem !important;
-                padding: 0.75rem !important;
-            }
-            
-            /* 🔥 手機版：PDF查看器區域 */
-            .pdf-viewer {
-                padding: 1rem !important;
-                background: #f9fafb !important;
-            }
-            
-            /* PDF 預覽容器 - 更大更美觀 */
-            #pdf-container {
-                height: 50vh !important;
-                max-width: 100% !important;
-                margin: 0 auto !important;
-                background: white !important;
-                border-radius: 12px !important;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
-                overflow: hidden !important;
-            }
-            
-            #pdf-container canvas,
-            #pdf-container img {
-                max-width: 100% !important;
-                height: auto !important;
-                object-fit: contain !important;
-            }
-            
-            /* 🔥 手機版：PDF控制按鈕 - 縮小30%以適應屏幕 */
-            .pdf-controls {
-                padding: 0.25rem 0.35rem !important;
-                gap: 0.175rem !important;
-                flex-wrap: nowrap !important;
-                justify-content: center !important;
-                background: white !important;
-                border-radius: 4px !important;
-                margin: 0.175rem !important;
-                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
-                max-width: 70% !important; /* 縮小30% */
-                overflow-x: auto !important;
-                transform: scale(0.7); /* 整體縮小30% */
-                transform-origin: center;
-            }
-            
-            .pdf-controls button {
-                padding: 0.175rem 0.28rem !important;
-                font-size: 0.49rem !important; /* 0.7 * 0.7 = 0.49 */
-                min-width: 22px !important; /* 32 * 0.7 = 22.4 */
-                border-radius: 3px !important;
-                background: #f3f4f6 !important;
-                border: 1px solid #e5e7eb !important;
-            }
-            
-            .pdf-controls button i {
-                font-size: 0.455rem !important; /* 0.65 * 0.7 = 0.455 */
-            }
-            
-            /* 🔥 手機版：頁面指示器縮小 */
-            .page-indicator {
-                font-size: 0.49rem !important; /* 0.7 * 0.7 = 0.49 */
-                padding: 0 0.175rem !important;
-            }
-            
-            /* 🔥 手機版：縮放按鈕區域 */
-            .pdf-zoom-controls {
-                gap: 0.14rem !important; /* 0.2 * 0.7 = 0.14 */
-            }
-            
-            .pdf-zoom-controls button {
-                padding: 0.14rem 0.245rem !important; /* 0.2 * 0.7, 0.35 * 0.7 */
-                min-width: 19.6px !important; /* 28 * 0.7 */
-            }
-            
-            /* 🔥 手機版：縮放顯示 */
-            .zoom-display {
-                font-size: 0.455rem !important; /* 0.65 * 0.7 */
-                min-width: 24.5px !important; /* 35 * 0.7 */
-            }
-            
-            /* 🔥 手機版：表格橫向滾動 */
-            .table-wrapper,
-            .transactions-section {
-                overflow-x: auto !important;
-                -webkit-overflow-scrolling: touch !important;
-            }
-            
-            /* 表格 */
-            table {
-                font-size: 0.75rem !important;
-                min-width: 600px !important; /* 最小寬度，允許橫向滾動 */
-            }
-            
-            table th,
-            table td {
-                padding: 0.5rem 0.375rem !important;
-                white-space: nowrap !important;
-            }
-            
-            /* 🔥 手機版：表格第一列固定（日期列） */
-            table th:first-child,
-            table td:first-child {
-                position: sticky !important;
-                left: 0 !important;
-                background: white !important;
-                z-index: 10 !important;
-                box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05) !important;
-            }
-            
-            /* 隱藏部分不重要的列（Balance列） */
-            table th:nth-child(5),
-            table td:nth-child(5) {
-                display: none !important;
-            }
-            
-            /* 🔥 手機版：PDF Modal全屏 */
-            .pdf-modal-content {
-                width: 95% !important;
-                max-width: 95% !important;
-                margin: 0 !important;
-            }
-            
-            .pdf-modal-controls {
-                padding: 0.75rem !important;
-                gap: 0.5rem !important;
-            }
-            
-            .pdf-modal-btn {
-                padding: 0.5rem 0.75rem !important;
-                font-size: 0.875rem !important;
-            }
-        }
-    </style>
-    <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <link rel="alternate icon" type="image/png" href="favicon.png">
-
-    <!-- Google Analytics 4 -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LWPEKNC7RQ"></script>
     <script>
       window.dataLayer = window.dataLayer | [];
       function gtag(){dataLayer.push(arguments);}
@@ -1730,406 +668,439 @@
     </script>
     
     <!-- 🔥 手機側邊欄功能 -->
-    <script>
-        // 打開側邊欄
-        function openMobileSidebar() {
-            const sidebar = document.getElementById('mobile-sidebar');
-            const overlay = document.getElementById('mobile-sidebar-overlay');
-            if (sidebar && overlay) {
-                sidebar.style.left = '0';
-                overlay.style.display = 'block';
-                document.body.style.overflow = 'hidden';
-            }
-        }
-        
-        // 關閉側邊欄
-        function closeMobileSidebar() {
-            const sidebar = document.getElementById('mobile-sidebar');
-            const overlay = document.getElementById('mobile-sidebar-overlay');
-            if (sidebar && overlay) {
-                sidebar.style.left = '-100%';
-                overlay.style.display = 'none';
-                document.body.style.overflow = 'auto';
-            }
-        }
-    </script>
-    
-    <!-- 🔥 Export 菜單（放在 body 最後面確保在最上層）-->
-    <div id="exportMenu" class="export-menu" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: none; border-radius: 12px; box-shadow: 0 25px 50px rgba(0,0,0,0.25); min-width: 280px; max-width: 90%; max-height: 80vh; overflow: auto; z-index: 2147483647; padding: 1rem;">
-        <!-- 動態生成的菜單內容 -->
-    </div>
-    
-    <!-- 🔥 Export 菜單背景遮罩（z-index 低於菜單）-->
-    <div id="exportMenuOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2147483646;" onclick="closeExportMenu()"></div>
-
-
-    <!-- Google Analytics 事件跟踪 -->
-    <script src="/ga-event-tracking.js"></script>
-
     
 
+<!-- 🔥 Export Menu（独立容器，与 firstproject.html 完全相同）-->
+<div class="export-menu" id="exportMenu" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: #ffffff !important; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); min-width: 280px; max-width: 400px; z-index: 999999; padding: 1rem; overflow: hidden;">
+<!-- 动态生成内容 -->
+</div>
 
-    <!-- Export Menu -->
-    <div id="exportMenu" style="display: none; position: fixed; background: white; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); z-index: 999999; min-width: 280px; max-width: 400px;">
-        <!-- 内容由 JavaScript 动态生成 -->
-    </div>
-    
-    <!-- Export Menu Overlay（移动端遮罩） -->
-    <div id="exportMenuOverlay" onclick="closeExportMenu()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 999998;"></div>
-    
+<!-- Export Menu 背景遮罩 -->
+<div id="exportMenuOverlay" onclick="closeExportMenu()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999998;"></div>
 
-    <style>
-        /* Export Menu 样式 */
+<style>
+    /* Export Menu 样式 - 与 firstproject.html 完全相同 */
+    .export-menu-item:hover {
+        background: #f3f4f6 !important;
+    }
+    
+    /* 移动端样式 */
+    @media (max-width: 768px) {
         #exportMenu {
-            padding: 0;
-            overflow: hidden;
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            right: auto !important;
+            margin: 0 !important;
+            z-index: 999999 !important;
+            width: 90% !important;
+            max-width: 400px !important;
+            background-color: #ffffff !important;
+            box-shadow: none !important;
+            border: none !important;
+            border-radius: 12px !important;
+            padding: 1.5rem !important;
+            overflow: hidden !important;
         }
-        
-        #exportMenu button:hover {
-            border-color: #10b981 !important;
-            background: #f0fdf4 !important;
-        }
-        
-        /* 移动端样式 */
-        @media (max-width: 768px) {
-            #exportMenu {
-                position: fixed !important;
-                top: 50% !important;
-                left: 50% !important;
-                transform: translate(-50%, -50%) !important;
-                width: 90% !important;
-                max-width: 400px !important;
-                box-shadow: 0 25px 50px rgba(0,0,0,0.3) !important;
-            }
-        }
-    </style>
-    
-<script>
+    }
+</style>
 
-        // 🔥 Export Menu - 适配自 firstproject.html（单文档版本）
-        window.toggleExportMenu = function(event) {
-            console.log('🔍 toggleExportMenu Called (Document Detail Version)');
+<script>
+    // 🔥 Export 功能 - 完整复制自 firstproject.html（适配单文档版本）
+    
+    // 🔄 更新 Export 菜单内容（适配单文档）
+    function updateExportMenuContent() {
+        const menu = document.getElementById('exportMenu');
+        if (!menu) {
+            console.error('❌ 未找到 exportMenu 元素');
+            return;
+        }
+        
+        // 获取当前文档
+        const currentDoc = window.currentDocument;
+        if (!currentDoc) {
+            console.error('❌ 当前文档不存在');
+            return;
+        }
+        
+        // 判断文档类型
+        const docType = (currentDoc.documentType || currentDoc.type || '').toLowerCase();
+        console.log('📋 当前文档类型:', docType);
+        
+        let hasBankStatement = false;
+        let hasInvoice = false;
+        
+        if (docType.includes('bank') || docType.includes('statement')) {
+            hasBankStatement = true;
+        } else if (docType.includes('invoice') || docType.includes('receipt')) {
+            hasInvoice = true;
+        }
+        
+        // 动态生成菜单内容（与 firstproject 完全相同）
+        let menuHTML = '<div style="padding: 0.5rem 0; background: #ffffff;">';
+        
+        // Bank Statement 选项
+        if (hasBankStatement) {
+            menuHTML += `
+                <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Bank Statement</div>
+                <button onclick="exportDocuments('bank_statement_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                    <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
+                    <div>
+                        <div style="font-weight: 500;">Standard CSV</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">complete fields Format</div>
+                    </div>
+                </button>
+            `;
+        }
+        
+        // Invoice 选项
+        if (hasInvoice) {
+            menuHTML += `
+                <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Invoice</div>
+                <button onclick="exportDocuments('invoice_summary_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                    <i class="fas fa-file-invoice" style="color: #f59e0b; width: 20px;"></i>
+                    <div>
+                        <div style="font-weight: 500;">Standard CSV（Total）</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">fast Pair account</div>
+                    </div>
+                </button>
+                <button onclick="exportDocuments('invoice_detailed_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                    <i class="fas fa-file-invoice" style="color: #f59e0b; width: 20px;"></i>
+                    <div>
+                        <div style="font-weight: 500;">complete whole transaction Data CSV</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">details record</div>
+                    </div>
+                </button>
+            `;
+        }
+        
+        // 其他选项（Xero、QuickBooks、IIF、QBO）- 始终显示
+        menuHTML += `
+            <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Other</div>
+            <button onclick="exportDocuments('xero_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                <i class="fas fa-file-csv" style="color: #3b82f6; width: 20px;"></i>
+                <div>
+                    <div style="font-weight: 500;">Xero CSV</div>
+                    <div style="font-size: 0.75rem; color: #6b7280;">official Minimum Format</div>
+                </div>
+            </button>
+            <button onclick="exportDocuments('quickbooks_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
+                <div>
+                    <div style="font-weight: 500;">QuickBooks CSV</div>
+                    <div style="font-size: 0.75rem; color: #6b7280;">official Minimum Format</div>
+                </div>
+            </button>
+            <button onclick="exportDocuments('iif')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                <i class="fas fa-file-alt" style="color: #3b82f6; width: 20px;"></i>
+                <div>
+                    <div style="font-weight: 500;">IIF</div>
+                    <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Desktop</div>
+                </div>
+            </button>
+            <button onclick="exportDocuments('qbo')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                <i class="fas fa-cloud" style="color: #8b5cf6; width: 20px;"></i>
+                <div>
+                    <div style="font-weight: 500;">QBO</div>
+                    <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Online</div>
+                </div>
+            </button>
+        `;
+        
+        menuHTML += '</div>';
+        
+        // 更新菜单内容
+        menu.innerHTML = menuHTML;
+        console.log('✅ 菜单内容已更新');
+    }
+    
+    // 🔄 关闭 Export 菜单（与 firstproject 完全相同）
+    window.closeExportMenu = function() {
+        const menu = document.getElementById('exportMenu');
+        const overlay = document.getElementById('exportMenuOverlay');
+        if (menu) {
+            menu.style.display = 'none';
+            menu.classList.remove('active');
+        }
+        if (overlay) {
+            overlay.style.display = 'none';
+        }
+        console.log('🔒 菜单已关闭');
+    };
+    
+    // 🔄 切换 Export 菜单显示/隐藏（与 firstproject 完全相同的逻辑）
+    window.toggleExportMenu = function() {
+        console.log('🔍 toggleExportMenu Called');
+        const menu = document.getElementById('exportMenu');
+        const overlay = document.getElementById('exportMenuOverlay');
+        console.log('📋 菜单元素:', menu);
+        
+        if (!menu) {
+            console.error('❌ 未找到 #exportMenu 元素');
+            return;
+        }
+        
+        // 如果菜单已显示，则关闭
+        if (menu.style.display === 'block') {
+            closeExportMenu();
+            return;
+        }
+        
+        // 检查当前文档（适配：不需要勾选）
+        if (!window.currentDocument) {
+            alert('文档数据未加载');
+            return;
+        }
+        
+        console.log('📄 当前文档已加载');
+        
+        // 更新菜单内容并显示
+        console.log('🔄 更新菜单内容...');
+        updateExportMenuContent();
+        
+        // 🔥 根据屏幕大小设置菜单样式（与 firstproject 完全相同）
+        if (window.innerWidth <= 768) {
+            // 移动端：居中显示，全白设计
+            menu.style.position = 'fixed';
+            menu.style.top = '50%';
+            menu.style.left = '50%';
+            menu.style.transform = 'translate(-50%, -50%)';
+            menu.style.right = 'auto';
+            menu.style.width = '90%';
+            menu.style.maxWidth = '400px';
+            menu.style.backgroundColor = '#ffffff'; // 🔥 白色背景
+            menu.style.border = 'none'; // 🔥 无边框
+            menu.style.boxShadow = 'none'; // 🔥 无阴影
+            menu.style.borderRadius = '12px';
+            console.log('📱 移动端：菜单居中显示（全白）');
             
-            if (event) {
-                event.preventDefault();
-                event.stopPropagation();
+            // 显示遮罩
+            if (overlay) {
+                overlay.style.display = 'block';
             }
+        } else {
+            // 桌面端：在 Export 按钮下方
+            const exportBtn = document.querySelector('[onclick*="toggleExportMenu"]') || 
+                            document.getElementById('export-btn');
+            if (exportBtn) {
+                const rect = exportBtn.getBoundingClientRect();
+                menu.style.position = 'fixed';
+                menu.style.top = (rect.bottom + 8) + 'px';
+                menu.style.right = (window.innerWidth - rect.right) + 'px';
+                menu.style.left = 'auto';
+                menu.style.transform = 'none';
+                menu.style.width = 'auto';
+                menu.style.minWidth = '280px';
+                menu.style.maxWidth = '400px';
+                menu.style.backgroundColor = '#ffffff';
+                menu.style.border = '1px solid #e5e7eb';
+                menu.style.boxShadow = '0 10px 25px rgba(0,0,0,0.15)';
+                menu.style.borderRadius = '8px';
+            }
+            console.log('💻 桌面端：菜单在按钮下方');
             
-            const menu = document.getElementById('exportMenu');
-            const overlay = document.getElementById('exportMenuOverlay');
-            
-            if (!menu) {
-                console.error('❌ 未找到 #exportMenu 元素');
+            // 桌面端不显示遮罩
+            if (overlay) {
+                overlay.style.display = 'none';
+            }
+        }
+        
+        menu.style.display = 'block';
+        menu.classList.add('active');
+        
+        console.log('✅ 菜单已显示');
+    };
+    
+    // ✅ 按类型导出文档（内部辅助函数，适配单文档）
+    async function exportByType(docs, format) {
+        if (!docs || docs.length === 0) {
+            console.log('⚠️ 无文档需要导出');
+            return;
+        }
+        
+        let exportContent = '';
+        let fileName = '';
+        const mimeType = 'text/csv;charset=utf-8;';
+        
+        switch(format) {
+            case 'bank_statement_csv':
+                if (window.BankStatementExport) {
+                    exportContent = window.BankStatementExport.generateBankStatementCSV(docs);
+                    fileName = `BankStatement_${new Date().toISOString().split('T')[0]}.csv`;
+                } else {
+                    // 简单版本
+                    exportContent = 'Date,Description,Amount,Balance\n';
+                    docs.forEach(doc => {
+                        if (doc.processedData && doc.processedData.transactions) {
+                            doc.processedData.transactions.forEach(t => {
+                                exportContent += `"${t.date || ''}","${t.description || ''}","${t.amount || 0}","${t.balance || 0}"\n`;
+                            });
+                        }
+                    });
+                    fileName = `BankStatement_${new Date().toISOString().split('T')[0]}.csv`;
+                }
+                break;
+                
+            case 'invoice_summary_csv':
+                if (window.InvoiceExport) {
+                    exportContent = window.InvoiceExport.generateInvoiceSummaryCSV(docs);
+                    fileName = `Invoice_${new Date().toISOString().split('T')[0]}.csv`;
+                } else {
+                    // 简单版本
+                    exportContent = 'Invoice Number,Date,Vendor,Amount\n';
+                    docs.forEach(doc => {
+                        if (doc.processedData) {
+                            const data = doc.processedData;
+                            exportContent += `"${data.invoiceNumber || ''}","${data.date || ''}","${data.vendor || ''}","${data.totalAmount || 0}"\n`;
+                        }
+                    });
+                    fileName = `Invoice_${new Date().toISOString().split('T')[0]}.csv`;
+                }
+                break;
+                
+            case 'invoice_detailed_csv':
+                exportContent = 'Code,Description,Quantity,Unit Price,Amount\n';
+                docs.forEach(doc => {
+                    if (doc.processedData && doc.processedData.items) {
+                        doc.processedData.items.forEach(item => {
+                            exportContent += `"${item.code || ''}","${item.description || ''}","${item.quantity || 0}","${item.unit_price || item.unitPrice || 0}","${item.amount || 0}"\n`;
+                        });
+                    }
+                });
+                fileName = `InvoiceDetailed_${new Date().toISOString().split('T')[0]}.csv`;
+                break;
+                
+            case 'general_csv':
+                exportContent = JSON.stringify(docs, null, 2);
+                fileName = `Export_${new Date().toISOString().split('T')[0]}.json`;
+                break;
+                
+            default:
+                alert(`${format} 格式即将推出...`);
                 return;
-            }
+        }
+        
+        if (!exportContent) {
+            console.error('❌ 导出内容为空');
+            alert('无数据可导出');
+            return;
+        }
+        
+        // 下载文件
+        const blob = new Blob(['\uFEFF' + exportContent], { type: mimeType });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        
+        console.log(`✅ 已导出: ${fileName}`);
+    }
+    
+    // 📤 导出文档（适配单文档）
+    window.exportDocuments = async function(format) {
+        console.log('📤 开始导出:', format);
+        
+        // 🔥 关闭菜单
+        closeExportMenu();
+        
+        try {
+            // 获取当前文档（适配：使用 window.currentDocument）
+            const currentDoc = window.currentDocument;
             
-            // 如果菜单已显示，则关闭
-            if (menu.style.display === 'block') {
-                closeExportMenu();
-                return;
-            }
-            
-            // 检查当前文档
-            if (!window.currentDocument) {
+            if (!currentDoc) {
                 alert('文档数据未加载');
                 return;
             }
             
-            console.log('📄 当前文档:', window.currentDocument);
-            
-            // 更新菜单内容
-            updateExportMenuForDocumentDetail();
-            
-            // 根据屏幕大小设置菜单样式
-            if (window.innerWidth <= 768) {
-                // 移动端：居中显示
-                menu.style.position = 'fixed';
-                menu.style.top = '50%';
-                menu.style.left = '50%';
-                menu.style.transform = 'translate(-50%, -50%)';
-                menu.style.right = 'auto';
-                menu.style.width = '90%';
-                menu.style.maxWidth = '400px';
-                menu.style.backgroundColor = '#ffffff';
-                menu.style.border = 'none';
-                menu.style.boxShadow = '0 25px 50px rgba(0,0,0,0.3)';
-                menu.style.borderRadius = '12px';
-                menu.style.zIndex = '999999';
-                console.log('📱 移动端：菜单居中显示');
-                
-                // 显示遮罩
-                if (overlay) {
-                    overlay.style.display = 'block';
-                }
-            } else {
-                // 桌面端：在Export按钮下方
-                const exportBtn = document.getElementById('export-btn') || 
-                                document.querySelector('[onclick*="toggleExportMenu"]');
-                if (exportBtn) {
-                    const rect = exportBtn.getBoundingClientRect();
-                    menu.style.position = 'fixed';
-                    menu.style.top = (rect.bottom + 8) + 'px';
-                    menu.style.right = (window.innerWidth - rect.right) + 'px';
-                    menu.style.left = 'auto';
-                    menu.style.transform = 'none';
-                    menu.style.width = 'auto';
-                    menu.style.minWidth = '280px';
-                    menu.style.maxWidth = '400px';
-                    menu.style.backgroundColor = '#ffffff';
-                    menu.style.border = '1px solid #e5e7eb';
-                    menu.style.boxShadow = '0 10px 25px rgba(0,0,0,0.15)';
-                    menu.style.borderRadius = '8px';
-                    menu.style.zIndex = '999999';
-                }
-                console.log('💻 桌面端：菜单在按钮下方');
-                
-                // 桌面端不显示遮罩
-                if (overlay) {
-                    overlay.style.display = 'none';
-                }
-            }
-            
-            menu.style.display = 'block';
-            menu.classList.add('active');
-            
-            console.log('✅ 菜单已显示');
-        };
-        
-        window.closeExportMenu = function() {
-            const menu = document.getElementById('exportMenu');
-            const overlay = document.getElementById('exportMenuOverlay');
-            
-            if (menu) {
-                menu.style.display = 'none';
-                menu.classList.remove('active');
-            }
-            
-            if (overlay) {
-                overlay.style.display = 'none';
-            }
-            
-            console.log('✅ 菜单已关闭');
-        };
-        
-        function updateExportMenuForDocumentDetail() {
-            const menu = document.getElementById('exportMenu');
-            if (!menu || !window.currentDocument) {
-                console.error('❌ 菜单或文档不存在');
+            // 检查文档是否已处理
+            if (currentDoc.status !== 'completed' || !currentDoc.processedData) {
+                alert('文档尚未完成处理');
                 return;
             }
             
-            const doc = window.currentDocument;
-            const docType = (doc.documentType || doc.type || '').toLowerCase();
+            console.log('📋 准备导出当前文档');
             
-            console.log('📋 文档类型:', docType);
+            // 按类型分组（虽然只有一个文档，但保持与 firstproject 相同的结构）
+            const groupedDocs = {
+                bank_statements: [],
+                invoices: [],
+                receipts: [],
+                general: []
+            };
             
-            let menuHTML = '';
-            
-            // 根据文档类型生成不同的导出选项
-            if (docType.includes('bank') || docType.includes('statement')) {
-                // 银行对账单导出选项
-                menuHTML = `
-                    <div style="padding: 1rem; background: white; border-radius: 8px;">
-                        <h3 style="margin: 0 0 1rem 0; font-size: 1.1rem; font-weight: 600; color: #1f2937;">
-                            匯出銀行對帳單
-                        </h3>
-                        
-                        <button onclick="exportCurrentDocument('bank_csv')" 
-                                style="width: 100%; text-align: left; padding: 0.875rem; margin-bottom: 0.5rem; 
-                                       border: 1px solid #e5e7eb; background: white; cursor: pointer; 
-                                       border-radius: 6px; display: flex; align-items: center; gap: 0.75rem; 
-                                       transition: all 0.2s; font-size: 0.95rem;">
-                            <i class="fas fa-file-csv" style="color: #10b981; font-size: 1.2rem;"></i>
-                            <div style="flex: 1;">
-                                <div style="font-weight: 500; color: #1f2937;">標準 CSV</div>
-                                <div style="font-size: 0.8rem; color: #6b7280;">通用格式</div>
-                            </div>
-                        </button>
-                        
-                        <button onclick="exportCurrentDocument('bank_xero')" 
-                                style="width: 100%; text-align: left; padding: 0.875rem; margin-bottom: 0.5rem; 
-                                       border: 1px solid #e5e7eb; background: white; cursor: pointer; 
-                                       border-radius: 6px; display: flex; align-items: center; gap: 0.75rem; 
-                                       transition: all 0.2s; font-size: 0.95rem;">
-                            <i class="fas fa-file-csv" style="color: #2563eb; font-size: 1.2rem;"></i>
-                            <div style="flex: 1;">
-                                <div style="font-weight: 500; color: #1f2937;">Xero CSV</div>
-                                <div style="font-size: 0.8rem; color: #6b7280;">Xero 會計軟體</div>
-                            </div>
-                        </button>
-                        
-                        <button onclick="exportCurrentDocument('bank_qbo')" 
-                                style="width: 100%; text-align: left; padding: 0.875rem; margin-bottom: 1rem; 
-                                       border: 1px solid #e5e7eb; background: white; cursor: pointer; 
-                                       border-radius: 6px; display: flex; align-items: center; gap: 0.75rem; 
-                                       transition: all 0.2s; font-size: 0.95rem;">
-                            <i class="fas fa-cloud" style="color: #8b5cf6; font-size: 1.2rem;"></i>
-                            <div style="flex: 1;">
-                                <div style="font-weight: 500; color: #1f2937;">QBO 格式</div>
-                                <div style="font-size: 0.8rem; color: #6b7280;">QuickBooks Online</div>
-                            </div>
-                        </button>
-                        
-                        <button onclick="closeExportMenu()" 
-                                style="width: 100%; padding: 0.75rem; border: none; 
-                                       background: #f3f4f6; color: #374151; cursor: pointer; 
-                                       border-radius: 6px; font-weight: 500; font-size: 0.95rem;">
-                            取消
-                        </button>
-                    </div>
-                `;
-            } else if (docType.includes('invoice') || docType.includes('receipt')) {
-                // 发票/收据导出选项
-                menuHTML = `
-                    <div style="padding: 1rem; background: white; border-radius: 8px;">
-                        <h3 style="margin: 0 0 1rem 0; font-size: 1.1rem; font-weight: 600; color: #1f2937;">
-                            匯出發票
-                        </h3>
-                        
-                        <button onclick="exportCurrentDocument('invoice_csv')" 
-                                style="width: 100%; text-align: left; padding: 0.875rem; margin-bottom: 0.5rem; 
-                                       border: 1px solid #e5e7eb; background: white; cursor: pointer; 
-                                       border-radius: 6px; display: flex; align-items: center; gap: 0.75rem; 
-                                       transition: all 0.2s; font-size: 0.95rem;">
-                            <i class="fas fa-file-csv" style="color: #10b981; font-size: 1.2rem;"></i>
-                            <div style="flex: 1;">
-                                <div style="font-weight: 500; color: #1f2937;">標準 CSV</div>
-                                <div style="font-size: 0.8rem; color: #6b7280;">發票明細</div>
-                            </div>
-                        </button>
-                        
-                        <button onclick="exportCurrentDocument('invoice_quickbooks')" 
-                                style="width: 100%; text-align: left; padding: 0.875rem; margin-bottom: 1rem; 
-                                       border: 1px solid #e5e7eb; background: white; cursor: pointer; 
-                                       border-radius: 6px; display: flex; align-items: center; gap: 0.75rem; 
-                                       transition: all 0.2s; font-size: 0.95rem;">
-                            <i class="fas fa-file-csv" style="color: #059669; font-size: 1.2rem;"></i>
-                            <div style="flex: 1;">
-                                <div style="font-weight: 500; color: #1f2937;">QuickBooks CSV</div>
-                                <div style="font-size: 0.8rem; color: #6b7280;">QuickBooks 格式</div>
-                            </div>
-                        </button>
-                        
-                        <button onclick="closeExportMenu()" 
-                                style="width: 100%; padding: 0.75rem; border: none; 
-                                       background: #f3f4f6; color: #374151; cursor: pointer; 
-                                       border-radius: 6px; font-weight: 500; font-size: 0.95rem;">
-                            取消
-                        </button>
-                    </div>
-                `;
+            const docType = (currentDoc.documentType || '').toLowerCase();
+            if (docType === 'bank_statement' || docType === 'bank_statements') {
+                groupedDocs.bank_statements.push(currentDoc);
+            } else if (docType === 'invoice' || docType === 'invoices') {
+                groupedDocs.invoices.push(currentDoc);
+            } else if (docType === 'receipt' || docType === 'receipts') {
+                groupedDocs.receipts.push(currentDoc);
             } else {
-                // 通用导出选项
-                menuHTML = `
-                    <div style="padding: 1rem; background: white; border-radius: 8px;">
-                        <h3 style="margin: 0 0 1rem 0; font-size: 1.1rem; font-weight: 600; color: #1f2937;">
-                            匯出文件
-                        </h3>
-                        
-                        <button onclick="exportCurrentDocument('general_csv')" 
-                                style="width: 100%; text-align: left; padding: 0.875rem; margin-bottom: 1rem; 
-                                       border: 1px solid #e5e7eb; background: white; cursor: pointer; 
-                                       border-radius: 6px; display: flex; align-items: center; gap: 0.75rem; 
-                                       transition: all 0.2s; font-size: 0.95rem;">
-                            <i class="fas fa-file-csv" style="color: #10b981; font-size: 1.2rem;"></i>
-                            <div style="flex: 1;">
-                                <div style="font-weight: 500; color: #1f2937;">CSV 格式</div>
-                                <div style="font-size: 0.8rem; color: #6b7280;">通用格式</div>
-                            </div>
-                        </button>
-                        
-                        <button onclick="closeExportMenu()" 
-                                style="width: 100%; padding: 0.75rem; border: none; 
-                                       background: #f3f4f6; color: #374151; cursor: pointer; 
-                                       border-radius: 6px; font-weight: 500; font-size: 0.95rem;">
-                            取消
-                        </button>
-                    </div>
-                `;
+                groupedDocs.general.push(currentDoc);
             }
             
-            menu.innerHTML = menuHTML;
-            console.log('✅ 菜单内容已更新');
+            console.log('📊 文档分组结果:', {
+                bank_statements: groupedDocs.bank_statements.length,
+                invoices: groupedDocs.invoices.length,
+                receipts: groupedDocs.receipts.length,
+                general: groupedDocs.general.length
+            });
+            
+            // 根据格式选择合适的文档组
+            let docsToExport = [];
+            
+            switch(format) {
+                case 'bank_statement_csv':
+                    docsToExport = groupedDocs.bank_statements;
+                    if (docsToExport.length === 0) {
+                        alert('当前文档不是银行对账单');
+                        return;
+                    }
+                    break;
+                    
+                case 'invoice_summary_csv':
+                case 'invoice_detailed_csv':
+                    docsToExport = [...groupedDocs.invoices, ...groupedDocs.receipts];
+                    if (docsToExport.length === 0) {
+                        alert('当前文档不是发票或收据');
+                        return;
+                    }
+                    break;
+                    
+                case 'xero_csv':
+                case 'quickbooks_csv':
+                case 'iif':
+                case 'qbo':
+                    // 这些格式支持所有类型
+                    docsToExport = [currentDoc];
+                    break;
+                    
+                case 'general_csv':
+                    docsToExport = [currentDoc];
+                    break;
+                    
+                default:
+                    docsToExport = [currentDoc];
+            }
+            
+            console.log(`📤 准备导出 ${docsToExport.length} 个文档`);
+            
+            // 执行导出
+            await exportByType(docsToExport, format);
+            
+        } catch (error) {
+            console.error('❌ 导出失败:', error);
+            alert('导出失败: ' + error.message);
         }
-        
-        window.exportCurrentDocument = function(format) {
-            console.log('📤 导出格式:', format);
-            closeExportMenu();
-            
-            if (!window.currentDocument) {
-                alert('文档数据不可用');
-                return;
-            }
-            
-            const doc = window.currentDocument;
-            const data = doc.processedData || {};
-            
-            try {
-                let csv = '';
-                let filename = '';
-                
-                switch(format) {
-                    case 'bank_csv':
-                        if (data.transactions && data.transactions.length > 0) {
-                            csv = 'Date,Description,Amount,Balance\n';
-                            data.transactions.forEach(t => {
-                                csv += `"${t.date || ''}","${t.description || ''}","${t.amount || 0}","${t.balance || 0}"\n`;
-                            });
-                            filename = `BankStatement_${Date.now()}.csv`;
-                        }
-                        break;
-                        
-                    case 'bank_xero':
-                        alert('Xero 格式即将推出...');
-                        return;
-                        
-                    case 'bank_qbo':
-                        alert('QBO 格式即将推出...');
-                        return;
-                        
-                    case 'invoice_csv':
-                        if (data.items && data.items.length > 0) {
-                            csv = 'Code,Description,Quantity,Unit Price,Amount\n';
-                            data.items.forEach(item => {
-                                csv += `"${item.code || ''}","${item.description || ''}","${item.quantity || 0}","${item.unit_price || item.unitPrice || 0}","${item.amount || 0}"\n`;
-                            });
-                            filename = `Invoice_${Date.now()}.csv`;
-                        }
-                        break;
-                        
-                    case 'invoice_quickbooks':
-                        alert('QuickBooks 格式即将推出...');
-                        return;
-                        
-                    case 'general_csv':
-                        csv = JSON.stringify(doc, null, 2);
-                        filename = `Document_${Date.now()}.json`;
-                        break;
-                }
-                
-                if (!csv) {
-                    alert('无数据可导出');
-                    return;
-                }
-                
-                // 下载文件
-                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                
-                console.log('✅ 已下载:', filename);
-            } catch (error) {
-                console.error('❌ 导出失败:', error);
-                alert('导出失败: ' + error.message);
-            }
-        };
+    };
     
+    console.log('✅ Export 功能已加载（document-detail 单文档版本）');
 </script>
+
 </body>
 </html>
