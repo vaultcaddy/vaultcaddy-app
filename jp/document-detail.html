@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
     
     <!-- 🔒 ページ保護 -->
     <style>
         body.auth-checking { visibility: hidden !important; }
-        .auth-loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; align-items: center; justify-content: center; z-index: 10000; visibility: visible !important; }
+        .auth-loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; align-items: center; justify-content: center; z-index: 9999; visibility: visible !important; }
         body.auth-ready .auth-loading { display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
@@ -26,130 +26,634 @@
     <link rel="stylesheet" href="../dashboard.css">
     <link rel="stylesheet" href="../pages.css">
     <link rel="stylesheet" href="../editable-table.css">
-    <link rel="stylesheet" href="https:        // 🔥 Export 功能 - 工作版本（从 firstproject.html）
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script defer src="../config.js"></script>
+    <script defer src="../translations.js"></script>
+    
+    <!-- Firebase SDK -->
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    
+    <!-- Firebase 設定と數據管理器 -->
+    <script src="../firebase-config.js?v=20251106-editable"></script>
+    <!-- 🔥 新の簡化系統 -->
+    <script defer src="../simple-auth.js?v=20251106-editable"></script>
+    <script defer src="../user-profile-manager.js?v=20251120"></script>
+    <script defer src="../simple-data-manager.js?v=20251106-editable"></script>
+    
+    <!-- ナビゲーションバーのインタラクション機能 -->
+    <script defer src="../navbar-interactions.js?v=20251108"></script>
+    
+    <!-- ✅ 統一ナビゲーション欄系統：靜態 HTML + navbar-component.js -->
+    <script defer src="../navbar-component.js?v=20251120-unified"></script>
+    <script defer src="../sidebar-component.js?v=20251106-editable"></script>
+    
+    <!-- 機能模块 - 簡化版 -->
+    <script defer src="../export-manager.js?v=20251106-editable"></script>
+    
+    <!-- ✅ 提前定義 goBackToDashboard 函數 -->
+    
+    <script>
+      window.dataLayer = window.dataLayer | [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-LWPEKNC7RQ');
+    </script>
+
+
+    <!-- 资源提示 - 优化加载速度 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+    <link rel="dns-prefetch" href="https://images.unsplash.com">
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+        <script src="/multilingual-data-sync.js"></script>
+
+    <meta name="description" content="AI搭載の文書詳細 - VaultCaddy明細書変換ツール。3秒でPDFをExcel/QuickBooks/Xeroに変換、精度98%。20ページ無料試用、クレジットカード不要。¥926/月から、日本200+企業が信頼。">
+
+    <link rel="canonical" href="https://vaultcaddy.com/document-detail.html">
+
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "VaultCaddy - 文書詳細 - VaultCaddy Statement Converter",
+  "applicationCategory": "FinanceApplication",
+  "operatingSystem": "Web, iOS, Android",
+  "offers": {
+    "@type": "Offer",
+    "price": "926",
+    "priceCurrency": "JPY",
+    "priceValidUntil": "2026-12-31"
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.8",
+    "ratingCount": "127",
+    "bestRating": "5"
+  },
+  "featureList": [
+    "AI-powered recognition",
+    "Excel/QuickBooks/Xero export",
+    "98% accuracy",
+    "3-second processing",
+    "Batch processing",
+    "Cloud storage"
+  ]
+}
+</script>
+    </head>
+<body class="auth-checking">
+    <!-- 🔒 Auth 加載動畫 -->
+    <div class="auth-loading">
+        <div style="text-align: center;">
+            <div style="width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
+            <p style="color: #6b7280; font-size: 0.875rem;">本人確認中...</p>
+        </div>
+    </div>
+    
+    <!-- ✅ 統一された静のナビゲーションバー -->
+    <nav class="vaultcaddy-navbar" id="main-navbar" style="position: fixed; top: 0; left: 0; right: 0; height: 60px; background: #ffffff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; z-index: 1000; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <!-- 🔥 ハンバーガーメニューボタン（僅手機顯示） -->
+            <button id="mobile-menu-btn" onclick="openMobileSidebar()" style="display: none; background: none; border: none; cursor: pointer; padding: 0.5rem; color: #1f2937; font-size: 1.5rem;">
+                <i class="fas fa-bars"></i>
+            </button>
+            
+            <a href="index.html" style="display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: #1f2937; font-weight: 600; font-size: 1.125rem;">
+                <div class="desktop-logo" style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.25rem;">
+                    V
+                </div>
+                <div class="desktop-logo-text">
+                    <div>VaultCaddy</div>
+                    <div style="font-size: 0.75rem; color: #6b7280; font-weight: 400; text-transform: uppercase; letter-spacing: 0.05em;">AI DOCUMENT PROCESSING</div>
+                </div>
+            </a>
+        </div>
+        <div style="display: flex; align-items: center; gap: 2rem;">
+            <div style="display: flex; align-items: center; gap: 2rem;">
+                <a href="index.html#features" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">機能</a>
+                <a href="index.html#pricing" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">価格</a>
+                <a href="blog/" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">学習センター</a>
+                <a href="dashboard.html" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">ダッシュボード</a>
+            </div>
+            <div id="language-switcher" style="display: inline-block; margin-right: 1rem;"></div>
+                <div id="user-menu" style="position: relative; display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;">
+                <div id="user-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">U</div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- 🔥 手機サイドバーメニュー -->
+    <div id="mobile-sidebar" style="position: fixed; top: 0; left: -100%; width: 280px; height: 100vh; background: white; z-index: 2000; transition: left 0.3s ease; box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto;">
+        <div style="padding: 1.5rem;">
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <a href="index.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
+                    <i class="fas fa-home" style="width: 20px; color: #667eea;"></i>
+                    <span>ホーム</span>
+                </a>
+                <a href="index.html#features" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
+                    <i class="fas fa-star" style="width: 20px; color: #667eea;"></i>
+                    <span>機能</span>
+                </a>
+                <a href="index.html#pricing" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
+                    <i class="fas fa-dollar-sign" style="width: 20px; color: #667eea;"></i>
+                    <span>価格</span>
+                </a>
+                <a href="blog/" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
+                    <i class="fas fa-graduation-cap" style="width: 20px; color: #667eea;"></i>
+                    <span>学習センター</span>
+                </a>
+                <a href="dashboard.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
+                    <i class="fas fa-th-large" style="width: 20px; color: #667eea;"></i>
+                    <span>ダッシュボード</span>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 🔥 サイドバーマスク -->
+    <div id="mobile-sidebar-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; display: none;" onclick="closeMobileSidebar()"></div>
+    
+    <!-- 主容器 -->
+    <div class="dashboard-container">
+        <!-- 左サイドバー（由 sidebar-component.js 動の生成） -->
+        <aside class="sidebar"></aside>
         
-        // 关闭菜单
-        window.closeExportMenu = function() {
-            const menu = document.getElementById('exportMenu');
-            const overlay = document.getElementById('exportMenuOverlay');
-            if (menu) {
-                menu.style.display = 'none';
-                menu.classList.remove('active');
-            }
-            if (overlay) {
-                overlay.style.display = 'none';
-            }
-            console.log('🔒 菜单已关闭');
-        };
-        
-        // 切换菜单显示
-        window.toggleExportMenu = function() {
-            console.log('🔍 toggleExportMenu Called');
-            const menu = document.getElementById('exportMenu');
-            const overlay = document.getElementById('exportMenuOverlay');
-            console.log('📋 菜单元素:', menu);
+        <!-- 主コンテンツエリア -->
+        <div class="main-content">
+            <!-- 詳情ページ頂部 -->
+            <div class="detail-header">
+                <span class="back-btn" onclick="goBackToDashboard()">
+                    <i class="fas fa-arrow-left"></i>
+                    戻るダッシュボード
+                </span>
+                <h1 class="document-title" id="documentTitle">読み込み中...</h1>
+                <div class="top-actions">
+                    <!-- 保存指示器（動態顯示） -->
+                    <span id="savedIndicator" class="saved-indicator" style="display: none;">
+                        <i class="fas fa-cloud-check"></i>
+                        Saved
+                    </span>
+                    <!-- 导出按钮（綠色）- メニュー已移まで body 最後 -->
+                    <div class="export-dropdown" style="position: relative;">
+                        <button onclick="toggleExportMenu(event)" style="background: #10b981; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
+                            <i class="fas fa-download"></i>
+                            <span>Export</span>
+                            <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
+                        </button>
+                        
+                    </div>
+                    <button class="icon-btn delete" onclick="deleteCurrentDocument()" title="削除文書" style="background: #fee2e2; border: 1px solid #fecaca; color: #ef4444; padding: 0.5rem 1rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-trash"></i>
+                        <span>Delete</span>
+                    </button>
+                </div>
+            </div>
             
-            if (!menu) {
-                console.error('❌ 未找到 #exportMenu 元素');
-                return;
-            }
-            
-            // 如果菜单已显示，则关闭
-            if (menu.style.display === 'block') {
-                closeExportMenu();
-                return;
-            }
-            
-            // 使用当前文档（document-detail 场景）
-            if (!window.currentDocument) {
-                console.warn('⚠️ window.currentDocument 不存在');
-            }
-            
-            // 更新菜单内容
-            console.log('🔄 更新菜单内容...');
-            updateExportMenuContent();
-            
-            // 根据屏幕大小设置菜单样式
-            if (window.innerWidth <= 768) {
-                // 移动端：居中显示
-                menu.style.position = 'fixed';
-                menu.style.top = '50%';
-                menu.style.left = '50%';
-                menu.style.transform = 'translate(-50%, -50%)';
-                menu.style.right = 'auto';
-                menu.style.width = '90%';
-                menu.style.maxWidth = '400px';
-                menu.style.backgroundColor = '#ffffff';
-                menu.style.border = 'none';
-                menu.style.boxShadow = 'none';
-                menu.style.borderRadius = '12px';
-                console.log('📱 移动端：菜单居中显示');
+            <!-- 詳情コンテンツ容器 -->
+            <div class="detail-container">
+        <!-- 左側 PDF 預覽 -->
+        <div class="pdf-preview-panel">
+            <div class="pdf-controls">
+                <button class="page-nav-btn" id="prevPageBtn" onclick="previousPage()">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <span class="page-indicator">
+                    <span id="currentPage">1</span> of <span id="totalPages">1</span>
+                </span>
+                <button class="page-nav-btn" id="nextPageBtn" onclick="nextPage()">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
                 
-                // 显示遮罩
-                if (overlay) {
-                    overlay.style.display = 'block';
-                }
+                <div class="pdf-zoom-controls">
+                    <button class="page-nav-btn" onclick="zoomOut()">
+                        <i class="fas fa-search-minus"></i>
+                    </button>
+                    <button class="page-nav-btn" onclick="resetZoom()">
+                        <i class="fas fa-undo"></i>
+                    </button>
+                    <button class="page-nav-btn" onclick="zoomIn()">
+                        <i class="fas fa-search-plus"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="pdf-viewer" id="pdfViewer">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <div>ドキュメントを読み込み中...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 右側數據面板 -->
+        <div class="data-panel">
+            
+            
+            <!-- 文書詳細（根據タイプ動態顯示） -->
+            <div id="documentDetailsSection">
+                <!-- 將由 JavaScript 動の生成 -->
+            </div>
+            
+            <!-- 數據テーブル（根據タイプ動態顯示） -->
+            <div id="documentDataSection">
+                <!-- 將由 JavaScript 動の生成 -->
+            </div>
+            
+            <!-- 原有の銀行取引明細書取引記録テーブル（保留作として備用） -->
+            <div id="bankStatementSection" style="display: none;">
+                <div class="bank-details-card">
+                    <div class="card-header">
+                        <h3 class="card-title">Bank Statement Details & Notes</h3>
+                        <i class="fas fa-chevron-down expand-icon"></i>
+                    </div>
+                </div>
+                
+                <div class="transactions-section">
+                    <div class="transactions-header">
+                        <h3 class="transactions-title">Transactions</h3>
+                        <div class="transaction-controls">
+                            <button class="control-btn">Show Unreconciled</button>
+                            <button class="control-btn">Toggle All</button>
+                            <button class="control-btn add">Add Item</button>
+                        </div>
+                    </div>
+                    
+                    <div class="transactions-info" id="transactionsInfo">
+                        Showing 0 to 0 of 0 transactions
+                    </div>
+                    
+                    <table class="transactions-table">
+                    <thead>
+                        <tr>
+                            <th class="checkbox-cell">
+                                <input type="checkbox" onchange="toggleAllTransactions(this)">
+                            </th>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                            <th>Balance</th>
+                            <th class="action-cell">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionsBody">
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 2rem; color: #94a3b8;">
+                                取引を読み込み中...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- PDF 放大モーダル -->
+    <div id="pdfModal" class="pdf-modal">
+        <span class="pdf-modal-close" onclick="closePdfModal()">&times;</span>
+        <div class="pdf-modal-content">
+            <img id="pdfModalImage" class="pdf-modal-image" src="" alt="PDF 放大檢視" loading="lazy">
+        </div>
+        <div class="pdf-modal-controls">
+            <button class="pdf-modal-btn" onclick="previousModalPage()">
+                <i class="fas fa-chevron-left"></i> 前へ
+            </button>
+            <span class="pdf-modal-info">
+                <span id="modalCurrentPage">1</span> / <span id="modalTotalPages">1</span>
+            </button>
+            <button class="pdf-modal-btn" onclick="nextModalPage()">
+                次へ <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+    
+    
+    <script defer src="bank-statement-export.js"></script>
+    <script defer src="invoice-export.js"></script>
+    
+    <script defer src="../document-detail-new.js?v=20251107-rewrite"></script>
+    
+    <!-- PDF 放大表示機能 -->
+    <script>
+        let modalCurrentPageIndex = 0;
+        let modalPdfPages = [];
+        
+        // 初期化 PDF 放大機能
+        function initPdfZoom() {
+            // 取得すべて PDF ページ画像
+            const pdfImages = document.querySelectorAll('.pdf-page img');
+            modalPdfPages = Array.from(pdfImages);
+            
+            // として每個画像添加クリック事件
+            pdfImages.forEach((img, index) => {
+                img.addEventListener('click', function() {
+                    openPdfModal(index);
+                });
+            });
+        }
+        
+        // 開くモーダル
+        function openPdfModal(pageIndex) {
+            const modal = document.getElementById('pdfModal');
+            const modalImage = document.getElementById('pdfModalImage');
+            
+            if (modalPdfPages.length === 0) return;
+            
+            modalCurrentPageIndex = pageIndex;
+            modalImage.src = modalPdfPages[pageIndex].src;
+            modal.classList.add('active');
+            
+            updateModalPageInfo();
+            
+            // 防止背景スクロール
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // 關閉モーダル
+        function closePdfModal() {
+            const modal = document.getElementById('pdfModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+        
+        // 前へ
+        function previousModalPage() {
+            if (modalCurrentPageIndex > 0) {
+                modalCurrentPageIndex--;
+                updateModalImage();
+            }
+        }
+        
+        // 次へ
+        function nextModalPage() {
+            if (modalCurrentPageIndex < modalPdfPages.length - 1) {
+                modalCurrentPageIndex++;
+                updateModalImage();
+            }
+        }
+        
+        // 更新モーダル画像
+        function updateModalImage() {
+            const modalImage = document.getElementById('pdfModalImage');
+            modalImage.src = modalPdfPages[modalCurrentPageIndex].src;
+            updateModalPageInfo();
+        }
+        
+        // 更新頁碼信息
+        function updateModalPageInfo() {
+            document.getElementById('modalCurrentPage').textContent = modalCurrentPageIndex + 1;
+            document.getElementById('modalTotalPages').textContent = modalPdfPages.length;
+        }
+        
+        // 鍵盤ナビゲーション
+        document.addEventListener('keydown', function(e) {
+            const modal = document.getElementById('pdfModal');
+            if (!modal.classList.contains('active')) return;
+            
+            if (e.key === 'Escape') {
+                closePdfModal();
+            } else if (e.key === 'ArrowLeft') {
+                previousModalPage();
+            } else if (e.key === 'ArrowRight') {
+                nextModalPage();
+            }
+        });
+        
+        // クリック背景關閉
+        document.getElementById('pdfModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePdfModal();
+            }
+        });
+        
+        // 延遲初期化，待機 PDF 加載完了
+        setTimeout(() => {
+            initPdfZoom();
+        }, 2000);
+        
+        // 監聽 PDF 加載完了事件（もしあれば）
+        window.addEventListener('pdfLoaded', function() {
+            setTimeout(() => {
+                initPdfZoom();
+            }, 500);
+        });
+        
+        // 🔄 關閉 Export メニュー
+        
+        
+        // 🔄 動の生成 Export メニュー（文書に基づいてタイプ）
+        
+        
+        function updateExportMenuForDocumentDetail() {
+            console.log('🔧 updateExportMenuForDocumentDetail 被调用');
+            const menu = document.getElementById('exportMenu');
+            if (!menu) return;
+            
+            // 🔥 强制设置默认内容（调试用）
+            console.log('🔥 强制设置默认菜单内容');
+            menu.innerHTML = `
+                <div style="padding: 1.5rem;">
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.1rem; color: #1f2937;">Export Options</h3>
+                    <p style="margin-bottom: 1rem; font-size: 0.9rem; color: #6b7280;">Select export format:</p>
+                    
+                    <button onclick="exportDocument('bank_statement_csv')" style="width: 100%; text-align: left; padding: 0.75rem 1rem; margin-bottom: 0.5rem; border: 1px solid #e5e7eb; background: white; cursor: pointer; border-radius: 6px; display: flex; align-items: center; gap: 0.75rem; transition: background 0.2s;">
+                        <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">Standard CSV</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">Complete fields format</div>
+                        </div>
+                    </button>
+                    
+                    <button onclick="exportDocument('xero_csv')" style="width: 100%; text-align: left; padding: 0.75rem 1rem; margin-bottom: 0.5rem; border: 1px solid #e5e7eb; background: white; cursor: pointer; border-radius: 6px; display: flex; align-items: center; gap: 0.75rem; transition: background 0.2s;">
+                        <i class="fas fa-file-csv" style="color: #2563eb; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">Xero CSV</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">Xero official format</div>
+                        </div>
+                    </button>
+                    
+                    <button onclick="exportDocument('quickbooks_csv')" style="width: 100%; text-align: left; padding: 0.75rem 1rem; margin-bottom: 0.5rem; border: 1px solid #e5e7eb; background: white; cursor: pointer; border-radius: 6px; display: flex; align-items: center; gap: 0.75rem; transition: background 0.2s;">
+                        <i class="fas fa-file-csv" style="color: #059669; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">QuickBooks CSV</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks official format</div>
+                        </div>
+                    </button>
+                    
+                    <button onclick="exportDocument('qbo')" style="width: 100%; text-align: left; padding: 0.75rem 1rem; margin-bottom: 0.5rem; border: 1px solid #e5e7eb; background: white; cursor: pointer; border-radius: 6px; display: flex; align-items: center; gap: 0.75rem; transition: background 0.2s;">
+                        <i class="fas fa-cloud" style="color: #8b5cf6; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">QBO</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Online</div>
+                        </div>
+                    </button>
+                    
+                    <button onclick="closeExportMenu()" style="width: 100%; padding: 0.75rem 1rem; margin-top: 1rem; border: none; background: #ef4444; color: white; cursor: pointer; border-radius: 6px; font-weight: 500;">
+                        Close
+                    </button>
+                </div>
+            `;
+            console.log('✅ 默认菜单内容已设置');
+            return;  // 直接返回，不执行后面的逻辑
+            
+            // から currentDocument 取得文書タイプ（定義で document-detail-new.js）
+            let docType = 'general';
+            if (window.currentDocument) {
+                docType = window.currentDocument.type || window.currentDocument.documentType || 'general';
+                // 🔥 標準化文書タイプ
+                docType = docType.toLowerCase();
+                console.log('📄 Export メニュー - 文書タイプ:', docType);
             } else {
-                // 桌面端：在 Export 按钮下方
-                const exportBtn = document.querySelector('button[onclick*="toggleExportMenu"]');
-                if (exportBtn) {
-                    const rect = exportBtn.getBoundingClientRect();
-                    menu.style.position = 'fixed';
-                    menu.style.top = (rect.bottom + 8) + 'px';
-                    menu.style.right = (window.innerWidth - rect.right) + 'px';
-                    menu.style.left = 'auto';
-                    menu.style.transform = 'none';
-                    menu.style.width = 'auto';
-                    menu.style.minWidth = '280px';
-                    menu.style.maxWidth = '400px';
-                }
-                console.log('💻 桌面端：菜单在按钮下方');
-                
-                // 不显示遮罩
-                if (overlay) {
-                    overlay.style.display = 'none';
-                }
+                console.warn('⚠️ window.currentDocument 未定義，取得失敗文書タイプ');
             }
             
-            menu.style.display = 'block';
-            menu.classList.add('active');
+            // 🔥 モバイル版：添加關閉ボタン
+            let menuHTML = '';
+            if (window.innerWidth <= 768) {
+                menuHTML += `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 1rem; border-bottom: 1px solid #e5e7eb; margin-bottom: 1rem;">
+                        <h2 style="margin: 0; font-size: 1.25rem; font-weight: 600; color: #1f2937;">選択導出フォーマット</h2>
+                        <button onclick="closeExportMenu()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6b7280; padding: 0.5rem;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+            }
             
-            console.log('✅ 菜单已显示');
-        };
-        
-        console.log('✅ Export 功能已加载（工作版本）');
-
-        
-        // 等待2秒后执行，确保页面完全加载
-
-
+            menuHTML += '<div style="padding: 0.5rem 0; background: #ffffff;">';
+            
+            // 文書に基づいてタイプ顯示對應選項
+            if (docType === 'invoice' || docType === '請求書' || docType === 'invoices') {
+                // 請求書：顯示請求書選項 + その他（IIF/QBO）
+                menuHTML += `
+                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">請求書</div>
+                    <button onclick="exportDocument('invoice_summary_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-invoice" style="color: #f59e0b; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">標準 CSV（合計）</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">快速對帳</div>
+                        </div>
+                    </button>
+                    <button onclick="exportDocument('invoice_detailed_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-invoice" style="color: #f59e0b; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">完整取引數據 CSV</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">詳細記録</div>
+                        </div>
+                    </button>
+                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">その他</div>
+                    <button onclick="exportDocument('xero_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-csv" style="color: #2563eb; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">Xero CSV</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">官方最小フォーマット</div>
+                        </div>
+                    </button>
+                    <button onclick="exportDocument('quickbooks_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-csv" style="color: #059669; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">QuickBooks CSV</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">官方最小フォーマット</div>
+                        </div>
+                    </button>
+                    <button onclick="exportDocument('iif')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-alt" style="color: #3b82f6; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">IIF</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Desktop</div>
+                        </div>
+                    </button>
+                    <button onclick="exportDocument('qbo')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-cloud" style="color: #8b5cf6; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">QBO</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Online</div>
+                        </div>
+                    </button>
+                `;
+            } else {
+                // 銀行取引明細書：顯示銀行取引明細書選項 + その他（Xero/QuickBooks/IIF/QBO）
+                menuHTML += `
+                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">銀行取引明細書</div>
+                    <button onclick="exportDocument('bank_statement_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">標準 CSV</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">完全フィールドフォーマット</div>
+                        </div>
+                    </button>
+                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">その他</div>
+                    <button onclick="exportDocument('xero_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-csv" style="color: #2563eb; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">Xero CSV</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">官方最小フォーマット</div>
+                        </div>
+                    </button>
+                    <button onclick="exportDocument('quickbooks_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-csv" style="color: #059669; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">QuickBooks CSV</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">官方最小フォーマット</div>
+                        </div>
+                    </button>
+                    <button onclick="exportDocument('iif')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-alt" style="color: #3b82f6; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">IIF</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Desktop</div>
+                        </div>
+                    </button>
+                    <button onclick="exportDocument('qbo')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-cloud" style="color: #8b5cf6; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">QBO</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Online</div>
+                        </div>
+                    </button>
+                `;
+            }
+            
+            menuHTML += '</div>';
+            
+            // 🔥 检查是否生成了内容
+            if (menuHTML.trim() === '<div style="padding: 0.5rem 0; background: #ffffff;"></div>' || menuHTML.length < 100) {
+                console.warn('⚠️ 菜单内容为空，添加默认选项');
+                menuHTML = `
+                    <div style="padding: 1rem;">
+                        <h3 style="margin: 0 0 1rem 0; font-size: 1.1rem;">Export Options</h3>
+                        <button onclick="exportDocument('csv')" style="width: 100%; padding: 0.75rem; margin-bottom: 0.5rem; border: 1px solid #ddd; background: white; cursor: pointer; border-radius: 6px; text-align: left;">
+                            <i class="fas fa-file-csv" style="color: #10b981; margin-right: 0.5rem;"></i>
+                            Standard CSV
+                        </button>
+                        <button onclick="exportDocument('json')" style="width: 100%; padding: 0.75rem; margin-bottom: 0.5rem; border: 1px solid #ddd; background: white; cursor: pointer; border-radius: 6px; text-align: left;">
+                            <i class="fas fa-file-code" style="color: #3b82f6; margin-right: 0.5rem;"></i>
+                            JSON Format
+                        </button>
+                        <button onclick="closeExportMenu()" style="width: 100%; padding: 0.75rem; margin-top: 1rem; border: none; background: #ef4444; color: white; cursor: pointer; border-radius: 6px;">
+                            Close
+                        </button>
+                    </div>
+                `;
+            }
+            
+            menu.innerHTML = menuHTML;
+            console.log('📋 菜单 HTML 已设置, 长度:', menuHTML.length);
+            console.log('📋 菜单内容预览:', menuHTML.substring(0, 200));
+        }
     </script>
     
-    <style>
-        /* Export Menu 样式 */
-        .export-menu-item:hover {
-            background: #f3f4f6 !important;
-        }
-        
-        /* 移动端样式 */
-        @media (max-width: 768px) {
-            #exportMenu {
-                position: fixed !important;
-                top: 50% !important;
-                left: 50% !important;
-                transform: translate(-50%, -50%) !important;
-                right: auto !important;
-                width: 90% !important;
-                max-width: 400px !important;
-                background-color: #ffffff !important;
-                box-shadow: none !important;
-                border: none !important;
-                border-radius: 12px !important;
-                padding: 1.5rem !important;
-                overflow: hidden !important;
-            }
-        }
-    </style>
+    <!-- 🔥 手機サイドバー機能 -->
+    
+
+
+
+
+
+
 
 </body>
 </html>
