@@ -5127,48 +5127,59 @@
         
         // 監聽分頁按鈕
         const paginationButtons = document.querySelectorAll('.pagination-controls button');
+        console.log('🔍 [调试] 找到分页按钮数量:', paginationButtons.length);
+        
         if (paginationButtons.length === 4) {
             // 第一頁
-            paginationButtons[0].addEventListener('click', function() {
+            paginationButtons[0].onclick = function() {
+                console.log('🔵 点击：第一页');
                 if (window.currentPage !== 1) {
                     window.currentPage = 1;
                     if (window.renderDocuments) {
                         window.renderDocuments();
                     }
                 }
-            });
+            };
             
             // 上一頁
-            paginationButtons[1].addEventListener('click', function() {
+            paginationButtons[1].onclick = function() {
+                console.log('🔵 点击：上一页，当前页:', window.currentPage);
                 if (window.currentPage > 1) {
                     window.currentPage--;
                     if (window.renderDocuments) {
                         window.renderDocuments();
                     }
                 }
-            });
+            };
             
             // 下一頁
-            paginationButtons[2].addEventListener('click', function() {
+            paginationButtons[2].onclick = function() {
                 const totalPages = Math.ceil((window.allDocuments || []).length / window.rowsPerPage);
+                console.log('🟢 点击：下一页，当前页:', window.currentPage, '总页数:', totalPages);
                 if (window.currentPage < totalPages) {
                     window.currentPage++;
+                    console.log('🟢 跳转到页面:', window.currentPage);
                     if (window.renderDocuments) {
                         window.renderDocuments();
                     }
                 }
-            });
+            };
             
             // 最後一頁
-            paginationButtons[3].addEventListener('click', function() {
+            paginationButtons[3].onclick = function() {
                 const totalPages = Math.ceil((window.allDocuments || []).length / window.rowsPerPage);
+                console.log('🔴 点击：最后一页，总页数:', totalPages);
                 if (window.currentPage !== totalPages && totalPages > 0) {
                     window.currentPage = totalPages;
                     if (window.renderDocuments) {
                         window.renderDocuments();
                     }
                 }
-            });
+            };
+            
+            console.log('✅ 分页按钮事件绑定完成');
+        } else {
+            console.error('❌ 分页按钮数量不正确:', paginationButtons.length);
         }
         
         console.log("✅ 分頁功能初始化完成");

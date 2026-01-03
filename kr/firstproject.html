@@ -3118,7 +3118,7 @@
                             <td class="document-name-cell" style="padding: 1rem;">
                                 <div style="display: flex; align-items: center; gap: 0.75rem; ${!isProcessing && !isFailed ? 'cursor: pointer;' : 'cursor: default;'}" ${!isProcessing && !isFailed ? `onclick="viewDocument('${doc.id}')"` : ''}>
                                     <i class="fas fa-file-pdf" style="color: #ef4444; font-size: 1.25rem;"></i>
-                                    <span style="font-weight: 500; color: #1f2937;">${doc.name || doc.fileName | '미命名'}</span>
+                                    <span style="font-weight: 500; color: #1f2937;">${doc.name || doc.fileName || '미命名'}</span>
                                 </div>
                             </td>
                             
@@ -5155,48 +5155,59 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 페이지네이션 버튼 모니터링
     const paginationButtons = document.querySelectorAll('.pagination-controls button');
+    console.log('🔍 [DEBUG] 분페이지 버튼 수:', paginationButtons.length);
+    
     if (paginationButtons.length === 4) {
         // 첫 페이지
-        paginationButtons[0].addEventListener('click', function() {
+        paginationButtons[0].onclick = function() {
+            console.log('🔵 클릭: 첫 페이지');
             if (window.currentPage !== 1) {
                 window.currentPage = 1;
                 if (window.renderDocuments) {
                     window.renderDocuments();
                 }
             }
-        });
+        };
         
         // 이전 페이지
-        paginationButtons[1].addEventListener('click', function() {
+        paginationButtons[1].onclick = function() {
+            console.log('🔵 클릭: 이전 페이지, 현재:', window.currentPage);
             if (window.currentPage > 1) {
                 window.currentPage--;
                 if (window.renderDocuments) {
                     window.renderDocuments();
                 }
             }
-        });
+        };
         
         // 다음 페이지
-        paginationButtons[2].addEventListener('click', function() {
+        paginationButtons[2].onclick = function() {
             const totalPages = Math.ceil((window.allDocuments || []).length / window.rowsPerPage);
+            console.log('🟢 클릭: 다음 페이지, 현재:', window.currentPage, '전체:', totalPages);
             if (window.currentPage < totalPages) {
                 window.currentPage++;
+                console.log('🟢 페이지 이동:', window.currentPage);
                 if (window.renderDocuments) {
                     window.renderDocuments();
                 }
             }
-        });
+        };
         
         // 마지막 페이지
-        paginationButtons[3].addEventListener('click', function() {
+        paginationButtons[3].onclick = function() {
             const totalPages = Math.ceil((window.allDocuments || []).length / window.rowsPerPage);
+            console.log('🔴 클릭: 마지막 페이지, 전체:', totalPages);
             if (window.currentPage !== totalPages && totalPages > 0) {
                 window.currentPage = totalPages;
                 if (window.renderDocuments) {
                     window.renderDocuments();
                 }
             }
-        });
+        };
+        
+        console.log('✅ 분페이지 버튼 이벤트 바인딩 완료');
+    } else {
+        console.error('❌ 분페이지 버튼 수 오류:', paginationButtons.length);
     }
     
     console.log('✅ 페이지네이션 기능 초기화 완료');

@@ -5171,48 +5171,59 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Monitor pagination buttons
     const paginationButtons = document.querySelectorAll('.pagination-controls button');
+    console.log('🔍 [DEBUG] Found pagination buttons:', paginationButtons.length);
+    
     if (paginationButtons.length === 4) {
         // First page
-        paginationButtons[0].addEventListener('click', function() {
+        paginationButtons[0].onclick = function() {
+            console.log('🔵 Click: First page');
             if (window.currentPage !== 1) {
                 window.currentPage = 1;
                 if (window.renderDocuments) {
                     window.renderDocuments();
                 }
             }
-        });
+        };
         
         // Previous page
-        paginationButtons[1].addEventListener('click', function() {
+        paginationButtons[1].onclick = function() {
+            console.log('🔵 Click: Previous page, current:', window.currentPage);
             if (window.currentPage > 1) {
                 window.currentPage--;
                 if (window.renderDocuments) {
                     window.renderDocuments();
                 }
             }
-        });
+        };
         
         // Next page
-        paginationButtons[2].addEventListener('click', function() {
+        paginationButtons[2].onclick = function() {
             const totalPages = Math.ceil((window.allDocuments || []).length / window.rowsPerPage);
+            console.log('🟢 Click: Next page, current:', window.currentPage, 'total:', totalPages);
             if (window.currentPage < totalPages) {
                 window.currentPage++;
+                console.log('🟢 Navigate to page:', window.currentPage);
                 if (window.renderDocuments) {
                     window.renderDocuments();
                 }
             }
-        });
+        };
         
         // Last page
-        paginationButtons[3].addEventListener('click', function() {
+        paginationButtons[3].onclick = function() {
             const totalPages = Math.ceil((window.allDocuments || []).length / window.rowsPerPage);
+            console.log('🔴 Click: Last page, total:', totalPages);
             if (window.currentPage !== totalPages && totalPages > 0) {
                 window.currentPage = totalPages;
                 if (window.renderDocuments) {
                     window.renderDocuments();
                 }
             }
-        });
+        };
+        
+        console.log('✅ Pagination button events bound');
+    } else {
+        console.error('❌ Incorrect pagination button count:', paginationButtons.length);
     }
     
     console.log('✅ Pagination feature initialized');
