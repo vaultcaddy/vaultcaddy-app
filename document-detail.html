@@ -1505,13 +1505,13 @@
             const overlay = document.getElementById('exportMenuOverlay');
             if (!menu) return;
             
-            // 如果菜單已顯示，則關閉
+            // 如果菜单已显示，则关闭
             if (menu.style.display === 'block') {
                 closeExportMenu();
                 return;
             }
             
-            // 🔧 總是顯示背景遮罩（CSS會控制桌面版隱藏）
+            // 总是显示背景遮罩（CSS会控制桌面版隐藏）
             if (!overlay) {
                 const newOverlay = document.createElement('div');
                 newOverlay.id = 'exportMenuOverlay';
@@ -1522,21 +1522,43 @@
                 overlay.style.display = 'block';
             }
             
-            // 根據文檔類型生成菜單
+            // 基于文档类型生成菜单
             updateExportMenuForDocumentDetail();
             
-            // 顯示菜單
-            menu.style.display = 'block';
-            
-            // 🔥 桌面版：動態定位菜單到Export按鈕下方
-            if (window.innerWidth > 768) {
+            // 🔥 根据屏幕大小设置菜单样式（与 firstproject.html 完全一致）
+            if (window.innerWidth <= 768) {
+                // 📱 移动端：居中显示，全白设计
+                if (menu.parentElement !== document.body) {
+                    document.body.appendChild(menu);
+                }
+                menu.style.position = 'fixed';
+                menu.style.top = '50%';
+                menu.style.left = '50%';
+                menu.style.transform = 'translate(-50%, -50%)';
+                menu.style.right = 'auto';
+                menu.style.width = '90%';
+                menu.style.maxWidth = '400px';
+                menu.style.backgroundColor = '#ffffff'; // 🔥 白色背景
+                menu.style.border = 'none'; // 🔥 无边框
+                menu.style.boxShadow = 'none'; // 🔥 无阴影
+                menu.style.borderRadius = '12px';
+                menu.style.zIndex = '999999';
+                menu.style.marginTop = '0';
+                console.log('📱 移动端：菜单居中显示（全白）');
+                
+                // 显示遮罩
+                if (overlay) {
+                    overlay.style.display = 'block';
+                }
+            } else {
+                // 💻 桌面端：在 Export 按钮下方
                 const exportBtn = event ? event.currentTarget : document.querySelector('button[onclick*="toggleExportMenu"]');
                 if (exportBtn) {
                     const btnRect = exportBtn.getBoundingClientRect();
                     const exportDropdown = exportBtn.closest('.export-dropdown');
                     
                     if (exportDropdown) {
-                        // 相對於export-dropdown定位
+                        // 相对于 export-dropdown 定位
                         menu.style.position = 'absolute';
                         menu.style.top = 'auto';
                         menu.style.left = 'auto';
@@ -1544,26 +1566,30 @@
                         menu.style.bottom = 'auto';
                         menu.style.transform = 'none';
                         menu.style.marginTop = '0.5rem';
+                        menu.style.minWidth = '280px';
+                        menu.style.maxWidth = '400px';
+                        menu.style.backgroundColor = '#ffffff';
+                        menu.style.border = '1px solid #e5e7eb';
+                        menu.style.boxShadow = '0 10px 25px rgba(0,0,0,0.15)';
+                        menu.style.borderRadius = '8px';
+                        menu.style.zIndex = '999999';
                         
-                        // 將菜單移到export-dropdown內
+                        // 将菜单移动到 export-dropdown 内部
                         exportDropdown.appendChild(menu);
                     }
                 }
-            } else {
-                // 手機版：確保菜單在body中且居中顯示
-                if (menu.parentElement !== document.body) {
-                    document.body.appendChild(menu);
+                console.log('💻 桌面端：菜单在按钮下方');
+                
+                // 桌面端不显示遮罩
+                if (overlay) {
+                    overlay.style.display = 'none';
                 }
-                menu.style.position = 'fixed';
-                menu.style.top = '50%';
-                menu.style.left = '50%';
-                menu.style.right = 'auto';
-                menu.style.bottom = 'auto';
-                menu.style.transform = 'translate(-50%, -50%)';
-                menu.style.marginTop = '0';
             }
             
-            console.log('📤 Export 菜單已顯示');
+            // 显示菜单
+            menu.style.display = 'block';
+            
+            console.log('📤 Export 菜单已显示');
         };
         
         function updateExportMenuForDocumentDetail() {
