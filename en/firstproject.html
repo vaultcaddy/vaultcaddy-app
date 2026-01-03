@@ -2985,21 +2985,21 @@
                         bVal = (bData.vendor || bData.supplier || bData.merchantName || '-').toLowerCase();
                         break;
                     case 'amount':
-                        const aAmount = (a.processedData?.totalAmount | a.processedData?.amount | a.processedData?.total | 0);
-                        const bAmount = (b.processedData?.totalAmount | b.processedData?.amount | b.processedData?.total | 0);
+                        const aAmount = (a.processedData?.totalAmount || a.processedData?.amount || a.processedData?.total || 0);
+                        const bAmount = (b.processedData?.totalAmount || b.processedData?.amount || b.processedData?.total || 0);
                         aVal = parseFloat(aAmount) || 0;
                         bVal = parseFloat(bAmount) || 0;
                         break;
                     case 'date':
-                        const aDate = a.processedData?.invoiceDate | a.processedData?.transactionDate | a.processedData?.date | '';
-                        const bDate = b.processedData?.invoiceDate | b.processedData?.transactionDate | b.processedData?.date | '';
+                        const aDate = a.processedData?.invoiceDate || a.processedData?.transactionDate || a.processedData?.date || '';
+                        const bDate = b.processedData?.invoiceDate || b.processedData?.transactionDate || b.processedData?.date || '';
                         aVal = aDate ? new Date(aDate).getTime() : 0;
                         bVal = bDate ? new Date(bDate).getTime() : 0;
                         break;
                     case 'status':
                         const statusOrder = { 'processing': 1, 'failed': 2, 'completed': 3 };
-                        aVal = statusOrder[a.status] | 999;
-                        bVal = statusOrder[b.status] | 999;
+                        aVal = statusOrder[a.status] || 999;
+                        bVal = statusOrder[b.status] || 999;
                         break;
                     case 'uploadDate':
                         aVal = a.createdAt ? (typeof a.createdAt === 'object' && a.createdAt.seconds ? a.createdAt.seconds * 1000 : new Date(a.createdAt).getTime()) : 0;
@@ -3018,8 +3018,8 @@
             });
             
             // SupportPagination（If anyPaginationargument）
-            const currentPage = window.currentPage | 1;
-            const rowsPerPage = window.rowsPerPage | sortedDocs.length;
+            const currentPage = window.currentPage || 1;
+            const rowsPerPage = window.rowsPerPage || 10;
             const startIndex = (currentPage - 1) * rowsPerPage;
             const endIndex = startIndex + rowsPerPage;
             const pageDocuments = sortedDocs.slice(startIndex, endIndex);
