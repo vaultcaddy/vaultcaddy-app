@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     
@@ -54,9 +54,1072 @@
     <script defer src="../export-manager.js?v=20251106-editable"></script>
     
     <!-- ✅ 提frontdefinition goBackToDashboard Function -->
-    
     <script>
-      window.dataLayer = window.dataLayer | [];
+        // BackDashboard（提frontdefinition，avoid ReferenceError）
+        function goBackToDashboard() {
+            const params = new URLSearchParams(window.location.search);
+            const projectId = params.get('project');
+            if (projectId) {
+                window.location.href = `firstproject.html?project=${projectId}`;
+            } else {
+                window.location.href = 'dashboard.html';
+            }
+        }
+        
+        // 🔥 DeleteWhenfrontDocument
+        async function deleteCurrentDocument() {
+            const confirmDelete = confirm('確定要刪除此文檔嗎？此操作無法撤銷。');
+            if (!confirmDelete) return;
+            
+            try {
+                const params = new URLSearchParams(window.location.search);
+                const projectId = params.get('project');
+                const documentId = params.get('id');
+                
+                if (!projectId || !documentId) {
+                    alert('無法獲取文檔信息');
+                    return;
+                }
+                
+                console.log('🗑️ 開始刪除文檔:', { projectId, documentId });
+                
+                // 🔥 使用與 firstproject.html 相同的刪除方法
+                if (window.simpleDataManager && typeof window.simpleDataManager.deleteDocument === 'function') {
+                    // 方法1：使用 simpleDataManager
+                    await window.simpleDataManager.deleteDocument(projectId, documentId);
+                    console.log('✅ 文檔已刪除 (simpleDataManager)');
+                } else if (firebase && firebase.firestore) {
+                    // 方法2：直接使用 Firestore（備用）
+                    await firebase.firestore()
+                        .collection('projects')
+                        .doc(projectId)
+                        .collection('documents')
+                        .doc(documentId)
+                        .delete();
+                    console.log('✅ 文檔已刪除 (Firestore)');
+                } else {
+                    throw new Error('無法連接到數據庫');
+                }
+                
+                alert('文檔已成功刪除');
+                
+                // 🎯 刪除成功後，返回項目頁面（與 firstproject.html 一致）
+                console.log('📍 返回項目頁面:', projectId);
+                window.location.href = `firstproject.html?project=${projectId}`;
+                
+            } catch (error) {
+                console.error('❌ 刪除文檔失敗:', error);
+                alert('刪除文檔失敗: ' + error.message);
+            }
+        
+        }
+    </script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #ffffff;
+            color: #1f2937;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* Useand firstproject.html same的布bureaustructure */
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+            background: #ffffff;
+            padding-top: 20px; /* 🔥 desktop：upmove 15pt (60px - 15pt ≈ 45px) */
+        }
+        
+        .sidebar {
+            width: 280px;
+            background: #ffffff;
+            border-right: 1px solid #e5e7eb;
+            flex-shrink: 0;
+            position: fixed;
+            top: 60px;
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: none;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .saved-indicator {
+            color: #10b981;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        /* mainContent area */
+        .main-content {
+            margin-left: 280px; /* Left sidecolumnWidth */
+            flex: 1;
+            background: #ffffff;
+            min-height: calc(100vh - 60px);
+            padding-top: 0; /* 🔥 ensureNoneamountouterspacing */
+        }
+        
+        /* DetailspageTop */
+        .detail-header {
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 0.5rem 2rem;
+            margin-top: 5pt; /* 🔥 距離navigationcolumn 5pt */
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 60px;
+            z-index: 10;
+        }
+        
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+            cursor: pointer;
+        }
+        
+        .back-btn:hover {
+            color: #1f2937;
+        }
+        
+        .document-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        /* DetailsContentContainer */
+        .detail-container {
+            display: grid;
+            grid-template-columns: 550px 1fr;
+            gap: 0; /* RemoveMiddleempty白 */
+            height: calc(100vh - 120px);
+            overflow: hidden; /* 🔥 preventContainer本身產生scroll條 */
+        }
+        
+        /* Left side PDF Preview區 */
+        .pdf-preview-panel {
+            background: #f9fafb;
+            border-right: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* 🔥 Hideouterlayerscroll條，onlyreserve pdf-viewer 的scroll */
+        }
+        
+        .pdf-controls {
+            padding: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+        
+        .page-nav-btn {
+            background: #ffffff;
+            color: #1f2937;
+            border: 1px solid #d1d5db;
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .page-nav-btn:hover:not(:disabled) {
+            background: #f3f4f6;
+            border-color: #9ca3af;
+        }
+        
+        .page-nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        
+        .page-indicator {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        
+        .pdf-zoom-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .pdf-viewer {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .pdf-page {
+            background: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            max-width: 100%;
+        }
+        
+        .pdf-page img {
+            width: 100%;
+            display: block;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .pdf-page img:hover {
+            transform: scale(1.02);
+        }
+        
+        /* PDF Zoom inModal */
+        .pdf-modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.95);
+            overflow: auto;
+        }
+        
+        .pdf-modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .pdf-modal-content {
+            position: relative;
+            max-width: 95%;
+            max-height: 95vh;
+            overflow: auto;
+        }
+        
+        .pdf-modal-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .pdf-modal-close {
+            position: fixed;
+            top: 20px;
+            right: 40px;
+            color: white;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 10001;
+            background: rgba(0, 0, 0, 0.5);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+        }
+        
+        .pdf-modal-close:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+        
+        .pdf-modal-controls {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px 25px;
+            border-radius: 50px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            z-index: 10001;
+        }
+        
+        .pdf-modal-btn {
+            background: white;
+            color: #1f2937;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .pdf-modal-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .pdf-modal-info {
+            color: white;
+            font-weight: 600;
+        }
+        
+        /* Right sideDatapage板 */
+        .data-panel {
+            background: #ffffff;
+            overflow-y: auto;
+            padding: 2rem;
+            padding-top: calc(2rem + 30pt); /* 🔥 ContentFloormove 30pt */
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .tab {
+            padding: 0.75rem 1rem;
+            background: none;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+        
+        .tab.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+        }
+        
+        .tab:hover {
+            color: #1f2937;
+        }
+        
+        /* 核PairStatuscard */
+        .reconciliation-card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .reconciliation-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+        
+        .reconciliation-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .progress-badge {
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .reconciliation-subtitle {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        
+        /* Bank StatementDetails */
+        .bank-details-card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            cursor: pointer;
+        }
+        
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .expand-icon {
+            color: #6b7280;
+            transition: transform 0.2s;
+        }
+        
+        .card-header:hover .expand-icon {
+            color: #1f2937;
+        }
+        
+        /* transactionTable */
+        .transactions-section {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+        
+        .transactions-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+        
+        .transactions-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .transaction-controls {
+            display: flex;
+            gap: 0.75rem;
+        }
+        
+        .control-btn {
+            padding: 0.5rem 1rem;
+            background: #f3f4f6;
+            color: #1f2937;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .control-btn:hover {
+            background: #e5e7eb;
+        }
+        
+        .control-btn.add {
+            background: #7c3aed;
+            color: white;
+            border-color: #7c3aed;
+        }
+        
+        .control-btn.add:hover {
+            background: #6d28d9;
+        }
+        
+        .transactions-info {
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        
+        .transactions-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .transactions-table thead {
+            background: #f9fafb;
+        }
+        
+        .transactions-table th {
+            padding: 0.75rem;
+            text-align: left;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #6b7280;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .transactions-table tbody tr {
+            border-bottom: 1px solid #e5e7eb;
+            transition: background 0.2s;
+        }
+        
+        .transactions-table tbody tr:hover {
+            background: #f9fafb;
+        }
+        
+        .transactions-table td {
+            padding: 0.75rem;
+            font-size: 0.9rem;
+            color: #1f2937;
+        }
+        
+        .checkbox-cell {
+            width: 40px;
+        }
+        
+        .checkbox-cell input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+        
+        .amount-cell {
+            font-family: 'Courier New', monospace;
+            font-weight: 500;
+        }
+        
+        .amount-positive {
+            color: #10b981;
+        }
+        
+        .amount-negative {
+            color: #ef4444;
+        }
+        
+        .action-cell {
+            width: 100px;
+        }
+        
+        .action-btns {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .icon-btn {
+            background: none;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 0.25rem;
+            transition: color 0.2s;
+        }
+        
+        .icon-btn:hover {
+            color: #1f2937;
+        }
+        
+        .icon-btn.delete:hover {
+            color: #ef4444;
+        }
+        
+        /* LoadAnimation */
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            color: #6b7280;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e5e7eb;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* ==================== MobileDedicatedStyle ==================== */
+        @media (max-width: 768px) {
+            /* 🔥 Mobile：ShowHamburger menu */
+            #mobile-menu-btn {
+                display: block !important;
+            }
+            
+            /* 🔥 Mobile：HideDesktop logo andText */
+            .desktop-logo,
+            .desktop-logo-text {
+                display: none !important;
+            }
+            
+            /* 🔥 Mobile：HideSidebar，mainContentallwide */
+            .sidebar {
+                display: none !important;
+            }
+            
+            .main-content {
+                margin-left: 0 !important;
+                width: 100% !important;
+                padding: 0 !important;
+            }
+            
+            /* mainContainer */
+            body {
+                padding-top: 60px !important;
+            }
+            
+            .dashboard-container {
+                display: block !important;
+                padding: 0 !important;
+            }
+            
+            .main-container,
+            .content-wrapper {
+                padding: 0.75rem !important;
+                margin: 0 !important;
+            }
+            
+            /* 🔥 Mobile：navigationcolumnStyle */
+            .vaultcaddy-navbar {
+                padding: 0 1rem !important;
+            }
+            
+            /* HideDesktopnavigationlinkandLanguageSelector */
+            .vaultcaddy-navbar > div:nth-child(2) > div:first-child,
+            .vaultcaddy-navbar > div:nth-child(2) > #language-dropdown {
+                display: none !important;
+            }
+            
+            /* 🔥 Mobile：adjust布bureauOrder */
+            .detail-container {
+                display: flex !important;
+                flex-direction: column !important;
+                height: auto !important;
+            }
+            
+            /* 🔥 Mobile布bureauOrder：Image > Details > Data */
+            .pdf-preview-panel {
+                order: 1 !important;
+                width: 100% !important;
+                height: auto !important;
+                min-height: 50vh !important;
+            }
+            
+            .data-panel {
+                order: 2 !important;
+                width: 100% !important;
+                border-left: none !important;
+                border-top: 1px solid #e5e7eb !important;
+            }
+            
+            /* 🔥 Mobile：PDFViewdeviceoptimize */
+            .pdf-viewer {
+                height: 50vh !important;
+            }
+            
+            /* HideLanguageSelector */
+            #language-selector {
+                display: none !important;
+            }
+            
+            /* 🔥 navigationcolumn之outer所HasContentCeilmove 10pt */
+            .main-content {
+                margin-top: -10pt !important;
+            }
+            
+            /* DetailspageTop - update現代化 */
+            .detail-header {
+                padding: 0.75rem 1rem !important;
+                padding-top: 0 !important;
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 0.75rem !important;
+                position: sticky !important;
+                top: 60px !important;
+                background: white !important;
+                z-index: 100 !important;
+                border-bottom: 1px solid #e5e7eb !important;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+            }
+            
+            .detail-header .back-btn {
+                width: 100% !important;
+                font-size: 0.875rem !important;
+                padding: 0.75rem 1rem !important;
+                border-radius: 8px !important;
+                background: #f3f4f6 !important;
+                border: 1px solid #e5e7eb !important;
+                font-weight: 500 !important;
+                color: #374151 !important;
+                transition: all 0.2s !important;
+            }
+            
+            .detail-header .back-btn:hover {
+                background: #e5e7eb !important;
+            }
+            
+            /* 🔥 Mobile：DocumentTitle美化 */
+            .detail-header .document-title {
+                font-size: 1rem !important;
+                font-weight: 600 !important;
+                color: #1f2937 !important;
+                word-break: break-all !important;
+                line-height: 1.5 !important;
+                margin: 0 !important;
+                width: 100% !important;
+            }
+            
+            /* 🔥 Mobile：Button groupmodifyasleftrightarrangecolumn */
+            .detail-header .top-actions {
+                display: flex !important;
+                flex-direction: row !important;
+                width: 100% !important;
+                gap: 0.5rem !important;
+            }
+            
+            .detail-header .top-actions .saved-indicator {
+                width: 100% !important;
+                justify-content: center !important;
+                padding: 0.5rem !important;
+                font-size: 0.875rem !important;
+            }
+            
+            .detail-header .top-actions .export-dropdown {
+                flex: 1 !important;
+            }
+            
+            .detail-header .top-actions .export-dropdown button {
+                width: 100% !important;
+                justify-content: center !important;
+                padding: 0.75rem 0.5rem !important;
+                font-size: 0.875rem !important;
+                border-radius: 8px !important;
+            }
+            
+            .detail-header .top-actions .icon-btn {
+                flex: 1 !important;
+                padding: 0.75rem 0.5rem !important;
+                font-size: 0.875rem !important;
+                border-radius: 8px !important;
+            }
+            
+            .detail-header .top-actions .icon-btn.delete {
+                background: #fee2e2 !important;
+                border: 1px solid #fecaca !important;
+                color: #ef4444 !important;
+                justify-content: center !important;
+            }
+            
+            .detail-header .top-actions .icon-btn.delete:hover {
+                background: #fecaca !important;
+            }
+
+            /* 所Hascard */
+            .card,
+            div[style*="border-radius"][style*="padding"] {
+                padding: 1rem !important;
+                margin-bottom: 1rem !important;
+            }
+            
+            /* 🔥 Mobile：Content area */
+            .content-section {
+                padding: 0.75rem !important;
+            }
+            
+            .data-panel {
+                margin: 0.75rem !important;
+                border-radius: 8px !important;
+            }
+            
+            /* TitleFontSize */
+            h1 {
+                font-size: 1.25rem !important;
+            }
+            
+            h2 {
+                font-size: 1.125rem !important;
+            }
+            
+            h3 {
+                font-size: 1rem !important;
+            }
+            
+            /* Button */
+            button,
+            .btn {
+                padding: 0.75rem 1rem !important;
+                font-size: 0.875rem !important;
+                white-space: nowrap !important;
+            }
+            
+            /* 🔧 ensure Export Buttoncanclick */
+            #export-btn,
+            #export-dropdown,
+            button[onclick*="toggleExportMenu"] {
+                pointer-events: auto !important;
+                z-index: 9999 !important;
+                touch-action: manipulation !important;
+            }
+            
+            /* 🔧 MobileExportMenuCenter display */
+            #exportMenu[style*="display: block"] {
+                position: fixed !important;
+                top: 50% !important;
+                left: 50% !important;
+                transform: translate(-50%, -50%) !important;
+                right: auto !important;
+                bottom: auto !important;
+                margin: 0 !important;
+                z-index: 2147483647 !important; /* 🔥 32位whole數MaximumValue */
+                width: 90% !important;
+                max-width: 400px !important;
+                display: block !important;
+                height: auto !important;
+                max-height: 80vh !important;
+                background: #ffffff !important;
+                overflow: auto !important;
+                box-shadow: none !important;
+                border: none !important;
+                border-radius: 12px !important;
+                padding: 1.5rem !important;
+            }
+            
+            /* 🔥 DesktopmodifyasRight sideDropdown menu（andfirstproject.htmlsame） */
+            @media (min-width: 769px) {
+                #exportMenu[style*="display: block"] {
+                    position: absolute !important;
+                    top: 100% !important;
+                    left: auto !important;
+                    right: 0 !important;
+                    transform: none !important;
+                    margin-top: 0.5rem !important;
+                    width: 250px !important;
+                    max-width: 250px !important;
+                    z-index: 9999 !important;
+                }
+                
+                /* DesktopnotneedneedbackgroundMask */
+                #exportMenuOverlay {
+                    display: none !important;
+                }
+            }
+            
+            /* 🔥 Ensure all menu parts are whiteNo border */
+            #exportMenu[style*="display: block"] > *,
+            #exportMenu[style*="display: block"] > div,
+            #exportMenu[style*="display: block"] .export-menu-item,
+            #exportMenu[style*="display: block"] button {
+                background-color: #ffffff !important;
+                border: none !important;
+                border-color: transparent !important;
+            }
+            
+            /* 🔥 Export Menu background mask（DesktopandMobileunified） */
+            #exportMenuOverlay {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                background: rgba(0, 0, 0, 0.5) !important;
+                z-index: 2147483646 !important;
+                display: none !important;
+            }
+            
+            #exportMenuOverlay[style*="display: block"] {
+                display: block !important;
+            }
+            
+            /* Export Menu items larger touch area */
+            .export-menu-item,
+            #exportMenu button {
+                padding: 1rem !important;
+                min-height: 50px !important; /* iOS Recommended觸控Area */
+                touch-action: manipulation !important;
+            }
+            
+            /* Input box */
+            input,
+            select,
+            textarea {
+                font-size: 1rem !important;
+                padding: 0.75rem !important;
+            }
+            
+            /* 🔥 Mobile：PDFViewdeviceArea */
+            .pdf-viewer {
+                padding: 1rem !important;
+                background: #f9fafb !important;
+            }
+            
+            /* PDF PreviewContainer - updatelargeupdate美觀 */
+            #pdf-container {
+                height: 50vh !important;
+                max-width: 100% !important;
+                margin: 0 auto !important;
+                background: white !important;
+                border-radius: 12px !important;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+                overflow: hidden !important;
+            }
+            
+            #pdf-container canvas,
+            #pdf-container img {
+                max-width: 100% !important;
+                height: auto !important;
+                object-fit: contain !important;
+            }
+            
+            /* 🔥 Mobile：PDFcontrolButton - Zoom out30%toFit to screen */
+            .pdf-controls {
+                padding: 0.25rem 0.35rem !important;
+                gap: 0.175rem !important;
+                flex-wrap: nowrap !important;
+                justify-content: center !important;
+                background: white !important;
+                border-radius: 4px !important;
+                margin: 0.175rem !important;
+                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+                max-width: 70% !important; /* Zoom out30% */
+                overflow-x: auto !important;
+                transform: scale(0.7); /* whole體Zoom out30% */
+                transform-origin: center;
+            }
+            
+            .pdf-controls button {
+                padding: 0.175rem 0.28rem !important;
+                font-size: 0.49rem !important; /* 0.7 * 0.7 = 0.49 */
+                min-width: 22px !important; /* 32 * 0.7 = 22.4 */
+                border-radius: 3px !important;
+                background: #f3f4f6 !important;
+                border: 1px solid #e5e7eb !important;
+            }
+            
+            .pdf-controls button i {
+                font-size: 0.455rem !important; /* 0.65 * 0.7 = 0.455 */
+            }
+            
+            /* 🔥 Mobile：page指示deviceZoom out */
+            .page-indicator {
+                font-size: 0.49rem !important; /* 0.7 * 0.7 = 0.49 */
+                padding: 0 0.175rem !important;
+            }
+            
+            /* 🔥 Mobile：ZoomButtonArea */
+            .pdf-zoom-controls {
+                gap: 0.14rem !important; /* 0.2 * 0.7 = 0.14 */
+            }
+            
+            .pdf-zoom-controls button {
+                padding: 0.14rem 0.245rem !important; /* 0.2 * 0.7, 0.35 * 0.7 */
+                min-width: 19.6px !important; /* 28 * 0.7 */
+            }
+            
+            /* 🔥 Mobile：ZoomShow */
+            .zoom-display {
+                font-size: 0.455rem !important; /* 0.65 * 0.7 */
+                min-width: 24.5px !important; /* 35 * 0.7 */
+            }
+            
+            /* 🔥 Mobile：Tablehorizontaltoscroll */
+            .table-wrapper,
+            .transactions-section {
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+            }
+            
+            /* Table */
+            table {
+                font-size: 0.75rem !important;
+                min-width: 600px !important; /* MinimumWidth，allowhorizontaltoscroll */
+            }
+            
+            table th,
+            table td {
+                padding: 0.5rem 0.375rem !important;
+                white-space: nowrap !important;
+            }
+            
+            /* 🔥 Mobile：TableNo.onecolumnfixed（Datecolumn） */
+            table th:first-child,
+            table td:first-child {
+                position: sticky !important;
+                left: 0 !important;
+                background: white !important;
+                z-index: 10 !important;
+                box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05) !important;
+            }
+            
+            /* Hidepartialnotheavyneed的column（Balancecolumn） */
+            table th:nth-child(5),
+            table td:nth-child(5) {
+                display: none !important;
+            }
+            
+            /* 🔥 Mobile：PDF ModalFullscreen */
+            .pdf-modal-content {
+                width: 95% !important;
+                max-width: 95% !important;
+                margin: 0 !important;
+            }
+            
+            .pdf-modal-controls {
+                padding: 0.75rem !important;
+                gap: 0.5rem !important;
+            }
+            
+            .pdf-modal-btn {
+                padding: 0.5rem 0.75rem !important;
+                font-size: 0.875rem !important;
+            }
+        }
+    </style>
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <link rel="alternate icon" type="image/png" href="../favicon.png">
+
+    <!-- Google Analytics 4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LWPEKNC7RQ"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'G-LWPEKNC7RQ');
@@ -455,111 +1518,74 @@
         
         // 🔄 Dynamically generated Export Menu（Based on documentType）
         window.toggleExportMenu = function(event) {
-            console.log('🎯 toggleExportMenu 被调用');
-            console.log('  - event:', event);
-            console.log('  - window.exportDocument:', typeof window.exportDocument);
-            console.log('  - window.currentDocument:', window.currentDocument);
-            
             const menu = document.getElementById('exportMenu');
             const overlay = document.getElementById('exportMenuOverlay');
+            if (!menu) return;
             
-            if (!menu) {
-                console.error('❌ Export 菜单元素不存在！');
-                alert('错误：Export 菜单元素不存在');
-                return;
-            }
-            
-            console.log('✅ Export 菜单元素存在');
-            
-            // 如果菜单已显示，则关闭
+            // IfMenualreadyShow，則Close
             if (menu.style.display === 'block') {
-                console.log('🔄 关闭菜单');
-                menu.style.display = 'none';
-                if (overlay) overlay.style.display = 'none';
+                closeExportMenu();
                 return;
             }
             
-            // 显示遮罩
+            // 🔧 totalYesShowbackgroundMask（CSSwillcontrolDesktopHide）
+            if (!overlay) {
+                const newOverlay = document.createElement('div');
+                newOverlay.id = 'exportMenuOverlay';
+                newOverlay.onclick = closeExportMenu;
+                document.body.appendChild(newOverlay);
+            }
             if (overlay) {
                 overlay.style.display = 'block';
             }
             
-            // 更新菜单内容
-            console.log('🔄 更新菜单内容...');
+            // Based on documentTypeGenerateMenu
             updateExportMenuForDocumentDetail();
             
-            // 显示菜单（简化版 - 固定居中显示）
+            // ShowMenu
             menu.style.display = 'block';
-            menu.style.position = 'fixed';
-            menu.style.top = '50%';
-            menu.style.left = '50%';
-            menu.style.transform = 'translate(-50%, -50%)';
-            menu.style.zIndex = '2147483647';
-            menu.style.background = 'white';
-            menu.style.borderRadius = '12px';
-            menu.style.boxShadow = '0 25px 50px rgba(0,0,0,0.25)';
-            menu.style.minWidth = '350px';
-            menu.style.maxWidth = '500px';
-            menu.style.minHeight = '400px';
-            menu.style.maxHeight = '80vh';
-            menu.style.overflow = 'auto';
-            menu.style.padding = '0';
-            menu.style.border = '2px solid #10b981';
             
-            console.log('✅ Export 菜单已显示');
+            // 🔥 Desktop version: Dynamic position menu to Export button below
+            if (window.innerWidth > 768) {
+                const exportBtn = event ? event.currentTarget : document.querySelector('button[onclick*="toggleExportMenu"]');
+                if (exportBtn) {
+                    const btnRect = exportBtn.getBoundingClientRect();
+                    const exportDropdown = exportBtn.closest('.export-dropdown');
+                    
+                    if (exportDropdown) {
+                        // Relative to export-dropdown position
+                        menu.style.position = 'absolute';
+                        menu.style.top = 'auto';
+                        menu.style.left = 'auto';
+                        menu.style.right = '0';
+                        menu.style.bottom = 'auto';
+                        menu.style.transform = 'none';
+                        menu.style.marginTop = '0.5rem';
+                        
+                        // Move menu to export-dropdown inside
+                        exportDropdown.appendChild(menu);
+                    }
+                }
+            } else {
+                // Mobile version: Ensure menu in body and centered display
+                if (menu.parentElement !== document.body) {
+                    document.body.appendChild(menu);
+                }
+                menu.style.position = 'fixed';
+                menu.style.top = '50%';
+                menu.style.left = '50%';
+                menu.style.right = 'auto';
+                menu.style.bottom = 'auto';
+                menu.style.transform = 'translate(-50%, -50%)';
+                menu.style.marginTop = '0';
+            }
+            
+            console.log('📤 Export MenualreadyShow');
         };
         
         function updateExportMenuForDocumentDetail() {
-            console.log('🔧 updateExportMenuForDocumentDetail 被调用');
             const menu = document.getElementById('exportMenu');
             if (!menu) return;
-            
-            // 🔥 强制设置默认内容（调试用）
-            console.log('🔥 强制设置默认菜单内容');
-            menu.innerHTML = `
-                <div style="padding: 1.5rem;">
-                    <h3 style="margin: 0 0 1rem 0; font-size: 1.1rem; color: #1f2937;">Export Options</h3>
-                    <p style="margin-bottom: 1rem; font-size: 0.9rem; color: #6b7280;">Select export format:</p>
-                    
-                    <button onclick="exportDocument('bank_statement_csv')" style="width: 100%; text-align: left; padding: 0.75rem 1rem; margin-bottom: 0.5rem; border: 1px solid #e5e7eb; background: white; cursor: pointer; border-radius: 6px; display: flex; align-items: center; gap: 0.75rem; transition: background 0.2s;">
-                        <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
-                        <div>
-                            <div style="font-weight: 500;">Standard CSV</div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">Complete fields format</div>
-                        </div>
-                    </button>
-                    
-                    <button onclick="exportDocument('xero_csv')" style="width: 100%; text-align: left; padding: 0.75rem 1rem; margin-bottom: 0.5rem; border: 1px solid #e5e7eb; background: white; cursor: pointer; border-radius: 6px; display: flex; align-items: center; gap: 0.75rem; transition: background 0.2s;">
-                        <i class="fas fa-file-csv" style="color: #2563eb; width: 20px;"></i>
-                        <div>
-                            <div style="font-weight: 500;">Xero CSV</div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">Xero official format</div>
-                        </div>
-                    </button>
-                    
-                    <button onclick="exportDocument('quickbooks_csv')" style="width: 100%; text-align: left; padding: 0.75rem 1rem; margin-bottom: 0.5rem; border: 1px solid #e5e7eb; background: white; cursor: pointer; border-radius: 6px; display: flex; align-items: center; gap: 0.75rem; transition: background 0.2s;">
-                        <i class="fas fa-file-csv" style="color: #059669; width: 20px;"></i>
-                        <div>
-                            <div style="font-weight: 500;">QuickBooks CSV</div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks official format</div>
-                        </div>
-                    </button>
-                    
-                    <button onclick="exportDocument('qbo')" style="width: 100%; text-align: left; padding: 0.75rem 1rem; margin-bottom: 0.5rem; border: 1px solid #e5e7eb; background: white; cursor: pointer; border-radius: 6px; display: flex; align-items: center; gap: 0.75rem; transition: background 0.2s;">
-                        <i class="fas fa-cloud" style="color: #8b5cf6; width: 20px;"></i>
-                        <div>
-                            <div style="font-weight: 500;">QBO</div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Online</div>
-                        </div>
-                    </button>
-                    
-                    <button onclick="closeExportMenu()" style="width: 100%; padding: 0.75rem 1rem; margin-top: 1rem; border: none; background: #ef4444; color: white; cursor: pointer; border-radius: 6px; font-weight: 500;">
-                        Close
-                    </button>
-                </div>
-            `;
-            console.log('✅ 默认菜单内容已设置');
-            return;  // 直接返回，不执行后面的逻辑
             
             // from currentDocument GetDocumentType（definitionin document-detail-new.js）
             let docType = 'general';
@@ -568,7 +1594,6 @@
                 // 🔥 Standard化DocumentType
                 docType = docType.toLowerCase();
                 console.log('📄 Export Menu - DocumentType:', docType);
-            console.log('📄 文档对象:', window.currentDocument);
             } else {
                 console.warn('⚠️ window.currentDocument Undefined，Failed to fetchDocumentType');
             }
@@ -681,42 +1706,45 @@
             }
             
             menuHTML += '</div>';
-            
-            // 🔥 检查是否生成了内容
-            if (menuHTML.trim() === '<div style="padding: 0.5rem 0; background: #ffffff;"></div>' || menuHTML.length < 100) {
-                console.warn('⚠️ 菜单内容为空，添加默认选项');
-                menuHTML = `
-                    <div style="padding: 1rem;">
-                        <h3 style="margin: 0 0 1rem 0; font-size: 1.1rem;">Export Options</h3>
-                        <button onclick="exportDocument('csv')" style="width: 100%; padding: 0.75rem; margin-bottom: 0.5rem; border: 1px solid #ddd; background: white; cursor: pointer; border-radius: 6px; text-align: left;">
-                            <i class="fas fa-file-csv" style="color: #10b981; margin-right: 0.5rem;"></i>
-                            Standard CSV
-                        </button>
-                        <button onclick="exportDocument('json')" style="width: 100%; padding: 0.75rem; margin-bottom: 0.5rem; border: 1px solid #ddd; background: white; cursor: pointer; border-radius: 6px; text-align: left;">
-                            <i class="fas fa-file-code" style="color: #3b82f6; margin-right: 0.5rem;"></i>
-                            JSON Format
-                        </button>
-                        <button onclick="closeExportMenu()" style="width: 100%; padding: 0.75rem; margin-top: 1rem; border: none; background: #ef4444; color: white; cursor: pointer; border-radius: 6px;">
-                            Close
-                        </button>
-                    </div>
-                `;
-            }
-            
             menu.innerHTML = menuHTML;
-            console.log('📋 菜单 HTML 已设置, 长度:', menuHTML.length);
-            console.log('📋 菜单内容预览:', menuHTML.substring(0, 200));
         }
     </script>
     
     <!-- 🔥 mobileSidebarFeatures -->
+    <script>
+        // OpenSidebar
+        function openMobileSidebar() {
+            const sidebar = document.getElementById('mobile-sidebar');
+            const overlay = document.getElementById('mobile-sidebar-overlay');
+            if (sidebar && overlay) {
+                sidebar.style.left = '0';
+                overlay.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+            }
+        }
+        
+        // CloseSidebar
+        function closeMobileSidebar() {
+            const sidebar = document.getElementById('mobile-sidebar');
+            const overlay = document.getElementById('mobile-sidebar-overlay');
+            if (sidebar && overlay) {
+                sidebar.style.left = '-100%';
+                overlay.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        }
+    </script>
     
+    <!-- 🔥 Export Menu（placein body Finallypageensureinmostuplayer）-->
+    <div id="exportMenu" class="export-menu" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: none; border-radius: 12px; box-shadow: 0 25px 50px rgba(0,0,0,0.25); min-width: 280px; max-width: 90%; max-height: 80vh; overflow: auto; z-index: 2147483647; padding: 1rem;">
+        <!-- Dynamically generated的MenuContent -->
+    </div>
+    
+    <!-- 🔥 Export Menu background mask（z-index lowatMenu）-->
+    <div id="exportMenuOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2147483646;" onclick="closeExportMenu()"></div>
 
 
-
-
-
-
-
+    <!-- Google Analytics 事件跟踪 -->
+    <script src="/ga-event-tracking.js"></script>
 </body>
 </html>
