@@ -1,32 +1,21 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
+#!/usr/bin/env python3
+"""
+🎯 直接替换：用 firstproject 的工作代码替换 document-detail 的 Export 功能
+
+简单策略：
+1. 删除 document-detail 中所有 Export 相关代码
+2. 直接插入 firstproject 的工作代码
+3. 只修改文档选择部分（使用 window.currentDocument）
+"""
+
+import os
+import re
+
+def replace_with_working_code():
+    """直接替换为工作的代码"""
     
-    <!-- 🔒 pageprotected -->
-    <style>
-        body.auth-checking { visibility: hidden !important; }
-        .auth-loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; align-items: center; justify-content: center; z-index: 10000; visibility: visible !important; }
-        body.auth-ready .auth-loading { display: none; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    </style>
-    <script>
-        document.documentElement.classList.add('auth-checking');
-        if (document.body) { document.body.classList.add('auth-checking'); } 
-        else { document.addEventListener('DOMContentLoaded', function() { document.body.classList.add('auth-checking'); }); }
-    </script>
-    
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- 🔇 safeallhiddencontrolconsole log（do not delete code） -->
-    <script defer src="../disable-console-safe.js"></script>
-    
-    <title>Document details - VaultCaddy Statement Converter | PDF to Excel/QuickBooks | 98% Accuracy</title>
-    <link rel="stylesheet" href="../styles.css">
-    <link rel="stylesheet" href="../dashboard.css">
-    <link rel="stylesheet" href="../pages.css">
-    <link rel="stylesheet" href="../editable-table.css">
-    <link rel="stylesheet" href="https:        // 🔥 Export 功能 - 工作版本（从 firstproject.html）
+    # 工作的代码（从 firstproject.html 复制，已验证可用）
+    working_export_code = '''        // 🔥 Export 功能 - 工作版本（从 firstproject.html）
         
         // 关闭菜单
         window.closeExportMenu = function() {
@@ -118,38 +107,69 @@
         };
         
         console.log('✅ Export 功能已加载（工作版本）');
-
-        
-        // 等待2秒后执行，确保页面完全加载
-
-
-    </script>
+'''
     
-    <style>
-        /* Export Menu 样式 */
-        .export-menu-item:hover {
-            background: #f3f4f6 !important;
-        }
+    html_files = [
+        'en/document-detail.html',
+        'jp/document-detail.html',
+        'kr/document-detail.html',
+        'document-detail.html'
+    ]
+    
+    for html_file in html_files:
+        if not os.path.exists(html_file):
+            continue
         
-        /* 移动端样式 */
-        @media (max-width: 768px) {
-            #exportMenu {
-                position: fixed !important;
-                top: 50% !important;
-                left: 50% !important;
-                transform: translate(-50%, -50%) !important;
-                right: auto !important;
-                width: 90% !important;
-                max-width: 400px !important;
-                background-color: #ffffff !important;
-                box-shadow: none !important;
-                border: none !important;
-                border-radius: 12px !important;
-                padding: 1.5rem !important;
-                overflow: hidden !important;
-            }
-        }
-    </style>
+        with open(html_file, 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        print(f"\n处理 {html_file}:")
+        print("=" * 50)
+        
+        # 找到并删除从 "// 🔥 Export 功能" 到下一个主要 script 标签或 </script> 的所有内容
+        # 使用更宽松的模式
+        pattern = r'//.*?Export.*?功能.*?console\.log\(.*?Export.*?功能.*?已加载.*?\);'
+        
+        matches = list(re.finditer(pattern, content, re.DOTALL))
+        if matches:
+            print(f"找到 {len(matches)} 个 Export 代码块")
+            # 只替换最后一个（最新的）
+            last_match = matches[-1]
+            content = content[:last_match.start()] + working_export_code + content[last_match.end():]
+            print("✅ 已替换为工作版本")
+        else:
+            print("⚠️ 未找到 Export 代码块，在文件末尾添加")
+            # 在最后一个 </script> 前添加
+            last_script = content.rfind('</script>')
+            if last_script != -1:
+                content = content[:last_script] + working_export_code + '\n' + content[last_script:]
+        
+        with open(html_file, 'w', encoding='utf-8') as f:
+            f.write(content)
+        
+        print(f"✅ 已更新 {html_file}")
 
-</body>
-</html>
+def main():
+    print("🎯 替换为工作的 Export 代码\n")
+    
+    print("=" * 60)
+    print("开始替换...")
+    print("=" * 60)
+    
+    replace_with_working_code()
+    
+    print("\n" + "=" * 60)
+    print("✅ 完成！")
+    print("=" * 60)
+    
+    print("\n🎉 已使用 firstproject.html 的工作代码！")
+    print("\n🚀 请刷新页面测试！")
+    print("\n📋 预期：")
+    print("• 点击 Export 按钮")
+    print("• 菜单应该立即显示")
+    print("• 桌面端：在按钮下方")
+    print("• 移动端：屏幕中央")
+
+if __name__ == '__main__':
+    main()
+
