@@ -6,7 +6,7 @@
     <!-- 🔒 페이지보호 -->
     <style>
         body.auth-checking { visibility: hidden !important; }
-        .auth-loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; align-items: center; justify-content: center; z-index: 9999; visibility: visible !important; }
+        .auth-loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; align-items: center; justify-content: center; z-index: 10000; visibility: visible !important; }
         body.auth-ready .auth-loading { display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
@@ -1792,7 +1792,7 @@
         }
         
         // 切换菜单显示（与 firstproject 完全相同的逻辑）
-        window.toggleExportMenu = function() {
+        window.toggleExportMenu = function(event) {
             console.log('🔍 toggleExportMenu Called');
             const menu = document.getElementById('exportMenu');
             const overlay = document.getElementById('exportMenuOverlay');
@@ -1947,7 +1947,42 @@
             }
         };
         
-        console.log('✅ Export 功能已加载（全新版本）');
+        
+        // 🔥 备用：直接添加 event listener（防止 onclick 被阻止）
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔍 DOMContentLoaded - 开始绑定 Export 按钮');
+            
+            const exportBtn = document.querySelector('button[onclick*="toggleExportMenu"]');
+            console.log('📋 Export 按钮:', exportBtn);
+            
+            if (exportBtn) {
+                // 移除旧的 listener（如果有）
+                exportBtn.removeAttribute('data-listener-attached');
+                
+                // 添加新的 listener
+                exportBtn.addEventListener('click', function(e) {
+                    console.log('🎯 Export 按钮被点击（event listener）');
+                    console.log('📋 Event:', e);
+                    
+                    // 确保函数存在
+                    if (typeof window.toggleExportMenu === 'function') {
+                        console.log('✅ toggleExportMenu 函数存在，调用中...');
+                        window.toggleExportMenu(e);
+                    } else {
+                        console.error('❌ toggleExportMenu 函数不存在');
+                        console.log('window.toggleExportMenu:', window.toggleExportMenu);
+                    }
+                });
+                
+                exportBtn.setAttribute('data-listener-attached', 'true');
+                console.log('✅ Export 按钮 event listener 已绑定');
+            } else {
+                console.error('❌ 未找到 Export 按钮');
+            }
+        });
+        
+        console.log('✅ Export 功能已加载（全新版本 + 备用 listener）');
+
     </script>
     
     <style>
