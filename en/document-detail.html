@@ -1782,7 +1782,7 @@
             console.log('✅ 菜单内容已更新');
         }
         
-        // 切换菜单显示（与 firstproject 完全相同的逻辑）
+                // 切换菜单显示（简化版，确保能显示）
         window.toggleExportMenu = function(event) {
             console.log('🔍 toggleExportMenu Called');
             const menu = document.getElementById('exportMenu');
@@ -1796,60 +1796,69 @@
             
             // 如果菜单已显示，则关闭
             if (menu.style.display === 'block') {
+                console.log('🔒 菜单已显示，关闭中...');
                 closeExportMenu();
                 return;
             }
             
-            // 检查当前文档（适配：单文档）
-            if (!window.currentDocument) {
-                console.warn('⚠️ window.currentDocument 不存在');
-            }
-            
-            console.log('📄 当前文档:', window.currentDocument);
+            // 检查当前文档
+            console.log('📄 window.currentDocument:', window.currentDocument);
             
             // 更新菜单内容
             console.log('🔄 更新菜单内容...');
             updateExportMenuContent();
             
-            // 🔥 根据屏幕大小设置菜单样式（与 firstproject 完全一致）
+            console.log('📱 设置菜单样式...');
+            
+            // 🔥 使用简化的、确保有效的样式设置（参考强制显示测试）
+            menu.style.display = 'block';
+            menu.style.position = 'fixed';
+            menu.style.zIndex = '9999999';
+            menu.style.backgroundColor = '#ffffff';
+            menu.style.padding = '1.5rem';
+            menu.style.borderRadius = '12px';
+            menu.style.minWidth = '300px';
+            menu.style.maxWidth = '90%';
+            
             if (window.innerWidth <= 768) {
-                // 📱 移动端：居中显示，全白设计
-                menu.style.position = 'fixed';
+                // 📱 移动端：居中显示
                 menu.style.top = '50%';
                 menu.style.left = '50%';
                 menu.style.transform = 'translate(-50%, -50%)';
-                menu.style.right = 'auto';
                 menu.style.width = '90%';
                 menu.style.maxWidth = '400px';
-                menu.style.backgroundColor = '#ffffff';
                 menu.style.border = 'none';
-                menu.style.boxShadow = 'none';
-                menu.style.borderRadius = '12px';
-                console.log('📱 移动端：菜单居中显示（全白）');
+                menu.style.boxShadow = '0 25px 50px rgba(0,0,0,0.25)';
+                console.log('📱 移动端：菜单居中显示');
                 
                 // 显示遮罩
                 if (overlay) {
                     overlay.style.display = 'block';
                 }
             } else {
-                // 💻 桌面端：在 Export 按钮下方
+                // 💻 桌面端：在按钮下方
                 const exportBtn = document.querySelector('button[onclick*="toggleExportMenu"]');
                 if (exportBtn) {
                     const rect = exportBtn.getBoundingClientRect();
-                    menu.style.position = 'fixed';
                     menu.style.top = (rect.bottom + 8) + 'px';
                     menu.style.right = (window.innerWidth - rect.right) + 'px';
                     menu.style.left = 'auto';
                     menu.style.transform = 'none';
                     menu.style.width = 'auto';
-                    menu.style.minWidth = '280px';
-                    menu.style.maxWidth = '400px';
-                    menu.style.backgroundColor = '#ffffff';
+                    menu.style.minWidth = '300px';
+                    menu.style.maxWidth = '450px';
                     menu.style.border = '1px solid #e5e7eb';
                     menu.style.boxShadow = '0 10px 25px rgba(0,0,0,0.15)';
-                    menu.style.borderRadius = '8px';
+                    console.log('💻 桌面端：菜单在按钮下方 (top=' + menu.style.top + ', right=' + menu.style.right + ')');
+                } else {
+                    // 如果找不到按钮，居中显示
+                    console.warn('⚠️ 未找到 Export 按钮，使用居中显示');
+                    menu.style.top = '50%';
+                    menu.style.left = '50%';
+                    menu.style.transform = 'translate(-50%, -50%)';
+                    menu.style.border = '1px solid #e5e7eb';
+                    menu.style.boxShadow = '0 10px 25px rgba(0,0,0,0.15)';
                 }
-                console.log('💻 桌面端：菜单在按钮下方');
                 
                 // 桌面端不显示遮罩
                 if (overlay) {
@@ -1857,10 +1866,10 @@
                 }
             }
             
-            menu.style.display = 'block';
             menu.classList.add('active');
             
             console.log('✅ 菜单已显示');
+            console.log('📊 最终样式: display=' + menu.style.display + ', position=' + menu.style.position + ', zIndex=' + menu.style.zIndex);
         };
         
         // 导出文档（简化版，适配单文档）
