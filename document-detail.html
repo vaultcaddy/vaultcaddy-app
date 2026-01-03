@@ -1749,6 +1749,21 @@
                 `;
             }
             
+            // 确保至少有 Bank Statement 或 Other 显示
+            if (!hasBankStatement && !hasInvoice) {
+                // 如果没有匹配到类型，至少显示 Bank Statement
+                menuHTML += `
+                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Bank Statement</div>
+                    <button onclick="exportDocuments('bank_statement_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">Standard CSV</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">complete fields Format</div>
+                        </div>
+                    </button>
+                `;
+            }
+            
             // Other 选项（始终显示）
             menuHTML += `
                 <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Other</div>
@@ -1792,6 +1807,10 @@
                 // 切换菜单显示（简化版，确保能显示）
         window.toggleExportMenu = function(event) {
             console.log('🔍 toggleExportMenu Called');
+            
+            // 🔥 强制更新菜单内容（确保有内容）
+            console.log('🔄 强制更新菜单内容...');
+            updateExportMenuContent();
             const menu = document.getElementById('exportMenu');
             const overlay = document.getElementById('exportMenuOverlay');
             console.log('📋 菜单元素:', menu);
@@ -1811,9 +1830,7 @@
             // 检查当前文档
             console.log('📄 window.currentDocument:', window.currentDocument);
             
-            // 更新菜单内容
-            console.log('🔄 更新菜单内容...');
-            updateExportMenuContent();
+            
             
             console.log('📱 设置菜单样式...');
             
