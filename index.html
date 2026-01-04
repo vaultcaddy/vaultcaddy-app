@@ -1445,23 +1445,64 @@
                     <p style="font-size: 1.125rem; color: #6b7280;">選擇文檔類型 → 拖放上傳 → AI 自動處理</p>
                 </div>
                 
-                <!-- GIF 演示區域 -->
+                <!-- 實際上傳功能區域 -->
                 <div style="background: white; padding: 2rem; border-radius: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.1); border: 2px solid #e5e7eb;">
-                    <div style="border-radius: 16px; overflow: hidden; background: #f9fafb;">
-                        <!-- 上傳演示 GIF -->
-                        <img src="video/upload-demo.gif" 
-                             alt="VaultCaddy 上傳演示 - 選擇文檔類型並拖放上傳" 
-                             style="width: 100%; height: auto; display: block;"
-                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <!-- 備用占位符 -->
-                        <div style="display: none; min-height: 400px; align-items: center; justify-content: center; flex-direction: column; padding: 3rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                            <i class="fas fa-file-upload" style="font-size: 4rem; color: white; margin-bottom: 1.5rem; opacity: 0.9;"></i>
-                            <h3 style="color: white; font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">上傳演示即將推出</h3>
-                            <p style="color: rgba(255,255,255,0.9); font-size: 1.125rem; text-align: center; max-width: 500px;">
-                                拖放上傳 • 批量處理 • 智能分類<br>
-                                讓 AI 幫您自動處理財務文檔
-                            </p>
+                    <!-- 文檔類型選擇器 -->
+                    <div id="homepage-doc-type-selector" style="margin-bottom: 2rem;">
+                        <h3 style="font-size: 1.125rem; color: #1f2937; margin: 0 0 1rem 0; font-weight: 600; text-align: center;">選擇文檔類型</h3>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                            <!-- 銀行對帳單 -->
+                            <div class="homepage-doc-type-card" data-type="bank_statement" onclick="selectHomepageDocType('bank_statement')" style="background: #ffffff; border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; cursor: pointer; transition: all 0.3s ease; position: relative; text-align: center;">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🏦</div>
+                                <div style="font-weight: 600; color: #1f2937; font-size: 1rem; margin-bottom: 0.25rem;">銀行對帳單</div>
+                                <div style="font-size: 0.75rem; color: #6b7280;">PDF、圖片格式</div>
+                                <div class="homepage-selected-indicator" style="display: none; position: absolute; top: 0.75rem; right: 0.75rem; width: 24px; height: 24px; background: #3b82f6; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.875rem;">✓</div>
+                            </div>
+                            <!-- 發票 -->
+                            <div class="homepage-doc-type-card" data-type="invoice" onclick="selectHomepageDocType('invoice')" style="background: #ffffff; border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; cursor: pointer; transition: all 0.3s ease; position: relative; text-align: center;">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">📄</div>
+                                <div style="font-weight: 600; color: #1f2937; font-size: 1rem; margin-bottom: 0.25rem;">發票</div>
+                                <div style="font-size: 0.75rem; color: #6b7280;">PDF、圖片格式</div>
+                                <div class="homepage-selected-indicator" style="display: none; position: absolute; top: 0.75rem; right: 0.75rem; width: 24px; height: 24px; background: #3b82f6; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.875rem;">✓</div>
+                            </div>
                         </div>
+                    </div>
+                    
+                    <!-- 拖放上傳區域 -->
+                    <div id="homepage-upload-area" class="homepage-upload-area" style="border: 3px dashed #d1d5db; border-radius: 16px; padding: 3rem 2rem; text-align: center; cursor: pointer; transition: all 0.3s ease; background: #fafafa; min-height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        <div style="font-size: 3.5rem; margin-bottom: 1rem; color: #667eea;">📤</div>
+                        <div style="font-size: 1.125rem; color: #374151; margin-bottom: 0.5rem; font-weight: 600;">拖放文件到此處或點擊上傳</div>
+                        <div style="color: #6b7280; font-size: 0.875rem; margin-bottom: 1rem;">支援 PDF、JPG、PNG 格式 (最大 10MB)</div>
+                        <div style="color: #667eea; font-size: 0.875rem; font-weight: 600;">✨ 支持批量上傳</div>
+                        <input type="file" id="homepage-file-input" accept=".pdf,.jpg,.jpeg,.png,.gif,.webp" multiple style="display: none;">
+                    </div>
+                    
+                    <!-- 處理進度顯示 -->
+                    <div id="homepage-progress-container" style="display: none; margin-top: 2rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
+                            <div class="homepage-progress-step" data-step="1" style="flex: 1; text-align: center; opacity: 0.4; transition: all 0.3s ease;">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">📤</div>
+                                <div style="font-size: 0.875rem; color: #6b7280; font-weight: 500;">文件上傳</div>
+                            </div>
+                            <div class="homepage-progress-step" data-step="2" style="flex: 1; text-align: center; opacity: 0.4; transition: all 0.3s ease;">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🤖</div>
+                                <div style="font-size: 0.875rem; color: #6b7280; font-weight: 500;">AI 分析</div>
+                            </div>
+                            <div class="homepage-progress-step" data-step="3" style="flex: 1; text-align: center; opacity: 0.4; transition: all 0.3s ease;">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">✅</div>
+                                <div style="font-size: 0.875rem; color: #6b7280; font-weight: 500;">3秒完成</div>
+                            </div>
+                        </div>
+                        <div style="background: #e5e7eb; height: 8px; border-radius: 4px; overflow: hidden;">
+                            <div id="homepage-progress-bar" style="background: linear-gradient(90deg, #667eea, #764ba2); height: 100%; width: 0%; transition: width 0.3s ease;"></div>
+                        </div>
+                        <div id="homepage-progress-text" style="text-align: center; margin-top: 1rem; color: #6b7280; font-size: 0.875rem;">準備中...</div>
+                    </div>
+                    
+                    <!-- 上傳文件列表 -->
+                    <div id="homepage-file-list" style="display: none; margin-top: 1.5rem; max-height: 200px; overflow-y: auto;">
+                        <div style="font-size: 0.875rem; font-weight: 600; color: #1f2937; margin-bottom: 0.75rem;">已選擇文件：</div>
+                        <div id="homepage-file-items"></div>
                     </div>
                 </div>
                 
@@ -2197,6 +2238,50 @@
                 grid-template-columns: 1fr !important;
             }
             
+            /* 🔥 首頁上傳區域手機版優化 */
+            #homepage-doc-type-selector > div[style*="grid-template-columns: repeat(2, 1fr)"] {
+                grid-template-columns: 1fr !important;
+                gap: 0.75rem !important;
+            }
+            
+            .homepage-doc-type-card {
+                padding: 1rem !important;
+            }
+            
+            #homepage-upload-area {
+                padding: 2rem 1rem !important;
+                min-height: 180px !important;
+            }
+            
+            #homepage-upload-area > div:first-child {
+                font-size: 2.5rem !important;
+            }
+            
+            #homepage-upload-area > div:nth-child(2) {
+                font-size: 1rem !important;
+            }
+            
+            #homepage-upload-area > div:nth-child(3),
+            #homepage-upload-area > div:nth-child(4) {
+                font-size: 0.8125rem !important;
+            }
+            
+            #homepage-progress-container {
+                margin-top: 1.5rem !important;
+            }
+            
+            .homepage-progress-step > div:first-child {
+                font-size: 1.5rem !important;
+            }
+            
+            .homepage-progress-step > div:last-child {
+                font-size: 0.75rem !important;
+            }
+            
+            #homepage-file-list {
+                max-height: 150px !important;
+            }
+            
             /* 價格卡片 */
             div[style*="display: grid; grid-template-columns: 1fr 1fr"] {
                 grid-template-columns: 1fr !important;
@@ -2656,6 +2741,225 @@
     <script defer src="script.js"></script>
     
     <script>
+    // 首頁上傳功能 JavaScript
+    (function() {
+        'use strict';
+        
+        // 全局變量
+        let selectedDocType = 'bank_statement'; // 默認選擇銀行對帳單
+        let selectedFiles = [];
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initHomepageUpload();
+            // 默認選擇銀行對帳單
+            selectHomepageDocType('bank_statement');
+        });
+        
+        // 選擇文檔類型
+        window.selectHomepageDocType = function(type) {
+            selectedDocType = type;
+            
+            // 更新卡片樣式
+            document.querySelectorAll('.homepage-doc-type-card').forEach(card => {
+                const indicator = card.querySelector('.homepage-selected-indicator');
+                if (card.getAttribute('data-type') === type) {
+                    card.style.borderColor = '#3b82f6';
+                    card.style.background = '#eff6ff';
+                    if (indicator) indicator.style.display = 'flex';
+                } else {
+                    card.style.borderColor = '#e5e7eb';
+                    card.style.background = '#ffffff';
+                    if (indicator) indicator.style.display = 'none';
+                }
+            });
+            
+            console.log('✅ 已選擇文檔類型:', type);
+        };
+        
+        // 初始化上傳功能
+        function initHomepageUpload() {
+            const uploadArea = document.getElementById('homepage-upload-area');
+            const fileInput = document.getElementById('homepage-file-input');
+            
+            if (!uploadArea || !fileInput) {
+                console.warn('⚠️ 找不到上傳元素');
+                return;
+            }
+            
+            // 點擊上傳區域
+            uploadArea.addEventListener('click', function(e) {
+                e.preventDefault();
+                // 檢查是否已登入
+                if (window.VaultCaddyAuth && !window.VaultCaddyAuth.isAuthenticated()) {
+                    // 未登入，跳轉到登入頁面或firstproject.html
+                    window.location.href = 'firstproject.html';
+                    return;
+                }
+                fileInput.click();
+            });
+            
+            // 拖放事件
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.style.borderColor = '#3b82f6';
+                this.style.background = '#eff6ff';
+                this.style.borderStyle = 'solid';
+            });
+            
+            uploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.style.borderColor = '#d1d5db';
+                this.style.background = '#fafafa';
+                this.style.borderStyle = 'dashed';
+            });
+            
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.style.borderColor = '#d1d5db';
+                this.style.background = '#fafafa';
+                this.style.borderStyle = 'dashed';
+                
+                // 檢查是否已登入
+                if (window.VaultCaddyAuth && !window.VaultCaddyAuth.isAuthenticated()) {
+                    window.location.href = 'firstproject.html';
+                    return;
+                }
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleHomepageFiles(Array.from(files));
+                }
+            });
+            
+            // 文件選擇處理
+            fileInput.addEventListener('change', function(e) {
+                const files = e.target.files;
+                if (files.length > 0) {
+                    handleHomepageFiles(Array.from(files));
+                }
+            });
+        }
+        
+        // 處理選擇的文件
+        function handleHomepageFiles(files) {
+            selectedFiles = files;
+            
+            // 顯示文件列表
+            displayFileList(files);
+            
+            // 顯示進度容器
+            const progressContainer = document.getElementById('homepage-progress-container');
+            if (progressContainer) {
+                progressContainer.style.display = 'block';
+            }
+            
+            // 開始處理（模擬進度）
+            simulateProcessing();
+            
+            // 如果已登入，跳轉到firstproject.html進行實際處理
+            if (window.VaultCaddyAuth && window.VaultCaddyAuth.isAuthenticated()) {
+                // 延遲跳轉，讓用戶看到進度
+                setTimeout(function() {
+                    // 將選擇的文件和類型傳遞到firstproject.html
+                    sessionStorage.setItem('pendingFiles', JSON.stringify({
+                        files: Array.from(selectedFiles).map(f => ({ name: f.name, size: f.size, type: f.type })),
+                        docType: selectedDocType
+                    }));
+                    window.location.href = 'firstproject.html';
+                }, 1500);
+            } else {
+                // 未登入，直接跳轉
+                setTimeout(function() {
+                    window.location.href = 'firstproject.html';
+                }, 1000);
+            }
+        }
+        
+        // 顯示文件列表
+        function displayFileList(files) {
+            const fileList = document.getElementById('homepage-file-list');
+            const fileItems = document.getElementById('homepage-file-items');
+            
+            if (!fileList || !fileItems) return;
+            
+            fileList.style.display = 'block';
+            fileItems.innerHTML = '';
+            
+            files.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.style.cssText = 'display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; background: #f9fafb; border-radius: 8px; margin-bottom: 0.5rem;';
+                fileItem.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 0.75rem; flex: 1; min-width: 0;">
+                        <div style="font-size: 1.5rem;">📄</div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-size: 0.875rem; font-weight: 600; color: #1f2937; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${file.name}</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">${formatFileSize(file.size)}</div>
+                        </div>
+                    </div>
+                `;
+                fileItems.appendChild(fileItem);
+            });
+        }
+        
+        // 模擬處理進度
+        function simulateProcessing() {
+            const progressBar = document.getElementById('homepage-progress-bar');
+            const progressText = document.getElementById('homepage-progress-text');
+            const steps = document.querySelectorAll('.homepage-progress-step');
+            
+            if (!progressBar || !progressText) return;
+            
+            let progress = 0;
+            let currentStep = 0;
+            
+            const interval = setInterval(function() {
+                progress += 10;
+                
+                if (progress <= 33) {
+                    currentStep = 0;
+                    progressText.textContent = '正在上傳文件...';
+                } else if (progress <= 66) {
+                    currentStep = 1;
+                    progressText.textContent = 'AI 正在分析中...';
+                } else {
+                    currentStep = 2;
+                    progressText.textContent = '即將完成（約3秒）...';
+                }
+                
+                // 更新進度條
+                progressBar.style.width = progress + '%';
+                
+                // 更新步驟指示器
+                steps.forEach((step, index) => {
+                    if (index <= currentStep) {
+                        step.style.opacity = '1';
+                        step.style.transform = 'scale(1.05)';
+                    } else {
+                        step.style.opacity = '0.4';
+                        step.style.transform = 'scale(1)';
+                    }
+                });
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    progressText.textContent = '✅ 處理完成！正在跳轉...';
+                }
+            }, 100);
+        }
+        
+        // 格式化文件大小
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+    })();
     </script>
 
     <!-- 數字滾動動畫腳本 -->
