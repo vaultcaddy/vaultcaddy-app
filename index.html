@@ -831,7 +831,7 @@
             // 獲取用戶首字母
             function getUserInitial() {
                 // 優先使用 displayName 的第一個字母
-                if (userDisplayName && userDisplayName.trim()) {
+                if (userDisplayName && userDisplayName.trim() && userDisplayName !== '0') {
                     return userDisplayName.charAt(0).toUpperCase();
                 }
                 // 否則使用 email 的第一個字母
@@ -1013,16 +1013,16 @@
                     if (isLoggedIn) {
                         // ✅ 已登入：顯示用戶頭像
                         const currentUser = window.simpleAuth.getCurrentUser();
-                        userEmail = currentUser.email | '';
-                        userDisplayName = currentUser.displayName | '';
+                        userEmail = currentUser.email || '';
+                        userDisplayName = currentUser.displayName || '';
                         
                         // 🔥 從 Firestore 獲取 displayName 和 credits
                         if (window.simpleDataManager && window.simpleDataManager.initialized) {
                             try {
                                 const userDoc = await window.simpleDataManager.getUserDocument();
                                 if (userDoc) {
-                                    userDisplayName = userDoc.displayName | userDisplayName;
-                                    userCredits = userDoc.credits | 0;
+                                    userDisplayName = userDoc.displayName || userDisplayName;
+                                    userCredits = userDoc.credits || 0;
                                     console.log('✅ index.html 獲取 Credits:', userCredits);
                                 }
                             } catch (error) {

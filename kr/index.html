@@ -544,7 +544,7 @@
             // 사용자 이니셜 가져오기
             function getUserInitial() {
                 // 우선 사용 displayName 의 첫개字母
-                if (userDisplayName && userDisplayName.trim()) {
+                if (userDisplayName && userDisplayName.trim() && userDisplayName !== '0') {
                     return userDisplayName.charAt(0).toUpperCase();
                 }
                 // 그렇지 않으면 email 의 첫개字母
@@ -726,16 +726,16 @@
                     if (isLoggedIn) {
                         // ✅ 已로그인：표시用戶頭像
                         const currentUser = window.simpleAuth.getCurrentUser();
-                        userEmail = currentUser.email | '';
-                        userDisplayName = currentUser.displayName | '';
+                        userEmail = currentUser.email || '';
+                        userDisplayName = currentUser.displayName || '';
                         
                         // 🔥 에서 Firestore 獲取 displayName 和 credits
                         if (window.simpleDataManager && window.simpleDataManager.initialized) {
                             try {
                                 const userDoc = await window.simpleDataManager.getUserDocument();
                                 if (userDoc) {
-                                    userDisplayName = userDoc.displayName | userDisplayName;
-                                    userCredits = userDoc.credits | 0;
+                                    userDisplayName = userDoc.displayName || userDisplayName;
+                                    userCredits = userDoc.credits || 0;
                                     console.log('✅ index.html 獲取 Credits:', userCredits);
                                 }
                             } catch (error) {

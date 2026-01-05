@@ -546,7 +546,7 @@
             // ユーザーイニシャルを取得
             function getUserInitial() {
                 // displayNameの最初の文字を優先使用
-                if (userDisplayName && userDisplayName.trim()) {
+                if (userDisplayName && userDisplayName.trim() && userDisplayName !== '0') {
                     return userDisplayName.charAt(0).toUpperCase();
                 }
                 // そうでなければemailの最初の文字を使用
@@ -728,16 +728,16 @@
                     if (isLoggedIn) {
                         // ✅ ログイン済み：ユーザーアバターを表示
                         const currentUser = window.simpleAuth.getCurrentUser();
-                        userEmail = currentUser.email | '';
-                        userDisplayName = currentUser.displayName | '';
+                        userEmail = currentUser.email || '';
+                        userDisplayName = currentUser.displayName || '';
                         
                         // 🔥 FirestoreからdisplayNameとcreditsを取得
                         if (window.simpleDataManager && window.simpleDataManager.initialized) {
                             try {
                                 const userDoc = await window.simpleDataManager.getUserDocument();
                                 if (userDoc) {
-                                    userDisplayName = userDoc.displayName | userDisplayName;
-                                    userCredits = userDoc.credits | 0;
+                                    userDisplayName = userDoc.displayName || userDisplayName;
+                                    userCredits = userDoc.credits || 0;
                                     console.log('✅ index.html Creditsを取得:', userCredits);
                                 }
                             } catch (error) {
