@@ -203,6 +203,13 @@
             z-index: 10;
         }
         
+        /* 左側ボタングループ（戻る + 削除） */
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
         .back-btn {
             display: flex;
             align-items: center;
@@ -210,12 +217,38 @@
             color: #6b7280;
             text-decoration: none;
             font-size: 0.9rem;
-            transition: color 0.2s;
+            transition: all 0.2s;
             cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+            background: #ffffff;
         }
         
         .back-btn:hover {
             color: #1f2937;
+            background: #f9fafb;
+            border-color: #d1d5db;
+        }
+        
+        /* 削除ボタンスタイル（戻るボタンと同じサイズ） */
+        .header-left .icon-btn.delete {
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            color: #ef4444;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .header-left .icon-btn.delete:hover {
+            background: #fecaca;
+            border-color: #fca5a5;
         }
         
         .document-title {
@@ -781,9 +814,18 @@
                 box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
             }
             
+            /* モバイル版: 左側ボタングループ */
+            .detail-header .header-left {
+                display: flex !important;
+                flex-direction: row !important;
+                gap: 0.5rem !important;
+                width: 100% !important;
+                flex-basis: 100% !important;
+                margin-bottom: 0.5rem !important;
+            }
+            
             .detail-header .back-btn {
                 flex: 1 1 auto !important;
-                max-width: calc(100% - 120px) !important;
                 font-size: 0.875rem !important;
                 padding: 0.75rem 1rem !important;
                 border-radius: 8px !important;
@@ -796,6 +838,21 @@
             
             .detail-header .back-btn:hover {
                 background: #e5e7eb !important;
+            }
+            
+            /* モバイル版: 削除ボタン（戻るボタンと同じサイズ） */
+            .detail-header .header-left .icon-btn.delete {
+                flex: 1 1 auto !important;
+                font-size: 0.875rem !important;
+                padding: 0.75rem 1rem !important;
+                border-radius: 8px !important;
+                background: #fee2e2 !important;
+                border: 1px solid #fecaca !important;
+                color: #ef4444 !important;
+            }
+            
+            .detail-header .header-left .icon-btn.delete:hover {
+                background: #fecaca !important;
             }
             
             /* 🔥 モバイル版：文書タイトル美化 */
@@ -1257,10 +1314,16 @@
         <div class="main-content">
             <!-- 詳情ページ頂部 -->
             <div class="detail-header">
-                <span class="back-btn" onclick="goBackToDashboard()">
-                    <i class="fas fa-arrow-left"></i>
-                    戻るダッシュボード
-                </span>
+                <div class="header-left">
+                    <span class="back-btn" onclick="goBackToDashboard()">
+                        <i class="fas fa-arrow-left"></i>
+                        ダッシュボードに戻る
+                    </span>
+                    <button class="icon-btn delete" onclick="deleteCurrentDocument()" title="文書を削除">
+                        <i class="fas fa-trash"></i>
+                        <span>Delete</span>
+                    </button>
+                </div>
                 <h1 class="document-title" id="documentTitle">読み込み中...</h1>
                 <div class="top-actions">
                     <!-- 保存指示器（動態顯示） -->
@@ -1273,10 +1336,6 @@
                         
                         <!-- Export メニュー已移まで body 最後面 -->
                     </div>
-                    <button class="icon-btn delete" onclick="deleteCurrentDocument()" title="削除文書" style="background: #fee2e2; border: 1px solid #fecaca; color: #ef4444; padding: 0.5rem 1rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem;">
-                        <i class="fas fa-trash"></i>
-                        <span>Delete</span>
-                    </button>
                 </div>
             </div>
             
