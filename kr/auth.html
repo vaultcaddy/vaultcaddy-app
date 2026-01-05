@@ -704,10 +704,18 @@
                 const firstName = document.getElementById('register-firstName').value;
                 const lastName = document.getElementById('register-lastName').value;
                 const email = document.getElementById('register-email').value;
+                const company = (document.getElementById('register-company').value || '').trim();  // 🏢 회사명 (선택사항)
                 const displayName = `${firstName} ${lastName}`.trim();
                 
+                // 🎯 추가 데이터 준비
+                const additionalData = {
+                    company: company
+                };
+                
+                console.log('📝 가입 데이터:', { email, displayName, company });
+                
                 // Firebase Auth 사용자 생성 (자동 로그인 없음)
-                await window.simpleAuth.registerWithEmail(email, password, displayName);
+                await window.simpleAuth.registerWithEmail(email, password, displayName, additionalData);
                 
                 // 인증 코드 전송
                 const functions = firebase.functions();

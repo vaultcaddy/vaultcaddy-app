@@ -710,10 +710,18 @@
                 const firstName = document.getElementById('register-firstName').value;
                 const lastName = document.getElementById('register-lastName').value;
                 const email = document.getElementById('register-email').value;
+                const company = (document.getElementById('register-company').value || '').trim();  // 🏢 Company Name (Optional)
                 const displayName = `${firstName} ${lastName}`.trim();
                 
+                // 🎯 Prepare additional data
+                const additionalData = {
+                    company: company
+                };
+                
+                console.log('📝 Registration data:', { email, displayName, company });
+                
                 // Create Firebase Auth user (without auto login)
-                await window.simpleAuth.registerWithEmail(email, password, displayName);
+                await window.simpleAuth.registerWithEmail(email, password, displayName, additionalData);
                 
                 // Send verification code
                 const functions = firebase.functions();
