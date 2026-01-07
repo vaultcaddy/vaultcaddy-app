@@ -190,6 +190,223 @@
             background: #fee2e2;
             color: #991b1b;
         }
+
+        /* ===== 美觀結果展示樣式 ===== */
+        .beautiful-result {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .info-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .info-card h3 {
+            margin: 0 0 1.5rem 0;
+            color: #1f2937;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .info-card h3 i {
+            color: #667eea;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-row .label {
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .detail-row .value {
+            color: #1f2937;
+            font-weight: 600;
+        }
+
+        /* 餘額卡片特殊樣式 */
+        .balance-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .balance-card h3,
+        .balance-card h3 i,
+        .balance-card .label,
+        .balance-card .value {
+            color: white !important;
+        }
+
+        .balance-card .detail-row {
+            border-bottom-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .balance-amount {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1.5rem 0;
+            gap: 0.75rem;
+        }
+
+        .value-large {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        /* 總金額卡片 */
+        .total-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .total-card h3,
+        .total-card h3 i,
+        .total-card .label,
+        .total-card .value {
+            color: white !important;
+        }
+
+        .total-card .detail-row {
+            border-bottom-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .total-amount {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1.5rem 0;
+            gap: 0.75rem;
+        }
+
+        .total-card .value-large {
+            font-size: 2.25rem;
+            font-weight: 700;
+        }
+
+        /* 表格樣式 */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 1rem;
+        }
+
+        .transactions-table,
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .transactions-table th,
+        .items-table th {
+            background: #f9fafb;
+            padding: 0.75rem;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 2px solid #e5e7eb;
+            position: sticky;
+            top: 0;
+        }
+
+        .transactions-table td,
+        .items-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid #f3f4f6;
+            color: #1f2937;
+        }
+
+        .transactions-table tbody tr:hover,
+        .items-table tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .transactions-table .amount-col,
+        .items-table .amount-col {
+            text-align: right;
+            font-weight: 600;
+        }
+
+        .transactions-table .date-col {
+            white-space: nowrap;
+        }
+
+        .transactions-table .desc-col {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .items-table .qty-col {
+            text-align: center;
+        }
+
+        .transactions-table td.positive {
+            color: #10b981;
+        }
+
+        .transactions-table td.negative {
+            color: #ef4444;
+        }
+
+        /* 手機版適配 */
+        @media (max-width: 768px) {
+            .beautiful-result {
+                gap: 1rem;
+            }
+
+            .info-card {
+                padding: 1rem;
+            }
+
+            .info-card h3 {
+                font-size: 1rem;
+            }
+
+            .balance-amount,
+            .total-amount {
+                padding: 1rem 0;
+            }
+
+            .value-large {
+                font-size: 1.75rem;
+            }
+
+            .transactions-table,
+            .items-table {
+                font-size: 0.85rem;
+            }
+
+            .transactions-table th,
+            .items-table th,
+            .transactions-table td,
+            .items-table td {
+                padding: 0.5rem 0.25rem;
+            }
+
+            .transactions-table .desc-col {
+                max-width: 150px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -466,10 +683,19 @@
                         throw new Error('請先設置 Qwen-VL Max API Key');
                     }
 
+                    let imageFile = file;
+                    let mimeType = file.type || 'image/jpeg';
+
+                    // ⚠️ 如果是PDF，需要先转换为图片
+                    if (file.type === 'application/pdf') {
+                        console.log('📄 檢測到 PDF，需要先轉換為圖片...');
+                        alert('⚠️ PDF支持開發中\n\n目前Qwen-VL測試頁面暫不支持PDF直接上傳。\n\n請使用以下替代方案：\n1. 將PDF轉換為圖片後上傳\n2. 或使用主應用（firstproject.html）處理PDF');
+                        throw new Error('PDF格式暫不支持，請轉換為圖片（JPG/PNG）後上傳');
+                    }
+
                     // 將文件轉換為 Base64
                     console.log('📸 步驟 1：轉換文件為 Base64...');
-                    const base64Image = await this.fileToBase64(file);
-                    const mimeType = file.type || 'image/jpeg';
+                    const base64Image = await this.fileToBase64(imageFile);
 
                     // 生成提示詞
                     const prompt = documentType === 'bank' 
@@ -484,8 +710,10 @@
                                 role: 'user',
                                 content: [
                                     {
-                                        type: 'image',
-                                        image: `data:${mimeType};base64,${base64Image}`
+                                        type: 'image_url',  // ✅ 修正：使用 image_url
+                                        image_url: {
+                                            url: `data:${mimeType};base64,${base64Image}`
+                                        }
                                     },
                                     {
                                         type: 'text',
@@ -650,14 +878,25 @@
             }
         }
 
-        // 顯示結果
+        // 顯示結果（優化版 - 美觀展示）
         function displayResult(type, result) {
             const resultEl = document.getElementById(`${type}-result`);
             const extractedDataEl = document.getElementById(`${type}-extracted-data`);
             const statsEl = document.getElementById(`${type}-stats`);
 
-            // 顯示提取的數據
-            extractedDataEl.textContent = JSON.stringify(result.extractedData, null, 2);
+            const data = result.extractedData;
+
+            // ===== 生成美觀的 HTML 展示 =====
+            let beautifulHTML = '';
+
+            if (type === 'bank') {
+                beautifulHTML = generateBankStatementHTML(data);
+            } else {
+                beautifulHTML = generateReceiptHTML(data);
+            }
+
+            // 顯示美觀的數據
+            extractedDataEl.innerHTML = beautifulHTML;
 
             // 顯示統計信息
             const stats = {
@@ -666,12 +905,187 @@
                 '文檔類型': result.documentType,
                 '輸入 Token': result.usage.prompt_tokens || 'N/A',
                 '輸出 Token': result.usage.completion_tokens || 'N/A',
-                '總 Token': result.usage.total_tokens || 'N/A'
+                '總 Token': result.usage.total_tokens || 'N/A',
+                '預估成本': calculateCost(result.usage.total_tokens)
             };
             statsEl.textContent = JSON.stringify(stats, null, 2);
 
             // 顯示結果容器
             resultEl.classList.add('active');
+        }
+
+        // 生成銀行對賬單的美觀 HTML
+        function generateBankStatementHTML(data) {
+            let html = '<div class="beautiful-result">';
+            
+            // 帳戶信息卡片
+            html += `
+                <div class="info-card">
+                    <h3><i class="fas fa-university"></i> 帳戶資訊</h3>
+                    ${createDetailRow('銀行名稱', data.bankName || 'N/A')}
+                    ${createDetailRow('帳號', data.accountNumber || 'N/A')}
+                    ${createDetailRow('帳戶持有人', data.accountHolder || 'N/A')}
+                    ${createDetailRow('對賬單期間', data.statementPeriod || 'N/A')}
+                </div>
+            `;
+            
+            // 餘額卡片
+            if (data.closingBalance !== undefined) {
+                html += `
+                    <div class="info-card balance-card">
+                        <h3><i class="fas fa-wallet"></i> 餘額資訊</h3>
+                        <div class="balance-amount">
+                            <span class="label">期末餘額</span>
+                            <span class="value-large">${data.currency || ''} ${formatNumber(data.closingBalance)}</span>
+                        </div>
+                        ${data.openingBalance !== undefined ? `
+                        <div class="detail-row">
+                            <span class="label">期初餘額:</span>
+                            <span class="value">${data.currency || ''} ${formatNumber(data.openingBalance)}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+            }
+            
+            // 交易記錄表格
+            if (data.transactions && data.transactions.length > 0) {
+                html += `
+                    <div class="info-card">
+                        <h3><i class="fas fa-list"></i> 交易記錄 (${data.transactions.length} 筆)</h3>
+                        <div class="table-container">
+                            <table class="transactions-table">
+                                <thead>
+                                    <tr>
+                                        <th>日期</th>
+                                        <th>描述</th>
+                                        <th class="amount-col">金額</th>
+                                        <th class="amount-col">餘額</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${data.transactions.map(t => `
+                                        <tr>
+                                            <td class="date-col">${t.date || 'N/A'}</td>
+                                            <td class="desc-col">${t.description || 'N/A'}</td>
+                                            <td class="amount-col ${parseFloat(t.amount) < 0 ? 'negative' : 'positive'}">
+                                                ${formatNumber(t.amount)}
+                                            </td>
+                                            <td class="amount-col">${formatNumber(t.balance)}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            html += '</div>';
+            return html;
+        }
+
+        // 生成收據的美觀 HTML
+        function generateReceiptHTML(data) {
+            let html = '<div class="beautiful-result">';
+            
+            // 收據詳情卡片
+            html += `
+                <div class="info-card">
+                    <h3><i class="fas fa-receipt"></i> 收據詳情</h3>
+                    ${createDetailRow('收據編號', data.receiptNumber || 'N/A')}
+                    ${createDetailRow('日期', data.receiptDate || 'N/A')}
+                    ${createDetailRow('商家名稱', data.merchantName || 'N/A')}
+                    ${data.merchantAddress ? createDetailRow('商家地址', data.merchantAddress) : ''}
+                </div>
+            `;
+            
+            // 總金額卡片
+            if (data.totalAmount !== undefined) {
+                html += `
+                    <div class="info-card total-card">
+                        <h3><i class="fas fa-dollar-sign"></i> 金額資訊</h3>
+                        <div class="total-amount">
+                            <span class="label">總金額</span>
+                            <span class="value-large">$${formatNumber(data.totalAmount)}</span>
+                        </div>
+                        ${data.taxAmount ? `
+                        <div class="detail-row">
+                            <span class="label">稅額:</span>
+                            <span class="value">$${formatNumber(data.taxAmount)}</span>
+                        </div>
+                        ` : ''}
+                        ${data.paymentMethod ? `
+                        <div class="detail-row">
+                            <span class="label">支付方式:</span>
+                            <span class="value">${data.paymentMethod}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+            }
+            
+            // 項目明細表格
+            if (data.items && data.items.length > 0) {
+                html += `
+                    <div class="info-card">
+                        <h3><i class="fas fa-shopping-cart"></i> 項目明細 (${data.items.length} 項)</h3>
+                        <div class="table-container">
+                            <table class="items-table">
+                                <thead>
+                                    <tr>
+                                        <th>商品名稱</th>
+                                        <th>數量</th>
+                                        <th class="amount-col">單價</th>
+                                        <th class="amount-col">小計</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${data.items.map(item => `
+                                        <tr>
+                                            <td>${item.name || item.description || 'N/A'}</td>
+                                            <td class="qty-col">${item.quantity || 'N/A'}</td>
+                                            <td class="amount-col">$${formatNumber(item.unitPrice)}</td>
+                                            <td class="amount-col">$${formatNumber(item.subtotal)}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            html += '</div>';
+            return html;
+        }
+
+        // 創建詳情行
+        function createDetailRow(label, value) {
+            return `
+                <div class="detail-row">
+                    <span class="label">${label}:</span>
+                    <span class="value">${value}</span>
+                </div>
+            `;
+        }
+
+        // 格式化數字
+        function formatNumber(num) {
+            if (num === null || num === undefined || num === 'N/A') return 'N/A';
+            const n = parseFloat(num);
+            if (isNaN(n)) return 'N/A';
+            return n.toFixed(2);
+        }
+
+        // 計算預估成本 (Qwen-VL Max)
+        function calculateCost(totalTokens) {
+            if (!totalTokens || totalTokens === 'N/A') return 'N/A';
+            // Qwen-VL Max定價（假設平均價格）
+            const costPer1000Tokens = 0.0025; // USD
+            const costUSD = (totalTokens / 1000) * costPer1000Tokens;
+            const costHKD = costUSD * 7.8; // 轉換為港幣
+            return `HK$${costHKD.toFixed(4)}`;
         }
 
         // 頁面加載時的提示
