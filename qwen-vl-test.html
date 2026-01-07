@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qwen-VL Max 測試頁面 - VaultCaddy</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Qwen-VL 配置 -->
+    <script src="qwen-vl-config.js"></script>
+    <style>
+        /* 測試頁面專用樣式 */
+        .test-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+        .test-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+        .test-header h1 {
+            margin: 0 0 0.5rem 0;
+            font-size: 2rem;
+        }
+        .test-header p {
+            margin: 0;
+            opacity: 0.9;
+        }
+        .test-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        .test-tab {
+            padding: 1rem 2rem;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #6b7280;
+            transition: all 0.3s;
+        }
+        .test-tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        .test-tab:hover {
+            color: #667eea;
+        }
+        .test-content {
+            display: none;
+        }
+        .test-content.active {
+            display: block;
+        }
+        .upload-area {
+            border: 3px dashed #d1d5db;
+            border-radius: 12px;
+            padding: 3rem;
+            text-align: center;
+            background: #f9fafb;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f3f4f6;
+        }
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #ede9fe;
+        }
+        .upload-icon {
+            font-size: 4rem;
+            color: #9ca3af;
+            margin-bottom: 1rem;
+        }
+        .upload-text {
+            font-size: 1.125rem;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+        .upload-hint {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+        .file-input {
+            display: none;
+        }
+        .processing-status {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: #f3f4f6;
+            border-radius: 8px;
+            display: none;
+        }
+        .processing-status.active {
+            display: block;
+        }
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+        .status-icon {
+            width: 20px;
+            text-align: center;
+        }
+        .result-container {
+            margin-top: 2rem;
+            display: none;
+        }
+        .result-container.active {
+            display: block;
+        }
+        .result-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .result-card h3 {
+            margin: 0 0 1rem 0;
+            color: #111827;
+        }
+        .result-data {
+            background: #f9fafb;
+            padding: 1rem;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .error-message {
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+        .comparison-section {
+            margin-top: 3rem;
+            padding: 2rem;
+            background: #f9fafb;
+            border-radius: 12px;
+        }
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        .comparison-table th,
+        .comparison-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .comparison-table th {
+            background: #f3f4f6;
+            font-weight: 600;
+        }
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .badge-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="test-header">
+            <h1><i class="fas fa-flask"></i> Qwen-VL Max 測試頁面</h1>
+            <p>測試 Qwen-VL Max 對銀行對賬單和收據的處理效果（不影響現有系統）</p>
+        </div>
+
+        <div class="test-tabs">
+            <button class="test-tab active" onclick="switchTab('bank')">
+                <i class="fas fa-university"></i> 銀行對賬單測試
+            </button>
+            <button class="test-tab" onclick="switchTab('receipt')">
+                <i class="fas fa-receipt"></i> 收據測試
+            </button>
+        </div>
+
+        <!-- 銀行對賬單測試 -->
+        <div id="bank-test" class="test-content active">
+            <div class="upload-area" onclick="document.getElementById('bank-file-input').click()" 
+                 ondrop="handleDrop(event, 'bank')" 
+                 ondragover="handleDragOver(event)" 
+                 ondragleave="handleDragLeave(event)">
+                <div class="upload-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <div class="upload-text">點擊或拖放銀行對賬單文件</div>
+                <div class="upload-hint">支持 PDF、PNG、JPG 格式</div>
+                <input type="file" id="bank-file-input" class="file-input" 
+                       accept=".pdf,.png,.jpg,.jpeg" 
+                       onchange="handleFileSelect(event, 'bank')">
+            </div>
+
+            <div id="bank-processing" class="processing-status">
+                <div class="status-item">
+                    <div class="status-icon"><i class="fas fa-spinner fa-spin"></i></div>
+                    <div>
+                        <strong>處理中...</strong>
+                        <div id="bank-status-text">正在上傳文件到 Qwen-VL Max</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="bank-result" class="result-container">
+                <div class="result-card">
+                    <h3><i class="fas fa-file-alt"></i> 提取的數據</h3>
+                    <div id="bank-extracted-data" class="result-data"></div>
+                </div>
+                <div class="result-card">
+                    <h3><i class="fas fa-chart-line"></i> 處理統計</h3>
+                    <div id="bank-stats" class="result-data"></div>
+                </div>
+            </div>
+
+            <div id="bank-error" class="error-message" style="display: none;"></div>
+        </div>
+
+        <!-- 收據測試 -->
+        <div id="receipt-test" class="test-content">
+            <div class="upload-area" onclick="document.getElementById('receipt-file-input').click()" 
+                 ondrop="handleDrop(event, 'receipt')" 
+                 ondragover="handleDragOver(event)" 
+                 ondragleave="handleDragLeave(event)">
+                <div class="upload-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <div class="upload-text">點擊或拖放收據文件</div>
+                <div class="upload-hint">支持 PDF、PNG、JPG 格式</div>
+                <input type="file" id="receipt-file-input" class="file-input" 
+                       accept=".pdf,.png,.jpg,.jpeg" 
+                       onchange="handleFileSelect(event, 'receipt')">
+            </div>
+
+            <div id="receipt-processing" class="processing-status">
+                <div class="status-item">
+                    <div class="status-icon"><i class="fas fa-spinner fa-spin"></i></div>
+                    <div>
+                        <strong>處理中...</strong>
+                        <div id="receipt-status-text">正在上傳文件到 Qwen-VL Max</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="receipt-result" class="result-container">
+                <div class="result-card">
+                    <h3><i class="fas fa-file-alt"></i> 提取的數據</h3>
+                    <div id="receipt-extracted-data" class="result-data"></div>
+                </div>
+                <div class="result-card">
+                    <h3><i class="fas fa-chart-line"></i> 處理統計</h3>
+                    <div id="receipt-stats" class="result-data"></div>
+                </div>
+            </div>
+
+            <div id="receipt-error" class="error-message" style="display: none;"></div>
+        </div>
+
+        <!-- 對比分析 -->
+        <div class="comparison-section">
+            <h2><i class="fas fa-balance-scale"></i> 與現有系統對比</h2>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>項目</th>
+                        <th>Google Vision + DeepSeek</th>
+                        <th>Qwen-VL Max</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>處理步驟</td>
+                        <td>2步（OCR + 分析）</td>
+                        <td><span class="badge badge-success">1步（端到端）</span></td>
+                    </tr>
+                    <tr>
+                        <td>處理時間</td>
+                        <td>~12秒/頁</td>
+                        <td><span class="badge badge-success">~6秒/頁</span></td>
+                    </tr>
+                    <tr>
+                        <td>成本（HKD/頁）</td>
+                        <td>HK$0.6255</td>
+                        <td><span class="badge badge-success">HK$0.038</span></td>
+                    </tr>
+                    <tr>
+                        <td>手寫識別準確率</td>
+                        <td>75-80%</td>
+                        <td><span class="badge badge-success">96.5%</span></td>
+                    </tr>
+                    <tr>
+                        <td>多語言支持</td>
+                        <td>良好</td>
+                        <td><span class="badge badge-success">優秀（中英日韓）</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Qwen-VL Max 處理器
+        class QwenVLMaxProcessor {
+            constructor() {
+                // 從配置文件讀取 API Key
+                this.apiKey = typeof QWEN_VL_CONFIG !== 'undefined' ? QWEN_VL_CONFIG.apiKey : '';
+                this.apiUrl = typeof QWEN_VL_CONFIG !== 'undefined' ? QWEN_VL_CONFIG.apiUrl : 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions';
+                this.model = typeof QWEN_VL_CONFIG !== 'undefined' ? QWEN_VL_CONFIG.model : 'qwen-vl-max';
+                this.temperature = typeof QWEN_VL_CONFIG !== 'undefined' ? QWEN_VL_CONFIG.temperature : 0.1;
+                this.maxTokens = typeof QWEN_VL_CONFIG !== 'undefined' ? QWEN_VL_CONFIG.maxTokens : 4000;
+                
+                console.log('🤖 Qwen-VL Max 處理器初始化');
+                console.log(`   模型: ${this.model}`);
+                console.log(`   API URL: ${this.apiUrl}`);
+                if (!this.apiKey) {
+                    console.warn('⚠️ 未設置 API Key，請在 qwen-vl-config.js 中設置');
+                }
+            }
+
+            /**
+             * 將文件轉換為 Base64
+             */
+            async fileToBase64(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        const base64 = reader.result.split(',')[1];
+                        resolve(base64);
+                    };
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            /**
+             * 生成銀行對賬單的提示詞
+             */
+            generateBankStatementPrompt() {
+                return `請從這張銀行對賬單中提取以下信息，並以 JSON 格式返回：
+
+1. 銀行名稱
+2. 賬戶號碼
+3. 賬戶持有人
+4. 對賬單日期範圍（開始日期和結束日期）
+5. 期初餘額
+6. 期末餘額
+7. 交易記錄列表（每筆交易包含）：
+   - 交易日期
+   - 描述/備註
+   - 金額（正數為收入，負數為支出）
+   - 餘額
+
+請確保：
+- 所有日期格式為 YYYY-MM-DD
+- 所有金額為數字（不包含貨幣符號）
+- JSON 格式正確，可以直接解析
+
+返回格式示例：
+{
+  "bankName": "銀行名稱",
+  "accountNumber": "賬戶號碼",
+  "accountHolder": "賬戶持有人",
+  "statementPeriod": {
+    "startDate": "2026-01-01",
+    "endDate": "2026-01-31"
+  },
+  "openingBalance": 10000.00,
+  "closingBalance": 9500.00,
+  "transactions": [
+    {
+      "date": "2026-01-05",
+      "description": "交易描述",
+      "amount": -500.00,
+      "balance": 9500.00
+    }
+  ]
+}`;
+            }
+
+            /**
+             * 生成收據的提示詞
+             */
+            generateReceiptPrompt() {
+                return `請從這張收據中提取以下信息，並以 JSON 格式返回：
+
+1. 商家名稱
+2. 商家地址
+3. 收據日期
+4. 收據號碼/發票號碼
+5. 總金額
+6. 稅額（如果有的話）
+7. 支付方式
+8. 商品/服務列表（每項包含）：
+   - 商品名稱
+   - 數量
+   - 單價
+   - 小計
+
+請確保：
+- 所有日期格式為 YYYY-MM-DD
+- 所有金額為數字（不包含貨幣符號）
+- JSON 格式正確，可以直接解析
+
+返回格式示例：
+{
+  "merchantName": "商家名稱",
+  "merchantAddress": "商家地址",
+  "receiptDate": "2026-01-05",
+  "receiptNumber": "REC-001",
+  "totalAmount": 100.00,
+  "taxAmount": 10.00,
+  "paymentMethod": "信用卡",
+  "items": [
+    {
+      "name": "商品名稱",
+      "quantity": 2,
+      "unitPrice": 45.00,
+      "subtotal": 90.00
+    }
+  ]
+}`;
+            }
+
+            /**
+             * 處理文檔（銀行對賬單或收據）
+             */
+            async processDocument(file, documentType = 'bank') {
+                const startTime = Date.now();
+                console.log(`🚀 Qwen-VL Max 開始處理: ${file.name} (${documentType})`);
+
+                try {
+                    // 檢查 API Key
+                    if (!this.apiKey) {
+                        throw new Error('請先設置 Qwen-VL Max API Key');
+                    }
+
+                    // 將文件轉換為 Base64
+                    console.log('📸 步驟 1：轉換文件為 Base64...');
+                    const base64Image = await this.fileToBase64(file);
+                    const mimeType = file.type || 'image/jpeg';
+
+                    // 生成提示詞
+                    const prompt = documentType === 'bank' 
+                        ? this.generateBankStatementPrompt() 
+                        : this.generateReceiptPrompt();
+
+                    // 構建請求
+                    const requestBody = {
+                        model: this.model,
+                        messages: [
+                            {
+                                role: 'user',
+                                content: [
+                                    {
+                                        type: 'image',
+                                        image: `data:${mimeType};base64,${base64Image}`
+                                    },
+                                    {
+                                        type: 'text',
+                                        text: prompt
+                                    }
+                                ]
+                            }
+                        ],
+                        temperature: this.temperature,
+                        max_tokens: this.maxTokens
+                    };
+
+                    console.log('🧠 步驟 2：調用 Qwen-VL Max API...');
+                    
+                    // 調用 API
+                    const response = await fetch(this.apiUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${this.apiKey}`
+                        },
+                        body: JSON.stringify(requestBody)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(`API 錯誤: ${response.status} - ${errorData.error?.message || response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    const processingTime = Date.now() - startTime;
+
+                    // 提取響應文本
+                    let extractedText = '';
+                    if (data.choices && data.choices[0] && data.choices[0].message) {
+                        extractedText = data.choices[0].message.content;
+                    }
+
+                    // 嘗試解析 JSON
+                    let extractedData = null;
+                    try {
+                        // 提取 JSON 部分（如果響應包含其他文本）
+                        const jsonMatch = extractedText.match(/\{[\s\S]*\}/);
+                        if (jsonMatch) {
+                            extractedData = JSON.parse(jsonMatch[0]);
+                        } else {
+                            extractedData = JSON.parse(extractedText);
+                        }
+                    } catch (parseError) {
+                        console.warn('⚠️ 無法解析為 JSON，返回原始文本');
+                        extractedData = { rawText: extractedText };
+                    }
+
+                    console.log(`✅ 處理完成 (${processingTime}ms)`);
+
+                    return {
+                        success: true,
+                        documentType: documentType,
+                        extractedData: extractedData,
+                        rawText: extractedText,
+                        processingTime: processingTime,
+                        processor: 'qwen-vl-max',
+                        usage: data.usage || {}
+                    };
+
+                } catch (error) {
+                    console.error('❌ Qwen-VL Max 處理失敗:', error);
+                    throw error;
+                }
+            }
+        }
+
+        // 全局處理器實例
+        const qwenProcessor = new QwenVLMaxProcessor();
+
+        // Tab 切換
+        function switchTab(tab) {
+            // 更新 Tab 按鈕
+            document.querySelectorAll('.test-tab').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // 更新內容
+            document.querySelectorAll('.test-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`${tab}-test`).classList.add('active');
+
+            // 重置狀態
+            resetTest(tab);
+        }
+
+        // 重置測試狀態
+        function resetTest(type) {
+            document.getElementById(`${type}-processing`).classList.remove('active');
+            document.getElementById(`${type}-result`).classList.remove('active');
+            document.getElementById(`${type}-error`).style.display = 'none';
+        }
+
+        // 拖放處理
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('dragover');
+        }
+
+        function handleDrop(e, type) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0], type);
+            }
+        }
+
+        // 文件選擇處理
+        function handleFileSelect(e, type) {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file, type);
+            }
+        }
+
+        // 處理文件
+        async function handleFile(file, type) {
+            // 重置狀態
+            resetTest(type);
+
+            // 顯示處理狀態
+            const processingEl = document.getElementById(`${type}-processing`);
+            const statusTextEl = document.getElementById(`${type}-status-text`);
+            const resultEl = document.getElementById(`${type}-result`);
+            const errorEl = document.getElementById(`${type}-error`);
+
+            processingEl.classList.add('active');
+            errorEl.style.display = 'none';
+            resultEl.classList.remove('active');
+
+            try {
+                // 更新狀態
+                statusTextEl.textContent = `正在處理 ${file.name}...`;
+
+                // 調用 Qwen-VL Max 處理
+                const result = await qwenProcessor.processDocument(file, type);
+
+                // 隱藏處理狀態
+                processingEl.classList.remove('active');
+
+                // 顯示結果
+                displayResult(type, result);
+
+            } catch (error) {
+                console.error('處理錯誤:', error);
+                processingEl.classList.remove('active');
+                errorEl.textContent = `錯誤: ${error.message}`;
+                errorEl.style.display = 'block';
+            }
+        }
+
+        // 顯示結果
+        function displayResult(type, result) {
+            const resultEl = document.getElementById(`${type}-result`);
+            const extractedDataEl = document.getElementById(`${type}-extracted-data`);
+            const statsEl = document.getElementById(`${type}-stats`);
+
+            // 顯示提取的數據
+            extractedDataEl.textContent = JSON.stringify(result.extractedData, null, 2);
+
+            // 顯示統計信息
+            const stats = {
+                '處理時間': `${result.processingTime}ms`,
+                '處理器': result.processor,
+                '文檔類型': result.documentType,
+                '輸入 Token': result.usage.prompt_tokens || 'N/A',
+                '輸出 Token': result.usage.completion_tokens || 'N/A',
+                '總 Token': result.usage.total_tokens || 'N/A'
+            };
+            statsEl.textContent = JSON.stringify(stats, null, 2);
+
+            // 顯示結果容器
+            resultEl.classList.add('active');
+        }
+
+        // 頁面加載時的提示
+        window.addEventListener('DOMContentLoaded', () => {
+            if (!qwenProcessor.apiKey) {
+                alert('⚠️ 請先設置 Qwen-VL Max API Key！\n\n在 qwen-vl-test.html 中設置 qwenProcessor.apiKey');
+            }
+        });
+    </script>
+</body>
+</html>
+
