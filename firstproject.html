@@ -104,8 +104,8 @@
 <script defer="" src="email-verification-check.js"></script>
 <!-- 導航欄交互功能 -->
 <script defer="" src="navbar-interactions.js?v=20251108"></script>
-<!-- ✅ AI 處理器 -->
-<script defer="" src="hybrid-vision-deepseek.js?v=20251106-final-fix"></script>
+<!-- ✅ AI 處理器（Qwen-VL Max）-->
+<script defer="" src="qwen-vl-max-processor.js?v=20260107"></script>
 <script defer="" src="pdf-to-image-converter.js?v=20251114"></script>
 <!-- ✅ 文檔處理和導出 -->
 <script defer="" src="export-manager.js?v=20251106-final-fix"></script>
@@ -3636,13 +3636,13 @@
         
         async function processFileWithAI(file, docId, pages = 1) {
             try {
-                console.log('🤖 開始 AI 處理:', file.name, `(${pages} 頁)`);
+                console.log('🤖 開始 AI 處理 (Qwen-VL Max):', file.name, `(${pages} 頁)`);
                 
-                if (!window.HybridVisionDeepSeekProcessor) {
+                if (!window.QwenVLMaxProcessor) {
                     throw new Error('AI 處理器未載入');
                 }
                 
-                const processor = new window.HybridVisionDeepSeekProcessor();
+                const processor = new window.QwenVLMaxProcessor();
                 const result = await processor.processDocument(file, selectedDocumentType);
                 
                 console.log('✅ AI 處理完成');
@@ -3699,17 +3699,17 @@
                     // ✅ 添加到處理鎖
                     processingDocuments.add(docId);
                     console.log(`🔒 鎖定文檔 ${docId}，開始處理`);
-                    console.log(`🤖 開始多頁 AI 處理: ${files.length} 頁（方案 C：批量 OCR + 逐頁 DeepSeek）`);
+                    console.log(`🤖 開始多頁 AI 處理 (Qwen-VL Max): ${files.length} 頁`);
                     console.log(`🔍 [DEBUG] processMultiPageFileWithAI 收到的參數：`);
                     console.log(`   - documentType 類型: ${typeof documentType}`);
                     console.log(`   - documentType 值: "${documentType}"`);
                     console.log(`   - documentType 是否為 undefined: ${documentType === undefined}`);
                 
-                if (!window.HybridVisionDeepSeekProcessor) {
+                if (!window.QwenVLMaxProcessor) {
                     throw new Error('AI 處理器未載入');
                 }
                 
-                const processor = new window.HybridVisionDeepSeekProcessor();
+                const processor = new window.QwenVLMaxProcessor();
                 
                 // ✅ 方案 B：使用批量處理方法（批量 OCR + 單次 DeepSeek）
                 if (files.length > 1) {

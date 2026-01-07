@@ -221,7 +221,7 @@
 <!-- 내비게이션 바 인터랙션기능 -->
 <script defer="" src="../navbar-interactions.js?v=20251108"></script>
 <!-- ✅ AI 처리기 -->
-<script defer="" src="../hybrid-vision-deepseek.js?v=20251106-final-fix"></script>
+<script defer="" src="../qwen-vl-max-processor.js?v=20260107"></script>
 <script defer="" src="../pdf-to-image-converter.js?v=20251114"></script>
 <!-- ✅ 문서처리및내보내기 -->
 <script defer="" src="../export-manager.js?v=20251106-final-fix"></script>
@@ -3658,13 +3658,13 @@
         
         async function processFileWithAI(file, docId, pages = 1) {
             try {
-                console.log('🤖 시작 AI 처리:', file.name, `(${pages} 페이지)`);
+                console.log('🤖 시작 AI 처리 (Qwen-VL Max):', file.name, `(${pages} 페이지)`);
                 
-                if (!window.HybridVisionDeepSeekProcessor) {
+                if (!window.QwenVLMaxProcessor) {
                     throw new Error('AI 처리기미로드');
                 }
                 
-                const processor = new window.HybridVisionDeepSeekProcessor();
+                const processor = new window.QwenVLMaxProcessor();
                 const result = await processor.processDocument(file, selectedDocumentType);
                 
                 console.log('✅ AI 처리완료');
@@ -3721,13 +3721,13 @@
                     // ✅ 추가까지처리鎖
                     processingDocuments.add(docId);
                     console.log(`🔒 鎖설정문서 ${docId}，시작처리`);
-                    console.log(`🤖 시작다중 페이지 AI 처리: ${files.length} 페이지（방안 C：일괄 OCR + 逐페이지 DeepSeek）`);
+                    console.log(`🤖 시작다중 페이지 AI 처리 (Qwen-VL Max): ${files.length} 페이지`);
                 
-                if (!window.HybridVisionDeepSeekProcessor) {
+                if (!window.QwenVLMaxProcessor) {
                     throw new Error('AI 처리기미로드');
                 }
                 
-                const processor = new window.HybridVisionDeepSeekProcessor();
+                const processor = new window.QwenVLMaxProcessor();
                 
                 // ✅ 방안 B：사용일괄처리方法（일괄 OCR + 單次 DeepSeek）
                 if (files.length > 1) {

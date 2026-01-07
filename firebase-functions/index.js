@@ -1062,7 +1062,7 @@ async function addCredits(userId, amount, metadata = {}) {
 async function deductCredits(userId, amount, metadata = {}) {
     const userRef = db.collection('users').doc(userId);
     
-    await db.runTransaction(async (transaction) => {
+    const transactionResult = await db.runTransaction(async (transaction) => {
         const userDoc = await transaction.get(userRef);
         const userData = userDoc.data();
         const currentCredits = userData?.credits || 0;

@@ -237,7 +237,7 @@
 <!-- Navigation bar interactionFeatures -->
 <script defer="" src="../navbar-interactions.js?v=20251108"></script>
 <!-- ✅ AI Handler -->
-<script defer="" src="../hybrid-vision-deepseek.js?v=20251106-final-fix"></script>
+<script defer="" src="../qwen-vl-max-processor.js?v=20260107"></script>
 <script defer="" src="../pdf-to-image-converter.js?v=20251114"></script>
 <!-- ✅ DocumentHandle andExport -->
 <script defer="" src="../export-manager.js?v=20251106-final-fix"></script>
@@ -3674,13 +3674,13 @@
         
         async function processFileWithAI(file, docId, pages = 1) {
             try {
-                console.log('🤖 Start AI Process:', file.name, `(${pages} page)`);
+                console.log('🤖 Start AI Process (Qwen-VL Max):', file.name, `(${pages} page)`);
                 
-                if (!window.HybridVisionDeepSeekProcessor) {
+                if (!window.QwenVLMaxProcessor) {
                     throw new Error('AI HandlernotLoad');
                 }
                 
-                const processor = new window.HybridVisionDeepSeekProcessor();
+                const processor = new window.QwenVLMaxProcessor();
                 const result = await processor.processDocument(file, selectedDocumentType);
                 
                 console.log('✅ AI ProcessComplete');
@@ -3737,13 +3737,13 @@
                     // ✅ AddtoProcess鎖
                     processingDocuments.add(docId);
                     console.log(`🔒 鎖setDocument ${docId}，StartProcess`);
-                    console.log(`🤖 Startmulti-page AI Process: ${files.length} page（Plan C：Batch OCR + 逐page DeepSeek）`);
+                    console.log(`🤖 Startmulti-page AI Process (Qwen-VL Max): ${files.length} page`);
                 
-                if (!window.HybridVisionDeepSeekProcessor) {
+                if (!window.QwenVLMaxProcessor) {
                     throw new Error('AI HandlernotLoad');
                 }
                 
-                const processor = new window.HybridVisionDeepSeekProcessor();
+                const processor = new window.QwenVLMaxProcessor();
                 
                 // ✅ Plan B：UseBatchProcessMethod（Batch OCR + singletimes DeepSeek）
                 if (files.length > 1) {

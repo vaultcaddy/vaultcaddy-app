@@ -221,7 +221,7 @@
 <!-- ナビゲーションバーのインタラクション機能 -->
 <script defer="" src="../navbar-interactions.js?v=20251108"></script>
 <!-- ✅ AI 処理器 -->
-<script defer="" src="../hybrid-vision-deepseek.js?v=20251106-final-fix"></script>
+<script defer="" src="../qwen-vl-max-processor.js?v=20260107"></script>
 <script defer="" src="../pdf-to-image-converter.js?v=20251114"></script>
 <!-- ✅ 文書処理と導出 -->
 <script defer="" src="../export-manager.js?v=20251106-final-fix"></script>
@@ -3658,13 +3658,13 @@
         
         async function processFileWithAI(file, docId, pages = 1) {
             try {
-                console.log('🤖 開始 AI 処理:', file.name, `(${pages} 頁)`);
+                console.log('🤖 開始 AI 処理 (Qwen-VL Max):', file.name, `(${pages} 頁)`);
                 
-                if (!window.HybridVisionDeepSeekProcessor) {
+                if (!window.QwenVLMaxProcessor) {
                     throw new Error('AI 処理器未読み込み');
                 }
                 
-                const processor = new window.HybridVisionDeepSeekProcessor();
+                const processor = new window.QwenVLMaxProcessor();
                 const result = await processor.processDocument(file, selectedDocumentType);
                 
                 console.log('✅ AI 処理完了');
@@ -3721,13 +3721,13 @@
                     // ✅ 添加まで処理鎖
                     processingDocuments.add(docId);
                     console.log(`🔒 鎖定文書 ${docId}，開始処理`);
-                    console.log(`🤖 開始複数ページ AI 処理: ${files.length} 頁（プラン C：バッチ OCR + 逐頁 DeepSeek）`);
+                    console.log(`🤖 開始複数ページ AI 処理 (Qwen-VL Max): ${files.length} 頁`);
                 
-                if (!window.HybridVisionDeepSeekProcessor) {
+                if (!window.QwenVLMaxProcessor) {
                     throw new Error('AI 処理器未読み込み');
                 }
                 
-                const processor = new window.HybridVisionDeepSeekProcessor();
+                const processor = new window.QwenVLMaxProcessor();
                 
                 // ✅ プラン B：使用バッチ処理方法（バッチ OCR + 單次 DeepSeek）
                 if (files.length > 1) {
