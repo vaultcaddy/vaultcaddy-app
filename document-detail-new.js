@@ -24,7 +24,10 @@ const i18n = {
     'zh-TW': {
         verified: '已核對',
         date: '日期',
+        type: '類型',
         description: '描述',
+        payee: '收款人',
+        reference: '參考編號',
         amount: '金額',
         balance: '餘額',
         account_info: '帳戶信息',
@@ -59,7 +62,10 @@ const i18n = {
     'en': {
         verified: 'Verified',
         date: 'Date',
+        type: 'Type',
         description: 'Description',
+        payee: 'Payee',
+        reference: 'Reference',
         amount: 'Amount',
         balance: 'Balance',
         account_info: 'Account Information',
@@ -94,7 +100,10 @@ const i18n = {
     'ja': {
         verified: '確認済',
         date: '日付',
+        type: 'タイプ',
         description: '説明',
+        payee: '受取人',
+        reference: '参照番号',
         amount: '金額',
         balance: '残高',
         account_info: '口座情報',
@@ -129,7 +138,10 @@ const i18n = {
     'ko': {
         verified: '확인됨',
         date: '날짜',
+        type: '유형',
         description: '설명',
+        payee: '수취인',
+        reference: '참조번호',
         amount: '금액',
         balance: '잔액',
         account_info: '계정 정보',
@@ -1487,6 +1499,11 @@ function displayBankStatementContent(data) {
         // ✅ 優化描述顯示（保留完整名稱）
         const description = tx.description || tx.details || tx.memo || '—';
         
+        // ✅ 获取新字段数据
+        const transactionType = tx.transactionType || '—';
+        const payee = tx.payee || '—';
+        const referenceNumber = tx.referenceNumber || '—';
+        
         transactionsHTML += `
             <tr data-index="${actualIndex}">
                 <td class="checkbox-cell">
@@ -1497,7 +1514,10 @@ function displayBankStatementContent(data) {
                            onchange="handleTransactionCheckbox(${actualIndex}, this.checked)">
                 </td>
                 <td contenteditable="true" class="editable-cell" data-field="date" style="min-width: 100px;">${tx.date || '—'}</td>
+                <td contenteditable="true" class="editable-cell" data-field="transactionType" style="min-width: 100px; color: #6b7280; font-size: 0.85rem;">${transactionType}</td>
                 <td contenteditable="true" class="editable-cell" data-field="description" style="min-width: 200px;">${description}</td>
+                <td contenteditable="true" class="editable-cell" data-field="payee" style="min-width: 150px; color: #6b7280; font-size: 0.85rem;">${payee}</td>
+                <td contenteditable="true" class="editable-cell" data-field="referenceNumber" style="min-width: 100px; color: #6b7280; font-size: 0.85rem;">${referenceNumber}</td>
                 <td class="amount-cell" style="position: relative;">
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                         <button onclick="toggleTransactionType(${actualIndex})" 
@@ -1560,13 +1580,16 @@ function displayBankStatementContent(data) {
                     <tr>
                         <th class="checkbox-cell" style="font-size: 0.75rem; font-weight: 600; text-align: center;">${t('verified')}</th>
                         <th>${t('date')}</th>
+                        <th>${t('type')}</th>
                         <th>${t('description')}</th>
+                        <th>${t('payee')}</th>
+                        <th>${t('reference')}</th>
                         <th>${t('amount')}</th>
                         <th>${t('balance')}</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${transactionsHTML || `<tr><td colspan="5" style="text-align: center; padding: 2rem; color: #6b7280;">${t('no_transactions')}</td></tr>`}
+                    ${transactionsHTML || `<tr><td colspan="8" style="text-align: center; padding: 2rem; color: #6b7280;">${t('no_transactions')}</td></tr>`}
                 </tbody>
             </table>
             ${paginationHTML}
@@ -2257,8 +2280,14 @@ function setupTransactionEditListeners() {
             // 更新對應欄位
             if (field === 'date') {
                 transaction.date = value;
+            } else if (field === 'transactionType') {
+                transaction.transactionType = value;
             } else if (field === 'description') {
                 transaction.description = value;
+            } else if (field === 'payee') {
+                transaction.payee = value;
+            } else if (field === 'referenceNumber') {
+                transaction.referenceNumber = value;
             } else if (field === 'balance') {
                 transaction.balance = parseFloat(value.replace(/[^0-9.-]+/g, '')) || 0;
             }

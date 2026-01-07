@@ -1169,9 +1169,15 @@
                 box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05) !important;
             }
             
-            /* 隱藏部分不重要的列（Balance列） */
+            /* 🔥 手機版：隱藏部分不重要的列（Type, Payee, Reference, Balance列） */
+            table th:nth-child(3),
+            table td:nth-child(3),
             table th:nth-child(5),
-            table td:nth-child(5) {
+            table td:nth-child(5),
+            table th:nth-child(6),
+            table td:nth-child(6),
+            table th:nth-child(8),
+            table td:nth-child(8) {
                 display: none !important;
             }
             
@@ -1402,7 +1408,10 @@
                                 <input type="checkbox" onchange="toggleAllTransactions(this)">
                             </th>
                             <th>Date</th>
+                            <th>Type</th>
                             <th>Description</th>
+                            <th>Payee</th>
+                            <th>Reference</th>
                             <th>Amount</th>
                             <th>Balance</th>
                             <th class="action-cell">Actions</th>
@@ -1956,6 +1965,136 @@
             console.log('📊 最终样式: display=' + menu.style.display + ', position=' + menu.style.position + ', zIndex=' + menu.style.zIndex);
         };
         
+        // ✅ 生成 QBO 文件内容
+        function generateQBOFile(data) {
+            console.log('📊 生成 QBO 文件...');
+            
+            const now = new Date();
+            const formatQBODateTime = (date) => {
+                const d = new Date(date);
+                return d.getFullYear() + 
+                       String(d.getMonth() + 1).padStart(2, '0') + 
+                       String(d.getDate()).padStart(2, '0') + 
+                       String(d.getHours()).padStart(2, '0') + 
+                       String(d.getMinutes()).padStart(2, '0') + 
+                       String(d.getSeconds()).padStart(2, '0');
+            };
+            
+            const formatQBODate = (dateStr) => {
+                if (!dateStr) return formatQBODateTime(now);
+                const d = new Date(dateStr);
+                if (isNaN(d)) return formatQBODateTime(now);
+                return d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+            };
+            
+            const escapeXML = (str) => {
+                if (!str) return '';
+                return String(str)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&apos;');
+            };
+            
+            // 将交易类型映射到 OFX TRNTYPE
+            const mapTransactionType = (type) => {
+                if (!type) return 'OTHER';
+                const t = type.toLowerCase();
+                if (t.includes('deposit') || t.includes('存款') || t.includes('入账')) return 'CREDIT';
+                if (t.includes('withdraw') || t.includes('提款') || t.includes('转出')) return 'DEBIT';
+                if (t.includes('check') || t.includes('支票')) return 'CHECK';
+                if (t.includes('atm')) return 'ATM';
+                if (t.includes('pos') || t.includes('刷卡')) return 'POS';
+                if (t.includes('transfer') || t.includes('转账')) return 'XFER';
+                if (t.includes('payment') || t.includes('付款')) return 'PAYMENT';
+                if (t.includes('fee') || t.includes('费用')) return 'FEE';
+                if (t.includes('interest') || t.includes('利息')) return 'INT';
+                return 'OTHER';
+            };
+            
+            // QBO 文件头
+            let qbo = `OFXHEADER:100
+DATA:OFXSGML
+VERSION:102
+SECURITY:NONE
+ENCODING:USASCII
+CHARSET:1252
+COMPRESSION:NONE
+OLDFILEUID:NONE
+NEWFILEUID:NONE
+
+<OFX>
+<SIGNONMSGSRSV1>
+<SONRS>
+<STATUS>
+<CODE>0</CODE>
+<SEVERITY>INFO</SEVERITY>
+</STATUS>
+<DTSERVER>${formatQBODateTime(now)}</DTSERVER>
+<LANGUAGE>ENG</LANGUAGE>
+</SONRS>
+</SIGNONMSGSRSV1>
+<BANKMSGSRSV1>
+<STMTTRNRS>
+<TRNUID>1</TRNUID>
+<STATUS>
+<CODE>0</CODE>
+<SEVERITY>INFO</SEVERITY>
+</STATUS>
+<STMTRS>
+<CURDEF>${data.currency || 'HKD'}</CURDEF>
+<BANKACCTFROM>
+<BANKID>${escapeXML(data.bankCode || data.bankName || '000000000')}</BANKID>
+<ACCTID>${escapeXML(data.accountNumber || '123456789')}</ACCTID>
+<ACCTTYPE>CHECKING</ACCTTYPE>
+</BANKACCTFROM>
+<BANKTRANLIST>
+<DTSTART>${formatQBODateTime(now)}</DTSTART>
+<DTEND>${formatQBODateTime(now)}</DTEND>
+`;
+            
+            // 添加每笔交易
+            data.transactions.forEach((tx, index) => {
+                const amount = parseFloat(tx.amount || 0);
+                const trnType = mapTransactionType(tx.transactionType);
+                const payee = escapeXML(tx.payee || tx.description || '');
+                const memo = escapeXML(tx.memo || tx.referenceNumber || '');
+                
+                qbo += `<STMTTRN>
+<TRNTYPE>${trnType}</TRNTYPE>
+<DTPOSTED>${formatQBODate(tx.date)}</DTPOSTED>
+<TRNAMT>${amount.toFixed(2)}</TRNAMT>
+<FITID>${index + 1}</FITID>
+<NAME>${payee}</NAME>
+<MEMO>${memo}</MEMO>
+`;
+                
+                // 如果有支票号码，添加 CHECKNUM 字段
+                if (tx.checkNumber) {
+                    qbo += `<CHECKNUM>${escapeXML(tx.checkNumber)}</CHECKNUM>\n`;
+                }
+                
+                qbo += `</STMTTRN>
+`;
+            });
+            
+            // QBO 文件尾
+            qbo += `</BANKTRANLIST>
+<LEDGERBAL>
+<BALAMT>${parseFloat(data.closingBalance || data.balance || 0).toFixed(2)}</BALAMT>
+<DTASOF>${formatQBODateTime(now)}</DTASOF>
+</LEDGERBAL>
+</STMTRS>
+</STMTTRNRS>
+</BANKMSGSRSV1>
+</OFX>
+`;
+            
+            console.log('✅ QBO 文件生成完成');
+            return qbo;
+        }
+        
         // 导出文档（简化版，适配单文档）
         window.exportDocuments = async function(format) {
             console.log('📤 开始导出:', format);
@@ -1984,11 +2123,28 @@
                 switch(format) {
                     case 'bank_statement_csv':
                         if (data.transactions && data.transactions.length > 0) {
-                            csv = 'Date,Description,Amount,Balance\n';
+                            csv = 'Date,Type,Description,Payee,Reference,Amount,Balance\n';
                             data.transactions.forEach(t => {
-                                csv += `"${t.date || ''}","${t.description || ''}","${t.amount || 0}","${t.balance || 0}"\n`;
+                                csv += `"${t.date || ''}","${t.transactionType || ''}","${t.description || ''}","${t.payee || ''}","${t.referenceNumber || ''}","${t.amount || 0}","${t.balance || 0}"\n`;
                             });
                             filename = `BankStatement_${Date.now()}.csv`;
+                        }
+                        break;
+                        
+                    case 'qbo':
+                        if (data.transactions && data.transactions.length > 0) {
+                            const qboContent = generateQBOFile(data);
+                            const blob = new Blob([qboContent], { type: 'application/x-qbo;charset=utf-8;' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `BankStatement_${Date.now()}.qbo`;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+                            console.log('✅ QBO 已下载');
+                            return;
                         }
                         break;
                         
