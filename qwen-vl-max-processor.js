@@ -19,7 +19,7 @@
 class QwenVLMaxProcessor {
     constructor() {
         // Qwen-VL Max API (通过 Cloudflare Worker)
-        this.qwenWorkerUrl = 'https://qwen-vl-proxy.vaultcaddy.workers.dev';
+        this.qwenWorkerUrl = 'https://deepseek-proxy.vaultcaddy.workers.dev';
         this.qwenModel = 'qwen3-vl-plus-2025-12-19'; // ⭐ 推荐模型（2025-12-18 发布）
         
         // 处理统计
