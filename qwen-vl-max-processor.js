@@ -151,11 +151,19 @@ class QwenVLMaxProcessor {
      */
     async processMultiPageDocument(files, documentType = 'invoice') {
         const startTime = Date.now();
-        console.log(`\n🚀 [Qwen-VL Max] 批量处理多页文档 (${files.length} 页，单次API调用)`);
+        const MAX_IMAGES_PER_REQUEST = 2;  // ✅ 限制：每次最多2页
+        
+        console.log(`\n🚀 [Qwen-VL Max] 批量处理多页文档 (${files.length} 页)`);
+        
+        // ✅ 如果超过限制，分批处理
+        if (files.length > MAX_IMAGES_PER_REQUEST) {
+            console.log(`⚠️ 文档超过 ${MAX_IMAGES_PER_REQUEST} 页，将分 ${Math.ceil(files.length / MAX_IMAGES_PER_REQUEST)} 批处理`);
+            return this.processMultiPageInBatches(files, documentType, MAX_IMAGES_PER_REQUEST);
+        }
         
         try {
             // 1. 将所有文件转换为 Base64
-            console.log('📸 转换所有页面为 Base64...');
+            console.log(`📸 转换 ${files.length} 页为 Base64...`);
             const imageContents = [];
             for (let i = 0; i < files.length; i++) {
                 const base64Data = await this.fileToBase64(files[i]);
@@ -251,6 +259,180 @@ class QwenVLMaxProcessor {
             
         } catch (error) {
             console.error('❌ 批量处理失败:', error);
+            throw error;
+        }
+    }
+    
+    /**
+     * 分批处理多页文档（当页数超过限制时）
+     * @param {File[]} files - 图片文件数组
+     * @param {string} documentType - 'invoice' 或 'bank_statement'
+     * @param {number} batchSize - 每批处理的页数
+     * @returns {Object} 提取的结构化数据
+     */
+    async processMultiPageInBatches(files, documentType, batchSize) {
+        const startTime = Date.now();
+        const totalPages = files.length;
+        const totalBatches = Math.ceil(totalPages / batchSize);
+        
+        console.log(`\n🔄 [Qwen-VL Max] 分批处理模式`);
+        console.log(`   📊 总页数: ${totalPages}`);
+        console.log(`   📦 每批: ${batchSize} 页`);
+        console.log(`   🔢 总批次: ${totalBatches}`);
+        
+        try {
+            const allResults = [];
+            let totalUsage = {
+                prompt_tokens: 0,
+                completion_tokens: 0,
+                total_tokens: 0
+            };
+            const allResponses = [];
+            
+            // 分批处理
+            for (let i = 0; i < totalPages; i += batchSize) {
+                const batchNum = Math.floor(i / batchSize) + 1;
+                const batchStart = i;
+                const batchEnd = Math.min(i + batchSize, totalPages);
+                const batchFiles = files.slice(batchStart, batchEnd);
+                
+                console.log(`\n📦 [批次 ${batchNum}/${totalBatches}] 处理第 ${batchStart + 1}-${batchEnd} 页（共 ${batchFiles.length} 页）...`);
+                
+                // 调用单次处理（最多2页）
+                const batchResult = await this.processSingleBatch(batchFiles, documentType);
+                
+                allResults.push(batchResult.extractedData);
+                if (batchResult.rawResponse) {
+                    allResponses.push(batchResult.rawResponse);
+                }
+                if (batchResult.usage) {
+                    totalUsage.prompt_tokens += batchResult.usage.prompt_tokens || 0;
+                    totalUsage.completion_tokens += batchResult.usage.completion_tokens || 0;
+                    totalUsage.total_tokens += batchResult.usage.total_tokens || 0;
+                }
+                
+                console.log(`✅ [批次 ${batchNum}/${totalBatches}] 完成！耗时 ${batchResult.processingTime}ms`);
+            }
+            
+            // 合并所有批次的结果
+            const mergedData = this.mergeMultiPageResults(allResults, documentType);
+            
+            const totalTime = Date.now() - startTime;
+            
+            console.log(`\n🎉 分批处理完成！`);
+            console.log(`   📊 总页数: ${totalPages}`);
+            console.log(`   ⏱️  总耗时: ${totalTime}ms`);
+            console.log(`   📈 平均: ${(totalTime / totalPages).toFixed(0)}ms/页`);
+            console.log(`   💰 总成本: $${(this.calculateCost(totalUsage.total_tokens)).toFixed(4)}`);
+            
+            return {
+                success: true,
+                documentType: documentType,
+                extractedData: mergedData,
+                rawResponse: allResponses.join('\n---\n'),
+                pages: totalPages,
+                processingTime: totalTime,
+                processor: 'qwen-vl-max-batch-multi',  // 标记为分批处理
+                model: this.qwenModel,
+                usage: totalUsage
+            };
+            
+        } catch (error) {
+            console.error('❌ 分批处理失败:', error);
+            throw error;
+        }
+    }
+    
+    /**
+     * 处理单个批次（内部方法）
+     * @param {File[]} files - 图片文件数组（最多2页）
+     * @param {string} documentType - 'invoice' 或 'bank_statement'
+     * @returns {Object} 提取的结构化数据
+     */
+    async processSingleBatch(files, documentType) {
+        const startTime = Date.now();
+        
+        try {
+            // 1. 将文件转换为 Base64
+            const imageContents = [];
+            for (let i = 0; i < files.length; i++) {
+                const base64Data = await this.fileToBase64(files[i]);
+                const mimeType = files[i].type || 'image/jpeg';
+                imageContents.push({
+                    type: 'image_url',
+                    image_url: {
+                        url: `data:${mimeType};base64,${base64Data}`
+                    }
+                });
+            }
+            
+            // 2. 生成提示词
+            const prompt = this.generateMultiPagePrompt(documentType, files.length);
+            
+            // 3. 构建请求
+            const requestBody = {
+                model: this.qwenModel,
+                messages: [
+                    {
+                        role: 'user',
+                        content: [
+                            ...imageContents,
+                            {
+                                type: 'text',
+                                text: prompt
+                            }
+                        ]
+                    }
+                ],
+                temperature: 0.1,
+                max_tokens: 8000
+            };
+            
+            // 4. 调用 API
+            const response = await fetch(this.qwenWorkerUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(`Qwen-VL API 错误: ${response.status} - ${errorData.message || response.statusText}`);
+            }
+            
+            const data = await response.json();
+            
+            // 5. 提取响应文本
+            let responseText = '';
+            if (data.choices && data.choices[0] && data.choices[0].message) {
+                responseText = data.choices[0].message.content;
+            }
+            
+            if (!responseText) {
+                throw new Error('Qwen-VL 未返回有效响应');
+            }
+            
+            // 6. 解析 JSON
+            const extractedData = this.parseJSON(responseText);
+            
+            const totalTime = Date.now() - startTime;
+            
+            return {
+                success: true,
+                documentType: documentType,
+                extractedData: extractedData,
+                rawResponse: responseText,
+                pages: files.length,
+                processingTime: totalTime,
+                processor: 'qwen-vl-max',
+                model: this.qwenModel,
+                usage: data.usage || {}
+            };
+            
+        } catch (error) {
+            console.error('❌ 批次处理失败:', error);
             throw error;
         }
     }
