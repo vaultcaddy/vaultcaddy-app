@@ -265,29 +265,57 @@ class QwenVLMaxProcessor {
 必須提取的字段：
 {
   "bankName": "銀行名稱",
+  "bankCode": "銀行代碼（如 024）",
+  "branchName": "分行名稱",
   "accountNumber": "帳號",
   "accountHolder": "帳戶持有人",
-  "statementPeriod": "對賬單期間",
+  "accountAddress": "帳戶地址（完整地址）",
+  "statementPeriod": "對賬單期間（格式：YYYY-MM-DD to YYYY-MM-DD）",
+  "statementDate": "對賬單日期（YYYY-MM-DD 格式）",
   "currency": "貨幣（如 HKD, USD）",
   "openingBalance": 期初餘額（數字）,
   "closingBalance": 期末餘額（數字）,
+  "totalDeposits": 總存款（數字，如果有顯示）,
+  "totalWithdrawals": 總支出（數字，如果有顯示）,
   "transactions": [
     {
       "date": "日期（YYYY-MM-DD 格式）",
       "description": "交易描述",
       "amount": 金額（正數為入賬，負數為出賬）,
-      "balance": 餘額（數字）
+      "balance": 餘額（數字）,
+      "transactionType": "交易類型（Deposit/Withdrawal/Transfer/Fee/Interest/Check/ATM/POS/Wire/FPS/Other）",
+      "payee": "收款人或付款人名稱（如 SIC ALIPAY HK LTD，從描述中提取）",
+      "referenceNumber": "交易參考編號（如 FRN2021040700252614927，從描述中提取）",
+      "checkNumber": "支票號碼（如果描述中有 CHQ/CHEQUE 相關編號）",
+      "memo": "備註（額外信息，可選）"
     }
   ]
 }
 
 請確保：
-1. 所有交易記錄按日期排序
-2. 所有日期格式為 YYYY-MM-DD
-3. 所有金額為數字（不包含貨幣符號）
-4. JSON 格式正確，可以直接解析
-5. 如果某字段無法提取，設為 null
-6. 提取所有交易記錄（不要遺漏）`;
+1. 提取完整的帳戶地址（包括所有地址行）
+2. 提取分行名稱和銀行代碼
+3. statementPeriod 格式為 "YYYY-MM-DD to YYYY-MM-DD"
+4. 所有交易記錄按日期排序
+5. 所有日期格式為 YYYY-MM-DD
+6. 所有金額為數字（不包含貨幣符號和逗號）
+7. JSON 格式正確，可以直接解析
+8. 如果某字段無法提取，設為 null
+9. 提取所有交易記錄（不要遺漏）
+10. **重要**：根據交易描述智能判斷 transactionType：
+    - "存款/DEPOSIT/現金存款" → Deposit
+    - "轉帳/TRANSFER/FPS" → Transfer
+    - "提款/WITHDRAWAL/ATM" → ATM
+    - "支票/CHQ/CHEQUE" → Check
+    - "手續費/FEE" → Fee
+    - "利息/INTEREST" → Interest
+    - "ALIPAY/OCTOPUS/CARD" → POS
+    - "承上結欠/B/F BALANCE" → Opening Balance
+    - "過戶/C/F BALANCE" → Closing Balance
+11. payee 字段應提取商戶名稱（如 "SIC ALIPAY HK LTD"、"SCR OCTOPUS CARDS LTD"）
+12. referenceNumber 應提取括號中的參考編號（如 "(FRN2021040700252614927)"）
+
+只返回 JSON，不要包含任何額外文字。`;
         } else {
             // 發票
             return `你是一個專業的發票數據提取專家。請從圖片中提取所有發票資料，並以 JSON 格式返回。
@@ -333,30 +361,57 @@ class QwenVLMaxProcessor {
 必須提取的字段：
 {
   "bankName": "銀行名稱",
+  "bankCode": "銀行代碼（如 024）",
+  "branchName": "分行名稱",
   "accountNumber": "帳號",
   "accountHolder": "帳戶持有人",
-  "statementPeriod": "對賬單期間",
+  "accountAddress": "帳戶地址（完整地址）",
+  "statementPeriod": "對賬單期間（格式：YYYY-MM-DD to YYYY-MM-DD，如 2025-06-21 to 2025-07-22）",
+  "statementDate": "對賬單日期（YYYY-MM-DD 格式）",
   "currency": "貨幣（如 HKD, USD）",
-  "openingBalance": 期初餘額（數字）,
-  "closingBalance": 期末餘額（數字）,
+  "openingBalance": 期初餘額（數字，從第一筆交易的起始餘額或B/F Balance計算）,
+  "closingBalance": 期末餘額（數字），
+  "totalDeposits": 總存款（數字，如果有顯示）,
+  "totalWithdrawals": 總支出（數字，如果有顯示）,
   "transactions": [
     {
       "date": "日期（YYYY-MM-DD 格式）",
       "description": "交易描述",
       "amount": 金額（正數為入賬，負數為出賬）,
-      "balance": 餘額（數字）
+      "balance": 餘額（數字）,
+      "transactionType": "交易類型（Deposit/Withdrawal/Transfer/Fee/Interest/Check/ATM/POS/Wire/FPS/Other）",
+      "payee": "收款人或付款人名稱（如 SIC ALIPAY HK LTD，從描述中提取）",
+      "referenceNumber": "交易參考編號（如 FRN2021040700252614927，從描述中提取）",
+      "checkNumber": "支票號碼（如果描述中有 CHQ/CHEQUE 相關編號）",
+      "memo": "備註（額外信息，可選）"
     }
   ]
 }
 
 請特別注意：
 1. **綜合所有 ${pageCount} 頁的信息**，不要遺漏任何交易記錄
-2. 所有交易記錄按日期排序
-3. 所有日期格式為 YYYY-MM-DD
-4. 所有金額為數字（不包含貨幣符號）
-5. JSON 格式正確，可以直接解析
-6. 如果某字段無法提取，設為 null
-7. 確保交易記錄的連續性和完整性
+2. statementPeriod 必須是期間範圍（from date to date），從第一筆交易日期到最後一筆交易日期
+3. 如果第1頁只顯示截至日期的餘額，請從交易記錄頁面提取期初餘額
+4. 提取完整的帳戶地址（包括所有地址行）
+5. 提取分行名稱和銀行代碼（如 EAST POINT CITY, 024）
+6. 所有交易記錄按日期排序
+7. 所有日期格式為 YYYY-MM-DD
+8. 所有金額為數字（不包含貨幣符號和逗號）
+9. JSON 格式正確，可以直接解析
+10. 如果某字段無法提取，設為 null
+11. 確保交易記錄的連續性和完整性
+12. **重要**：根據交易描述智能判斷 transactionType：
+    - "存款/DEPOSIT/現金存款" → Deposit
+    - "轉帳/TRANSFER/FPS" → Transfer
+    - "提款/WITHDRAWAL/ATM" → ATM
+    - "支票/CHQ/CHEQUE" → Check
+    - "手續費/FEE" → Fee
+    - "利息/INTEREST" → Interest
+    - "ALIPAY/OCTOPUS/CARD" → POS
+    - "承上結欠/B/F BALANCE" → Opening Balance
+    - "過戶/C/F BALANCE" → Closing Balance
+13. payee 字段應提取商戶名稱（如 "SIC ALIPAY HK LTD"、"SCR OCTOPUS CARDS LTD"）
+14. referenceNumber 應提取括號中的參考編號（如 "(FRN2021040700252614927)"）
 
 只返回 JSON，不要包含任何額外文字。`;
         } else {
