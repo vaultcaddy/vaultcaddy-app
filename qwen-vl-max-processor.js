@@ -144,43 +144,113 @@ class QwenVLMaxProcessor {
     }
     
     /**
-     * 处理多页文档
+     * 处理多页文档（批量模式 - 一次性发送所有页面）✅ 推荐
      * @param {File[]} files - 图片文件数组
      * @param {string} documentType - 'invoice' 或 'bank_statement'
      * @returns {Object} 提取的结构化数据
      */
     async processMultiPageDocument(files, documentType = 'invoice') {
         const startTime = Date.now();
-        console.log(`\n🚀 [Qwen-VL Max] 开始处理多页文档 (${files.length} 页)`);
+        console.log(`\n🚀 [Qwen-VL Max] 批量处理多页文档 (${files.length} 页，单次API调用)`);
         
         try {
-            // 处理每一页
-            const results = [];
+            // 1. 将所有文件转换为 Base64
+            console.log('📸 转换所有页面为 Base64...');
+            const imageContents = [];
             for (let i = 0; i < files.length; i++) {
-                console.log(`\n📄 处理第 ${i + 1}/${files.length} 页...`);
-                const result = await this.processDocument(files[i], documentType);
-                results.push(result.extractedData);
+                const base64Data = await this.fileToBase64(files[i]);
+                const mimeType = files[i].type || 'image/jpeg';
+                imageContents.push({
+                    type: 'image_url',
+                    image_url: {
+                        url: `data:${mimeType};base64,${base64Data}`
+                    }
+                });
+                console.log(`   ✅ 页面 ${i + 1}/${files.length} 已转换`);
             }
             
-            // 合并结果
-            const mergedData = this.mergeMultiPageResults(results, documentType);
+            // 2. 生成提示词
+            const prompt = this.generateMultiPagePrompt(documentType, files.length);
+            
+            // 3. 构建请求（所有图片 + 提示词）
+            const requestBody = {
+                model: this.qwenModel,
+                messages: [
+                    {
+                        role: 'user',
+                        content: [
+                            ...imageContents,  // ✅ 所有图片
+                            {
+                                type: 'text',
+                                text: prompt
+                            }
+                        ]
+                    }
+                ],
+                temperature: 0.1,
+                max_tokens: 8000  // 多页需要更多 tokens
+            };
+            
+            console.log(`🧠 调用 Qwen-VL Max API（${files.length} 页，单次调用）...`);
+            
+            // 4. 调用 Qwen-VL API
+            const response = await fetch(this.qwenWorkerUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(`Qwen-VL API 错误: ${response.status} - ${errorData.message || response.statusText}`);
+            }
+            
+            const data = await response.json();
+            
+            // 5. 提取响应文本
+            let responseText = '';
+            if (data.choices && data.choices[0] && data.choices[0].message) {
+                responseText = data.choices[0].message.content;
+            }
+            
+            if (!responseText) {
+                throw new Error('Qwen-VL 未返回有效响应');
+            }
+            
+            // 6. 解析 JSON
+            const extractedData = this.parseJSON(responseText);
             
             const totalTime = Date.now() - startTime;
-            console.log(`\n✅ 多页文档处理完成 (${totalTime}ms)`);
-            console.log(`📊 平均处理时间: ${(totalTime / files.length).toFixed(0)}ms/页`);
+            
+            // 7. 更新统计
+            this.stats.documentsProcessed++;
+            this.stats.totalProcessingTime += totalTime;
+            if (data.usage && data.usage.total_tokens) {
+                this.stats.totalTokens += data.usage.total_tokens;
+                this.stats.totalCost += this.calculateCost(data.usage.total_tokens);
+            }
+            
+            console.log(`✅ 批量处理完成 (${totalTime}ms, ${files.length} 页)`);
+            console.log(`📊 平均: ${(totalTime / files.length).toFixed(0)}ms/页`);
+            console.log(`💰 成本: $${(this.calculateCost(data.usage?.total_tokens || 0)).toFixed(4)}`);
+            console.log(`🎉 节省: 相比逐页处理节省 ${((1 - 1/files.length) * 100).toFixed(0)}% 的API调用`);
             
             return {
                 success: true,
                 documentType: documentType,
-                extractedData: mergedData,
+                extractedData: extractedData,
+                rawResponse: responseText,
                 pages: files.length,
                 processingTime: totalTime,
-                processor: 'qwen-vl-max',
-                model: this.qwenModel
+                processor: 'qwen-vl-max-batch',  // 标记为批量处理
+                model: this.qwenModel,
+                usage: data.usage || {}
             };
             
         } catch (error) {
-            console.error('❌ 多页文档处理失败:', error);
+            console.error('❌ 批量处理失败:', error);
             throw error;
         }
     }
@@ -250,6 +320,80 @@ class QwenVLMaxProcessor {
 3. JSON 格式正確，可以直接解析
 4. 如果某字段無法提取，設為 null
 5. 提取所有項目明細（不要遺漏）`;
+        }
+    }
+    
+    /**
+     * 生成多页提示词
+     */
+    generateMultiPagePrompt(documentType, pageCount) {
+        if (documentType === 'bank_statement') {
+            return `你是一個專業的銀行對賬單數據提取專家。我發送了 ${pageCount} 張圖片，它們是同一份銀行對賬單的多個頁面。請綜合分析所有頁面，提取完整的交易記錄和帳戶資料，並以 JSON 格式返回。
+
+必須提取的字段：
+{
+  "bankName": "銀行名稱",
+  "accountNumber": "帳號",
+  "accountHolder": "帳戶持有人",
+  "statementPeriod": "對賬單期間",
+  "currency": "貨幣（如 HKD, USD）",
+  "openingBalance": 期初餘額（數字）,
+  "closingBalance": 期末餘額（數字）,
+  "transactions": [
+    {
+      "date": "日期（YYYY-MM-DD 格式）",
+      "description": "交易描述",
+      "amount": 金額（正數為入賬，負數為出賬）,
+      "balance": 餘額（數字）
+    }
+  ]
+}
+
+請特別注意：
+1. **綜合所有 ${pageCount} 頁的信息**，不要遺漏任何交易記錄
+2. 所有交易記錄按日期排序
+3. 所有日期格式為 YYYY-MM-DD
+4. 所有金額為數字（不包含貨幣符號）
+5. JSON 格式正確，可以直接解析
+6. 如果某字段無法提取，設為 null
+7. 確保交易記錄的連續性和完整性
+
+只返回 JSON，不要包含任何額外文字。`;
+        } else {
+            return `你是一個專業的發票數據提取專家。我發送了 ${pageCount} 張圖片，它們是同一份發票的多個頁面。請綜合分析所有頁面，提取完整的發票資料和項目明細，並以 JSON 格式返回。
+
+必須提取的字段：
+{
+  "invoiceNumber": "發票號碼",
+  "invoiceDate": "發票日期（YYYY-MM-DD 格式）",
+  "dueDate": "到期日（YYYY-MM-DD 格式）",
+  "vendor": "供應商名稱",
+  "vendorAddress": "供應商地址",
+  "customer": "客戶名稱",
+  "customerAddress": "客戶地址",
+  "currency": "貨幣（如 HKD, USD）",
+  "subtotal": 小計金額（數字）,
+  "tax": 稅額（數字）,
+  "total": 總金額（數字）,
+  "items": [
+    {
+      "description": "項目描述",
+      "quantity": 數量（數字）,
+      "unitPrice": 單價（數字）,
+      "amount": 金額（數字）
+    }
+  ]
+}
+
+請特別注意：
+1. **綜合所有 ${pageCount} 頁的信息**，不要遺漏任何項目明細
+2. 所有日期格式為 YYYY-MM-DD
+3. 所有金額為數字（不包含貨幣符號）
+4. JSON 格式正確，可以直接解析
+5. 如果某字段無法提取，設為 null
+6. 確保項目明細的完整性
+
+只返回 JSON，不要包含任何額外文字。`;
         }
     }
     
