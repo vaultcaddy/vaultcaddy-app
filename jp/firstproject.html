@@ -3671,7 +3671,12 @@
                 
                 await window.simpleDataManager.updateDocument(currentProjectId, docId, {
                     status: 'completed',
-                    processedData: result.data || result.extractedData
+                    processedData: result.data || result.extractedData,
+                    rawText: result.rawResponse || result.rawText || null,
+                    processingTime: result.processingTime,
+                    processor: result.processor,
+                    model: result.model,
+                    usage: result.usage
                 });
                 
                 console.log('✅ 文書ステータス已更新');
@@ -3746,11 +3751,12 @@
                     await window.simpleDataManager.updateDocument(currentProjectId, docId, {
                         status: 'completed',
                         processedData: result.extractedData,
-                        rawText: result.rawText,
-                        confidence: result.confidence,
+                        rawText: result.rawResponse || result.rawText || null,
                         processingTime: result.processingTime,
                         processor: result.processor,
-                        pageCount: result.pageCount,
+                        model: result.model,
+                        pages: result.pages || files.length,
+                        usage: result.usage,
                         processingProgress: 100
                     });
                     
@@ -3770,10 +3776,11 @@
                     await window.simpleDataManager.updateDocument(currentProjectId, docId, {
                         status: 'completed',
                         processedData: result.extractedData,
-                        rawText: result.rawText,
-                        confidence: result.confidence,
+                        rawText: result.rawResponse || result.rawText || null,
                         processingTime: result.processingTime,
                         processor: result.processor,
+                        model: result.model,
+                        usage: result.usage,
                         processingProgress: 100
                     });
                     
