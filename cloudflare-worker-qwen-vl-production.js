@@ -19,7 +19,7 @@
 // =====================================================
 
 // Qwen-VL Max API Key (阿里云百炼)
-const QWEN_API_KEY = 'sk-b4016d4560e44c6b925217578004aa9c';
+const QWEN_API_KEY = 
 
 // Qwen-VL API 端点 (新加坡地域 - 国际版)
 const QWEN_API_URL = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions';
