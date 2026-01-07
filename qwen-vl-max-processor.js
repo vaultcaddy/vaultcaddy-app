@@ -147,9 +147,10 @@ class QwenVLMaxProcessor {
      * 处理多页文档（批量模式 - 一次性发送所有页面）✅ 推荐
      * @param {File[]} files - 图片文件数组
      * @param {string} documentType - 'invoice' 或 'bank_statement'
+     * @param {Function} progressCallback - 进度回调函数 (currentBatch, totalBatches, progress)
      * @returns {Object} 提取的结构化数据
      */
-    async processMultiPageDocument(files, documentType = 'invoice') {
+    async processMultiPageDocument(files, documentType = 'invoice', progressCallback = null) {
         const startTime = Date.now();
         const MAX_IMAGES_PER_REQUEST = 2;  // ✅ 限制：每次最多2页
         
@@ -158,7 +159,7 @@ class QwenVLMaxProcessor {
         // ✅ 如果超过限制，分批处理
         if (files.length > MAX_IMAGES_PER_REQUEST) {
             console.log(`⚠️ 文档超过 ${MAX_IMAGES_PER_REQUEST} 页，将分 ${Math.ceil(files.length / MAX_IMAGES_PER_REQUEST)} 批处理`);
-            return this.processMultiPageInBatches(files, documentType, MAX_IMAGES_PER_REQUEST);
+            return this.processMultiPageInBatches(files, documentType, MAX_IMAGES_PER_REQUEST, progressCallback);
         }
         
         try {
@@ -268,9 +269,10 @@ class QwenVLMaxProcessor {
      * @param {File[]} files - 图片文件数组
      * @param {string} documentType - 'invoice' 或 'bank_statement'
      * @param {number} batchSize - 每批处理的页数
+     * @param {Function} progressCallback - 进度回调函数 (currentBatch, totalBatches, progress)
      * @returns {Object} 提取的结构化数据
      */
-    async processMultiPageInBatches(files, documentType, batchSize) {
+    async processMultiPageInBatches(files, documentType, batchSize, progressCallback = null) {
         const startTime = Date.now();
         const totalPages = files.length;
         const totalBatches = Math.ceil(totalPages / batchSize);
@@ -312,6 +314,18 @@ class QwenVLMaxProcessor {
                 }
                 
                 console.log(`✅ [批次 ${batchNum}/${totalBatches}] 完成！耗时 ${batchResult.processingTime}ms`);
+                
+                // ✅ 调用进度回调（如果提供）
+                if (progressCallback && typeof progressCallback === 'function') {
+                    const progress = Math.round((batchNum / totalBatches) * 90) + 10; // 10-100%
+                    console.log(`📊 更新进度: ${progress}% (${batchNum}/${totalBatches})`);
+                    try {
+                        await progressCallback(batchNum, totalBatches, progress);
+                    } catch (callbackError) {
+                        console.warn('⚠️ 进度回调执行失败:', callbackError);
+                        // 继续处理，不因回调失败而中断
+                    }
+                }
             }
             
             // 合并所有批次的结果

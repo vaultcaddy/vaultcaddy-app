@@ -3752,20 +3752,29 @@
                 
                 // ✅ Plan B：UseBatchProcessMethod（Batch OCR + singletimes DeepSeek）
                 if (files.length > 1) {
-                    console.log(`📚 UseBatchProcessmode（${files.length} page）`);
+                    console.log(`📚 Using batch processing mode (${files.length} pages)`);
                     
-                    // UpdateStatusasProcessing
+                    // Update status to processing
                     await window.simpleDataManager.updateDocument(currentProjectId, docId, {
                         status: 'processing',
                         processingProgress: 10
                     });
                     
-                    // BatchProcess所Haspage
-                    const result = await processor.processMultiPageDocument(files, documentType);
+                    // ✅ Define progress callback function
+                    const progressCallback = async (currentBatch, totalBatches, progress) => {
+                        console.log(`🔄 [Progress Update] Batch ${currentBatch}/${totalBatches} - ${progress}%`);
+                        await window.simpleDataManager.updateDocument(currentProjectId, docId, {
+                            status: 'processing',  // ⚠️ Keep as processing, don't change to completed
+                            processingProgress: progress
+                        });
+                    };
                     
-                    // UpdateasCompleted
+                    // Batch process all pages (pass progress callback)
+                    const result = await processor.processMultiPageDocument(files, documentType, progressCallback);
+                    
+                    // Update to completed
                     await window.simpleDataManager.updateDocument(currentProjectId, docId, {
-                        status: 'completed',
+                        status: 'completed',  // ✅ Only update to completed after all batches finish
                         processedData: result.extractedData,
                         rawText: result.rawResponse || result.rawText || null,
                         processingTime: result.processingTime,
@@ -3776,7 +3785,7 @@
                         processingProgress: 100
                     });
                     
-                    console.log('✅ BatchProcessComplete');
+                    console.log('✅ Batch processing completed');
                     
                 } else {
                     // singlepageDocument，UseoriginalHaslogic

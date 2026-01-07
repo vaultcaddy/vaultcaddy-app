@@ -3736,20 +3736,29 @@
                 
                 // ✅ 방안 B：사용일괄처리方法（일괄 OCR + 單次 DeepSeek）
                 if (files.length > 1) {
-                    console.log(`📚 사용일괄처리模式（${files.length} 페이지）`);
+                    console.log(`📚 사용 일괄 처리 모드 (${files.length} 페이지)`);
                     
-                    // 업데이트상태로서처리 중
+                    // 업데이트 상태로서 처리 중
                     await window.simpleDataManager.updateDocument(currentProjectId, docId, {
                         status: 'processing',
                         processingProgress: 10
                     });
                     
-                    // 일괄처리모든페이지
-                    const result = await processor.processMultiPageDocument(files, documentType);
+                    // ✅ 진행 상황 콜백 함수 정의
+                    const progressCallback = async (currentBatch, totalBatches, progress) => {
+                        console.log(`🔄 [진행 상황 업데이트] 배치 ${currentBatch}/${totalBatches} - ${progress}%`);
+                        await window.simpleDataManager.updateDocument(currentProjectId, docId, {
+                            status: 'processing',  // ⚠️ processing으로 유지, completed로 변경하지 마세요
+                            processingProgress: progress
+                        });
+                    };
                     
-                    // 업데이트로서완료됨
+                    // 일괄 처리 모든 페이지 (진행 상황 콜백 전달)
+                    const result = await processor.processMultiPageDocument(files, documentType, progressCallback);
+                    
+                    // 업데이트로서 완료됨
                     await window.simpleDataManager.updateDocument(currentProjectId, docId, {
-                        status: 'completed',
+                        status: 'completed',  // ✅ 모든 배치가 완료된 후에만 completed로 업데이트
                         processedData: result.extractedData,
                         rawText: result.rawResponse || result.rawText || null,
                         processingTime: result.processingTime,
@@ -3760,7 +3769,7 @@
                         processingProgress: 100
                     });
                     
-                    console.log('✅ 일괄처리완료');
+                    console.log('✅ 일괄 처리 완료');
                     
                 } else {
                     // 單페이지문서，사용原있음邏輯

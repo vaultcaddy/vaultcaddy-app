@@ -3726,12 +3726,21 @@
                         processingProgress: 10
                     });
                     
-                    // 批量處理所有頁面
-                    const result = await processor.processMultiPageDocument(files, documentType);
+                    // ✅ 定義進度回調函數
+                    const progressCallback = async (currentBatch, totalBatches, progress) => {
+                        console.log(`🔄 [進度更新] 批次 ${currentBatch}/${totalBatches} - ${progress}%`);
+                        await window.simpleDataManager.updateDocument(currentProjectId, docId, {
+                            status: 'processing',  // ⚠️ 保持為 processing，不要改為 completed
+                            processingProgress: progress
+                        });
+                    };
+                    
+                    // 批量處理所有頁面（傳遞進度回調）
+                    const result = await processor.processMultiPageDocument(files, documentType, progressCallback);
                     
                     // 更新為已完成
                     await window.simpleDataManager.updateDocument(currentProjectId, docId, {
-                        status: 'completed',
+                        status: 'completed',  // ✅ 只有在所有批次完成後才更新為 completed
                         processedData: result.extractedData,
                         rawText: result.rawResponse || result.rawText || null,
                         processingTime: result.processingTime,

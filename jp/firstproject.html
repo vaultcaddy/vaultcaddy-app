@@ -3736,20 +3736,29 @@
                 
                 // ✅ プラン B：使用バッチ処理方法（バッチ OCR + 單次 DeepSeek）
                 if (files.length > 1) {
-                    console.log(`📚 使用バッチ処理模式（${files.length} 頁）`);
+                    console.log(`📚 バッチ処理モード使用 (${files.length} ページ)`);
                     
-                    // 更新ステータスとして処理中
+                    // ステータスを処理中に更新
                     await window.simpleDataManager.updateDocument(currentProjectId, docId, {
                         status: 'processing',
                         processingProgress: 10
                     });
                     
-                    // バッチ処理すべてページ
-                    const result = await processor.processMultiPageDocument(files, documentType);
+                    // ✅ 進行状況コールバック関数を定義
+                    const progressCallback = async (currentBatch, totalBatches, progress) => {
+                        console.log(`🔄 [進行状況更新] バッチ ${currentBatch}/${totalBatches} - ${progress}%`);
+                        await window.simpleDataManager.updateDocument(currentProjectId, docId, {
+                            status: 'processing',  // ⚠️ processing のまま維持、completed に変更しないでください
+                            processingProgress: progress
+                        });
+                    };
                     
-                    // 更新として完了
+                    // すべてのページをバッチ処理 (進行状況コールバックを渡す)
+                    const result = await processor.processMultiPageDocument(files, documentType, progressCallback);
+                    
+                    // 完了として更新
                     await window.simpleDataManager.updateDocument(currentProjectId, docId, {
-                        status: 'completed',
+                        status: 'completed',  // ✅ すべてのバッチが完了した後にのみ completed に更新
                         processedData: result.extractedData,
                         rawText: result.rawResponse || result.rawText || null,
                         processingTime: result.processingTime,
