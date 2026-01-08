@@ -2203,42 +2203,54 @@ exports.createStripeCheckoutSession = functions.https.onCall(async (data, contex
     }
     
     // 🎯 定義價格 ID（生產模式 - 正式版）
-    // 🆕 2026-01-08 更新：使用新的多貨幣單一價格（每個 Price 支持 6 種貨幣）
+    // 🆕 2026-01-08 更新：使用新的多貨幣單一價格 + 保留超額計費
     const productionPriceMapping = {
-        monthly: 'price_1SnF6hJmiQ31C0GT0QSOiXVI',  // ✅ 月費 HKD $28/月（支持 HKD/USD/JPY/KRW/EUR/GBP）
-        yearly: 'price_1SnF6hJmiQ31C0GT8SvegPzM'    // ✅ 年費 HKD $264/年 (每月 $22)（支持 HKD/USD/JPY/KRW/EUR/GBP）
+        monthly: {
+            basePriceId: 'price_1SnF6hJmiQ31C0GT0QSOiXVI',  // ✅ 月費 HKD $28/月（支持 HKD/USD/JPY/KRW/EUR/GBP）
+            usagePriceId: 'price_1SfZQQJmiQ31C0GTeUu6TSXE'  // ✅ 超額計費（和之前一樣）
+        },
+        yearly: {
+            basePriceId: 'price_1SnF6hJmiQ31C0GT8SvegPzM',   // ✅ 年費 HKD $264/年（支持 HKD/USD/JPY/KRW/EUR/GBP）
+            usagePriceId: 'price_1SfZQVJmiQ31C0GTOYgabmaJ'   // ✅ 超額計費（和之前一樣）
+        }
     };
     
-    // 🧪 定義測試模式價格 ID（使用生產環境相同的價格，或創建測試專用價格）
-    // 如果需要測試，建議在 Stripe Test Mode 中創建相同配置的測試價格
+    // 🧪 定義測試模式價格 ID（使用生產環境相同的價格）
     const testPriceMapping = {
-        monthly: 'price_1SnF6hJmiQ31C0GT0QSOiXVI',  // 測試月費（暫時使用生產價格，建議創建測試專用）
-        yearly: 'price_1SnF6hJmiQ31C0GT8SvegPzM'    // 測試年費（暫時使用生產價格，建議創建測試專用）
+        monthly: {
+            basePriceId: 'price_1SnF6hJmiQ31C0GT0QSOiXVI',  // 測試月費
+            usagePriceId: 'price_1SfZQQJmiQ31C0GTeUu6TSXE'  // 測試超額計費
+        },
+        yearly: {
+            basePriceId: 'price_1SnF6hJmiQ31C0GT8SvegPzM',   // 測試年費
+            usagePriceId: 'price_1SfZQVJmiQ31C0GTOYgabmaJ'   // 測試超額計費
+        }
     };
     
     // 根據 isTest 選擇對應的 Price Mapping
     const priceMapping = isTest ? testPriceMapping : productionPriceMapping;
     
-    const selectedPriceId = priceMapping[planType];
+    const selectedPlan = priceMapping[planType];
     
-    if (!selectedPriceId) {
+    if (!selectedPlan) {
         console.error('❌ 無效的計劃類型:', planType);
         throw new functions.https.HttpsError('invalid-argument', '無效的訂閱計劃');
     }
     
     try {
-        console.log('📝 創建 Checkout Session，價格 ID:', selectedPriceId, '模式:', isTest ? '測試' : '生產');
+        console.log('📝 創建 Checkout Session，價格:', selectedPlan, '模式:', isTest ? '測試' : '生產');
         
         // 🎯 創建 Checkout Session（使用對應模式的客戶端）
-        // 🆕 2026-01-08：使用簡化的單一價格系統，每個價格支持多種貨幣
+        // 🆕 2026-01-08：使用多貨幣價格 + 保留超額計費
         const session = await stripeClient.checkout.sessions.create({
             mode: 'subscription',
             payment_method_types: ['card'],  // 只显示信用卡支付
             line_items: [
                 {
-                    price: selectedPriceId,  // 單一訂閱價格（包含所有貨幣選項）
+                    price: selectedPlan.basePriceId,  // 基礎訂閱價格（包含所有貨幣選項）
                     quantity: 1
                 }
+                // ⚠️ 注意：usagePriceId 在訂閱創建後由 Billing Meter 自動關聯
             ],
             customer_email: email,  // 自動填充 email
             client_reference_id: userId,  // 傳遞 userId
