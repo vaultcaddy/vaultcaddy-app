@@ -28,8 +28,16 @@ const i18n = {
         description: '描述',
         payee: '收款人',
         reference: '參考編號',
+        checkNumber: '支票號碼',
+        category: '分類',
+        memo: '備注',
+        reconciled: '已對賬',
+        attachment: '附件',
         amount: '金額',
         balance: '餘額',
+        bankCode: '銀行代碼',
+        branchName: '分行名稱',
+        accountType: '賬戶類型',
         account_info: '帳戶信息',
         editable: '(可編輯)',
         bank_name: '銀行名稱',
@@ -66,8 +74,16 @@ const i18n = {
         description: 'Description',
         payee: 'Payee',
         reference: 'Reference',
+        checkNumber: 'Check #',
+        category: 'Category',
+        memo: 'Memo',
+        reconciled: 'Reconciled',
+        attachment: 'Attach',
         amount: 'Amount',
         balance: 'Balance',
+        bankCode: 'Bank Code',
+        branchName: 'Branch',
+        accountType: 'Account Type',
         account_info: 'Account Information',
         editable: '(Editable)',
         bank_name: 'Bank Name',
@@ -104,8 +120,16 @@ const i18n = {
         description: '説明',
         payee: '受取人',
         reference: '参照番号',
+        checkNumber: '小切手番号',
+        category: 'カテゴリー',
+        memo: 'メモ',
+        reconciled: '照合済',
+        attachment: '添付',
         amount: '金額',
         balance: '残高',
+        bankCode: '銀行コード',
+        branchName: '支店名',
+        accountType: '口座種類',
         account_info: '口座情報',
         editable: '(編集可)',
         bank_name: '銀行名',
@@ -142,8 +166,16 @@ const i18n = {
         description: '설명',
         payee: '수취인',
         reference: '참조번호',
+        checkNumber: '수표번호',
+        category: '카테고리',
+        memo: '메모',
+        reconciled: '조정완료',
+        attachment: '첨부',
         amount: '금액',
         balance: '잔액',
+        bankCode: '은행코드',
+        branchName: '지점명',
+        accountType: '계좌유형',
         account_info: '계정 정보',
         editable: '(편집 가능)',
         bank_name: '은행명',
@@ -1383,9 +1415,26 @@ function displayBankStatementContent(data) {
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">
+                        ${t('bankCode')}
+                        <span style="color: #9ca3af; font-weight: normal; font-size: 0.7rem;">(如: 024, 004)</span>
+                    </label>
+                    <input type="text" id="bankCode" value="${data.bankCode || ''}" 
+                           onchange="autoSaveBankStatementDetails()"
+                           placeholder="024"
+                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
+                </div>
+                <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
                     <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('account_number')}</label>
                     <input type="text" id="accountNumber" value="${accountNumber}" 
                            onchange="autoSaveBankStatementDetails()"
+                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
+                </div>
+                <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('branchName')}</label>
+                    <input type="text" id="branchName" value="${data.branchName || ''}" 
+                           onchange="autoSaveBankStatementDetails()"
+                           placeholder="${currentLang === 'zh-TW' ? '中環分行' : 'Central Branch'}"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
@@ -1393,6 +1442,17 @@ function displayBankStatementContent(data) {
                     <input type="text" id="accountHolder" value="${accountHolder}" 
                            onchange="autoSaveBankStatementDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
+                </div>
+                <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('accountType')}</label>
+                    <select id="accountType" 
+                            onchange="autoSaveBankStatementDetails()"
+                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white; cursor: pointer;">
+                        <option value="CHECKING" ${(data.accountType || 'CHECKING') === 'CHECKING' ? 'selected' : ''}>${currentLang === 'zh-TW' ? '支票賬戶' : 'Checking'}</option>
+                        <option value="SAVINGS" ${data.accountType === 'SAVINGS' ? 'selected' : ''}>${currentLang === 'zh-TW' ? '儲蓄賬戶' : 'Savings'}</option>
+                        <option value="CREDITCARD" ${data.accountType === 'CREDITCARD' ? 'selected' : ''}>${currentLang === 'zh-TW' ? '信用卡' : 'Credit Card'}</option>
+                        <option value="MONEYMRKT" ${data.accountType === 'MONEYMRKT' ? 'selected' : ''}>${currentLang === 'zh-TW' ? '貨幣市場' : 'Money Market'}</option>
+                    </select>
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
                     <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('currency')}</label>
@@ -1499,13 +1559,18 @@ function displayBankStatementContent(data) {
         // ✅ 優化描述顯示（保留完整名稱）
         const description = tx.description || tx.details || tx.memo || '—';
         
-        // ✅ 获取新字段数据
+        // ✅ 获取所有字段数据
         const transactionType = tx.transactionType || '—';
         const payee = tx.payee || '—';
-        const referenceNumber = tx.referenceNumber || '—';
+        const referenceNumber = tx.referenceNumber || '';
+        const checkNumber = tx.checkNumber || '';
+        const category = tx.category || '';
+        const memo = tx.memo || '';
+        const reconciled = tx.reconciled || false;
+        const hasAttachment = tx.hasAttachment || false;
         
         transactionsHTML += `
-            <tr data-index="${actualIndex}">
+            <tr data-index="${actualIndex}" class="transaction-row">
                 <td class="checkbox-cell">
                     <input type="checkbox" 
                            class="transaction-checkbox" 
@@ -1513,11 +1578,49 @@ function displayBankStatementContent(data) {
                            ${tx.checked ? 'checked' : ''}
                            onchange="handleTransactionCheckbox(${actualIndex}, this.checked)">
                 </td>
+                <td class="reconciled-cell">
+                    <input type="checkbox" 
+                           class="reconciled-checkbox" 
+                           data-index="${actualIndex}"
+                           ${reconciled ? 'checked' : ''}
+                           onchange="handleReconciledChange(${actualIndex}, this.checked)"
+                           title="${reconciled ? '已對賬' : '未對賬'}">
+                </td>
                 <td contenteditable="true" class="editable-cell" data-field="date" style="min-width: 100px;">${tx.date || '—'}</td>
                 <td contenteditable="true" class="editable-cell" data-field="transactionType" style="min-width: 100px; color: #6b7280; font-size: 0.85rem;">${transactionType}</td>
-                <td contenteditable="true" class="editable-cell" data-field="description" style="min-width: 200px;">${description}</td>
+                <td style="position: relative;">
+                    <div style="display: flex; align-items: center; gap: 0.25rem;">
+                        <div contenteditable="true" class="editable-cell" data-field="description" style="min-width: 200px; flex: 1;">${description}</div>
+                        <button class="expand-btn ${memo ? 'active' : ''}" onclick="toggleMemo(${actualIndex})" title="備注">
+                            <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
+                        </button>
+                    </div>
+                </td>
                 <td contenteditable="true" class="editable-cell" data-field="payee" style="min-width: 150px; color: #6b7280; font-size: 0.85rem;">${payee}</td>
                 <td contenteditable="true" class="editable-cell" data-field="referenceNumber" style="min-width: 100px; color: #6b7280; font-size: 0.85rem;">${referenceNumber}</td>
+                <td contenteditable="true" class="editable-cell" data-field="checkNumber" style="min-width: 80px; color: #6b7280; font-size: 0.85rem;">${checkNumber}</td>
+                <td>
+                    <select class="category-select" data-index="${actualIndex}" onchange="handleCategoryChange(${actualIndex}, this.value)">
+                        <option value="">未分類</option>
+                        <optgroup label="收入類別">
+                            <option value="salary" ${category === 'salary' ? 'selected' : ''}>工資</option>
+                            <option value="sales" ${category === 'sales' ? 'selected' : ''}>銷售收入</option>
+                            <option value="interest" ${category === 'interest' ? 'selected' : ''}>利息收入</option>
+                            <option value="other-income" ${category === 'other-income' ? 'selected' : ''}>其他收入</option>
+                        </optgroup>
+                        <optgroup label="支出類別">
+                            <option value="office" ${category === 'office' ? 'selected' : ''}>辦公費用</option>
+                            <option value="transport" ${category === 'transport' ? 'selected' : ''}>交通費用</option>
+                            <option value="meal" ${category === 'meal' ? 'selected' : ''}>餐飲費用</option>
+                            <option value="utilities" ${category === 'utilities' ? 'selected' : ''}>水電費</option>
+                            <option value="rent" ${category === 'rent' ? 'selected' : ''}>租金</option>
+                            <option value="salary-expense" ${category === 'salary-expense' ? 'selected' : ''}>工資支出</option>
+                            <option value="marketing" ${category === 'marketing' ? 'selected' : ''}>營銷費用</option>
+                            <option value="supplies" ${category === 'supplies' ? 'selected' : ''}>耗材</option>
+                            <option value="other-expense" ${category === 'other-expense' ? 'selected' : ''}>其他支出</option>
+                        </optgroup>
+                    </select>
+                </td>
                 <td class="amount-cell" style="position: relative;">
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                         <button onclick="toggleTransactionType(${actualIndex})" 
@@ -1537,6 +1640,32 @@ function displayBankStatementContent(data) {
                     </div>
                 </td>
                 <td contenteditable="true" class="editable-cell" data-field="balance" style="text-align: right; font-weight: 600; color: #3b82f6;">${formatCurrency(balance)}</td>
+                <td class="attachment-cell">
+                    <i class="fas fa-paperclip attachment-icon ${hasAttachment ? 'has-attachment' : 'no-attachment'}" 
+                       onclick="handleAttachment(${actualIndex})"
+                       title="${hasAttachment ? '查看附件' : '添加附件'}"></i>
+                </td>
+                <td class="action-cell">
+                    <div class="action-btns">
+                        <button class="icon-btn" onclick="editTransaction(${actualIndex})" title="編輯">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="icon-btn delete" onclick="deleteTransaction(${actualIndex})" title="刪除">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            <tr class="memo-row ${memo ? 'active' : ''}" data-index="${actualIndex}">
+                <td colspan="13" style="padding: 0.5rem 3rem; background: #f9fafb;">
+                    <div style="display: flex; align-items: flex-start; gap: 0.5rem;">
+                        <i class="fas fa-sticky-note" style="color: #6b7280; margin-top: 0.5rem;"></i>
+                        <textarea class="memo-textarea" 
+                                  placeholder="添加備注..." 
+                                  data-index="${actualIndex}"
+                                  onchange="handleMemoChange(${actualIndex}, this.value)">${memo}</textarea>
+                    </div>
+                </td>
             </tr>
         `;
     });
@@ -2429,6 +2558,108 @@ function extractOtherAccounts(data) {
     countSpan.textContent = `(${totalCount})`;
     
     console.log(`   ✅ 找到 ${totalCount} 個其他賬戶`);
+}
+
+// ============================================
+// 新功能處理函數
+// ============================================
+
+/**
+ * 展開/折疊備注行
+ */
+function toggleMemo(index) {
+    const memoRow = document.querySelector(`.memo-row[data-index="${index}"]`);
+    const expandBtn = document.querySelector(`.expand-btn[onclick*="${index}"]`);
+    
+    if (memoRow && expandBtn) {
+        memoRow.classList.toggle('active');
+        expandBtn.classList.toggle('active');
+    }
+}
+
+/**
+ * 處理分類更改
+ */
+function handleCategoryChange(index, category) {
+    console.log(`📁 更新交易 ${index} 的分類:`, category);
+    
+    if (!currentDocument || !currentDocument.processedData) return;
+    
+    const transactions = currentDocument.processedData.transactions || [];
+    if (transactions[index]) {
+        transactions[index].category = category;
+        
+        // 保存到 Firestore
+        saveTransactionChanges();
+    }
+}
+
+/**
+ * 處理對賬狀態更改
+ */
+function handleReconciledChange(index, reconciled) {
+    console.log(`✓ 更新交易 ${index} 的對賬狀態:`, reconciled);
+    
+    if (!currentDocument || !currentDocument.processedData) return;
+    
+    const transactions = currentDocument.processedData.transactions || [];
+    if (transactions[index]) {
+        transactions[index].reconciled = reconciled;
+        
+        // 更新UI視覺反饋
+        const checkbox = document.querySelector(`.reconciled-checkbox[data-index="${index}"]`);
+        if (checkbox) {
+            checkbox.title = reconciled ? '已對賬' : '未對賬';
+        }
+        
+        // 保存到 Firestore
+        saveTransactionChanges();
+    }
+}
+
+/**
+ * 處理備注更改
+ */
+function handleMemoChange(index, memo) {
+    console.log(`📝 更新交易 ${index} 的備注:`, memo);
+    
+    if (!currentDocument || !currentDocument.processedData) return;
+    
+    const transactions = currentDocument.processedData.transactions || [];
+    if (transactions[index]) {
+        transactions[index].memo = memo;
+        
+        // 更新展開按鈕狀態
+        const expandBtn = document.querySelector(`.expand-btn[onclick*="${index}"]`);
+        if (expandBtn) {
+            if (memo) {
+                expandBtn.classList.add('active');
+            } else {
+                expandBtn.classList.remove('active');
+            }
+        }
+        
+        // 保存到 Firestore
+        saveTransactionChanges();
+    }
+}
+
+/**
+ * 處理附件操作
+ */
+function handleAttachment(index) {
+    console.log(`📎 處理交易 ${index} 的附件`);
+    
+    const icon = document.querySelector(`.attachment-icon[onclick*="${index}"]`);
+    const hasAttachment = icon && icon.classList.contains('has-attachment');
+    
+    if (hasAttachment) {
+        // 查看附件（未來功能）
+        alert('查看附件功能即將推出...');
+    } else {
+        // 上傳附件（未來功能）
+        alert('上傳附件功能即將推出...\n\n提示：您可以使用文件管理系統上傳收據、發票等附件。');
+    }
 }
 
 // ============================================

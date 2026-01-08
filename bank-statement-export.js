@@ -476,11 +476,11 @@ function generateSageCSV(docs) {
             
             // 確定交易類型代碼
             const amount = parseFloat(tx.amount || 0);
-            const typeCode = amount >= 0 ? 'BP' : 'BR'; // BP=Bank Payment, BR=Bank Receipt
+            const typeCode = amount >= 0 ? 'BR' : 'BP'; // BR=Bank Receipt (收入), BP=Bank Payment (支出)
             
             // 借貸分離
-            const debit = amount >= 0 ? Math.abs(amount).toFixed(2) : '0.00';
-            const credit = amount < 0 ? Math.abs(amount).toFixed(2) : '0.00';
+            const debit = amount < 0 ? Math.abs(amount).toFixed(2) : '0.00';  // 支出=Debit
+            const credit = amount >= 0 ? Math.abs(amount).toFixed(2) : '0.00'; // 收入=Credit
             
             const reference = tx.referenceNumber || tx.checkNumber || '';
             
