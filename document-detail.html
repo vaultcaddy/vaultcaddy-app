@@ -709,20 +709,8 @@
                 min-width: 120px;
             }
             
-            /* 添加"更多"按钮提示 */
-            .transactions-table tr:hover::after {
-                content: '点击编辑查看更多';
-                position: absolute;
-                right: 60px;
-                background: #6366f1;
-                color: white;
-                padding: 0.25rem 0.5rem;
-                border-radius: 4px;
-                font-size: 0.75rem;
-                pointer-events: none;
-                opacity: 0.9;
-                z-index: 10;
-            }
+            /* 🎨 設計大師優化：移除閃動提示，改用平滑過渡 */
+            /* 不再使用 ::after 提示，避免布局跳動 */
         }
         
         /* 中屏 (1024-1440px): 更少列 */
@@ -766,11 +754,15 @@
                 padding: 1rem;
                 background: white;
                 box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             }
             
+            /* 🎨 設計大師優化：卡片式hover效果 */
             .transactions-table tr.transaction-row:hover {
-                background: #f9fafb;
-                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+                box-shadow: 0 8px 16px rgba(99, 102, 241, 0.12);
+                transform: translateY(-2px);
+                border-color: #c7d2fe;
             }
             
             .transactions-table td {
@@ -900,11 +892,20 @@
         
         .transactions-table tbody tr {
             border-bottom: 1px solid #e5e7eb;
-            transition: background 0.2s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
         }
         
+        /* 🎨 設計大師優化：漸進式背景變化 + 微妙陰影 */
         .transactions-table tbody tr:hover {
-            background: #f9fafb;
+            background: linear-gradient(to right, #f9fafb 0%, #f3f4f6 100%);
+            transform: translateX(2px);
+            box-shadow: -2px 0 8px rgba(99, 102, 241, 0.08);
+        }
+        
+        /* 🎨 hover時讓操作按鈕更明顯 */
+        .transactions-table tbody tr:hover .action-btns {
+            opacity: 1;
         }
         
         .transactions-table td {
@@ -929,23 +930,27 @@
             text-align: center;
         }
         
+        /* 🎨 設計大師優化：展開按鈕平滑動畫 */
         .expand-btn, .toggle-all-btn {
             background: none;
             border: none;
             color: #6b7280;
             cursor: pointer;
             padding: 0.25rem;
-            transition: all 0.2s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             font-size: 0.875rem;
+            border-radius: 4px;
         }
         
         .expand-btn:hover, .toggle-all-btn:hover {
             color: #6366f1;
-            transform: scale(1.1);
+            background: #eef2ff;
+            transform: scale(1.15);
         }
         
         .expand-btn.active {
             color: #6366f1;
+            background: #e0e7ff;
         }
         
         .expand-btn.active i {
@@ -953,7 +958,7 @@
         }
         
         .expand-btn i, .toggle-all-btn i {
-            transition: transform 0.2s;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
         /* 详情行样式 */
@@ -1058,6 +1063,7 @@
             border-style: solid;
         }
         
+        /* 🎨 設計大師優化：對帳複選框平滑效果 */
         .reconciled-checkbox-detail {
             display: flex;
             align-items: center;
@@ -1067,12 +1073,14 @@
             border-radius: 6px;
             background: white;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
         .reconciled-checkbox-detail:hover {
-            background: #f0fdf4;
+            background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%);
             border-color: #10b981;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(16, 185, 129, 0.15);
         }
         
         .reconciled-checkbox-detail input[type="checkbox"] {
@@ -1169,60 +1177,118 @@
             transform: rotate(180deg);
         }
         
+        /* 🎨 設計大師優化：附件圖標動態效果 */
         .attachment-icon {
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 0.25rem;
+            border-radius: 4px;
         }
         
         .attachment-icon:hover {
-            transform: scale(1.2);
+            transform: scale(1.25) rotate(5deg);
         }
         
         .attachment-icon.has-attachment {
             color: #10b981;
         }
         
+        .attachment-icon.has-attachment:hover {
+            background: #d1fae5;
+            color: #059669;
+        }
+        
         .attachment-icon.no-attachment {
             color: #e5e7eb;
         }
         
+        .attachment-icon.no-attachment:hover {
+            background: #f3f4f6;
+            color: #9ca3af;
+        }
+        
+        /* 🎨 設計大師優化：金額單元格視覺層次 */
         .amount-cell {
             font-family: 'Courier New', monospace;
             font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* hover時金額更加醒目 */
+        tr:hover .amount-cell {
+            font-weight: 600;
+            font-size: 1.05em;
+            letter-spacing: 0.5px;
         }
         
         .amount-positive {
             color: #10b981;
         }
         
+        /* hover時正數金額有柔和的綠色背景 */
+        tr:hover .amount-positive {
+            color: #059669;
+            background: linear-gradient(90deg, transparent 0%, #d1fae5 50%, transparent 100%);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+        
         .amount-negative {
             color: #ef4444;
+        }
+        
+        /* hover時負數金額有柔和的紅色背景 */
+        tr:hover .amount-negative {
+            color: #dc2626;
+            background: linear-gradient(90deg, transparent 0%, #fee2e2 50%, transparent 100%);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
         }
         
         .action-cell {
             width: 100px;
         }
         
+        /* 🎨 設計大師優化：操作按鈕始終顯示，但使用透明度 */
         .action-btns {
             display: flex;
             gap: 0.5rem;
+            opacity: 0.4;
+            transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
+        /* hover時按鈕完全可見 */
+        tr:hover .action-btns {
+            opacity: 1;
+        }
+        
+        /* 🎨 設計大師優化：圖標按鈕微動畫 */
         .icon-btn {
             background: none;
             border: none;
             color: #6b7280;
             cursor: pointer;
             padding: 0.25rem;
-            transition: color 0.2s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 4px;
         }
         
         .icon-btn:hover {
             color: #1f2937;
+            background: #f3f4f6;
+            transform: scale(1.1);
         }
         
         .icon-btn.delete:hover {
             color: #ef4444;
+            background: #fee2e2;
+            transform: scale(1.1);
+        }
+        
+        /* 編輯按鈕特殊樣式 */
+        .icon-btn:not(.delete):hover {
+            color: #6366f1;
+            background: #eef2ff;
         }
         
         /* 載入動畫 */
