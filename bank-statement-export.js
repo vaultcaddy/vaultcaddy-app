@@ -397,6 +397,160 @@ function downloadCSV(content, filename) {
     URL.revokeObjectURL(url);
 }
 
+// ==================== 通用 CSV 格式（新增）====================
+/**
+ * 生成通用 CSV（適用於 Xero, Wave, QuickBooks, MYOB）
+ * 格式：ISO 8601 日期 (YYYY-MM-DD)，正負號金額
+ */
+function generateUniversalCSV(docs) {
+    console.log('🌐 生成通用 CSV (Universal CSV)');
+    
+    let csv = 'Date,Type,Description,Payee,Reference,Amount,Balance\n';
+    let rowCount = 0;
+    
+    docs.forEach(doc => {
+        const data = doc.processedData || {};
+        const transactions = data.transactions || [];
+        
+        transactions.forEach(tx => {
+            // 使用 ISO 8601 日期格式 (YYYY-MM-DD)
+            let isoDate = tx.date || '';
+            if (isoDate && !isoDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                try {
+                    const d = new Date(isoDate);
+                    if (!isNaN(d.getTime())) {
+                        isoDate = d.toISOString().split('T')[0];
+                    }
+                } catch (e) {
+                    console.warn('日期格式轉換失敗:', isoDate);
+                }
+            }
+            
+            csv += `${escapeCSV(isoDate)},`;
+            csv += `${escapeCSV(tx.transactionType || '')},`;
+            csv += `${escapeCSV(tx.description || '')},`;
+            csv += `${escapeCSV(tx.payee || '')},`;
+            csv += `${escapeCSV(tx.referenceNumber || '')},`;
+            csv += `${tx.amount || 0},`;
+            csv += `${tx.balance || 0}\n`;
+            rowCount++;
+        });
+    });
+    
+    console.log(`✅ 通用 CSV 生成完成，共 ${rowCount} 筆交易`);
+    return csv;
+}
+
+// ==================== Sage CSV 格式（新增）====================
+/**
+ * 生成 Sage CSV（英國格式 - 借貸分離）
+ * 格式：DD/MM/YYYY 日期，Debit/Credit 分離
+ */
+function generateSageCSV(docs) {
+    console.log('📄 生成 Sage CSV');
+    
+    let csv = 'Date,Type,Account Ref,Description,Debit,Credit,Reference\n';
+    let rowCount = 0;
+    
+    docs.forEach(doc => {
+        const data = doc.processedData || {};
+        const transactions = data.transactions || [];
+        const accountRef = data.accountNumber || '1200';
+        
+        transactions.forEach(tx => {
+            // 轉換為 DD/MM/YYYY 格式
+            let ukDate = tx.date || '';
+            if (ukDate) {
+                try {
+                    const d = new Date(ukDate);
+                    if (!isNaN(d.getTime())) {
+                        const day = String(d.getDate()).padStart(2, '0');
+                        const month = String(d.getMonth() + 1).padStart(2, '0');
+                        const year = d.getFullYear();
+                        ukDate = `${day}/${month}/${year}`;
+                    }
+                } catch (e) {
+                    console.warn('日期格式轉換失敗:', ukDate);
+                }
+            }
+            
+            // 確定交易類型代碼
+            const amount = parseFloat(tx.amount || 0);
+            const typeCode = amount >= 0 ? 'BP' : 'BR'; // BP=Bank Payment, BR=Bank Receipt
+            
+            // 借貸分離
+            const debit = amount >= 0 ? Math.abs(amount).toFixed(2) : '0.00';
+            const credit = amount < 0 ? Math.abs(amount).toFixed(2) : '0.00';
+            
+            const reference = tx.referenceNumber || tx.checkNumber || '';
+            
+            csv += `${escapeCSV(ukDate)},`;
+            csv += `${escapeCSV(typeCode)},`;
+            csv += `${escapeCSV(accountRef)},`;
+            csv += `${escapeCSV(tx.description || '')},`;
+            csv += `${debit},`;
+            csv += `${credit},`;
+            csv += `${escapeCSV(reference)}\n`;
+            rowCount++;
+        });
+    });
+    
+    console.log(`✅ Sage CSV 生成完成，共 ${rowCount} 筆交易`);
+    return csv;
+}
+
+// ==================== Zoho Books CSV 格式（新增）====================
+/**
+ * 生成 Zoho Books CSV（印度格式 - 借貸分離）
+ * 格式：DD/MM/YYYY 日期，Debit/Credit 分離
+ */
+function generateZohoCSV(docs) {
+    console.log('📄 生成 Zoho Books CSV');
+    
+    let csv = 'Date,Description,Reference,Debit,Credit\n';
+    let rowCount = 0;
+    
+    docs.forEach(doc => {
+        const data = doc.processedData || {};
+        const transactions = data.transactions || [];
+        
+        transactions.forEach(tx => {
+            // 轉換為 DD/MM/YYYY 格式
+            let indiaDate = tx.date || '';
+            if (indiaDate) {
+                try {
+                    const d = new Date(indiaDate);
+                    if (!isNaN(d.getTime())) {
+                        const day = String(d.getDate()).padStart(2, '0');
+                        const month = String(d.getMonth() + 1).padStart(2, '0');
+                        const year = d.getFullYear();
+                        indiaDate = `${day}/${month}/${year}`;
+                    }
+                } catch (e) {
+                    console.warn('日期格式轉換失敗:', indiaDate);
+                }
+            }
+            
+            // 借貸分離
+            const amount = parseFloat(tx.amount || 0);
+            const debit = amount >= 0 ? Math.abs(amount).toFixed(2) : '';
+            const credit = amount < 0 ? Math.abs(amount).toFixed(2) : '';
+            
+            const reference = tx.referenceNumber || tx.checkNumber || '';
+            
+            csv += `${escapeCSV(indiaDate)},`;
+            csv += `${escapeCSV(tx.description || '')},`;
+            csv += `${escapeCSV(reference)},`;
+            csv += `${debit},`;
+            csv += `${credit}\n`;
+            rowCount++;
+        });
+    });
+    
+    console.log(`✅ Zoho Books CSV 生成完成，共 ${rowCount} 筆交易`);
+    return csv;
+}
+
 // ==================== 導出到全局命名空間 ====================
 
 /**
@@ -407,6 +561,9 @@ window.BankStatementExport = {
     generateBankStatementCSV: generateBankStatementCSV,
     generateXeroCSV: generateXeroCSV,
     generateQuickBooksCSV: generateQuickBooksCSV,
+    generateUniversalCSV: generateUniversalCSV,
+    generateSageCSV: generateSageCSV,
+    generateZohoCSV: generateZohoCSV,
     formatDate: formatDate,
     formatDateForXero: formatDateForXero,
     formatDateForQuickBooks: formatDateForQuickBooks,
@@ -465,4 +622,7 @@ console.log('✅ 銀行對帳單導出模塊已載入');
 console.log('   可用方法: window.BankStatementExport.generateBankStatementCSV()');
 console.log('   可用方法: window.BankStatementExport.generateXeroCSV()');
 console.log('   可用方法: window.BankStatementExport.generateQuickBooksCSV()');
+console.log('   可用方法: window.BankStatementExport.generateUniversalCSV() [新增]');
+console.log('   可用方法: window.BankStatementExport.generateSageCSV() [新增]');
+console.log('   可用方法: window.BankStatementExport.generateZohoCSV() [新增]');
 

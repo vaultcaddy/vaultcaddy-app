@@ -87,8 +87,8 @@
 <script defer="" src="navbar-component.js?v=20251106-final-fix"></script>
 <script defer="" src="sidebar-component.js?v=20251106-final-fix"></script>
 <!-- ✅ 銀行對帳單導出模塊 -->
-<script defer="" src="bank-statement-export.js"></script>
-<script defer="" src="invoice-export.js"></script>
+<script defer="" src="bank-statement-export.js?v=20260107-v2"></script>
+<script defer="" src="invoice-export.js?v=20260107"></script>
 <!-- ✅ Firebase SDK（CDN 版本）-->
 <script defer="" src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script defer="" src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
@@ -4097,12 +4097,37 @@
             // 銀行對帳單選項
             if (hasBankStatement) {
                 menuHTML += `
-                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">銀行對帳單</div>
+                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">CSV 格式</div>
+                    
                     <button onclick="exportDocuments('bank_statement_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
                         <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
                         <div>
-                            <div style="font-weight: 500;">標準 CSV</div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">完整欄位格式</div>
+                            <div style="font-weight: 500;">📄 標準 CSV</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">VaultCaddy 格式 - 最完整</div>
+                        </div>
+                    </button>
+                    
+                    <button onclick="exportDocuments('universal_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s; background: linear-gradient(90deg, rgba(16,185,129,0.05) 0%, transparent 100%);">
+                        <i class="fas fa-globe" style="color: #10b981; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 600;">🌐 通用 CSV</div>
+                            <div style="font-size: 0.75rem; color: #059669; font-weight: 500;">✨ Xero, Wave, QuickBooks, MYOB</div>
+                        </div>
+                    </button>
+                    
+                    <button onclick="exportDocuments('sage_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-csv" style="color: #3b82f6; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">📄 Sage CSV</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">🇬🇧 Sage 50, Sage Accounting</div>
+                        </div>
+                    </button>
+                    
+                    <button onclick="exportDocuments('zoho_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-csv" style="color: #f59e0b; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">📄 Zoho Books CSV</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">🇮🇳 Zoho Books 格式</div>
                         </div>
                     </button>
                 `;
@@ -4129,37 +4154,37 @@
                 `;
             }
             
-            // 其他選項（Xero、QuickBooks、IIF、QBO）- 始終顯示
+            // 其他格式（始終顯示）
             menuHTML += `
-                <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">其他</div>
-                <button onclick="exportDocuments('xero_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                    <i class="fas fa-file-csv" style="color: #3b82f6; width: 20px;"></i>
-                    <div>
-                        <div style="font-weight: 500;">Xero CSV</div>
-                        <div style="font-size: 0.75rem; color: #6b7280;">官方最小格式</div>
-                    </div>
-                </button>
-                <button onclick="exportDocuments('quickbooks_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                    <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
-                    <div>
-                        <div style="font-weight: 500;">QuickBooks CSV</div>
-                        <div style="font-size: 0.75rem; color: #6b7280;">官方最小格式</div>
-                    </div>
-                </button>
-                <button onclick="exportDocuments('iif')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                    <i class="fas fa-file-alt" style="color: #3b82f6; width: 20px;"></i>
-                    <div>
-                        <div style="font-weight: 500;">IIF</div>
-                        <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Desktop</div>
-                    </div>
-                </button>
+                <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.5rem;">其他格式</div>
+                
                 <button onclick="exportDocuments('qbo')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
                     <i class="fas fa-cloud" style="color: #8b5cf6; width: 20px;"></i>
                     <div>
-                        <div style="font-weight: 500;">QBO</div>
-                        <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Online</div>
+                        <div style="font-weight: 500;">💼 QBO 文件</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Online 官方格式</div>
                     </div>
                 </button>
+                
+                <button onclick="exportDocuments('excel')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                    <i class="fas fa-file-excel" style="color: #059669; width: 20px;"></i>
+                    <div>
+                        <div style="font-weight: 500;">📊 Excel (.xlsx)</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">Microsoft Excel 試算表</div>
+                    </div>
+                </button>
+            `;
+            
+            // 💡 添加格式說明
+            menuHTML += `
+                <div style="padding: 1rem; margin-top: 0.5rem; background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border-radius: 8px; border-left: 3px solid #10b981;">
+                    <div style="font-size: 0.75rem; color: #065f46; font-weight: 500; margin-bottom: 0.25rem;">
+                        💡 不確定選哪個？
+                    </div>
+                    <div style="font-size: 0.7rem; color: #059669; line-height: 1.4;">
+                        大多數用戶選擇 <strong>通用 CSV</strong> 或 <strong>QBO 文件</strong>
+                    </div>
+                </div>
             `;
             
             menuHTML += '</div>';
@@ -4437,6 +4462,45 @@
                             console.log('✅ 標準銀行對帳單 CSV 導出');
                         } else {
                             alert('銀行對帳單導出模塊未載入，請刷新頁面後重試');
+                            return;
+                        }
+                        break;
+                    
+                    case 'universal_csv':
+                        // 🌐 通用 CSV (適用於 Xero, Wave, QuickBooks, MYOB)
+                        if (window.BankStatementExport) {
+                            exportContent = window.BankStatementExport.generateUniversalCSV(docsToExport);
+                            fileName = `Universal_BankStatement_${new Date().toISOString().split('T')[0]}.csv`;
+                            mimeType = 'text/csv;charset=utf-8;';
+                            console.log('✅ 通用 CSV 導出');
+                        } else {
+                            alert('導出模塊未載入，請刷新頁面後重試');
+                            return;
+                        }
+                        break;
+                    
+                    case 'sage_csv':
+                        // 📄 Sage CSV (英國格式 - 借貸分離)
+                        if (window.BankStatementExport) {
+                            exportContent = window.BankStatementExport.generateSageCSV(docsToExport);
+                            fileName = `Sage_BankStatement_${new Date().toISOString().split('T')[0]}.csv`;
+                            mimeType = 'text/csv;charset=utf-8;';
+                            console.log('✅ Sage CSV 導出');
+                        } else {
+                            alert('導出模塊未載入，請刷新頁面後重試');
+                            return;
+                        }
+                        break;
+                    
+                    case 'zoho_csv':
+                        // 📄 Zoho Books CSV (印度格式 - 借貸分離)
+                        if (window.BankStatementExport) {
+                            exportContent = window.BankStatementExport.generateZohoCSV(docsToExport);
+                            fileName = `ZohoBooks_BankStatement_${new Date().toISOString().split('T')[0]}.csv`;
+                            mimeType = 'text/csv;charset=utf-8;';
+                            console.log('✅ Zoho Books CSV 導出');
+                        } else {
+                            alert('導出模塊未載入，請刷新頁面後重試');
                             return;
                         }
                         break;
