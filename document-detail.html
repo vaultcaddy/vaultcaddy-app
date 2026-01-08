@@ -624,83 +624,118 @@
         .transactions-table {
             width: 100%;
             border-collapse: collapse;
-            table-layout: auto; /* 自动调整列宽 */
+            table-layout: fixed; /* 固定布局，防止溢出 */
         }
         
-        /* 表格容器 - 添加滚动提示 */
+        /* 表格容器 - 移除滚动 */
         .table-wrapper {
             position: relative;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch; /* 平滑滚动 iOS */
+            width: 100%;
+            overflow: visible; /* 不允许滚动 */
         }
         
-        .table-wrapper::after {
-            content: '← 滑动查看更多 →';
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            background: linear-gradient(to left, rgba(255,255,255,0.95), transparent);
-            padding: 0.5rem 1rem;
-            font-size: 0.75rem;
-            color: #6b7280;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.3s;
+        /* 确保表格不超出容器 */
+        .transactions-table-container {
+            max-width: 100%;
+            overflow: visible;
         }
         
-        .table-wrapper.has-scroll::after {
-            opacity: 1;
+        /* 文本溢出处理 */
+        .transactions-table td {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
         
-        /* 响应式列优先级 */
-        
-        /* 超大屏 (>1920px): 显示所有列 */
-        @media (min-width: 1921px) {
-            .transactions-table th,
-            .transactions-table td {
-                display: table-cell;
-            }
+        .transactions-table td[contenteditable="true"]:focus {
+            white-space: normal;
+            overflow: visible;
         }
         
-        /* 大屏 (1440-1920px): 隐藏次要列 */
+        /* 响应式列优先级 - 更激进的隐藏策略 */
+        
+        /* 默认（≤1920px）: 只显示核心6列 */
         @media (max-width: 1920px) {
-            /* 隐藏: 对账状态、参考编号、支票号码、附件 */
-            .transactions-table th:nth-child(2),  /* 对账状态 */
-            .transactions-table th:nth-child(7),  /* 参考编号 */
-            .transactions-table th:nth-child(8),  /* 支票号码 */
-            .transactions-table th:nth-child(12), /* 附件 */
-            .transactions-table td:nth-child(2),
-            .transactions-table td:nth-child(7),
+            /* 隐藏: 展开按钮、对账状态、类型、参考、支票、分类、附件 */
+            .transactions-table th:nth-child(1),  /* 展开按钮 */
+            .transactions-table th:nth-child(3),  /* 对账状态 */
+            .transactions-table th:nth-child(5),  /* 类型 */
+            .transactions-table th:nth-child(8),  /* 参考 */
+            .transactions-table th:nth-child(9),  /* 支票 */
+            .transactions-table th:nth-child(10), /* 分类 */
+            .transactions-table th:nth-child(13), /* 附件 */
+            .transactions-table td:nth-child(1),
+            .transactions-table td:nth-child(3),
+            .transactions-table td:nth-child(5),
             .transactions-table td:nth-child(8),
-            .transactions-table td:nth-child(12),
-            .memo-row td:nth-child(2),
-            .memo-row td:nth-child(7),
-            .memo-row td:nth-child(8),
-            .memo-row td:nth-child(12) {
+            .transactions-table td:nth-child(9),
+            .transactions-table td:nth-child(10),
+            .transactions-table td:nth-child(13) {
                 display: none !important;
             }
             
-            /* 调整 memo-row 的 colspan */
-            .memo-row td {
-                /* 从 colspan="13" 变为 colspan="9" */
+            /* 显示的列: 复选框、日期、描述、收款人、金额、余额、操作 */
+            
+            /* 优化列宽 */
+            .transactions-table th:nth-child(4),  /* 日期 */
+            .transactions-table td:nth-child(4) {
+                width: 90px;
+                min-width: 90px;
+            }
+            
+            .transactions-table th:nth-child(6),  /* 描述 */
+            .transactions-table td:nth-child(6) {
+                width: auto;
+                min-width: 180px;
+                max-width: 300px;
+            }
+            
+            .transactions-table th:nth-child(7),  /* 收款人 */
+            .transactions-table td:nth-child(7) {
+                width: 150px;
+                min-width: 120px;
+                max-width: 150px;
+            }
+            
+            .transactions-table th:nth-child(11), /* 金额 */
+            .transactions-table td:nth-child(11) {
+                width: 120px;
+                min-width: 120px;
+            }
+            
+            .transactions-table th:nth-child(12), /* 余额 */
+            .transactions-table td:nth-child(12) {
+                width: 120px;
+                min-width: 120px;
+            }
+            
+            /* 添加"更多"按钮提示 */
+            .transactions-table tr:hover::after {
+                content: '点击编辑查看更多';
+                position: absolute;
+                right: 60px;
+                background: #6366f1;
+                color: white;
+                padding: 0.25rem 0.5rem;
+                border-radius: 4px;
+                font-size: 0.75rem;
+                pointer-events: none;
+                opacity: 0.9;
+                z-index: 10;
             }
         }
         
-        /* 中屏 (1024-1440px): 只显示核心列 */
+        /* 中屏 (1024-1440px): 更少列 */
         @media (max-width: 1440px) {
-            /* 额外隐藏: 类型、收款人、分类 */
-            .transactions-table th:nth-child(4),  /* 类型 */
-            .transactions-table th:nth-child(6),  /* 收款人 */
-            .transactions-table th:nth-child(9),  /* 分类 */
-            .transactions-table td:nth-child(4),
-            .transactions-table td:nth-child(6),
-            .transactions-table td:nth-child(9) {
+            /* 额外隐藏: 收款人 */
+            .transactions-table th:nth-child(7),
+            .transactions-table td:nth-child(7) {
                 display: none !important;
             }
             
             /* 描述列加宽 */
-            .transactions-table th:nth-child(5),
-            .transactions-table td:nth-child(5) {
+            .transactions-table th:nth-child(6),
+            .transactions-table td:nth-child(6) {
                 min-width: 250px;
                 max-width: 400px;
             }
