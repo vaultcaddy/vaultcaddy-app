@@ -624,6 +624,230 @@
         .transactions-table {
             width: 100%;
             border-collapse: collapse;
+            table-layout: auto; /* 自动调整列宽 */
+        }
+        
+        /* 表格容器 - 添加滚动提示 */
+        .table-wrapper {
+            position: relative;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch; /* 平滑滚动 iOS */
+        }
+        
+        .table-wrapper::after {
+            content: '← 滑动查看更多 →';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(to left, rgba(255,255,255,0.95), transparent);
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+            color: #6b7280;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .table-wrapper.has-scroll::after {
+            opacity: 1;
+        }
+        
+        /* 响应式列优先级 */
+        
+        /* 超大屏 (>1920px): 显示所有列 */
+        @media (min-width: 1921px) {
+            .transactions-table th,
+            .transactions-table td {
+                display: table-cell;
+            }
+        }
+        
+        /* 大屏 (1440-1920px): 隐藏次要列 */
+        @media (max-width: 1920px) {
+            /* 隐藏: 对账状态、参考编号、支票号码、附件 */
+            .transactions-table th:nth-child(2),  /* 对账状态 */
+            .transactions-table th:nth-child(7),  /* 参考编号 */
+            .transactions-table th:nth-child(8),  /* 支票号码 */
+            .transactions-table th:nth-child(12), /* 附件 */
+            .transactions-table td:nth-child(2),
+            .transactions-table td:nth-child(7),
+            .transactions-table td:nth-child(8),
+            .transactions-table td:nth-child(12),
+            .memo-row td:nth-child(2),
+            .memo-row td:nth-child(7),
+            .memo-row td:nth-child(8),
+            .memo-row td:nth-child(12) {
+                display: none !important;
+            }
+            
+            /* 调整 memo-row 的 colspan */
+            .memo-row td {
+                /* 从 colspan="13" 变为 colspan="9" */
+            }
+        }
+        
+        /* 中屏 (1024-1440px): 只显示核心列 */
+        @media (max-width: 1440px) {
+            /* 额外隐藏: 类型、收款人、分类 */
+            .transactions-table th:nth-child(4),  /* 类型 */
+            .transactions-table th:nth-child(6),  /* 收款人 */
+            .transactions-table th:nth-child(9),  /* 分类 */
+            .transactions-table td:nth-child(4),
+            .transactions-table td:nth-child(6),
+            .transactions-table td:nth-child(9) {
+                display: none !important;
+            }
+            
+            /* 描述列加宽 */
+            .transactions-table th:nth-child(5),
+            .transactions-table td:nth-child(5) {
+                min-width: 250px;
+                max-width: 400px;
+            }
+        }
+        
+        /* 平板 (768-1024px): 卡片式布局 */
+        @media (max-width: 1024px) {
+            .transactions-table {
+                display: block;
+                border: none;
+            }
+            
+            .transactions-table thead {
+                display: none;
+            }
+            
+            .transactions-table tbody {
+                display: block;
+            }
+            
+            .transactions-table tr.transaction-row {
+                display: grid;
+                grid-template-columns: 40px 1fr 120px 40px;
+                gap: 0.5rem;
+                margin-bottom: 0.75rem;
+                border: 1px solid #e5e7eb;
+                border-radius: 8px;
+                padding: 1rem;
+                background: white;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            }
+            
+            .transactions-table tr.transaction-row:hover {
+                background: #f9fafb;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            }
+            
+            .transactions-table td {
+                display: flex;
+                align-items: center;
+                padding: 0.25rem;
+                border: none;
+            }
+            
+            /* 复选框 */
+            .transactions-table .checkbox-cell {
+                grid-column: 1;
+                grid-row: 1;
+            }
+            
+            /* 日期 + 描述 */
+            .transactions-table td:nth-child(3),
+            .transactions-table td:nth-child(5) {
+                grid-column: 2;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .transactions-table td:nth-child(3)::before {
+                content: attr(data-date);
+                font-size: 0.75rem;
+                color: #6b7280;
+                margin-bottom: 0.25rem;
+            }
+            
+            /* 金额 */
+            .transactions-table .amount-cell {
+                grid-column: 3;
+                grid-row: 1;
+                justify-content: flex-end;
+            }
+            
+            /* 操作按钮 */
+            .transactions-table .action-cell {
+                grid-column: 4;
+                grid-row: 1;
+            }
+            
+            /* 余额 - 显示在第二行 */
+            .transactions-table td:nth-child(11) {
+                grid-column: 2 / 4;
+                grid-row: 2;
+                font-size: 0.75rem;
+                color: #6b7280;
+            }
+            
+            .transactions-table td:nth-child(11)::before {
+                content: '余额: ';
+                margin-right: 0.5rem;
+            }
+            
+            /* 备注行 */
+            .memo-row {
+                display: block !important;
+                margin-top: -0.75rem;
+                margin-bottom: 0.75rem;
+                border: none;
+                border-radius: 8px;
+                padding: 0 1rem 1rem 1rem;
+                background: #f9fafb;
+            }
+            
+            .memo-row.active {
+                display: block !important;
+            }
+        }
+        
+        /* 手机 (<768px): 简化卡片 */
+        @media (max-width: 768px) {
+            .transactions-table tr.transaction-row {
+                grid-template-columns: 40px 1fr 40px;
+                padding: 0.75rem;
+            }
+            
+            .transactions-table .checkbox-cell {
+                grid-column: 1;
+                grid-row: 1 / 3;
+            }
+            
+            .transactions-table td:nth-child(3) {
+                grid-column: 2;
+                grid-row: 1;
+                font-size: 0.75rem;
+                color: #6b7280;
+            }
+            
+            .transactions-table td:nth-child(5) {
+                grid-column: 2;
+                grid-row: 2;
+                font-weight: 500;
+            }
+            
+            .transactions-table .amount-cell {
+                grid-column: 3;
+                grid-row: 1 / 3;
+                font-size: 1.125rem;
+                font-weight: 700;
+            }
+            
+            .transactions-table .action-cell {
+                grid-column: 2 / 4;
+                grid-row: 3;
+                justify-content: flex-end;
+                margin-top: 0.5rem;
+                padding-top: 0.5rem;
+                border-top: 1px solid #e5e7eb;
+            }
         }
         
         .transactions-table thead {
@@ -662,6 +886,172 @@
             width: 16px;
             height: 16px;
             cursor: pointer;
+        }
+        
+        /* 展开按钮样式 */
+        .expand-cell {
+            width: 40px;
+            text-align: center;
+        }
+        
+        .expand-btn, .toggle-all-btn {
+            background: none;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 0.25rem;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+        }
+        
+        .expand-btn:hover, .toggle-all-btn:hover {
+            color: #6366f1;
+            transform: scale(1.1);
+        }
+        
+        .expand-btn.active {
+            color: #6366f1;
+        }
+        
+        .expand-btn.active i {
+            transform: rotate(90deg);
+        }
+        
+        .expand-btn i, .toggle-all-btn i {
+            transition: transform 0.2s;
+        }
+        
+        /* 详情行样式 */
+        .details-row {
+            background: linear-gradient(to bottom, #f9fafb, white);
+            display: none;
+        }
+        
+        .details-row.active {
+            display: table-row;
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .details-panel {
+            padding: 1.5rem;
+            border-top: 2px solid #e5e7eb;
+        }
+        
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+        
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .detail-item.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .detail-item label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .detail-item input[type="text"],
+        .detail-item input[type="number"],
+        .detail-item select,
+        .detail-item textarea {
+            padding: 0.5rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            background: white;
+            transition: all 0.2s;
+        }
+        
+        .detail-item input:focus,
+        .detail-item select:focus,
+        .detail-item textarea:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        .detail-item input[readonly] {
+            background: #f9fafb;
+            color: #6b7280;
+            cursor: not-allowed;
+        }
+        
+        .detail-item textarea {
+            min-height: 80px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        
+        .attach-btn {
+            padding: 0.5rem 1rem;
+            border: 1px dashed #6366f1;
+            border-radius: 6px;
+            background: white;
+            color: #6366f1;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .attach-btn:hover {
+            background: #eef2ff;
+            border-style: solid;
+        }
+        
+        .reconciled-checkbox-detail {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .reconciled-checkbox-detail:hover {
+            background: #f0fdf4;
+            border-color: #10b981;
+        }
+        
+        .reconciled-checkbox-detail input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #10b981;
+        }
+        
+        .reconciled-checkbox-detail label {
+            cursor: pointer;
+            text-transform: none;
+            font-weight: 500;
+            color: #374151;
         }
         
         .reconciled-cell {
@@ -1501,6 +1891,11 @@
                     <table class="transactions-table">
                     <thead>
                         <tr>
+                            <th class="expand-cell" title="展开详情">
+                                <button onclick="toggleAllDetails()" class="toggle-all-btn" title="全部展开/收起">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </th>
                             <th class="checkbox-cell">
                                 <input type="checkbox" onchange="toggleAllTransactions(this)">
                             </th>

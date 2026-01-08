@@ -1571,6 +1571,11 @@ function displayBankStatementContent(data) {
         
         transactionsHTML += `
             <tr data-index="${actualIndex}" class="transaction-row">
+                <td class="expand-cell">
+                    <button class="expand-btn" onclick="toggleDetails(${actualIndex})" title="展開詳情">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </td>
                 <td class="checkbox-cell">
                     <input type="checkbox" 
                            class="transaction-checkbox" 
@@ -1586,16 +1591,9 @@ function displayBankStatementContent(data) {
                            onchange="handleReconciledChange(${actualIndex}, this.checked)"
                            title="${reconciled ? '已對賬' : '未對賬'}">
                 </td>
-                <td contenteditable="true" class="editable-cell" data-field="date" style="min-width: 100px;">${tx.date || '—'}</td>
+                <td contenteditable="true" class="editable-cell" data-field="date" style="min-width: 100px;" data-date="${tx.date || '—'}">${tx.date || '—'}</td>
                 <td contenteditable="true" class="editable-cell" data-field="transactionType" style="min-width: 100px; color: #6b7280; font-size: 0.85rem;">${transactionType}</td>
-                <td style="position: relative;">
-                    <div style="display: flex; align-items: center; gap: 0.25rem;">
-                        <div contenteditable="true" class="editable-cell" data-field="description" style="min-width: 200px; flex: 1;">${description}</div>
-                        <button class="expand-btn ${memo ? 'active' : ''}" onclick="toggleMemo(${actualIndex})" title="備注">
-                            <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
-                        </button>
-                    </div>
-                </td>
+                <td contenteditable="true" class="editable-cell" data-field="description" style="min-width: 200px;">${description}</td>
                 <td contenteditable="true" class="editable-cell" data-field="payee" style="min-width: 150px; color: #6b7280; font-size: 0.85rem;">${payee}</td>
                 <td contenteditable="true" class="editable-cell" data-field="referenceNumber" style="min-width: 100px; color: #6b7280; font-size: 0.85rem;">${referenceNumber}</td>
                 <td contenteditable="true" class="editable-cell" data-field="checkNumber" style="min-width: 80px; color: #6b7280; font-size: 0.85rem;">${checkNumber}</td>
@@ -1656,14 +1654,75 @@ function displayBankStatementContent(data) {
                     </div>
                 </td>
             </tr>
-            <tr class="memo-row ${memo ? 'active' : ''}" data-index="${actualIndex}">
-                <td colspan="13" style="padding: 0.5rem 3rem; background: #f9fafb;">
-                    <div style="display: flex; align-items: flex-start; gap: 0.5rem;">
-                        <i class="fas fa-sticky-note" style="color: #6b7280; margin-top: 0.5rem;"></i>
-                        <textarea class="memo-textarea" 
-                                  placeholder="添加備注..." 
-                                  data-index="${actualIndex}"
-                                  onchange="handleMemoChange(${actualIndex}, this.value)">${memo}</textarea>
+            <tr class="details-row" data-index="${actualIndex}">
+                <td colspan="14" style="padding: 0;">
+                    <div class="details-panel">
+                        <div class="details-grid">
+                            <div class="detail-item">
+                                <label>交易類型</label>
+                                <input type="text" value="${transactionType}" readonly>
+                            </div>
+                            <div class="detail-item">
+                                <label>收款人/付款人</label>
+                                <input type="text" value="${payee}" 
+                                       onchange="updateDetailField(${actualIndex}, 'payee', this.value)">
+                            </div>
+                            <div class="detail-item">
+                                <label>參考編號</label>
+                                <input type="text" value="${referenceNumber}" 
+                                       onchange="updateDetailField(${actualIndex}, 'referenceNumber', this.value)">
+                            </div>
+                            <div class="detail-item">
+                                <label>支票號碼</label>
+                                <input type="text" value="${checkNumber}" 
+                                       onchange="updateDetailField(${actualIndex}, 'checkNumber', this.value)">
+                            </div>
+                            <div class="detail-item">
+                                <label>分類</label>
+                                <select onchange="handleCategoryChange(${actualIndex}, this.value)">
+                                    <option value="">未分類</option>
+                                    <optgroup label="收入類別">
+                                        <option value="salary" ${category === 'salary' ? 'selected' : ''}>工資</option>
+                                        <option value="sales" ${category === 'sales' ? 'selected' : ''}>銷售收入</option>
+                                        <option value="interest" ${category === 'interest' ? 'selected' : ''}>利息收入</option>
+                                        <option value="other-income" ${category === 'other-income' ? 'selected' : ''}>其他收入</option>
+                                    </optgroup>
+                                    <optgroup label="支出類別">
+                                        <option value="office" ${category === 'office' ? 'selected' : ''}>辦公費用</option>
+                                        <option value="transport" ${category === 'transport' ? 'selected' : ''}>交通費用</option>
+                                        <option value="meal" ${category === 'meal' ? 'selected' : ''}>餐飲費用</option>
+                                        <option value="utilities" ${category === 'utilities' ? 'selected' : ''}>水電費</option>
+                                        <option value="rent" ${category === 'rent' ? 'selected' : ''}>租金</option>
+                                        <option value="salary-expense" ${category === 'salary-expense' ? 'selected' : ''}>工資支出</option>
+                                        <option value="marketing" ${category === 'marketing' ? 'selected' : ''}>營銷費用</option>
+                                        <option value="supplies" ${category === 'supplies' ? 'selected' : ''}>耗材</option>
+                                        <option value="other-expense" ${category === 'other-expense' ? 'selected' : ''}>其他支出</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                            <div class="detail-item">
+                                <label>對賬狀態</label>
+                                <div class="reconciled-checkbox-detail">
+                                    <input type="checkbox" 
+                                           id="reconciled-${actualIndex}" 
+                                           ${reconciled ? 'checked' : ''}
+                                           onchange="handleReconciledChange(${actualIndex}, this.checked)">
+                                    <label for="reconciled-${actualIndex}">已對賬</label>
+                                </div>
+                            </div>
+                            <div class="detail-item">
+                                <label>附件</label>
+                                <button class="attach-btn" onclick="handleAttachment(${actualIndex})">
+                                    <i class="fas fa-paperclip"></i>
+                                    ${hasAttachment ? '查看附件' : '添加附件'}
+                                </button>
+                            </div>
+                            <div class="detail-item full-width">
+                                <label>備注</label>
+                                <textarea placeholder="添加備注..." 
+                                          onchange="handleMemoChange(${actualIndex}, this.value)">${memo}</textarea>
+                            </div>
+                        </div>
                     </div>
                 </td>
             </tr>
@@ -2565,16 +2624,88 @@ function extractOtherAccounts(data) {
 // ============================================
 
 /**
- * 展開/折疊備注行
+ * 展开/折叠详情行
+ */
+function toggleDetails(index) {
+    const detailsRow = document.querySelector(`.details-row[data-index="${index}"]`);
+    const expandBtn = document.querySelector(`.transaction-row[data-index="${index}"] .expand-btn`);
+    
+    if (detailsRow && expandBtn) {
+        detailsRow.classList.toggle('active');
+        expandBtn.classList.toggle('active');
+        
+        console.log(`📋 切换交易 ${index} 的详情显示:`, detailsRow.classList.contains('active'));
+    }
+}
+
+/**
+ * 全部展开/收起
+ */
+function toggleAllDetails() {
+    const allDetailsRows = document.querySelectorAll('.details-row');
+    const toggleAllBtn = document.querySelector('.toggle-all-btn i');
+    
+    // 检查是否全部展开
+    const allExpanded = Array.from(allDetailsRows).every(row => row.classList.contains('active'));
+    
+    allDetailsRows.forEach((row, index) => {
+        if (allExpanded) {
+            row.classList.remove('active');
+        } else {
+            row.classList.add('active');
+        }
+    });
+    
+    // 更新所有展开按钮
+    document.querySelectorAll('.expand-btn').forEach((btn, index) => {
+        if (allExpanded) {
+            btn.classList.remove('active');
+        } else {
+            btn.classList.add('active');
+        }
+    });
+    
+    // 更新全部按钮图标
+    if (toggleAllBtn) {
+        if (allExpanded) {
+            toggleAllBtn.style.transform = 'rotate(0deg)';
+        } else {
+            toggleAllBtn.style.transform = 'rotate(180deg)';
+        }
+    }
+    
+    console.log(`📋 全部${allExpanded ? '收起' : '展开'}详情`);
+}
+
+/**
+ * 更新详情字段
+ */
+function updateDetailField(index, field, value) {
+    console.log(`📝 更新交易 ${index} 的 ${field}:`, value);
+    
+    if (!currentDocument || !currentDocument.processedData) return;
+    
+    const transactions = currentDocument.processedData.transactions || [];
+    if (transactions[index]) {
+        transactions[index][field] = value;
+        
+        // 同步更新主表格中的字段
+        const mainCell = document.querySelector(`.transaction-row[data-index="${index}"] .editable-cell[data-field="${field}"]`);
+        if (mainCell) {
+            mainCell.textContent = value;
+        }
+        
+        // 保存到 Firestore
+        saveTransactionChanges();
+    }
+}
+
+/**
+ * 展開/折疊備注行（旧版，保留兼容）
  */
 function toggleMemo(index) {
-    const memoRow = document.querySelector(`.memo-row[data-index="${index}"]`);
-    const expandBtn = document.querySelector(`.expand-btn[onclick*="${index}"]`);
-    
-    if (memoRow && expandBtn) {
-        memoRow.classList.toggle('active');
-        expandBtn.classList.toggle('active');
-    }
+    // 现在使用详情行，此函数保留以防旧代码调用
+    toggleDetails(index);
 }
 
 /**
@@ -2588,6 +2719,18 @@ function handleCategoryChange(index, category) {
     const transactions = currentDocument.processedData.transactions || [];
     if (transactions[index]) {
         transactions[index].category = category;
+        
+        // 同步更新主表格中的下拉菜单
+        const mainSelect = document.querySelector(`.transaction-row[data-index="${index}"] .category-select`);
+        if (mainSelect && mainSelect !== event.target) {
+            mainSelect.value = category;
+        }
+        
+        // 同步更新详情行中的下拉菜单
+        const detailSelect = document.querySelector(`.details-row[data-index="${index}"] select`);
+        if (detailSelect && detailSelect !== event.target) {
+            detailSelect.value = category;
+        }
         
         // 保存到 Firestore
         saveTransactionChanges();
@@ -2606,10 +2749,17 @@ function handleReconciledChange(index, reconciled) {
     if (transactions[index]) {
         transactions[index].reconciled = reconciled;
         
-        // 更新UI視覺反饋
-        const checkbox = document.querySelector(`.reconciled-checkbox[data-index="${index}"]`);
-        if (checkbox) {
-            checkbox.title = reconciled ? '已對賬' : '未對賬';
+        // 同步更新主表格中的复选框
+        const mainCheckbox = document.querySelector(`.transaction-row[data-index="${index}"] .reconciled-checkbox`);
+        if (mainCheckbox && mainCheckbox !== event.target) {
+            mainCheckbox.checked = reconciled;
+            mainCheckbox.title = reconciled ? '已對賬' : '未對賬';
+        }
+        
+        // 同步更新详情行中的复选框
+        const detailCheckbox = document.querySelector(`.details-row[data-index="${index}"] #reconciled-${index}`);
+        if (detailCheckbox && detailCheckbox !== event.target) {
+            detailCheckbox.checked = reconciled;
         }
         
         // 保存到 Firestore
@@ -2628,16 +2778,6 @@ function handleMemoChange(index, memo) {
     const transactions = currentDocument.processedData.transactions || [];
     if (transactions[index]) {
         transactions[index].memo = memo;
-        
-        // 更新展開按鈕狀態
-        const expandBtn = document.querySelector(`.expand-btn[onclick*="${index}"]`);
-        if (expandBtn) {
-            if (memo) {
-                expandBtn.classList.add('active');
-            } else {
-                expandBtn.classList.remove('active');
-            }
-        }
         
         // 保存到 Firestore
         saveTransactionChanges();
