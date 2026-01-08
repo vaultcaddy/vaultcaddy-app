@@ -1,0 +1,763 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+创建Sage银行组合Landing Pages - 价格优化版
+针对英国主要银行 + Sage的组合
+"""
+
+# 英国主要银行 + Sage组合页面配置
+SAGE_BANK_PAGES = {
+    'barclays-statement-to-sage': {
+        'bank_name': 'Barclays',
+        'bank_country': 'UK 🇬🇧',
+        'title': 'Barclays Bank Statement to Sage | Free Trial + $2.88/month ⭐4.9/5 - VaultCaddy',
+        'description': 'Convert Barclays bank statements to Sage 50/Accounting format in 3 seconds. Free 20-page trial, no credit card. From $2.88/month (annual). 98% accuracy for UK Barclays statements.',
+        'keywords': 'barclays to sage, barclays bank statement to sage 50, barclays sage converter, convert barclays to sage accounting, barclays csv to sage, uk barclays sage import',
+        'h1': 'Convert <span class="highlight">Barclays</span> Statement to Sage',
+        'subtitle': 'Instantly convert Barclays bank statements (PDF/CSV) to Sage 50 & Sage Accounting format.<br><strong style="color: #fbbf24;">Free 20-page trial • Then just $2.88/month</strong>',
+    },
+    'hsbc-statement-to-sage': {
+        'bank_name': 'HSBC UK',
+        'bank_country': 'UK 🇬🇧',
+        'title': 'HSBC UK Bank Statement to Sage | Free Trial + $2.88/month ⭐4.9/5 - VaultCaddy',
+        'description': 'Convert HSBC UK bank statements to Sage 50/Accounting format in 3 seconds. Free 20-page trial, no credit card. From $2.88/month (annual). 98% accuracy for HSBC statements.',
+        'keywords': 'hsbc to sage, hsbc uk to sage 50, hsbc sage converter, convert hsbc to sage accounting, hsbc csv to sage, uk hsbc sage import',
+        'h1': 'Convert <span class="highlight">HSBC UK</span> Statement to Sage',
+        'subtitle': 'Instantly convert HSBC UK bank statements (PDF/CSV) to Sage 50 & Sage Accounting format.<br><strong style="color: #fbbf24;">Free 20-page trial • Then just $2.88/month</strong>',
+    },
+    'lloyds-statement-to-sage': {
+        'bank_name': 'Lloyds Bank',
+        'bank_country': 'UK 🇬🇧',
+        'title': 'Lloyds Bank Statement to Sage | Free Trial + $2.88/month ⭐4.9/5 - VaultCaddy',
+        'description': 'Convert Lloyds Bank statements to Sage 50/Accounting format in 3 seconds. Free 20-page trial, no credit card. From $2.88/month (annual). 98% accuracy for Lloyds statements.',
+        'keywords': 'lloyds to sage, lloyds bank to sage 50, lloyds sage converter, convert lloyds to sage accounting, lloyds csv to sage, uk lloyds sage import',
+        'h1': 'Convert <span class="highlight">Lloyds Bank</span> Statement to Sage',
+        'subtitle': 'Instantly convert Lloyds Bank statements (PDF/CSV) to Sage 50 & Sage Accounting format.<br><strong style="color: #fbbf24;">Free 20-page trial • Then just $2.88/month</strong>',
+    },
+    'natwest-statement-to-sage': {
+        'bank_name': 'NatWest',
+        'bank_country': 'UK 🇬🇧',
+        'title': 'NatWest Bank Statement to Sage | Free Trial + $2.88/month ⭐4.9/5 - VaultCaddy',
+        'description': 'Convert NatWest bank statements to Sage 50/Accounting format in 3 seconds. Free 20-page trial, no credit card. From $2.88/month (annual). 98% accuracy for NatWest statements.',
+        'keywords': 'natwest to sage, natwest bank to sage 50, natwest sage converter, convert natwest to sage accounting, natwest csv to sage, uk natwest sage import',
+        'h1': 'Convert <span class="highlight">NatWest</span> Statement to Sage',
+        'subtitle': 'Instantly convert NatWest bank statements (PDF/CSV) to Sage 50 & Sage Accounting format.<br><strong style="color: #fbbf24;">Free 20-page trial • Then just $2.88/month</strong>',
+    },
+    'santander-uk-statement-to-sage': {
+        'bank_name': 'Santander UK',
+        'bank_country': 'UK 🇬🇧',
+        'title': 'Santander UK Statement to Sage | Free Trial + $2.88/month ⭐4.9/5 - VaultCaddy',
+        'description': 'Convert Santander UK bank statements to Sage 50/Accounting format in 3 seconds. Free 20-page trial, no credit card. From $2.88/month (annual). 98% accuracy for Santander statements.',
+        'keywords': 'santander uk to sage, santander to sage 50, santander sage converter, convert santander to sage accounting, santander csv to sage, uk santander sage import',
+        'h1': 'Convert <span class="highlight">Santander UK</span> Statement to Sage',
+        'subtitle': 'Instantly convert Santander UK bank statements (PDF/CSV) to Sage 50 & Sage Accounting format.<br><strong style="color: #fbbf24;">Free 20-page trial • Then just $2.88/month</strong>',
+    }
+}
+
+# 复用核心模板HTML结构
+def create_sage_bank_page(filename, config):
+    """创建银行特定的Sage页面"""
+    
+    bank_name = config['bank_name']
+    
+    html = f'''<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SEO Optimization -->
+    <title>{config['title']}</title>
+    <meta name="description" content="{config['description']}">
+    <meta name="keywords" content="{config['keywords']}">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://vaultcaddy.com/{filename}.html">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="{config['title']}">
+    <meta property="og:description" content="{config['description']}">
+    <meta property="og:url" content="https://vaultcaddy.com/{filename}.html">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://vaultcaddy.com/assets/og-sage-{bank_name.lower().replace(' ', '-')}.jpg">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Schema.org Structured Data -->
+    <script type="application/ld+json">
+    {{
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "VaultCaddy - {bank_name} to Sage Converter",
+        "applicationCategory": "FinanceApplication",
+        "operatingSystem": "Web",
+        "offers": {{
+            "@type": "Offer",
+            "price": "2.88",
+            "priceCurrency": "USD"
+        }},
+        "aggregateRating": {{
+            "@type": "AggregateRating",
+            "ratingValue": "4.9",
+            "ratingCount": "500"
+        }}
+    }}
+    </script>
+    
+    <!-- Google Analytics 4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-H6C6SNHKVR"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){{dataLayer.push(arguments);}}
+        gtag('js', new Date());
+        gtag('config', 'G-H6C6SNHKVR');
+    </script>
+    
+    <style>
+        :root {{
+            --primary: #00DC06;
+            --primary-dark: #00B005;
+            --secondary: #6366f1;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --dark: #0f172a;
+            --light: #f8fafc;
+        }}
+        
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        
+        body {{
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--dark);
+            color: #1e293b;
+            overflow-x: hidden;
+        }}
+        
+        .hero {{
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #00DC06 0%, #00B005 50%, #6366f1 100%);
+            position: relative;
+            overflow: hidden;
+        }}
+        
+        .hero::before {{
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: moveBackground 20s linear infinite;
+        }}
+        
+        @keyframes moveBackground {{
+            0% {{ transform: translate(0, 0); }}
+            100% {{ transform: translate(50px, 50px); }}
+        }}
+        
+        .hero-content {{
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 40px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }}
+        
+        .hero-badge-price {{
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: #1a202c;
+            padding: 14px 32px;
+            border-radius: 50px;
+            font-weight: 700;
+            display: inline-block;
+            margin-bottom: 20px;
+            font-size: 18px;
+            box-shadow: 0 10px 30px rgba(251, 191, 36, 0.4);
+            animation: pulse 2s infinite;
+        }}
+        
+        @keyframes pulse {{
+            0%, 100% {{ transform: scale(1); }}
+            50% {{ transform: scale(1.05); }}
+        }}
+        
+        .hero-badge {{
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 12px 24px;
+            border-radius: 50px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }}
+        
+        .hero h1 {{
+            font-size: clamp(36px, 6vw, 72px);
+            font-weight: 900;
+            color: white;
+            margin-bottom: 24px;
+            line-height: 1.1;
+        }}
+        
+        .hero h1 .highlight {{
+            background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }}
+        
+        .hero p {{
+            font-size: clamp(18px, 2.5vw, 24px);
+            color: rgba(255, 255, 255, 0.95);
+            margin-bottom: 40px;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+        }}
+        
+        .hero-stats {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            max-width: 800px;
+            margin: 0 auto 40px;
+        }}
+        
+        .stat {{
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }}
+        
+        .stat-number {{
+            display: block;
+            font-size: 2em;
+            font-weight: 900;
+            color: white;
+            margin-bottom: 5px;
+        }}
+        
+        .stat-label {{
+            display: block;
+            font-size: 0.9em;
+            color: rgba(255, 255, 255, 0.9);
+        }}
+        
+        .stat.price-highlight {{
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            border-color: #fbbf24;
+        }}
+        
+        .stat.price-highlight .stat-number,
+        .stat.price-highlight .stat-label {{
+            color: #1a202c;
+        }}
+        
+        .rating {{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 40px;
+        }}
+        
+        .stars {{
+            color: #fbbf24;
+            font-size: 24px;
+        }}
+        
+        .rating-text {{
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+        }}
+        
+        .cta-buttons {{
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }}
+        
+        .cta-button {{
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 18px 40px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }}
+        
+        .cta-button.primary {{
+            background: white;
+            color: var(--primary);
+        }}
+        
+        .cta-button.primary:hover {{
+            transform: translateY(-4px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        }}
+        
+        .cta-button.secondary {{
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+        }}
+        
+        .cta-button.secondary:hover {{
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-4px);
+        }}
+        
+        .section {{
+            padding: 100px 20px;
+            background: white;
+        }}
+        
+        .section.dark {{
+            background: var(--dark);
+            color: white;
+        }}
+        
+        .container {{
+            max-width: 1200px;
+            margin: 0 auto;
+        }}
+        
+        .section-title {{
+            font-size: clamp(32px, 5vw, 48px);
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 20px;
+        }}
+        
+        .section-subtitle {{
+            text-align: center;
+            font-size: 1.2em;
+            color: #64748b;
+            margin-bottom: 60px;
+        }}
+        
+        .section-title .highlight {{
+            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }}
+        
+        .features-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+        }}
+        
+        .feature-card {{
+            background: var(--light);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }}
+        
+        .feature-card:hover {{
+            transform: translateY(-8px);
+            border-color: var(--primary);
+            box-shadow: 0 20px 60px rgba(0, 220, 6, 0.2);
+        }}
+        
+        .feature-icon {{
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            color: white;
+        }}
+        
+        .feature-card h3 {{
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }}
+        
+        .feature-card p {{
+            font-size: 16px;
+            line-height: 1.6;
+            color: #64748b;
+        }}
+        
+        .steps {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-top: 60px;
+        }}
+        
+        .step {{
+            text-align: center;
+        }}
+        
+        .step-number {{
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 24px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: 900;
+            color: white;
+        }}
+        
+        .step h3 {{
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }}
+        
+        .step p {{
+            font-size: 16px;
+            color: #64748b;
+            line-height: 1.6;
+        }}
+        
+        .demo-section {{
+            padding: 100px 20px;
+            background: white;
+            text-align: center;
+        }}
+        
+        .demo-video {{
+            max-width: 900px;
+            margin: 40px auto;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        }}
+        
+        .demo-video img {{
+            width: 100%;
+            height: auto;
+            display: block;
+        }}
+        
+        .final-cta {{
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 100px 20px;
+            text-align: center;
+        }}
+        
+        .final-cta h2 {{
+            font-size: clamp(32px, 5vw, 52px);
+            font-weight: 900;
+            margin-bottom: 20px;
+        }}
+        
+        .final-cta p {{
+            font-size: 20px;
+            margin-bottom: 40px;
+            opacity: 0.95;
+        }}
+        
+        footer {{
+            background: var(--dark);
+            color: white;
+            padding: 60px 20px 30px;
+            text-align: center;
+        }}
+        
+        .footer-links {{
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }}
+        
+        .footer-links a {{
+            color: white;
+            text-decoration: none;
+            opacity: 0.8;
+        }}
+        
+        .footer-links a:hover {{
+            opacity: 1;
+        }}
+        
+        @media (max-width: 768px) {{
+            .hero h1 {{ font-size: 36px; }}
+            .hero p {{ font-size: 18px; }}
+            .hero-stats {{ grid-template-columns: 1fr 1fr; }}
+            .cta-buttons {{ flex-direction: column; }}
+            .section {{ padding: 60px 20px; }}
+            .features-grid, .steps {{ grid-template-columns: 1fr; }}
+        }}
+    </style>
+</head>
+<body>
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badge-price">
+                💰 FREE 20-Page Trial • From $2.88/month (15x Cheaper!)
+            </div>
+            
+            <div class="hero-badge">
+                <i class="fas fa-bolt"></i> AI-Powered OCR • {bank_name} Specialist
+            </div>
+            
+            <h1>{config['h1']}</h1>
+            
+            <p>{config['subtitle']}</p>
+            
+            <div class="hero-stats">
+                <div class="stat">
+                    <span class="stat-number">3s</span>
+                    <span class="stat-label">Processing Time</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">98%</span>
+                    <span class="stat-label">Accuracy</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">{bank_name}</span>
+                    <span class="stat-label">Optimized For</span>
+                </div>
+                <div class="stat price-highlight">
+                    <span class="stat-number">$2.88</span>
+                    <span class="stat-label">Per Month</span>
+                </div>
+            </div>
+            
+            <div class="rating">
+                <div class="stars">⭐⭐⭐⭐⭐</div>
+                <span class="rating-text">4.9/5 from 500+ users</span>
+            </div>
+            
+            <div class="cta-buttons">
+                <a href="/firstproject.html" class="cta-button primary">
+                    <i class="fas fa-rocket"></i>
+                    Start FREE Trial - 20 Pages
+                </a>
+                <a href="#how-it-works" class="cta-button secondary">
+                    <i class="fas fa-play-circle"></i>
+                    See How It Works
+                </a>
+            </div>
+        </div>
+    </section>
+    
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">
+                Why VaultCaddy for <span class="highlight">{bank_name} → Sage</span>?
+            </h2>
+            <p class="section-subtitle">
+                Specifically optimized for {bank_name} bank statements with Sage format
+            </p>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-university"></i></div>
+                    <h3>{bank_name} Optimized</h3>
+                    <p>Our AI is specially trained to recognize {bank_name} statement formats perfectly</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-check-double"></i></div>
+                    <h3>Sage Compatible</h3>
+                    <p>Perfect DD/MM/YYYY dates, Debit/Credit columns, BP/BR codes for Sage</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-bolt"></i></div>
+                    <h3>3-Second Processing</h3>
+                    <p>Upload {bank_name} statement → Get Sage CSV in 3 seconds</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);">
+                        <i class="fas fa-tag"></i>
+                    </div>
+                    <h3>Unbeatable Price</h3>
+                    <p><strong>$2.88/month</strong> (annual) or $5.59/month. 15x cheaper than competitors!</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+                    <h3>100% Secure</h3>
+                    <p>Bank-level 256-bit encryption, auto-delete after 24 hours</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-gift"></i></div>
+                    <h3>Free Trial</h3>
+                    <p>20 pages free, no credit card required. Try with your {bank_name} statements!</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section id="how-it-works" class="section" style="background: var(--light);">
+        <div class="container">
+            <h2 class="section-title">
+                How It <span class="highlight">Works</span>
+            </h2>
+            <p class="section-subtitle">
+                Convert {bank_name} statements to Sage format in 4 simple steps
+            </p>
+            
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>📤 Upload {bank_name} Statement</h3>
+                    <p>Upload your {bank_name} bank statement PDF or CSV</p>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>🤖 AI Extracts Data</h3>
+                    <p>Our AI recognizes {bank_name} format perfectly</p>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>📊 Get Sage CSV</h3>
+                    <p>Download perfectly formatted Sage-compatible file</p>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <h3>✅ Import to Sage</h3>
+                    <p>Import into Sage 50 or Sage Accounting instantly</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section class="demo-section">
+        <div class="container">
+            <h2 class="section-title">
+                See It In <span class="highlight">Action</span>
+            </h2>
+            <div class="demo-video">
+                <img src="video/chase-bank-demo.gif" alt="Convert {bank_name} to Sage" loading="lazy">
+            </div>
+            <p style="max-width: 800px; margin: 30px auto 0; color: #64748b; line-height: 1.8;">
+                <strong>What you'll get:</strong> A perfectly formatted Sage CSV with DD/MM/YYYY dates, 
+                Debit/Credit columns, BP/BR transaction codes, and account references. 
+                Ready for instant import into Sage 50 or Sage Accounting.
+            </p>
+        </div>
+    </section>
+    
+    <section class="final-cta">
+        <div class="container">
+            <h2>Ready to Convert {bank_name} to Sage?</h2>
+            <p>
+                Join 500+ UK businesses using VaultCaddy<br>
+                <strong style="color: #fbbf24; font-size: 1.3em;">Free 20-page trial • From $2.88/month</strong>
+            </p>
+            
+            <a href="/firstproject.html" class="cta-button primary" style="margin: 0 auto;">
+                <i class="fas fa-rocket"></i>
+                Start FREE Trial Now
+            </a>
+            
+            <p style="margin-top: 30px; font-size: 16px; opacity: 0.9;">
+                <i class="fas fa-check-circle"></i> No credit card • 
+                <i class="fas fa-check-circle"></i> Cancel anytime • 
+                <i class="fas fa-check-circle"></i> 98% accuracy
+            </p>
+        </div>
+    </section>
+    
+    <footer>
+        <div class="container">
+            <div class="footer-links">
+                <a href="/">Home</a>
+                <a href="/convert-bank-statement-to-sage.html">Sage Converter</a>
+                <a href="/convert-bank-statement-to-qbo.html">QBO Converter</a>
+                <a href="/convert-bank-statement-to-xero.html">Xero Converter</a>
+                <a href="/pricing.html">Pricing</a>
+            </div>
+            <p style="opacity: 0.6; font-size: 14px; margin-top: 20px;">
+                © 2026 VaultCaddy. All rights reserved.
+            </p>
+        </div>
+    </footer>
+    
+    <script>
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {{
+            anchor.addEventListener('click', function (e) {{
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({{
+                    behavior: 'smooth'
+                }});
+            }});
+        }});
+    </script>
+</body>
+</html>'''
+    
+    return html
+
+def main():
+    """批量创建所有Sage银行组合页面"""
+    print("🏦 开始创建Sage银行组合Landing Pages...")
+    print(f"共需创建 {len(SAGE_BANK_PAGES)} 个银行页面\n")
+    
+    for filename, config in SAGE_BANK_PAGES.items():
+        print(f"📝 创建: {filename}.html ({config['bank_name']})")
+        html_content = create_sage_bank_page(filename, config)
+        
+        with open(f"{filename}.html", 'w', encoding='utf-8') as f:
+            f.write(html_content)
+        
+        print(f"   ✅ 完成: {filename}.html")
+        print()
+    
+    print("\n🎉 所有Sage银行页面创建完成!")
+    print("\n📋 创建的页面列表:")
+    for filename, config in SAGE_BANK_PAGES.items():
+        print(f"   ✅ {filename}.html ({config['bank_name']})")
+    
+    print("\n🔗 下一步操作:")
+    print("   1. 测试所有页面")
+    print("   2. 提交到Google Search Console")
+    print("   3. 更新sitemap.xml")
+    print("   4. 添加内部链接")
+
+if __name__ == "__main__":
+    main()
+
