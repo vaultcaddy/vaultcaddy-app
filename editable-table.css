@@ -280,3 +280,188 @@
     }
 }
 
+/* ========== 🎨 展開詳情面板優化設計 ========== */
+
+/* 詳情面板容器 - 默認隱藏 */
+.transaction-detail-row {
+    display: none;  /* 默認收起 */
+    background: #f9fafb;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* 展開狀態 */
+.transaction-detail-row.active {
+    display: table-row;
+}
+
+/* 詳情內容區域 */
+.detail-content {
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+}
+
+/* 詳情標題 */
+.detail-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.detail-title i {
+    color: #6366f1;
+}
+
+/* 詳情字段網格 */
+.detail-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+/* 單個字段 */
+.detail-field {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 0.75rem;
+    transition: all 0.2s;
+}
+
+.detail-field:hover {
+    border-color: #c7d2fe;
+    box-shadow: 0 2px 4px rgba(99, 102, 241, 0.1);
+}
+
+/* 字段標籤 */
+.detail-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.detail-label i {
+    font-size: 0.7rem;
+    color: #9ca3af;
+}
+
+/* 字段值 */
+.detail-value {
+    font-size: 0.9rem;
+    color: #1f2937;
+    min-height: 20px;
+    word-break: break-word;
+}
+
+/* 空值顯示 */
+.detail-value.empty {
+    color: #d1d5db;
+    font-style: italic;
+}
+
+.detail-value.empty::before {
+    content: '—';
+}
+
+/* 備注字段特殊樣式（全寬） */
+.detail-field.memo {
+    grid-column: 1 / -1;
+}
+
+.detail-field.memo .detail-value {
+    min-height: 60px;
+    padding: 0.5rem;
+    background: #fffbeb;
+    border: 1px dashed #fcd34d;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+}
+
+/* 附件字段特殊樣式 */
+.detail-field.attachment .detail-value {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.attachment-icon {
+    color: #10b981;
+    font-size: 1.125rem;
+}
+
+.attachment-icon.no-file {
+    color: #d1d5db;
+}
+
+/* 展開按鈕在行內 */
+.expand-detail-btn {
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    color: #6b7280;
+    padding: 0.375rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+}
+
+.expand-detail-btn:hover {
+    background: #eef2ff;
+    border-color: #c7d2fe;
+    color: #6366f1;
+}
+
+.expand-detail-btn.active {
+    background: #eef2ff;
+    border-color: #6366f1;
+    color: #6366f1;
+}
+
+.expand-detail-btn i {
+    transition: transform 0.2s;
+}
+
+.expand-detail-btn.active i {
+    transform: rotate(180deg);
+}
+
+/* 只顯示額外信息提示 */
+.detail-info-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.125rem 0.5rem;
+    background: #dbeafe;
+    color: #1e40af;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-left: 0.5rem;
+}
+
+.detail-info-badge i {
+    font-size: 0.7rem;
+}
+
+/* 響應式：移動端 */
+@media (max-width: 768px) {
+    .detail-fields {
+        grid-template-columns: 1fr;
+    }
+    
+    .detail-content {
+        padding: 1rem;
+    }
+}
+
