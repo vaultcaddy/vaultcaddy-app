@@ -1571,11 +1571,7 @@ function displayBankStatementContent(data) {
         
         transactionsHTML += `
             <tr data-index="${actualIndex}" class="transaction-row">
-                <td class="expand-cell">
-                    <button class="expand-btn" onclick="toggleDetails(${actualIndex})" title="展開詳情">
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
-                </td>
+                <!-- 🚫 展開按鈕已移除（2026-01-09） -->
                 <td class="checkbox-cell">
                     <input type="checkbox" 
                            class="transaction-checkbox" 
@@ -1654,78 +1650,7 @@ function displayBankStatementContent(data) {
                     </div>
                 </td>
             </tr>
-            <tr class="details-row" data-index="${actualIndex}">
-                <td colspan="14" style="padding: 0;">
-                    <div class="details-panel">
-                        <div class="details-grid">
-                            <div class="detail-item">
-                                <label>交易類型</label>
-                                <input type="text" value="${transactionType}" readonly>
-                            </div>
-                            <div class="detail-item">
-                                <label>收款人/付款人</label>
-                                <input type="text" value="${payee}" 
-                                       onchange="updateDetailField(${actualIndex}, 'payee', this.value)">
-                            </div>
-                            <div class="detail-item">
-                                <label>參考編號</label>
-                                <input type="text" value="${referenceNumber}" 
-                                       onchange="updateDetailField(${actualIndex}, 'referenceNumber', this.value)">
-                            </div>
-                            <div class="detail-item">
-                                <label>支票號碼</label>
-                                <input type="text" value="${checkNumber}" 
-                                       onchange="updateDetailField(${actualIndex}, 'checkNumber', this.value)">
-                            </div>
-                            <div class="detail-item">
-                                <label>分類</label>
-                                <select onchange="handleCategoryChange(${actualIndex}, this.value)">
-                                    <option value="">未分類</option>
-                                    <optgroup label="收入類別">
-                                        <option value="salary" ${category === 'salary' ? 'selected' : ''}>工資</option>
-                                        <option value="sales" ${category === 'sales' ? 'selected' : ''}>銷售收入</option>
-                                        <option value="interest" ${category === 'interest' ? 'selected' : ''}>利息收入</option>
-                                        <option value="other-income" ${category === 'other-income' ? 'selected' : ''}>其他收入</option>
-                                    </optgroup>
-                                    <optgroup label="支出類別">
-                                        <option value="office" ${category === 'office' ? 'selected' : ''}>辦公費用</option>
-                                        <option value="transport" ${category === 'transport' ? 'selected' : ''}>交通費用</option>
-                                        <option value="meal" ${category === 'meal' ? 'selected' : ''}>餐飲費用</option>
-                                        <option value="utilities" ${category === 'utilities' ? 'selected' : ''}>水電費</option>
-                                        <option value="rent" ${category === 'rent' ? 'selected' : ''}>租金</option>
-                                        <option value="salary-expense" ${category === 'salary-expense' ? 'selected' : ''}>工資支出</option>
-                                        <option value="marketing" ${category === 'marketing' ? 'selected' : ''}>營銷費用</option>
-                                        <option value="supplies" ${category === 'supplies' ? 'selected' : ''}>耗材</option>
-                                        <option value="other-expense" ${category === 'other-expense' ? 'selected' : ''}>其他支出</option>
-                                    </optgroup>
-                                </select>
-                            </div>
-                            <div class="detail-item">
-                                <label>對賬狀態</label>
-                                <div class="reconciled-checkbox-detail">
-                                    <input type="checkbox" 
-                                           id="reconciled-${actualIndex}" 
-                                           ${reconciled ? 'checked' : ''}
-                                           onchange="handleReconciledChange(${actualIndex}, this.checked)">
-                                    <label for="reconciled-${actualIndex}">已對賬</label>
-                                </div>
-                            </div>
-                            <div class="detail-item">
-                                <label>附件</label>
-                                <button class="attach-btn" onclick="handleAttachment(${actualIndex})">
-                                    <i class="fas fa-paperclip"></i>
-                                    ${hasAttachment ? '查看附件' : '添加附件'}
-                                </button>
-                            </div>
-                            <div class="detail-item full-width">
-                                <label>備注</label>
-                                <textarea placeholder="添加備注..." 
-                                          onchange="handleMemoChange(${actualIndex}, this.value)">${memo}</textarea>
-                            </div>
-                        </div>
-                    </div>
-                </td>
-            </tr>
+            <!-- 🚫 編輯表單面板已移除（2026-01-09）：用戶要求刪除圖2中的編輯UI -->
         `;
     });
     
@@ -2624,57 +2549,22 @@ function extractOtherAccounts(data) {
 // ============================================
 
 /**
- * 展开/折叠详情行
+ * 🚫 展开/折叠详情行（已禁用 2026-01-09）
+ * 用戶要求移除編輯表單面板功能
  */
 function toggleDetails(index) {
-    const detailsRow = document.querySelector(`.details-row[data-index="${index}"]`);
-    const expandBtn = document.querySelector(`.transaction-row[data-index="${index}"] .expand-btn`);
-    
-    if (detailsRow && expandBtn) {
-        detailsRow.classList.toggle('active');
-        expandBtn.classList.toggle('active');
-        
-        console.log(`📋 切换交易 ${index} 的详情显示:`, detailsRow.classList.contains('active'));
-    }
+    // 功能已禁用
+    console.log('⚠️ toggleDetails 功能已禁用');
+    return;
 }
 
 /**
- * 全部展开/收起
+ * 🚫 全部展开/收起（已禁用 2026-01-09）
  */
 function toggleAllDetails() {
-    const allDetailsRows = document.querySelectorAll('.details-row');
-    const toggleAllBtn = document.querySelector('.toggle-all-btn i');
-    
-    // 检查是否全部展开
-    const allExpanded = Array.from(allDetailsRows).every(row => row.classList.contains('active'));
-    
-    allDetailsRows.forEach((row, index) => {
-        if (allExpanded) {
-            row.classList.remove('active');
-        } else {
-            row.classList.add('active');
-        }
-    });
-    
-    // 更新所有展开按钮
-    document.querySelectorAll('.expand-btn').forEach((btn, index) => {
-        if (allExpanded) {
-            btn.classList.remove('active');
-        } else {
-            btn.classList.add('active');
-        }
-    });
-    
-    // 更新全部按钮图标
-    if (toggleAllBtn) {
-        if (allExpanded) {
-            toggleAllBtn.style.transform = 'rotate(0deg)';
-        } else {
-            toggleAllBtn.style.transform = 'rotate(180deg)';
-        }
-    }
-    
-    console.log(`📋 全部${allExpanded ? '收起' : '展开'}详情`);
+    // 功能已禁用
+    console.log('⚠️ toggleAllDetails 功能已禁用');
+    return;
 }
 
 /**
@@ -2704,8 +2594,9 @@ function updateDetailField(index, field, value) {
  * 展開/折疊備注行（旧版，保留兼容）
  */
 function toggleMemo(index) {
-    // 现在使用详情行，此函数保留以防旧代码调用
-    toggleDetails(index);
+    // 🚫 功能已禁用（2026-01-09）
+    console.log('⚠️ toggleMemo 功能已禁用');
+    return;
 }
 
 /**
@@ -2726,11 +2617,7 @@ function handleCategoryChange(index, category) {
             mainSelect.value = category;
         }
         
-        // 同步更新详情行中的下拉菜单
-        const detailSelect = document.querySelector(`.details-row[data-index="${index}"] select`);
-        if (detailSelect && detailSelect !== event.target) {
-            detailSelect.value = category;
-        }
+        // 🚫 詳情行同步代碼已移除（2026-01-09）
         
         // 保存到 Firestore
         saveTransactionChanges();
@@ -2756,11 +2643,7 @@ function handleReconciledChange(index, reconciled) {
             mainCheckbox.title = reconciled ? '已對賬' : '未對賬';
         }
         
-        // 同步更新详情行中的复选框
-        const detailCheckbox = document.querySelector(`.details-row[data-index="${index}"] #reconciled-${index}`);
-        if (detailCheckbox && detailCheckbox !== event.target) {
-            detailCheckbox.checked = reconciled;
-        }
+        // 🚫 詳情行同步代碼已移除（2026-01-09）
         
         // 保存到 Firestore
         saveTransactionChanges();
