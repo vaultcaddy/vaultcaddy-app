@@ -280,13 +280,13 @@
     }
 }
 
-/* ========== 🎨 展開詳情面板優化設計 ========== */
+/* ========== 🎨 展開詳情面板 - 精簡設計（只顯示備注） ========== */
 
 /* 詳情面板容器 - 默認隱藏 */
 .transaction-detail-row {
     display: none;  /* 默認收起 */
-    background: #f9fafb;
-    border-top: 1px solid #e5e7eb;
+    background: #fffbeb;
+    border-top: 1px solid #fcd34d;
 }
 
 /* 展開狀態 */
@@ -294,121 +294,73 @@
     display: table-row;
 }
 
-/* 詳情內容區域 */
+/* 詳情內容區域 - 精簡設計 */
 .detail-content {
-    padding: 1.5rem;
-    background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+    padding: 1rem 1.5rem;
 }
 
-/* 詳情標題 */
-.detail-title {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #6b7280;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+/* 備注字段 - 唯一顯示的字段 */
+.memo-field {
+    width: 100%;
 }
 
-.detail-title i {
-    color: #6366f1;
-}
-
-/* 詳情字段網格 */
-.detail-fields {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1rem;
-}
-
-/* 單個字段 */
-.detail-field {
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 6px;
-    padding: 0.75rem;
-    transition: all 0.2s;
-}
-
-.detail-field:hover {
-    border-color: #c7d2fe;
-    box-shadow: 0 2px 4px rgba(99, 102, 241, 0.1);
-}
-
-/* 字段標籤 */
-.detail-label {
+/* 備注標籤 */
+.memo-label {
     font-size: 0.75rem;
     font-weight: 600;
-    color: #6b7280;
+    color: #92400e;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     margin-bottom: 0.5rem;
     display: flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: 0.5rem;
 }
 
-.detail-label i {
-    font-size: 0.7rem;
-    color: #9ca3af;
+.memo-label i {
+    color: #f59e0b;
 }
 
-/* 字段值 */
-.detail-value {
+/* 備注輸入框 */
+.memo-input {
+    width: 100%;
+    min-height: 80px;
+    padding: 0.75rem;
+    background: #ffffff;
+    border: 1px solid #fcd34d;
+    border-radius: 6px;
+    font-family: 'Courier New', monospace;
     font-size: 0.9rem;
     color: #1f2937;
-    min-height: 20px;
-    word-break: break-word;
+    resize: vertical;
+    transition: all 0.2s;
 }
 
-/* 空值顯示 */
-.detail-value.empty {
+.memo-input:focus {
+    outline: none;
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+}
+
+.memo-input::placeholder {
     color: #d1d5db;
     font-style: italic;
 }
 
-.detail-value.empty::before {
-    content: '—';
+/* 空備注提示 */
+.memo-empty {
+    padding: 1rem;
+    text-align: center;
+    color: #9ca3af;
+    font-style: italic;
+    font-size: 0.875rem;
 }
 
-/* 備注字段特殊樣式（全寬） */
-.detail-field.memo {
-    grid-column: 1 / -1;
-}
-
-.detail-field.memo .detail-value {
-    min-height: 60px;
-    padding: 0.5rem;
-    background: #fffbeb;
-    border: 1px dashed #fcd34d;
-    border-radius: 4px;
-    font-family: 'Courier New', monospace;
-}
-
-/* 附件字段特殊樣式 */
-.detail-field.attachment .detail-value {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.attachment-icon {
-    color: #10b981;
-    font-size: 1.125rem;
-}
-
-.attachment-icon.no-file {
-    color: #d1d5db;
-}
-
-/* 展開按鈕在行內 */
-.expand-detail-btn {
-    background: #f3f4f6;
-    border: 1px solid #e5e7eb;
-    color: #6b7280;
+/* 展開按鈕 - 只在有備注時顯示 */
+.expand-memo-btn {
+    background: #fef3c7;
+    border: 1px solid #fcd34d;
+    color: #92400e;
     padding: 0.375rem;
     border-radius: 6px;
     cursor: pointer;
@@ -416,52 +368,60 @@
     transition: all 0.2s;
 }
 
-.expand-detail-btn:hover {
-    background: #eef2ff;
-    border-color: #c7d2fe;
-    color: #6366f1;
+.expand-memo-btn:hover {
+    background: #fde68a;
+    border-color: #f59e0b;
 }
 
-.expand-detail-btn.active {
-    background: #eef2ff;
-    border-color: #6366f1;
-    color: #6366f1;
+.expand-memo-btn.active {
+    background: #fde68a;
+    border-color: #f59e0b;
 }
 
-.expand-detail-btn i {
+.expand-memo-btn i {
     transition: transform 0.2s;
 }
 
-.expand-detail-btn.active i {
+.expand-memo-btn.active i {
     transform: rotate(180deg);
 }
 
-/* 只顯示額外信息提示 */
-.detail-info-badge {
+/* 備注徽章提示 */
+.memo-badge {
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
     padding: 0.125rem 0.5rem;
-    background: #dbeafe;
-    color: #1e40af;
+    background: #fef3c7;
+    color: #92400e;
     border-radius: 12px;
     font-size: 0.75rem;
     font-weight: 500;
-    margin-left: 0.5rem;
 }
 
-.detail-info-badge i {
+.memo-badge i {
     font-size: 0.7rem;
+    color: #f59e0b;
+}
+
+/* 隱藏附件相關UI */
+.attach-btn,
+.attachment-icon,
+.attachment-field,
+[class*="attachment"],
+button[onclick*="attach"] {
+    display: none !important;
 }
 
 /* 響應式：移動端 */
 @media (max-width: 768px) {
-    .detail-fields {
-        grid-template-columns: 1fr;
+    .detail-content {
+        padding: 0.75rem 1rem;
     }
     
-    .detail-content {
-        padding: 1rem;
+    .memo-input {
+        min-height: 60px;
+        font-size: 0.85rem;
     }
 }
 
