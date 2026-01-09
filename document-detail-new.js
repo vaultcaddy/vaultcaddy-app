@@ -1572,14 +1572,8 @@ function displayBankStatementContent(data) {
         transactionsHTML += `
             <tr data-index="${actualIndex}" class="transaction-row">
                 <!-- 🚫 展開按鈕已移除（2026-01-09） -->
+                <!-- 🚫 選擇框已移除（2026-01-09）：用戶反饋有兩個復選框，刪除選擇功能 -->
                 <td class="checkbox-cell">
-                    <input type="checkbox" 
-                           class="transaction-checkbox" 
-                           data-index="${actualIndex}"
-                           ${tx.checked ? 'checked' : ''}
-                           onchange="handleTransactionCheckbox(${actualIndex}, this.checked)">
-                </td>
-                <td class="reconciled-cell">
                     <input type="checkbox" 
                            class="reconciled-checkbox" 
                            data-index="${actualIndex}"
@@ -1691,18 +1685,22 @@ function displayBankStatementContent(data) {
             <table class="transactions-table">
                 <thead>
                     <tr>
-                        <th class="checkbox-cell" style="font-size: 0.75rem; font-weight: 600; text-align: center;">${t('verified')}</th>
-                        <th>${t('date')}</th>
-                        <th>${t('type')}</th>
-                        <th>${t('description')}</th>
-                        <th>${t('payee')}</th>
-                        <th>${t('reference')}</th>
-                        <th>${t('amount')}</th>
-                        <th>${t('balance')}</th>
+                        <th class="checkbox-cell" style="width: 45px; text-align: center; font-size: 0.75rem; font-weight: 600;">✓ 已對賬</th>
+                        <th style="font-size: 0.875rem;">${t('date')}</th>
+                        <th class="type-cell" style="font-size: 0.875rem;">${t('type')}</th>
+                        <th style="font-size: 0.875rem;">${t('description')}</th>
+                        <th style="font-size: 0.875rem;">${t('payee')}</th>
+                        <th class="ref-cell" style="font-size: 0.875rem;">${t('reference')}</th>
+                        <th class="check-cell" style="font-size: 0.875rem;">支票號</th>
+                        <th class="category-cell" style="font-size: 0.875rem;">分類</th>
+                        <th style="font-size: 0.875rem; text-align: right;">${t('amount')}</th>
+                        <th style="font-size: 0.875rem; text-align: right;">${t('balance')}</th>
+                        <th class="attachment-cell" style="font-size: 0.875rem; text-align: center;">📎</th>
+                        <th class="action-cell" style="font-size: 0.875rem; text-align: center;">操作</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${transactionsHTML || `<tr><td colspan="8" style="text-align: center; padding: 2rem; color: #6b7280;">${t('no_transactions')}</td></tr>`}
+                    ${transactionsHTML || `<tr><td colspan="12" style="text-align: center; padding: 2rem; color: #6b7280;">${t('no_transactions')}</td></tr>`}
                 </tbody>
             </table>
             ${paginationHTML}
