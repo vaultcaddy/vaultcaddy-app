@@ -2241,7 +2241,7 @@ exports.createStripeCheckoutSession = functions.https.onCall(async (data, contex
         console.log('📝 創建 Checkout Session，價格:', selectedPlan, '模式:', isTest ? '測試' : '生產');
         
         // 🎯 創建 Checkout Session（使用對應模式的客戶端）
-        // 🆕 2026-01-08：使用多貨幣價格 + 保留超額計費
+        // 🆕 2026-01-08：使用多貨幣價格 + 保留超額計費 + 自動貨幣選擇
         const session = await stripeClient.checkout.sessions.create({
             mode: 'subscription',
             payment_method_types: ['card'],  // 只显示信用卡支付
@@ -2254,6 +2254,7 @@ exports.createStripeCheckoutSession = functions.https.onCall(async (data, contex
             ],
             customer_email: email,  // 自動填充 email
             client_reference_id: userId,  // 傳遞 userId
+            locale: 'auto',  // 🌍 自動檢測用戶語言和貨幣（香港→HKD, 美國→USD, 日本→JPY, 韓國→KRW）
             metadata: {
                 userId: userId,  // 傳遞 userId（雙重保險）
                 planType: planType
