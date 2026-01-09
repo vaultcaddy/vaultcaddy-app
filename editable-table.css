@@ -280,7 +280,7 @@
     }
 }
 
-/* ========== 🎨 完全移除展開詳情功能 ========== */
+/* ========== 🎨 完全移除展開詳情和編輯表單UI ========== */
 
 /* 隱藏所有展開詳情相關UI */
 .transaction-detail-row,
@@ -319,7 +319,7 @@ button[onclick*="attach"] {
     display: none !important;
 }
 
-/* 隱藏備注相關UI（如果在展開面板中） */
+/* 隱藏備注相關UI */
 .memo-field,
 .memo-label,
 .memo-input,
@@ -327,6 +327,77 @@ button[onclick*="attach"] {
 .detail-content,
 .detail-fields,
 .detail-field {
+    display: none !important;
+}
+
+/* ========== 🚫 完全隱藏編輯表單面板（圖2） ========== */
+
+/* ⚠️ 核心規則：隱藏所有表單相關UI */
+
+/* 方法1：通過表單標籤隱藏 - 適用於動態生成的表單 */
+form:not(.search-form):not(.login-form):not(.register-form) {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    position: absolute !important;
+    left: -9999px !important;
+}
+
+/* 方法2：通過常見的編輯面板類名隱藏 */
+.edit-form,
+.edit-panel,
+.edit-sidebar,
+.edit-drawer,
+.transaction-edit-form,
+.transaction-edit-panel,
+.detail-form,
+.detail-panel,
+.edit-detail-form,
+.side-panel,
+.right-panel,
+.right-sidebar,
+[class*="edit-form"],
+[class*="edit-panel"],
+[class*="transaction-edit"],
+[id*="edit-form"],
+[id*="edit-panel"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* 方法3：通過表單字段容器隱藏 */
+.form-container:not(.search-form):not(.login-form),
+.form-wrapper,
+.form-content,
+div[class*="form-container"]:not(.transactions-section) {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+/* 方法4：通過遮罩層隱藏（如果有） */
+.form-overlay,
+.modal-overlay:not(#mobile-sidebar-overlay):not(#pdfModal),
+.drawer-overlay,
+[class*="form-backdrop"] {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+/* 方法5：阻止彈出的側邊欄 */
+aside:not(.sidebar),
+div[role="dialog"]:not(#pdfModal),
+div[role="form"],
+div[class*="offcanvas"] {
+    display: none !important;
+}
+
+/* 特殊處理：隱藏可能的React/Vue生成的表單 */
+div[data-form="edit"],
+div[data-component*="edit"],
+div[data-type="form"] {
     display: none !important;
 }
 
