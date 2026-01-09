@@ -632,6 +632,59 @@
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);  /* 微妙陰影 */
         }
         
+        /* 🎨 設計大師優化：響應式表格包裝器 */
+        .table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 0 -1.5rem;  /* 負邊距讓表格可以滾動到邊緣 */
+            padding: 0 1.5rem;
+        }
+        
+        /* 🎨 設計大師優化：隱藏次要列（小屏幕） */
+        @media (max-width: 1600px) {
+            /* 隱藏：類型、支票號 */
+            .transactions-table th:nth-child(5),  /* Type */
+            .transactions-table td:nth-child(5) {
+                display: none;
+            }
+            
+            .transactions-table th:nth-child(9),  /* Check # */
+            .transactions-table td:nth-child(9) {
+                display: none;
+            }
+        }
+        
+        @media (max-width: 1400px) {
+            /* 額外隱藏：參考編號 */
+            .transactions-table th:nth-child(8),  /* Reference */
+            .transactions-table td:nth-child(8) {
+                display: none;
+            }
+        }
+        
+        @media (max-width: 1200px) {
+            /* 額外隱藏：分類 */
+            .transactions-table th:nth-child(10),  /* Category */
+            .transactions-table td:nth-child(10) {
+                display: none;
+            }
+        }
+        
+        /* 🎨 桌面版：顯示隱藏列提示 */
+        @media (max-width: 1600px) {
+            .transactions-table::after {
+                content: '💡 提示：部分欄位已隱藏以優化顯示。點擊編輯按鈕查看完整詳情。';
+                display: block;
+                padding: 0.75rem 1rem;
+                background: #eff6ff;
+                color: #1e40af;
+                font-size: 0.875rem;
+                text-align: center;
+                border-top: 1px solid #dbeafe;
+                margin-top: -1px;
+            }
+        }
+        
         /* 🎨 設計大師美化：表頭更醒目 */
         .transactions-table thead {
             background: #f3f4f6;  /* 更深的背景色 */
@@ -670,6 +723,67 @@
             font-size: 0.9rem;
             color: #1f2937;
             vertical-align: middle;  /* 垂直居中 */
+        }
+        
+        /* 🎨 設計大師優化：智能列寬分配 */
+        .transactions-table th:nth-child(2),  /* 復選框 */
+        .transactions-table td:nth-child(2) {
+            width: 50px;
+            min-width: 50px;
+        }
+        
+        .transactions-table th:nth-child(3),  /* 日期 */
+        .transactions-table td:nth-child(3) {
+            width: 110px;
+            min-width: 110px;
+            white-space: nowrap;
+        }
+        
+        .transactions-table th:nth-child(6),  /* 描述 */
+        .transactions-table td:nth-child(6) {
+            min-width: 200px;
+            max-width: 350px;
+        }
+        
+        .transactions-table th:nth-child(7),  /* 收款人 */
+        .transactions-table td:nth-child(7) {
+            min-width: 150px;
+            max-width: 250px;
+        }
+        
+        .transactions-table th:nth-child(11),  /* 金額 */
+        .transactions-table td:nth-child(11) {
+            width: 120px;
+            min-width: 120px;
+            text-align: right;
+        }
+        
+        .transactions-table th:nth-child(12),  /* 餘額 */
+        .transactions-table td:nth-child(12) {
+            width: 130px;
+            min-width: 130px;
+            text-align: right;
+        }
+        
+        .transactions-table th:last-child,  /* 操作 */
+        .transactions-table td:last-child {
+            width: 100px;
+            min-width: 100px;
+        }
+        
+        /* 🎨 設計大師優化：描述列文字處理 */
+        .transactions-table td:nth-child(6),
+        .transactions-table td:nth-child(7) {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        /* Hover時顯示完整文字 */
+        .transactions-table tr:hover td:nth-child(6),
+        .transactions-table tr:hover td:nth-child(7) {
+            white-space: normal;
+            word-break: break-word;
         }
         
         /* 🎨 美化復選框：更大更易點擊 */
