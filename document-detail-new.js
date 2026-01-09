@@ -1587,14 +1587,14 @@ function displayBankStatementContent(data) {
                            onchange="handleReconciledChange(${actualIndex}, this.checked)"
                            title="${reconciled ? '已對賬' : '未對賬'}">
                 </td>
-                <td contenteditable="true" class="editable-cell" data-field="date" style="min-width: 100px;" data-date="${tx.date || '—'}">${tx.date || '—'}</td>
-                <td contenteditable="true" class="editable-cell" data-field="transactionType" style="min-width: 100px; color: #6b7280; font-size: 0.85rem;">${transactionType}</td>
-                <td contenteditable="true" class="editable-cell" data-field="description" style="min-width: 200px;">${description}</td>
-                <td contenteditable="true" class="editable-cell" data-field="payee" style="min-width: 150px; color: #6b7280; font-size: 0.85rem;">${payee}</td>
-                <td contenteditable="true" class="editable-cell" data-field="referenceNumber" style="min-width: 100px; color: #6b7280; font-size: 0.85rem;">${referenceNumber}</td>
-                <td contenteditable="true" class="editable-cell" data-field="checkNumber" style="min-width: 80px; color: #6b7280; font-size: 0.85rem;">${checkNumber}</td>
-                <td>
-                    <select class="category-select" data-index="${actualIndex}" onchange="handleCategoryChange(${actualIndex}, this.value)">
+                <td contenteditable="true" class="editable-cell date-cell" data-field="date" style="min-width: 95px; font-size: 0.875rem;" data-date="${tx.date || '—'}">${tx.date || '—'}</td>
+                <td contenteditable="true" class="editable-cell type-cell" data-field="transactionType" style="min-width: 80px; color: #6b7280; font-size: 0.8rem;">${transactionType}</td>
+                <td contenteditable="true" class="editable-cell desc-cell" data-field="description" style="min-width: 180px; max-width: 300px; font-size: 0.875rem;">${description}</td>
+                <td contenteditable="true" class="editable-cell payee-cell" data-field="payee" style="min-width: 120px; max-width: 200px; color: #6b7280; font-size: 0.8rem;">${payee}</td>
+                <td contenteditable="true" class="editable-cell ref-cell" data-field="referenceNumber" style="min-width: 90px; color: #6b7280; font-size: 0.8rem;">${referenceNumber}</td>
+                <td contenteditable="true" class="editable-cell check-cell" data-field="checkNumber" style="min-width: 70px; color: #6b7280; font-size: 0.8rem;">${checkNumber}</td>
+                <td class="category-cell" style="min-width: 110px;">
+                    <select class="category-select" data-index="${actualIndex}" onchange="handleCategoryChange(${actualIndex}, this.value)" style="width: 100%; padding: 0.35rem; font-size: 0.8rem; border: 1px solid #d1d5db; border-radius: 4px;">
                         <option value="">未分類</option>
                         <optgroup label="收入類別">
                             <option value="salary" ${category === 'salary' ? 'selected' : ''}>工資</option>
