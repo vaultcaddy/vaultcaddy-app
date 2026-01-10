@@ -621,23 +621,57 @@ class QwenVLMaxProcessor {
 
 請特別注意：
 1. **綜合所有 ${pageCount} 頁的信息**，不要遺漏任何交易記錄
-2. **重要：正確識別收入和支出**：
-   - 銀行對賬單通常有兩欄：支出（DEBIT/借項）和收入（CREDIT/貸項/存款）
-   - 如果金額在「支出/DEBIT/借項」欄 → transactionSign = "expense"
-   - 如果金額在「收入/CREDIT/貸項/存款」欄 → transactionSign = "income"
-   - amount 永遠是正數（不帶正負號），表示交易金額的絕對值
-   - debit 和 credit 分別記錄支出和收入金額，為0表示該欄為空
-3. statementPeriod 必須是期間範圍（from date to date），從第一筆交易日期到最後一筆交易日期
-4. 如果第1頁只顯示截至日期的餘額，請從交易記錄頁面提取期初餘額
-5. 提取完整的帳戶地址（包括所有地址行）
-6. 提取分行名稱和銀行代碼（如 EAST POINT CITY, 024）
-7. 所有交易記錄按日期排序
-8. 所有日期格式為 YYYY-MM-DD
-9. 所有金額為數字（不包含貨幣符號和逗號）
-10. JSON 格式正確，可以直接解析
-11. 如果某字段無法提取，設為 null
-12. 確保交易記錄的連續性和完整性
-13. **重要**：根據交易描述智能判斷 transactionType：
+
+2. **🔴 關鍵：正確識別銀行對賬單的列結構**：
+   銀行對賬單的交易記錄部分通常有以下列：
+   | 日期 | 描述 | 支出(Debit) | 存入(Credit) | 結餘(Balance) |
+   
+   **示例1（支出交易）**：
+   | 2021-07-06 | CQW 000012 | 25,655.00 |           | 15,531.71 |
+   解析為：
+   - date: "2021-07-06"
+   - description: "CQW 000012"
+   - debit: 25655.00 （支出列的數字）
+   - credit: 0 （存入列為空）
+   - amount: 25655.00 （交易金額 = debit）
+   - balance: 15531.71 （結餘列的數字）
+   - transactionSign: "expense" （因為有debit）
+   
+   **示例2（收入交易）**：
+   | 2021-07-01 | 利息支出 |          | 5.06      | 59,417.89 |
+   解析為：
+   - date: "2021-07-01"
+   - description: "利息支出"
+   - debit: 0 （支出列為空）
+   - credit: 5.06 （存入列的數字）
+   - amount: 5.06 （交易金額 = credit）
+   - balance: 59417.89 （結餘列的數字）
+   - transactionSign: "income" （因為有credit）
+
+3. **🔴 常見錯誤（必須避免）**：
+   ❌ 錯誤：把"結餘"列的數字當成"金額"
+   ❌ 錯誤：忽略"支出"或"存入"列，只看"結餘"
+   ❌ 錯誤：把所有交易都標記為同一類型
+   ✅ 正確：根據"支出"和"存入"列判斷交易類型
+   ✅ 正確：amount = debit（如果有支出）或 credit（如果有存入）
+   ✅ 正確：balance 永遠是"結餘"列的數字，不是"支出"或"存入"
+
+4. **識別列的方法**：
+   - 看表頭：通常有"支出/借項/DEBIT"、"存入/貸項/CREDIT"、"結餘/余額/BALANCE"
+   - 看位置：通常支出在中間偏左，存入在中間偏右，結餘在最右邊
+   - 看數據：每行只有一個金額（在支出或存入列），結餘列總是有數字
+
+5. statementPeriod 必須是期間範圍（from date to date），從第一筆交易日期到最後一筆交易日期
+6. 如果第1頁只顯示截至日期的餘額，請從交易記錄頁面提取期初餘額
+7. 提取完整的帳戶地址（包括所有地址行）
+8. 提取分行名稱和銀行代碼（如 EAST POINT CITY, 024）
+9. 所有交易記錄按日期排序
+10. 所有日期格式為 YYYY-MM-DD
+11. 所有金額為數字（不包含貨幣符號和逗號）
+12. JSON 格式正確，可以直接解析
+13. 如果某字段無法提取，設為 null
+14. 確保交易記錄的連續性和完整性
+15. **重要**：根據交易描述智能判斷 transactionType：
     - "存款/DEPOSIT/現金存款" → Deposit
     - "轉帳/TRANSFER/FPS" → Transfer
     - "提款/WITHDRAWAL/ATM" → ATM
@@ -647,9 +681,9 @@ class QwenVLMaxProcessor {
     - "ALIPAY/OCTOPUS/CARD" → POS
     - "承上結欠/B/F BALANCE" → Opening Balance
     - "過戶/C/F BALANCE" → Closing Balance
-14. payee 字段應提取商戶名稱（如 "SIC ALIPAY HK LTD"、"SCR OCTOPUS CARDS LTD"）
-15. referenceNumber 應提取括號中的參考編號（如 "(FRN2021040700252614927)"）
-16. **關鍵**：amount、debit、credit 都必須與銀行單上顯示的數字完全一致，不要進行任何計算或轉換
+16. payee 字段應提取商戶名稱（如 "SIC ALIPAY HK LTD"、"SCR OCTOPUS CARDS LTD"）
+17. referenceNumber 應提取括號中的參考編號（如 "(FRN2021040700252614927)"）
+18. **關鍵**：amount、debit、credit、balance 都必須與銀行單上顯示的數字完全一致，不要進行任何計算或轉換
 
 只返回 JSON，不要包含任何額外文字。`;
         } else {
