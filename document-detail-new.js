@@ -1621,7 +1621,7 @@ function displayBankStatementContent(data) {
                     </select>
                 </td>
                 <td class="amount-cell" style="position: relative;">
-                    <div style="display: flex; align-items: center; gap: 0.5rem; justify-content: flex-end;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; justify-content: flex-end; white-space: nowrap;">
                         <button onclick="toggleTransactionType(${actualIndex})" 
                                 style="display: inline-block; width: 28px; height: 28px; line-height: 26px; text-align: center; background: ${isIncome ? '#10b981' : '#ef4444'}; color: white; border: none; border-radius: 4px; font-weight: 700; font-size: 1rem; cursor: pointer; flex-shrink: 0; transition: opacity 0.2s;"
                                 onmouseover="this.style.opacity='0.8'" 
@@ -1633,12 +1633,12 @@ function displayBankStatementContent(data) {
                               class="editable-amount" 
                               data-index="${actualIndex}"
                               data-field="amount"
-                              style="text-align: right; color: ${amountColor}; font-weight: 600; font-size: 0.875rem; min-width: 80px; padding: 0.25rem 0.5rem; border: 1px solid transparent; border-radius: 4px;"
+                              style="text-align: right; color: ${amountColor}; font-weight: 600; font-size: 0.875rem; min-width: 90px; padding: 0.25rem 0.5rem; border: 1px solid transparent; border-radius: 4px; white-space: nowrap;"
                               onfocus="this.style.border='1px solid #3b82f6'; this.style.background='#eff6ff'"
                               onblur="this.style.border='1px solid transparent'; this.style.background='transparent'; updateTransactionAmount(${actualIndex}, this.textContent, ${isIncome})">${displayAmount}</span>
                     </div>
                 </td>
-                <td contenteditable="true" class="editable-cell balance-cell" data-field="balance" style="text-align: right; font-weight: 600; color: #3b82f6; font-size: 0.875rem;">${displayBalance}</td>
+                <td contenteditable="true" class="editable-cell balance-cell" data-field="balance" style="text-align: right; font-weight: 600; color: #3b82f6; font-size: 0.875rem; white-space: nowrap;">${displayBalance}</td>
                 <td class="attachment-cell">
                     <i class="fas fa-paperclip attachment-icon ${hasAttachment ? 'has-attachment' : 'no-attachment'}" 
                        onclick="handleAttachment(${actualIndex})"
