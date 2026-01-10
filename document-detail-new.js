@@ -1548,13 +1548,18 @@ function displayBankStatementContent(data) {
     currentPageTransactions.forEach((tx, pageIndex) => {
         const actualIndex = startIndex + pageIndex; // 實際在完整數組中的索引
         
-        // ✅ 直接使用原始金額數據，不進行計算
+        // ✅ 直接使用原始數據，不進行任何計算
         const amountStr = String(tx.amount || '0');
         const balanceStr = String(tx.balance || '0');
         
-        // 判斷收入/支出（根據金額正負）
-        const amountNum = parseFloat(amountStr.replace(/[^0-9.-]+/g, ''));
-        const isIncome = amountNum >= 0;
+        // ✅ 使用獨立的標記字段來表示交易類型（不影響amount值）
+        // 如果沒有transactionSign字段，根據amount正負號初始化
+        if (tx.transactionSign === undefined) {
+            const amountNum = parseFloat(amountStr.replace(/[^0-9.-]+/g, ''));
+            tx.transactionSign = amountNum >= 0 ? 'income' : 'expense';
+        }
+        
+        const isIncome = tx.transactionSign === 'income';
         const amountSign = isIncome ? '+' : '-';
         const amountColor = isIncome ? '#10b981' : '#ef4444';
         
@@ -2304,9 +2309,9 @@ window.changeTransactionPage = function(newPage) {
 // 交易記錄編輯函數
 // ============================================
 
-// ✅ 切換交易類型（+/-）
+// ✅ 切換交易類型標記（+/-）- 只改變顯示標記，不修改金額數值
 function toggleTransactionType(index) {
-    console.log(`🔄 切換交易 ${index} 的類型`);
+    console.log(`🔄 切換交易 ${index} 的類型標記`);
     
     if (!currentDocument || !currentDocument.processedData || !currentDocument.processedData.transactions) {
         console.error('❌ 無法找到交易數據');
@@ -2319,8 +2324,12 @@ function toggleTransactionType(index) {
         return;
     }
     
-    // 切換金額正負
-    transaction.amount = -parseFloat(transaction.amount || 0);
+    // ✅ 只切換顯示標記，不修改 amount 或 balance 的實際數值
+    // 這只是修正AI識別錯誤的標記，不影響銀行單中已計算好的數據
+    transaction.transactionSign = transaction.transactionSign === 'income' ? 'expense' : 'income';
+    
+    console.log(`✅ 交易 ${index} 標記已切換為: ${transaction.transactionSign}`);
+    console.log(`📊 金額和余額保持不變: amount=${transaction.amount}, balance=${transaction.balance}`);
     
     // 更新 UI
     displayDocumentContent();
@@ -2329,7 +2338,7 @@ function toggleTransactionType(index) {
     markAsChanged();
 }
 
-// ✅ 更新交易金額
+// ✅ 更新交易金額 - 只更新amount值，不影響transactionSign標記
 function updateTransactionAmount(index, value, wasIncome) {
     console.log(`💰 更新交易 ${index} 的金額: ${value}`);
     
@@ -2344,9 +2353,13 @@ function updateTransactionAmount(index, value, wasIncome) {
         return;
     }
     
-    // 解析金額並保持正負符號
-    const numValue = parseFloat(value) || 0;
-    transaction.amount = wasIncome ? numValue : -numValue;
+    // ✅ 只更新金額數值（保持原有的正負號和格式）
+    // 移除逗號等格式符號，保留數字和小數點
+    const cleanValue = value.toString().replace(/,/g, '');
+    transaction.amount = cleanValue;
+    
+    console.log(`✅ 金額已更新為: ${transaction.amount}`);
+    console.log(`📊 transactionSign 標記保持不變: ${transaction.transactionSign}`);
     
     // 標記為有未保存更改
     markAsChanged();
