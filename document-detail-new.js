@@ -1622,9 +1622,13 @@ function displayBankStatementContent(data) {
                 </td>
                 <td class="amount-cell" style="position: relative;">
                     <div style="display: flex; align-items: center; gap: 0.5rem; justify-content: flex-end;">
-                        <span style="display: inline-block; width: 28px; height: 28px; line-height: 26px; text-align: center; background: ${isIncome ? '#10b981' : '#ef4444'}; color: white; border-radius: 4px; font-weight: 700; font-size: 1rem; flex-shrink: 0;">
+                        <button onclick="toggleTransactionType(${actualIndex})" 
+                                style="display: inline-block; width: 28px; height: 28px; line-height: 26px; text-align: center; background: ${isIncome ? '#10b981' : '#ef4444'}; color: white; border: none; border-radius: 4px; font-weight: 700; font-size: 1rem; cursor: pointer; flex-shrink: 0; transition: opacity 0.2s;"
+                                onmouseover="this.style.opacity='0.8'" 
+                                onmouseout="this.style.opacity='1'"
+                                title="點擊切換收入/支出">
                             ${amountSign}
-                        </span>
+                        </button>
                         <span contenteditable="true" 
                               class="editable-amount" 
                               data-index="${actualIndex}"
@@ -1641,14 +1645,9 @@ function displayBankStatementContent(data) {
                        title="${hasAttachment ? '查看附件' : '添加附件'}"></i>
                 </td>
                 <td class="action-cell">
-                    <div class="action-btns">
-                        <button class="icon-btn" onclick="editTransaction(${actualIndex})" title="編輯">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="icon-btn delete" onclick="deleteTransaction(${actualIndex})" title="刪除">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </div>
+                    <button class="icon-btn delete" onclick="confirmDeleteTransaction(${actualIndex})" title="刪除" style="background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; padding: 0.4rem 0.5rem; border-radius: 6px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
                 </td>
             </tr>
             <!-- 🚫 編輯表單面板已移除（2026-01-09）：用戶要求刪除圖2中的編輯UI -->
@@ -2697,6 +2696,60 @@ function handleAttachment(index) {
 function formatCurrency(amount) {
     const num = parseFloat(amount) || 0;
     return '$' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// ✅ 確認刪除交易記錄
+function confirmDeleteTransaction(index) {
+    if (!currentDocument || !currentDocument.processedData || !currentDocument.processedData.transactions) {
+        console.error('❌ 無法找到交易數據');
+        return;
+    }
+    
+    const transaction = currentDocument.processedData.transactions[index];
+    if (!transaction) {
+        console.error(`❌ 找不到交易 ${index}`);
+        return;
+    }
+    
+    // 顯示確認對話框
+    const description = transaction.description || '此交易';
+    const amount = transaction.amount || 0;
+    const formattedAmount = Math.abs(amount).toLocaleString('en-US', { 
+        minimumFractionDigits: 2, 
+        maximumFractionDigits: 2 
+    });
+    
+    const confirmed = confirm(
+        `確定要刪除此交易記錄嗎？\n\n` +
+        `描述：${description}\n` +
+        `金額：${amount >= 0 ? '+' : '-'}${formattedAmount}\n\n` +
+        `此操作無法撤銷！`
+    );
+    
+    if (confirmed) {
+        deleteTransaction(index);
+    }
+}
+
+// ✅ 刪除交易記錄
+function deleteTransaction(index) {
+    console.log(`🗑️ 刪除交易 ${index}`);
+    
+    if (!currentDocument || !currentDocument.processedData || !currentDocument.processedData.transactions) {
+        console.error('❌ 無法找到交易數據');
+        return;
+    }
+    
+    // 從數組中刪除
+    currentDocument.processedData.transactions.splice(index, 1);
+    
+    // 更新 UI
+    displayDocumentContent();
+    
+    // 標記為有未保存更改
+    markAsChanged();
+    
+    console.log(`✅ 交易 ${index} 已刪除`);
 }
 
 // ============================================

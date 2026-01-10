@@ -690,34 +690,37 @@
         /* 🎨 優化：默認隱藏次要列（適配所有屏幕，避免滾動） */
         
         /* 列結構（從左到右）：
-         * 1. checkbox（選擇）
-         * 2. checkbox（已對賬）
-         * 3. date（日期）✅ 保留
-         * 4. type（類型）❌ 隱藏
-         * 5. description（描述）✅ 保留
-         * 6. payee（收款人）✅ 保留
-         * 7. reference（參考編號）❌ 隱藏
-         * 8. check#（支票號）❌ 隱藏
-         * 9. category（分類）❌ 隱藏
-         * 10. amount（金額）✅ 保留
-         * 11. balance（余額）✅ 保留
-         * 12. attachment（附件）❌ 隱藏
-         * 13. actions（操作）✅ 保留
+         * 1. checkbox（已對賬）✅ 保留
+         * 2. date（日期）✅ 保留
+         * 3. type（類型）❌ 隱藏
+         * 4. description（描述）✅ 保留
+         * 5. payee（收款人）✅ 保留
+         * 6. reference（參考編號）❌ 隱藏
+         * 7. check#（支票號）❌ 隱藏
+         * 8. category（分類）✅ 保留（用戶需要）
+         * 9. amount（金額）✅ 保留
+         * 10. balance（余額）✅ 保留
+         * 11. attachment（附件）❌ 隱藏
+         * 12. actions（操作）✅ 保留
          */
         
         /* 默認隱藏次要列 */
         .type-cell,
         .ref-cell,
         .check-cell,
-        .category-cell,
         .attachment-cell,
         .transactions-table th:nth-child(4),  /* Type header */
         .transactions-table th:nth-child(7),  /* Reference header */
         .transactions-table th:nth-child(8),  /* Check# header */
-        .transactions-table th:nth-child(9),  /* Category header */
         .transactions-table th:nth-child(12)  /* Attachment header */
         {
             display: none !important;
+        }
+        
+        /* ✅ 分類列始終顯示（用戶需要） */
+        .category-cell,
+        .transactions-table th:nth-child(9) {
+            display: table-cell !important;
         }
         
         /* 🔍 超大屏幕（>2000px）：顯示所有列 */
@@ -725,11 +728,9 @@
             .type-cell,
             .ref-cell,
             .check-cell,
-            .category-cell,
             .transactions-table th:nth-child(4),  /* Type header */
             .transactions-table th:nth-child(7),  /* Reference header */
-            .transactions-table th:nth-child(8),  /* Check# header */
-            .transactions-table th:nth-child(9)   /* Category header */
+            .transactions-table th:nth-child(8)   /* Check# header */
             {
                 display: table-cell !important;
             }
@@ -738,9 +739,7 @@
         /* 🔍 大屏幕（>1600px）：顯示部分列 */
         @media (min-width: 1600px) and (max-width: 1999px) {
             .type-cell,
-            .category-cell,
-            .transactions-table th:nth-child(4),  /* Type header */
-            .transactions-table th:nth-child(9)   /* Category header */
+            .transactions-table th:nth-child(4)  /* Type header */
             {
                 display: table-cell !important;
             }
@@ -762,7 +761,7 @@
         
         /* 🎨 顯示隱藏列提示 */
         .transactions-section::before {
-            content: '💡 精簡模式：已隱藏次要欄位（類型、參考編號、支票號、分類、附件），保留核心信息避免滾動。';
+            content: '💡 精簡模式：已隱藏次要欄位（類型、參考編號、支票號、附件），保留核心信息避免滾動。';
             display: block;
             padding: 0.75rem 1rem;
             background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
@@ -778,7 +777,7 @@
         /* 大屏幕更新提示 */
         @media (min-width: 1600px) {
             .transactions-section::before {
-                content: '✅ 標準模式：顯示類型和分類欄位。已隱藏：參考編號、支票號、附件。';
+                content: '✅ 標準模式：顯示類型欄位。已隱藏：參考編號、支票號、附件。';
                 background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
                 color: #166534;
                 border-color: #bbf7d0;
