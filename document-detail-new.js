@@ -1554,14 +1554,17 @@ function displayBankStatementContent(data) {
         
         // ✅ 使用獨立的標記字段來表示交易類型（不影響amount值）
         // 如果沒有transactionSign字段，根據amount正負號初始化
-        if (tx.transactionSign === undefined) {
+        if (tx.transactionSign === undefined || tx.transactionSign === null) {
             const amountNum = parseFloat(amountStr.replace(/[^0-9.-]+/g, ''));
+            // 正數或0為收入，負數為支出
             tx.transactionSign = amountNum >= 0 ? 'income' : 'expense';
+            console.log(`🔢 初始化交易 ${actualIndex} 標記: amount=${amountNum}, sign=${tx.transactionSign}`);
         }
         
         const isIncome = tx.transactionSign === 'income';
         const amountSign = isIncome ? '+' : '-';
         const amountColor = isIncome ? '#10b981' : '#ef4444';
+        const amountBgColor = isIncome ? '#d1fae5' : '#fee2e2';
         
         // 格式化顯示金額（保留原始數值，只添加千分位）
         const formatAmount = (val) => {
@@ -1571,6 +1574,8 @@ function displayBankStatementContent(data) {
         
         const displayAmount = formatAmount(amountStr);
         const displayBalance = formatAmount(balanceStr);
+        
+        console.log(`💰 渲染交易 ${actualIndex}: sign=${amountSign}, amount=${displayAmount}, balance=${displayBalance}`);
         
         // ✅ 優化描述顯示（保留完整名稱）
         const description = tx.description || tx.details || tx.memo || '—';
@@ -1625,22 +1630,23 @@ function displayBankStatementContent(data) {
                         </optgroup>
                     </select>
                 </td>
-                <td class="amount-cell" style="position: relative;">
-                    <div style="display: flex; align-items: center; gap: 0.5rem; justify-content: flex-end; white-space: nowrap;">
+                <td class="amount-cell" style="position: relative; padding: 0.5rem !important;">
+                    <div style="display: flex; align-items: center; gap: 0.4rem; justify-content: flex-end; white-space: nowrap;">
                         <button onclick="toggleTransactionType(${actualIndex})" 
-                                style="display: inline-block; width: 28px; height: 28px; line-height: 26px; text-align: center; background: ${isIncome ? '#10b981' : '#ef4444'}; color: white; border: none; border-radius: 4px; font-weight: 700; font-size: 1rem; cursor: pointer; flex-shrink: 0; transition: opacity 0.2s;"
-                                onmouseover="this.style.opacity='0.8'" 
-                                onmouseout="this.style.opacity='1'"
-                                title="點擊切換收入/支出">
+                                class="transaction-sign-btn"
+                                style="display: inline-flex !important; align-items: center; justify-content: center; width: 26px; height: 26px; background: ${amountColor}; color: white; border: none; border-radius: 4px; font-weight: 700; font-size: 0.95rem; cursor: pointer; flex-shrink: 0; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.1);"
+                                onmouseover="this.style.opacity='0.85'; this.style.transform='scale(1.05)'" 
+                                onmouseout="this.style.opacity='1'; this.style.transform='scale(1)'"
+                                title="${isIncome ? '收入（點擊改為支出）' : '支出（點擊改為收入）'}">
                             ${amountSign}
                         </button>
                         <span contenteditable="true" 
                               class="editable-amount" 
                               data-index="${actualIndex}"
                               data-field="amount"
-                              style="text-align: right; color: ${amountColor}; font-weight: 600; font-size: 0.875rem; min-width: 90px; padding: 0.25rem 0.5rem; border: 1px solid transparent; border-radius: 4px; white-space: nowrap;"
-                              onfocus="this.style.border='1px solid #3b82f6'; this.style.background='#eff6ff'"
-                              onblur="this.style.border='1px solid transparent'; this.style.background='transparent'; updateTransactionAmount(${actualIndex}, this.textContent, ${isIncome})">${displayAmount}</span>
+                              style="text-align: right; color: ${amountColor}; font-weight: 600; font-size: 0.875rem; min-width: 85px; padding: 0.3rem 0.5rem; border: 1px solid transparent; border-radius: 4px; white-space: nowrap; background: ${amountBgColor}20;"
+                              onfocus="this.style.border='1px solid ${amountColor}'; this.style.background='${amountBgColor}40'"
+                              onblur="this.style.border='1px solid transparent'; this.style.background='${amountBgColor}20'; updateTransactionAmount(${actualIndex}, this.textContent)">${displayAmount}</span>
                     </div>
                 </td>
                 <td contenteditable="true" class="editable-cell balance-cell" data-field="balance" style="text-align: right; font-weight: 600; color: #3b82f6; font-size: 0.875rem; white-space: nowrap;">${displayBalance}</td>
