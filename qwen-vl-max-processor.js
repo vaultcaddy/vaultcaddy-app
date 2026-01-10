@@ -308,11 +308,14 @@ class QwenVLMaxProcessor {
                 const batchPromise = this.processSingleBatch(batchFiles, documentType)
                     .then(result => {
                         console.log(`✅ 批次 ${batchNum}/${totalBatches} 完成！耗时 ${result.processingTime}ms`);
-                        return { batchNum, result };
+                        console.log(`📊 批次 ${batchNum} 提取了 ${result.extractedData?.transactions?.length || 0} 笔交易`);
+                        return { batchNum, result, success: true };
                     })
                     .catch(error => {
-                        console.error(`❌ 批次 ${batchNum}/${totalBatches} 失败:`, error);
-                        throw error;
+                        console.error(`❌ 批次 ${batchNum}/${totalBatches} 失败:`, error.message);
+                        console.error(`📋 错误详情:`, error);
+                        // 返回错误信息，但不中断其他批次
+                        return { batchNum, error, success: false };
                     });
                 
                 batchPromises.push(batchPromise);
@@ -322,11 +325,28 @@ class QwenVLMaxProcessor {
             console.log(`⚡ 同时处理 ${batchPromises.length} 个批次...`);
             const batchResults = await Promise.all(batchPromises);
             
-            // 按批次顺序整理结果
-            batchResults.sort((a, b) => a.batchNum - b.batchNum);
+            // 按批次顺序整理结果，过滤失败的批次
+            const successfulBatches = batchResults
+                .filter(b => b.success)
+                .sort((a, b) => a.batchNum - b.batchNum);
             
-            // 收集所有结果
-            for (const { batchNum, result } of batchResults) {
+            const failedBatches = batchResults.filter(b => !b.success);
+            
+            if (failedBatches.length > 0) {
+                console.warn(`⚠️ ${failedBatches.length} 个批次处理失败`);
+                for (const failed of failedBatches) {
+                    console.error(`   ❌ 批次 ${failed.batchNum}: ${failed.error.message}`);
+                }
+            }
+            
+            if (successfulBatches.length === 0) {
+                throw new Error('所有批次都处理失败');
+            }
+            
+            console.log(`✅ 成功处理 ${successfulBatches.length}/${totalBatches} 个批次`);
+            
+            // 收集所有成功批次的结果
+            for (const { batchNum, result } of successfulBatches) {
                 allResults.push(result.extractedData);
                 if (result.rawResponse) {
                     allResponses.push(result.rawResponse);
@@ -338,7 +358,7 @@ class QwenVLMaxProcessor {
                 }
             }
             
-            console.log(`🎉 所有 ${totalBatches} 个批次并行处理完成！`)
+            console.log(`🎉 所有 ${successfulBatches.length} 个批次并行处理完成！`)
             
             // 合并所有批次的结果
             const mergedData = this.mergeMultiPageResults(allResults, documentType);
@@ -678,21 +698,72 @@ class QwenVLMaxProcessor {
             // 尝试直接解析
             return JSON.parse(responseText);
         } catch (e) {
+            console.warn('⚠️ 直接JSON解析失败，尝试其他方法...');
+            
             // 尝试提取 JSON 代码块
             const jsonMatch = responseText.match(/```json\n([\s\S]*?)\n```/);
             if (jsonMatch) {
-                return JSON.parse(jsonMatch[1]);
+                try {
+                    console.log('📦 从```json```代码块中提取JSON');
+                    return JSON.parse(jsonMatch[1]);
+                } catch (e2) {
+                    console.error('❌ 代码块JSON解析失败:', e2.message);
+                }
             }
             
             // 尝试提取 {} 之间的内容
             const braceMatch = responseText.match(/\{[\s\S]*\}/);
             if (braceMatch) {
-                return JSON.parse(braceMatch[0]);
+                try {
+                    console.log('📦 从{}中提取JSON');
+                    return JSON.parse(braceMatch[0]);
+                } catch (e3) {
+                    console.error('❌ 大括号JSON解析失败:', e3.message);
+                }
             }
             
-            // 解析失败，返回原始文本
-            console.warn('⚠️ JSON 解析失败，返回原始文本');
-            return { rawText: responseText };
+            // 尝试清理常见问题
+            try {
+                console.log('🔧 尝试清理JSON格式问题...');
+                let cleanedText = responseText;
+                
+                // 移除markdown代码块标记
+                cleanedText = cleanedText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+                
+                // 移除BOM和其他不可见字符
+                cleanedText = cleanedText.replace(/^\uFEFF/, '').trim();
+                
+                // 移除多余的逗号（在}或]之前）
+                cleanedText = cleanedText.replace(/,\s*([}\]])/g, '$1');
+                
+                // 修复常见的数字后缺少逗号的问题
+                cleanedText = cleanedText.replace(/([0-9])\n\s*"/g, '$1,\n"');
+                
+                // 修复字符串中的换行符
+                cleanedText = cleanedText.replace(/"\s*\n\s*"/g, '');
+                
+                // 提取第一个完整的JSON对象
+                const firstBrace = cleanedText.indexOf('{');
+                const lastBrace = cleanedText.lastIndexOf('}');
+                if (firstBrace >= 0 && lastBrace > firstBrace) {
+                    cleanedText = cleanedText.substring(firstBrace, lastBrace + 1);
+                }
+                
+                // 尝试解析清理后的文本
+                console.log('🔍 尝试解析清理后的JSON...');
+                const parsed = JSON.parse(cleanedText);
+                console.log('✅ JSON清理成功！');
+                return parsed;
+            } catch (e4) {
+                console.error('❌ 清理后JSON解析仍失败:', e4.message);
+                console.error('💡 错误位置:', e4.message.match(/position (\d+)/));
+            }
+            
+            // 所有方法都失败，记录详细错误并抛出异常
+            console.error('❌ JSON 解析完全失败！');
+            console.error('📄 响应文本前500字符:', responseText.substring(0, 500));
+            console.error('📄 响应文本后500字符:', responseText.substring(Math.max(0, responseText.length - 500)));
+            throw new Error(`JSON解析失败: ${e.message}`);
         }
     }
     
