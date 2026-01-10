@@ -291,42 +291,54 @@ class QwenVLMaxProcessor {
             };
             const allResponses = [];
             
-            // 分批处理
+            // ✅ 并行处理所有批次（减少总时间）
+            console.log(`🚀 开始并行处理 ${totalBatches} 个批次...`);
+            
+            // 创建所有批次的Promise数组
+            const batchPromises = [];
             for (let i = 0; i < totalPages; i += batchSize) {
                 const batchNum = Math.floor(i / batchSize) + 1;
                 const batchStart = i;
                 const batchEnd = Math.min(i + batchSize, totalPages);
                 const batchFiles = files.slice(batchStart, batchEnd);
                 
-                console.log(`\n📦 [批次 ${batchNum}/${totalBatches}] 处理第 ${batchStart + 1}-${batchEnd} 页（共 ${batchFiles.length} 页）...`);
+                console.log(`📦 准备批次 ${batchNum}/${totalBatches}：第 ${batchStart + 1}-${batchEnd} 页`);
                 
-                // 调用单次处理（最多2页）
-                const batchResult = await this.processSingleBatch(batchFiles, documentType);
+                // 创建批次处理Promise
+                const batchPromise = this.processSingleBatch(batchFiles, documentType)
+                    .then(result => {
+                        console.log(`✅ 批次 ${batchNum}/${totalBatches} 完成！耗时 ${result.processingTime}ms`);
+                        return { batchNum, result };
+                    })
+                    .catch(error => {
+                        console.error(`❌ 批次 ${batchNum}/${totalBatches} 失败:`, error);
+                        throw error;
+                    });
                 
-                allResults.push(batchResult.extractedData);
-                if (batchResult.rawResponse) {
-                    allResponses.push(batchResult.rawResponse);
+                batchPromises.push(batchPromise);
+            }
+            
+            // ✅ 并行执行所有批次
+            console.log(`⚡ 同时处理 ${batchPromises.length} 个批次...`);
+            const batchResults = await Promise.all(batchPromises);
+            
+            // 按批次顺序整理结果
+            batchResults.sort((a, b) => a.batchNum - b.batchNum);
+            
+            // 收集所有结果
+            for (const { batchNum, result } of batchResults) {
+                allResults.push(result.extractedData);
+                if (result.rawResponse) {
+                    allResponses.push(result.rawResponse);
                 }
-                if (batchResult.usage) {
-                    totalUsage.prompt_tokens += batchResult.usage.prompt_tokens || 0;
-                    totalUsage.completion_tokens += batchResult.usage.completion_tokens || 0;
-                    totalUsage.total_tokens += batchResult.usage.total_tokens || 0;
-                }
-                
-                console.log(`✅ [批次 ${batchNum}/${totalBatches}] 完成！耗时 ${batchResult.processingTime}ms`);
-                
-                // ✅ 调用进度回调（如果提供）
-                if (progressCallback && typeof progressCallback === 'function') {
-                    const progress = Math.round((batchNum / totalBatches) * 90) + 10; // 10-100%
-                    console.log(`📊 更新进度: ${progress}% (${batchNum}/${totalBatches})`);
-                    try {
-                        await progressCallback(batchNum, totalBatches, progress);
-                    } catch (callbackError) {
-                        console.warn('⚠️ 进度回调执行失败:', callbackError);
-                        // 继续处理，不因回调失败而中断
-                    }
+                if (result.usage) {
+                    totalUsage.prompt_tokens += result.usage.prompt_tokens || 0;
+                    totalUsage.completion_tokens += result.usage.completion_tokens || 0;
+                    totalUsage.total_tokens += result.usage.total_tokens || 0;
                 }
             }
+            
+            console.log(`🎉 所有 ${totalBatches} 个批次并行处理完成！`)
             
             // 合并所有批次的结果
             const mergedData = this.mergeMultiPageResults(allResults, documentType);
@@ -573,8 +585,11 @@ class QwenVLMaxProcessor {
     {
       "date": "日期（YYYY-MM-DD 格式）",
       "description": "交易描述",
-      "amount": 金額（正數為入賬，負數為出賬）,
-      "balance": 餘額（數字）,
+      "debit": 支出金額（數字，從「支出/借項/DEBIT」欄位提取，如果為空則為0）,
+      "credit": 收入金額（數字，從「存款/入賬/貸項/CREDIT」欄位提取，如果為空則為0）,
+      "amount": 交易金額（數字，正數表示，不帶正負號）,
+      "balance": 餘額（數字），
+      "transactionSign": "交易標記（'income'表示收入/credit，'expense'表示支出/debit）",
       "transactionType": "交易類型（Deposit/Withdrawal/Transfer/Fee/Interest/Check/ATM/POS/Wire/FPS/Other）",
       "payee": "收款人或付款人名稱（如 SIC ALIPAY HK LTD，從描述中提取）",
       "referenceNumber": "交易參考編號（如 FRN2021040700252614927，從描述中提取）",
@@ -586,17 +601,23 @@ class QwenVLMaxProcessor {
 
 請特別注意：
 1. **綜合所有 ${pageCount} 頁的信息**，不要遺漏任何交易記錄
-2. statementPeriod 必須是期間範圍（from date to date），從第一筆交易日期到最後一筆交易日期
-3. 如果第1頁只顯示截至日期的餘額，請從交易記錄頁面提取期初餘額
-4. 提取完整的帳戶地址（包括所有地址行）
-5. 提取分行名稱和銀行代碼（如 EAST POINT CITY, 024）
-6. 所有交易記錄按日期排序
-7. 所有日期格式為 YYYY-MM-DD
-8. 所有金額為數字（不包含貨幣符號和逗號）
-9. JSON 格式正確，可以直接解析
-10. 如果某字段無法提取，設為 null
-11. 確保交易記錄的連續性和完整性
-12. **重要**：根據交易描述智能判斷 transactionType：
+2. **重要：正確識別收入和支出**：
+   - 銀行對賬單通常有兩欄：支出（DEBIT/借項）和收入（CREDIT/貸項/存款）
+   - 如果金額在「支出/DEBIT/借項」欄 → transactionSign = "expense"
+   - 如果金額在「收入/CREDIT/貸項/存款」欄 → transactionSign = "income"
+   - amount 永遠是正數（不帶正負號），表示交易金額的絕對值
+   - debit 和 credit 分別記錄支出和收入金額，為0表示該欄為空
+3. statementPeriod 必須是期間範圍（from date to date），從第一筆交易日期到最後一筆交易日期
+4. 如果第1頁只顯示截至日期的餘額，請從交易記錄頁面提取期初餘額
+5. 提取完整的帳戶地址（包括所有地址行）
+6. 提取分行名稱和銀行代碼（如 EAST POINT CITY, 024）
+7. 所有交易記錄按日期排序
+8. 所有日期格式為 YYYY-MM-DD
+9. 所有金額為數字（不包含貨幣符號和逗號）
+10. JSON 格式正確，可以直接解析
+11. 如果某字段無法提取，設為 null
+12. 確保交易記錄的連續性和完整性
+13. **重要**：根據交易描述智能判斷 transactionType：
     - "存款/DEPOSIT/現金存款" → Deposit
     - "轉帳/TRANSFER/FPS" → Transfer
     - "提款/WITHDRAWAL/ATM" → ATM
@@ -606,8 +627,9 @@ class QwenVLMaxProcessor {
     - "ALIPAY/OCTOPUS/CARD" → POS
     - "承上結欠/B/F BALANCE" → Opening Balance
     - "過戶/C/F BALANCE" → Closing Balance
-13. payee 字段應提取商戶名稱（如 "SIC ALIPAY HK LTD"、"SCR OCTOPUS CARDS LTD"）
-14. referenceNumber 應提取括號中的參考編號（如 "(FRN2021040700252614927)"）
+14. payee 字段應提取商戶名稱（如 "SIC ALIPAY HK LTD"、"SCR OCTOPUS CARDS LTD"）
+15. referenceNumber 應提取括號中的參考編號（如 "(FRN2021040700252614927)"）
+16. **關鍵**：amount、debit、credit 都必須與銀行單上顯示的數字完全一致，不要進行任何計算或轉換
 
 只返回 JSON，不要包含任何額外文字。`;
         } else {
