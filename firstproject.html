@@ -3110,9 +3110,22 @@
                             
                             <!-- 狀態（移到類型和供應商中間）-->
                             <td style="padding: 1rem;">
-                                <span style="padding: 0.375rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; white-space: nowrap; background: ${isProcessing ? '#fef3c7' : isFailed ? '#fee2e2' : '#d1fae5'}; color: ${isProcessing ? '#92400e' : isFailed ? '#991b1b' : '#065f46'};">
-                                    ${isProcessing ? '處理中' : isFailed ? '失敗' : '已完成'}
-                                </span>
+                                ${isProcessing ? `
+                                    <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                                        <span style="padding: 0.375rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; white-space: nowrap; background: #fef3c7; color: #92400e;">
+                                            處理中 ${doc.processingProgress ? `${doc.processingProgress}%` : ''}
+                                        </span>
+                                        ${doc.currentBatch && doc.totalBatches ? `
+                                            <span style="font-size: 0.75rem; color: #6b7280; text-align: center;">
+                                                批次 ${doc.currentBatch}/${doc.totalBatches}
+                                            </span>
+                                        ` : ''}
+                                    </div>
+                                ` : `
+                                    <span style="padding: 0.375rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; white-space: nowrap; background: ${isFailed ? '#fee2e2' : '#d1fae5'}; color: ${isFailed ? '#991b1b' : '#065f46'};">
+                                        ${isFailed ? '失敗' : '已完成'}
+                                    </span>
+                                `}
                             </td>
                             
                             <!-- 供應商/來源/銀行 -->
@@ -3729,18 +3742,30 @@
                     // ✅ 定義進度回調函數
                     const progressCallback = async (currentBatch, totalBatches, progress) => {
                         console.log(`🔄 [進度更新] 批次 ${currentBatch}/${totalBatches} - ${progress}%`);
+                        console.log(`⚠️ 注意：这只是批次进度，不是最终完成！`);
+                        
+                        // ✅ 更新进度，但保持 status 为 'processing'
                         await window.simpleDataManager.updateDocument(currentProjectId, docId, {
-                            status: 'processing',  // ⚠️ 保持為 processing，不要改為 completed
-                            processingProgress: progress
+                            status: 'processing',  // ⚠️ 关键：必须保持为 processing
+                            processingProgress: progress,
+                            currentBatch: currentBatch,
+                            totalBatches: totalBatches,
+                            processingStage: `处理批次 ${currentBatch}/${totalBatches}`
                         });
+                        
+                        // ✅ 实时刷新UI，让用户看到进度
+                        await loadDocuments();
                     };
                     
                     // 批量處理所有頁面（傳遞進度回調）
+                    console.log(`🚀 开始批量处理 ${files.length} 页文档...`);
                     const result = await processor.processMultiPageDocument(files, documentType, progressCallback);
                     
-                    // 更新為已完成
+                    console.log(`✅ 所有批次处理完成，开始合并结果...`);
+                    
+                    // ✅ 只有在所有批次完成并合并后，才更新为 'completed'
                     await window.simpleDataManager.updateDocument(currentProjectId, docId, {
-                        status: 'completed',  // ✅ 只有在所有批次完成後才更新為 completed
+                        status: 'completed',  // ✅ 关键：只有这里才设置为 completed
                         processedData: result.extractedData,
                         rawText: result.rawResponse || result.rawText || null,
                         processingTime: result.processingTime,
@@ -3748,10 +3773,17 @@
                         model: result.model,
                         pages: result.pages || files.length,
                         usage: result.usage,
-                        processingProgress: 100
+                        processingProgress: 100,
+                        currentBatch: undefined,  // 清除批次信息
+                        totalBatches: undefined,
+                        processingStage: '已完成'
                     });
                     
+                    console.log(`🎉 文档 ${docId} 已完成处理并标记为 'completed'`);
                     console.log('✅ 批量處理完成');
+                    
+                    // ✅ 最终刷新UI，显示完成状态
+                    await loadDocuments();
                     
                 } else {
                     // 單頁文檔，使用原有邏輯
@@ -3904,7 +3936,7 @@
                 console.error('❌ 找不到項目 ID');
                 return;
             }
-            window.location.href = `document-detail.html?project=${currentProjectId}&id=${docId}`;
+            window.open(`document-detail.html?project=${currentProjectId}&id=${docId}`, '_blank');
         };
         
         // ==================== 刪除文檔 ====================
