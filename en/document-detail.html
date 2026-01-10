@@ -619,52 +619,143 @@
         .table-wrapper {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
-            margin: 0 -1.5rem;  /* Negative margin for edge-to-edge scrolling */
-            padding: 0 1.5rem;
+            margin: 0 -1.25rem;  /* From -1.5rem reduced to -1.25rem */
+            padding: 0 1.25rem;  /* From 1.5rem reduced to -1.25rem */
         }
         
-        /* 🎨 Design Master Optimization: Hide Secondary Columns (Small Screens) */
-        @media (max-width: 1600px) {
-            /* Hide: Type, Check # */
-            .transactions-table th:nth-child(5),  /* Type */
-            .transactions-table td:nth-child(5) {
-                display: none;
-            }
-            
-            .transactions-table th:nth-child(9),  /* Check # */
-            .transactions-table td:nth-child(9) {
-                display: none;
+        /* 🎯 Optimization: Reduce table internal spacing for more compact layout */
+        .transactions-table th,
+        .transactions-table td {
+            padding: 0.6rem 0.4rem !important;  /* From 0.65rem 0.5rem further reduced to 0.6rem 0.4rem */
+            font-size: 0.875rem;  /* Unified font size */
+        }
+        
+        /* 🎯 Optimization: Narrower reconciled column */
+        .checkbox-cell {
+            width: 45px !important;
+            padding: 0.5rem 0.2rem !important;  /* From 0.3rem reduced to 0.2rem */
+            text-align: center !important;
+        }
+        
+        .checkbox-cell input[type="checkbox"] {
+            width: 18px !important;
+            height: 18px !important;
+            cursor: pointer;
+            accent-color: #10b981;  /* Green checkmark */
+        }
+        
+        .action-cell {
+            width: 80px !important;
+            padding: 0.5rem !important;
+        }
+        
+        /* 🎯 Optimization: Amount and balance columns right-aligned and more compact */
+        .amount-cell,
+        .transactions-table td[data-field="balance"] {
+            text-align: right;
+            min-width: 110px !important;
+            max-width: 130px;
+            padding: 0.65rem 0.75rem !important;
+        }
+        
+        /* 🎨 Optimization: Hide secondary columns by default (fit all screens, avoid scrolling) */
+        
+        /* Column structure (left to right):
+         * 1. checkbox (Reconciled) ✅ Keep
+         * 2. date ✅ Keep
+         * 3. type ❌ Hide
+         * 4. description ✅ Keep
+         * 5. payee ✅ Keep
+         * 6. reference ❌ Hide
+         * 7. check# ❌ Hide
+         * 8. category ✅ Keep (users need it)
+         * 9. amount ✅ Keep
+         * 10. balance ✅ Keep
+         * 11. attachment ❌ Hide
+         * 12. actions ✅ Keep
+         */
+        
+        /* Default: Hide secondary columns */
+        .type-cell,
+        .ref-cell,
+        .check-cell,
+        .attachment-cell,
+        .transactions-table th:nth-child(3),  /* Type header */
+        .transactions-table th:nth-child(6),  /* Reference header */
+        .transactions-table th:nth-child(7),  /* Check# header */
+        .transactions-table th:nth-child(11)  /* Attachment header */
+        {
+            display: none !important;
+        }
+        
+        /* ✅ Category column always visible (users need it) */
+        .category-cell,
+        .transactions-table th:nth-child(8) {
+            display: table-cell !important;
+        }
+        
+        /* 🔍 Extra Large Screens (>2000px): Show all columns */
+        @media (min-width: 2000px) {
+            .type-cell,
+            .ref-cell,
+            .check-cell,
+            .transactions-table th:nth-child(3),  /* Type header */
+            .transactions-table th:nth-child(6),  /* Reference header */
+            .transactions-table th:nth-child(7)   /* Check# header */
+            {
+                display: table-cell !important;
             }
         }
         
+        /* 🔍 Large Screens (>1600px): Show some columns */
+        @media (min-width: 1600px) and (max-width: 1999px) {
+            .type-cell,
+            .transactions-table th:nth-child(3)  /* Type header */
+            {
+                display: table-cell !important;
+            }
+        }
+        
+        /* 📱 Tablet (<1400px): Hide more columns */
         @media (max-width: 1400px) {
-            /* Additionally hide: Reference */
-            .transactions-table th:nth-child(8),  /* Reference */
-            .transactions-table td:nth-child(8) {
-                display: none;
+            .payee-cell,
+            .transactions-table th:nth-child(5)  /* Payee header */
+            {
+                display: none !important;
             }
         }
         
-        @media (max-width: 1200px) {
-            /* Additionally hide: Category */
-            .transactions-table th:nth-child(10),  /* Category */
-            .transactions-table td:nth-child(10) {
-                display: none;
+        /* 🎨 Show hidden columns tip */
+        .transactions-section::before {
+            content: '💡 Compact Mode: Hidden secondary columns (Type, Reference, Check#, Attachment). 📊 To view complete data (including notes, attachments, etc.), click the top "Export" button.';
+            display: block;
+            padding: 0.75rem 1rem;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            color: #1e40af;
+            font-size: 0.8rem;
+            text-align: center;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+        
+        /* Update tip for larger screens */
+        @media (min-width: 1600px) {
+            .transactions-section::before {
+                content: '✅ Standard Mode: Showing Type column. Hidden: Reference, Check#, Attachment.';
+                background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+                color: #166534;
+                border-color: #bbf7d0;
             }
         }
         
-        /* 🎨 Desktop: Show Hidden Columns Tip */
-        @media (max-width: 1600px) {
-            .transactions-table::after {
-                content: '💡 Tip: Some columns are hidden for better display. Click edit button to view full details.';
-                display: block;
-                padding: 0.75rem 1rem;
-                background: #eff6ff;
-                color: #1e40af;
-                font-size: 0.875rem;
-                text-align: center;
-                border-top: 1px solid #dbeafe;
-                margin-top: -1px;
+        @media (min-width: 2000px) {
+            .transactions-section::before {
+                content: '🎉 Full Mode: Showing all columns (Attachment icon hidden for cleaner look).';
+                background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+                color: #92400e;
+                border-color: #fcd34d;
             }
         }
         
@@ -708,50 +799,56 @@
             vertical-align: middle;  /* Vertically centered */
         }
         
-        /* 🎨 Design Master Optimization: Smart Column Width Allocation */
-        .transactions-table th:nth-child(2),  /* Checkbox */
-        .transactions-table td:nth-child(2) {
-            width: 50px;
-            min-width: 50px;
+        /* 🎨 Design Master Optimization: Smart Column Width Allocation (Compact Version) */
+        .transactions-table th:nth-child(1),  /* Checkbox */
+        .transactions-table td:nth-child(1) {
+            width: 45px;
+            min-width: 45px;
         }
         
-        .transactions-table th:nth-child(3),  /* Date */
-        .transactions-table td:nth-child(3) {
-            width: 110px;
-            min-width: 110px;
+        .transactions-table th:nth-child(2),  /* Date */
+        .transactions-table td:nth-child(2) {
+            width: 100px;
+            min-width: 100px;
             white-space: nowrap;
         }
         
-        .transactions-table th:nth-child(6),  /* Description */
-        .transactions-table td:nth-child(6) {
-            min-width: 200px;
-            max-width: 350px;
-        }
-        
-        .transactions-table th:nth-child(7),  /* Payee */
-        .transactions-table td:nth-child(7) {
+        .transactions-table th:nth-child(4),  /* Description */
+        .transactions-table td:nth-child(4) {
             min-width: 150px;
-            max-width: 250px;
+            max-width: 280px;
         }
         
-        .transactions-table th:nth-child(11),  /* Amount */
-        .transactions-table td:nth-child(11) {
+        .transactions-table th:nth-child(5),  /* Payee */
+        .transactions-table td:nth-child(5) {
+            min-width: 120px;
+            max-width: 200px;
+        }
+        
+        .transactions-table th:nth-child(8),  /* Category */
+        .transactions-table td:nth-child(8) {
+            width: 105px;
+            min-width: 105px;
+        }
+        
+        .transactions-table th:nth-child(9),  /* Amount */
+        .transactions-table td:nth-child(9) {
+            width: 145px;
+            min-width: 145px;
+            text-align: right;
+        }
+        
+        .transactions-table th:nth-child(10),  /* Balance */
+        .transactions-table td:nth-child(10) {
             width: 120px;
             min-width: 120px;
             text-align: right;
         }
         
-        .transactions-table th:nth-child(12),  /* Balance */
-        .transactions-table td:nth-child(12) {
-            width: 130px;
-            min-width: 130px;
-            text-align: right;
-        }
-        
         .transactions-table th:last-child,  /* Actions */
         .transactions-table td:last-child {
-            width: 100px;
-            min-width: 100px;
+            width: 70px;
+            min-width: 70px;
         }
         
         /* 🎨 Design Master Optimization: Description Column Text Handling */

@@ -619,45 +619,143 @@
         .table-wrapper {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
-            margin: 0 -1.5rem;
-            padding: 0 1.5rem;
+            margin: 0 -1.25rem;
+            padding: 0 1.25rem;
         }
         
-        /* 🎨 디자인 마스터 최적화: 보조 열 숨기기 (작은 화면) */
-        @media (max-width: 1600px) {
-            .transactions-table th:nth-child(5),
-            .transactions-table td:nth-child(5),
-            .transactions-table th:nth-child(9),
-            .transactions-table td:nth-child(9) {
-                display: none;
+        /* 🎯 최적화: 테이블 내부 간격 축소, 더 컴팩트하게 */
+        .transactions-table th,
+        .transactions-table td {
+            padding: 0.6rem 0.4rem !important;
+            font-size: 0.875rem;
+        }
+        
+        /* 🎯 최적화: 조정 완료 열을 더 좁게 */
+        .checkbox-cell {
+            width: 45px !important;
+            padding: 0.5rem 0.2rem !important;
+            text-align: center !important;
+        }
+        
+        .checkbox-cell input[type="checkbox"] {
+            width: 18px !important;
+            height: 18px !important;
+            cursor: pointer;
+            accent-color: #10b981;
+        }
+        
+        .action-cell {
+            width: 80px !important;
+            padding: 0.5rem !important;
+        }
+        
+        /* 🎯 최적화: 금액 및 잔액 열 우측 정렬 및 컴팩트화 */
+        .amount-cell,
+        .transactions-table td[data-field="balance"] {
+            text-align: right;
+            min-width: 110px !important;
+            max-width: 130px;
+            padding: 0.65rem 0.75rem !important;
+        }
+        
+        /* 🎨 최적화: 기본적으로 보조 열 숨기기 (모든 화면 대응, 스크롤 방지) */
+        
+        /* 열 구조 (왼쪽에서 오른쪽):
+         * 1. checkbox (조정 완료) ✅ 유지
+         * 2. date (날짜) ✅ 유지
+         * 3. type (유형) ❌ 숨김
+         * 4. description (설명) ✅ 유지
+         * 5. payee (수취인) ✅ 유지
+         * 6. reference (참조) ❌ 숨김
+         * 7. check# (수표 번호) ❌ 숨김
+         * 8. category (카테고리) ✅ 유지 (사용자 필요)
+         * 9. amount (금액) ✅ 유지
+         * 10. balance (잔액) ✅ 유지
+         * 11. attachment (첨부) ❌ 숨김
+         * 12. actions (작업) ✅ 유지
+         */
+        
+        /* 기본: 보조 열 숨기기 */
+        .type-cell,
+        .ref-cell,
+        .check-cell,
+        .attachment-cell,
+        .transactions-table th:nth-child(3),  /* Type header */
+        .transactions-table th:nth-child(6),  /* Reference header */
+        .transactions-table th:nth-child(7),  /* Check# header */
+        .transactions-table th:nth-child(11)  /* Attachment header */
+        {
+            display: none !important;
+        }
+        
+        /* ✅ 카테고리 열은 항상 표시 (사용자 필요) */
+        .category-cell,
+        .transactions-table th:nth-child(8) {
+            display: table-cell !important;
+        }
+        
+        /* 🔍 초대형 화면 (>2000px): 모든 열 표시 */
+        @media (min-width: 2000px) {
+            .type-cell,
+            .ref-cell,
+            .check-cell,
+            .transactions-table th:nth-child(3),  /* Type header */
+            .transactions-table th:nth-child(6),  /* Reference header */
+            .transactions-table th:nth-child(7)   /* Check# header */
+            {
+                display: table-cell !important;
             }
         }
         
+        /* 🔍 대형 화면 (>1600px): 일부 열 표시 */
+        @media (min-width: 1600px) and (max-width: 1999px) {
+            .type-cell,
+            .transactions-table th:nth-child(3)  /* Type header */
+            {
+                display: table-cell !important;
+            }
+        }
+        
+        /* 📱 태블릿 (<1400px): 추가로 숨기기 */
         @media (max-width: 1400px) {
-            .transactions-table th:nth-child(8),
-            .transactions-table td:nth-child(8) {
-                display: none;
+            .payee-cell,
+            .transactions-table th:nth-child(5)  /* Payee header */
+            {
+                display: none !important;
             }
         }
         
-        @media (max-width: 1200px) {
-            .transactions-table th:nth-child(10),
-            .transactions-table td:nth-child(10) {
-                display: none;
+        /* 🎨 숨겨진 열 힌트 표시 */
+        .transactions-section::before {
+            content: '💡 컴팩트 모드: 보조 열 숨김 (유형, 참조, 수표 번호, 첨부). 📊 전체 데이터(메모, 첨부 파일 등)를 보려면 상단의 "Export" 버튼을 클릭하세요.';
+            display: block;
+            padding: 0.75rem 1rem;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            color: #1e40af;
+            font-size: 0.8rem;
+            text-align: center;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+        
+        /* 큰 화면 힌트 업데이트 */
+        @media (min-width: 1600px) {
+            .transactions-section::before {
+                content: '✅ 표준 모드: 유형 열 표시. 숨김: 참조, 수표 번호, 첨부.';
+                background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+                color: #166534;
+                border-color: #bbf7d0;
             }
         }
         
-        @media (max-width: 1600px) {
-            .transactions-table::after {
-                content: '💡 팁: 일부 열이 숨겨져 있습니다. 편집 버튼을 클릭하여 전체 세부 정보를 확인하세요.';
-                display: block;
-                padding: 0.75rem 1rem;
-                background: #eff6ff;
-                color: #1e40af;
-                font-size: 0.875rem;
-                text-align: center;
-                border-top: 1px solid #dbeafe;
-                margin-top: -1px;
+        @media (min-width: 2000px) {
+            .transactions-section::before {
+                content: '🎉 전체 모드: 모든 열 표시 (깔끔한 외관을 위해 첨부 아이콘 숨김).';
+                background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+                color: #92400e;
+                border-color: #fcd34d;
             }
         }
         
@@ -701,14 +799,57 @@
             vertical-align: middle;
         }
         
-        /* 🎨 디자인 마스터 최적화: 스마트 열 너비 할당 */
-        .transactions-table th:nth-child(2), .transactions-table td:nth-child(2) { width: 50px; min-width: 50px; }
-        .transactions-table th:nth-child(3), .transactions-table td:nth-child(3) { width: 110px; min-width: 110px; white-space: nowrap; }
-        .transactions-table th:nth-child(6), .transactions-table td:nth-child(6) { min-width: 200px; max-width: 350px; }
-        .transactions-table th:nth-child(7), .transactions-table td:nth-child(7) { min-width: 150px; max-width: 250px; }
-        .transactions-table th:nth-child(11), .transactions-table td:nth-child(11) { width: 120px; min-width: 120px; text-align: right; }
-        .transactions-table th:nth-child(12), .transactions-table td:nth-child(12) { width: 130px; min-width: 130px; text-align: right; }
-        .transactions-table th:last-child, .transactions-table td:last-child { width: 100px; min-width: 100px; }
+        /* 🎨 디자인 마스터 최적화: 스마트 열 너비 할당 (컴팩트 버전) */
+        .transactions-table th:nth-child(1),  /* 체크박스 */
+        .transactions-table td:nth-child(1) {
+            width: 45px;
+            min-width: 45px;
+        }
+        
+        .transactions-table th:nth-child(2),  /* 날짜 */
+        .transactions-table td:nth-child(2) {
+            width: 100px;
+            min-width: 100px;
+            white-space: nowrap;
+        }
+        
+        .transactions-table th:nth-child(4),  /* 설명 */
+        .transactions-table td:nth-child(4) {
+            min-width: 150px;
+            max-width: 280px;
+        }
+        
+        .transactions-table th:nth-child(5),  /* 수취인 */
+        .transactions-table td:nth-child(5) {
+            min-width: 120px;
+            max-width: 200px;
+        }
+        
+        .transactions-table th:nth-child(8),  /* 카테고리 */
+        .transactions-table td:nth-child(8) {
+            width: 105px;
+            min-width: 105px;
+        }
+        
+        .transactions-table th:nth-child(9),  /* 금액 */
+        .transactions-table td:nth-child(9) {
+            width: 145px;
+            min-width: 145px;
+            text-align: right;
+        }
+        
+        .transactions-table th:nth-child(10),  /* 잔액 */
+        .transactions-table td:nth-child(10) {
+            width: 120px;
+            min-width: 120px;
+            text-align: right;
+        }
+        
+        .transactions-table th:last-child,  /* 작업 */
+        .transactions-table td:last-child {
+            width: 70px;
+            min-width: 70px;
+        }
         
         .transactions-table td:nth-child(6), .transactions-table td:nth-child(7) {
             overflow: hidden;

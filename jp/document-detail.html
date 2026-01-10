@@ -619,39 +619,145 @@
         .table-wrapper {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
-            margin: 0 -1.5rem;
-            padding: 0 1.5rem;
+            margin: 0 -1.25rem;
+            padding: 0 1.25rem;
         }
         
-        /* 🎨 デザインマスター最適化：副次的な列を非表示（小画面） */
-        @media (max-width: 1600px) {
-            .transactions-table th:nth-child(5),
-            .transactions-table td:nth-child(5),
-            .transactions-table th:nth-child(9),
-            .transactions-table td:nth-child(9) {
-                display: none;
+        /* 🎯 最適化：テーブル内の間隔を減らして、よりコンパクトに */
+        .transactions-table th,
+        .transactions-table td {
+            padding: 0.6rem 0.4rem !important;
+            font-size: 0.875rem;
+        }
+        
+        /* 🎯 最適化：照合済み列をより狭く */
+        .checkbox-cell {
+            width: 45px !important;
+            padding: 0.5rem 0.2rem !important;
+            text-align: center !important;
+        }
+        
+        .checkbox-cell input[type="checkbox"] {
+            width: 18px !important;
+            height: 18px !important;
+            cursor: pointer;
+            accent-color: #10b981;
+        }
+        
+        .action-cell {
+            width: 80px !important;
+            padding: 0.5rem !important;
+        }
+        
+        /* 🎯 最適化：金額と残高列を右揃え・コンパクト化 */
+        .amount-cell,
+        .transactions-table td[data-field="balance"] {
+            text-align: right;
+            min-width: 110px !important;
+            max-width: 130px;
+            padding: 0.65rem 0.75rem !important;
+        }
+        
+        /* 🎨 最適化：デフォルトで補助列を非表示（全画面対応、スクロール回避） */
+        
+        /* 列構造（左から右）：
+         * 1. checkbox（照合済み）✅ 保持
+         * 2. date（日付）✅ 保持
+         * 3. type（タイプ）❌ 非表示
+         * 4. description（説明）✅ 保持
+         * 5. payee（支払先）✅ 保持
+         * 6. reference（参照）❌ 非表示
+         * 7. check#（小切手番号）❌ 非表示
+         * 8. category（カテゴリー）✅ 保持（ユーザーが必要）
+         * 9. amount（金額）✅ 保持
+         * 10. balance（残高）✅ 保持
+         * 11. attachment（添付）❌ 非表示
+         * 12. actions（操作）✅ 保持
+         */
+        
+        /* デフォルト：補助列を非表示 */
+        .type-cell,
+        .ref-cell,
+        .check-cell,
+        .attachment-cell,
+        .transactions-table th:nth-child(3),  /* Type header */
+        .transactions-table th:nth-child(6),  /* Reference header */
+        .transactions-table th:nth-child(7),  /* Check# header */
+        .transactions-table th:nth-child(11)  /* Attachment header */
+        {
+            display: none !important;
+        }
+        
+        /* ✅ カテゴリー列は常に表示（ユーザーが必要） */
+        .category-cell,
+        .transactions-table th:nth-child(8) {
+            display: table-cell !important;
+        }
+        
+        /* 🔍 超大型画面（>2000px）：全ての列を表示 */
+        @media (min-width: 2000px) {
+            .type-cell,
+            .ref-cell,
+            .check-cell,
+            .transactions-table th:nth-child(3),  /* Type header */
+            .transactions-table th:nth-child(6),  /* Reference header */
+            .transactions-table th:nth-child(7)   /* Check# header */
+            {
+                display: table-cell !important;
             }
         }
         
+        /* 🔍 大型画面（>1600px）：一部の列を表示 */
+        @media (min-width: 1600px) and (max-width: 1999px) {
+            .type-cell,
+            .transactions-table th:nth-child(3)  /* Type header */
+            {
+                display: table-cell !important;
+            }
+        }
+        
+        /* 📱 タブレット（<1400px）：さらに非表示 */
         @media (max-width: 1400px) {
-            .transactions-table th:nth-child(8),
-            .transactions-table td:nth-child(8) {
-                display: none;
+            .payee-cell,
+            .transactions-table th:nth-child(5)  /* Payee header */
+            {
+                display: none !important;
             }
         }
         
-        @media (max-width: 1200px) {
-            .transactions-table th:nth-child(10),
-            .transactions-table td:nth-child(10) {
-                display: none;
+        /* 🎨 非表示列のヒントを表示 */
+        .transactions-section::before {
+            content: '💡 コンパクトモード：補助列を非表示（タイプ、参照、小切手番号、添付）。📊 完全なデータ（メモ、添付ファイル等）を表示するには、上部の「Export」ボタンをクリックしてください。';
+            display: block;
+            padding: 0.75rem 1rem;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            color: #1e40af;
+            font-size: 0.8rem;
+            text-align: center;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+        
+        /* 大画面用のヒント更新 */
+        @media (min-width: 1600px) {
+            .transactions-section::before {
+                content: '✅ 標準モード：タイプ列を表示。非表示：参照、小切手番号、添付。';
+                background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+                color: #166534;
+                border-color: #bbf7d0;
             }
         }
         
-        @media (max-width: 1600px) {
-            .transactions-table::after {
-                content: '💡 ヒント：一部の列は非表示になっています。編集ボタンをクリックして詳細を表示します。';
-                display: block;
-                padding: 0.75rem 1rem;
+        @media (min-width: 2000px) {
+            .transactions-section::before {
+                content: '🎉 フルモード：全ての列を表示（添付アイコンはクリーンな見た目のため非表示）。';
+                background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+                color: #92400e;
+                border-color: #fcd34d;
+            }
+        }
                 background: #eff6ff;
                 color: #1e40af;
                 font-size: 0.875rem;
@@ -701,14 +807,57 @@
             vertical-align: middle;
         }
         
-        /* 🎨 デザインマスター最適化：スマート列幅配分 */
-        .transactions-table th:nth-child(2), .transactions-table td:nth-child(2) { width: 50px; min-width: 50px; }
-        .transactions-table th:nth-child(3), .transactions-table td:nth-child(3) { width: 110px; min-width: 110px; white-space: nowrap; }
-        .transactions-table th:nth-child(6), .transactions-table td:nth-child(6) { min-width: 200px; max-width: 350px; }
-        .transactions-table th:nth-child(7), .transactions-table td:nth-child(7) { min-width: 150px; max-width: 250px; }
-        .transactions-table th:nth-child(11), .transactions-table td:nth-child(11) { width: 120px; min-width: 120px; text-align: right; }
-        .transactions-table th:nth-child(12), .transactions-table td:nth-child(12) { width: 130px; min-width: 130px; text-align: right; }
-        .transactions-table th:last-child, .transactions-table td:last-child { width: 100px; min-width: 100px; }
+        /* 🎨 デザインマスター最適化：スマート列幅配分（コンパクト版） */
+        .transactions-table th:nth-child(1),  /* チェックボックス */
+        .transactions-table td:nth-child(1) {
+            width: 45px;
+            min-width: 45px;
+        }
+        
+        .transactions-table th:nth-child(2),  /* 日付 */
+        .transactions-table td:nth-child(2) {
+            width: 100px;
+            min-width: 100px;
+            white-space: nowrap;
+        }
+        
+        .transactions-table th:nth-child(4),  /* 説明 */
+        .transactions-table td:nth-child(4) {
+            min-width: 150px;
+            max-width: 280px;
+        }
+        
+        .transactions-table th:nth-child(5),  /* 支払先 */
+        .transactions-table td:nth-child(5) {
+            min-width: 120px;
+            max-width: 200px;
+        }
+        
+        .transactions-table th:nth-child(8),  /* カテゴリー */
+        .transactions-table td:nth-child(8) {
+            width: 105px;
+            min-width: 105px;
+        }
+        
+        .transactions-table th:nth-child(9),  /* 金額 */
+        .transactions-table td:nth-child(9) {
+            width: 145px;
+            min-width: 145px;
+            text-align: right;
+        }
+        
+        .transactions-table th:nth-child(10),  /* 残高 */
+        .transactions-table td:nth-child(10) {
+            width: 120px;
+            min-width: 120px;
+            text-align: right;
+        }
+        
+        .transactions-table th:last-child,  /* 操作 */
+        .transactions-table td:last-child {
+            width: 70px;
+            min-width: 70px;
+        }
         
         .transactions-table td:nth-child(6), .transactions-table td:nth-child(7) {
             overflow: hidden;
