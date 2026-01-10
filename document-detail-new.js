@@ -1547,14 +1547,25 @@ function displayBankStatementContent(data) {
     let transactionsHTML = '';
     currentPageTransactions.forEach((tx, pageIndex) => {
         const actualIndex = startIndex + pageIndex; // 實際在完整數組中的索引
-        const amount = parseFloat(tx.amount || 0);
-        const balance = parseFloat(tx.balance || 0);
         
-        // ✅ 判斷交易類型（根據金額正負）
-        const isIncome = amount >= 0;
+        // ✅ 直接使用原始金額數據，不進行計算
+        const amountStr = String(tx.amount || '0');
+        const balanceStr = String(tx.balance || '0');
+        
+        // 判斷收入/支出（根據金額正負）
+        const amountNum = parseFloat(amountStr.replace(/[^0-9.-]+/g, ''));
+        const isIncome = amountNum >= 0;
         const amountSign = isIncome ? '+' : '-';
         const amountColor = isIncome ? '#10b981' : '#ef4444';
-        const amountValue = Math.abs(amount);
+        
+        // 格式化顯示金額（保留原始數值，只添加千分位）
+        const formatAmount = (val) => {
+            const num = Math.abs(parseFloat(val.toString().replace(/[^0-9.-]+/g, '')) || 0);
+            return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        };
+        
+        const displayAmount = formatAmount(amountStr);
+        const displayBalance = formatAmount(balanceStr);
         
         // ✅ 優化描述顯示（保留完整名稱）
         const description = tx.description || tx.details || tx.memo || '—';
@@ -1610,24 +1621,20 @@ function displayBankStatementContent(data) {
                     </select>
                 </td>
                 <td class="amount-cell" style="position: relative;">
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                        <button onclick="toggleTransactionType(${actualIndex})" 
-                                style="background: ${isIncome ? '#10b981' : '#ef4444'}; color: white; border: none; border-radius: 4px; padding: 0.25rem 0.5rem; cursor: pointer; font-weight: 600; font-size: 0.875rem; transition: all 0.2s;"
-                                onmouseover="this.style.opacity='0.8'" 
-                                onmouseout="this.style.opacity='1'"
-                                title="點擊切換收入/支出">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; justify-content: flex-end;">
+                        <span style="display: inline-block; width: 28px; height: 28px; line-height: 26px; text-align: center; background: ${isIncome ? '#10b981' : '#ef4444'}; color: white; border-radius: 4px; font-weight: 700; font-size: 1rem; flex-shrink: 0;">
                             ${amountSign}
-                        </button>
-                        <input type="text" 
-                               value="${amountValue.toFixed(2)}" 
-                               class="editable-amount" 
-                               data-index="${actualIndex}"
-                               data-field="amount"
-                               style="border: 1px solid #e5e7eb; border-radius: 4px; padding: 0.25rem 0.5rem; text-align: right; color: ${amountColor}; font-weight: 600; width: 100px;"
-                               onchange="updateTransactionAmount(${actualIndex}, this.value, ${isIncome})">
+                        </span>
+                        <span contenteditable="true" 
+                              class="editable-amount" 
+                              data-index="${actualIndex}"
+                              data-field="amount"
+                              style="text-align: right; color: ${amountColor}; font-weight: 600; font-size: 0.875rem; min-width: 80px; padding: 0.25rem 0.5rem; border: 1px solid transparent; border-radius: 4px;"
+                              onfocus="this.style.border='1px solid #3b82f6'; this.style.background='#eff6ff'"
+                              onblur="this.style.border='1px solid transparent'; this.style.background='transparent'; updateTransactionAmount(${actualIndex}, this.textContent, ${isIncome})">${displayAmount}</span>
                     </div>
                 </td>
-                <td contenteditable="true" class="editable-cell" data-field="balance" style="text-align: right; font-weight: 600; color: #3b82f6;">${formatCurrency(balance)}</td>
+                <td contenteditable="true" class="editable-cell balance-cell" data-field="balance" style="text-align: right; font-weight: 600; color: #3b82f6; font-size: 0.875rem;">${displayBalance}</td>
                 <td class="attachment-cell">
                     <i class="fas fa-paperclip attachment-icon ${hasAttachment ? 'has-attachment' : 'no-attachment'}" 
                        onclick="handleAttachment(${actualIndex})"
