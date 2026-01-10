@@ -1,0 +1,2422 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    
+    <!-- 🔒 페이지보호 -->
+    <style>
+        body.auth-checking { visibility: hidden !important; }
+        .auth-loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; align-items: center; justify-content: center; z-index: 10000; visibility: visible !important; }
+        body.auth-ready .auth-loading { display: none; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+    <script>
+        document.documentElement.classList.add('auth-checking');
+        if (document.body) { document.body.classList.add('auth-checking'); } 
+        else { document.addEventListener('DOMContentLoaded', function() { document.body.classList.add('auth-checking'); }); }
+    </script>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- 🔇 安全隐藏제어台日志（아니删除代码） -->
+    <script defer src="../disable-console-safe.js"></script>
+    
+    <title>문서 세부정보 - VaultCaddy 명세서 변환 | PDF를 Excel/QuickBooks로 | 정확도 98% | VaultCaddy</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="../dashboard.css">
+    <link rel="stylesheet" href="../pages.css">
+    <link rel="stylesheet" href="../editable-table.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script defer src="../config.js"></script>
+    <script defer src="../translations.js"></script>
+    
+    <!-- Firebase SDK -->
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    
+    <!-- Firebase 설정및데이터관리자 -->
+    <script src="../firebase-config.js?v=20251106-editable"></script>
+    <!-- 🔥 새로운단순화시스템 -->
+    <script defer src="../simple-auth.js?v=20251106-editable"></script>
+    <script defer src="../user-profile-manager.js?v=20251120"></script>
+    <script defer src="../simple-data-manager.js?v=20251106-editable"></script>
+    
+    <!-- 내비게이션 바 인터랙션기능 -->
+    <script defer src="../navbar-interactions.js?v=20251108"></script>
+    
+    <!-- ✅ 통일내비게이션열시스템：靜態 HTML + navbar-component.js -->
+    <script defer src="../navbar-component.js?v=20251120-unified"></script>
+    <script defer src="../sidebar-component.js?v=20251106-editable"></script>
+    
+    <!-- 기능模块 - 簡化版 -->
+    <script defer src="../export-manager.js?v=20251106-editable"></script>
+    
+    <!-- ✅ 提앞정의 goBackToDashboard 함수 -->
+    <script>
+        // 돌아가기대시보드（提앞정의，회피 ReferenceError）
+        function goBackToDashboard() {
+            const params = new URLSearchParams(window.location.search);
+            const projectId = params.get('project');
+            if (projectId) {
+                window.location.href = `firstproject.html?project=${projectId}`;
+            } else {
+                window.location.href = 'dashboard.html';
+            }
+        }
+        
+        // 🔥 삭제때앞문서
+        async function deleteCurrentDocument() {
+            const confirmDelete = confirm('確定要刪除此文檔嗎？此操作無法撤銷。');
+            if (!confirmDelete) return;
+            
+            try {
+                const params = new URLSearchParams(window.location.search);
+                const projectId = params.get('project');
+                const documentId = params.get('id');
+                
+                if (!projectId || !documentId) {
+                    alert('無法獲取文檔信息');
+                    return;
+                }
+                
+                console.log('🗑️ 開始刪除文檔:', { projectId, documentId });
+                
+                // 🔥 使用與 firstproject.html 相同的刪除方法
+                if (window.simpleDataManager && typeof window.simpleDataManager.deleteDocument === 'function') {
+                    // 方法1：使用 simpleDataManager
+                    await window.simpleDataManager.deleteDocument(projectId, documentId);
+                    console.log('✅ 文檔已刪除 (simpleDataManager)');
+                } else if (firebase && firebase.firestore) {
+                    // 方法2：直接使用 Firestore（備用）
+                    await firebase.firestore()
+                        .collection('projects')
+                        .doc(projectId)
+                        .collection('documents')
+                        .doc(documentId)
+                        .delete();
+                    console.log('✅ 文檔已刪除 (Firestore)');
+                } else {
+                    throw new Error('無法連接到數據庫');
+                }
+                
+                alert('文檔已成功刪除');
+                
+                // 🎯 刪除成功後，返回項目頁面（與 firstproject.html 一致）
+                console.log('📍 返回項目頁面:', projectId);
+                window.location.href = `firstproject.html?project=${projectId}`;
+                
+            } catch (error) {
+                console.error('❌ 刪除文檔失敗:', error);
+                alert('刪除文檔失敗: ' + error.message);
+            }
+        
+        }
+    </script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #ffffff;
+            color: #1f2937;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* 사용와 firstproject.html 같은的布局結構 */
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+            background: #ffffff;
+            padding-top: 20px; /* 🔥 電腦版：위이동 15pt (60px - 15pt ≈ 45px) */
+        }
+        
+        .sidebar {
+            width: 280px;
+            background: #ffffff;
+            border-right: 1px solid #e5e7eb;
+            flex-shrink: 0;
+            position: fixed;
+            top: 60px;
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: none;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .saved-indicator {
+            color: #10b981;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        /* 주콘텐츠 영역 */
+        .main-content {
+            margin-left: 280px; /* 왼쪽측열너비 */
+            flex: 1;
+            background: #ffffff;
+            min-height: calc(100vh - 60px);
+            padding-top: 0; /* 🔥 보장無額외부사이거리 */
+        }
+        
+        /* 세부정보페이지頂部 */
+        .detail-header {
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 0.5rem 2rem;
+            margin-top: 5pt; /* 🔥 거리떨어짐내비게이션열 5pt */
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 60px;
+            z-index: 10;
+        }
+        
+        /* 왼쪽 버튼 그룹 (돌아가기 + 삭제) */
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+            background: #ffffff;
+        }
+        
+        .back-btn:hover {
+            color: #1f2937;
+            background: #f9fafb;
+            border-color: #d1d5db;
+        }
+        
+        /* 삭제 버튼 스타일 (돌아가기 버튼과 동일한 크기) */
+        .header-left .icon-btn.delete {
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            color: #ef4444;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .header-left .icon-btn.delete:hover {
+            background: #fecaca;
+            border-color: #fca5a5;
+        }
+        
+        .document-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        /* 세부정보내용컨테이너 */
+        .detail-container {
+            display: grid;
+            grid-template-columns: 550px 1fr;
+            gap: 0; /* 제거중사이空白 */
+            height: calc(100vh - 120px);
+            overflow: hidden; /* 🔥 방지컨테이너本身產生스크롤條 */
+        }
+        
+        /* 왼쪽측 PDF 預覽區 */
+        .pdf-preview-panel {
+            background: #f9fafb;
+            border-right: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* 🔥 숨김외부層스크롤條，只保留 pdf-viewer 的스크롤 */
+        }
+        
+        .pdf-controls {
+            padding: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+        
+        .page-nav-btn {
+            background: #ffffff;
+            color: #1f2937;
+            border: 1px solid #d1d5db;
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .page-nav-btn:hover:not(:disabled) {
+            background: #f3f4f6;
+            border-color: #9ca3af;
+        }
+        
+        .page-nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        
+        .page-indicator {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        
+        .pdf-zoom-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .pdf-viewer {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .pdf-page {
+            background: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            max-width: 100%;
+        }
+        
+        .pdf-page img {
+            width: 100%;
+            display: block;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .pdf-page img:hover {
+            transform: scale(1.02);
+        }
+        
+        /* PDF 放大모달 */
+        .pdf-modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.95);
+            overflow: auto;
+        }
+        
+        .pdf-modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .pdf-modal-content {
+            position: relative;
+            max-width: 95%;
+            max-height: 95vh;
+            overflow: auto;
+        }
+        
+        .pdf-modal-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .pdf-modal-close {
+            position: fixed;
+            top: 20px;
+            right: 40px;
+            color: white;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 10001;
+            background: rgba(0, 0, 0, 0.5);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+        }
+        
+        .pdf-modal-close:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+        
+        .pdf-modal-controls {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px 25px;
+            border-radius: 50px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            z-index: 10001;
+        }
+        
+        .pdf-modal-btn {
+            background: white;
+            color: #1f2937;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .pdf-modal-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .pdf-modal-info {
+            color: white;
+            font-weight: 600;
+        }
+        
+        /* 오른쪽측데이터面板 */
+        .data-panel {
+            background: #ffffff;
+            overflow-y: auto;
+            padding: 2rem;
+            padding-top: calc(2rem + 30pt); /* 🔥 내용향해아래이동 30pt */
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .tab {
+            padding: 0.75rem 1rem;
+            background: none;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+        
+        .tab.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+        }
+        
+        .tab:hover {
+            color: #1f2937;
+        }
+        
+        /* 核대해상태카드 */
+        .reconciliation-card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .reconciliation-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+        
+        .reconciliation-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .progress-badge {
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .reconciliation-subtitle {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        
+        /* 은행 명세서세부정보 */
+        .bank-details-card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            cursor: pointer;
+        }
+        
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .expand-icon {
+            color: #6b7280;
+            transition: transform 0.2s;
+        }
+        
+        .card-header:hover .expand-icon {
+            color: #1f2937;
+        }
+        
+        /* 거래표 */
+        .transactions-section {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+        
+        .transactions-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+        
+        .transactions-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .transaction-controls {
+            display: flex;
+            gap: 0.75rem;
+        }
+        
+        .control-btn {
+            padding: 0.5rem 1rem;
+            background: #f3f4f6;
+            color: #1f2937;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .control-btn:hover {
+            background: #e5e7eb;
+        }
+        
+        .control-btn.add {
+            background: #7c3aed;
+            color: white;
+            border-color: #7c3aed;
+        }
+        
+        .control-btn.add:hover {
+            background: #6d28d9;
+        }
+        
+        .transactions-info {
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        
+        /* 🎨 디자인 마스터 강화: 테이블 전체 */
+        .transactions-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* 🎨 디자인 마스터 최적화: 반응형 테이블 래퍼 */
+        .table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 0 -1.5rem;
+            padding: 0 1.5rem;
+        }
+        
+        /* 🎨 디자인 마스터 최적화: 보조 열 숨기기 (작은 화면) */
+        @media (max-width: 1600px) {
+            .transactions-table th:nth-child(5),
+            .transactions-table td:nth-child(5),
+            .transactions-table th:nth-child(9),
+            .transactions-table td:nth-child(9) {
+                display: none;
+            }
+        }
+        
+        @media (max-width: 1400px) {
+            .transactions-table th:nth-child(8),
+            .transactions-table td:nth-child(8) {
+                display: none;
+            }
+        }
+        
+        @media (max-width: 1200px) {
+            .transactions-table th:nth-child(10),
+            .transactions-table td:nth-child(10) {
+                display: none;
+            }
+        }
+        
+        @media (max-width: 1600px) {
+            .transactions-table::after {
+                content: '💡 팁: 일부 열이 숨겨져 있습니다. 편집 버튼을 클릭하여 전체 세부 정보를 확인하세요.';
+                display: block;
+                padding: 0.75rem 1rem;
+                background: #eff6ff;
+                color: #1e40af;
+                font-size: 0.875rem;
+                text-align: center;
+                border-top: 1px solid #dbeafe;
+                margin-top: -1px;
+            }
+        }
+        
+        /* 🎨 디자인 마스터 강화: 더욱 돋보이는 테이블 헤더 */
+        .transactions-table thead {
+            background: #f3f4f6;
+            border-bottom: 2px solid #d1d5db;
+        }
+        
+        .transactions-table th {
+            padding: 1rem 0.75rem;
+            text-align: left;
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #374151;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 2px solid #d1d5db;
+        }
+        
+        /* 🎨 디자인 마스터 정적 강화: 얼룩말 무늬 + 명확한 호버 효과 */
+        .transactions-table tbody tr {
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        /* 얼룩말 무늬: 교대 배경색으로 가독성 향상 */
+        .transactions-table tbody tr:nth-child(even) {
+            background: #f9fafb;
+        }
+        
+        /* 호버 효과: 더 깊은 배경색, 애니메이션 없음 */
+        .transactions-table tbody tr:hover {
+            background: #f3f4f6;
+        }
+        
+        /* 🎨 디자인 마스터 강화: 테이블 셀 */
+        .transactions-table td {
+            padding: 1rem 0.75rem;
+            font-size: 0.9rem;
+            color: #1f2937;
+            vertical-align: middle;
+        }
+        
+        /* 🎨 디자인 마스터 최적화: 스마트 열 너비 할당 */
+        .transactions-table th:nth-child(2), .transactions-table td:nth-child(2) { width: 50px; min-width: 50px; }
+        .transactions-table th:nth-child(3), .transactions-table td:nth-child(3) { width: 110px; min-width: 110px; white-space: nowrap; }
+        .transactions-table th:nth-child(6), .transactions-table td:nth-child(6) { min-width: 200px; max-width: 350px; }
+        .transactions-table th:nth-child(7), .transactions-table td:nth-child(7) { min-width: 150px; max-width: 250px; }
+        .transactions-table th:nth-child(11), .transactions-table td:nth-child(11) { width: 120px; min-width: 120px; text-align: right; }
+        .transactions-table th:nth-child(12), .transactions-table td:nth-child(12) { width: 130px; min-width: 130px; text-align: right; }
+        .transactions-table th:last-child, .transactions-table td:last-child { width: 100px; min-width: 100px; }
+        
+        .transactions-table td:nth-child(6), .transactions-table td:nth-child(7) {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .transactions-table tr:hover td:nth-child(6), .transactions-table tr:hover td:nth-child(7) {
+            white-space: normal;
+            word-break: break-word;
+        }
+        
+        /* 🎨 강화된 체크박스: 더 크고 클릭하기 쉬움 */
+        .checkbox-cell {
+            width: 50px;
+            text-align: center;
+        }
+        
+        .checkbox-cell input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #6366f1;
+        }
+        
+        /* 🎨 디자인 마스터 강화: 더욱 돋보이는 금액 표시 */
+        .amount-cell {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            font-size: 1rem;
+            text-align: right;
+        }
+        
+        /* 양수 금액: 더 밝은 녹색 */
+        .amount-positive {
+            color: #059669;
+            font-weight: 700;
+        }
+        
+        /* 음수 금액: 더 밝은 빨간색 */
+        .amount-negative {
+            color: #dc2626;
+            font-weight: 700;
+        }
+        
+        /* 🎨 디자인 마스터 강화: 액션 버튼 영역 */
+        .action-cell {
+            width: 100px;
+            text-align: center;
+        }
+        
+        .action-btns {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+        
+        /* 🎨 강화된 아이콘 버튼: 더 명확하게, 애니메이션 없음 */
+        .icon-btn {
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 0.375rem;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        
+        /* 호버 시 배경과 색상 변경, 애니메이션 없음 */
+        .icon-btn:hover {
+            background: #e5e7eb;
+            color: #1f2937;
+            border-color: #d1d5db;
+        }
+        
+        /* 편집 버튼 호버 */
+        .icon-btn:not(.delete):hover {
+            background: #eef2ff;
+            color: #6366f1;
+            border-color: #c7d2fe;
+        }
+        
+        /* 삭제 버튼 호버 */
+        .icon-btn.delete:hover {
+            background: #fee2e2;
+            color: #dc2626;
+            border-color: #fecaca;
+        }
+        
+        /* 로드애니메이션 */
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            color: #6b7280;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e5e7eb;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* ==================== 모바일 버전전용스타일 ==================== */
+        @media (max-width: 768px) {
+            /* 🔥 모바일 버전：표시햄버거 메뉴 */
+            #mobile-menu-btn {
+                display: block !important;
+            }
+            
+            /* 🔥 모바일 버전：숨김데스크톱 버전 logo 및텍스트 */
+            .desktop-logo,
+            .desktop-logo-text {
+                display: none !important;
+            }
+            
+            /* 🔥 모바일 버전：숨김사이드바，주내용全寬 */
+            .sidebar {
+                display: none !important;
+            }
+            
+            .main-content {
+                margin-left: 0 !important;
+                width: 100% !important;
+                padding: 0 !important;
+            }
+            
+            /* 메인 컨테이너 */
+            body {
+                padding-top: 60px !important;
+            }
+            
+            .dashboard-container {
+                display: block !important;
+                padding: 0 !important;
+            }
+            
+            .main-container,
+            .content-wrapper {
+                padding: 0.75rem !important;
+                margin: 0 !important;
+            }
+            
+            /* 🔥 모바일 버전：내비게이션열스타일 */
+            .vaultcaddy-navbar {
+                padding: 0 1rem !important;
+            }
+            
+            /* 숨김데스크톱 버전내비게이션鏈接및언어선택기 */
+            .vaultcaddy-navbar > div:nth-child(2) > div:first-child,
+            .vaultcaddy-navbar > div:nth-child(2) > #language-dropdown {
+                display: none !important;
+            }
+            
+            /* 🔥 모바일 버전：조정布局順序 */
+            .detail-container {
+                display: flex !important;
+                flex-direction: column !important;
+                height: auto !important;
+            }
+            
+            /* 🔥 모바일 버전布局順序：이미지 > 세부정보 > 데이터 */
+            .pdf-preview-panel {
+                order: 1 !important;
+                width: 100% !important;
+                height: auto !important;
+                min-height: 50vh !important;
+            }
+            
+            .data-panel {
+                order: 2 !important;
+                width: 100% !important;
+                border-left: none !important;
+                border-top: 1px solid #e5e7eb !important;
+            }
+            
+            /* 🔥 모바일 버전：PDF보기기최적화 */
+            .pdf-viewer {
+                height: 50vh !important;
+            }
+            
+            /* 숨김언어선택기 */
+            #language-selector {
+                display: none !important;
+            }
+            
+            /* 🔥 내비게이션열之외부모든내용향해위이동 10pt */
+            .main-content {
+                margin-top: -10pt !important;
+            }
+            
+            /* 세부정보페이지頂部 - 更現代化 */
+            .detail-header {
+                padding: 0.75rem 1rem !important;
+                padding-top: 0 !important;
+                flex-direction: row !important;
+                flex-wrap: wrap !important;
+                align-items: flex-start !important;
+                gap: 0.75rem !important;
+                position: sticky !important;
+                top: 60px !important;
+                background: white !important;
+                z-index: 100 !important;
+                border-bottom: 1px solid #e5e7eb !important;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+            }
+            
+            /* 모바일 버전: 왼쪽 버튼 그룹 */
+            .detail-header .header-left {
+                display: flex !important;
+                flex-direction: row !important;
+                gap: 0.5rem !important;
+                width: 100% !important;
+                flex-basis: 100% !important;
+                margin-bottom: 0.5rem !important;
+            }
+            
+            .detail-header .back-btn {
+                flex: 1 1 auto !important;
+                font-size: 0.875rem !important;
+                padding: 0.75rem 1rem !important;
+                border-radius: 8px !important;
+                background: #f3f4f6 !important;
+                border: 1px solid #e5e7eb !important;
+                font-weight: 500 !important;
+                color: #374151 !important;
+                transition: all 0.2s !important;
+            }
+            
+            .detail-header .back-btn:hover {
+                background: #e5e7eb !important;
+            }
+            
+            /* 모바일 버전: 삭제 버튼 (돌아가기 버튼과 동일한 크기) */
+            .detail-header .header-left .icon-btn.delete {
+                flex: 1 1 auto !important;
+                font-size: 0.875rem !important;
+                padding: 0.75rem 1rem !important;
+                border-radius: 8px !important;
+                background: #fee2e2 !important;
+                border: 1px solid #fecaca !important;
+                color: #ef4444 !important;
+            }
+            
+            .detail-header .header-left .icon-btn.delete:hover {
+                background: #fecaca !important;
+            }
+            
+            /* 🔥 모바일 버전：문서제목美化 */
+            .detail-header .document-title {
+                font-size: 1rem !important;
+                font-weight: 600 !important;
+                color: #1f2937 !important;
+                word-break: break-all !important;
+                line-height: 1.5 !important;
+                margin: 0 !important;
+                width: 100% !important;
+                flex-basis: 100% !important;
+            }
+            
+            /* 🔥 모바일 버전：버튼 그룹변경로서왼쪽오른쪽排열 */
+            .detail-header .top-actions {
+                display: flex !important;
+                flex-direction: row !important;
+                width: auto !important;
+                flex: 0 0 auto !important;
+                gap: 0.5rem !important;
+            }
+            
+            .detail-header .top-actions .saved-indicator {
+                width: 100% !important;
+                justify-content: center !important;
+                padding: 0.5rem !important;
+                font-size: 0.875rem !important;
+            }
+            
+            .detail-header .top-actions .export-dropdown {
+                flex: 1 !important;
+            }
+            
+            .detail-header .top-actions .export-dropdown button {
+                width: 100% !important;
+                justify-content: center !important;
+                padding: 0.75rem 0.5rem !important;
+                font-size: 0.875rem !important;
+                border-radius: 8px !important;
+            }
+            
+            .detail-header .top-actions .icon-btn {
+                flex: 1 !important;
+                padding: 0.75rem 0.5rem !important;
+                font-size: 0.875rem !important;
+                border-radius: 8px !important;
+            }
+            
+            .detail-header .top-actions .icon-btn.delete {
+                flex: 0 0 auto !important;
+                width: auto !important;
+                white-space: nowrap !important;
+                background: #fee2e2 !important;
+                border: 1px solid #fecaca !important;
+                color: #ef4444 !important;
+                justify-content: center !important;
+            }
+            
+            .detail-header .top-actions .icon-btn.delete:hover {
+                background: #fecaca !important;
+            }
+
+            /* 모든카드 */
+            .card,
+            div[style*="border-radius"][style*="padding"] {
+                padding: 1rem !important;
+                margin-bottom: 1rem !important;
+            }
+            
+            /* 🔥 모바일 버전：콘텐츠 영역 */
+            .content-section {
+                padding: 0.75rem !important;
+            }
+            
+            .data-panel {
+                margin: 0.75rem !important;
+                border-radius: 8px !important;
+            }
+            
+            /* 제목字體大작은 */
+            h1 {
+                font-size: 1.25rem !important;
+            }
+            
+            h2 {
+                font-size: 1.125rem !important;
+            }
+            
+            h3 {
+                font-size: 1rem !important;
+            }
+            
+            /* 버튼 */
+            button,
+            .btn {
+                padding: 0.75rem 1rem !important;
+                font-size: 0.875rem !important;
+                white-space: nowrap !important;
+            }
+            
+            /* 🔧 보장 Export 버튼가능클릭 */
+            #export-btn,
+            #export-dropdown,
+            button[onclick*="toggleExportMenu"] {
+                position: relative !important;  /* 🔥 关键：让 z-index 生效 */
+                z-index: 999999 !important;     /* 🔥 超高 z-index */
+                pointer-events: auto !important;
+                touch-action: manipulation !important;
+            }
+            
+            /* 🔧 모바일 버전Export메뉴중앙 표시 */
+            #exportMenu[style*="display: block"] {
+                position: fixed !important;
+                top: 50% !important;
+                left: 50% !important;
+                transform: translate(-50%, -50%) !important;
+                right: auto !important;
+                bottom: auto !important;
+                margin: 0 !important;
+                z-index: 2147483647 !important; /* 🔥 32位整數최大值 */
+                width: 90% !important;
+                max-width: 400px !important;
+                display: block !important;
+                height: auto !important;
+                max-height: 80vh !important;
+                background: #ffffff !important;
+                overflow: auto !important;
+                box-shadow: none !important;
+                border: none !important;
+                border-radius: 12px !important;
+                padding: 1.5rem !important;
+            }
+            
+            /* 🔥 데스크톱 버전변경로서오른쪽측드롭다운 메뉴（와firstproject.html같은） */
+            @media (min-width: 769px) {
+                #exportMenu[style*="display: block"] {
+                    position: absolute !important;
+                    top: 100% !important;
+                    left: auto !important;
+                    right: 0 !important;
+                    transform: none !important;
+                    margin-top: 0.5rem !important;
+                    width: 250px !important;
+                    max-width: 250px !important;
+                    z-index: 9999 !important;
+                }
+                
+                /* 데스크톱 버전아니需要背景마스크 */
+                #exportMenuOverlay {
+                    display: none !important;
+                }
+            }
+            
+            /* 🔥 메뉴 전체를 흰색으로테두리 없음 */
+            #exportMenu[style*="display: block"] > *,
+            #exportMenu[style*="display: block"] > div,
+            #exportMenu[style*="display: block"] .export-menu-item,
+            #exportMenu[style*="display: block"] button {
+                background-color: #ffffff !important;
+                border: none !important;
+                border-color: transparent !important;
+            }
+            
+            /* 🔥 Export 메뉴 배경 마스크（데스크톱 버전및모바일 버전통일） */
+            #exportMenuOverlay {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                background: rgba(0, 0, 0, 0.5) !important;
+                z-index: 2147483646 !important;
+                display: none !important;
+            }
+            
+            #exportMenuOverlay[style*="display: block"] {
+                display: block !important;
+            }
+            
+            /* Export 메뉴 항목 터치 영역 확대 */
+            .export-menu-item,
+            #exportMenu button {
+                padding: 1rem !important;
+                min-height: 50px !important; /* iOS 推薦觸控區域 */
+                touch-action: manipulation !important;
+            }
+            
+            /* 입력 상자 */
+            input,
+            select,
+            textarea {
+                font-size: 1rem !important;
+                padding: 0.75rem !important;
+            }
+            
+            /* 🔥 모바일 버전：PDF보기기區域 */
+            .pdf-viewer {
+                padding: 1rem !important;
+                background: #f9fafb !important;
+            }
+            
+            /* PDF 預覽컨테이너 - 更大更美觀 */
+            #pdf-container {
+                height: 50vh !important;
+                max-width: 100% !important;
+                margin: 0 auto !important;
+                background: white !important;
+                border-radius: 12px !important;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+                overflow: hidden !important;
+            }
+            
+            #pdf-container canvas,
+            #pdf-container img {
+                max-width: 100% !important;
+                height: auto !important;
+                object-fit: contain !important;
+            }
+            
+            /* 🔥 모바일 버전：PDF제어버튼 - 縮작은30%以適應屏幕 */
+            .pdf-controls {
+                padding: 0.25rem 0.35rem !important;
+                gap: 0.175rem !important;
+                flex-wrap: nowrap !important;
+                justify-content: center !important;
+                background: white !important;
+                border-radius: 4px !important;
+                margin: 0.175rem !important;
+                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+                max-width: 70% !important; /* 縮작은30% */
+                overflow-x: auto !important;
+                transform: scale(0.7); /* 整體縮작은30% */
+                transform-origin: center;
+            }
+            
+            .pdf-controls button {
+                padding: 0.175rem 0.28rem !important;
+                font-size: 0.49rem !important; /* 0.7 * 0.7 = 0.49 */
+                min-width: 22px !important; /* 32 * 0.7 = 22.4 */
+                border-radius: 3px !important;
+                background: #f3f4f6 !important;
+                border: 1px solid #e5e7eb !important;
+            }
+            
+            .pdf-controls button i {
+                font-size: 0.455rem !important; /* 0.65 * 0.7 = 0.455 */
+            }
+            
+            /* 🔥 모바일 버전：페이지指示기縮작은 */
+            .page-indicator {
+                font-size: 0.49rem !important; /* 0.7 * 0.7 = 0.49 */
+                padding: 0 0.175rem !important;
+            }
+            
+            /* 🔥 모바일 버전：縮放버튼區域 */
+            .pdf-zoom-controls {
+                gap: 0.14rem !important; /* 0.2 * 0.7 = 0.14 */
+            }
+            
+            .pdf-zoom-controls button {
+                padding: 0.14rem 0.245rem !important; /* 0.2 * 0.7, 0.35 * 0.7 */
+                min-width: 19.6px !important; /* 28 * 0.7 */
+            }
+            
+            /* 🔥 모바일 버전：縮放표시 */
+            .zoom-display {
+                font-size: 0.455rem !important; /* 0.65 * 0.7 */
+                min-width: 24.5px !important; /* 35 * 0.7 */
+            }
+            
+            /* 🔥 모바일 버전：표橫향해스크롤 */
+            .table-wrapper,
+            .transactions-section {
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+            }
+            
+            /* 🎨 확장 세부정보 기능 완전히 숨기기 */
+            .transaction-detail-row,
+            .expand-btn,
+            .expand-detail-btn,
+            .expand-memo-btn {
+                display: none !important;
+            }
+            
+            /* 표 */
+            table {
+                font-size: 0.75rem !important;
+                min-width: 600px !important; /* 최작은너비，允許橫향해스크롤 */
+            }
+            
+            table th,
+            table td {
+                padding: 0.5rem 0.375rem !important;
+                white-space: nowrap !important;
+            }
+            
+            /* 🔥 모바일 버전：표第一열固설정（날짜열） */
+            table th:first-child,
+            table td:first-child {
+                position: sticky !important;
+                left: 0 !important;
+                background: white !important;
+                z-index: 10 !important;
+                box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05) !important;
+            }
+            
+            /* 숨김部分아니중要的열（Balance열） */
+            /* 🔥 手機版：隱藏部分不重要的列（Type, Payee, Reference, Balance列） */
+            table th:nth-child(3),
+            table td:nth-child(3),
+            table th:nth-child(5),
+            table td:nth-child(5),
+            table th:nth-child(6),
+            table td:nth-child(6),
+            table th:nth-child(8),
+            table td:nth-child(8) {
+                display: none !important;
+            }
+            
+            /* 🔥 모바일 버전：PDF Modal全屏 */
+            .pdf-modal-content {
+                width: 95% !important;
+                max-width: 95% !important;
+                margin: 0 !important;
+            }
+            
+            .pdf-modal-controls {
+                padding: 0.75rem !important;
+                gap: 0.5rem !important;
+            }
+            
+            .pdf-modal-btn {
+                padding: 0.5rem 0.75rem !important;
+                font-size: 0.875rem !important;
+            }
+        }
+    </style>
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <link rel="alternate icon" type="image/png" href="../favicon.png">
+
+    <!-- Google Analytics 4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LWPEKNC7RQ"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-LWPEKNC7RQ');
+    </script>
+
+
+    <!-- 리소스 힌트 - 로딩 속도 최적화 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+    <link rel="dns-prefetch" href="https://images.unsplash.com">
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+        <script src="/multilingual-data-sync.js"></script>
+
+    <meta name="description" content="AI 기반 문서 세부정보 - VaultCaddy 명세서 변환 도구. 3초 내에 PDF를 Excel/QuickBooks/Xero로 변환, 정확도 98%. 20페이지 무료 체험, 신용카드 불필요. ₩7998/월부터, 한국 150+기업 신뢰.">
+
+    <link rel="canonical" href="https://vaultcaddy.com/document-detail.html">
+
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "VaultCaddy - 문서 세부정보 - VaultCaddy Statement Converter",
+  "applicationCategory": "FinanceApplication",
+  "operatingSystem": "Web, iOS, Android",
+  "offers": {
+    "@type": "Offer",
+    "price": "7998",
+    "priceCurrency": "KRW",
+    "priceValidUntil": "2026-12-31"
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.8",
+    "ratingCount": "127",
+    "bestRating": "5"
+  },
+  "featureList": [
+    "AI-powered recognition",
+    "Excel/QuickBooks/Xero export",
+    "98% accuracy",
+    "3-second processing",
+    "Batch processing",
+    "Cloud storage"
+  ]
+}
+</script>
+    </head>
+<body class="auth-checking">
+    <!-- 🔒 Auth 로드애니메이션 -->
+    <div class="auth-loading">
+        <div style="text-align: center;">
+            <div style="width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
+            <p style="color: #6b7280; font-size: 0.875rem;">신원 확인 중...</p>
+        </div>
+    </div>
+    
+    <!-- ✅ 통일된 정적 네비게이션 바 -->
+    <nav class="vaultcaddy-navbar" id="main-navbar" style="position: fixed; top: 0; left: 0; right: 0; height: 60px; background: #ffffff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; z-index: 1000; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <!-- 🔥 햄버거 메뉴버튼（모바일만 표시） -->
+            <button id="mobile-menu-btn" onclick="openMobileSidebar()" style="display: none; background: none; border: none; cursor: pointer; padding: 0.5rem; color: #1f2937; font-size: 1.5rem;">
+                <i class="fas fa-bars"></i>
+            </button>
+            
+            <a href="index.html" style="display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: #1f2937; font-weight: 600; font-size: 1.125rem;">
+                <div class="desktop-logo" style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.25rem;">
+                    V
+                </div>
+                <div class="desktop-logo-text">
+                    <div>VaultCaddy</div>
+                    <div style="font-size: 0.75rem; color: #6b7280; font-weight: 400; text-transform: uppercase; letter-spacing: 0.05em;">AI DOCUMENT PROCESSING</div>
+                </div>
+            </a>
+        </div>
+        <div style="display: flex; align-items: center; gap: 2rem;">
+            <div style="display: flex; align-items: center; gap: 2rem;">
+                <a href="index.html#features" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">기능</a>
+                <a href="index.html#pricing" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">가격</a>
+                <a href="blog/" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">학습 센터</a>
+                <a href="dashboard.html" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">대시보드</a>
+            </div>
+            <div id="language-switcher" style="display: inline-block; margin-right: 1rem;"></div>
+                <div id="user-menu" style="position: relative; display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;">
+                <div id="user-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">U</div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- 🔥 모바일사이드바메뉴 -->
+    <div id="mobile-sidebar" style="position: fixed; top: 0; left: -100%; width: 280px; height: 100vh; background: white; z-index: 2000; transition: left 0.3s ease; box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto;">
+        <div style="padding: 1.5rem;">
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <a href="index.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
+                    <i class="fas fa-home" style="width: 20px; color: #667eea;"></i>
+                    <span>홈</span>
+                </a>
+                <a href="index.html#features" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
+                    <i class="fas fa-star" style="width: 20px; color: #667eea;"></i>
+                    <span>기능</span>
+                </a>
+                <a href="index.html#pricing" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
+                    <i class="fas fa-dollar-sign" style="width: 20px; color: #667eea;"></i>
+                    <span>가격</span>
+                </a>
+                <a href="blog/" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
+                    <i class="fas fa-graduation-cap" style="width: 20px; color: #667eea;"></i>
+                    <span>학습 센터</span>
+                </a>
+                <a href="dashboard.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
+                    <i class="fas fa-th-large" style="width: 20px; color: #667eea;"></i>
+                    <span>대시보드</span>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 🔥 사이드바마스크 -->
+    <div id="mobile-sidebar-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; display: none;" onclick="closeMobileSidebar()"></div>
+    
+    <!-- 메인 컨테이너 -->
+    <div class="dashboard-container">
+        <!-- 왼쪽사이드바（의해 sidebar-component.js 동적 생성） -->
+        <aside class="sidebar"></aside>
+        
+        <!-- 주콘텐츠 영역 -->
+        <div class="main-content">
+            <!-- 세부정보페이지頂部 -->
+            <div class="detail-header">
+                <div class="header-left">
+                    <span class="back-btn" onclick="goBackToDashboard()">
+                        <i class="fas fa-arrow-left"></i>
+                        대시보드로 돌아가기
+                    </span>
+                    <button class="icon-btn delete" onclick="deleteCurrentDocument()" title="문서 삭제">
+                        <i class="fas fa-trash"></i>
+                        <span>Delete</span>
+                    </button>
+                </div>
+                <h1 class="document-title" id="documentTitle">로드 중...</h1>
+                <div class="top-actions">
+                    <!-- 저장指示기（동적표시） -->
+                    <span id="savedIndicator" class="saved-indicator" style="display: none;">
+                        <i class="fas fa-cloud-check"></i>
+                        Saved
+                    </span>
+                    <!-- 导出클릭钮（綠色）- 메뉴이미이동까지 body 최후 -->
+                    <div class="export-dropdown" style="position: relative;">
+                        
+                        <!-- Export 메뉴이미이동까지 body 최후面 -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 세부정보내용컨테이너 -->
+            <div class="detail-container">
+        <!-- 왼쪽측 PDF 預覽 -->
+        <div class="pdf-preview-panel">
+            <div class="pdf-controls">
+                <button class="page-nav-btn" id="prevPageBtn" onclick="previousPage()">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <span class="page-indicator">
+                    <span id="currentPage">1</span> of <span id="totalPages">1</span>
+                </span>
+                <button class="page-nav-btn" id="nextPageBtn" onclick="nextPage()">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+                
+                <div class="pdf-zoom-controls">
+                    <button class="page-nav-btn" onclick="zoomOut()">
+                        <i class="fas fa-search-minus"></i>
+                    </button>
+                    <button class="page-nav-btn" onclick="resetZoom()">
+                        <i class="fas fa-undo"></i>
+                    </button>
+                    <button class="page-nav-btn" onclick="zoomIn()">
+                        <i class="fas fa-search-plus"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="pdf-viewer" id="pdfViewer">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <div>문서 로드 중...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 오른쪽측데이터面板 -->
+        <div class="data-panel">
+            <!-- 🔥 이미제거 "Results Export JSON" 標籤페이지 -->
+            
+            <!-- 문서 세부정보（기반유형동적표시） -->
+            <div id="documentDetailsSection">
+                <!-- 할의해 JavaScript 동적 생성 -->
+            </div>
+            
+            <!-- 데이터표（기반유형동적표시） -->
+            <div id="documentDataSection">
+                <!-- 할의해 JavaScript 동적 생성 -->
+            </div>
+            
+            <!-- 原있음的은행 명세서거래기록표（保留作로서備用） -->
+            <div id="bankStatementSection" style="display: none;">
+                <div class="bank-details-card">
+                    <div class="card-header">
+                        <h3 class="card-title">Bank Statement Details & Notes</h3>
+                        <i class="fas fa-chevron-down expand-icon"></i>
+                    </div>
+                </div>
+                
+                <div class="transactions-section">
+                    <div class="transactions-header">
+                        <h3 class="transactions-title">Transactions</h3>
+                        <div class="transaction-controls">
+                            <button class="control-btn">Show Unreconciled</button>
+                            <button class="control-btn">Toggle All</button>
+                            <button class="control-btn add">Add Item</button>
+                        </div>
+                    </div>
+                    
+                    <div class="transactions-info" id="transactionsInfo">
+                        Showing 0 to 0 of 0 transactions
+                    </div>
+                    
+                    <table class="transactions-table">
+                    <thead>
+                        <tr>
+                            <th class="checkbox-cell">
+                                <input type="checkbox" onchange="toggleAllTransactions(this)">
+                            </th>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Payee</th>
+                            <th>Reference</th>
+                            <th>Amount</th>
+                            <th>Balance</th>
+                            <th class="action-cell">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionsBody">
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 2rem; color: #94a3b8;">
+                                거래 로드 중...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- PDF 放大모달 -->
+    <div id="pdfModal" class="pdf-modal">
+        <span class="pdf-modal-close" onclick="closePdfModal()">&times;</span>
+        <div class="pdf-modal-content">
+            <img id="pdfModalImage" class="pdf-modal-image" src="" alt="PDF 放大檢視" loading="lazy">
+        </div>
+        <div class="pdf-modal-controls">
+            <button class="pdf-modal-btn" onclick="previousModalPage()">
+                <i class="fas fa-chevron-left"></i> 이전
+            </button>
+            <span class="pdf-modal-info">
+                <span id="modalCurrentPage">1</span> / <span id="modalTotalPages">1</span>
+            </button>
+            <button class="pdf-modal-btn" onclick="nextModalPage()">
+                다음 <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Export 模塊 -->
+    <script defer src="bank-statement-export.js"></script>
+    <script defer src="invoice-export.js"></script>
+    
+    <script defer src="../document-detail-new.js?v=20251107-rewrite"></script>
+    
+    <!-- PDF 放大보기기능 -->
+    <script>
+        let modalCurrentPageIndex = 0;
+        let modalPdfPages = [];
+        
+        // 초기화 PDF 放大기능
+        function initPdfZoom() {
+            // 가져오기모든 PDF 페이지이미지
+            const pdfImages = document.querySelectorAll('.pdf-page img');
+            modalPdfPages = Array.from(pdfImages);
+            
+            // 로서매個이미지추가클릭이벤트
+            pdfImages.forEach((img, index) => {
+                img.addEventListener('click', function() {
+                    openPdfModal(index);
+                });
+            });
+        }
+        
+        // 열기모달
+        function openPdfModal(pageIndex) {
+            const modal = document.getElementById('pdfModal');
+            const modalImage = document.getElementById('pdfModalImage');
+            
+            if (modalPdfPages.length === 0) return;
+            
+            modalCurrentPageIndex = pageIndex;
+            modalImage.src = modalPdfPages[pageIndex].src;
+            modal.classList.add('active');
+            
+            updateModalPageInfo();
+            
+            // 방지背景스크롤
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // 닫기모달
+        function closePdfModal() {
+            const modal = document.getElementById('pdfModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+        
+        // 이전
+        function previousModalPage() {
+            if (modalCurrentPageIndex > 0) {
+                modalCurrentPageIndex--;
+                updateModalImage();
+            }
+        }
+        
+        // 다음
+        function nextModalPage() {
+            if (modalCurrentPageIndex < modalPdfPages.length - 1) {
+                modalCurrentPageIndex++;
+                updateModalImage();
+            }
+        }
+        
+        // 업데이트모달이미지
+        function updateModalImage() {
+            const modalImage = document.getElementById('pdfModalImage');
+            modalImage.src = modalPdfPages[modalCurrentPageIndex].src;
+            updateModalPageInfo();
+        }
+        
+        // 업데이트페이지碼정보
+        function updateModalPageInfo() {
+            document.getElementById('modalCurrentPage').textContent = modalCurrentPageIndex + 1;
+            document.getElementById('modalTotalPages').textContent = modalPdfPages.length;
+        }
+        
+        // 鍵盤내비게이션
+        document.addEventListener('keydown', function(e) {
+            const modal = document.getElementById('pdfModal');
+            if (!modal.classList.contains('active')) return;
+            
+            if (e.key === 'Escape') {
+                closePdfModal();
+            } else if (e.key === 'ArrowLeft') {
+                previousModalPage();
+            } else if (e.key === 'ArrowRight') {
+                nextModalPage();
+            }
+        });
+        
+        // 클릭背景닫기
+        document.getElementById('pdfModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePdfModal();
+            }
+        });
+        
+        // 지연초기화，대기 PDF 로드완료
+        setTimeout(() => {
+            initPdfZoom();
+        }, 2000);
+        
+        // 리스닝 PDF 로드완료이벤트（있다면）
+        window.addEventListener('pdfLoaded', function() {
+            setTimeout(() => {
+                initPdfZoom();
+            }, 500);
+        });
+        
+        // 🔄 닫기 Export 메뉴
+        
+        
+        // 🔄 동적 생성 Export 메뉴（문서에 따라유형）
+        
+        
+        window.currentDocument) {
+                docType = window.currentDocument.type || window.currentDocument.documentType || 'general';
+                // 🔥 표준化문서유형
+                docType = docType.toLowerCase();
+                console.log('📄 Export 메뉴 - 문서유형:', docType);
+            } else {
+                console.warn('⚠️ window.currentDocument 미정의，가져오기 실패문서유형');
+            }
+            
+            // 🔥 모바일 버전：추가닫기버튼
+            let menuHTML = '';
+            if (window.innerWidth <= 768) {
+                menuHTML += `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 1rem; border-bottom: 1px solid #e5e7eb; margin-bottom: 1rem;">
+                        <h2 style="margin: 0; font-size: 1.25rem; font-weight: 600; color: #1f2937;">선택내보내기포맷</h2>
+                        <button onclick="closeExportMenu()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6b7280; padding: 0.5rem;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+            }
+            
+            menuHTML += '<div style="padding: 0.5rem 0; background: #ffffff;">';
+            
+            // 문서에 따라유형표시대해應선택항목
+            if (docType === 'invoice' || docType === '송장' || docType === 'invoices') {
+                // 송장：표시송장선택항목 + 기타（IIF/QBO）
+                menuHTML += `
+                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">송장</div>
+                    <button onclick="exportDocument('invoice_summary_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-invoice" style="color: #f59e0b; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">표준 CSV（총계）</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">快速대해帳</div>
+                        </div>
+                    </button>
+                    <button onclick="exportDocument('invoice_detailed_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-invoice" style="color: #f59e0b; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">完整거래데이터 CSV</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">상세기록</div>
+                        </div>
+                    </button>
+                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">기타</div>
+                    <button onclick="exportDocument('xero_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-csv" style="color: #2563eb; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">Xero CSV</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">공식 최소포맷</div>
+                        </div>
+                    </button>
+                    <button onclick="exportDocument('quickbooks_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-csv" style="color: #059669; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">QuickBooks CSV</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">공식 최소포맷</div>
+                        </div>
+                    </button>
+                    <button onclick="exportDocument('iif')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-alt" style="color: #3b82f6; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">IIF</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Desktop</div>
+                        </div>
+                    </button>
+                    <button onclick="exportDocument('qbo')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-cloud" style="color: #8b5cf6; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">QBO</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Online</div>
+                        </div>
+                    </button>
+                `;
+            } else {
+                // 은행 명세서：표시은행 명세서선택항목 + 기타（Xero/QuickBooks/IIF/QBO）
+                menuHTML += `
+                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">은행 명세서</div>
+                    <button onclick="exportDocument('bank_statement_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">표준 CSV</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">전체 필드포맷</div>
+                        </div>
+                    </button>
+                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">기타</div>
+                    <button onclick="exportDocument('xero_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-csv" style="color: #2563eb; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">Xero CSV</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">공식 최소포맷</div>
+                        </div>
+                    </button>
+                    <button onclick="exportDocument('quickbooks_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-csv" style="color: #059669; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">QuickBooks CSV</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">공식 최소포맷</div>
+                        </div>
+                    </button>
+                    <button onclick="exportDocument('iif')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-alt" style="color: #3b82f6; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">IIF</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Desktop</div>
+                        </div>
+                    </button>
+                    <button onclick="exportDocument('qbo')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-cloud" style="color: #8b5cf6; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">QBO</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Online</div>
+                        </div>
+                    </button>
+                `;
+            }
+            
+            menuHTML += '</div>';
+            menu.innerHTML = menuHTML;
+        }
+    </script>
+    
+    <!-- 🔥 모바일사이드바기능 -->
+    <script>
+        // 열기사이드바
+        function openMobileSidebar() {
+            const sidebar = document.getElementById('mobile-sidebar');
+            const overlay = document.getElementById('mobile-sidebar-overlay');
+            if (sidebar && overlay) {
+                sidebar.style.left = '0';
+                overlay.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+            }
+        }
+        
+        // 닫기사이드바
+        function closeMobileSidebar() {
+            const sidebar = document.getElementById('mobile-sidebar');
+            const overlay = document.getElementById('mobile-sidebar-overlay');
+            if (sidebar && overlay) {
+                sidebar.style.left = '-100%';
+                overlay.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        }
+    </script>
+    
+    <!-- 🔥 Export 메뉴（放에서 body 최후面보장에서최위層）-->
+    <div id="exportMenu" class="export-menu" style="display: none; z-index: 999999;">
+        <!-- 동적 생성的메뉴내용 -->
+    </div>
+    
+    <!-- 🔥 Export 메뉴 배경 마스크（z-index 低에메뉴）-->
+    <div id="exportMenuOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999998;" onclick="closeExportMenu()"></div>
+
+
+    <!-- Google Analytics 事件跟踪 -->
+    <script src="/ga-event-tracking.js"></script>
+
+    <!-- 🔥 Export Menu（完全基于 firstproject.html）-->
+    <div class="export-menu" id="exportMenu" style="display: none; position: fixed; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); min-width: 280px; max-width: 400px; z-index: 999999; padding: 1rem; overflow: hidden;">
+        <!-- 动态生成内容 -->
+    </div>
+    
+    <!-- Export Menu 背景遮罩 -->
+    <div id="exportMenuOverlay" onclick="closeExportMenu()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999998;"></div>
+    
+    <script>
+        // 🔥 Export 功能 - 完全基于 firstproject.html（适配单文档）
+        
+        // 关闭菜单
+        window.closeExportMenu = function() {
+            const menu = document.getElementById('exportMenu');
+            const overlay = document.getElementById('exportMenuOverlay');
+            if (menu) {
+                menu.style.display = 'none';
+            }
+            if (overlay) {
+                overlay.style.display = 'none';
+            }
+            console.log('🔒 菜单已关闭');
+        };
+        
+        // 更新菜单内容
+        function updateExportMenuContent() {
+            const menu = document.getElementById('exportMenu');
+            if (!menu) {
+                console.error('❌ exportMenu 元素不存在');
+                return;
+            }
+            
+            // 获取当前文档类型
+            let docType = 'bank_statement';  // 默认
+            if (window.currentDocument) {
+                docType = (window.currentDocument.type || window.currentDocument.documentType || 'bank_statement').toLowerCase();
+                console.log('📄 文档类型:', docType);
+            } else {
+                console.warn('⚠️ window.currentDocument 不存在，使用默认类型');
+            }
+            
+            // 判断文档类型
+            const hasBankStatement = docType.includes('bank') || docType.includes('statement');
+            const hasInvoice = docType.includes('invoice') || docType.includes('receipt');
+            
+            // 生成菜单 HTML（与 firstproject 完全相同的结构）
+            let menuHTML = '<div style="padding: 0.5rem 0; background: #ffffff;">';
+            
+            // Bank Statement 选项
+            if (hasBankStatement) {
+                menuHTML += `
+                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Bank Statement</div>
+                    <button onclick="exportDocuments('bank_statement_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">Standard CSV</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">complete fields Format</div>
+                        </div>
+                    </button>
+                `;
+            }
+            
+            // Invoice 选项
+            if (hasInvoice) {
+                menuHTML += `
+                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Invoice</div>
+                    <button onclick="exportDocuments('invoice_summary_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-invoice" style="color: #f59e0b; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">Standard CSV (Total)</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">fast Pair account</div>
+                        </div>
+                    </button>
+                    <button onclick="exportDocuments('invoice_detailed_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-invoice" style="color: #f59e0b; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">complete whole transaction Data CSV</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">details record</div>
+                        </div>
+                    </button>
+                `;
+            }
+            
+            // 确保至少有 Bank Statement 或 Other 显示
+            if (!hasBankStatement && !hasInvoice) {
+                // 如果没有匹配到类型，至少显示 Bank Statement
+                menuHTML += `
+                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Bank Statement</div>
+                    <button onclick="exportDocuments('bank_statement_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">Standard CSV</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">complete fields Format</div>
+                        </div>
+                    </button>
+                `;
+            }
+            
+            // Other 选项（始终显示）
+            menuHTML += `
+                <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Other</div>
+                <button onclick="exportDocuments('xero_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                    <i class="fas fa-file-csv" style="color: #3b82f6; width: 20px;"></i>
+                    <div>
+                        <div style="font-weight: 500;">Xero CSV</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">official Minimum Format</div>
+                    </div>
+                </button>
+                <button onclick="exportDocuments('quickbooks_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                    <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
+                    <div>
+                        <div style="font-weight: 500;">QuickBooks CSV</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">official Minimum Format</div>
+                    </div>
+                </button>
+                <button onclick="exportDocuments('iif')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                    <i class="fas fa-file-alt" style="color: #3b82f6; width: 20px;"></i>
+                    <div>
+                        <div style="font-weight: 500;">IIF</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Desktop</div>
+                    </div>
+                </button>
+                <button onclick="exportDocuments('qbo')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                    <i class="fas fa-cloud" style="color: #8b5cf6; width: 20px;"></i>
+                    <div>
+                        <div style="font-weight: 500;">QBO</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Online</div>
+                    </div>
+                </button>
+            `;
+            
+            menuHTML += '</div>';
+            
+            // 更新菜单内容
+            menu.innerHTML = menuHTML;
+            console.log('✅ 菜单内容已更新');
+        }
+        
+                // 切换菜单显示（简化版，确保能显示）
+        window.toggleExportMenu = function(event) {
+            console.log('🔍 toggleExportMenu Called');
+            
+            // 🔥 强制更新菜单内容（确保有内容）
+            console.log('🔄 强制更新菜单内容...');
+            updateExportMenuContent();
+            const menu = document.getElementById('exportMenu');
+            const overlay = document.getElementById('exportMenuOverlay');
+            console.log('📋 菜单元素:', menu);
+            
+            if (!menu) {
+                console.error('❌ 未找到 #exportMenu 元素');
+                return;
+            }
+            
+            // 如果菜单已显示，则关闭
+            if (menu.style.display === 'block') {
+                console.log('🔒 菜单已显示，关闭中...');
+                closeExportMenu();
+                return;
+            }
+            
+            // 检查当前文档
+            console.log('📄 window.currentDocument:', window.currentDocument);
+
+            console.log('📱 设置菜单样式...');
+            
+            // 🔥 使用简化的、确保有效的样式设置（参考强制显示测试）
+            menu.style.display = 'block';
+            menu.style.position = 'fixed';
+            menu.style.zIndex = '9999999';
+            menu.style.backgroundColor = '#ffffff';
+            menu.style.padding = '1.5rem';
+            menu.style.borderRadius = '12px';
+            menu.style.minWidth = '300px';
+            menu.style.maxWidth = '90%';
+            
+            if (window.innerWidth <= 768) {
+                // 📱 移动端：居中显示
+                menu.style.top = '50%';
+                menu.style.left = '50%';
+                menu.style.transform = 'translate(-50%, -50%)';
+                menu.style.width = '90%';
+                menu.style.maxWidth = '400px';
+                menu.style.border = 'none';
+                menu.style.boxShadow = '0 25px 50px rgba(0,0,0,0.25)';
+                console.log('📱 移动端：菜单居中显示');
+                
+                // 显示遮罩
+                if (overlay) {
+                    overlay.style.display = 'block';
+                }
+            } else {
+                // 💻 桌面端：在按钮下方
+                const exportBtn = document.querySelector('button[onclick*="toggleExportMenu"]');
+                if (exportBtn) {
+                    const rect = exportBtn.getBoundingClientRect();
+                    menu.style.top = (rect.bottom + 8) + 'px';
+                    menu.style.right = (window.innerWidth - rect.right) + 'px';
+                    menu.style.left = 'auto';
+                    menu.style.transform = 'none';
+                    menu.style.width = 'auto';
+                    menu.style.minWidth = '300px';
+                    menu.style.maxWidth = '450px';
+                    menu.style.border = '1px solid #e5e7eb';
+                    menu.style.boxShadow = '0 10px 25px rgba(0,0,0,0.15)';
+                    console.log('💻 桌面端：菜单在按钮下方 (top=' + menu.style.top + ', right=' + menu.style.right + ')');
+                } else {
+                    // 如果找不到按钮，居中显示
+                    console.warn('⚠️ 未找到 Export 按钮，使用居中显示');
+                    menu.style.top = '50%';
+                    menu.style.left = '50%';
+                    menu.style.transform = 'translate(-50%, -50%)';
+                    menu.style.border = '1px solid #e5e7eb';
+                    menu.style.boxShadow = '0 10px 25px rgba(0,0,0,0.15)';
+                }
+                
+                // 桌面端不显示遮罩
+                if (overlay) {
+                    overlay.style.display = 'none';
+                }
+            }
+            
+            menu.classList.add('active');
+            
+            console.log('✅ 菜单已显示');
+            console.log('📊 最终样式: display=' + menu.style.display + ', position=' + menu.style.position + ', zIndex=' + menu.style.zIndex);
+        };
+        
+        // 导出文档（简化版，适配单文档）
+        window.exportDocuments = async function(format) {
+            console.log('📤 开始导出:', format);
+            
+            // 关闭菜单
+            closeExportMenu();
+            
+            // 获取当前文档
+            const currentDoc = window.currentDocument;
+            if (!currentDoc) {
+                alert('文档数据未加载');
+                return;
+            }
+            
+            if (currentDoc.status !== 'completed' || !currentDoc.processedData) {
+                alert('文档尚未完成处理');
+                return;
+            }
+            
+            // 简单的导出逻辑
+            try {
+                const data = currentDoc.processedData;
+                let csv = '';
+                let filename = '';
+                
+                switch(format) {
+                    case 'bank_statement_csv':
+                        if (data.transactions && data.transactions.length > 0) {
+                            csv = 'Date,Description,Amount,Balance\n';
+                            data.transactions.forEach(t => {
+                                csv += `"${t.date || ''}","${t.description || ''}","${t.amount || 0}","${t.balance || 0}"\n`;
+                            });
+                            filename = `BankStatement_${Date.now()}.csv`;
+                        }
+                        break;
+                        
+                    case 'invoice_summary_csv':
+                    case 'invoice_detailed_csv':
+                        if (data.items && data.items.length > 0) {
+                            csv = 'Code,Description,Quantity,Unit Price,Amount\n';
+                            data.items.forEach(item => {
+                                csv += `"${item.code || ''}","${item.description || ''}","${item.quantity || 0}","${item.unit_price || item.unitPrice || 0}","${item.amount || 0}"\n`;
+                            });
+                            filename = `Invoice_${Date.now()}.csv`;
+                        }
+                        break;
+                        
+                    default:
+                        alert(`${format} 格式即将推出...`);
+                        return;
+                }
+                
+                if (!csv) {
+                    alert('无数据可导出');
+                    return;
+                }
+                
+                // 下载文件
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                console.log('✅ 已下载:', filename);
+            } catch (error) {
+                console.error('❌ 导出失败:', error);
+                alert('导出失败: ' + error.message);
+            }
+        };
+        
+        
+        // 🔥 备用：直接添加 event listener（防止 onclick 被阻止）
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔍 DOMContentLoaded - 开始绑定 Export 按钮');
+            
+            const exportBtn = document.querySelector('button[onclick*="toggleExportMenu"]');
+            console.log('📋 Export 按钮:', exportBtn);
+            
+            if (exportBtn) {
+                // 移除旧的 listener（如果有）
+                exportBtn.removeAttribute('data-listener-attached');
+                
+                // 添加新的 listener
+                exportBtn.addEventListener('click', function(e) {
+                    console.log('🎯 Export 按钮被点击（event listener）');
+                    console.log('📋 Event:', e);
+                    
+                    // 确保函数存在
+                    if (typeof window.toggleExportMenu === 'function') {
+                        console.log('✅ toggleExportMenu 函数存在，调用中...');
+                        window.toggleExportMenu(e);
+                    } else {
+                        console.error('❌ toggleExportMenu 函数不存在');
+                        console.log('window.toggleExportMenu:', window.toggleExportMenu);
+                    }
+                });
+                
+                exportBtn.setAttribute('data-listener-attached', 'true');
+                console.log('✅ Export 按钮 event listener 已绑定');
+            } else {
+                console.error('❌ 未找到 Export 按钮');
+            }
+        });
+        
+        console.log('✅ Export 功能已加载（全新版本 + 备用 listener）');
+        
+        // 🔍 终极诊断：找出为什么点击不工作
+        setTimeout(function() {
+            console.log('');
+            console.log('🔍🔍🔍 开始终极诊断 🔍🔍🔍');
+            console.log('');
+            
+            const exportBtn = document.querySelector('button[onclick*="toggleExportMenu"]');
+            
+            if (!exportBtn) {
+                console.error('❌ Export 按钮不存在');
+                return;
+            }
+            
+            console.log('✅ Export 按钮存在:', exportBtn);
+            
+            // 1. 检查按钮的 CSS 属性
+            const computedStyle = window.getComputedStyle(exportBtn);
+            console.log('📊 按钮样式:');
+            console.log('  - display:', computedStyle.display);
+            console.log('  - visibility:', computedStyle.visibility);
+            console.log('  - opacity:', computedStyle.opacity);
+            console.log('  - pointer-events:', computedStyle.pointerEvents);
+            console.log('  - z-index:', computedStyle.zIndex);
+            console.log('  - position:', computedStyle.position);
+            
+            // 2. 检查按钮的位置
+            const rect = exportBtn.getBoundingClientRect();
+            console.log('📍 按钮位置:');
+            console.log('  - top:', rect.top);
+            console.log('  - left:', rect.left);
+            console.log('  - width:', rect.width);
+            console.log('  - height:', rect.height);
+            
+            // 3. 检查按钮中心点的元素
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const elementAtCenter = document.elementFromPoint(centerX, centerY);
+            
+            console.log('🎯 按钮中心点 (' + centerX + ', ' + centerY + ') 的元素:');
+            console.log('  - 元素:', elementAtCenter);
+            console.log('  - 是否是按钮本身?', elementAtCenter === exportBtn);
+            console.log('  - 是否在按钮内部?', exportBtn.contains(elementAtCenter));
+            
+            if (elementAtCenter !== exportBtn && !exportBtn.contains(elementAtCenter)) {
+                console.error('❌❌❌ 发现问题！按钮被其他元素覆盖了！');
+                console.error('覆盖元素:', elementAtCenter);
+                console.error('覆盖元素的 class:', elementAtCenter.className);
+                console.error('覆盖元素的 id:', elementAtCenter.id);
+                
+                // 检查覆盖元素的 z-index
+                const overlayStyle = window.getComputedStyle(elementAtCenter);
+                console.error('覆盖元素的 z-index:', overlayStyle.zIndex);
+                console.error('覆盖元素的 position:', overlayStyle.position);
+            }
+            
+            // 4. 手动触发点击测试
+            console.log('');
+            console.log('🧪 测试：手动触发点击事件...');
+            
+            // 测试 1: 直接调用函数
+            if (typeof window.toggleExportMenu === 'function') {
+                console.log('✅ toggleExportMenu 函数存在');
+                console.log('🧪 测试 1: 直接调用 window.toggleExportMenu()...');
+                try {
+                    window.toggleExportMenu();
+                    console.log('✅ 函数调用成功');
+                } catch (e) {
+                    console.error('❌ 函数调用失败:', e);
+                }
+            } else {
+                console.error('❌ toggleExportMenu 函数不存在');
+            }
+            
+            console.log('');
+            
+            
+            // 🔍 深度诊断：检查 exportMenu 元素
+            console.log('');
+            console.log('🔍🔍🔍 exportMenu 元素深度检查 🔍🔍🔍');
+            
+            const menu = document.getElementById('exportMenu');
+            const overlay = document.getElementById('exportMenuOverlay');
+            
+            console.log('1️⃣ exportMenu 存在?', menu !== null);
+            console.log('   元素:', menu);
+            
+            if (menu) {
+                console.log('2️⃣ exportMenu 的样式:');
+                const menuStyle = window.getComputedStyle(menu);
+                console.log('   - display:', menuStyle.display);
+                console.log('   - visibility:', menuStyle.visibility);
+                console.log('   - opacity:', menuStyle.opacity);
+                console.log('   - position:', menuStyle.position);
+                console.log('   - top:', menuStyle.top);
+                console.log('   - left:', menuStyle.left);
+                console.log('   - transform:', menuStyle.transform);
+                console.log('   - z-index:', menuStyle.zIndex);
+                console.log('   - width:', menuStyle.width);
+                console.log('   - height:', menuStyle.height);
+                
+                console.log('3️⃣ exportMenu 的位置:');
+                const menuRect = menu.getBoundingClientRect();
+                console.log('   - top:', menuRect.top);
+                console.log('   - left:', menuRect.left);
+                console.log('   - right:', menuRect.right);
+                console.log('   - bottom:', menuRect.bottom);
+                console.log('   - width:', menuRect.width);
+                console.log('   - height:', menuRect.height);
+                
+                console.log('4️⃣ exportMenu 的内容:');
+                console.log('   - innerHTML 长度:', menu.innerHTML.length);
+                console.log('   - innerHTML 前 100 字符:', menu.innerHTML.substring(0, 100));
+                
+                if (menu.innerHTML.length === 0 || menu.innerHTML.trim() === '') {
+                    console.error('❌❌❌ exportMenu 没有内容！');
+                }
+            } else {
+                console.error('❌❌❌ exportMenu 元素不存在！');
+            }
+            
+            console.log('5️⃣ exportMenuOverlay 存在?', overlay !== null);
+            if (overlay) {
+                const overlayStyle = window.getComputedStyle(overlay);
+                console.log('   - display:', overlayStyle.display);
+                console.log('   - z-index:', overlayStyle.zIndex);
+            }
+            
+            console.log('');
+            console.log('🧪 手动测试：强制显示菜单...');
+            
+            if (menu) {
+                // 保存原始样式
+                console.log('📝 原始 inline style:', menu.getAttribute('style'));
+                
+                // 强制设置样式
+                menu.style.display = 'block';
+                menu.style.position = 'fixed';
+                menu.style.top = '50%';
+                menu.style.left = '50%';
+                menu.style.transform = 'translate(-50%, -50%)';
+                menu.style.zIndex = '9999999';
+                menu.style.backgroundColor = '#ffffff';
+                menu.style.border = '5px solid red';  // 红色边框用于调试
+                menu.style.padding = '2rem';
+                menu.style.minWidth = '300px';
+                menu.style.minHeight = '200px';
+                
+                console.log('✅ 已强制设置样式，菜单应该在屏幕中央显示（红色边框）');
+                console.log('👀 请查看页面，是否看到红色边框的菜单？');
+                
+                setTimeout(function() {
+                    const newMenuStyle = window.getComputedStyle(menu);
+                    console.log('🔍 强制设置后的样式:');
+                    console.log('   - display:', newMenuStyle.display);
+                    console.log('   - position:', newMenuStyle.position);
+                    console.log('   - top:', newMenuStyle.top);
+                    console.log('   - left:', newMenuStyle.left);
+                    console.log('   - z-index:', newMenuStyle.zIndex);
+                    
+                    const newRect = menu.getBoundingClientRect();
+                    console.log('   - 位置: top=' + newRect.top + ', left=' + newRect.left);
+                    console.log('   - 尺寸: width=' + newRect.width + ', height=' + newRect.height);
+                    
+                    if (newRect.width === 0 || newRect.height === 0) {
+                        console.error('❌❌❌ 菜单的尺寸是 0！可能是内容为空或 CSS 问题');
+                    }
+                    
+                    if (newMenuStyle.display === 'none') {
+                        console.error('❌❌❌ display 还是 none！可能被其他 CSS 规则覆盖');
+                    }
+                }, 100);
+            }
+            
+            console.log('');
+            console.log('🔍🔍🔍 深度检查完成 🔍🔍🔍');
+            console.log('');
+            console.log('📋 请告诉我：');
+            console.log('1. exportMenu 存在吗？');
+            console.log('2. exportMenu 的 display 是什么？');
+            console.log('3. exportMenu 的内容长度是多少？');
+            console.log('4. 是否看到红色边框的菜单？');
+
+            console.log('🔍🔍🔍 诊断完成 🔍🔍🔍');
+            console.log('');
+            console.log('📋 如果看到 "按钮被其他元素覆盖"，请告诉我覆盖元素的信息');
+            console.log('📋 如果没有看到菜单弹出，请截图整个 Console');
+            
+        }, 2000);  // 等待2秒后执行，确保页面完全加载
+
+
+    </script>
+    
+    <style>
+        /* Export Menu 样式 */
+        .export-menu-item:hover {
+            background: #f3f4f6 !important;
+        }
+        
+        /* 移动端样式 */
+        @media (max-width: 768px) {
+            #exportMenu {
+                position: fixed !important;
+                top: 50% !important;
+                left: 50% !important;
+                transform: translate(-50%, -50%) !important;
+                right: auto !important;
+                width: 90% !important;
+                max-width: 400px !important;
+                background-color: #ffffff !important;
+                box-shadow: none !important;
+                border: none !important;
+                border-radius: 12px !important;
+                padding: 1.5rem !important;
+                overflow: hidden !important;
+            }
+        }
+    </style>
+
+</body>
+</html>
