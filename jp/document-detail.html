@@ -665,7 +665,7 @@
          * 2. date（日付）✅ 保持
          * 3. type（タイプ）❌ 非表示
          * 4. description（説明）✅ 保持
-         * 5. payee（支払先）✅ 保持
+         * 5. payee（支払先）❌ 非表示（ほとんどの銀行明細書では個別に表示されない）
          * 6. reference（参照）❌ 非表示
          * 7. check#（小切手番号）❌ 非表示
          * 8. category（カテゴリー）✅ 保持（ユーザーが必要）
@@ -677,10 +677,12 @@
         
         /* デフォルト：補助列を非表示 */
         .type-cell,
+        .payee-cell,
         .ref-cell,
         .check-cell,
         .attachment-cell,
         .transactions-table th:nth-child(3),  /* Type header */
+        .transactions-table th:nth-child(5),  /* Payee header - 非表示（2026-01-11） */
         .transactions-table th:nth-child(6),  /* Reference header */
         .transactions-table th:nth-child(7),  /* Check# header */
         .transactions-table th:nth-child(11)  /* Attachment header */
@@ -716,14 +718,7 @@
             }
         }
         
-        /* 📱 タブレット（<1400px）：さらに非表示 */
-        @media (max-width: 1400px) {
-            .payee-cell,
-            .transactions-table th:nth-child(5)  /* Payee header */
-            {
-                display: none !important;
-            }
-        }
+        /* 📱 タブレット（<1400px）：追加の非表示列なし（payeeはデフォルトリスト内） */
         
         /* 🎨 非表示列のヒントを表示 */
         .transactions-section::before {

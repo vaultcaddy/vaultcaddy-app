@@ -694,7 +694,7 @@
          * 2. date（日期）✅ 保留
          * 3. type（類型）❌ 隱藏
          * 4. description（描述）✅ 保留
-         * 5. payee（收款人）✅ 保留
+         * 5. payee（收款人）❌ 隱藏（大多數銀行不單獨顯示，已包含在描述中）
          * 6. reference（參考編號）❌ 隱藏
          * 7. check#（支票號）❌ 隱藏
          * 8. category（分類）✅ 保留（用戶需要）
@@ -706,10 +706,12 @@
         
         /* 默認隱藏次要列 */
         .type-cell,
+        .payee-cell,
         .ref-cell,
         .check-cell,
         .attachment-cell,
         .transactions-table th:nth-child(3),  /* Type header */
+        .transactions-table th:nth-child(5),  /* Payee header - 隱藏（2026-01-11：大多數銀行對賬單不單獨顯示） */
         .transactions-table th:nth-child(6),  /* Reference header */
         .transactions-table th:nth-child(7),  /* Check# header */
         .transactions-table th:nth-child(11)  /* Attachment header */
@@ -745,14 +747,7 @@
             }
         }
         
-        /* 📱 平板（<1400px）：進一步隱藏 */
-        @media (max-width: 1400px) {
-            .payee-cell,
-            .transactions-table th:nth-child(5)  /* Payee header */
-            {
-                display: none !important;
-            }
-        }
+        /* 📱 平板（<1400px）：無需額外隱藏（payee 已在默認隱藏列表中） */
         
         /* 📱 小屏（<1200px）：極簡模式 */
         @media (max-width: 1200px) {

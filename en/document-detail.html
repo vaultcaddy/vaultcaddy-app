@@ -665,7 +665,7 @@
          * 2. date ✅ Keep
          * 3. type ❌ Hide
          * 4. description ✅ Keep
-         * 5. payee ✅ Keep
+         * 5. payee ❌ Hide (Most bank statements don't show payee separately)
          * 6. reference ❌ Hide
          * 7. check# ❌ Hide
          * 8. category ✅ Keep (users need it)
@@ -677,10 +677,12 @@
         
         /* Default: Hide secondary columns */
         .type-cell,
+        .payee-cell,
         .ref-cell,
         .check-cell,
         .attachment-cell,
         .transactions-table th:nth-child(3),  /* Type header */
+        .transactions-table th:nth-child(5),  /* Payee header - Hidden (2026-01-11) */
         .transactions-table th:nth-child(6),  /* Reference header */
         .transactions-table th:nth-child(7),  /* Check# header */
         .transactions-table th:nth-child(11)  /* Attachment header */
@@ -716,14 +718,7 @@
             }
         }
         
-        /* 📱 Tablet (<1400px): Hide more columns */
-        @media (max-width: 1400px) {
-            .payee-cell,
-            .transactions-table th:nth-child(5)  /* Payee header */
-            {
-                display: none !important;
-            }
-        }
+        /* 📱 Tablet (<1400px): No additional columns to hide (payee already in default list) */
         
         /* 🎨 Show hidden columns tip */
         .transactions-section::before {

@@ -32,6 +32,7 @@ const i18n = {
         category: '分類',
         memo: '備注',
         reconciled: '已對賬',
+        unreconciled: '未對賬',
         attachment: '附件',
         amount: '金額',
         balance: '餘額',
@@ -65,7 +66,27 @@ const i18n = {
         unit: '單位',
         unit_price: '單價',
         unit_default: '件',
-        no_items: '無項目數據'
+        no_items: '無項目數據',
+        // 分类相关
+        actions: '操作',
+        uncategorized: '未分類',
+        income_categories: '收入類別',
+        expense_categories: '支出類別',
+        cat_salary: '工資',
+        cat_sales: '銷售收入',
+        cat_interest: '利息收入',
+        cat_other_income: '其他收入',
+        cat_office: '辦公費用',
+        cat_transport: '交通費用',
+        cat_meal: '餐飲費用',
+        cat_utilities: '水電費',
+        cat_rent: '租金',
+        cat_salary_expense: '工資支出',
+        cat_marketing: '營銷費用',
+        cat_supplies: '耗材',
+        cat_other_expense: '其他支出',
+        income_click_to_expense: '收入（點擊改為支出）',
+        expense_click_to_income: '支出（點擊改為收入）'
     },
     'en': {
         verified: 'Verified',
@@ -78,6 +99,7 @@ const i18n = {
         category: 'Category',
         memo: 'Memo',
         reconciled: 'Reconciled',
+        unreconciled: 'Unreconciled',
         attachment: 'Attach',
         amount: 'Amount',
         balance: 'Balance',
@@ -111,7 +133,27 @@ const i18n = {
         unit: 'Unit',
         unit_price: 'Unit Price',
         unit_default: 'pcs',
-        no_items: 'No item data'
+        no_items: 'No item data',
+        // Category related
+        actions: 'Actions',
+        uncategorized: 'Uncategorized',
+        income_categories: 'Income Categories',
+        expense_categories: 'Expense Categories',
+        cat_salary: 'Salary',
+        cat_sales: 'Sales Revenue',
+        cat_interest: 'Interest Income',
+        cat_other_income: 'Other Income',
+        cat_office: 'Office Expenses',
+        cat_transport: 'Transportation',
+        cat_meal: 'Meals & Entertainment',
+        cat_utilities: 'Utilities',
+        cat_rent: 'Rent',
+        cat_salary_expense: 'Salary Expense',
+        cat_marketing: 'Marketing',
+        cat_supplies: 'Supplies',
+        cat_other_expense: 'Other Expenses',
+        income_click_to_expense: 'Income (Click to change to Expense)',
+        expense_click_to_income: 'Expense (Click to change to Income)'
     },
     'ja': {
         verified: '確認済',
@@ -124,6 +166,7 @@ const i18n = {
         category: 'カテゴリー',
         memo: 'メモ',
         reconciled: '照合済',
+        unreconciled: '未照合',
         attachment: '添付',
         amount: '金額',
         balance: '残高',
@@ -157,7 +200,27 @@ const i18n = {
         unit: '単位',
         unit_price: '単価',
         unit_default: '個',
-        no_items: '項目データなし'
+        no_items: '項目データなし',
+        // カテゴリー関連
+        actions: '操作',
+        uncategorized: '未分類',
+        income_categories: '収入カテゴリー',
+        expense_categories: '支出カテゴリー',
+        cat_salary: '給与',
+        cat_sales: '売上収入',
+        cat_interest: '利息収入',
+        cat_other_income: 'その他収入',
+        cat_office: '事務所費用',
+        cat_transport: '交通費',
+        cat_meal: '接待交際費',
+        cat_utilities: '水道光熱費',
+        cat_rent: '家賃',
+        cat_salary_expense: '給与支出',
+        cat_marketing: 'マーケティング費用',
+        cat_supplies: '消耗品',
+        cat_other_expense: 'その他支出',
+        income_click_to_expense: '収入（クリックで支出に変更）',
+        expense_click_to_income: '支出（クリックで収入に変更）'
     },
     'ko': {
         verified: '확인됨',
@@ -170,6 +233,7 @@ const i18n = {
         category: '카테고리',
         memo: '메모',
         reconciled: '조정완료',
+        unreconciled: '미조정',
         attachment: '첨부',
         amount: '금액',
         balance: '잔액',
@@ -203,7 +267,27 @@ const i18n = {
         unit: '단위',
         unit_price: '단가',
         unit_default: '개',
-        no_items: '항목 데이터 없음'
+        no_items: '항목 데이터 없음',
+        // 카테고리 관련
+        actions: '작업',
+        uncategorized: '미분류',
+        income_categories: '수입 카테고리',
+        expense_categories: '지출 카테고리',
+        cat_salary: '급여',
+        cat_sales: '판매 수익',
+        cat_interest: '이자 수입',
+        cat_other_income: '기타 수입',
+        cat_office: '사무실 비용',
+        cat_transport: '교통비',
+        cat_meal: '식대',
+        cat_utilities: '공과금',
+        cat_rent: '임대료',
+        cat_salary_expense: '급여 지출',
+        cat_marketing: '마케팅 비용',
+        cat_supplies: '소모품',
+        cat_other_expense: '기타 지출',
+        income_click_to_expense: '수입 (클릭하여 지출로 변경)',
+        expense_click_to_income: '지출 (클릭하여 수입으로 변경)'
     }
 };
 
@@ -1590,7 +1674,8 @@ function displayBankStatementContent(data) {
         
         // ✅ 获取所有字段数据
         const transactionType = tx.transactionType || '—';
-        const payee = tx.payee || '—';
+        // ✅ 將 Unknown 改為 —
+        const payee = (tx.payee && tx.payee.toLowerCase() !== 'unknown') ? tx.payee : '—';
         const referenceNumber = tx.referenceNumber || '';
         const checkNumber = tx.checkNumber || '';
         const category = tx.category || '';
@@ -1608,7 +1693,7 @@ function displayBankStatementContent(data) {
                            data-index="${actualIndex}"
                            ${reconciled ? 'checked' : ''}
                            onchange="handleReconciledChange(${actualIndex}, this.checked)"
-                           title="${reconciled ? '已對賬' : '未對賬'}">
+                           title="${reconciled ? t('reconciled') : t('unreconciled')}">
                 </td>
                 <td contenteditable="true" class="editable-cell date-cell" data-field="date" style="min-width: 100px; font-size: 0.875rem;" data-date="${tx.date || '—'}">${tx.date || '—'}</td>
                 <td contenteditable="true" class="editable-cell type-cell" data-field="transactionType" style="min-width: 75px; color: #6b7280; font-size: 0.8rem;">${transactionType}</td>
@@ -1618,41 +1703,41 @@ function displayBankStatementContent(data) {
                 <td contenteditable="true" class="editable-cell check-cell" data-field="checkNumber" style="min-width: 65px; color: #6b7280; font-size: 0.8rem;">${checkNumber}</td>
                 <td class="category-cell" style="min-width: 105px;">
                     <select class="category-select" data-index="${actualIndex}" onchange="handleCategoryChange(${actualIndex}, this.value)" style="width: 100%; padding: 0.3rem; font-size: 0.8rem; border: 1px solid #d1d5db; border-radius: 4px;">
-                        <option value="">未分類</option>
-                        <optgroup label="收入類別">
-                            <option value="salary" ${category === 'salary' ? 'selected' : ''}>工資</option>
-                            <option value="sales" ${category === 'sales' ? 'selected' : ''}>銷售收入</option>
-                            <option value="interest" ${category === 'interest' ? 'selected' : ''}>利息收入</option>
-                            <option value="other-income" ${category === 'other-income' ? 'selected' : ''}>其他收入</option>
+                        <option value="">${t('uncategorized')}</option>
+                        <optgroup label="${t('income_categories')}">
+                            <option value="salary" ${category === 'salary' ? 'selected' : ''}>${t('cat_salary')}</option>
+                            <option value="sales" ${category === 'sales' ? 'selected' : ''}>${t('cat_sales')}</option>
+                            <option value="interest" ${category === 'interest' ? 'selected' : ''}>${t('cat_interest')}</option>
+                            <option value="other-income" ${category === 'other-income' ? 'selected' : ''}>${t('cat_other_income')}</option>
                         </optgroup>
-                        <optgroup label="支出類別">
-                            <option value="office" ${category === 'office' ? 'selected' : ''}>辦公費用</option>
-                            <option value="transport" ${category === 'transport' ? 'selected' : ''}>交通費用</option>
-                            <option value="meal" ${category === 'meal' ? 'selected' : ''}>餐飲費用</option>
-                            <option value="utilities" ${category === 'utilities' ? 'selected' : ''}>水電費</option>
-                            <option value="rent" ${category === 'rent' ? 'selected' : ''}>租金</option>
-                            <option value="salary-expense" ${category === 'salary-expense' ? 'selected' : ''}>工資支出</option>
-                            <option value="marketing" ${category === 'marketing' ? 'selected' : ''}>營銷費用</option>
-                            <option value="supplies" ${category === 'supplies' ? 'selected' : ''}>耗材</option>
-                            <option value="other-expense" ${category === 'other-expense' ? 'selected' : ''}>其他支出</option>
+                        <optgroup label="${t('expense_categories')}">
+                            <option value="office" ${category === 'office' ? 'selected' : ''}>${t('cat_office')}</option>
+                            <option value="transport" ${category === 'transport' ? 'selected' : ''}>${t('cat_transport')}</option>
+                            <option value="meal" ${category === 'meal' ? 'selected' : ''}>${t('cat_meal')}</option>
+                            <option value="utilities" ${category === 'utilities' ? 'selected' : ''}>${t('cat_utilities')}</option>
+                            <option value="rent" ${category === 'rent' ? 'selected' : ''}>${t('cat_rent')}</option>
+                            <option value="salary-expense" ${category === 'salary-expense' ? 'selected' : ''}>${t('cat_salary_expense')}</option>
+                            <option value="marketing" ${category === 'marketing' ? 'selected' : ''}>${t('cat_marketing')}</option>
+                            <option value="supplies" ${category === 'supplies' ? 'selected' : ''}>${t('cat_supplies')}</option>
+                            <option value="other-expense" ${category === 'other-expense' ? 'selected' : ''}>${t('cat_other_expense')}</option>
                         </optgroup>
                     </select>
                 </td>
                 <td class="amount-cell" style="position: relative; padding: 0.45rem 0.3rem !important;">
-                    <div style="display: flex; align-items: center; gap: 0.35rem; justify-content: flex-end; white-space: nowrap;">
+                    <div style="display: flex; align-items: center; gap: 0.35rem; justify-content: flex-start; white-space: nowrap;">
                         <button onclick="toggleTransactionType(${actualIndex})" 
                                 class="transaction-sign-btn"
                                 style="display: inline-flex !important; align-items: center; justify-content: center; width: 24px; height: 24px; background: ${amountColor}; color: white; border: none; border-radius: 3px; font-weight: 700; font-size: 0.9rem; cursor: pointer; flex-shrink: 0; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.1);"
                                 onmouseover="this.style.opacity='0.85'; this.style.transform='scale(1.05)'" 
                                 onmouseout="this.style.opacity='1'; this.style.transform='scale(1)'"
-                                title="${isIncome ? '收入（點擊改為支出）' : '支出（點擊改為收入）'}">
+                                title="${isIncome ? t('income_click_to_expense') : t('expense_click_to_income')}">
                             ${amountSign}
                         </button>
                         <span contenteditable="true" 
                               class="editable-amount" 
                               data-index="${actualIndex}"
                               data-field="amount"
-                              style="text-align: right; color: ${amountColor}; font-weight: 600; font-size: 0.85rem; min-width: 80px; padding: 0.25rem 0.4rem; border: 1px solid transparent; border-radius: 3px; white-space: nowrap; background: ${amountBgColor}20;"
+                              style="text-align: left; color: ${amountColor}; font-weight: 600; font-size: 0.85rem; min-width: 80px; padding: 0.25rem 0.4rem; border: 1px solid transparent; border-radius: 3px; white-space: nowrap; background: ${amountBgColor}20;"
                               onfocus="this.style.border='1px solid ${amountColor}'; this.style.background='${amountBgColor}40'"
                               onblur="this.style.border='1px solid transparent'; this.style.background='${amountBgColor}20'; updateTransactionAmount(${actualIndex}, this.textContent)">${displayAmount}</span>
                     </div>
@@ -1710,18 +1795,18 @@ function displayBankStatementContent(data) {
             <table class="transactions-table">
                 <thead>
                     <tr>
-                        <th class="checkbox-cell" style="width: 45px; text-align: center; font-size: 0.75rem; font-weight: 600;">✓ 已對賬</th>
+                        <th class="checkbox-cell" style="width: 45px; text-align: center; font-size: 0.75rem; font-weight: 600;">✓ ${t('reconciled')}</th>
                         <th style="font-size: 0.875rem;">${t('date')}</th>
                         <th class="type-cell" style="font-size: 0.875rem;">${t('type')}</th>
                         <th style="font-size: 0.875rem;">${t('description')}</th>
                         <th style="font-size: 0.875rem;">${t('payee')}</th>
                         <th class="ref-cell" style="font-size: 0.875rem;">${t('reference')}</th>
-                        <th class="check-cell" style="font-size: 0.875rem;">支票號</th>
-                        <th class="category-cell" style="font-size: 0.875rem;">分類</th>
+                        <th class="check-cell" style="font-size: 0.875rem;">${t('checkNumber')}</th>
+                        <th class="category-cell" style="font-size: 0.875rem;">${t('category')}</th>
                         <th style="font-size: 0.875rem; text-align: right;">${t('amount')}</th>
                         <th style="font-size: 0.875rem; text-align: right;">${t('balance')}</th>
                         <th class="attachment-cell" style="font-size: 0.875rem; text-align: center;">📎</th>
-                        <th class="action-cell" style="font-size: 0.875rem; text-align: center;">操作</th>
+                        <th class="action-cell" style="font-size: 0.875rem; text-align: center;">${t('actions')}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -2671,7 +2756,7 @@ function handleReconciledChange(index, reconciled) {
         const mainCheckbox = document.querySelector(`.transaction-row[data-index="${index}"] .reconciled-checkbox`);
         if (mainCheckbox && mainCheckbox !== event.target) {
             mainCheckbox.checked = reconciled;
-            mainCheckbox.title = reconciled ? '已對賬' : '未對賬';
+            mainCheckbox.title = reconciled ? t('reconciled') : t('unreconciled');
         }
         
         // 🚫 詳情行同步代碼已移除（2026-01-09）

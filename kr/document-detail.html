@@ -665,7 +665,7 @@
          * 2. date (날짜) ✅ 유지
          * 3. type (유형) ❌ 숨김
          * 4. description (설명) ✅ 유지
-         * 5. payee (수취인) ✅ 유지
+         * 5. payee (수취인) ❌ 숨김 (대부분의 은행 명세서에서 개별로 표시되지 않음)
          * 6. reference (참조) ❌ 숨김
          * 7. check# (수표 번호) ❌ 숨김
          * 8. category (카테고리) ✅ 유지 (사용자 필요)
@@ -677,10 +677,12 @@
         
         /* 기본: 보조 열 숨기기 */
         .type-cell,
+        .payee-cell,
         .ref-cell,
         .check-cell,
         .attachment-cell,
         .transactions-table th:nth-child(3),  /* Type header */
+        .transactions-table th:nth-child(5),  /* Payee header - 숨김 (2026-01-11) */
         .transactions-table th:nth-child(6),  /* Reference header */
         .transactions-table th:nth-child(7),  /* Check# header */
         .transactions-table th:nth-child(11)  /* Attachment header */
@@ -716,14 +718,7 @@
             }
         }
         
-        /* 📱 태블릿 (<1400px): 추가로 숨기기 */
-        @media (max-width: 1400px) {
-            .payee-cell,
-            .transactions-table th:nth-child(5)  /* Payee header */
-            {
-                display: none !important;
-            }
-        }
+        /* 📱 태블릿 (<1400px): 추가 숨김 열 없음 (payee는 기본 목록에 포함) */
         
         /* 🎨 숨겨진 열 힌트 표시 */
         .transactions-section::before {
