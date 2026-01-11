@@ -623,3 +623,4 @@ function classifyTransactionType(description, amount) {
 **测试版本**: Qwen-VL Max (批量处理 + 智能识别)  
 **下次更新**: 待重新测试后
 
+

@@ -252,3 +252,4 @@ if (file.type === 'application/pdf') {
 **临时方案**: 使用主应用处理PDF  
 **长期方案**: 为测试页面添加PDF支持（开发中）
 
+
