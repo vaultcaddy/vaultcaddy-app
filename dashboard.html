@@ -1293,14 +1293,24 @@
             
             // 處理 Firebase Timestamp 對象
             if (typeof dateValue === 'object' && dateValue.seconds) {
+                // 檢查 seconds 是否為有效值（不為 0 或負數）
+                if (dateValue.seconds <= 0) {
+                    console.warn('⚠️ 無效的 Firebase Timestamp:', dateValue);
+                    return '-';
+                }
                 date = new Date(dateValue.seconds * 1000);
             } 
-            // 處理 Date 對象或字符串
+            // 處理 Date 對象
             else if (dateValue instanceof Date) {
                 date = dateValue;
             }
             // 處理數字時間戳
             else if (typeof dateValue === 'number') {
+                // 檢查時間戳是否為有效值
+                if (dateValue <= 0) {
+                    console.warn('⚠️ 無效的時間戳:', dateValue);
+                    return '-';
+                }
                 date = new Date(dateValue);
             }
             // 處理字符串
@@ -1308,11 +1318,13 @@
                 date = new Date(dateValue);
             }
             else {
+                console.warn('⚠️ 未知的日期格式:', dateValue);
                 return '-';
             }
             
             // 檢查日期是否有效
-            if (isNaN(date.getTime())) {
+            if (isNaN(date.getTime()) || date.getTime() <= 0) {
+                console.warn('⚠️ 無效的日期:', date);
                 return '-';
             }
             

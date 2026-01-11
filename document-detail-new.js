@@ -1737,7 +1737,7 @@ function displayBankStatementContent(data) {
                               class="editable-amount" 
                               data-index="${actualIndex}"
                               data-field="amount"
-                              style="text-align: left; color: ${amountColor}; font-weight: 600; font-size: 0.85rem; min-width: 80px; padding: 0.25rem 0.4rem; border: 1px solid transparent; border-radius: 3px; white-space: nowrap; background: ${amountBgColor}20;"
+                              style="text-align: right; color: ${amountColor}; font-weight: 600; font-size: 0.85rem; min-width: 80px; padding: 0.25rem 0.4rem; border: 1px solid transparent; border-radius: 3px; white-space: nowrap; background: ${amountBgColor}20; flex: 1;"
                               onfocus="this.style.border='1px solid ${amountColor}'; this.style.background='${amountBgColor}40'"
                               onblur="this.style.border='1px solid transparent'; this.style.background='${amountBgColor}20'; updateTransactionAmount(${actualIndex}, this.textContent)">${displayAmount}</span>
                     </div>
