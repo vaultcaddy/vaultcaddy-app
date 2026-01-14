@@ -1792,11 +1792,17 @@ exports.checkEmailVerified = functions.https.onCall(async (data, context) => {
 
 /**
  * 每天自動清理過期數據
- * 基礎版：60 天
- * 專業版：90 天
- * 商業版：365 天
- * 免費版：30 天
+ * ⚠️ 已禁用 - 2026-01-14：改為永久保存所有項目
+ * 舊設置：
+ * - 基礎版：60 天
+ * - 專業版：90 天
+ * - 商業版：365 天
+ * - 免費版：30 天
+ * 
+ * 新設置：永久保存（不自動刪除）
  */
+// 🔒 已禁用此定時任務 - 所有項目永久保存
+/*
 exports.cleanupExpiredData = functions.pubsub
     .schedule('0 2 * * *') // 每天凌晨 2 點執行
     .timeZone('Asia/Hong_Kong')
@@ -1868,9 +1874,11 @@ exports.cleanupExpiredData = functions.pubsub
             return null;
         }
     });
+*/
 
 /**
  * 手動觸發數據清理（用於測試）
+ * ⚠️ 已禁用 - 2026-01-14：改為永久保存所有項目
  */
 exports.triggerCleanup = functions.https.onCall(async (data, context) => {
     // 只允許管理員執行

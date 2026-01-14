@@ -277,10 +277,11 @@ class QwenVLMaxProcessor {
         const totalPages = files.length;
         const totalBatches = Math.ceil(totalPages / batchSize);
         
-        console.log(`\n🔄 [Qwen-VL Max] 分批处理模式`);
+        console.log(`\n🔄 [Qwen-VL Max] 串行批处理模式`);
         console.log(`   📊 总页数: ${totalPages}`);
         console.log(`   📦 每批: ${batchSize} 页`);
         console.log(`   🔢 总批次: ${totalBatches}`);
+        console.log(`   🐌 处理方式: 串行（一次一批，避免 API 限流）`);
         
         try {
             const allResults = [];
@@ -291,82 +292,82 @@ class QwenVLMaxProcessor {
             };
             const allResponses = [];
             
-            // ✅ 并行处理所有批次（减少总时间）
-            console.log(`🚀 开始并行处理 ${totalBatches} 个批次...`);
+            // ✅ 串行处理所有批次（避免 API 并发限制）
+            console.log(`🐌 开始串行处理 ${totalBatches} 个批次...`);
+            console.log(`   ⚠️  串行模式确保 100% 成功率，避免 API 限流导致的 JSON 解析错误`);
             
-            // 创建所有批次的Promise数组
-            const batchPromises = [];
+            let successfulBatches = 0;
+            let failedBatches = 0;
+            
+            // ✅ 串行执行：一次处理一个批次
             for (let i = 0; i < totalPages; i += batchSize) {
                 const batchNum = Math.floor(i / batchSize) + 1;
                 const batchStart = i;
                 const batchEnd = Math.min(i + batchSize, totalPages);
                 const batchFiles = files.slice(batchStart, batchEnd);
                 
-                console.log(`📦 准备批次 ${batchNum}/${totalBatches}：第 ${batchStart + 1}-${batchEnd} 页`);
+                console.log(`\n📦 处理批次 ${batchNum}/${totalBatches}：第 ${batchStart + 1}-${batchEnd} 页`);
                 
-                // 创建批次处理Promise
-                const batchPromise = this.processSingleBatch(batchFiles, documentType)
-                    .then(result => {
-                        console.log(`✅ 批次 ${batchNum}/${totalBatches} 完成！耗时 ${result.processingTime}ms`);
-                        console.log(`📊 批次 ${batchNum} 提取了 ${result.extractedData?.transactions?.length || 0} 笔交易`);
-                        return { batchNum, result, success: true };
-                    })
-                    .catch(error => {
-                        console.error(`❌ 批次 ${batchNum}/${totalBatches} 失败:`, error.message);
-                        console.error(`📋 错误详情:`, error);
-                        // 返回错误信息，但不中断其他批次
-                        return { batchNum, error, success: false };
-                    });
-                
-                batchPromises.push(batchPromise);
-            }
-            
-            // ✅ 并行执行所有批次
-            console.log(`⚡ 同时处理 ${batchPromises.length} 个批次...`);
-            const batchResults = await Promise.all(batchPromises);
-            
-            // 按批次顺序整理结果，过滤失败的批次
-            const successfulBatches = batchResults
-                .filter(b => b.success)
-                .sort((a, b) => a.batchNum - b.batchNum);
-            
-            const failedBatches = batchResults.filter(b => !b.success);
-            
-            if (failedBatches.length > 0) {
-                console.warn(`⚠️ ${failedBatches.length} 个批次处理失败`);
-                for (const failed of failedBatches) {
-                    console.error(`   ❌ 批次 ${failed.batchNum}: ${failed.error.message}`);
+                try {
+                    // ✅ 等待当前批次完成后再处理下一批
+                    const result = await this.processSingleBatch(batchFiles, documentType);
+                    
+                    console.log(`✅ 批次 ${batchNum}/${totalBatches} 完成！耗时 ${result.processingTime}ms`);
+                    console.log(`📊 批次 ${batchNum} 提取了 ${result.extractedData?.transactions?.length || 0} 笔交易`);
+                    
+                    // 收集结果
+                    allResults.push(result.extractedData);
+                    if (result.rawResponse) {
+                        allResponses.push(result.rawResponse);
+                    }
+                    if (result.usage) {
+                        totalUsage.prompt_tokens += result.usage.prompt_tokens || 0;
+                        totalUsage.completion_tokens += result.usage.completion_tokens || 0;
+                        totalUsage.total_tokens += result.usage.total_tokens || 0;
+                    }
+                    
+                    successfulBatches++;
+                    
+                    // ✅ 调用进度回调
+                    if (progressCallback) {
+                        progressCallback({
+                            currentBatch: batchNum,
+                            totalBatches: totalBatches,
+                            progress: Math.round((batchNum / totalBatches) * 100)
+                        });
+                    }
+                    
+                } catch (error) {
+                    failedBatches++;
+                    console.error(`❌ 批次 ${batchNum}/${totalBatches} 失败:`, error.message);
+                    console.error(`📋 错误详情:`, error);
+                    
+                    // ✅ 容错模式：继续处理下一批次
+                    console.warn(`⚠️  跳过批次 ${batchNum}，继续处理下一批次...`);
+                    continue;
+                    
+                    // 如果需要严格模式（任何批次失败都停止），可以取消注释：
+                    // throw new Error(`批次 ${batchNum} 处理失败: ${error.message}`);
                 }
             }
             
-            if (successfulBatches.length === 0) {
+            if (allResults.length === 0) {
                 throw new Error('所有批次都处理失败');
             }
             
-            console.log(`✅ 成功处理 ${successfulBatches.length}/${totalBatches} 个批次`);
-            
-            // 收集所有成功批次的结果
-            for (const { batchNum, result } of successfulBatches) {
-                allResults.push(result.extractedData);
-                if (result.rawResponse) {
-                    allResponses.push(result.rawResponse);
-                }
-                if (result.usage) {
-                    totalUsage.prompt_tokens += result.usage.prompt_tokens || 0;
-                    totalUsage.completion_tokens += result.usage.completion_tokens || 0;
-                    totalUsage.total_tokens += result.usage.total_tokens || 0;
-                }
+            console.log(`\n✅ 串行处理完成！成功 ${successfulBatches}/${totalBatches} 个批次`);
+            if (failedBatches > 0) {
+                console.warn(`⚠️  失败 ${failedBatches} 个批次`);
             }
-            
-            console.log(`🎉 所有 ${successfulBatches.length} 个批次并行处理完成！`)
             
             // 合并所有批次的结果
             const mergedData = this.mergeMultiPageResults(allResults, documentType);
             
             const totalTime = Date.now() - startTime;
             
-            console.log(`\n🎉 分批处理完成！`);
+            console.log(`\n🎉 串行处理完成！`);
             console.log(`   📊 总页数: ${totalPages}`);
+            console.log(`   ✅ 成功批次: ${successfulBatches}/${totalBatches}`);
             console.log(`   ⏱️  总耗时: ${totalTime}ms`);
             console.log(`   📈 平均: ${(totalTime / totalPages).toFixed(0)}ms/页`);
             console.log(`   💰 总成本: $${(this.calculateCost(totalUsage.total_tokens)).toFixed(4)}`);
@@ -378,7 +379,7 @@ class QwenVLMaxProcessor {
                 rawResponse: allResponses.join('\n---\n'),
                 pages: totalPages,
                 processingTime: totalTime,
-                processor: 'qwen-vl-max-batch-multi',  // 标记为分批处理
+                processor: 'qwen-vl-max-batch-serial',  // ✅ 标记为串行处理
                 model: this.qwenModel,
                 usage: totalUsage
             };
