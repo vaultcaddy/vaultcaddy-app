@@ -400,11 +400,27 @@ class QwenVLMaxProcessor {
         const startTime = Date.now();
         
         try {
+            // 📊 记录批次信息
+            console.log(`\n📦 批次详细信息:`);
+            console.log(`   - 页数: ${files.length}`);
+            for (let i = 0; i < files.length; i++) {
+                const fileSizeKB = (files[i].size / 1024).toFixed(1);
+                console.log(`   - 文件${i+1}: ${files[i].name}, 大小: ${fileSizeKB} KB, 类型: ${files[i].type}`);
+            }
+            
             // 1. 将文件转换为 Base64
+            console.log(`🔄 开始转换为Base64...`);
             const imageContents = [];
+            let totalBase64Size = 0;
+            
             for (let i = 0; i < files.length; i++) {
                 const base64Data = await this.fileToBase64(files[i]);
-                const mimeType = files[i].type || 'image/jpeg';
+                const base64Size = base64Data.length;
+                totalBase64Size += base64Size;
+                const base64SizeMB = (base64Size / 1024 / 1024).toFixed(2);
+                console.log(`   ✅ 文件${i+1} Base64: ${base64SizeMB} MB`);
+                
+                const mimeType = files[i].type || 'image/webp';
                 imageContents.push({
                     type: 'image_url',
                     image_url: {
@@ -413,8 +429,17 @@ class QwenVLMaxProcessor {
                 });
             }
             
+            const totalBase64MB = (totalBase64Size / 1024 / 1024).toFixed(2);
+            console.log(`📊 Base64总大小: ${totalBase64MB} MB`);
+            
+            // ⚠️ 检查大小限制
+            if (totalBase64Size > 3 * 1024 * 1024) {
+                console.warn(`⚠️  警告: Base64大小超过3MB，可能导致API处理缓慢或失败`);
+            }
+            
             // 2. 生成提示词
             const prompt = this.generateMultiPagePrompt(documentType, files.length);
+            console.log(`📝 提示词长度: ${prompt.length} 字符`);
             
             // 3. 构建请求
             const requestBody = {
@@ -435,7 +460,14 @@ class QwenVLMaxProcessor {
                 max_tokens: 8000
             };
             
+            const requestBodySize = JSON.stringify(requestBody).length;
+            const requestBodySizeMB = (requestBodySize / 1024 / 1024).toFixed(2);
+            console.log(`📊 请求体大小: ${requestBodySizeMB} MB`);
+            
             // 4. 调用 API
+            console.log(`🚀 开始调用Qwen API...`);
+            const apiStartTime = Date.now();
+            
             const response = await fetch(this.qwenWorkerUrl, {
                 method: 'POST',
                 headers: {
@@ -444,12 +476,25 @@ class QwenVLMaxProcessor {
                 body: JSON.stringify(requestBody)
             });
             
+            const apiDuration = Date.now() - apiStartTime;
+            console.log(`✅ API响应耗时: ${apiDuration}ms (${(apiDuration/1000).toFixed(1)}秒)`);
+            console.log(`📊 HTTP状态码: ${response.status} ${response.statusText}`);
+            
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
+                const errorText = await response.text();
+                console.error(`❌ API错误响应: ${errorText.substring(0, 500)}`);
+                let errorData;
+                try {
+                    errorData = JSON.parse(errorText);
+                } catch {
+                    errorData = { message: errorText };
+                }
                 throw new Error(`Qwen-VL API 错误: ${response.status} - ${errorData.message || response.statusText}`);
             }
             
+            console.log(`🔄 开始解析JSON响应...`);
             const data = await response.json();
+            console.log(`✅ JSON解析成功`);
             
             // 5. 提取响应文本
             let responseText = '';
@@ -458,13 +503,30 @@ class QwenVLMaxProcessor {
             }
             
             if (!responseText) {
+                console.error(`❌ Qwen-VL未返回有效响应`);
+                console.error(`📊 API响应数据:`, JSON.stringify(data, null, 2));
                 throw new Error('Qwen-VL 未返回有效响应');
             }
             
+            console.log(`📏 响应文本长度: ${responseText.length} 字符`);
+            console.log(`🔍 响应文本预览: ${responseText.substring(0, 200)}...`);
+            
             // 6. 解析 JSON
+            console.log(`🔄 开始解析提取的数据...`);
             const extractedData = this.parseJSON(responseText);
+            console.log(`✅ 数据解析成功`);
+            
+            if (extractedData.transactions) {
+                console.log(`📊 提取了 ${extractedData.transactions.length} 笔交易`);
+            }
             
             const totalTime = Date.now() - startTime;
+            console.log(`🎉 批次处理完成！总耗时: ${totalTime}ms (${(totalTime/1000).toFixed(1)}秒)`);
+            
+            // 记录使用统计
+            if (data.usage) {
+                console.log(`📊 Token使用: prompt=${data.usage.prompt_tokens}, completion=${data.usage.completion_tokens}, total=${data.usage.total_tokens}`);
+            }
             
             return {
                 success: true,
@@ -479,7 +541,21 @@ class QwenVLMaxProcessor {
             };
             
         } catch (error) {
-            console.error('❌ 批次处理失败:', error);
+            const totalTime = Date.now() - startTime;
+            console.error(`\n❌ ========== 批次处理失败 ==========`);
+            console.error(`⏱️  耗时: ${totalTime}ms (${(totalTime/1000).toFixed(1)}秒)`);
+            console.error(`📛 错误类型: ${error.name}`);
+            console.error(`💬 错误信息: ${error.message}`);
+            console.error(`📍 错误堆栈:`);
+            console.error(error.stack);
+            
+            // 记录文件信息以便调试
+            console.error(`📋 失败批次的文件信息:`);
+            for (let i = 0; i < files.length; i++) {
+                console.error(`   - 文件${i+1}: ${files[i].name}, ${(files[i].size / 1024).toFixed(1)} KB`);
+            }
+            console.error(`========================================\n`);
+            
             throw error;
         }
     }
