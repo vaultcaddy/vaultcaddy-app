@@ -3274,19 +3274,31 @@
             
             for (const doc of pendingDocs) {
                 try {
-                    // から Storage ダウンロードファイル
-                    const response = await fetch(doc.downloadURL);
-                    const blob = await response.blob();
-                    const file = new File([blob], doc.fileName, { type: blob.type });
-                    
-                    const pages = doc.pages | 1;
+                    const pages = doc.pages || 1;  // ✅ 修正: 論理和 || を使用
                     
                     console.log(`🔄 恢復処理: ${doc.fileName} (${pages} 頁)`);
                     
-                    // 繼續 AI 処理
-                    processFileWithAI(file, doc.id, pages).catch(err => {
-                        console.error('❌ 恢復処理失敗:', err);
-                    });
+                    // ✅ 修正: 複数ページ文書は自動回復に対応していません（PDF→画像変換が必要）、再アップロードを促す
+                    if (pages > 1) {
+                        console.warn(`⚠️  複数ページ文書 ${doc.fileName} は再アップロードが必要です（自動回復非対応）`);
+                        
+                        // 失敗状態に更新、再アップロードを促す
+                        await window.simpleDataManager.updateDocument(currentProjectId, doc.id, {
+                            status: 'failed',
+                            error: 'ページ更新により処理が中断されました。この文書を削除して再アップロードしてください'
+                        });
+                        await loadDocuments();
+                    } else {
+                        // 単一ページ文書は正常に回復可能
+                        const response = await fetch(doc.downloadURL);
+                        const blob = await response.blob();
+                        const file = new File([blob], doc.fileName, { type: blob.type });
+                        
+                        console.log(`📄 単一ページ文書の処理を回復: ${doc.fileName}`);
+                        processFileWithAI(file, doc.id, pages).catch(err => {
+                            console.error('❌ 恢復処理失敗:', err);
+                        });
+                    }
                     
                 } catch (error) {
                     console.error(`❌ 恢復文書 ${doc.fileName} 失敗:`, error);

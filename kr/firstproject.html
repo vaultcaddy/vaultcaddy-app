@@ -3274,19 +3274,31 @@
             
             for (const doc of pendingDocs) {
                 try {
-                    // 부터 Storage 다운로드파일
-                    const response = await fetch(doc.downloadURL);
-                    const blob = await response.blob();
-                    const file = new File([blob], doc.fileName, { type: blob.type });
-                    
-                    const pages = doc.pages | 1;
+                    const pages = doc.pages || 1;  // ✅ 수정: 논리합 || 사용
                     
                     console.log(`🔄 복원처리: ${doc.fileName} (${pages} 페이지)`);
                     
-                    // 繼續 AI 처리
-                    processFileWithAI(file, doc.id, pages).catch(err => {
-                        console.error('❌ 복원처리 실패:', err);
-                    });
+                    // ✅ 수정: 다중 페이지 문서는 자동 복원을 지원하지 않습니다 (PDF → 이미지 변환 필요), 재업로드 안내
+                    if (pages > 1) {
+                        console.warn(`⚠️  다중 페이지 문서 ${doc.fileName}는 재업로드가 필요합니다 (자동 복원 미지원)`);
+                        
+                        // 실패 상태로 업데이트, 재업로드 안내
+                        await window.simpleDataManager.updateDocument(currentProjectId, doc.id, {
+                            status: 'failed',
+                            error: '페이지 새로고침으로 처리가 중단되었습니다. 이 문서를 삭제하고 재업로드하세요'
+                        });
+                        await loadDocuments();
+                    } else {
+                        // 단일 페이지 문서는 정상적으로 복원 가능
+                        const response = await fetch(doc.downloadURL);
+                        const blob = await response.blob();
+                        const file = new File([blob], doc.fileName, { type: blob.type });
+                        
+                        console.log(`📄 단일 페이지 문서 처리 복원: ${doc.fileName}`);
+                        processFileWithAI(file, doc.id, pages).catch(err => {
+                            console.error('❌ 복원처리 실패:', err);
+                        });
+                    }
                     
                 } catch (error) {
                     console.error(`❌ 복원문서 ${doc.fileName} 실패:`, error);

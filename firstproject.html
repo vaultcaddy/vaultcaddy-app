@@ -3252,19 +3252,31 @@
             
             for (const doc of pendingDocs) {
                 try {
-                    // 從 Storage 下載文件
-                    const response = await fetch(doc.downloadURL);
-                    const blob = await response.blob();
-                    const file = new File([blob], doc.fileName, { type: blob.type });
-                    
-                    const pages = doc.pages | 1;
+                    const pages = doc.pages || 1;  // ✅ 修复：使用逻辑或 ||
                     
                     console.log(`🔄 恢復處理: ${doc.fileName} (${pages} 頁)`);
                     
-                    // 繼續 AI 處理
-                    processFileWithAI(file, doc.id, pages).catch(err => {
-                        console.error('❌ 恢復處理失敗:', err);
-                    });
+                    // ✅ 修复：多页文档不支持自动恢复（需要PDF转图片），提示用户重新上传
+                    if (pages > 1) {
+                        console.warn(`⚠️  多页文档 ${doc.fileName} 需要重新上传（不支持自动恢复）`);
+                        
+                        // 更新为失败状态，提示用户重新上传
+                        await window.simpleDataManager.updateDocument(currentProjectId, doc.id, {
+                            status: 'failed',
+                            error: '页面刷新导致处理中断，请删除后重新上传此文档'
+                        });
+                        await loadDocuments();
+                    } else {
+                        // 单页文档可以正常恢复
+                        const response = await fetch(doc.downloadURL);
+                        const blob = await response.blob();
+                        const file = new File([blob], doc.fileName, { type: blob.type });
+                        
+                        console.log(`📄 恢復单页文档处理: ${doc.fileName}`);
+                        processFileWithAI(file, doc.id, pages).catch(err => {
+                            console.error('❌ 恢復處理失敗:', err);
+                        });
+                    }
                     
                 } catch (error) {
                     console.error(`❌ 恢復文檔 ${doc.fileName} 失敗:`, error);

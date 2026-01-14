@@ -3290,22 +3290,34 @@
             
             for (const doc of pendingDocs) {
                 try {
-                    // from Storage DownloadFile
-                    const response = await fetch(doc.downloadURL);
-                    const blob = await response.blob();
-                    const file = new File([blob], doc.fileName, { type: blob.type });
+                    const pages = doc.pages || 1;  // ✅ Fix: Use logical OR ||
                     
-                    const pages = doc.pages | 1;
+                    console.log(`🔄 Restore Process: ${doc.fileName} (${pages} page)`);
                     
-                    console.log(`🔄 RestoreProcess: ${doc.fileName} (${pages} page)`);
-                    
-                    // Continue AI Process
-                    processFileWithAI(file, doc.id, pages).catch(err => {
-                        console.error('❌ RestoreProcessing failed:', err);
-                    });
+                    // ✅ Fix: Multi-page documents don't support auto-resume (need PDF to images), prompt user to re-upload
+                    if (pages > 1) {
+                        console.warn(`⚠️  Multi-page document ${doc.fileName} needs to be re-uploaded (auto-resume not supported)`);
+                        
+                        // Update to failed status, prompt user to re-upload
+                        await window.simpleDataManager.updateDocument(currentProjectId, doc.id, {
+                            status: 'failed',
+                            error: 'Processing interrupted by page refresh. Please delete and re-upload this document'
+                        });
+                        await loadDocuments();
+                    } else {
+                        // Single-page documents can be resumed normally
+                        const response = await fetch(doc.downloadURL);
+                        const blob = await response.blob();
+                        const file = new File([blob], doc.fileName, { type: blob.type });
+                        
+                        console.log(`📄 Resume single-page document processing: ${doc.fileName}`);
+                        processFileWithAI(file, doc.id, pages).catch(err => {
+                            console.error('❌ Restore Processing Failed:', err);
+                        });
+                    }
                     
                 } catch (error) {
-                    console.error(`❌ RestoreDocument ${doc.fileName} Failed:`, error);
+                    console.error(`❌ Restore Document ${doc.fileName} Failed:`, error);
                 }
             }
         }
