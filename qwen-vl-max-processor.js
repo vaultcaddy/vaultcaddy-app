@@ -80,7 +80,7 @@ class QwenVLMaxProcessor {
                     }
                 ],
                 temperature: 0.1,
-                max_tokens: 4000
+                max_tokens: 16000  // ✅ 增加到16000，避免JSON截断
             };
             
             // 4. 调用 Qwen-VL API
@@ -197,7 +197,7 @@ class QwenVLMaxProcessor {
                     }
                 ],
                 temperature: 0.1,
-                max_tokens: 8000  // 多页需要更多 tokens
+                max_tokens: 16000  // ✅ 增加到16000，支持大量交易记录（之前8000导致JSON截断）
             };
             
             console.log(`🧠 调用 Qwen-VL Max API（${files.length} 页，单次调用）...`);
@@ -457,8 +457,10 @@ class QwenVLMaxProcessor {
                     }
                 ],
                 temperature: 0.1,
-                max_tokens: 8000
+                max_tokens: 16000  // ✅ 增加到16000，支持更多交易记录（之前8000导致JSON截断）
             };
+            
+            console.log(`⚙️  max_tokens设置: 16000 (支持约32KB中文输出)`);
             
             const requestBodySize = JSON.stringify(requestBody).length;
             const requestBodySizeMB = (requestBodySize / 1024 / 1024).toFixed(2);
@@ -510,6 +512,16 @@ class QwenVLMaxProcessor {
             
             console.log(`📏 响应文本长度: ${responseText.length} 字符`);
             console.log(`🔍 响应文本预览: ${responseText.substring(0, 200)}...`);
+            
+            // ⚠️ 检查响应是否可能被截断
+            if (data.usage && data.usage.completion_tokens) {
+                const completionTokens = data.usage.completion_tokens;
+                console.log(`📊 实际使用Token数: ${completionTokens}`);
+                
+                if (completionTokens >= 15500) {  // 接近16000
+                    console.warn(`⚠️  警告: 已使用${completionTokens} tokens，接近max_tokens限制，响应可能被截断！`);
+                }
+            }
             
             // 6. 解析 JSON
             console.log(`🔄 开始解析提取的数据...`);
@@ -835,6 +847,15 @@ class QwenVLMaxProcessor {
             return JSON.parse(responseText);
         } catch (e) {
             console.warn('⚠️ 直接JSON解析失败，尝试其他方法...');
+            console.error(`❌ 解析错误: ${e.message}`);
+            console.log(`📏 响应文本长度: ${responseText.length} 字符`);
+            
+            // 检查是否是JSON截断问题
+            if (e.message.includes('Unterminated string') || e.message.includes('Unexpected end of JSON')) {
+                console.warn(`⚠️  检测到JSON截断！可能是max_tokens不足。`);
+                console.warn(`💡 当前响应长度: ${responseText.length} 字符`);
+                console.warn(`💡 建议: 增加max_tokens或减少数据量`);
+            }
             
             // 尝试提取 JSON 代码块
             const jsonMatch = responseText.match(/```json\n([\s\S]*?)\n```/);
