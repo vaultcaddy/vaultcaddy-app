@@ -152,7 +152,9 @@ class QwenVLMaxProcessor {
      */
     async processMultiPageDocument(files, documentType = 'invoice', progressCallback = null) {
         const startTime = Date.now();
-        const MAX_IMAGES_PER_REQUEST = 2;  // ✅ 限制：每次最多2页
+        
+        // ✅ 动态计算最优批次大小（基于文件大小）
+        const MAX_IMAGES_PER_REQUEST = this.calculateOptimalBatchSize(files);
         
         console.log(`\n🚀 [Qwen-VL Max] 批量处理多页文档 (${files.length} 页)`);
         
@@ -335,6 +337,13 @@ class QwenVLMaxProcessor {
                             totalBatches: totalBatches,
                             progress: Math.round((batchNum / totalBatches) * 100)
                         });
+                    }
+                    
+                    // ✅ 批次间延迟（给 API 服务器缓冲时间）
+                    if (batchNum < totalBatches) {
+                        const delayMs = 2000; // 2秒延迟
+                        console.log(`⏳ 等待 ${delayMs/1000} 秒后处理下一批次（避免 API 过载）...`);
+                        await new Promise(resolve => setTimeout(resolve, delayMs));
                     }
                     
                 } catch (error) {
@@ -986,6 +995,58 @@ class QwenVLMaxProcessor {
             
             throw new Error(`JSON解析失败: ${e.message}`);
         }
+    }
+    
+    /**
+     * 动态计算最优批次大小（避免超时）
+     * @param {File[]} files - 图片文件数组
+     * @returns {number} 最优批次大小（1或2）
+     */
+    calculateOptimalBatchSize(files) {
+        // 计算总文件大小
+        let totalSize = 0;
+        for (const file of files) {
+            totalSize += file.size;
+        }
+        
+        const totalSizeMB = totalSize / 1024 / 1024;
+        
+        console.log(`📊 文件大小分析:`);
+        console.log(`   - 文件数量: ${files.length}`);
+        console.log(`   - 总大小: ${totalSizeMB.toFixed(2)} MB`);
+        console.log(`   - 平均大小: ${(totalSizeMB / files.length).toFixed(2)} MB/页`);
+        
+        // 🎯 动态策略：
+        // 小文件（<1MB总大小）：2页/批（节省API调用）
+        // 中等文件（1-2MB）：1页/批（安全优先）
+        // 大文件（>2MB）：1页/批（必须单页）
+        
+        let batchSize;
+        let reason;
+        
+        if (files.length <= 2 && totalSizeMB < 1.0) {
+            // 情况1：只有1-2页，且总大小<1MB
+            batchSize = 2;
+            reason = '文件小，可批量处理';
+        } else if (totalSizeMB / files.length > 0.8) {
+            // 情况2：平均每页>0.8MB（可能是复杂页面）
+            batchSize = 1;
+            reason = '单页文件较大，逐页处理更安全';
+        } else if (totalSizeMB < 1.5) {
+            // 情况3：总大小<1.5MB（简单内容）
+            batchSize = 2;
+            reason = '文件适中，可批量处理';
+        } else {
+            // 情况4：默认保守策略
+            batchSize = 1;
+            reason = '保守策略，逐页处理确保成功';
+        }
+        
+        console.log(`🎯 批次大小决策: ${batchSize}页/批`);
+        console.log(`   - 原因: ${reason}`);
+        console.log(`   - 预计批次数: ${Math.ceil(files.length / batchSize)}`);
+        
+        return batchSize;
     }
     
     /**
