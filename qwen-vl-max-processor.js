@@ -80,7 +80,7 @@ class QwenVLMaxProcessor {
                     }
                 ],
                 temperature: 0.1,
-                max_tokens: 4000
+                max_tokens: 16000  // ✅ 增加到 16000（避免JSON截断，确保完整输出）
             };
             
             // 4. 调用 Qwen-VL API
@@ -197,7 +197,7 @@ class QwenVLMaxProcessor {
                     }
                 ],
                 temperature: 0.1,
-                max_tokens: 8000  // 多页需要更多 tokens
+                max_tokens: 32000  // ✅ 大幅增加到 32000（批量处理需要更多 tokens，避免JSON截断）
             };
             
             console.log(`🧠 调用 Qwen-VL Max API（${files.length} 页，单次调用）...`);
@@ -457,7 +457,7 @@ class QwenVLMaxProcessor {
                     }
                 ],
                 temperature: 0.1,
-                max_tokens: 8000
+                max_tokens: 32000  // ✅ 增加到 32000（避免大量交易记录时JSON截断）
             };
             
             const requestBodySize = JSON.stringify(requestBody).length;
@@ -827,14 +827,42 @@ class QwenVLMaxProcessor {
     }
     
     /**
-     * 解析 JSON 响应
+     * 解析 JSON 响应（带截断检测和保护）
      */
     parseJSON(responseText) {
         try {
+            // ✅ 检测JSON截断（常见标志）
+            const truncationSignals = [
+                responseText.endsWith('"'),  // 未闭合的字符串
+                responseText.endsWith(','),  // 未完成的数组
+                !responseText.trim().endsWith('}') && !responseText.trim().endsWith(']'),  // 未闭合的对象
+                responseText.includes('...') && responseText.lastIndexOf('...') > responseText.length - 100  // 末尾有省略号
+            ];
+            
+            if (truncationSignals.some(signal => signal)) {
+                console.warn('⚠️  检测到可能的JSON截断！');
+                console.warn('📏 响应长度:', responseText.length, '字符');
+                console.warn('📄 响应末尾 100 字符:', responseText.substring(Math.max(0, responseText.length - 100)));
+            }
+            
             // 尝试直接解析
             return JSON.parse(responseText);
         } catch (e) {
             console.warn('⚠️ 直接JSON解析失败，尝试其他方法...');
+            console.warn('❌ 错误:', e.message);
+            
+            // ✅ 检测是否为截断错误
+            const isTruncationError = 
+                e.message.includes('Unterminated string') || 
+                e.message.includes('Unexpected end') ||
+                e.message.includes('position');
+                
+            if (isTruncationError) {
+                console.error('🔴 确认为JSON截断错误！');
+                console.error('💡 原因: max_tokens 设置过低，导致 API 响应被截断');
+                console.error('📊 响应长度:', responseText.length, '字符');
+                console.error('🔧 建议: 增加 max_tokens 或减少单批处理的页数');
+            }
             
             // 尝试提取 JSON 代码块
             const jsonMatch = responseText.match(/```json\n([\s\S]*?)\n```/);
@@ -855,6 +883,49 @@ class QwenVLMaxProcessor {
                     return JSON.parse(braceMatch[0]);
                 } catch (e3) {
                     console.error('❌ 大括号JSON解析失败:', e3.message);
+                }
+            }
+            
+            // ✅ 尝试修复截断的JSON（添加闭合括号）
+            if (isTruncationError) {
+                try {
+                    console.log('🔧 尝试修复截断的JSON...');
+                    let repairedText = responseText.trim();
+                    
+                    // 移除可能的不完整内容（从最后一个逗号或引号后截断）
+                    const lastValidPoint = Math.max(
+                        repairedText.lastIndexOf('",'),
+                        repairedText.lastIndexOf('"}'),
+                        repairedText.lastIndexOf('],'),
+                        repairedText.lastIndexOf('}')
+                    );
+                    
+                    if (lastValidPoint > 0) {
+                        repairedText = repairedText.substring(0, lastValidPoint + 1);
+                        console.log('📏 截取到最后有效位置:', lastValidPoint);
+                    }
+                    
+                    // 补充可能缺少的闭合括号
+                    let openBraces = (repairedText.match(/\{/g) || []).length;
+                    let closeBraces = (repairedText.match(/\}/g) || []).length;
+                    let openBrackets = (repairedText.match(/\[/g) || []).length;
+                    let closeBrackets = (repairedText.match(/\]/g) || []).length;
+                    
+                    // 添加缺少的闭合符号
+                    for (let i = 0; i < (openBrackets - closeBrackets); i++) {
+                        repairedText += ']';
+                    }
+                    for (let i = 0; i < (openBraces - closeBraces); i++) {
+                        repairedText += '}';
+                    }
+                    
+                    console.log('🔧 修复后的JSON:', repairedText.substring(Math.max(0, repairedText.length - 200)));
+                    const parsed = JSON.parse(repairedText);
+                    console.log('✅ JSON修复成功！');
+                    console.warn('⚠️  注意：使用了截断修复，数据可能不完整！');
+                    return parsed;
+                } catch (e4) {
+                    console.error('❌ JSON修复失败:', e4.message);
                 }
             }
             
@@ -890,15 +961,29 @@ class QwenVLMaxProcessor {
                 const parsed = JSON.parse(cleanedText);
                 console.log('✅ JSON清理成功！');
                 return parsed;
-            } catch (e4) {
-                console.error('❌ 清理后JSON解析仍失败:', e4.message);
-                console.error('💡 错误位置:', e4.message.match(/position (\d+)/));
+            } catch (e5) {
+                console.error('❌ 清理后JSON解析仍失败:', e5.message);
+                console.error('💡 错误位置:', e5.message.match(/position (\d+)/));
             }
             
             // 所有方法都失败，记录详细错误并抛出异常
-            console.error('❌ JSON 解析完全失败！');
-            console.error('📄 响应文本前500字符:', responseText.substring(0, 500));
-            console.error('📄 响应文本后500字符:', responseText.substring(Math.max(0, responseText.length - 500)));
+            console.error('\n🔴 ========== JSON 解析完全失败 ==========');
+            console.error('❌ 错误类型:', e.message);
+            console.error('📏 响应长度:', responseText.length, '字符');
+            console.error('📄 响应开头 500 字符:', responseText.substring(0, 500));
+            console.error('📄 响应结尾 500 字符:', responseText.substring(Math.max(0, responseText.length - 500)));
+            
+            if (isTruncationError) {
+                console.error('\n💡 诊断建议:');
+                console.error('   1. 增加 max_tokens 设置（当前可能不足）');
+                console.error('   2. 减少单批处理的页数（从2页改为1页）');
+                console.error('   3. 简化提示词，减少输出要求');
+                console.error('   4. 检查 Cloudflare Worker 的 max_tokens 配置');
+                console.error('========================================\n');
+                
+                throw new Error(`JSON截断错误: 响应长度 ${responseText.length} 字符，max_tokens 可能不足。${e.message}`);
+            }
+            
             throw new Error(`JSON解析失败: ${e.message}`);
         }
     }
