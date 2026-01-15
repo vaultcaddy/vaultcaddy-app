@@ -125,7 +125,7 @@ async function handlePost(request) {
             model: requestBody.model,
             messages: requestBody.messages,
             temperature: requestBody.temperature || 0.1,
-            max_tokens: requestBody.max_tokens || 32000,  // ✅ 增加默认值到 32000（避免JSON截断）
+            max_tokens: Math.min(requestBody.max_tokens || 28000, 28000),  // ✅ 限制在 28K（避免超过模型32K上限）
             stream: false  // 不使用流式输出
         };
         

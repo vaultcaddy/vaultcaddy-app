@@ -197,7 +197,7 @@ class QwenVLMaxProcessor {
                     }
                 ],
                 temperature: 0.1,
-                max_tokens: 32000  // ✅ 大幅增加到 32000（批量处理需要更多 tokens，避免JSON截断）
+                max_tokens: 28000  // ✅ 设置为 28K（低于32K上限10%，避免边界问题和限流）
             };
             
             console.log(`🧠 调用 Qwen-VL Max API（${files.length} 页，单次调用）...`);
@@ -457,7 +457,7 @@ class QwenVLMaxProcessor {
                     }
                 ],
                 temperature: 0.1,
-                max_tokens: 32000  // ✅ 增加到 32000（避免大量交易记录时JSON截断）
+                max_tokens: 28000  // ✅ 设置为 28K（低于32K上限10%，避免边界问题）
             };
             
             const requestBodySize = JSON.stringify(requestBody).length;
