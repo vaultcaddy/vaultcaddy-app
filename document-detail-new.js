@@ -1653,6 +1653,38 @@ function displayBankStatementContent(data) {
             }
         }
         
+        // 🔴 關鍵驗證：檢查 transactionSign 是否與餘額變化一致
+        if (actualIndex > 0) {
+            const prevTx = transactions[actualIndex - 1];
+            if (prevTx && prevTx.balance !== undefined && tx.balance !== undefined) {
+                const prevBalance = parseFloat(prevTx.balance);
+                const currentBalance = parseFloat(tx.balance);
+                const balanceDiff = currentBalance - prevBalance;
+                const amountNum = parseFloat(amountStr.replace(/[^0-9.-]+/g, ''));
+                
+                // 判斷正確的交易類型
+                const correctSign = balanceDiff > 0 ? 'income' : (balanceDiff < 0 ? 'expense' : tx.transactionSign);
+                
+                // 如果 AI 的判斷與餘額變化不一致，修正它
+                if (tx.transactionSign !== correctSign && Math.abs(balanceDiff) > 0.01) {
+                    console.warn(`⚠️ 交易 ${actualIndex} 的 transactionSign 與餘額變化不一致！`);
+                    console.warn(`   AI 判斷: ${tx.transactionSign}, 餘額變化: ${balanceDiff > 0 ? 'income' : 'expense'}`);
+                    console.warn(`   前一筆餘額: ${prevBalance}, 當前餘額: ${currentBalance}, 差額: ${balanceDiff}`);
+                    console.warn(`   正在修正為: ${correctSign}`);
+                    
+                    // 修正 transactionSign 和 debit/credit
+                    tx.transactionSign = correctSign;
+                    if (correctSign === 'income') {
+                        tx.credit = amountNum;
+                        tx.debit = 0;
+                    } else {
+                        tx.debit = amountNum;
+                        tx.credit = 0;
+                    }
+                }
+            }
+        }
+        
         const isIncome = tx.transactionSign === 'income';
         const amountSign = isIncome ? '+' : '-';
         const amountColor = isIncome ? '#10b981' : '#ef4444';
