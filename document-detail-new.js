@@ -1545,13 +1545,6 @@ function displayBankStatementContent(data) {
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('statement_period')}</label>
-                    <input type="text" id="statementPeriod" value="${statementPeriod}" 
-                           onchange="autoSaveBankStatementDetails()"
-                           placeholder="例如：2025-02-22 to 2025-03-22"
-                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
-                </div>
-                <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
                     <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('statement_date')}</label>
                     <input type="date" id="statementDate" value="${statementDate === '—' ? '' : statementDate}" 
                            onchange="autoSaveBankStatementDetails()"
@@ -1571,6 +1564,14 @@ function displayBankStatementContent(data) {
                     <input type="text" id="closingBalance" value="${formatCurrency(closingBalance)}" 
                            onchange="autoSaveBankStatementDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; font-weight: 600; color: #10b981; background: white;">
+                </div>
+                <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${currentLang === 'zh-TW' ? '總支出' : currentLang === 'ja' ? '総支出' : currentLang === 'ko' ? '총 지출' : 'Total Expenses'}</label>
+                    <div style="padding: 0.5rem; border: 1px solid #fee2e2; border-radius: 6px; font-size: 0.9rem; font-weight: 600; color: #ef4444; background: #fef2f2;">${formatCurrency(totalExpenses)}</div>
+                </div>
+                <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${currentLang === 'zh-TW' ? '總收入' : currentLang === 'ja' ? '総収入' : currentLang === 'ko' ? '총 수입' : 'Total Income'}</label>
+                    <div style="padding: 0.5rem; border: 1px solid #d1fae5; border-radius: 6px; font-size: 0.9rem; font-weight: 600; color: #10b981; background: #d1fae5;">${formatCurrency(totalIncome)}</div>
                 </div>
             </div>
             <style>
@@ -1618,6 +1619,23 @@ function displayBankStatementContent(data) {
                          [];
     
     console.log('   交易數量:', transactions.length);
+    
+    // ✅ 計算總支出和總收入
+    let totalExpenses = 0;
+    let totalIncome = 0;
+    
+    transactions.forEach(tx => {
+        const amount = parseFloat(tx.amount || 0);
+        // 根據 transactionSign 判斷是收入還是支出
+        if (tx.transactionSign === 'expense' || (tx.debit && parseFloat(tx.debit) > 0)) {
+            totalExpenses += amount;
+        } else if (tx.transactionSign === 'income' || (tx.credit && parseFloat(tx.credit) > 0)) {
+            totalIncome += amount;
+        }
+    });
+    
+    console.log('   總支出:', totalExpenses);
+    console.log('   總收入:', totalIncome);
     
     // ✅ 設置全局變量用於分頁
     totalTransactions = transactions.length;
