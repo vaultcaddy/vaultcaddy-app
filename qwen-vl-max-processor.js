@@ -339,12 +339,9 @@ class QwenVLMaxProcessor {
                         });
                     }
                     
-                    // ✅ 批次间延迟（给 API 服务器缓冲时间）
-                    if (batchNum < totalBatches) {
-                        const delayMs = 2000; // 2秒延迟
-                        console.log(`⏳ 等待 ${delayMs/1000} 秒后处理下一批次（避免 API 过载）...`);
-                        await new Promise(resolve => setTimeout(resolve, delayMs));
-                    }
+                    // ❌ 取消批次间延迟
+                    // 原因：1页/批处理快（15-20秒），不会超时，无需延迟
+                    // 之前的问题是批次2包含2页密集交易记录，不是API过载
                     
                 } catch (error) {
                     failedBatches++;
@@ -1016,31 +1013,21 @@ class QwenVLMaxProcessor {
         console.log(`   - 总大小: ${totalSizeMB.toFixed(2)} MB`);
         console.log(`   - 平均大小: ${(totalSizeMB / files.length).toFixed(2)} MB/页`);
         
-        // 🎯 动态策略：
-        // 小文件（<1MB总大小）：2页/批（节省API调用）
-        // 中等文件（1-2MB）：1页/批（安全优先）
-        // 大文件（>2MB）：1页/批（必须单页）
+        // 🎯 修改策略：银行对账单通常有复杂页面，统一使用 1页/批
+        // 原因：批次2/3包含大量交易记录，2页一起处理会超时
+        // 解决方案：每页单独处理，确保在 Cloudflare 30秒限制内完成
         
         let batchSize;
         let reason;
         
-        if (files.length <= 2 && totalSizeMB < 1.0) {
-            // 情况1：只有1-2页，且总大小<1MB
-            batchSize = 2;
-            reason = '文件小，可批量处理';
-        } else if (totalSizeMB / files.length > 0.8) {
-            // 情况2：平均每页>0.8MB（可能是复杂页面）
-            batchSize = 1;
-            reason = '单页文件较大，逐页处理更安全';
-        } else if (totalSizeMB < 1.5) {
-            // 情况3：总大小<1.5MB（简单内容）
-            batchSize = 2;
-            reason = '文件适中，可批量处理';
-        } else {
-            // 情况4：默认保守策略
-            batchSize = 1;
-            reason = '保守策略，逐页处理确保成功';
-        }
+        // ✅ 统一策略：所有银行对账单都使用 1页/批
+        // 理由：
+        // 1. 避免批次2/3（交易记录密集页）超时
+        // 2. 处理时间可控（15-20秒/页 vs 30-40秒/2页）
+        // 3. 失败影响最小化（只影响1页）
+        // 4. Cloudflare 30秒限制内安全完成
+        batchSize = 1;
+        reason = '银行对账单逐页处理（避免复杂页面超时）';
         
         console.log(`🎯 批次大小决策: ${batchSize}页/批`);
         console.log(`   - 原因: ${reason}`);
