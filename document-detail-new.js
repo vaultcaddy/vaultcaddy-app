@@ -1483,6 +1483,30 @@ function displayBankStatementContent(data) {
     console.log('   期末餘額:', closingBalance);
     console.log('   貨幣:', currency);
     
+    // ✅ 提前計算總支出和總收入（在渲染之前）
+    const transactions = data.transactions || 
+                         data.transaction || 
+                         data.items ||
+                         currentDocument.transactions || 
+                         [];
+    
+    let totalExpenses = 0;
+    let totalIncome = 0;
+    
+    transactions.forEach(tx => {
+        const amount = parseFloat(tx.amount || 0);
+        // 根據 transactionSign 判斷是收入還是支出
+        if (tx.transactionSign === 'expense' || (tx.debit && parseFloat(tx.debit) > 0)) {
+            totalExpenses += amount;
+        } else if (tx.transactionSign === 'income' || (tx.credit && parseFloat(tx.credit) > 0)) {
+            totalIncome += amount;
+        }
+    });
+    
+    console.log('   總支出:', totalExpenses);
+    console.log('   總收入:', totalIncome);
+    console.log('   交易數量:', transactions.length);
+    
     // ✅ 帳戶詳情（可編輯）- 新增：帳戶持有人、對帳單期間、期初餘額、貨幣
     detailsSection.innerHTML = `
         <div class="bank-details-card">
@@ -1611,33 +1635,7 @@ function displayBankStatementContent(data) {
     // ✅ 提取其他賬戶信息（從 DeepSeek 數據中）
     extractOtherAccounts(data);
     
-    // ✅ 交易列表（支持多種字段名稱）
-    const transactions = data.transactions || 
-                         data.transaction || 
-                         data.items ||
-                         currentDocument.transactions || 
-                         [];
-    
-    console.log('   交易數量:', transactions.length);
-    
-    // ✅ 計算總支出和總收入
-    let totalExpenses = 0;
-    let totalIncome = 0;
-    
-    transactions.forEach(tx => {
-        const amount = parseFloat(tx.amount || 0);
-        // 根據 transactionSign 判斷是收入還是支出
-        if (tx.transactionSign === 'expense' || (tx.debit && parseFloat(tx.debit) > 0)) {
-            totalExpenses += amount;
-        } else if (tx.transactionSign === 'income' || (tx.credit && parseFloat(tx.credit) > 0)) {
-            totalIncome += amount;
-        }
-    });
-    
-    console.log('   總支出:', totalExpenses);
-    console.log('   總收入:', totalIncome);
-    
-    // ✅ 設置全局變量用於分頁
+    // ✅ 設置全局變量用於分頁（交易列表已在前面提取）
     totalTransactions = transactions.length;
     const totalPages = Math.ceil(totalTransactions / transactionsPerPage);
     
