@@ -830,7 +830,7 @@
 </div>
 </div>
 <!-- 側邊欄遮罩 -->
-<div id="mobile-sidebar-overlay" onclick="closeMobileSidebar()" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; display: none;"></div>
+<div id="mobile-sidebar-overlay" onclick="closeMobileSidebar()" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; display: none; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;"></div>
 <div id="user-dropdown" style="display: none; position: fixed; top: 70px; right: 2rem; background: white; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); padding: 1rem; min-width: 220px; z-index: 2000; border: 1px solid #e5e7eb;">
 <div style="padding: 0.75rem; border-bottom: 1px solid #f3f4f6;">
 <div style="font-weight: 600; font-size: 1rem; color: #1f2937; margin-bottom: 0.25rem;"><span>Credits</span>: <span id="dropdown-credits">0</span></div>
@@ -1502,7 +1502,11 @@
             if (sidebar && overlay) {
                 sidebar.style.left = '0';
                 overlay.style.display = 'block';
-                overlay.style.opacity = '1';
+                overlay.style.pointerEvents = 'auto';
+                // 触发重排后再改透明度，确保动画生效
+                setTimeout(() => {
+                    overlay.style.opacity = '1';
+                }, 10);
                 document.body.style.overflow = 'hidden';
                 console.log('✅ 側邊欄已打開');
             }
@@ -1517,6 +1521,7 @@
             if (sidebar && overlay) {
                 sidebar.style.left = '-100%';
                 overlay.style.opacity = '0';
+                overlay.style.pointerEvents = 'none';
                 setTimeout(() => {
                     overlay.style.display = 'none';
                 }, 300); // 等待動畫完成（與 CSS transition 一致）
@@ -1530,11 +1535,28 @@
             const btn = document.getElementById('mobile-menu-btn');
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
-            if (!btn | !overlay) {
+            if (!btn || !overlay) {
                 console.log('⏳ 元素未找到，200ms後重試');
                 setTimeout(simpleInitMenu, 200);
                 return;
             }
+            
+            // ✅ 确保遮罩初始状态是隐藏的
+            overlay.style.display = 'none';
+            overlay.style.opacity = '0';
+            overlay.style.pointerEvents = 'none';
+            
+            // ✅ 确保认证加载动画已隐藏
+            const authLoading = document.querySelector('.auth-loading');
+            if (authLoading) {
+                authLoading.style.display = 'none';
+            }
+            
+            // ✅ 确保 body 有 auth-ready 类
+            document.body.classList.add('auth-ready');
+            document.body.classList.remove('auth-checking');
+            document.documentElement.classList.add('auth-ready');
+            document.documentElement.classList.remove('auth-checking');
             
             console.log('✅ 找到所有元素！');
             
@@ -1573,6 +1595,35 @@
         } else {
             setTimeout(simpleInitMenu, 100);
         }
+        
+        // ✅ 紧急修复：页面完全加载后强制隐藏所有可能的遮罩
+        window.addEventListener('load', function() {
+            console.log('🔧 执行紧急遮罩清理...');
+            
+            // 隐藏所有可能的遮罩层
+            const overlays = [
+                document.getElementById('mobile-sidebar-overlay'),
+                document.querySelector('.auth-loading'),
+                document.querySelector('.modal-overlay'),
+                document.getElementById('deleteProjectModal')
+            ];
+            
+            overlays.forEach(overlay => {
+                if (overlay) {
+                    overlay.style.display = 'none';
+                    overlay.style.opacity = '0';
+                    overlay.style.pointerEvents = 'none';
+                }
+            });
+            
+            // 确保 body 可见
+            document.body.classList.add('auth-ready');
+            document.body.classList.remove('auth-checking');
+            document.body.style.visibility = 'visible';
+            document.body.style.overflow = 'auto';
+            
+            console.log('✅ 遮罩清理完成');
+        });
         
         // 暴露函數供側邊欄內的連結使用
         window.closeMobileSidebar = closeSidebar;
