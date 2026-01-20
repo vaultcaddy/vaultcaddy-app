@@ -37,12 +37,22 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 9999;
+            z-index: 999999 !important; /* ✅ 超高z-index确保显示在最上层 */
             visibility: visible !important;
+            pointer-events: auto !important;
         }
         
         body.auth-ready .auth-loading {
             display: none;
+        }
+        
+        /* ✅ 确保 auth-ready 时页面可见 */
+        body.auth-ready {
+            visibility: visible !important;
+        }
+        
+        html.auth-ready {
+            visibility: visible !important;
         }
         
         @keyframes spin {
@@ -60,6 +70,31 @@
                 document.body.classList.add('auth-checking');
             });
         }
+        
+        // ✅ 安全超时：3秒后强制显示页面（防止卡在认证检查）
+        setTimeout(function() {
+            console.log('⏰ 认证超时保护：强制显示页面');
+            console.log('   - 当前body类:', document.body ? document.body.className : 'body不存在');
+            console.log('   - 当前html类:', document.documentElement.className);
+            
+            document.documentElement.classList.remove('auth-checking');
+            document.documentElement.classList.add('auth-ready');
+            if (document.body) {
+                document.body.classList.remove('auth-checking');
+                document.body.classList.add('auth-ready');
+                document.body.style.visibility = 'visible';
+                document.body.style.overflow = 'auto';
+            }
+            
+            // 隐藏加载动画
+            const authLoading = document.querySelector('.auth-loading');
+            if (authLoading) {
+                authLoading.style.display = 'none';
+                console.log('   - 已隐藏auth-loading');
+            }
+            
+            console.log('   ✅ 超时保护完成');
+        }, 3000); // 3秒超时保护
     </script>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <!-- 🔇 安全隐藏控制台日志（不删除代码） -->
@@ -1596,8 +1631,8 @@
             setTimeout(simpleInitMenu, 100);
         }
         
-        // ✅ 紧急修复：页面完全加载后强制隐藏所有可能的遮罩
-        window.addEventListener('load', function() {
+        // ✅ 紧急修复：页面加载后立即执行（不等待load事件）
+        function emergencyOverlayCleanup() {
             console.log('🔧 执行紧急遮罩清理...');
             
             // 隐藏所有可能的遮罩层
@@ -1619,11 +1654,22 @@
             // 确保 body 可见
             document.body.classList.add('auth-ready');
             document.body.classList.remove('auth-checking');
+            document.documentElement.classList.add('auth-ready');
+            document.documentElement.classList.remove('auth-checking');
             document.body.style.visibility = 'visible';
             document.body.style.overflow = 'auto';
             
             console.log('✅ 遮罩清理完成');
-        });
+        }
+        
+        // 立即执行一次
+        setTimeout(emergencyOverlayCleanup, 1000); // 1秒后强制清理
+        
+        // load事件也执行一次
+        window.addEventListener('load', emergencyOverlayCleanup);
+        
+        // DOMContentLoaded也执行一次
+        document.addEventListener('DOMContentLoaded', emergencyOverlayCleanup);
         
         // 暴露函數供側邊欄內的連結使用
         window.closeMobileSidebar = closeSidebar;
