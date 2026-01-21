@@ -3027,11 +3027,11 @@ NEWFILEUID:NONE
                     const openingBalance = parseFloat(data.openingBalance || data.opening_balance || 0).toFixed(2);
                     const closingBalance = parseFloat(data.closingBalance || data.closing_balance || data.balance || 0).toFixed(2);
                     
-                    // CSV 标题（与图2、图3一致）
+                    // CSV 标题（12列格式）
                     const excelData = [[
                         'CustomerName', 'AccountNumber', 'AccountType', 'BankName', 'BankAddress',
-                        'PopulatedDate', 'EndDate', 'OpeningBalance', 'EndingBalance',
-                        'LineItems_Date', 'LineItems_Description', 'LineItems_Credits', 'LineItems_Debits', 'LineItems_Balance'
+                        'OpeningBalance', 'EndingBalance',
+                        'LineItems_Date', 'LineItems_Description', 'LineItems_Category', 'LineItems_Credits', 'LineItems_Debits', 'LineItems_Balance'
                     ]];
                     
                     // 为每笔交易生成一行
@@ -3062,18 +3062,44 @@ NEWFILEUID:NONE
                                 }
                             }
                             
+                            // 获取分类显示文本（如果未分类则为空白）
+                            const getCategoryLabel = (categoryValue) => {
+                                if (!categoryValue) return '';
+                                
+                                const categoryMap = {
+                                    // 收入类别
+                                    'salary': '工資',
+                                    'sales': '銷售收入',
+                                    'interest': '利息收入',
+                                    'other-income': '其他收入',
+                                    // 支出类别
+                                    'office': '辦公費用',
+                                    'transport': '交通費用',
+                                    'meal': '餐飲費用',
+                                    'utilities': '水電費',
+                                    'rent': '租金',
+                                    'salary-expense': '工資支出',
+                                    'marketing': '營銷費用',
+                                    'supplies': '辦公用品',
+                                    'other-expense': '其他支出'
+                                };
+                                
+                                return categoryMap[categoryValue] || categoryValue;
+                            };
+                            
+                            const category = getCategoryLabel(tx.category);
+                            
                             excelData.push([
                                 customerName,
                                 accountNumber,
                                 accountType,
                                 bankName,
                                 bankAddress,
-                                populatedDate,
-                                endDate,
                                 openingBalance,
                                 closingBalance,
                                 tx.date || '',
                                 tx.description || '',
+                                category,
                                 credits,
                                 debits,
                                 parseFloat(tx.balance || 0).toFixed(2)
@@ -3085,12 +3111,12 @@ NEWFILEUID:NONE
                     const ws = XLSX.utils.aoa_to_sheet(excelData);
                     ws['!cols'] = [
                         {wch: 20}, {wch: 15}, {wch: 18}, {wch: 20}, {wch: 40},
-                        {wch: 12}, {wch: 12}, {wch: 15}, {wch: 15},
-                        {wch: 12}, {wch: 40}, {wch: 12}, {wch: 12}, {wch: 15}
+                        {wch: 15}, {wch: 15},
+                        {wch: 12}, {wch: 40}, {wch: 15}, {wch: 12}, {wch: 12}, {wch: 15}
                     ];
                     XLSX.utils.book_append_sheet(wb, ws, "Bank Statement");
                     XLSX.writeFile(wb, `${fileName}.xlsx`);
-                    console.log('✅ Excel 文件已下載（完整银行对账单格式）');
+                    console.log('✅ Excel 文件已下載（12列格式，含分類）');
                     break;
                     
                 case 'universal_csv':

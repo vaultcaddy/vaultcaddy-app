@@ -4449,10 +4449,14 @@
                     case 'excel':
                         // 📊 Excel (.xlsx) - 使用 SheetJS 生成真正的 Excel 文件
                         try {
-                            const wb = XLSX.utils.book_new();
+                            const dateStr = new Date().toISOString().split('T')[0];
+                            let exportedCount = 0;
                             
-                            // 按类型分组并创建工作表
+                            // ✅ 分别导出银行对账单和发票为独立的Excel文件
+                            
+                            // 1️⃣ 导出银行对账单 Excel
                             if (groupedDocs.bank_statements.length > 0) {
+                                const wb = XLSX.utils.book_new();
                                 const excelData = [['Date', 'Type', 'Description', 'Payee', 'Reference', 'Amount', 'Balance']];
                                 groupedDocs.bank_statements.forEach(doc => {
                                     const data = doc.processedData;
@@ -4473,9 +4477,16 @@
                                 const ws = XLSX.utils.aoa_to_sheet(excelData);
                                 ws['!cols'] = [{wch: 12}, {wch: 10}, {wch: 40}, {wch: 25}, {wch: 15}, {wch: 12}, {wch: 12}];
                                 XLSX.utils.book_append_sheet(wb, ws, "Bank Statements");
+                                
+                                fileName = `BankStatement_${dateStr}.xlsx`;
+                                XLSX.writeFile(wb, fileName);
+                                console.log('✅ 銀行對帳單 Excel 文件已下載:', fileName);
+                                exportedCount++;
                             }
                             
+                            // 2️⃣ 导出发票 Excel
                             if (groupedDocs.invoices.length > 0) {
+                                const wb = XLSX.utils.book_new();
                                 const excelData = [['Invoice Number', 'Date', 'Supplier', 'Amount', 'Status']];
                                 groupedDocs.invoices.forEach(doc => {
                                     const data = doc.processedData;
@@ -4490,13 +4501,19 @@
                                 const ws = XLSX.utils.aoa_to_sheet(excelData);
                                 ws['!cols'] = [{wch: 15}, {wch: 12}, {wch: 30}, {wch: 12}, {wch: 15}];
                                 XLSX.utils.book_append_sheet(wb, ws, "Invoices");
+                                
+                                fileName = `Invoice_${dateStr}.xlsx`;
+                                XLSX.writeFile(wb, fileName);
+                                console.log('✅ 發票 Excel 文件已下載:', fileName);
+                                exportedCount++;
                             }
                             
-                            const dateStr = new Date().toISOString().split('T')[0];
-                            fileName = `VaultCaddy_Export_${dateStr}.xlsx`;
-                            XLSX.writeFile(wb, fileName);
-                            console.log('✅ Excel 文件已下载:', fileName);
-                            alert(`✅ 導出成功！\n已下載 Excel 文件：${fileName}`);
+                            // ✅ 显示导出成功消息
+                            if (exportedCount > 0) {
+                                alert(`✅ 導出成功！\n已下載 ${exportedCount} 個 Excel 文件`);
+                            } else {
+                                alert('沒有可導出的文檔');
+                            }
                             return;
                         } catch (error) {
                             console.error('❌ Excel 导出失败:', error);
@@ -4676,29 +4693,49 @@
                         break;
                         
                     case 'qbo':
-                        // QBO 格式（根據文檔類型導出）
-                        const qboBankDocs = docsToExport.filter(d => 
-                            (d.documentType || d.type || '').toLowerCase().includes('bank')
-                        );
-                        const qboInvoiceDocs = docsToExport.filter(d => 
-                            (d.documentType || d.type || '').toLowerCase().includes('invoice')
-                        );
-                        
-                        if (qboBankDocs.length > 0) {
-                            exportContent = generateQBO(qboBankDocs);
-                            fileName = `BankStatement_${new Date().toISOString().split('T')[0]}.qbo`;
-                        } else if (qboInvoiceDocs.length > 0) {
-                            // 🔥 發票導出 QBO 格式
-                            exportContent = window.InvoiceExport && window.InvoiceExport.generateQBO ? 
-                                window.InvoiceExport.generateQBO(qboInvoiceDocs) :
-                                generateQBO(qboInvoiceDocs);
-                            fileName = `Invoice_${new Date().toISOString().split('T')[0]}.qbo`;
-                        } else {
-                            exportContent = generateQBO(docsToExport);
-                            fileName = `vaultcaddy_export_${new Date().toISOString().split('T')[0]}.qbo`;
+                        // QBO 格式 - 分別導出銀行對帳單和發票為獨立文件
+                        try {
+                            const dateStr = new Date().toISOString().split('T')[0];
+                            let exportedCount = 0;
+                            
+                            // 1️⃣ 导出银行对账单 QBO
+                            if (groupedDocs.bank_statements.length > 0) {
+                                const qboContent = generateQBO(groupedDocs.bank_statements);
+                                const blob = new Blob([qboContent], { type: 'application/vnd.intu.qbo;charset=utf-8;' });
+                                const link = document.createElement('a');
+                                link.href = URL.createObjectURL(blob);
+                                link.download = `BankStatement_${dateStr}.qbo`;
+                                link.click();
+                                console.log('✅ 銀行對帳單 QBO 文件已下載');
+                                exportedCount++;
+                            }
+                            
+                            // 2️⃣ 导出发票 QBO
+                            if (groupedDocs.invoices.length > 0) {
+                                const qboContent = window.InvoiceExport && window.InvoiceExport.generateQBO ? 
+                                    window.InvoiceExport.generateQBO(groupedDocs.invoices) :
+                                    generateQBO(groupedDocs.invoices);
+                                const blob = new Blob([qboContent], { type: 'application/vnd.intu.qbo;charset=utf-8;' });
+                                const link = document.createElement('a');
+                                link.href = URL.createObjectURL(blob);
+                                link.download = `Invoice_${dateStr}.qbo`;
+                                link.click();
+                                console.log('✅ 發票 QBO 文件已下載');
+                                exportedCount++;
+                            }
+                            
+                            // ✅ 显示导出成功消息
+                            if (exportedCount > 0) {
+                                alert(`✅ 導出成功！\n已下載 ${exportedCount} 個 QBO 文件`);
+                            } else {
+                                alert('沒有可導出的文檔');
+                            }
+                            return; // 直接返回，不执行后面的通用下载代码
+                        } catch (error) {
+                            console.error('❌ QBO 导出失败:', error);
+                            alert('QBO 导出失败，请重试');
+                            return;
                         }
-                        mimeType = 'application/vnd.intu.qbo;charset=utf-8;';
-                        break;
                     default:
                         alert('不支持的導出格式');
                         return;
