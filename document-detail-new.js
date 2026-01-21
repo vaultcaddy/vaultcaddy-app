@@ -37,7 +37,7 @@ const i18n = {
         amount: '金額',
         balance: '餘額',
         bankCode: '銀行代碼',
-        branchName: '分行名稱',
+        branchName: '分行地址',
         accountType: '賬戶類型',
         account_info: '帳戶信息',
         editable: '(可編輯)',
@@ -104,7 +104,7 @@ const i18n = {
         amount: 'Amount',
         balance: 'Balance',
         bankCode: 'Bank Code',
-        branchName: 'Branch',
+        branchName: 'Branch Address',
         accountType: 'Account Type',
         account_info: 'Account Information',
         editable: '(Editable)',
@@ -171,7 +171,7 @@ const i18n = {
         amount: '金額',
         balance: '残高',
         bankCode: '銀行コード',
-        branchName: '支店名',
+        branchName: '支店住所',
         accountType: '口座種類',
         account_info: '口座情報',
         editable: '(編集可)',
@@ -238,7 +238,7 @@ const i18n = {
         amount: '금액',
         balance: '잔액',
         bankCode: '은행코드',
-        branchName: '지점명',
+        branchName: '지점 주소',
         accountType: '계좌유형',
         account_info: '계정 정보',
         editable: '(편집 가능)',
@@ -1542,7 +1542,7 @@ function displayBankStatementContent(data) {
                     <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('branchName')}</label>
                     <input type="text" id="branchName" value="${data.branchName || ''}" 
                            onchange="autoSaveBankStatementDetails()"
-                           placeholder="${currentLang === 'zh-TW' ? '中環分行' : 'Central Branch'}"
+                           placeholder="${currentLang === 'zh-TW' ? '香港中環花園道33樓' : 'Central Branch Address'}"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">

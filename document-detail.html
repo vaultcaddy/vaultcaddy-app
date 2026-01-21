@@ -3041,10 +3041,24 @@ NEWFILEUID:NONE
                             let debits = '';
                             const amount = parseFloat(tx.amount || 0);
                             
-                            if (tx.transactionSign === 'income' || amount > 0) {
+                            // 🔥 修正判断逻辑：优先使用 transactionSign
+                            if (tx.transactionSign === 'income') {
+                                // 收入 = Credits
                                 credits = Math.abs(amount).toFixed(2);
-                            } else if (tx.transactionSign === 'expense' || amount < 0) {
+                                debits = '';
+                            } else if (tx.transactionSign === 'expense') {
+                                // 支出 = Debits
+                                credits = '';
                                 debits = Math.abs(amount).toFixed(2);
+                            } else {
+                                // 如果没有 transactionSign，根据金额符号判断
+                                if (amount >= 0) {
+                                    credits = Math.abs(amount).toFixed(2);
+                                    debits = '';
+                                } else {
+                                    credits = '';
+                                    debits = Math.abs(amount).toFixed(2);
+                                }
                             }
                             
                             excelData.push([
