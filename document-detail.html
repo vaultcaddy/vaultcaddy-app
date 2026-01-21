@@ -2005,8 +2005,8 @@
         <!-- 动态生成内容 -->
     </div>
     
-    <!-- 新Export Menu 背景遮罩 -->
-    <div id="newExportMenuOverlay" onclick="closeNewExportMenu()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999998;"></div>
+    <!-- 新Export Menu 背景遮罩（onclick移到JS中添加，避免提前引用）-->
+    <div id="newExportMenuOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999998;"></div>
     
     <script>
         // 🔥 Export 功能 - 完全基于 firstproject.html（适配单文档）
@@ -2259,6 +2259,15 @@
         console.log('  - closeNewExportMenu:', typeof window.closeNewExportMenu);
         console.log('  - updateNewExportMenuContent:', typeof updateNewExportMenuContent);
         console.log('  - openNewExportMenu:', typeof window.openNewExportMenu);
+        
+        // ✅ 添加overlay点击事件（在函数定义后）
+        const overlay = document.getElementById('newExportMenuOverlay');
+        if (overlay) {
+            overlay.addEventListener('click', function() {
+                window.closeNewExportMenu();
+            });
+            console.log('✅ Overlay点击事件已绑定');
+        }
         
         // ✅ 生成 QBO 文件内容
         function generateQBOFile(data) {
@@ -2946,6 +2955,80 @@ NEWFILEUID:NONE
             console.log('🔍 检查完成');
             console.log('');
         }, 2000);
+    </script>
+    
+    <!-- 🔥 强制在页面末尾重新定义Export函数（确保最后执行）-->
+    <script>
+        (function() {
+            console.log('');
+            console.log('🔥 页面末尾：强制定义Export函数');
+            
+            // 如果函数已经定义，跳过
+            if (typeof window.openNewExportMenu === 'function' && typeof window.closeNewExportMenu === 'function') {
+                console.log('✅ Export函数已存在，无需重新定义');
+                return;
+            }
+            
+            console.log('⚠️ Export函数不存在，现在重新定义...');
+            
+            // 立即定义基本函数
+            window.closeNewExportMenu = function() {
+                console.log('🔒 关闭Export菜单');
+                const menu = document.getElementById('newExportMenu');
+                const overlay = document.getElementById('newExportMenuOverlay');
+                if (menu) menu.style.display = 'none';
+                if (overlay) overlay.style.display = 'none';
+            };
+            
+            window.openNewExportMenu = function(event) {
+                console.log('🎯 打开Export菜单');
+                event && event.preventDefault();
+                event && event.stopPropagation();
+                
+                const menu = document.getElementById('newExportMenu');
+                if (!menu) {
+                    console.error('❌ #newExportMenu 元素不存在');
+                    return;
+                }
+                
+                // 简单的菜单HTML
+                menu.innerHTML = `
+                    <div style="padding: 0.5rem 0;">
+                        <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280;">导出选项</div>
+                        <button onclick="alert('Excel导出功能开发中')" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer;">
+                            <div style="font-weight: 500;">📊 Excel (.xlsx)</div>
+                        </button>
+                        <button onclick="alert('CSV导出功能开发中')" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer;">
+                            <div style="font-weight: 500;">📄 CSV</div>
+                        </button>
+                        <button onclick="window.closeNewExportMenu()" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: #fee2e2; cursor: pointer; margin-top: 0.5rem;">
+                            <div style="font-weight: 500; color: #ef4444;">❌ 关闭</div>
+                        </button>
+                    </div>
+                `;
+                
+                // 显示菜单
+                menu.style.display = 'block';
+                menu.style.position = 'fixed';
+                menu.style.top = '50%';
+                menu.style.left = '50%';
+                menu.style.transform = 'translate(-50%, -50%)';
+                menu.style.zIndex = '999999';
+                menu.style.backgroundColor = '#ffffff';
+                menu.style.border = '1px solid #e5e7eb';
+                menu.style.borderRadius = '12px';
+                menu.style.boxShadow = '0 10px 25px rgba(0,0,0,0.15)';
+                menu.style.minWidth = '250px';
+                menu.style.maxWidth = '400px';
+                
+                console.log('✅ Export菜单已显示');
+            };
+            
+            console.log('✅ Export函数重新定义完成');
+            console.log('  - closeNewExportMenu:', typeof window.closeNewExportMenu);
+            console.log('  - openNewExportMenu:', typeof window.openNewExportMenu);
+            console.log('');
+        })();
     </script>
 
 </body>
