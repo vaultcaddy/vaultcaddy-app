@@ -3004,7 +3004,8 @@ NEWFILEUID:NONE
                     const accountNumber = data.accountNumber || data.account_number || '';
                     const accountType = data.accountType || 'Integrated Account';
                     const bankName = data.bankName || data.bank_name || data.bank || '';
-                    const bankAddress = data.bankAddress || data.bank_address || '';
+                    // 🔥 分行地址：优先使用 branchName (页面上的"分行地址"字段)
+                    const bankAddress = data.branchName || data.branch_name || data.bankAddress || data.bank_address || '';
                     
                     // 提取日期
                     const statementPeriod = data.statementPeriod || data.statement_period || data.period || '';
@@ -3130,7 +3131,29 @@ NEWFILEUID:NONE
                     
                 case 'qbo':
                     // ☁️ QBO 文件 (QuickBooks Online 官方格式)
-                    alert('QBO 格式開發中，請先使用 QuickBooks CSV 或通用 CSV');
+                    try {
+                        if (!data.transactions || data.transactions.length === 0) {
+                            alert('沒有交易記錄可導出');
+                            return;
+                        }
+                        
+                        console.log('📊 生成 QBO 文件...');
+                        const qboContent = generateQBOFile(data);
+                        const blob = new Blob([qboContent], { type: 'application/x-qbo;charset=utf-8;' });
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = `${fileName}_${dateStr}.qbo`;
+                        link.style.visibility = 'hidden';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(url);
+                        console.log('✅ QBO 文件已下載');
+                    } catch (error) {
+                        console.error('❌ QBO 生成失敗:', error);
+                        alert('QBO 文件生成失敗: ' + error.message);
+                    }
                     return;
                     
                 default:
