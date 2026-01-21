@@ -3064,24 +3064,28 @@
                             amountDisplay = `Start: $${parseFloat(openingBalance).toLocaleString('zh-TW', {minimumFractionDigits: 2, maximumFractionDigits: 2})}<br>End: $${parseFloat(closingBalance).toLocaleString('zh-TW', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
                         }
                         
-                        // ✅ 提取對帳單期間並轉換格式（22 Feb 2025 to 22 Mar 2025）
-                        let statementPeriod = data.statementPeriod || data.statement_period || data.period || '';
-                        if (statementPeriod && statementPeriod.includes('to')) {
-                            // 如果是 "2025-02-22 to 2025-03-22" 格式，轉換為 "22 Feb 2025 to 22 Mar 2025"
-                            const parts = statementPeriod.split(' to ');
-                            if (parts.length === 2) {
-                                const startDate = new Date(parts[0]);
-                                const endDate = new Date(parts[1]);
-                                if (!isNaN(startDate) && !isNaN(endDate)) {
-                                    const formatDate = (d) => {
-                                        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                                        return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
-                                    };
-                                    statementPeriod = `${formatDate(startDate)} to ${formatDate(endDate)}`;
+                        // ✅ 提取對帳單日期（優先顯示對帳單日期，而不是期間）
+                        let statementDate = data.statementDate || data.statement_date || data.date || '';
+                        
+                        // 🔄 格式化日期：YYYY-MM-DD → YYYY/MM/DD
+                        if (statementDate && statementDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                            statementDate = statementDate.replace(/-/g, '/');
+                        }
+                        
+                        // 如果沒有對帳單日期，則回退到對帳單期間
+                        if (!statementDate) {
+                            let statementPeriod = data.statementPeriod || data.statement_period || data.period || '';
+                            if (statementPeriod && statementPeriod.includes('to')) {
+                                // 提取结束日期作为对账单日期
+                                const parts = statementPeriod.split(' to ');
+                                if (parts.length === 2) {
+                                    const endDate = parts[1].trim();
+                                    statementDate = endDate.replace(/-/g, '/');
                                 }
                             }
                         }
-                        date = statementPeriod || data.statementDate || data.statement_date || data.date || '-';
+                        
+                        date = statementDate || '-';
                     } else {
                         // 發票/收據/一般文檔：顯示供應商、總金額、日期
                         vendor = data.vendor || data.supplier || data.merchantName || data.source || '-';
