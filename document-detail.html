@@ -2010,6 +2010,7 @@
     
     <script>
         // 🔥 Export 功能 - 完全基于 firstproject.html（适配单文档）
+        console.log('🔍 开始加载 Export 功能...');
         
         // 关闭新菜单
         window.closeNewExportMenu = function() {
@@ -2252,6 +2253,12 @@
             console.log('✅ 菜单已显示');
             console.log('📊 最终样式: display=' + menu.style.display + ', position=' + menu.style.position + ', zIndex=' + menu.style.zIndex);
         };
+        
+        // ✅ 确认所有Export函数已加载
+        console.log('✅ Export 功能加载完成:');
+        console.log('  - closeNewExportMenu:', typeof window.closeNewExportMenu);
+        console.log('  - updateNewExportMenuContent:', typeof updateNewExportMenuContent);
+        console.log('  - openNewExportMenu:', typeof window.openNewExportMenu);
         
         // ✅ 生成 QBO 文件内容
         function generateQBOFile(data) {
@@ -2629,6 +2636,9 @@ NEWFILEUID:NONE
             }
         };
         
+        // ✅ 确认exportDocuments函数已加载
+        console.log('  - exportDocuments:', typeof window.exportDocuments);
+        console.log('  - XLSX library:', typeof XLSX !== 'undefined' ? '✅ 已加载' : '❌ 未加载');
         
         // 🔥 旧Export测试代码（已禁用 - 使用新Export系统）
         /*
@@ -2910,6 +2920,32 @@ NEWFILEUID:NONE
         })();
         */
         // ⬆️ 旧Export测试代码结束
+    </script>
+    
+    <!-- 🔥 最终确认和Fallback脚本 -->
+    <script>
+        // 延迟检查，确保所有脚本加载完成
+        setTimeout(function() {
+            console.log('');
+            console.log('🔍🔍🔍 最终Export功能检查 🔍🔍🔍');
+            console.log('openNewExportMenu defined?', typeof window.openNewExportMenu === 'function');
+            console.log('closeNewExportMenu defined?', typeof window.closeNewExportMenu === 'function');
+            console.log('exportDocuments defined?', typeof window.exportDocuments === 'function');
+            console.log('XLSX library loaded?', typeof XLSX !== 'undefined');
+            console.log('newExportMenu element?', document.getElementById('newExportMenu') !== null);
+            console.log('newExportBtn element?', document.getElementById('newExportBtn') !== null);
+            
+            // 如果openNewExportMenu未定义，提供一个fallback
+            if (typeof window.openNewExportMenu !== 'function') {
+                console.error('❌ openNewExportMenu 未定义，创建 fallback 版本');
+                window.openNewExportMenu = function() {
+                    alert('Export功能加载失败，请刷新页面重试（Cmd + Shift + R）');
+                };
+            }
+            
+            console.log('🔍 检查完成');
+            console.log('');
+        }, 2000);
     </script>
 
 </body>

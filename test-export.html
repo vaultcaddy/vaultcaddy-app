@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Export</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+    <button onclick="testExport()">Test Export</button>
+    
+    <script>
+        window.testExport = function() {
+            console.log('Testing export...');
+            console.log('XLSX available?', typeof XLSX !== 'undefined');
+            
+            if (typeof XLSX === 'undefined') {
+                alert('XLSX library not loaded!');
+                return;
+            }
+            
+            // Test data
+            const data = [
+                ['Date', 'Description', 'Amount'],
+                ['2024-01-01', 'Test 1', 100],
+                ['2024-01-02', 'Test 2', 200]
+            ];
+            
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            XLSX.utils.book_append_sheet(wb, ws, "Test");
+            XLSX.writeFile(wb, 'test.xlsx');
+            
+            alert('Export successful!');
+        };
+    </script>
+</body>
+</html>
