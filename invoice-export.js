@@ -126,6 +126,203 @@
     }
     
     /**
+     * 生成通用 CSV 格式（適用於 Xero, Wave, QuickBooks, MYOB）
+     * 
+     * 簡化的發票格式，包含最基本的信息
+     * 
+     * @param {Array} invoices - 發票文檔數組
+     * @returns {string} CSV 內容
+     */
+    function generateUniversalCSV(invoices) {
+        console.log(`📊 生成通用發票 CSV，共 ${invoices.length} 個發票`);
+        
+        const headers = ['Date', 'Invoice Number', 'Supplier', 'Description', 'Amount'];
+        const rows = [headers];
+        
+        invoices.forEach(invoice => {
+            const data = invoice.processedData || {};
+            
+            const date = data.invoiceDate || data.date || data.issueDate || '';
+            const invoiceNumber = data.invoiceNumber || data.invoice_number || data.number || '';
+            const supplier = data.vendorName || data.vendor || data.supplier || data.supplierName || '';
+            const total = parseFloat(data.totalAmount || data.total || data.amount || 0);
+            
+            // 如果有項目明細，每個項目一行
+            const items = data.items || data.lineItems || [];
+            
+            if (items.length === 0) {
+                rows.push([
+                    date,
+                    invoiceNumber,
+                    supplier,
+                    'Invoice Total',
+                    total.toFixed(2)
+                ]);
+            } else {
+                items.forEach(item => {
+                    const description = item.description || item.itemName || item.name || '';
+                    const amount = parseFloat(item.amount || item.subtotal || 0);
+                    
+                    rows.push([
+                        date,
+                        invoiceNumber,
+                        supplier,
+                        description,
+                        amount.toFixed(2)
+                    ]);
+                });
+            }
+        });
+        
+        const csv = rows.map(row => row.map(escapeCSV).join(',')).join('\n');
+        console.log('✅ 通用發票 CSV 生成成功');
+        return csv;
+    }
+    
+    /**
+     * 生成 Sage CSV 格式（英國格式）
+     * 
+     * @param {Array} invoices - 發票文檔數組
+     * @returns {string} CSV 內容
+     */
+    function generateSageCSV(invoices) {
+        console.log(`📊 生成 Sage 發票 CSV，共 ${invoices.length} 個發票`);
+        
+        const headers = ['Type', 'Account Reference', 'Nominal A/C Ref', 'Date', 'Reference', 'Details', 'Net Amount', 'Tax Code', 'Tax Amount'];
+        const rows = [headers];
+        
+        invoices.forEach(invoice => {
+            const data = invoice.processedData || {};
+            
+            const date = formatDateForSage(data.invoiceDate || data.date || '');
+            const reference = data.invoiceNumber || data.invoice_number || '';
+            const accountRef = data.vendorName || data.vendor || data.supplier || '';
+            const netAmount = parseFloat(data.totalAmount || data.total || 0);
+            const taxAmount = parseFloat(data.taxAmount || data.tax || 0);
+            const taxCode = taxAmount > 0 ? 'T1' : 'T0';
+            
+            // 如果有項目明細，每個項目一行
+            const items = data.items || data.lineItems || [];
+            
+            if (items.length === 0) {
+                rows.push([
+                    'PI',  // Purchase Invoice
+                    accountRef,
+                    '5000',  // 默認購買科目
+                    date,
+                    reference,
+                    'Invoice Total',
+                    netAmount.toFixed(2),
+                    taxCode,
+                    taxAmount.toFixed(2)
+                ]);
+            } else {
+                items.forEach(item => {
+                    const details = item.description || item.itemName || '';
+                    const itemAmount = parseFloat(item.amount || item.subtotal || 0);
+                    const itemTax = (itemAmount / netAmount) * taxAmount;
+                    
+                    rows.push([
+                        'PI',
+                        accountRef,
+                        '5000',
+                        date,
+                        reference,
+                        details,
+                        itemAmount.toFixed(2),
+                        taxCode,
+                        itemTax.toFixed(2)
+                    ]);
+                });
+            }
+        });
+        
+        const csv = rows.map(row => row.map(escapeCSV).join(',')).join('\n');
+        console.log('✅ Sage 發票 CSV 生成成功');
+        return csv;
+    }
+    
+    /**
+     * 生成 Zoho Books CSV 格式（印度格式）
+     * 
+     * @param {Array} invoices - 發票文檔數組
+     * @returns {string} CSV 內容
+     */
+    function generateZohoCSV(invoices) {
+        console.log(`📊 生成 Zoho Books 發票 CSV，共 ${invoices.length} 個發票`);
+        
+        const headers = ['Invoice Number', 'Invoice Date', 'Vendor Name', 'Item Name', 'Item Description', 'Quantity', 'Rate', 'Amount', 'Tax', 'Total'];
+        const rows = [headers];
+        
+        invoices.forEach(invoice => {
+            const data = invoice.processedData || {};
+            
+            const invoiceNumber = data.invoiceNumber || data.invoice_number || '';
+            const invoiceDate = data.invoiceDate || data.date || '';
+            const vendorName = data.vendorName || data.vendor || data.supplier || '';
+            const total = parseFloat(data.totalAmount || data.total || 0);
+            const tax = parseFloat(data.taxAmount || data.tax || 0);
+            
+            // 如果有項目明細，每個項目一行
+            const items = data.items || data.lineItems || [];
+            
+            if (items.length === 0) {
+                rows.push([
+                    invoiceNumber,
+                    invoiceDate,
+                    vendorName,
+                    'Invoice Total',
+                    '',
+                    1,
+                    total.toFixed(2),
+                    total.toFixed(2),
+                    tax.toFixed(2),
+                    total.toFixed(2)
+                ]);
+            } else {
+                items.forEach(item => {
+                    const itemName = item.code || item.itemCode || item.name || '';
+                    const itemDescription = item.description || item.itemName || '';
+                    const quantity = parseFloat(item.quantity || 1);
+                    const rate = parseFloat(item.unitPrice || item.price || 0);
+                    const amount = parseFloat(item.amount || item.subtotal || 0);
+                    const itemTax = (amount / total) * tax;
+                    
+                    rows.push([
+                        invoiceNumber,
+                        invoiceDate,
+                        vendorName,
+                        itemName,
+                        itemDescription,
+                        quantity,
+                        rate.toFixed(2),
+                        amount.toFixed(2),
+                        itemTax.toFixed(2),
+                        total.toFixed(2)
+                    ]);
+                });
+            }
+        });
+        
+        const csv = rows.map(row => row.map(escapeCSV).join(',')).join('\n');
+        console.log('✅ Zoho Books 發票 CSV 生成成功');
+        return csv;
+    }
+    
+    /**
+     * 格式化日期為 Sage 格式 (DD/MM/YYYY)
+     */
+    function formatDateForSage(dateStr) {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        if (isNaN(date)) return dateStr;
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+    }
+    
+    /**
      * 生成 Xero 格式的發票 CSV
      * 
      * Xero 發票/賬單導入格式：
@@ -487,6 +684,9 @@
     window.InvoiceExport = {
         generateInvoiceSummaryCSV,
         generateInvoiceDetailedCSV,
+        generateUniversalCSV,
+        generateSageCSV,
+        generateZohoCSV,
         generateXeroCSV,
         generateQuickBooksCSV,
         generateIIF,
