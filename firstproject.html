@@ -4146,7 +4146,26 @@
             // 發票選項
             if (hasInvoice) {
                 menuHTML += `
-                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">發票</div>
+                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">CSV 格式</div>
+                    
+                    <button onclick="exportDocuments('invoice_xero_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s; background: linear-gradient(90deg, rgba(16,185,129,0.05) 0%, transparent 100%);">
+                        <i class="fas fa-globe" style="color: #10b981; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 600;">🌐 Xero CSV</div>
+                            <div style="font-size: 0.75rem; color: #059669; font-weight: 500;">✨ Xero 發票導入格式</div>
+                        </div>
+                    </button>
+                    
+                    <button onclick="exportDocuments('invoice_quickbooks_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-csv" style="color: #3b82f6; width: 20px;"></i>
+                        <div>
+                            <div style="font-weight: 500;">📄 QuickBooks CSV</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Online 格式</div>
+                        </div>
+                    </button>
+                    
+                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.5rem;">標準格式</div>
+                    
                     <button onclick="exportDocuments('invoice_summary_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
                         <i class="fas fa-file-invoice" style="color: #f59e0b; width: 20px;"></i>
                         <div>
@@ -4154,6 +4173,7 @@
                             <div style="font-size: 0.75rem; color: #6b7280;">快速對帳</div>
                         </div>
                     </button>
+                    
                     <button onclick="exportDocuments('invoice_detailed_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
                         <i class="fas fa-file-invoice" style="color: #f59e0b; width: 20px;"></i>
                         <div>
@@ -4332,6 +4352,20 @@
                         fileName = `Invoice_${new Date().toISOString().split('T')[0]}.csv`;
                     }
                     break;
+                
+                case 'invoice_xero_csv':
+                    if (window.InvoiceExport && window.InvoiceExport.generateXeroCSV) {
+                        exportContent = window.InvoiceExport.generateXeroCSV(docs);
+                        fileName = `Invoice_Xero_${new Date().toISOString().split('T')[0]}.csv`;
+                    }
+                    break;
+                
+                case 'invoice_quickbooks_csv':
+                    if (window.InvoiceExport && window.InvoiceExport.generateQuickBooksCSV) {
+                        exportContent = window.InvoiceExport.generateQuickBooksCSV(docs);
+                        fileName = `Invoice_QuickBooks_${new Date().toISOString().split('T')[0]}.csv`;
+                    }
+                    break;
                     
                 case 'general_csv':
                     exportContent = generateCSV(docs);
@@ -4488,22 +4522,112 @@
                                 exportedCount++;
                             }
                             
-                            // 2️⃣ 导出发票 Excel
+                            // 2️⃣ 导出发票 Excel（完整格式，包含项目明细）
                             if (groupedDocs.invoices.length > 0) {
                                 const wb = XLSX.utils.book_new();
-                                const excelData = [['Invoice Number', 'Date', 'Supplier', 'Amount', 'Status']];
+                                
+                                // ✅ 发票Excel标题（包含所有重要字段）
+                                const excelData = [[
+                                    'Invoice Number',      // 发票编号
+                                    'Date',               // 日期
+                                    'Supplier Name',      // 供应商名称
+                                    'Supplier Phone',     // 供应商电话
+                                    'Supplier Email',     // 供应商邮箱
+                                    'Item Code',          // 项目编码
+                                    'Item Description',   // 项目描述
+                                    'Quantity',           // 数量
+                                    'Unit',               // 单位
+                                    'Unit Price',         // 单价
+                                    'Amount',             // 小计
+                                    'Total Amount',       // 总金额
+                                    'Tax',                // 税额
+                                    'Status'              // 状态
+                                ]];
+                                
                                 groupedDocs.invoices.forEach(doc => {
                                     const data = doc.processedData;
-                                    excelData.push([
-                                        data.invoiceNumber || '',
-                                        data.invoiceDate || '',
-                                        data.supplierName || '',
-                                        parseFloat(data.totalAmount || 0),
-                                        data.status || ''
-                                    ]);
+                                    
+                                    // 提取基本信息
+                                    const invoiceNumber = data.invoiceNumber || data.invoice_number || '';
+                                    const invoiceDate = data.invoiceDate || data.date || data.invoice_date || '';
+                                    const supplierName = data.vendorName || data.vendor || data.supplier || data.supplierName || '';
+                                    const supplierPhone = data.vendorPhone || data.phone || data.supplier_phone || '';
+                                    const supplierEmail = data.vendorEmail || data.email || data.supplier_email || '';
+                                    const totalAmount = parseFloat(data.totalAmount || data.total || data.amount || 0);
+                                    const tax = parseFloat(data.taxAmount || data.tax || 0);
+                                    const status = data.status || data.paymentStatus || '未付款';
+                                    
+                                    // 提取项目明细
+                                    const items = data.items || data.lineItems || [];
+                                    
+                                    if (items.length === 0) {
+                                        // 如果没有项目明细，添加一行汇总
+                                        excelData.push([
+                                            invoiceNumber,
+                                            invoiceDate,
+                                            supplierName,
+                                            supplierPhone,
+                                            supplierEmail,
+                                            '',
+                                            '總計',
+                                            1,
+                                            '',
+                                            totalAmount,
+                                            totalAmount,
+                                            totalAmount,
+                                            tax,
+                                            status
+                                        ]);
+                                    } else {
+                                        // 为每个项目添加一行
+                                        items.forEach(item => {
+                                            const itemCode = item.code || item.itemCode || '';
+                                            const itemDescription = item.description || item.itemName || item.name || '';
+                                            const quantity = parseFloat(item.quantity || item.qty || 1);
+                                            const unit = item.unit || '件';
+                                            const unitPrice = parseFloat(item.unitPrice || item.unit_price || item.price || 0);
+                                            const amount = parseFloat(item.amount || item.subtotal || (quantity * unitPrice) || 0);
+                                            
+                                            excelData.push([
+                                                invoiceNumber,
+                                                invoiceDate,
+                                                supplierName,
+                                                supplierPhone,
+                                                supplierEmail,
+                                                itemCode,
+                                                itemDescription,
+                                                quantity,
+                                                unit,
+                                                unitPrice.toFixed(2),
+                                                amount.toFixed(2),
+                                                totalAmount.toFixed(2),
+                                                tax.toFixed(2),
+                                                status
+                                            ]);
+                                        });
+                                    }
                                 });
+                                
                                 const ws = XLSX.utils.aoa_to_sheet(excelData);
-                                ws['!cols'] = [{wch: 15}, {wch: 12}, {wch: 30}, {wch: 12}, {wch: 15}];
+                                
+                                // ✅ 设置列宽（14列）
+                                ws['!cols'] = [
+                                    {wch: 15},  // Invoice Number
+                                    {wch: 12},  // Date
+                                    {wch: 25},  // Supplier Name
+                                    {wch: 15},  // Supplier Phone
+                                    {wch: 25},  // Supplier Email
+                                    {wch: 12},  // Item Code
+                                    {wch: 40},  // Item Description
+                                    {wch: 10},  // Quantity
+                                    {wch: 8},   // Unit
+                                    {wch: 12},  // Unit Price
+                                    {wch: 12},  // Amount
+                                    {wch: 12},  // Total Amount
+                                    {wch: 10},  // Tax
+                                    {wch: 10}   // Status
+                                ];
+                                
                                 XLSX.utils.book_append_sheet(wb, ws, "Invoices");
                                 
                                 fileName = `Invoice_${dateStr}.xlsx`;
@@ -4667,6 +4791,32 @@
                             console.log('✅ 發票詳細交易數據 CSV 導出');
                         } else {
                             alert('發票導出模塊未載入，請刷新頁面後重試');
+                            return;
+                        }
+                        break;
+                    
+                    case 'invoice_xero_csv':
+                        // Xero 發票 CSV 格式
+                        if (window.InvoiceExport && window.InvoiceExport.generateXeroCSV) {
+                            exportContent = window.InvoiceExport.generateXeroCSV(docsToExport);
+                            fileName = `Invoice_Xero_${new Date().toISOString().split('T')[0]}.csv`;
+                            mimeType = 'text/csv;charset=utf-8;';
+                            console.log('✅ Xero 發票 CSV 導出');
+                        } else {
+                            alert('Xero 發票導出模塊未載入，請刷新頁面後重試');
+                            return;
+                        }
+                        break;
+                    
+                    case 'invoice_quickbooks_csv':
+                        // QuickBooks 發票 CSV 格式
+                        if (window.InvoiceExport && window.InvoiceExport.generateQuickBooksCSV) {
+                            exportContent = window.InvoiceExport.generateQuickBooksCSV(docsToExport);
+                            fileName = `Invoice_QuickBooks_${new Date().toISOString().split('T')[0]}.csv`;
+                            mimeType = 'text/csv;charset=utf-8;';
+                            console.log('✅ QuickBooks 發票 CSV 導出');
+                        } else {
+                            alert('QuickBooks 發票導出模塊未載入，請刷新頁面後重試');
                             return;
                         }
                         break;
