@@ -1586,8 +1586,8 @@
                         <i class="fas fa-cloud-check"></i>
                         Saved
                     </span>
-                    <!-- Export按钮（綠色） -->
-                    <button onclick="toggleExportMenu(event)" style="background: #10b981; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500; transition: all 0.2s;" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#10b981'">
+                    <!-- 新Export按钮（完全独立系统）-->
+                    <button id="vaultcaddyExportBtn" onclick="openVaultcaddyExportMenu()" style="background: #10b981; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500; transition: all 0.2s;" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#10b981'">
                         <i class="fas fa-download"></i>
                         <span>Export</span>
                     </button>
@@ -2826,6 +2826,253 @@ NEWFILEUID:NONE
             }
         }
     </style>
+    
+    <!-- ========== 🆕 全新独立的Export系统（避开旧代码）========== -->
+    
+    <!-- 新Export菜单容器 -->
+    <div id="vaultcaddyExportMenu" style="display: none; position: fixed; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); min-width: 280px; max-width: 400px; z-index: 999999; padding: 1rem;">
+        <!-- 动态生成内容 -->
+    </div>
+    
+    <!-- 新Export遮罩 -->
+    <div id="vaultcaddyExportOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999998;"></div>
+    
+    <script>
+    // ========== 🆕 VaultCaddy Export System（完全独立）==========
+    
+    // 关闭菜单
+    window.closeVaultcaddyExportMenu = function() {
+        const menu = document.getElementById('vaultcaddyExportMenu');
+        const overlay = document.getElementById('vaultcaddyExportOverlay');
+        if (menu) menu.style.display = 'none';
+        if (overlay) overlay.style.display = 'none';
+    };
+    
+    // 点击遮罩关闭
+    document.getElementById('vaultcaddyExportOverlay')?.addEventListener('click', closeVaultcaddyExportMenu);
+    
+    // 打开菜单
+    window.openVaultcaddyExportMenu = function() {
+        const menu = document.getElementById('vaultcaddyExportMenu');
+        const overlay = document.getElementById('vaultcaddyExportOverlay');
+        const btn = document.getElementById('vaultcaddyExportBtn');
+        
+        if (!menu) return;
+        
+        // 🎯 生成与 firstproject.html 完全一致的菜单内容
+        menu.innerHTML = `
+            <div style="padding: 0.5rem 0; background: #ffffff;">
+                <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">CSV 格式</div>
+                
+                <button onclick="vaultcaddyExportDocument('excel')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                    <i class="fas fa-file-excel" style="color: #059669; width: 20px;"></i>
+                    <div>
+                        <div style="font-weight: 500;">📊 Excel (.xlsx)</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">Microsoft Excel 試算表</div>
+                    </div>
+                </button>
+                
+                <button onclick="vaultcaddyExportDocument('universal_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s; background: linear-gradient(90deg, rgba(16,185,129,0.05) 0%, transparent 100%);">
+                    <i class="fas fa-globe" style="color: #10b981; width: 20px;"></i>
+                    <div>
+                        <div style="font-weight: 600;">🌐 通用 CSV</div>
+                        <div style="font-size: 0.75rem; color: #059669; font-weight: 500;">✨ Xero, Wave, QuickBooks, MYOB</div>
+                    </div>
+                </button>
+                
+                <button onclick="vaultcaddyExportDocument('sage_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                    <i class="fas fa-file-csv" style="color: #3b82f6; width: 20px;"></i>
+                    <div>
+                        <div style="font-weight: 500;">📄 Sage CSV</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">🇬🇧 Sage 50, Sage Accounting</div>
+                    </div>
+                </button>
+                
+                <button onclick="vaultcaddyExportDocument('zoho_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                    <i class="fas fa-file-csv" style="color: #f59e0b; width: 20px;"></i>
+                    <div>
+                        <div style="font-weight: 500;">📄 Zoho Books CSV</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">🇮🇳 Zoho Books 格式</div>
+                    </div>
+                </button>
+                
+                <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.5rem;">其他格式</div>
+                
+                <button onclick="vaultcaddyExportDocument('qbo')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                    <i class="fas fa-cloud" style="color: #8b5cf6; width: 20px;"></i>
+                    <div>
+                        <div style="font-weight: 500;">☁️ QBO 文件</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Online 官方格式</div>
+                    </div>
+                </button>
+                
+                <button onclick="vaultcaddyExportDocument('excel')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                    <i class="fas fa-file-excel" style="color: #059669; width: 20px;"></i>
+                    <div>
+                        <div style="font-weight: 500;">📊 Excel (.xlsx)</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">Microsoft Excel 試算表</div>
+                    </div>
+                </button>
+                
+                <div style="padding: 1rem; margin-top: 0.5rem; background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border-radius: 8px; border-left: 3px solid #10b981;">
+                    <div style="font-size: 0.75rem; color: #065f46; font-weight: 500; margin-bottom: 0.25rem;">
+                        💡 不確定選哪個？
+                    </div>
+                    <div style="font-size: 0.7rem; color: #059669; line-height: 1.4;">
+                        大多數用戶選擇 <strong>通用 CSV</strong> 或 <strong>QBO 文件</strong>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // 定位菜单
+        if (window.innerWidth <= 768) {
+            // 移动端：居中
+            menu.style.top = '50%';
+            menu.style.left = '50%';
+            menu.style.transform = 'translate(-50%, -50%)';
+            menu.style.right = 'auto';
+            menu.style.width = '90%';
+            if (overlay) overlay.style.display = 'block';
+        } else {
+            // 桌面端：按钮下方
+            if (btn) {
+                const rect = btn.getBoundingClientRect();
+                menu.style.top = (rect.bottom + 8) + 'px';
+                menu.style.right = (window.innerWidth - rect.right) + 'px';
+                menu.style.left = 'auto';
+                menu.style.transform = 'none';
+                menu.style.width = 'auto';
+            }
+        }
+        
+        menu.style.display = 'block';
+    };
+    
+    // 🎯 导出函数（完全支持 firstproject.html 的所有格式）
+    window.vaultcaddyExportDocument = async function(format) {
+        console.log('📤 開始導出:', format);
+        closeVaultcaddyExportMenu();
+        
+        // 获取当前文档
+        const doc = window.currentDocument;
+        if (!doc || !doc.processedData) {
+            alert('文檔數據未載入');
+            return;
+        }
+        
+        const data = doc.processedData;
+        const fileName = (doc.name || 'document').replace(/\.(pdf|jpg|png)$/i, '');
+        const dateStr = new Date().toISOString().split('T')[0];
+        
+        try {
+            let exportContent = '';
+            let exportFileName = '';
+            let mimeType = '';
+            
+            switch(format) {
+                case 'excel':
+                    // 📊 Excel (.xlsx) 格式
+                    if (typeof XLSX === 'undefined') {
+                        alert('Excel 庫未載入，請刷新頁面');
+                        return;
+                    }
+                    
+                    const excelData = [['Date', 'Type', 'Description', 'Payee', 'Reference', 'Amount', 'Balance']];
+                    if (data.transactions) {
+                        data.transactions.forEach(t => {
+                            excelData.push([
+                                t.date || '',
+                                t.transactionType || '',
+                                t.description || '',
+                                t.payee || '',
+                                t.referenceNumber || '',
+                                parseFloat(t.amount || 0),
+                                parseFloat(t.balance || 0)
+                            ]);
+                        });
+                    }
+                    
+                    const wb = XLSX.utils.book_new();
+                    const ws = XLSX.utils.aoa_to_sheet(excelData);
+                    ws['!cols'] = [{wch: 12}, {wch: 10}, {wch: 40}, {wch: 25}, {wch: 15}, {wch: 12}, {wch: 12}];
+                    XLSX.utils.book_append_sheet(wb, ws, "Bank Statement");
+                    XLSX.writeFile(wb, `${fileName}.xlsx`);
+                    console.log('✅ Excel 文件已下載');
+                    break;
+                    
+                case 'universal_csv':
+                    // 🌐 通用 CSV (適用於 Xero, Wave, QuickBooks, MYOB)
+                    if (!window.BankStatementExport) {
+                        alert('導出模塊未載入，請刷新頁面後重試');
+                        return;
+                    }
+                    exportContent = window.BankStatementExport.generateUniversalCSV([doc]);
+                    exportFileName = `${fileName}_Universal_${dateStr}.csv`;
+                    mimeType = 'text/csv;charset=utf-8;';
+                    console.log('✅ 通用 CSV 生成完成');
+                    break;
+                    
+                case 'sage_csv':
+                    // 📄 Sage CSV (英國格式 - 借貸分離)
+                    if (!window.BankStatementExport) {
+                        alert('導出模塊未載入，請刷新頁面後重試');
+                        return;
+                    }
+                    exportContent = window.BankStatementExport.generateSageCSV([doc]);
+                    exportFileName = `${fileName}_Sage_${dateStr}.csv`;
+                    mimeType = 'text/csv;charset=utf-8;';
+                    console.log('✅ Sage CSV 生成完成');
+                    break;
+                    
+                case 'zoho_csv':
+                    // 📄 Zoho Books CSV (印度格式 - 借貸分離)
+                    if (!window.BankStatementExport) {
+                        alert('導出模塊未載入，請刷新頁面後重試');
+                        return;
+                    }
+                    exportContent = window.BankStatementExport.generateZohoCSV([doc]);
+                    exportFileName = `${fileName}_Zoho_${dateStr}.csv`;
+                    mimeType = 'text/csv;charset=utf-8;';
+                    console.log('✅ Zoho Books CSV 生成完成');
+                    break;
+                    
+                case 'qbo':
+                    // ☁️ QBO 文件 (QuickBooks Online 官方格式)
+                    alert('QBO 格式開發中，請先使用 QuickBooks CSV 或通用 CSV');
+                    return;
+                    
+                default:
+                    alert('未知格式: ' + format);
+                    return;
+            }
+            
+            // 下载 CSV 文件
+            if (exportContent) {
+                const blob = new Blob(['\uFEFF' + exportContent], { type: mimeType });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                
+                link.setAttribute('href', url);
+                link.setAttribute('download', exportFileName);
+                link.style.visibility = 'hidden';
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                URL.revokeObjectURL(url);
+                console.log('✅ 文件已下載:', exportFileName);
+            }
+            
+        } catch (error) {
+            console.error('❌ 導出失敗:', error);
+            alert('導出失敗: ' + error.message);
+        }
+    };
+    
+    console.log('✅ VaultCaddy Export System 已載入');
+    </script>
 
 </body>
 </html>
