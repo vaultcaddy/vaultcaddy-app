@@ -53,6 +53,9 @@
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
     
+    <!-- SheetJS 库 (用于 Excel 导出) -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    
     <!-- Firebase 配置和數據管理器 -->
     <script src="firebase-config.js?v=20251106-editable"></script>
     <!-- 🔥 新的簡化系統 -->
@@ -1827,13 +1830,12 @@
             }, 500);
         });
         
-        // 🔄 關閉 Export 菜單
+        // 🔄 關閉 Export 菜單（已禁用 - 使用新的Export系统）
+        /*
+        // 🔄 動態生成 Export 菜單（根據文檔類型）- 旧代码，已注释
         
         
-        // 🔄 動態生成 Export 菜單（根據文檔類型）
-        
-        
-        window.currentDocument:', window.currentDocument);
+        console.log('📄 window.currentDocument:', window.currentDocument);
             
             if (window.currentDocument) {
                 docType = window.currentDocument.type || window.currentDocument.documentType || 'general';
@@ -1966,6 +1968,8 @@
             menu.innerHTML = menuHTML;
             console.log('✅ Export menu content updated');
         }
+        */
+        // ⬆️ 旧Export代码结束，已注释掉避免冲突
     </script>
     
     <!-- 🔥 手機側邊欄功能 -->
@@ -2049,11 +2053,11 @@
                 menuHTML += `
                     <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">CSV Formats</div>
                     
-                    <button onclick="exportDocuments('bank_statement_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                        <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
+                    <button onclick="exportDocuments('excel')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-excel" style="color: #059669; width: 20px;"></i>
                         <div>
-                            <div style="font-weight: 500;">📄 Standard CSV</div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">VaultCaddy Format - Most Complete</div>
+                            <div style="font-weight: 500;">📊 Excel (.xlsx)</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">Microsoft Excel Spreadsheet</div>
                         </div>
                     </button>
                     
@@ -2405,6 +2409,63 @@ NEWFILEUID:NONE
                 let filename = '';
                 
                 switch(format) {
+                    case 'excel':
+                        // 📊 Excel (.xlsx) - 使用 SheetJS 生成真正的 Excel 文件
+                        if (data.transactions && data.transactions.length > 0) {
+                            try {
+                                // 准备数据数组
+                                const excelData = [
+                                    ['Date', 'Type', 'Description', 'Payee', 'Reference', 'Amount', 'Balance']
+                                ];
+                                
+                                data.transactions.forEach(t => {
+                                    excelData.push([
+                                        t.date || '',
+                                        t.transactionType || '',
+                                        t.description || '',
+                                        t.payee || '',
+                                        t.referenceNumber || '',
+                                        parseFloat(t.amount || 0),
+                                        parseFloat(t.balance || 0)
+                                    ]);
+                                });
+                                
+                                // 创建工作簿
+                                const wb = XLSX.utils.book_new();
+                                const ws = XLSX.utils.aoa_to_sheet(excelData);
+                                
+                                // 设置列宽
+                                ws['!cols'] = [
+                                    {wch: 12}, // Date
+                                    {wch: 10}, // Type
+                                    {wch: 40}, // Description
+                                    {wch: 25}, // Payee
+                                    {wch: 15}, // Reference
+                                    {wch: 12}, // Amount
+                                    {wch: 12}  // Balance
+                                ];
+                                
+                                // 添加工作表到工作簿
+                                XLSX.utils.book_append_sheet(wb, ws, "Bank Statement");
+                                
+                                // 生成文件名
+                                const bankName = data.bankName || 'Bank';
+                                const accountNum = data.accountNumber || '';
+                                const dateStr = new Date().toISOString().split('T')[0];
+                                filename = `${bankName}_${accountNum}_${dateStr}.xlsx`.replace(/\s+/g, '_');
+                                
+                                // 下载文件
+                                XLSX.writeFile(wb, filename);
+                                console.log('✅ Excel 文件已下载:', filename);
+                                return; // 直接返回，不需要后续的 CSV 下载逻辑
+                            } catch (error) {
+                                console.error('❌ Excel 导出失败:', error);
+                                alert('Excel 导出失败，请重试或使用 CSV 格式');
+                                return;
+                            }
+                        }
+                        break;
+                    
                     case 'bank_statement_csv':
                         // 标准 CSV (VaultCaddy 格式 - 最详细)
                         if (data.transactions && data.transactions.length > 0) {
@@ -2569,7 +2630,8 @@ NEWFILEUID:NONE
         };
         
         
-        // 🔥 备用：直接添加 event listener（防止 onclick 被阻止）
+        // 🔥 旧Export测试代码（已禁用 - 使用新Export系统）
+        /*
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🔍 DOMContentLoaded - 开始绑定 Export 按钮');
             
@@ -2846,6 +2908,8 @@ NEWFILEUID:NONE
             document.addEventListener('DOMContentLoaded', ensureExportButtonVisible);
             window.addEventListener('load', ensureExportButtonVisible);
         })();
+        */
+        // ⬆️ 旧Export测试代码结束
     </script>
 
 </body>

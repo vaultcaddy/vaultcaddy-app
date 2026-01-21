@@ -95,6 +95,8 @@
 <script defer="" src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 <script defer="" src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
 <script defer="" src="https://www.gstatic.com/firebasejs/10.7.0/firebase-functions-compat.js"></script>
+<!-- SheetJS 库 (用于 Excel 导出) -->
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <!-- ✅ Firebase 初始化和身份驗證 -->
 <script defer="" src="firebase-config.js?v=20251106-final-fix"></script>
 <script defer="" src="simple-auth.js?v=20251106-final-fix"></script>
@@ -4111,11 +4113,11 @@
                 menuHTML += `
                     <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">CSV 格式</div>
                     
-                    <button onclick="exportDocuments('bank_statement_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                        <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
+                    <button onclick="exportDocuments('excel')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                        <i class="fas fa-file-excel" style="color: #059669; width: 20px;"></i>
                         <div>
-                            <div style="font-weight: 500;">📄 標準 CSV</div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">VaultCaddy 格式 - 最完整</div>
+                            <div style="font-weight: 500;">📊 Excel (.xlsx)</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">Microsoft Excel 試算表</div>
                         </div>
                     </button>
                     
@@ -4452,6 +4454,64 @@
                 let mimeType = '';
                 
                 switch(format) {
+                    case 'excel':
+                        // 📊 Excel (.xlsx) - 使用 SheetJS 生成真正的 Excel 文件
+                        try {
+                            const wb = XLSX.utils.book_new();
+                            
+                            // 按类型分组并创建工作表
+                            if (groupedDocs.bank_statements.length > 0) {
+                                const excelData = [['Date', 'Type', 'Description', 'Payee', 'Reference', 'Amount', 'Balance']];
+                                groupedDocs.bank_statements.forEach(doc => {
+                                    const data = doc.processedData;
+                                    if (data.transactions) {
+                                        data.transactions.forEach(t => {
+                                            excelData.push([
+                                                t.date || '',
+                                                t.transactionType || '',
+                                                t.description || '',
+                                                t.payee || '',
+                                                t.referenceNumber || '',
+                                                parseFloat(t.amount || 0),
+                                                parseFloat(t.balance || 0)
+                                            ]);
+                                        });
+                                    }
+                                });
+                                const ws = XLSX.utils.aoa_to_sheet(excelData);
+                                ws['!cols'] = [{wch: 12}, {wch: 10}, {wch: 40}, {wch: 25}, {wch: 15}, {wch: 12}, {wch: 12}];
+                                XLSX.utils.book_append_sheet(wb, ws, "Bank Statements");
+                            }
+                            
+                            if (groupedDocs.invoices.length > 0) {
+                                const excelData = [['Invoice Number', 'Date', 'Supplier', 'Amount', 'Status']];
+                                groupedDocs.invoices.forEach(doc => {
+                                    const data = doc.processedData;
+                                    excelData.push([
+                                        data.invoiceNumber || '',
+                                        data.invoiceDate || '',
+                                        data.supplierName || '',
+                                        parseFloat(data.totalAmount || 0),
+                                        data.status || ''
+                                    ]);
+                                });
+                                const ws = XLSX.utils.aoa_to_sheet(excelData);
+                                ws['!cols'] = [{wch: 15}, {wch: 12}, {wch: 30}, {wch: 12}, {wch: 15}];
+                                XLSX.utils.book_append_sheet(wb, ws, "Invoices");
+                            }
+                            
+                            const dateStr = new Date().toISOString().split('T')[0];
+                            fileName = `VaultCaddy_Export_${dateStr}.xlsx`;
+                            XLSX.writeFile(wb, fileName);
+                            console.log('✅ Excel 文件已下载:', fileName);
+                            alert(`✅ 導出成功！\n已下載 Excel 文件：${fileName}`);
+                            return;
+                        } catch (error) {
+                            console.error('❌ Excel 导出失败:', error);
+                            alert('Excel 导出失败，请重试或使用 CSV 格式');
+                            return;
+                        }
+                    
                     case 'csv':
                         // 使用優化版 ExportOptimizer（如果可用）
                         if (window.ExportOptimizer) {
