@@ -1587,7 +1587,7 @@
                         Saved
                     </span>
                     <!-- 新Export按钮（完全独立系统）-->
-                    <button id="vaultcaddyExportBtn" onclick="openVaultcaddyExportMenu()" style="background: #10b981; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500; transition: all 0.2s;" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#10b981'">
+                    <button id="vaultcaddyExportBtn" onclick="openVaultcaddyExportMenu(event)" style="background: #10b981; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500; transition: all 0.2s;" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#10b981'">
                         <i class="fas fa-download"></i>
                         <span>Export</span>
                     </button>
@@ -2851,8 +2851,24 @@ NEWFILEUID:NONE
     // 点击遮罩关闭
     document.getElementById('vaultcaddyExportOverlay')?.addEventListener('click', closeVaultcaddyExportMenu);
     
-    // 打开菜单
-    window.openVaultcaddyExportMenu = function() {
+    // 打开/关闭菜单（切换）
+    window.openVaultcaddyExportMenu = function(event) {
+        if (event) event.stopPropagation();
+        
+        const menu = document.getElementById('vaultcaddyExportMenu');
+        
+        // 如果菜单已经打开，则关闭
+        if (menu && menu.style.display === 'block') {
+            closeVaultcaddyExportMenu();
+            return;
+        }
+        
+        // 否则打开菜单
+        openVaultcaddyExportMenuInternal();
+    };
+    
+    // 内部函数：打开菜单
+    function openVaultcaddyExportMenuInternal() {
         const menu = document.getElementById('vaultcaddyExportMenu');
         const overlay = document.getElementById('vaultcaddyExportOverlay');
         const btn = document.getElementById('vaultcaddyExportBtn');
@@ -2863,14 +2879,6 @@ NEWFILEUID:NONE
         menu.innerHTML = `
             <div style="padding: 0.5rem 0; background: #ffffff;">
                 <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">CSV 格式</div>
-                
-                <button onclick="vaultcaddyExportDocument('excel')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                    <i class="fas fa-file-excel" style="color: #059669; width: 20px;"></i>
-                    <div>
-                        <div style="font-weight: 500;">📊 Excel (.xlsx)</div>
-                        <div style="font-size: 0.75rem; color: #6b7280;">Microsoft Excel 試算表</div>
-                    </div>
-                </button>
                 
                 <button onclick="vaultcaddyExportDocument('universal_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s; background: linear-gradient(90deg, rgba(16,185,129,0.05) 0%, transparent 100%);">
                     <i class="fas fa-globe" style="color: #10b981; width: 20px;"></i>
@@ -2947,7 +2955,20 @@ NEWFILEUID:NONE
         }
         
         menu.style.display = 'block';
-    };
+    }
+    
+    // 点击页面其他位置关闭菜单
+    document.addEventListener('click', function(e) {
+        const menu = document.getElementById('vaultcaddyExportMenu');
+        const btn = document.querySelector('[onclick*="openVaultcaddyExportMenu"]');
+        
+        // 如果点击的不是菜单、按钮，且菜单已打开，则关闭菜单
+        if (menu && menu.style.display === 'block' && 
+            !menu.contains(e.target) && 
+            !btn?.contains(e.target)) {
+            closeVaultcaddyExportMenu();
+        }
+    });
     
     // 🎯 导出函数（完全支持 firstproject.html 的所有格式）
     window.vaultcaddyExportDocument = async function(format) {
@@ -2972,33 +2993,89 @@ NEWFILEUID:NONE
             
             switch(format) {
                 case 'excel':
-                    // 📊 Excel (.xlsx) 格式
+                    // 📊 Excel (.xlsx) 格式 - 完整银行对账单格式
                     if (typeof XLSX === 'undefined') {
                         alert('Excel 庫未載入，請刷新頁面');
                         return;
                     }
                     
-                    const excelData = [['Date', 'Type', 'Description', 'Payee', 'Reference', 'Amount', 'Balance']];
-                    if (data.transactions) {
-                        data.transactions.forEach(t => {
+                    // 提取基本信息
+                    const customerName = data.accountHolder || data.account_holder || data.customerName || '';
+                    const accountNumber = data.accountNumber || data.account_number || '';
+                    const accountType = data.accountType || 'Integrated Account';
+                    const bankName = data.bankName || data.bank_name || data.bank || '';
+                    const bankAddress = data.bankAddress || data.bank_address || '';
+                    
+                    // 提取日期
+                    const statementPeriod = data.statementPeriod || data.statement_period || data.period || '';
+                    let populatedDate = '';
+                    let endDate = '';
+                    
+                    if (statementPeriod && statementPeriod.includes('to')) {
+                        const parts = statementPeriod.split(' to ');
+                        if (parts.length === 2) {
+                            populatedDate = parts[0];
+                            endDate = parts[1];
+                        }
+                    } else {
+                        populatedDate = data.statementDate || data.statement_date || '';
+                        endDate = data.statementDate || data.statement_date || '';
+                    }
+                    
+                    // 提取餘額
+                    const openingBalance = parseFloat(data.openingBalance || data.opening_balance || 0).toFixed(2);
+                    const closingBalance = parseFloat(data.closingBalance || data.closing_balance || data.balance || 0).toFixed(2);
+                    
+                    // CSV 标题（与图2、图3一致）
+                    const excelData = [[
+                        'CustomerName', 'AccountNumber', 'AccountType', 'BankName', 'BankAddress',
+                        'PopulatedDate', 'EndDate', 'OpeningBalance', 'EndingBalance',
+                        'LineItems_Date', 'LineItems_Description', 'LineItems_Credits', 'LineItems_Debits', 'LineItems_Balance'
+                    ]];
+                    
+                    // 为每笔交易生成一行
+                    if (data.transactions && data.transactions.length > 0) {
+                        data.transactions.forEach(tx => {
+                            // 判断是存入(Credits)还是支出(Debits)
+                            let credits = '';
+                            let debits = '';
+                            const amount = parseFloat(tx.amount || 0);
+                            
+                            if (tx.transactionSign === 'income' || amount > 0) {
+                                credits = Math.abs(amount).toFixed(2);
+                            } else if (tx.transactionSign === 'expense' || amount < 0) {
+                                debits = Math.abs(amount).toFixed(2);
+                            }
+                            
                             excelData.push([
-                                t.date || '',
-                                t.transactionType || '',
-                                t.description || '',
-                                t.payee || '',
-                                t.referenceNumber || '',
-                                parseFloat(t.amount || 0),
-                                parseFloat(t.balance || 0)
+                                customerName,
+                                accountNumber,
+                                accountType,
+                                bankName,
+                                bankAddress,
+                                populatedDate,
+                                endDate,
+                                openingBalance,
+                                closingBalance,
+                                tx.date || '',
+                                tx.description || '',
+                                credits,
+                                debits,
+                                parseFloat(tx.balance || 0).toFixed(2)
                             ]);
                         });
                     }
                     
                     const wb = XLSX.utils.book_new();
                     const ws = XLSX.utils.aoa_to_sheet(excelData);
-                    ws['!cols'] = [{wch: 12}, {wch: 10}, {wch: 40}, {wch: 25}, {wch: 15}, {wch: 12}, {wch: 12}];
+                    ws['!cols'] = [
+                        {wch: 20}, {wch: 15}, {wch: 18}, {wch: 20}, {wch: 40},
+                        {wch: 12}, {wch: 12}, {wch: 15}, {wch: 15},
+                        {wch: 12}, {wch: 40}, {wch: 12}, {wch: 12}, {wch: 15}
+                    ];
                     XLSX.utils.book_append_sheet(wb, ws, "Bank Statement");
                     XLSX.writeFile(wb, `${fileName}.xlsx`);
-                    console.log('✅ Excel 文件已下載');
+                    console.log('✅ Excel 文件已下載（完整银行对账单格式）');
                     break;
                     
                 case 'universal_csv':
