@@ -1584,7 +1584,7 @@
                         Saved
                     </span>
                     <!-- Export按钮（綠色） -->
-                    <button onclick="toggleExportMenu(event)" style="background: #10b981; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500; transition: all 0.2s;" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#10b981'">
+                    <button id="export-btn" onclick="toggleExportMenu(event)" style="background: #10b981 !important; color: white !important; border: none !important; padding: 0.5rem 1rem !important; border-radius: 6px !important; display: flex !important; align-items: center !important; gap: 0.5rem !important; cursor: pointer !important; font-weight: 500 !important; transition: all 0.2s !important; visibility: visible !important; opacity: 1 !important; position: relative !important; z-index: 100 !important;" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#10b981'">
                         <i class="fas fa-download"></i>
                         <span>Export</span>
                     </button>
@@ -2830,6 +2830,32 @@ NEWFILEUID:NONE
             }
         }
     </style>
+    
+    <!-- ✅ 确保Export按钮可见的脚本 -->
+    <script>
+        (function() {
+            // 立即执行
+            function ensureExportButtonVisible() {
+                const exportBtn = document.getElementById('export-btn');
+                if (exportBtn) {
+                    exportBtn.style.display = 'flex !important';
+                    exportBtn.style.visibility = 'visible !important';
+                    exportBtn.style.opacity = '1 !important';
+                    console.log('✅ Export按钮已强制显示');
+                } else {
+                    console.warn('⚠️ Export按钮未找到，500ms后重试...');
+                    setTimeout(ensureExportButtonVisible, 500);
+                }
+            }
+            
+            // 多次尝试确保按钮显示
+            setTimeout(ensureExportButtonVisible, 100);
+            setTimeout(ensureExportButtonVisible, 500);
+            setTimeout(ensureExportButtonVisible, 1000);
+            document.addEventListener('DOMContentLoaded', ensureExportButtonVisible);
+            window.addEventListener('load', ensureExportButtonVisible);
+        })();
+    </script>
 
 </body>
 </html>
