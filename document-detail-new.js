@@ -2213,6 +2213,40 @@ async function exportDocument(format) {
         let fileExtension = '';
         
         switch (format) {
+            case 'excel':
+                // Excel (.xlsx) 格式 - 使用 SheetJS
+                if (typeof XLSX === 'undefined') {
+                    alert('Excel 庫未加載，請刷新頁面後重試');
+                    return;
+                }
+                try {
+                    const excelData = [['Date', 'Type', 'Description', 'Payee', 'Reference', 'Amount', 'Balance']];
+                    if (data.transactions && data.transactions.length > 0) {
+                        data.transactions.forEach(t => {
+                            excelData.push([
+                                t.date || '',
+                                t.transactionType || '',
+                                t.description || '',
+                                t.payee || '',
+                                t.referenceNumber || '',
+                                parseFloat(t.amount || 0),
+                                parseFloat(t.balance || 0)
+                            ]);
+                        });
+                    }
+                    const wb = XLSX.utils.book_new();
+                    const ws = XLSX.utils.aoa_to_sheet(excelData);
+                    ws['!cols'] = [{wch: 12}, {wch: 10}, {wch: 40}, {wch: 25}, {wch: 15}, {wch: 12}, {wch: 12}];
+                    XLSX.utils.book_append_sheet(wb, ws, "Bank Statement");
+                    XLSX.writeFile(wb, fileName.replace(/\.(pdf|jpg|png)$/i, '') + '.xlsx');
+                    console.log('✅ Excel 文件已下載');
+                    return; // 直接返回，不需要後續的下載邏輯
+                } catch (error) {
+                    console.error('❌ Excel 導出失敗:', error);
+                    alert('Excel 導出失敗: ' + error.message);
+                    return;
+                }
+            
             case 'csv':
                 content = exportToCSV(data);
                 mimeType = 'text/csv';
