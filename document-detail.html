@@ -1583,8 +1583,8 @@
                         <i class="fas fa-cloud-check"></i>
                         Saved
                     </span>
-                    <!-- Export按钮（綠色） -->
-                    <button id="export-btn" onclick="toggleExportMenu(event)" style="background: #10b981 !important; color: white !important; border: none !important; padding: 0.5rem 1rem !important; border-radius: 6px !important; display: flex !important; align-items: center !important; gap: 0.5rem !important; cursor: pointer !important; font-weight: 500 !important; transition: all 0.2s !important; visibility: visible !important; opacity: 1 !important; position: relative !important; z-index: 100 !important;" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#10b981'">
+                    <!-- Export按钮（綠色）- 使用新函数名避免冲突 -->
+                    <button id="newExportBtn" onclick="openNewExportMenu(event)" style="background: #10b981 !important; color: white !important; border: none !important; padding: 0.5rem 1rem !important; border-radius: 6px !important; display: flex !important; align-items: center !important; gap: 0.5rem !important; cursor: pointer !important; font-weight: 500 !important; transition: all 0.2s !important; visibility: visible !important; opacity: 1 !important; position: relative !important; z-index: 100 !important;" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#10b981'">
                         <i class="fas fa-download"></i>
                         <span>Export</span>
                     </button>
@@ -1996,21 +1996,21 @@
     <!-- Google Analytics 事件跟踪 -->
     <script src="/ga-event-tracking.js"></script>
 
-    <!-- 🔥 Export Menu（完全基于 firstproject.html）-->
-    <div class="export-menu" id="exportMenu" style="display: none; position: fixed; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); min-width: 280px; max-width: 400px; z-index: 999999; padding: 1rem; overflow: hidden;">
+    <!-- 🔥 新Export Menu（避免与旧代码冲突）-->
+    <div class="new-export-menu" id="newExportMenu" style="display: none; position: fixed; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); min-width: 280px; max-width: 400px; z-index: 999999; padding: 1rem; overflow: hidden;">
         <!-- 动态生成内容 -->
     </div>
     
-    <!-- Export Menu 背景遮罩 -->
-    <div id="exportMenuOverlay" onclick="closeExportMenu()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999998;"></div>
+    <!-- 新Export Menu 背景遮罩 -->
+    <div id="newExportMenuOverlay" onclick="closeNewExportMenu()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999998;"></div>
     
     <script>
         // 🔥 Export 功能 - 完全基于 firstproject.html（适配单文档）
         
-        // 关闭菜单
-        window.closeExportMenu = function() {
-            const menu = document.getElementById('exportMenu');
-            const overlay = document.getElementById('exportMenuOverlay');
+        // 关闭新菜单
+        window.closeNewExportMenu = function() {
+            const menu = document.getElementById('newExportMenu');
+            const overlay = document.getElementById('newExportMenuOverlay');
             if (menu) {
                 menu.style.display = 'none';
             }
@@ -2020,11 +2020,11 @@
             console.log('🔒 菜单已关闭');
         };
         
-        // 更新菜单内容
-        function updateExportMenuContent() {
-            const menu = document.getElementById('exportMenu');
+        // 更新新菜单内容
+        function updateNewExportMenuContent() {
+            const menu = document.getElementById('newExportMenu');
             if (!menu) {
-                console.error('❌ exportMenu 元素不存在');
+                console.error('❌ newExportMenu 元素不存在');
                 return;
             }
             
@@ -2159,26 +2159,26 @@
             console.log('✅ 菜单内容已更新');
         }
         
-                // 切换菜单显示（简化版，确保能显示）
-        window.toggleExportMenu = function(event) {
-            console.log('🔍 toggleExportMenu Called');
+                // 切换新菜单显示（避免冲突）
+        window.openNewExportMenu = function(event) {
+            console.log('🔍 openNewExportMenu Called');
             
             // 🔥 强制更新菜单内容（确保有内容）
             console.log('🔄 强制更新菜单内容...');
-            updateExportMenuContent();
-            const menu = document.getElementById('exportMenu');
-            const overlay = document.getElementById('exportMenuOverlay');
+            updateNewExportMenuContent();
+            const menu = document.getElementById('newExportMenu');
+            const overlay = document.getElementById('newExportMenuOverlay');
             console.log('📋 菜单元素:', menu);
             
             if (!menu) {
-                console.error('❌ 未找到 #exportMenu 元素');
+                console.error('❌ 未找到 #newExportMenu 元素');
                 return;
             }
             
             // 如果菜单已显示，则关闭
             if (menu.style.display === 'block') {
                 console.log('🔒 菜单已显示，关闭中...');
-                closeExportMenu();
+                closeNewExportMenu();
                 return;
             }
             
@@ -2214,7 +2214,7 @@
                 }
             } else {
                 // 💻 桌面端：在按钮下方
-                const exportBtn = document.querySelector('button[onclick*="toggleExportMenu"]');
+                const exportBtn = document.getElementById('newExportBtn');
                 if (exportBtn) {
                     const rect = exportBtn.getBoundingClientRect();
                     menu.style.top = (rect.bottom + 8) + 'px';
@@ -2383,8 +2383,8 @@ NEWFILEUID:NONE
         window.exportDocuments = async function(format) {
             console.log('📤 开始导出:', format);
             
-            // 关闭菜单
-            closeExportMenu();
+            // 关闭新菜单
+            closeNewExportMenu();
             
             // 获取当前文档
             const currentDoc = window.currentDocument;
