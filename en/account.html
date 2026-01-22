@@ -1246,8 +1246,21 @@
             
             // CreateSidebar
             if (window.VaultCaddySidebar && !window.accountSidebar) {
-                console.log('🎨 CreateSidebar');
-                window.accountSidebar = new VaultCaddySidebar('account');
+                console.log('🎨 CreateSidebar for account page');
+                console.log('   VaultCaddySidebar available:', !!window.VaultCaddySidebar);
+                console.log('   SimpleDataManager available:', !!window.simpleDataManager);
+                console.log('   SimpleDataManager initialized:', window.simpleDataManager?.initialized);
+                
+                // 延迟初始化以确保所有依赖已加载
+                setTimeout(() => {
+                    console.log('🎨 Initializing sidebar after delay...');
+                    window.accountSidebar = new VaultCaddySidebar('account');
+                }, 500);
+            } else {
+                console.warn('⚠️ Sidebar not initialized:', {
+                    VaultCaddySidebar: !!window.VaultCaddySidebar,
+                    accountSidebar: !!window.accountSidebar
+                });
             }
             
             // LoadUserdata
