@@ -71,8 +71,17 @@ class VaultCaddyNavbar {
                 this.resetUserState();
             }
             
-            // 載入語言設置
-            this.language = localStorage.getItem('preferred_language') || 'zh-tw';
+            // 載入語言設置（根据URL路径检测）
+            const path = window.location.pathname;
+            if (path.includes('/en/')) {
+                this.language = 'en';
+            } else if (path.includes('/ja/')) {
+                this.language = 'ja';
+            } else if (path.includes('/ko/')) {
+                this.language = 'ko';
+            } else {
+                this.language = localStorage.getItem('preferred_language') || 'zh-tw';
+            }
             
             console.log('📊 導航欄用戶狀態已載入:', {
                 isLoggedIn: this.isLoggedIn,
@@ -288,6 +297,15 @@ class VaultCaddyNavbar {
      */
     getUserSection() {
         // 🔥 優先檢查 Firebase Auth（最新）
+        // 多语言文本映射
+        const t = {
+            'zh-tw': { firebaseAccount: 'Firebase 帳戶', googleAccount: 'Google 帳戶', account: '帳戶', billing: '計費', logout: '登出', login: '登入 →' },
+            'en': { firebaseAccount: 'Firebase Account', googleAccount: 'Google Account', account: 'Account', billing: 'Billing', logout: 'Logout', login: 'Login →' },
+            'ja': { firebaseAccount: 'Firebase アカウント', googleAccount: 'Google アカウント', account: 'アカウント', billing: '請求', logout: 'ログアウト', login: 'ログイン →' },
+            'ko': { firebaseAccount: 'Firebase 계정', googleAccount: 'Google 계정', account: '계정', billing: '결제', logout: '로그아웃', login: '로그인 →' }
+        };
+        const lang = t[this.language] || t['zh-tw'];
+        
         let currentUser = null;
         let userCredits = 0;
         let userPhotoURL = 'https://static.vecteezy.com/system/resources/previews/019/879/186/non_2x/user-icon-on-transparent-background-free-png.png';
@@ -344,20 +362,20 @@ class VaultCaddyNavbar {
                         <div class="user-info" style="padding: 1rem 1.5rem; background: #f9fafb; border-bottom: 1px solid #e5e7eb;">
                             <div style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem;">Credits: ${userCredits}</div>
                             <div style="font-size: 0.875rem; color: #6b7280;">${userEmail}</div>
-                            ${isFirebaseUser ? '<div style="font-size: 0.75rem; color: #3b82f6; margin-top: 0.25rem;"><i class="fas fa-shield-alt"></i> Firebase 帳戶</div>' : ''}
-                            ${isGoogleUser ? '<div style="font-size: 0.75rem; color: #10b981; margin-top: 0.25rem;"><i class="fab fa-google"></i> Google 帳戶</div>' : ''}
+                            ${isFirebaseUser ? `<div style="font-size: 0.75rem; color: #3b82f6; margin-top: 0.25rem;"><i class="fas fa-shield-alt"></i> ${lang.firebaseAccount}</div>` : ''}
+                            ${isGoogleUser ? `<div style="font-size: 0.75rem; color: #10b981; margin-top: 0.25rem;"><i class="fab fa-google"></i> ${lang.googleAccount}</div>` : ''}
                         </div>
                         <a href="account.html" class="user-menu-item" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.5rem; color: #374151; text-decoration: none; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
                             <div style="display: flex; align-items: center;">
                                 <i class="fas fa-user" style="width: 16px; margin-right: 0.75rem;"></i>
-                                <span>Account</span>
+                                <span>${lang.account}</span>
                             </div>
                             <span style="font-size: 0.75rem; color: #9ca3af;">⌘A</span>
                         </a>
                         <a href="billing.html" class="user-menu-item" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.5rem; color: #374151; text-decoration: none; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
                             <div style="display: flex; align-items: center;">
                                 <i class="fas fa-credit-card" style="width: 16px; margin-right: 0.75rem;"></i>
-                                <span>Billing</span>
+                                <span>${lang.billing}</span>
                             </div>
                             <span style="font-size: 0.75rem; color: #9ca3af;">⌘B</span>
                         </a>
@@ -365,7 +383,7 @@ class VaultCaddyNavbar {
                         <a href="#" class="user-menu-item logout" onclick="window.vaultcaddyNavbar.logout()" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.5rem; color: #dc2626; text-decoration: none; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#fef2f2'" onmouseout="this.style.backgroundColor='transparent'">
                             <div style="display: flex; align-items: center;">
                                 <i class="fas fa-sign-out-alt" style="width: 16px; margin-right: 0.75rem;"></i>
-                                <span>Log out</span>
+                                <span>${lang.logout}</span>
                             </div>
                             <span style="font-size: 0.75rem; color: #9ca3af;">⌘Q</span>
                         </a>
@@ -377,7 +395,7 @@ class VaultCaddyNavbar {
             return `
                 <div id="user-menu" style="position: relative; display: flex; align-items: center; gap: 0.75rem;">
                     <a href="auth.html" style="display: inline-flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.625rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; font-size: 0.9375rem; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
-                        登入 →
+                        ${lang.login}
                     </a>
                 </div>
             `;
