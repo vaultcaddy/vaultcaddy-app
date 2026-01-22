@@ -2875,9 +2875,65 @@ NEWFILEUID:NONE
         
         if (!menu) return;
         
-        // 🎯 生成与 firstproject.html 完全一致的菜单内容
-        menu.innerHTML = `
-            <div style="padding: 0.5rem 0; background: #ffffff;">
+        // 🔍 检测当前文档类型
+        const doc = window.currentDocument;
+        const docType = doc?.type || doc?.documentType || '';
+        const isInvoice = docType.toLowerCase().includes('invoice');
+        
+        console.log('📋 文档类型:', docType, '是否发票:', isInvoice);
+        
+        let menuHTML = '<div style="padding: 0.5rem 0; background: #ffffff;">';
+        
+        if (isInvoice) {
+            // 🧾 发票导出菜单
+            menuHTML += `
+                <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">CSV 格式</div>
+                
+                <button onclick="vaultcaddyExportDocument('invoice_universal_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s; background: linear-gradient(90deg, rgba(16,185,129,0.05) 0%, transparent 100%);">
+                    <i class="fas fa-globe" style="color: #10b981; width: 20px;"></i>
+                    <div>
+                        <div style="font-weight: 600;">🌐 通用 CSV</div>
+                        <div style="font-size: 0.75rem; color: #059669; font-weight: 500;">✨ Xero, Wave, QuickBooks, MYOB</div>
+                    </div>
+                </button>
+                
+                <button onclick="vaultcaddyExportDocument('invoice_sage_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                    <i class="fas fa-file-csv" style="color: #3b82f6; width: 20px;"></i>
+                    <div>
+                        <div style="font-weight: 500;">📄 Sage CSV</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">🇬🇧 Sage 50, Sage Accounting</div>
+                    </div>
+                </button>
+                
+                <button onclick="vaultcaddyExportDocument('invoice_zoho_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                    <i class="fas fa-file-csv" style="color: #f59e0b; width: 20px;"></i>
+                    <div>
+                        <div style="font-weight: 500;">📄 Zoho Books CSV</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">🇮🇳 Zoho Books 格式</div>
+                    </div>
+                </button>
+                
+                <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.5rem;">Excel 格式</div>
+                
+                <button onclick="vaultcaddyExportDocument('invoice_summary_excel')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                    <i class="fas fa-file-excel" style="color: #059669; width: 20px;"></i>
+                    <div>
+                        <div style="font-weight: 500;">標準 Excel（總數）</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">快速對帳</div>
+                    </div>
+                </button>
+                
+                <button onclick="vaultcaddyExportDocument('invoice_detailed_excel')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                    <i class="fas fa-file-excel" style="color: #059669; width: 20px;"></i>
+                    <div>
+                        <div style="font-weight: 500;">完整交易數據 Excel</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">詳細記錄</div>
+                    </div>
+                </button>
+            `;
+        } else {
+            // 🏦 银行对账单导出菜单
+            menuHTML += `
                 <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">CSV 格式</div>
                 
                 <button onclick="vaultcaddyExportDocument('universal_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s; background: linear-gradient(90deg, rgba(16,185,129,0.05) 0%, transparent 100%);">
@@ -2903,17 +2959,25 @@ NEWFILEUID:NONE
                         <div style="font-size: 0.75rem; color: #6b7280;">🇮🇳 Zoho Books 格式</div>
                     </div>
                 </button>
-                
-                <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.5rem;">其他格式</div>
-                
-                <button onclick="vaultcaddyExportDocument('qbo')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                    <i class="fas fa-cloud" style="color: #8b5cf6; width: 20px;"></i>
-                    <div>
-                        <div style="font-weight: 500;">☁️ QBO 文件</div>
-                        <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Online 官方格式</div>
-                    </div>
-                </button>
-                
+            `;
+        }
+        
+        // 其他格式（通用）
+        menuHTML += `
+            <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.5rem;">其他格式</div>
+            
+            <button onclick="vaultcaddyExportDocument('qbo')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                <i class="fas fa-cloud" style="color: #8b5cf6; width: 20px;"></i>
+                <div>
+                    <div style="font-weight: 500;">☁️ QBO 文件</div>
+                    <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Online 官方格式</div>
+                </div>
+            </button>
+        `;
+        
+        if (!isInvoice) {
+            // 银行对账单才显示Excel选项
+            menuHTML += `
                 <button onclick="vaultcaddyExportDocument('excel')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
                     <i class="fas fa-file-excel" style="color: #059669; width: 20px;"></i>
                     <div>
@@ -2921,17 +2985,22 @@ NEWFILEUID:NONE
                         <div style="font-size: 0.75rem; color: #6b7280;">Microsoft Excel 試算表</div>
                     </div>
                 </button>
-                
-                <div style="padding: 1rem; margin-top: 0.5rem; background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border-radius: 8px; border-left: 3px solid #10b981;">
-                    <div style="font-size: 0.75rem; color: #065f46; font-weight: 500; margin-bottom: 0.25rem;">
-                        💡 不確定選哪個？
-                    </div>
-                    <div style="font-size: 0.7rem; color: #059669; line-height: 1.4;">
-                        大多數用戶選擇 <strong>通用 CSV</strong> 或 <strong>QBO 文件</strong>
-                    </div>
+            `;
+        }
+        
+        menuHTML += `
+            <div style="padding: 1rem; margin-top: 0.5rem; background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border-radius: 8px; border-left: 3px solid #10b981;">
+                <div style="font-size: 0.75rem; color: #065f46; font-weight: 500; margin-bottom: 0.25rem;">
+                    💡 不確定選哪個？
+                </div>
+                <div style="font-size: 0.7rem; color: #059669; line-height: 1.4;">
+                    大多數用戶選擇 <strong>通用 CSV</strong> 或 <strong>QBO 文件</strong>
                 </div>
             </div>
+        </div>
         `;
+        
+        menu.innerHTML = menuHTML;
         
         // 定位菜单
         if (window.innerWidth <= 768) {
@@ -3155,6 +3224,141 @@ NEWFILEUID:NONE
                     console.log('✅ Zoho Books CSV 生成完成');
                     break;
                     
+                // ========== 发票导出格式 ==========
+                case 'invoice_universal_csv':
+                    // 🌐 发票通用 CSV
+                    if (!window.InvoiceExport || !window.InvoiceExport.generateUniversalCSV) {
+                        alert('發票導出模塊未載入，請刷新頁面後重試');
+                        return;
+                    }
+                    exportContent = window.InvoiceExport.generateUniversalCSV([doc]);
+                    exportFileName = `Invoice_Universal_${dateStr}.csv`;
+                    mimeType = 'text/csv;charset=utf-8;';
+                    console.log('✅ 發票通用 CSV 生成完成');
+                    break;
+                
+                case 'invoice_sage_csv':
+                    // 📄 发票 Sage CSV
+                    if (!window.InvoiceExport || !window.InvoiceExport.generateSageCSV) {
+                        alert('發票導出模塊未載入，請刷新頁面後重試');
+                        return;
+                    }
+                    exportContent = window.InvoiceExport.generateSageCSV([doc]);
+                    exportFileName = `Invoice_Sage_${dateStr}.csv`;
+                    mimeType = 'text/csv;charset=utf-8;';
+                    console.log('✅ 發票 Sage CSV 生成完成');
+                    break;
+                
+                case 'invoice_zoho_csv':
+                    // 📄 发票 Zoho Books CSV
+                    if (!window.InvoiceExport || !window.InvoiceExport.generateZohoCSV) {
+                        alert('發票導出模塊未載入，請刷新頁面後重試');
+                        return;
+                    }
+                    exportContent = window.InvoiceExport.generateZohoCSV([doc]);
+                    exportFileName = `Invoice_ZohoBooks_${dateStr}.csv`;
+                    mimeType = 'text/csv;charset=utf-8;';
+                    console.log('✅ 發票 Zoho Books CSV 生成完成');
+                    break;
+                
+                case 'invoice_summary_excel':
+                    // 📊 发票標準 Excel（總數）
+                    if (typeof XLSX === 'undefined') {
+                        alert('Excel 庫未載入，請刷新頁面');
+                        return;
+                    }
+                    try {
+                        const wb = XLSX.utils.book_new();
+                        const excelData = [['Invoice Number', 'Date', 'Supplier', 'Amount', 'Tax', 'Status']];
+                        
+                        excelData.push([
+                            data.invoiceNumber || data.invoice_number || '',
+                            data.invoiceDate || data.date || '',
+                            data.vendorName || data.vendor || data.supplier || '',
+                            parseFloat(data.totalAmount || data.total || 0).toFixed(2),
+                            parseFloat(data.taxAmount || data.tax || 0).toFixed(2),
+                            data.status || data.paymentStatus || '未付款'
+                        ]);
+                        
+                        const ws = XLSX.utils.aoa_to_sheet(excelData);
+                        ws['!cols'] = [{wch: 15}, {wch: 12}, {wch: 25}, {wch: 12}, {wch: 10}, {wch: 12}];
+                        XLSX.utils.book_append_sheet(wb, ws, "Invoice Summary");
+                        
+                        XLSX.writeFile(wb, `Invoice_Summary_${dateStr}.xlsx`);
+                        console.log('✅ 發票標準 Excel 已下載');
+                        return; // Excel导出不走后续的blob下载逻辑
+                    } catch (error) {
+                        console.error('❌ 發票 Excel 導出失敗:', error);
+                        alert('Excel 導出失敗，請重試');
+                        return;
+                    }
+                
+                case 'invoice_detailed_excel':
+                    // 📊 发票完整交易數據 Excel
+                    if (typeof XLSX === 'undefined') {
+                        alert('Excel 庫未載入，請刷新頁面');
+                        return;
+                    }
+                    try {
+                        const wb = XLSX.utils.book_new();
+                        const excelData = [[
+                            'Invoice Number', 'Date', 'Supplier Name', 'Supplier Phone', 'Supplier Email',
+                            'Item Code', 'Item Description', 'Quantity', 'Unit', 'Unit Price',
+                            'Amount', 'Total Amount', 'Tax', 'Status'
+                        ]];
+                        
+                        const invoiceNumber = data.invoiceNumber || data.invoice_number || '';
+                        const invoiceDate = data.invoiceDate || data.date || '';
+                        const supplierName = data.vendorName || data.vendor || data.supplier || '';
+                        const supplierPhone = data.vendorPhone || data.phone || '';
+                        const supplierEmail = data.vendorEmail || data.email || '';
+                        const totalAmount = parseFloat(data.totalAmount || data.total || 0);
+                        const tax = parseFloat(data.taxAmount || data.tax || 0);
+                        const status = data.status || '未付款';
+                        
+                        const items = data.items || data.lineItems || [];
+                        
+                        if (items.length === 0) {
+                            excelData.push([
+                                invoiceNumber, invoiceDate, supplierName, supplierPhone, supplierEmail,
+                                '', '總計', 1, '', totalAmount.toFixed(2),
+                                totalAmount.toFixed(2), totalAmount.toFixed(2), tax.toFixed(2), status
+                            ]);
+                        } else {
+                            items.forEach(item => {
+                                const itemCode = item.code || item.itemCode || '';
+                                const itemDescription = item.description || item.itemName || '';
+                                const quantity = parseFloat(item.quantity || 1);
+                                const unit = item.unit || '件';
+                                const unitPrice = parseFloat(item.unitPrice || item.price || 0);
+                                const amount = parseFloat(item.amount || (quantity * unitPrice));
+                                
+                                excelData.push([
+                                    invoiceNumber, invoiceDate, supplierName, supplierPhone, supplierEmail,
+                                    itemCode, itemDescription, quantity, unit, unitPrice.toFixed(2),
+                                    amount.toFixed(2), totalAmount.toFixed(2), tax.toFixed(2), status
+                                ]);
+                            });
+                        }
+                        
+                        const ws = XLSX.utils.aoa_to_sheet(excelData);
+                        ws['!cols'] = [
+                            {wch: 15}, {wch: 12}, {wch: 25}, {wch: 15}, {wch: 25},
+                            {wch: 12}, {wch: 40}, {wch: 10}, {wch: 8}, {wch: 12},
+                            {wch: 12}, {wch: 12}, {wch: 10}, {wch: 10}
+                        ];
+                        XLSX.utils.book_append_sheet(wb, ws, "Invoice Details");
+                        
+                        XLSX.writeFile(wb, `Invoice_Detailed_${dateStr}.xlsx`);
+                        console.log('✅ 發票完整 Excel 已下載');
+                        return; // Excel导出不走后续的blob下载逻辑
+                    } catch (error) {
+                        console.error('❌ 發票 Excel 導出失敗:', error);
+                        alert('Excel 導出失敗，請重試');
+                        return;
+                    }
+                
+                // ========== 通用格式（银行对账单和发票都支持）==========
                 case 'qbo':
                     // ☁️ QBO 文件 (QuickBooks Online 官方格式)
                     try {
