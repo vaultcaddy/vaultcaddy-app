@@ -997,8 +997,8 @@
                     if (isLoggedIn) {
                         // ✅ 已ログイン：顯示ユーザー頭像
                         const currentUser = window.simpleAuth.getCurrentUser();
-                        userEmail = currentUser.email | '';
-                        userDisplayName = currentUser.displayName | '';
+                        userEmail = currentUser.email || '';
+                        userDisplayName = currentUser.displayName || '';
                         
                         // 🔥 から Firestore 取得 displayName と credits
                         if (window.simpleDataManager && window.simpleDataManager.initialized) {
@@ -1306,7 +1306,7 @@
                         }
                         // チェック訂閱ステータス（舊版邏輯）
                         else if (userData.subscription && userData.subscription.status === 'active') {
-                            savedPlan = userData.subscription.planType | 'Free';
+                            savedPlan = userData.subscription.planType || 'Free';
                         }
                     }
                 }
@@ -1529,8 +1529,8 @@
                             
                             // チェック是否有活躍訂閱
                             if (userData.subscription && userData.subscription.status === 'active') {
-                                currentPlan = userData.subscription.planType | 'Free';
-                                planPeriod = userData.subscription.period | 'monthly';
+                                currentPlan = userData.subscription.planType || 'Free';
+                                planPeriod = userData.subscription.period || 'monthly';
                                 console.log('✅ から Firestore 取得計劃:', currentPlan, planPeriod);
                             } else {
                                 console.log('⚠️ Firestore 中なし活躍訂閱，使用 Free Plan');
@@ -1848,9 +1848,9 @@
                         sign = '+';
                         
                         if (record.metadata?.source === 'subscription') {
-                            description = `訂閱計劃 - ${record.metadata.planType?.toUpperCase() | 'N/A'}`;
+                            description = `訂閱計劃 - ${record.metadata.planType?.toUpperCase() || 'N/A'}`;
                         } else if (record.metadata?.source === 'purchase') {
-                            description = record.metadata.productName | 'クレジット購入';
+                            description = record.metadata.productName || 'クレジット購入';
                         } else {
                             description = '添加 Credits';
                         }
@@ -1859,12 +1859,12 @@
                         typeColor = '#ef4444';
                         sign = '-';
                         // 🔥 もし文書処理，顯示"ファイル変換"
-                        description = record.metadata?.projectName | 'ファイル変換';
+                        description = record.metadata?.projectName || 'ファイル変換';
                     } else if (record.type === 'reset') {
                         type = '重置';
                         typeColor = '#6b7280';
                         sign = '';
-                        description = `每月重置 - ${record.metadata?.planType?.toUpperCase() | 'N/A'}`;
+                        description = `每月重置 - ${record.metadata?.planType?.toUpperCase() || 'N/A'}`;
                     } else {
                         type = 'その他';
                         typeColor = '#9ca3af';
