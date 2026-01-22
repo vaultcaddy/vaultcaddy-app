@@ -604,334 +604,86 @@
             margin-bottom: 1rem;
         }
         
-        /* 🎨 디자인 마스터 강화: 테이블 전체 */
         .transactions-table {
             width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border-collapse: collapse;
         }
         
-        /* 🎨 디자인 마스터 최적화: 반응형 테이블 래퍼 */
-        .table-wrapper {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            margin: 0 -1.25rem;
-            padding: 0 1.25rem;
-        }
-        
-        /* 🎯 최적화: 테이블 내부 간격 축소, 더 컴팩트하게 */
-        .transactions-table th,
-        .transactions-table td {
-            padding: 0.6rem 0.4rem !important;
-            font-size: 0.875rem;
-        }
-        
-        /* 🎯 최적화: 조정 완료 열을 더 좁게 */
-        .checkbox-cell {
-            width: 45px !important;
-            padding: 0.5rem 0.2rem !important;
-            text-align: center !important;
-        }
-        
-        .checkbox-cell input[type="checkbox"] {
-            width: 18px !important;
-            height: 18px !important;
-            cursor: pointer;
-            accent-color: #10b981;
-        }
-        
-        .action-cell {
-            width: 80px !important;
-            padding: 0.5rem !important;
-        }
-        
-        /* 🎯 최적화: 금액 및 잔액 열 우측 정렬 및 컴팩트화 */
-        .amount-cell,
-        .transactions-table td[data-field="balance"] {
-            text-align: right;
-            min-width: 110px !important;
-            max-width: 130px;
-            padding: 0.65rem 0.75rem !important;
-        }
-        
-        /* 🎨 최적화: 기본적으로 보조 열 숨기기 (모든 화면 대응, 스크롤 방지) */
-        
-        /* 열 구조 (왼쪽에서 오른쪽):
-         * 1. checkbox (조정 완료) ✅ 유지
-         * 2. date (날짜) ✅ 유지
-         * 3. type (유형) ❌ 숨김
-         * 4. description (설명) ✅ 유지
-         * 5. payee (수취인) ❌ 숨김 (대부분의 은행 명세서에서 개별로 표시되지 않음)
-         * 6. reference (참조) ❌ 숨김
-         * 7. check# (수표 번호) ❌ 숨김
-         * 8. category (카테고리) ✅ 유지 (사용자 필요)
-         * 9. amount (금액) ✅ 유지
-         * 10. balance (잔액) ✅ 유지
-         * 11. attachment (첨부) ❌ 숨김
-         * 12. actions (작업) ✅ 유지
-         */
-        
-        /* 기본: 보조 열 숨기기 */
-        .type-cell,
-        .payee-cell,
-        .ref-cell,
-        .check-cell,
-        .attachment-cell,
-        .transactions-table th:nth-child(3),  /* Type header */
-        .transactions-table th:nth-child(5),  /* Payee header - 숨김 (2026-01-11) */
-        .transactions-table th:nth-child(6),  /* Reference header */
-        .transactions-table th:nth-child(7),  /* Check# header */
-        .transactions-table th:nth-child(11)  /* Attachment header */
-        {
-            display: none !important;
-        }
-        
-        /* ✅ 카테고리 열은 항상 표시 (사용자 필요) */
-        .category-cell,
-        .transactions-table th:nth-child(8) {
-            display: table-cell !important;
-        }
-        
-        /* 🔍 초대형 화면 (>2000px): 모든 열 표시 */
-        @media (min-width: 2000px) {
-            .type-cell,
-            .ref-cell,
-            .check-cell,
-            .transactions-table th:nth-child(3),  /* Type header */
-            .transactions-table th:nth-child(6),  /* Reference header */
-            .transactions-table th:nth-child(7)   /* Check# header */
-            {
-                display: table-cell !important;
-            }
-        }
-        
-        /* 🔍 대형 화면 (>1600px): 일부 열 표시 */
-        @media (min-width: 1600px) and (max-width: 1999px) {
-            .type-cell,
-            .transactions-table th:nth-child(3)  /* Type header */
-            {
-                display: table-cell !important;
-            }
-        }
-        
-        /* 📱 태블릿 (<1400px): 추가 숨김 열 없음 (payee는 기본 목록에 포함) */
-        
-        /* 🎨 숨겨진 열 힌트 표시 */
-        .transactions-section::before {
-            content: '💡 컴팩트 모드: 보조 열 숨김 (유형, 참조, 수표 번호, 첨부). 📊 전체 데이터(메모, 첨부 파일 등)를 보려면 상단의 "Export" 버튼을 클릭하세요.';
-            display: block;
-            padding: 0.75rem 1rem;
-            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-            color: #1e40af;
-            font-size: 0.8rem;
-            text-align: center;
-            border: 1px solid #bfdbfe;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            line-height: 1.5;
-        }
-        
-        /* 큰 화면 힌트 업데이트 */
-        @media (min-width: 1600px) {
-            .transactions-section::before {
-                content: '✅ 표준 모드: 유형 열 표시. 숨김: 참조, 수표 번호, 첨부.';
-                background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-                color: #166534;
-                border-color: #bbf7d0;
-            }
-        }
-        
-        @media (min-width: 2000px) {
-            .transactions-section::before {
-                content: '🎉 전체 모드: 모든 열 표시 (깔끔한 외관을 위해 첨부 아이콘 숨김).';
-                background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-                color: #92400e;
-                border-color: #fcd34d;
-            }
-        }
-        
-        /* 🎨 디자인 마스터 강화: 더욱 돋보이는 테이블 헤더 */
         .transactions-table thead {
-            background: #f3f4f6;
-            border-bottom: 2px solid #d1d5db;
-        }
-        
-        .transactions-table th {
-            padding: 1rem 0.75rem;
-            text-align: left;
-            font-size: 0.875rem;
-            font-weight: 700;
-            color: #374151;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            border-bottom: 2px solid #d1d5db;
-        }
-        
-        /* 🎨 디자인 마스터 정적 강화: 얼룩말 무늬 + 명확한 호버 효과 */
-        .transactions-table tbody tr {
-            border-bottom: 1px solid #e5e7eb;
-        }
-        
-        /* 얼룩말 무늬: 교대 배경색으로 가독성 향상 */
-        .transactions-table tbody tr:nth-child(even) {
             background: #f9fafb;
         }
         
-        /* 호버 효과: 더 깊은 배경색, 애니메이션 없음 */
-        .transactions-table tbody tr:hover {
-            background: #f3f4f6;
+        .transactions-table th {
+            padding: 0.75rem;
+            text-align: left;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #6b7280;
+            border-bottom: 1px solid #e5e7eb;
         }
         
-        /* 🎨 디자인 마스터 강화: 테이블 셀 */
+        .transactions-table tbody tr {
+            border-bottom: 1px solid #e5e7eb;
+            transition: background 0.2s;
+        }
+        
+        .transactions-table tbody tr:hover {
+            background: #f9fafb;
+        }
+        
         .transactions-table td {
-            padding: 1rem 0.75rem;
+            padding: 0.75rem;
             font-size: 0.9rem;
             color: #1f2937;
-            vertical-align: middle;
         }
         
-        /* 🎨 디자인 마스터 최적화: 스마트 열 너비 할당 (컴팩트 버전) */
-        .transactions-table th:nth-child(1),  /* 체크박스 */
-        .transactions-table td:nth-child(1) {
-            width: 45px;
-            min-width: 45px;
-        }
-        
-        .transactions-table th:nth-child(2),  /* 날짜 */
-        .transactions-table td:nth-child(2) {
-            width: 100px;
-            min-width: 100px;
-            white-space: nowrap;
-        }
-        
-        .transactions-table th:nth-child(4),  /* 설명 */
-        .transactions-table td:nth-child(4) {
-            min-width: 150px;
-            max-width: 280px;
-        }
-        
-        .transactions-table th:nth-child(5),  /* 수취인 */
-        .transactions-table td:nth-child(5) {
-            min-width: 120px;
-            max-width: 200px;
-        }
-        
-        .transactions-table th:nth-child(8),  /* 카테고리 */
-        .transactions-table td:nth-child(8) {
-            width: 105px;
-            min-width: 105px;
-        }
-        
-        .transactions-table th:nth-child(9),  /* 금액 */
-        .transactions-table td:nth-child(9) {
-            width: 145px;
-            min-width: 145px;
-            text-align: right;
-        }
-        
-        .transactions-table th:nth-child(10),  /* 잔액 */
-        .transactions-table td:nth-child(10) {
-            width: 120px;
-            min-width: 120px;
-            text-align: right;
-        }
-        
-        .transactions-table th:last-child,  /* 작업 */
-        .transactions-table td:last-child {
-            width: 70px;
-            min-width: 70px;
-        }
-        
-        .transactions-table td:nth-child(6), .transactions-table td:nth-child(7) {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        
-        .transactions-table tr:hover td:nth-child(6), .transactions-table tr:hover td:nth-child(7) {
-            white-space: normal;
-            word-break: break-word;
-        }
-        
-        /* 🎨 강화된 체크박스: 더 크고 클릭하기 쉬움 */
         .checkbox-cell {
-            width: 50px;
-            text-align: center;
+            width: 40px;
         }
         
         .checkbox-cell input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
             cursor: pointer;
-            accent-color: #6366f1;
         }
         
-        /* 🎨 디자인 마스터 강화: 더욱 돋보이는 금액 표시 */
         .amount-cell {
             font-family: 'Courier New', monospace;
-            font-weight: 600;
-            font-size: 1rem;
-            text-align: right;
+            font-weight: 500;
         }
         
-        /* 양수 금액: 더 밝은 녹색 */
         .amount-positive {
-            color: #059669;
-            font-weight: 700;
+            color: #10b981;
         }
         
-        /* 음수 금액: 더 밝은 빨간색 */
         .amount-negative {
-            color: #dc2626;
-            font-weight: 700;
+            color: #ef4444;
         }
         
-        /* 🎨 디자인 마스터 강화: 액션 버튼 영역 */
         .action-cell {
             width: 100px;
-            text-align: center;
         }
         
         .action-btns {
             display: flex;
             gap: 0.5rem;
-            justify-content: center;
         }
         
-        /* 🎨 강화된 아이콘 버튼: 더 명확하게, 애니메이션 없음 */
         .icon-btn {
-            background: #f3f4f6;
-            border: 1px solid #e5e7eb;
+            background: none;
+            border: none;
             color: #6b7280;
             cursor: pointer;
-            padding: 0.375rem;
-            border-radius: 6px;
-            font-size: 1rem;
+            padding: 0.25rem;
+            transition: color 0.2s;
         }
         
-        /* 호버 시 배경과 색상 변경, 애니메이션 없음 */
         .icon-btn:hover {
-            background: #e5e7eb;
             color: #1f2937;
-            border-color: #d1d5db;
         }
         
-        /* 편집 버튼 호버 */
-        .icon-btn:not(.delete):hover {
-            background: #eef2ff;
-            color: #6366f1;
-            border-color: #c7d2fe;
-        }
-        
-        /* 삭제 버튼 호버 */
         .icon-btn.delete:hover {
-            background: #fee2e2;
-            color: #dc2626;
-            border-color: #fecaca;
+            color: #ef4444;
         }
         
         /* 로드애니메이션 */
@@ -1379,14 +1131,6 @@
                 -webkit-overflow-scrolling: touch !important;
             }
             
-            /* 🎨 확장 세부정보 기능 완전히 숨기기 */
-            .transaction-detail-row,
-            .expand-btn,
-            .expand-detail-btn,
-            .expand-memo-btn {
-                display: none !important;
-            }
-            
             /* 표 */
             table {
                 font-size: 0.75rem !important;
@@ -1527,6 +1271,7 @@
             <div style="display: flex; align-items: center; gap: 2rem;">
                 <a href="index.html#features" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">기능</a>
                 <a href="index.html#pricing" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">가격</a>
+                <a href="blog/" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">학습 센터</a>
                 <a href="dashboard.html" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">대시보드</a>
             </div>
             <div id="language-switcher" style="display: inline-block; margin-right: 1rem;"></div>
@@ -1551,6 +1296,10 @@
                 <a href="index.html#pricing" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
                     <i class="fas fa-dollar-sign" style="width: 20px; color: #667eea;"></i>
                     <span>가격</span>
+                </a>
+                <a href="blog/" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
+                    <i class="fas fa-graduation-cap" style="width: 20px; color: #667eea;"></i>
+                    <span>학습 센터</span>
                 </a>
                 <a href="dashboard.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
                     <i class="fas fa-th-large" style="width: 20px; color: #667eea;"></i>

@@ -821,6 +821,7 @@
 <div class="desktop-nav-links" style="display: flex; align-items: center; gap: 2rem;">
 <a href="index.html#features" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">기능</a>
 <a href="index.html#pricing" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">가격</a>
+<a href="blog/" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">학습 센터</a>
 <a href="dashboard.html" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">대시보드</a>
 </div>
 <div id="language-switcher" style="display: inline-block; margin-right: 1rem;"></div>
@@ -847,3 +848,764 @@
 <span>가격</span>
 </a>
 <a href="blog/" onclick="closeMobileSidebar()" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;">
+<i class="fas fa-graduation-cap" style="width: 20px; color: #667eea;"></i>
+<span>학습 센터</span>
+</a>
+<a href="dashboard.html" onclick="closeMobileSidebar()" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;">
+<i class="fas fa-th-large" style="width: 20px; color: #667eea;"></i>
+<span>대시보드</span>
+</a>
+<div style="height: 1px; background: #e5e7eb; margin: 1rem 0;"></div>
+<div style="height: 1px; background: #e5e7eb; margin: 1rem 0;"></div>
+<a href="privacy.html" onclick="closeMobileSidebar()" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;">
+<i class="fas fa-shield-alt" style="width: 20px; color: #6b7280;"></i>
+<span>개인정보 처리방침</span>
+</a>
+<a href="terms.html" onclick="closeMobileSidebar()" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;">
+<i class="fas fa-file-contract" style="width: 20px; color: #6b7280;"></i>
+<span>서비스 약관</span>
+</a>
+</div>
+</div>
+</div>
+<!-- 사이드바마스크 -->
+<div id="mobile-sidebar-overlay" onclick="closeMobileSidebar()" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; display: none;"></div>
+<div id="user-dropdown" style="display: none; position: fixed; top: 70px; right: 2rem; background: white; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); padding: 1rem; min-width: 220px; z-index: 2000; border: 1px solid #e5e7eb;">
+<div style="padding: 0.75rem; border-bottom: 1px solid #f3f4f6;">
+<div style="font-weight: 600; font-size: 1rem; color: #1f2937; margin-bottom: 0.25rem;"><span>Credits</span>: <span id="dropdown-credits">0</span></div>
+<div id="dropdown-email" style="font-size: 0.875rem; color: #6b7280;">user@example.com</div>
+</div>
+<div style="padding: 0.5rem 0;">
+<a href="account.html" onmouseout="this.style.background='transparent'" onmouseover="this.style.background='#f3f4f6'" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; color: #374151; text-decoration: none; border-radius: 6px; transition: background 0.2s; font-size: 0.9375rem;">
+<span><i class="fas fa-user" style="margin-right: 0.75rem; color: #6b7280; width: 16px;"></i><span>계정</span></span>
+<span style="color: #9ca3af; font-size: 0.875rem;">⌘A</span>
+</a>
+<a href="billing.html" onmouseout="this.style.background='transparent'" onmouseover="this.style.background='#f3f4f6'" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; color: #374151; text-decoration: none; border-radius: 6px; transition: background 0.2s; font-size: 0.9375rem;">
+<span><i class="fas fa-credit-card" style="margin-right: 0.75rem; color: #6b7280; width: 16px;"></i><span>청구</span></span>
+<span style="color: #9ca3af; font-size: 0.875rem;">⌘B</span>
+</a>
+</div>
+<div style="border-top: 1px solid #f3f4f6; padding-top: 0.5rem;">
+<button onclick="handleLogout()" onmouseout="this.style.background='transparent'" onmouseover="this.style.background='#fee2e2'" style="width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; color: #ef4444; background: transparent; border: none; border-radius: 6px; cursor: pointer; transition: background 0.2s; font-size: 0.9375rem; text-align: left;">
+<span><i class="fas fa-sign-out-alt" style="margin-right: 0.75rem; width: 16px;"></i><span>로그아웃</span></span>
+<span style="color: #fca5a5; font-size: 0.875rem;">⌘Q</span>
+</button>
+</div>
+</div>
+<!-- ✅ index.html 동적업데이트사용자상태 -->
+<script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('✅ index.html 초기화');
+            
+            let userCredits = 0;
+            let userEmail = '';
+            let userDisplayName = '';
+            
+            // 가져오기사용자첫 글자
+            function getUserInitial() {
+                // 우선사용 displayName 의 첫 글자
+                if (userDisplayName && userDisplayName.trim()) {
+                    return userDisplayName.charAt(0).toUpperCase();
+                }
+                // 그렇지 않으면사용 email 의 첫 글자
+                if (userEmail && userEmail.trim()) {
+                    return userEmail.charAt(0).toUpperCase();
+                }
+                return 'U';
+            }
+            
+            // 🔥 햄버거 메뉴기능（즉시 실행，아니대기 DOMContentLoaded）
+            (function() {
+                console.log('🔵 초기화햄버거 메뉴...');
+                
+                // 열기사이드바
+                window.openMobileSidebar = function() {
+                    console.log('🔵 openMobileSidebar 호출됨');
+                    const sidebar = document.getElementById('mobile-sidebar');
+                    const overlay = document.getElementById('mobile-sidebar-overlay');
+                    console.log('🔵 sidebar:', sidebar);
+                    console.log('🔵 overlay:', overlay);
+                    
+                    if (sidebar && overlay) {
+                        sidebar.style.left = '0';
+                        overlay.style.display = 'block';
+                        document.body.style.overflow = 'hidden';
+                        console.log('✅ 사이드바열림');
+                    } else {
+                        console.error('❌ 찾을 수 없음사이드바또는마스크 요소');
+                    }
+                };
+                
+                // 닫기사이드바
+                window.closeMobileSidebar = function() {
+                    console.log('🔵 closeMobileSidebar 호출됨');
+                    const sidebar = document.getElementById('mobile-sidebar');
+                    const overlay = document.getElementById('mobile-sidebar-overlay');
+                    
+                    if (sidebar && overlay) {
+                        sidebar.style.left = '-100%';
+                        overlay.style.display = 'none';
+                        document.body.style.overflow = 'auto';
+                        console.log('✅ 사이드바이미 닫힘');
+                    }
+                };
+                
+                // 햄버거 메뉴버튼사용 onclick，無需額외부바인딩
+                console.log('✅ 햄버거 메뉴기능준비됨（사용 onclick）');
+            })();
+                
+                // 모바일 버전자동캐러셀（만에서모바일 버전활성화）
+                if (window.innerWidth <= 768) {
+                    // 평가캐러셀
+                    const testimonialsContainer = document.getElementById('testimonials-container');
+                    if (testimonialsContainer) {
+                        let testimonialIndex = 0;
+                        const testimonialCards = testimonialsContainer.children;
+                        
+                        setInterval(() => {
+                            testimonialIndex = (testimonialIndex + 1) % testimonialCards.length;
+                            const scrollAmount = testimonialCards[testimonialIndex].offsetLeft - testimonialsContainer.offsetLeft;
+                            testimonialsContainer.scrollTo({
+                                left: scrollAmount,
+                                behavior: 'smooth'
+                            });
+                        }, 4000); // 매4초 전환
+                    }
+                    
+                    // 학습 센터캐러셀
+                    const learningContainer = document.getElementById('learning-center-container');
+                    if (learningContainer) {
+                        let learningIndex = 0;
+                        const learningCards = learningContainer.children;
+                        
+                        setInterval(() => {
+                            learningIndex = (learningIndex + 1) % learningCards.length;
+                            const scrollAmount = learningCards[learningIndex].offsetLeft - learningContainer.offsetLeft;
+                            learningContainer.scrollTo({
+                                left: scrollAmount,
+                                behavior: 'smooth'
+                            });
+                        }, 5000); // 매5초 전환
+                    }
+                }
+            });
+            
+            // 전환드롭다운 메뉴
+            async function toggleDropdown() {
+                const dropdown = document.getElementById('user-dropdown');
+                if (dropdown.style.display === 'none') {
+                    dropdown.style.display = 'block';
+                    
+                    // 🔥 즉시때부터 SimpleDataManager 가져오기최새로운 Credits
+                    if (window.simpleDataManager && window.simpleDataManager.initialized) {
+                        try {
+                            userCredits = await window.simpleDataManager.getUserCredits();
+                            console.log('✅ 즉시 가져오기 Credits:', userCredits);
+                        } catch (error) {
+                            console.error('❌ 가져오기 실패 Credits:', error);
+                        }
+                    }
+                    
+                    // 업데이트드롭다운 메뉴내용
+                    document.getElementById('dropdown-credits').textContent = userCredits.toLocaleString();
+                    document.getElementById('dropdown-email').textContent = userEmail;
+                } else {
+                    dropdown.style.display = 'none';
+                }
+            }
+            
+            // 클릭외부 닫기드롭다운 메뉴
+            document.addEventListener('click', function(event) {
+                const dropdown = document.getElementById('user-dropdown');
+                const userMenu = document.getElementById('user-menu');
+                
+                if (dropdown && userMenu && 
+                    !dropdown.contains(event.target) && 
+                    !userMenu.contains(event.target)) {
+                    dropdown.style.display = 'none';
+                }
+            });
+            
+            // 로그아웃기능
+            window.handleLogout = async function() {
+                try {
+                    if (window.simpleAuth) {
+                        await window.simpleAuth.logout();
+                        window.location.href = 'index.html';
+                    }
+                } catch (error) {
+                    console.error('로그아웃실패:', error);
+                    alert('로그아웃실패，요청재시도');
+                }
+            };
+            
+            // 대기 Firebase 및 simpleAuth 로드
+            async function updateUserMenu() {
+                const userMenu = document.getElementById('user-menu');
+                if (!userMenu) return;
+                
+                try {
+                    const isLoggedIn = window.simpleAuth && window.simpleAuth.isLoggedIn();
+                    
+                    if (isLoggedIn) {
+                        // ✅ 이미로그인：표시사용자아바타
+                        const currentUser = window.simpleAuth.getCurrentUser();
+                        userEmail = currentUser.email | '';
+                        userDisplayName = currentUser.displayName | '';
+                        
+                        // 🔥 부터 Firestore 가져오기 displayName 및 credits
+                        if (window.simpleDataManager && window.simpleDataManager.initialized) {
+                            try {
+                                const userDoc = await window.simpleDataManager.getUserDocument();
+                                if (userDoc) {
+                                    userDisplayName = userDoc.displayName | userDisplayName;
+                                    userCredits = userDoc.credits | 0;
+                                    console.log('✅ index.html 가져오기 Credits:', userCredits);
+                                }
+                            } catch (error) {
+                                console.log('⚠️ 불가능부터 Firestore 가져오기사용자자료:', error);
+                            }
+                        } else {
+                            console.log('⏳ SimpleDataManager 아직초기화，대기중...');
+                            // 지연재시도
+                            setTimeout(async () => {
+                                if (window.simpleDataManager && window.simpleDataManager.initialized) {
+                                    try {
+                                        userCredits = await window.simpleDataManager.getUserCredits();
+                                        console.log('✅ 지연 가져오기 Credits:', userCredits);
+                                    } catch (error) {
+                                        console.error('❌ 지연 가져오기실패:', error);
+                                    }
+                                }
+                            }, 1000);
+                        }
+                        
+                        const userInitial = getUserInitial();
+                        console.log(`👤 사용자첫 글자: "${userInitial}" (displayName: "${userDisplayName}")`);
+                        
+                        userMenu.innerHTML = `
+                            <div onclick="toggleDropdown()" style="cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+                                <div style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem; opacity: 1; transition: opacity 0.3s;">${userInitial}</div>
+                            </div>
+                        `;
+                        console.log('✅ 사용자이미로그인，표시아바타');
+                    } else {
+                        // ✅ 미로그인：표시로그인버튼
+                        userMenu.innerHTML = `
+                            <button onclick="window.location.href='auth.html'" style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.875rem;" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">로그인</button>
+                        `;
+                        console.log('✅ 사용자미로그인，표시로그인버튼');
+                    }
+                } catch (e) {
+                    console.log('❌ 불가능업데이트사용자메뉴:', e);
+                }
+            }
+            
+            // 즉시시도업데이트
+            updateUserMenu();
+            
+            // 리스닝 Firebase 및 Auth 이벤트
+            window.addEventListener('firebase-ready', updateUserMenu);
+            window.addEventListener('user-logged-in', updateUserMenu);
+            window.addEventListener('user-logged-out', updateUserMenu);
+            
+            // 지연다시확인（방지이벤트이미트리거）
+            setTimeout(updateUserMenu, 1000);
+            setTimeout(updateUserMenu, 2000);
+            
+            // 노출 toggleDropdown 까지전역
+            window.toggleDropdown = toggleDropdown;
+        });
+    </script>
+<!-- 주요콘텐츠 영역 -->
+<main style="padding-top: 70px;">
+<!-- Dashboard 컨테이너 -->
+<div class="dashboard-container" style="display: flex !important; visibility: visible !important;">
+<!-- 왼쪽사이드바 (의해 sidebar-component.js 동적 생성) -->
+<aside class="sidebar"></aside>
+<!-- 주요콘텐츠 영역 -->
+<div class="main-content" style="display: block !important; visibility: visible !important;">
+<!-- 프로젝트목록제목 -->
+<div class="projects-header" style="display: flex; align-items: center; justify-content: flex-end; margin-bottom: 1.5rem;">
+<!-- Create 버튼 -->
+<div class="header-actions">
+<button class="create-btn" onclick="openCreateProjectModal()">
+<i class="fas fa-plus"></i>
+<span>Create</span>
+</button>
+</div>
+</div>
+<!-- 프로젝트표 -->
+<table class="projects-table">
+<thead>
+<tr>
+<th>Name</th>
+<th>Last modified</th>
+<th>Created</th>
+<th style="width: 80px; text-align: center;">작업</th>
+</tr>
+</thead>
+<tbody id="projects-tbody">
+<!-- 프로젝트목록할에서여기동적 생성 -->
+<tr>
+<td colspan="4">
+<div class="empty-state">
+<i class="fas fa-folder-open"></i>
+<h3>No projects yet</h3>
+<p>Create your first project to get started</p>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- 생성프로젝트모달 -->
+<div class="modal-overlay" id="createProjectModal">
+<div class="modal-content">
+<div class="modal-header">
+<h2 data-translate="create_new_project">Create New Project</h2>
+<button class="modal-close" onclick="closeCreateProjectModal()">
+<i class="fas fa-times"></i>
+</button>
+</div>
+<div class="modal-body">
+<div class="form-group">
+<label class="form-label" data-translate="project_name" for="projectName">Project Name</label>
+<input class="form-input" id="projectName" onkeypress="if(event.key === 'Enter') createProject()" placeholder="Enter project name..." type="text"/>
+</div>
+</div>
+<div class="modal-footer">
+<button class="btn-cancel" onclick="closeCreateProjectModal()"><span data-translate="cancel">Cancel</span></button>
+<button class="btn-create" id="createBtn" onclick="createProject()">Create</button>
+</div>
+</div>
+</div>
+<!-- 삭제프로젝트모달 -->
+<div id="deleteProjectModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+<div style="background: white; border-radius: 12px; padding: 2rem; width: 90%; max-width: 500px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
+<div style="display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1.5rem;">
+<div style="width: 48px; height: 48px; border-radius: 50%; background: #fee2e2; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+<i class="fas fa-exclamation-triangle" style="color: #ef4444; font-size: 1.5rem;"></i>
+</div>
+<div style="flex: 1;">
+<h2 style="font-size: 1.25rem; font-weight: 600; color: #1f2937; margin: 0 0 0.5rem 0;">삭제프로젝트</h2>
+<p style="color: #6b7280; font-size: 0.875rem; margin: 0;">
+                        여부삭제파일夾 '<span id="deleteProjectName" style="font-weight: 600; color: #1f2937;"></span>'？<br/>
+                        삭제후불가능復原파일夾及때중내용。
+                    </p>
+</div>
+</div>
+<div style="margin-bottom: 1.5rem;">
+<label style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem;">
+                    입력하세요프로젝트이름以확인삭제
+                </label>
+<input id="deleteProjectConfirmInput" oninput="validateDeleteInput()" placeholder="입력프로젝트이름" style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem; color: #1f2937; box-sizing: border-box;" type="text"/>
+</div>
+<div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+<button onclick="closeDeleteProjectModal()" style="background: #ffffff; border: 1px solid #d1d5db; color: #374151; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500;">
+                    취소
+                </button>
+<button disabled="" id="confirmDeleteBtn" onclick="confirmDeleteProject()" style="background: #ef4444; border: none; color: white; padding: 0.5rem 1rem; border-radius: 6px; cursor: not-allowed; font-size: 0.875rem; font-weight: 500; opacity: 0.5;"><span data-translate="yes_delete">是</span></button>
+</div>
+</div>
+</div>
+<script>
+        // 열기생성프로젝트모달
+        function openCreateProjectModal() {
+            const modal = document.getElementById('createProjectModal');
+            const input = document.getElementById('projectName');
+            modal.classList.add('active');
+            input.value = '';
+            input.focus();
+        }
+
+        // 닫기생성프로젝트모달
+        function closeCreateProjectModal() {
+            const modal = document.getElementById('createProjectModal');
+            modal.classList.remove('active');
+        }
+
+        // 생성새로운프로젝트
+        async function createProject() {
+            const input = document.getElementById('projectName');
+            const projectName = input.value.trim();
+            
+            if (!projectName) {
+                alert('Please enter a project name');
+                return;
+            }
+            
+            // 저장까지 Firebase
+            try {
+                const projectData = await window.simpleDataManager.createProject(projectName);
+                console.log('✅ 프로젝트이미저장까지 Firebase:', projectData);
+            
+            // 닫기모달
+            closeCreateProjectModal();
+            
+                // 🔥 수정：사용 Firebase 돌아가기的真實 projectId
+                const projectId = projectData.id;
+                console.log('🚀 이동까지새로운프로젝트페이지:', projectId);
+                
+                // 이동까지새로운프로젝트페이지
+                window.location.href = `firstproject.html?project=${projectId}`;
+            } catch (error) {
+                console.error('❌ 저장까지 Firebase 실패:', error);
+                alert('생성프로젝트실패，요청재시도');
+                return;
+            }
+        }
+
+        // ✅ 簡化：직접사용 SimpleAuth
+        function checkLoginStatus() {
+            return window.simpleAuth && window.simpleAuth.isLoggedIn();
+        }
+
+        // 로드프로젝트목록
+        async function loadProjects() {
+            console.log('🔄 로드프로젝트목록');
+            
+            // 부터 Firebase 가져오기프로젝트데이터
+            let projects = [];
+            try {
+                projects = await window.simpleDataManager.getProjects();
+                console.log(`✅ 부터 Firebase 로드 ${projects.length} 個프로젝트`);
+            } catch (error) {
+                console.error('❌ 부터 Firebase 로드프로젝트실패:', error);
+                projects = [];
+            }
+            
+            const tbody = document.getElementById('projects-tbody');
+            
+            if (projects.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4">
+                            <div class="empty-state">
+                                <i class="fas fa-folder-open"></i>
+                                <h3>No projects yet</h3>
+                                <p>Create your first project to get started</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = projects.map(project => `
+                <tr onclick="window.location.href='firstproject.html?project=${project.id}'" style="cursor: pointer;">
+                    <td>
+                        <div class="project-name">
+                            <div class="project-thumbnail">
+                                ${project.thumbnail ? 
+                                    `<img src="${project.thumbnail}" alt="${project.name}" loading="lazy" decoding="async">` : 
+                                    '<i class="fas fa-file-alt"></i>'
+                                }
+                            </div>
+                            <div class="project-info">
+                                <div class="project-title">${project.name}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="date-cell">${formatDate(project.updatedAt | project.lastModified | project.createdAt)}</td>
+                    <td class="date-cell">${formatDate(project.createdAt | project.created)}</td>
+                    <td style="text-align: center;">
+                        <button 
+                            onclick="event.stopPropagation(); showDeleteProjectModal('${project.id}', '${project.name.replace(/'/g, "\\'")}')" 
+                            style="background: none; border: none; color: #9ca3af; cursor: pointer; padding: 0.5rem; border-radius: 4px; transition: all 0.2s;"
+                            onmouseover="this.style.color='#ef4444'; this.style.backgroundColor='#fee2e2'"
+                            onmouseout="this.style.color='#9ca3af'; this.style.backgroundColor='transparent'"
+                            title="삭제프로젝트">
+                            <i class="fas fa-trash" style="font-size: 1rem;"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 포맷날짜
+        function formatDate(dateValue) {
+            if (!dateValue) return '-';
+            
+            let date;
+            
+            // 처리 Firebase Timestamp 대해상
+            if (typeof dateValue === 'object' && dateValue.seconds) {
+                date = new Date(dateValue.seconds * 1000);
+            } 
+            // 처리 Date 대해상또는字符串
+            else if (dateValue instanceof Date) {
+                date = dateValue;
+            }
+            // 처리數字때사이戳
+            else if (typeof dateValue === 'number') {
+                date = new Date(dateValue);
+            }
+            // 처리字符串
+            else if (typeof dateValue === 'string') {
+                date = new Date(dateValue);
+            }
+            else {
+                return '-';
+            }
+            
+            // 확인날짜여부있음效
+            if (isNaN(date.getTime())) {
+                return '-';
+            }
+            
+            // 돌아가기포맷的날짜
+            return date.toLocaleDateString('zh-TW', { 
+                year: 'numeric', 
+                month: '2-digit', 
+                day: '2-digit' 
+            });
+        }
+
+        // ==================== 삭제프로젝트모달 ====================
+        let projectToDelete = null;
+
+        function showDeleteProjectModal(projectId, projectName) {
+            projectToDelete = { id: projectId, name: projectName };
+            const modal = document.getElementById('deleteProjectModal');
+            const nameDisplay = document.getElementById('deleteProjectName');
+            const confirmInput = document.getElementById('deleteProjectConfirmInput');
+            const confirmBtn = document.getElementById('confirmDeleteBtn');
+            
+            nameDisplay.textContent = projectName;
+            confirmInput.value = '';
+            confirmBtn.disabled = true;
+            modal.style.display = 'flex';
+            
+            setTimeout(() => confirmInput.focus(), 100);
+        }
+
+        function closeDeleteProjectModal() {
+            const modal = document.getElementById('deleteProjectModal');
+            modal.style.display = 'none';
+            projectToDelete = null;
+        }
+
+        function validateDeleteInput() {
+            const confirmInput = document.getElementById('deleteProjectConfirmInput');
+            const confirmBtn = document.getElementById('confirmDeleteBtn');
+            
+            if (projectToDelete && confirmInput.value === projectToDelete.name) {
+                confirmBtn.disabled = false;
+                confirmBtn.style.opacity = '1';
+                confirmBtn.style.cursor = 'pointer';
+            } else {
+                confirmBtn.disabled = true;
+                confirmBtn.style.opacity = '0.5';
+                confirmBtn.style.cursor = 'not-allowed';
+            }
+        }
+
+        async function confirmDeleteProject() {
+            if (!projectToDelete) return;
+            
+            try {
+                await window.simpleDataManager.deleteProject(projectToDelete.id);
+                console.log('✅ 프로젝트이미삭제:', projectToDelete.name);
+                
+                // 트리거사이드바업데이트
+                window.dispatchEvent(new Event('projectDeleted'));
+                
+                // 닫기모달
+                closeDeleteProjectModal();
+                
+                // 중새로운로드프로젝트목록
+                loadProjects();
+                
+                alert('프로젝트이미성공삭제');
+            } catch (error) {
+                console.error('❌ 삭제프로젝트실패:', error);
+                alert('삭제프로젝트실패: ' + error.message);
+            }
+        }
+
+        // 초기화示例프로젝트함수이미제거 - 새로운사용자應該看까지空白프로젝트목록
+        // function initializeSampleProjects() {
+        //     새로운사용자가입때아니應該있음任何預設프로젝트
+        // }
+
+        // 🔥 리스닝 SimpleAuth 초기화완료이벤트
+        let authInitialized = false;
+        let dataManagerInitialized = false;
+        
+        window.addEventListener('auth-state-changed', async function(e) {
+            console.log('🔥 收까지 auth-state-changed 이벤트');
+            authInitialized = true;
+            
+            // 확인여부이미로그인
+            if (!e.detail.user) {
+                console.log('❌ 사용자미로그인');
+                return; // SimpleAuth 會자동처리중설정향해
+            }
+            
+            console.log('✅ 사용자이미로그인:', e.detail.user.email);
+            
+            // 초기화사이드바
+            initializeDashboard();
+        });
+        
+        // 초기화 Dashboard
+        function initializeDashboard() {
+            console.log('🎯 초기화 Dashboard...');
+            
+            // 초기화사이드바
+            if (window.VaultCaddySidebar && !window.dashboardSidebar) {
+                window.dashboardSidebar = new VaultCaddySidebar('dashboard');
+                console.log('✅ 사이드바이미초기화');
+            }
+            
+            // 만약 SimpleDataManager 이미초기화，로드프로젝트
+            if (window.simpleDataManager && window.simpleDataManager.initialized) {
+                console.log('✅ SimpleDataManager 준비됨，로드프로젝트');
+                loadProjects();
+            }
+        }
+        
+        // 리스닝 SimpleDataManager 초기화완료
+        // （通過폴링확인，因로서 simple-data-manager.js 없음트리거전용이벤트）
+        const checkDataManager = setInterval(() => {
+            if (window.simpleDataManager && window.simpleDataManager.initialized && !dataManagerInitialized) {
+                dataManagerInitialized = true;
+                clearInterval(checkDataManager);
+                console.log('✅ SimpleDataManager 이미초기화');
+                
+                // 만약사용자이미로그인，로드프로젝트
+                if (authInitialized && window.simpleAuth && window.simpleAuth.isLoggedIn()) {
+                    console.log('✅ 사용자이미로그인 + SimpleDataManager 준비됨，로드프로젝트');
+                    loadProjects();
+                }
+            }
+        }, 100);
+        
+        // 超때보호（15 秒）
+        setTimeout(() => {
+            clearInterval(checkDataManager);
+            if (!dataManagerInitialized) {
+                console.error('❌ SimpleDataManager 초기화超때');
+            }
+        }, 15000);
+        
+        // ==================== Email 검증 확인 ====================
+        (async function initEmailVerification() {
+            try {
+                // 대기 Firebase 및검증 확인기초기화
+                await new Promise((resolve) => {
+                    const checkReady = setInterval(() => {
+                        if (window.emailVerificationChecker && firebase.auth) {
+                            clearInterval(checkReady);
+                            resolve();
+                        }
+                    }, 100);
+                    
+                    setTimeout(() => {
+                        clearInterval(checkReady);
+                        resolve();
+                    }, 10000);
+                });
+                
+                // 확인검증상태및표시힌트（아니阻擋기능）
+                await checkEmailVerification({ showNotice: true, blockPage: false });
+            } catch (error) {
+                console.error('❌ Email 검증 확인실패:', error);
+            }
+        })();
+    </script>
+<!-- 🔥 햄버거 메뉴매우 간단한 수정방안 -->
+<script>
+        console.log('🔥 시작초기화햄버거 메뉴...');
+        
+        // 열기사이드바함수
+        function openSidebar() {
+            console.log('🔵 열기사이드바');
+            const sidebar = document.getElementById('mobile-sidebar');
+            const overlay = document.getElementById('mobile-sidebar-overlay');
+            
+            if (sidebar && overlay) {
+                sidebar.style.left = '0';
+                overlay.style.display = 'block';
+                overlay.style.opacity = '1';
+                document.body.style.overflow = 'hidden';
+                console.log('✅ 사이드바열림');
+            }
+        }
+        
+        // 닫기사이드바함수
+        function closeSidebar() {
+            console.log('🔵 닫기사이드바');
+            const sidebar = document.getElementById('mobile-sidebar');
+            const overlay = document.getElementById('mobile-sidebar-overlay');
+            
+            if (sidebar && overlay) {
+                sidebar.style.left = '-100%';
+                overlay.style.opacity = '0';
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                }, 300); // 대기애니메이션완료（와 CSS transition 일치）
+                document.body.style.overflow = 'auto';
+                console.log('✅ 사이드바이미 닫힘');
+            }
+        }
+        
+        // 매우 간단한초기화함수
+        function simpleInitMenu() {
+            const btn = document.getElementById('mobile-menu-btn');
+            const overlay = document.getElementById('mobile-sidebar-overlay');
+            
+            if (!btn | !overlay) {
+                console.log('⏳ 요소미찾기까지，200ms후재시도');
+                setTimeout(simpleInitMenu, 200);
+                return;
+            }
+            
+            console.log('✅ 찾기까지모든요소！');
+            
+            // 버튼클릭처리
+            btn.addEventListener('click', function() {
+                console.log('🔵 버튼의해클릭！');
+                openSidebar();
+            });
+            
+            // 터치처리
+            btn.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                console.log('🔵 터치이벤트！');
+                openSidebar();
+            });
+            
+            // 마스크클릭닫기
+            overlay.addEventListener('click', function() {
+                console.log('🔵 클릭마스크닫기');
+                closeSidebar();
+            });
+            
+            // 마스크터치닫기
+            overlay.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                console.log('🔵 터치마스크닫기');
+                closeSidebar();
+            });
+            
+            console.log('✅ 모든이벤트리스닝기이미바인딩');
+        }
+        
+        // 즉시시도초기화
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', simpleInitMenu);
+        } else {
+            setTimeout(simpleInitMenu, 100);
+        }
+        
+        // 노출함수제공사이드바내부링크사용
+        window.closeMobileSidebar = closeSidebar;
+    </script>
+</main>
+    <!-- Google Analytics 事件跟踪 -->
+    <script src="/ga-event-tracking.js"></script>
+</body>
+</html>

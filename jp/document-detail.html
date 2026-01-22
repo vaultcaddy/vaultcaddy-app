@@ -604,342 +604,86 @@
             margin-bottom: 1rem;
         }
         
-        /* 🎨 デザインマスター強化：テーブル全体 */
         .transactions-table {
             width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border-collapse: collapse;
         }
         
-        /* 🎨 デザインマスター最適化：レスポンシブテーブルラッパー */
-        .table-wrapper {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            margin: 0 -1.25rem;
-            padding: 0 1.25rem;
-        }
-        
-        /* 🎯 最適化：テーブル内の間隔を減らして、よりコンパクトに */
-        .transactions-table th,
-        .transactions-table td {
-            padding: 0.6rem 0.4rem !important;
-            font-size: 0.875rem;
-        }
-        
-        /* 🎯 最適化：照合済み列をより狭く */
-        .checkbox-cell {
-            width: 45px !important;
-            padding: 0.5rem 0.2rem !important;
-            text-align: center !important;
-        }
-        
-        .checkbox-cell input[type="checkbox"] {
-            width: 18px !important;
-            height: 18px !important;
-            cursor: pointer;
-            accent-color: #10b981;
-        }
-        
-        .action-cell {
-            width: 80px !important;
-            padding: 0.5rem !important;
-        }
-        
-        /* 🎯 最適化：金額と残高列を右揃え・コンパクト化 */
-        .amount-cell,
-        .transactions-table td[data-field="balance"] {
-            text-align: right;
-            min-width: 110px !important;
-            max-width: 130px;
-            padding: 0.65rem 0.75rem !important;
-        }
-        
-        /* 🎨 最適化：デフォルトで補助列を非表示（全画面対応、スクロール回避） */
-        
-        /* 列構造（左から右）：
-         * 1. checkbox（照合済み）✅ 保持
-         * 2. date（日付）✅ 保持
-         * 3. type（タイプ）❌ 非表示
-         * 4. description（説明）✅ 保持
-         * 5. payee（支払先）❌ 非表示（ほとんどの銀行明細書では個別に表示されない）
-         * 6. reference（参照）❌ 非表示
-         * 7. check#（小切手番号）❌ 非表示
-         * 8. category（カテゴリー）✅ 保持（ユーザーが必要）
-         * 9. amount（金額）✅ 保持
-         * 10. balance（残高）✅ 保持
-         * 11. attachment（添付）❌ 非表示
-         * 12. actions（操作）✅ 保持
-         */
-        
-        /* デフォルト：補助列を非表示 */
-        .type-cell,
-        .payee-cell,
-        .ref-cell,
-        .check-cell,
-        .attachment-cell,
-        .transactions-table th:nth-child(3),  /* Type header */
-        .transactions-table th:nth-child(5),  /* Payee header - 非表示（2026-01-11） */
-        .transactions-table th:nth-child(6),  /* Reference header */
-        .transactions-table th:nth-child(7),  /* Check# header */
-        .transactions-table th:nth-child(11)  /* Attachment header */
-        {
-            display: none !important;
-        }
-        
-        /* ✅ カテゴリー列は常に表示（ユーザーが必要） */
-        .category-cell,
-        .transactions-table th:nth-child(8) {
-            display: table-cell !important;
-        }
-        
-        /* 🔍 超大型画面（>2000px）：全ての列を表示 */
-        @media (min-width: 2000px) {
-            .type-cell,
-            .ref-cell,
-            .check-cell,
-            .transactions-table th:nth-child(3),  /* Type header */
-            .transactions-table th:nth-child(6),  /* Reference header */
-            .transactions-table th:nth-child(7)   /* Check# header */
-            {
-                display: table-cell !important;
-            }
-        }
-        
-        /* 🔍 大型画面（>1600px）：一部の列を表示 */
-        @media (min-width: 1600px) and (max-width: 1999px) {
-            .type-cell,
-            .transactions-table th:nth-child(3)  /* Type header */
-            {
-                display: table-cell !important;
-            }
-        }
-        
-        /* 📱 タブレット（<1400px）：追加の非表示列なし（payeeはデフォルトリスト内） */
-        
-        /* 🎨 非表示列のヒントを表示 */
-        .transactions-section::before {
-            content: '💡 コンパクトモード：補助列を非表示（タイプ、参照、小切手番号、添付）。📊 完全なデータ（メモ、添付ファイル等）を表示するには、上部の「Export」ボタンをクリックしてください。';
-            display: block;
-            padding: 0.75rem 1rem;
-            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-            color: #1e40af;
-            font-size: 0.8rem;
-            text-align: center;
-            border: 1px solid #bfdbfe;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            line-height: 1.5;
-        }
-        
-        /* 大画面用のヒント更新 */
-        @media (min-width: 1600px) {
-            .transactions-section::before {
-                content: '✅ 標準モード：タイプ列を表示。非表示：参照、小切手番号、添付。';
-                background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-                color: #166534;
-                border-color: #bbf7d0;
-            }
-        }
-        
-        @media (min-width: 2000px) {
-            .transactions-section::before {
-                content: '🎉 フルモード：全ての列を表示（添付アイコンはクリーンな見た目のため非表示）。';
-                background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-                color: #92400e;
-                border-color: #fcd34d;
-            }
-        }
-                background: #eff6ff;
-                color: #1e40af;
-                font-size: 0.875rem;
-                text-align: center;
-                border-top: 1px solid #dbeafe;
-                margin-top: -1px;
-            }
-        }
-        
-        /* 🎨 デザインマスター強化：より目立つテーブルヘッダー */
         .transactions-table thead {
-            background: #f3f4f6;
-            border-bottom: 2px solid #d1d5db;
-        }
-        
-        .transactions-table th {
-            padding: 1rem 0.75rem;
-            text-align: left;
-            font-size: 0.875rem;
-            font-weight: 700;
-            color: #374151;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            border-bottom: 2px solid #d1d5db;
-        }
-        
-        /* 🎨 デザインマスター静的強化：ゼブラストライプ + 明確なホバー効果 */
-        .transactions-table tbody tr {
-            border-bottom: 1px solid #e5e7eb;
-        }
-        
-        /* ゼブラストライプ：交互の背景色で可読性を向上 */
-        .transactions-table tbody tr:nth-child(even) {
             background: #f9fafb;
         }
         
-        /* ホバー効果：より深い背景色、アニメーションなし */
-        .transactions-table tbody tr:hover {
-            background: #f3f4f6;
+        .transactions-table th {
+            padding: 0.75rem;
+            text-align: left;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #6b7280;
+            border-bottom: 1px solid #e5e7eb;
         }
         
-        /* 🎨 デザインマスター強化：テーブルセル */
+        .transactions-table tbody tr {
+            border-bottom: 1px solid #e5e7eb;
+            transition: background 0.2s;
+        }
+        
+        .transactions-table tbody tr:hover {
+            background: #f9fafb;
+        }
+        
         .transactions-table td {
-            padding: 1rem 0.75rem;
+            padding: 0.75rem;
             font-size: 0.9rem;
             color: #1f2937;
-            vertical-align: middle;
         }
         
-        /* 🎨 デザインマスター最適化：スマート列幅配分（コンパクト版） */
-        .transactions-table th:nth-child(1),  /* チェックボックス */
-        .transactions-table td:nth-child(1) {
-            width: 45px;
-            min-width: 45px;
-        }
-        
-        .transactions-table th:nth-child(2),  /* 日付 */
-        .transactions-table td:nth-child(2) {
-            width: 100px;
-            min-width: 100px;
-            white-space: nowrap;
-        }
-        
-        .transactions-table th:nth-child(4),  /* 説明 */
-        .transactions-table td:nth-child(4) {
-            min-width: 150px;
-            max-width: 280px;
-        }
-        
-        .transactions-table th:nth-child(5),  /* 支払先 */
-        .transactions-table td:nth-child(5) {
-            min-width: 120px;
-            max-width: 200px;
-        }
-        
-        .transactions-table th:nth-child(8),  /* カテゴリー */
-        .transactions-table td:nth-child(8) {
-            width: 105px;
-            min-width: 105px;
-        }
-        
-        .transactions-table th:nth-child(9),  /* 金額 */
-        .transactions-table td:nth-child(9) {
-            width: 145px;
-            min-width: 145px;
-            text-align: right;
-        }
-        
-        .transactions-table th:nth-child(10),  /* 残高 */
-        .transactions-table td:nth-child(10) {
-            width: 120px;
-            min-width: 120px;
-            text-align: right;
-        }
-        
-        .transactions-table th:last-child,  /* 操作 */
-        .transactions-table td:last-child {
-            width: 70px;
-            min-width: 70px;
-        }
-        
-        .transactions-table td:nth-child(6), .transactions-table td:nth-child(7) {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        
-        .transactions-table tr:hover td:nth-child(6), .transactions-table tr:hover td:nth-child(7) {
-            white-space: normal;
-            word-break: break-word;
-        }
-        
-        /* 🎨 強化されたチェックボックス：より大きく、クリックしやすく */
         .checkbox-cell {
-            width: 50px;
-            text-align: center;
+            width: 40px;
         }
         
         .checkbox-cell input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
             cursor: pointer;
-            accent-color: #6366f1;
         }
         
-        /* 🎨 デザインマスター強化：より目立つ金額表示 */
         .amount-cell {
             font-family: 'Courier New', monospace;
-            font-weight: 600;
-            font-size: 1rem;
-            text-align: right;
+            font-weight: 500;
         }
         
-        /* プラス金額：より明るい緑色 */
         .amount-positive {
-            color: #059669;
-            font-weight: 700;
+            color: #10b981;
         }
         
-        /* マイナス金額：より明るい赤色 */
         .amount-negative {
-            color: #dc2626;
-            font-weight: 700;
+            color: #ef4444;
         }
         
-        /* 🎨 デザインマスター強化：アクションボタンエリア */
         .action-cell {
             width: 100px;
-            text-align: center;
         }
         
         .action-btns {
             display: flex;
             gap: 0.5rem;
-            justify-content: center;
         }
         
-        /* 🎨 強化されたアイコンボタン：より明確に、アニメーションなし */
         .icon-btn {
-            background: #f3f4f6;
-            border: 1px solid #e5e7eb;
+            background: none;
+            border: none;
             color: #6b7280;
             cursor: pointer;
-            padding: 0.375rem;
-            border-radius: 6px;
-            font-size: 1rem;
+            padding: 0.25rem;
+            transition: color 0.2s;
         }
         
-        /* ホバー時に背景と色を変更、アニメーションなし */
         .icon-btn:hover {
-            background: #e5e7eb;
             color: #1f2937;
-            border-color: #d1d5db;
         }
         
-        /* 編集ボタンホバー */
-        .icon-btn:not(.delete):hover {
-            background: #eef2ff;
-            color: #6366f1;
-            border-color: #c7d2fe;
-        }
-        
-        /* 削除ボタンホバー */
         .icon-btn.delete:hover {
-            background: #fee2e2;
-            color: #dc2626;
-            border-color: #fecaca;
+            color: #ef4444;
         }
         
         /* 読み込み動畫 */
@@ -1387,14 +1131,6 @@
                 -webkit-overflow-scrolling: touch !important;
             }
             
-            /* 🎨 展開詳細機能を完全に非表示 */
-            .transaction-detail-row,
-            .expand-btn,
-            .expand-detail-btn,
-            .expand-memo-btn {
-                display: none !important;
-            }
-            
             /* テーブル */
             table {
                 font-size: 0.75rem !important;
@@ -1535,6 +1271,7 @@
             <div style="display: flex; align-items: center; gap: 2rem;">
                 <a href="index.html#features" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">機能</a>
                 <a href="index.html#pricing" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">価格</a>
+                <a href="blog/" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">学習センター</a>
                 <a href="dashboard.html" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">ダッシュボード</a>
             </div>
             <div id="language-switcher" style="display: inline-block; margin-right: 1rem;"></div>
@@ -1559,6 +1296,10 @@
                 <a href="index.html#pricing" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
                     <i class="fas fa-dollar-sign" style="width: 20px; color: #667eea;"></i>
                     <span>価格</span>
+                </a>
+                <a href="blog/" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
+                    <i class="fas fa-graduation-cap" style="width: 20px; color: #667eea;"></i>
+                    <span>学習センター</span>
                 </a>
                 <a href="dashboard.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
                     <i class="fas fa-th-large" style="width: 20px; color: #667eea;"></i>
