@@ -1,0 +1,2236 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <!-- 资源预连接 - 性能优化 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://www.gstatic.com">
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+
+    <meta charset="UTF-8">
+    <!-- 性能优化：关键CSS内联 -->
+    <style>
+        /* 关键CSS - 首屏渲染必需 */
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;line-height:1.6;color:#1f2937}
+        .vaultcaddy-navbar{position:fixed;top:0;width:100%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.1);z-index:1000}
+        .hero-section{min-height:100vh;display:flex;align-items:center;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff}
+        .container{max-width:1200px;margin:0 auto;padding:0 1rem}
+        .loading{opacity:0.5}
+    </style>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accountsetset - VaultCaddy Statement Converter | PDF to Excel/QuickBooks | 98% Accuracy</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="../dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- 核心Settings -->
+    <script defer src="../config.js"></script>
+    <script defer src="../translations.js?v=20251102"></script>
+    
+    <!-- ✅ unifiednavigationcolumnsystem：static HTML + navbar-component.js -->
+    <script defer src="../navbar-component.js?v=20251120-unified"></script>
+    <script defer src="../sidebar-component.js?v=20251105-table-optimize"></script>
+    
+    <!-- Firebase SDK -->
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-functions-compat.js"></script>
+    
+    <!-- Firebase InitializeAnd authentication -->
+    <script defer src="../firebase-config.js?v=20251105-force-init"></script>
+    <script defer src="../simple-auth.js?v=20251105-force-init"></script>
+    <script defer src="../user-profile-manager.js?v=20251120"></script>
+    <script defer src="../simple-data-manager.js?v=20251105-force-init"></script>
+    
+    <!-- Email Verification check -->
+    <script defer src="../email-verification-check.js"></script>
+    
+    <!-- Navigation bar interactionFeatures -->
+    <script defer src="../navbar-interactions.js?v=20251108"></script>
+    
+    <style>
+        body {
+            background: #ffffff;
+            color: #1f2937;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+            background: #ffffff;
+            padding-top: 60px;
+        }
+        
+        .sidebar {
+            width: 280px;
+            background: #ffffff;
+            border-right: 1px solid #e5e7eb;
+            flex-shrink: 0;
+            position: fixed;
+            top: 60px;
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 2rem 3rem;
+            background: #f9fafb;
+            min-height: calc(100vh - 60px);
+            max-width: 900px; /* limitMaximumWidth */
+            margin: 0 auto; /* 水平居middle */
+            margin-left: calc(280px + (100vw - 280px - 900px) / 2); /* 考慮Left sidecolumnback居middle */
+        }
+        
+        @media (max-width: 1400px) {
+            .main-content {
+                margin-left: 280px; /* small螢幕time靠left */
+            }
+        }
+        
+        .account-header {
+            margin-bottom: 2rem;
+        }
+        
+        .account-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin: 0 0 0.5rem 0;
+        }
+        
+        .account-header p {
+            color: #6b7280;
+            font-size: 1rem;
+            margin: 0;
+        }
+        
+        .settings-container {
+            max-width: 800px;
+        }
+        
+        .settings-section {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0 0 1.5rem 0;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            color: #1f2937;
+            background: #ffffff;
+            transition: all 0.2s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+        
+        .form-input:disabled {
+            background: #f3f4f6;
+            color: #9ca3af;
+            cursor: not-allowed;
+        }
+        
+        .form-description {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 0.5rem;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+        
+        .btn-primary {
+            background: #8b5cf6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #7c3aed;
+        }
+        
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+        }
+        
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .avatar-section {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            font-weight: 600;
+        }
+        
+        .avatar-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .link-button {
+            background: none;
+            border: none;
+            color: #8b5cf6;
+            font-size: 0.875rem;
+            cursor: pointer;
+            padding: 0;
+            text-align: left;
+        }
+        
+        .link-button:hover {
+            text-decoration: underline;
+        }
+        
+        .danger-zone {
+            border: 1px solid #fca5a5;
+            background: #fef2f2;
+        }
+        
+        .danger-zone .section-title {
+            color: #dc2626;
+            border-bottom-color: #fca5a5;
+        }
+    
+        @media (max-width: 768px) {
+            /* navigationcolumn */
+            .vaultcaddy-navbar {
+                padding: 0 0.75rem !important;
+            }
+            
+            /* ShowHamburger menuButton */
+            #mobile-menu-btn {
+                display: block !important;
+            }
+            
+            /* MobileShow logo，HideText */
+            .desktop-logo {
+                display: flex !important; /* ✅ Show V icon */
+            }
+            
+            .desktop-logo-text {
+                display: none !important; /* ✅ Hide "VaultCaddy" Text */
+            }
+        
+        /* Mobile UI optimizeStyle */
+/* suitableuseat dashboard.html, firstproject.html, account.html, billing.html */
+
+@media (max-width: 768px) {
+    /* ==================== generalStyle ==================== */
+    
+    /* mainContainer */
+    body {
+        padding-top: 60px !important;
+    }
+    
+    .main-container,
+    .content-wrapper {
+        padding: 0.75rem !important;
+        margin: 0 !important;
+    }
+    
+    /* 所Hascard */
+    .card,
+    div[style*="border-radius"][style*="padding"] {
+        padding: 1rem !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    /* Title */
+    h1 {
+        font-size: 1.5rem !important;
+    }
+    
+    h2 {
+        font-size: 1.25rem !important;
+    }
+    
+    h3 {
+        font-size: 1.125rem !important;
+    }
+    
+    /* Button */
+    button,
+    .btn {
+        padding: 0.75rem 1rem !important;
+        font-size: 0.875rem !important;
+    }
+    
+    /* Input box */
+    input,
+    select,
+    textarea {
+        font-size: 1rem !important;
+        padding: 0.75rem !important;
+    }
+    
+    /* ==================== Dashboard Dedicated ==================== */
+    
+    /* ProjectList */
+    .projects-header {
+        flex-direction: column !important;
+        gap: 1rem !important;
+    }
+    
+    .projects-header > div {
+        width: 100% !important;
+    }
+    
+    /* Table */
+    table {
+        font-size: 0.875rem !important;
+    }
+    
+    table th,
+    table td {
+        padding: 0.5rem !important;
+    }
+    
+    /* HideColumn section（Mobile） */
+    table th:nth-child(3),
+    table td:nth-child(3) {
+        display: none !important; /* Hide CREATED column */
+    }
+    
+    /* ==================== First Project Dedicated ==================== */
+    
+    /* DocumentTypeSelector */
+    .document-type-selector {
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem !important;
+    }
+    
+    /* Upload area */
+    .upload-area {
+        padding: 2rem 1rem !important;
+    }
+    
+    /* ExportButton group */
+    .export-buttons {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+    }
+    
+    .export-buttons button {
+        width: 100% !important;
+    }
+    
+    /* DocumentTable */
+    #team-project-tbody tr {
+        font-size: 0.8125rem !important;
+    }
+    
+    /* HideColumn section */
+    .document-table th:nth-child(4),
+    .document-table td:nth-child(4),
+    .document-table th:nth-child(5),
+    .document-table td:nth-child(5) {
+        display: none !important; /* HideAmountandDatecolumn */
+    }
+    
+    /* ==================== Account Dedicated ==================== */
+    
+    /* Profilecard */
+    .profile-card {
+        flex-direction: column !important;
+        text-align: center !important;
+    }
+    
+    .profile-avatar {
+        margin: 0 auto 1rem !important;
+    }
+    
+    /* Credits Usage */
+    .credits-usage {
+        flex-direction: column !important;
+    }
+    
+    .credits-bar {
+        width: 100% !important;
+    }
+    
+    /* form */
+    .form-group {
+        margin-bottom: 1rem !important;
+    }
+    
+    .form-row {
+        flex-direction: column !important;
+        gap: 1rem !important;
+    }
+    
+    /* ==================== Billing Dedicated ==================== */
+    
+    /* Pricingcard */
+    .pricing-cards {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+    }
+    
+    /* transactionrecordTable */
+    .transaction-table {
+        font-size: 0.8125rem !important;
+    }
+    
+    .transaction-table th:nth-child(2),
+    .transaction-table td:nth-child(2) {
+        display: none !important; /* HideDescriptioncolumn */
+    }
+    
+    /* ==================== Modal ==================== */
+    
+    .modal-content {
+        width: 95% !important;
+        max-width: 95% !important;
+        margin: 1rem !important;
+        padding: 1rem !important;
+    }
+    
+    .modal-header {
+        padding: 1rem !important;
+    }
+    
+    .modal-body {
+        padding: 1rem !important;
+    }
+    
+    .modal-footer {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+    }
+    
+    .modal-footer button {
+        width: 100% !important;
+    }
+    
+    /* ==================== Sidebar ==================== */
+    
+    .sidebar {
+        width: 100% !important;
+        position: fixed !important;
+        top: 60px !important;
+        left: -100% !important;
+        height: calc(100vh - 60px) !important;
+        transition: left 0.3s ease !important;
+        z-index: 999 !important;
+    }
+    
+    .sidebar.active {
+        left: 0 !important;
+    }
+    
+    /* ==================== Otheroptimize ==================== */
+    
+    /* Hidenotmustneed的Element */
+    .desktop-only {
+        display: none !important;
+    }
+    
+    /* ShowMobileElement */
+    .mobile-only {
+        display: block !important;
+    }
+    
+    /* spacingadjust */
+    section {
+        padding: 1.5rem 0 !important;
+    }
+    
+    /* Button group */
+    .button-group {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+    }
+    
+    .button-group button,
+    .button-group a {
+        width: 100% !important;
+    }
+}
+
+        /* Account specificStyle */
+        @media (max-width: 768px) {
+            .account-header {
+                text-align: center !important;
+            }
+            
+            .settings-section {
+                padding: 1rem !important;
+            }
+            
+            .danger-zone {
+                margin-top: 2rem !important;
+            }
+        }
+        
+        /* ==================== ModalStyle ==================== */
+        .modal-overlay {
+            display: none !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            background: rgba(0, 0, 0, 0.5) !important;
+            z-index: 9999 !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        .modal-overlay.active {
+            display: flex !important;
+        }
+
+        .modal-content {
+            background: #ffffff !important;
+            border-radius: 12px !important;
+            padding: 2rem !important;
+            width: 90% !important;
+            max-width: 500px !important;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+            position: relative !important;
+            z-index: 10000 !important;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0;
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            font-size: 1.5rem;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+        }
+
+        .modal-close:hover {
+            background: #f3f4f6;
+            color: #1f2937;
+        }
+
+        .modal-body {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            color: #1f2937;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+
+        .btn-cancel {
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            color: #374151;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .btn-cancel:hover {
+            background: #f9fafb;
+        }
+
+        .btn-create {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: #ffffff;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .btn-create:hover {
+            opacity: 0.9;
+        }
+        
+        </style>
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <link rel="alternate icon" type="image/png" href="../favicon.png">
+    <link rel="stylesheet" href="mobile-responsive.css">
+
+    <!-- Google Analytics 4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LWPEKNC7RQ"></script>
+    <script>
+      window.dataLayer = window.dataLayer | [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-LWPEKNC7RQ');
+    </script>
+
+
+    <!-- resourcesTips - optimize loading speed -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+    <link rel="dns-prefetch" href="https://images.unsplash.com">
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+        <script src="/multilingual-data-sync.js"></script>
+
+    <meta name="description" content="AI-powered Accountsetset - VaultCaddy statement converter. Convert PDF to Excel/QuickBooks/Xero in 3 seconds with 98% accuracy. Free 20-page trial, no credit card required. From $3.88/month, trusted by 500+ businesses.">
+
+    <link rel="canonical" href="https://vaultcaddy.com/account.html">
+
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "VaultCaddy - Accountsetset - VaultCaddy Statement Converter",
+  "applicationCategory": "FinanceApplication",
+  "operatingSystem": "Web, iOS, Android",
+  "offers": {
+    "@type": "Offer",
+    "price": "5.59",
+    "priceCurrency": "USD",
+    "priceValidUntil": "2026-12-31"
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.8",
+    "ratingCount": "127",
+    "bestRating": "5"
+  },
+  "featureList": [
+    "AI-powered recognition",
+    "Excel/QuickBooks/Xero export",
+    "98% accuracy",
+    "3-second processing",
+    "Batch processing",
+    "Cloud storage"
+  ]
+}
+</script>
+    </head>
+<body>
+    <!-- ✅ Unified static navbar -->
+    <!-- ✅ Unified static navbar（and firstproject.html completelyconsistent）-->
+    <nav class="vaultcaddy-navbar" id="main-navbar" style="position: fixed; top: 0; left: 0; right: 0; height: 60px; background: #ffffff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; z-index: 1000; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <!-- Hamburger menuButton（mobile onlyShow）-->
+            <button id="mobile-menu-btn" onclick="openMobileSidebar()" style="display: none; background: none; border: none; cursor: pointer; padding: 0.5rem; color: #1f2937; font-size: 1.5rem;">
+                <i class="fas fa-bars"></i>
+            </button>
+            
+            <a href="index.html" style="display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: #1f2937; font-weight: 600; font-size: 1.125rem;">
+                <div class="desktop-logo" style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.25rem;">
+                    V
+                </div>
+                <div class="desktop-logo-text">
+                    <div>VaultCaddy</div>
+                    <div style="font-size: 0.75rem; color: #6b7280; font-weight: 400; text-transform: uppercase; letter-spacing: 0.05em;">AI DOCUMENT PROCESSING</div>
+                </div>
+            </a>
+        </div>
+        <div style="display: flex; align-items: center; gap: 2rem;">
+            <div style="display: flex; align-items: center; gap: 2rem;">
+                <a href="index.html#features" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">Features</a>
+                <a href="index.html#pricing" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">Pricing</a>
+                <a href="dashboard.html" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">Dashboard</a>
+            </div>
+            
+            <div id="language-switcher" style="display: inline-block; margin-right: 1rem;"></div>
+                <div id="user-menu" style="position: relative; display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;">
+                <div id="user-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">Y</div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- mobileSidebarMenu -->
+    <div id="mobile-sidebar" style="position: fixed; top: 0; left: -100%; width: 280px; height: 100vh; background: white; z-index: 2000; transition: left 0.3s ease; box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto;">
+        <div style="padding: 1.5rem;">
+            <!-- Menuitem -->
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <a href="index.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
+                    <i class="fas fa-home" style="width: 20px; color: #667eea;"></i>
+                    <span>Home</span>
+                </a>
+                <a href="index.html#features" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
+                    <i class="fas fa-star" style="width: 20px; color: #667eea;"></i>
+                    <span>Features</span>
+                </a>
+                <a href="index.html#pricing" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
+                    <i class="fas fa-dollar-sign" style="width: 20px; color: #667eea;"></i>
+                    <span>Pricing</span>
+                </a>
+                <a href="dashboard.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
+                    <i class="fas fa-th-large" style="width: 20px; color: #667eea;"></i>
+                    <span>Dashboard</span>
+                </a>
+                
+                <div style="height: 1px; background: #e5e7eb; margin: 1rem 0;"></div>
+
+                <div style="height: 1px; background: #e5e7eb; margin: 1rem 0;"></div>
+                
+                <a href="privacy.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
+                    <i class="fas fa-shield-alt" style="width: 20px; color: #6b7280;"></i>
+                    <span>Privacy Policy</span>
+                </a>
+                <a href="terms.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
+                    <i class="fas fa-file-contract" style="width: 20px; color: #6b7280;"></i>
+                    <span>Terms of Service</span>
+                </a>
+            </div>
+        </div>
+    </div>
+    </div>
+    
+    <!-- SidebarMask -->
+    <div id="mobile-sidebar-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; display: none;" onclick="closeMobileSidebar()"></div>
+    
+    <div id="user-dropdown" style="display: none; position: fixed; top: 70px; right: 2rem; background: white; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); padding: 1rem; min-width: 220px; z-index: 2000; border: 1px solid #e5e7eb;">
+        <div style="padding: 0.75rem; border-bottom: 1px solid #f3f4f6;">
+            <div style="font-weight: 600; font-size: 1rem; color: #1f2937; margin-bottom: 0.25rem;"><span>Credits</span>: <span id="dropdown-credits">0</span></div>
+            <div style="font-size: 0.875rem; color: #6b7280;" id="dropdown-email">user@example.com</div>
+        </div>
+        <div style="padding: 0.5rem 0;">
+            <a href="account.html" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; color: #374151; text-decoration: none; border-radius: 6px; transition: background 0.2s; font-size: 0.9375rem;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+                <span><i class="fas fa-user" style="margin-right: 0.75rem; color: #6b7280; width: 16px;"></i><span>Account</span></span>
+                <span style="color: #9ca3af; font-size: 0.875rem;">⌘A</span>
+            </a>
+            <a href="billing.html" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; color: #374151; text-decoration: none; border-radius: 6px; transition: background 0.2s; font-size: 0.9375rem;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+                <span><i class="fas fa-credit-card" style="margin-right: 0.75rem; color: #6b7280; width: 16px;"></i><span>Billing</span></span>
+                <span style="color: #9ca3af; font-size: 0.875rem;">⌘B</span>
+            </a>
+        </div>
+        <div style="border-top: 1px solid #f3f4f6; padding-top: 0.5rem;">
+            <button onclick="handleLogout()" style="width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; color: #ef4444; background: transparent; border: none; border-radius: 6px; cursor: pointer; transition: background 0.2s; font-size: 0.9375rem; text-align: left;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='transparent'">
+                <span><i class="fas fa-sign-out-alt" style="margin-right: 0.75rem; width: 16px;"></i><span>Logout</span></span>
+                <span style="color: #fca5a5; font-size: 0.875rem;">⌘Q</span>
+            </button>
+        </div>
+    </div>
+    
+    <!-- ✅ index.html dynamicUpdateUserStatus -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('✅ index.html Initialize');
+            
+            let userCredits = 0;
+            let userEmail = '';
+            let userDisplayName = '';
+            
+            // GetUserFirst letter
+            function getUserInitial() {
+                // priorityUse displayName First letter of
+                if (userDisplayName && userDisplayName.trim()) {
+                    return userDisplayName.charAt(0).toUpperCase();
+                }
+                // ElseUse email First letter of
+                if (userEmail && userEmail.trim()) {
+                    return userEmail.charAt(0).toUpperCase();
+                }
+                return 'U';
+            }
+            
+            // 🔥 Hamburger menuFeatures（Execute immediately，notWait DOMContentLoaded）
+            (function() {
+                console.log('🔵 InitializeHamburger menu...');
+                
+                // OpenSidebar
+                window.openMobileSidebar = function() {
+                    console.log('🔵 openMobileSidebar Called');
+                    const sidebar = document.getElementById('mobile-sidebar');
+                    const overlay = document.getElementById('mobile-sidebar-overlay');
+                    console.log('🔵 sidebar:', sidebar);
+                    console.log('🔵 overlay:', overlay);
+                    
+                    if (sidebar && overlay) {
+                        sidebar.style.left = '0';
+                        overlay.style.display = 'block';
+                        document.body.style.overflow = 'hidden';
+                        console.log('✅ SidebarOpened');
+                    } else {
+                        console.error('❌ Not foundSidebarorMask element');
+                    }
+                };
+                
+                // CloseSidebar
+                window.closeMobileSidebar = function() {
+                    console.log('🔵 closeMobileSidebar Called');
+                    const sidebar = document.getElementById('mobile-sidebar');
+                    const overlay = document.getElementById('mobile-sidebar-overlay');
+                    
+                    if (sidebar && overlay) {
+                        sidebar.style.left = '-100%';
+                        overlay.style.display = 'none';
+                        document.body.style.overflow = 'auto';
+                        console.log('✅ SidebaralreadyClose');
+                    }
+                };
+                
+                // Hamburger menuButtonUse onclick，Noneneedamountouterbind
+                console.log('✅ Hamburger menuFeaturesalreadyready（Use onclick）');
+            })();
+                
+                // Mobileautocarousel（onlyinMobileEnable）
+                if (window.innerWidth <= 768) {
+                    // reviewcarousel
+                    const testimonialsContainer = document.getElementById('testimonials-container');
+                    if (testimonialsContainer) {
+                        let testimonialIndex = 0;
+                        const testimonialCards = testimonialsContainer.children;
+                        
+                        setInterval(() => {
+                            testimonialIndex = (testimonialIndex + 1) % testimonialCards.length;
+                            const scrollAmount = testimonialCards[testimonialIndex].offsetLeft - testimonialsContainer.offsetLeft;
+                            testimonialsContainer.scrollTo({
+                                left: scrollAmount,
+                                behavior: 'smooth'
+                            });
+                        }, 4000); // per4Second toggle
+                    }
+                    
+                    // Blog carousel (disabled)
+                    const learningContainer = document.getElementById('learning-center-container');
+                    if (learningContainer) {
+                        let learningIndex = 0;
+                        const learningCards = learningContainer.children;
+                        
+                        setInterval(() => {
+                            learningIndex = (learningIndex + 1) % learningCards.length;
+                            const scrollAmount = learningCards[learningIndex].offsetLeft - learningContainer.offsetLeft;
+                            learningContainer.scrollTo({
+                                left: scrollAmount,
+                                behavior: 'smooth'
+                            });
+                        }, 5000); // per5Second toggle
+                    }
+                }
+            });
+            
+            // SwitchDropdown menu
+            async function toggleDropdown() {
+                const dropdown = document.getElementById('user-dropdown');
+                if (dropdown.style.display === 'none') {
+                    dropdown.style.display = 'block';
+                    
+                    // 🔥 instantfrom SimpleDataManager Getmostnew Credits
+                    if (window.simpleDataManager && window.simpleDataManager.initialized) {
+                        try {
+                            userCredits = await window.simpleDataManager.getUserCredits();
+                            console.log('✅ Fetch immediately Credits:', userCredits);
+                        } catch (error) {
+                                            clearTimeout(timeoutId); // ✅ Clear timeout
+                console.error('❌ Failed to fetch Credits:', error);
+                        }
+                    }
+                    
+                    // UpdateDropdown menuContent
+                    document.getElementById('dropdown-credits').textContent = userCredits.toLocaleString();
+                    document.getElementById('dropdown-email').textContent = userEmail;
+                } else {
+                    dropdown.style.display = 'none';
+                }
+            }
+            
+            // clickouterpartCloseDropdown menu
+            document.addEventListener('click', function(event) {
+                const dropdown = document.getElementById('user-dropdown');
+                const userMenu = document.getElementById('user-menu');
+                
+                if (dropdown && userMenu && 
+                    !dropdown.contains(event.target) && 
+                    !userMenu.contains(event.target)) {
+                    dropdown.style.display = 'none';
+                }
+            });
+            
+            // LogoutFeatures
+            window.handleLogout = async function() {
+                try {
+                    if (window.simpleAuth) {
+                        await window.simpleAuth.logout();
+                        window.location.href = 'index.html';
+                    }
+                } catch (error) {
+                                    clearTimeout(timeoutId); // ✅ Clear timeout
+                console.error('LogoutFailed:', error);
+                    alert('LogoutFailed，pleaseRetry');
+                }
+            };
+            
+            // Wait Firebase and simpleAuth Load
+            async function updateUserMenu() {
+                const userMenu = document.getElementById('user-menu');
+                if (!userMenu) return;
+                
+                try {
+                    const isLoggedIn = window.simpleAuth && window.simpleAuth.isLoggedIn();
+                    
+                    if (isLoggedIn) {
+                        // ✅ alreadyLogin：ShowUseravatar
+                        const currentUser = window.simpleAuth.getCurrentUser();
+                        userEmail = currentUser.email | '';
+                        userDisplayName = currentUser.displayName | '';
+                        
+                        // 🔥 from Firestore Get displayName and credits
+                        if (window.simpleDataManager && window.simpleDataManager.initialized) {
+                            try {
+                                const userDoc = await window.simpleDataManager.getUserDocument();
+                                if (userDoc) {
+                                    userDisplayName = userDoc.displayName | userDisplayName;
+                                    userCredits = userDoc.credits | 0;
+                                    console.log('✅ index.html Get Credits:', userCredits);
+                                }
+                            } catch (error) {
+                                console.log('⚠️ None法from Firestore GetUserdata:', error);
+                            }
+                        } else {
+                            console.log('⏳ SimpleDataManager yetnotInitialize，Waitmiddle...');
+                            // DelayRetry
+                            setTimeout(async () => {
+                                if (window.simpleDataManager && window.simpleDataManager.initialized) {
+                                    try {
+                                        userCredits = await window.simpleDataManager.getUserCredits();
+                                        console.log('✅ Delayed fetch Credits:', userCredits);
+                                    } catch (error) {
+                                                        clearTimeout(timeoutId); // ✅ Clear timeout
+                console.error('❌ Delayed fetchFailed:', error);
+                                    }
+                                }
+                            }, 1000);
+                        }
+                        
+                        const userInitial = getUserInitial();
+                        console.log(`👤 UserFirst letter: "${userInitial}" (displayName: "${userDisplayName}")`);
+                        
+                        userMenu.innerHTML = `
+                            <div onclick="toggleDropdown()" style="cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+                                <div style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem; opacity: 1; transition: opacity 0.3s;">${userInitial}</div>
+                            </div>
+                        `;
+                        console.log('✅ UseralreadyLogin，Showavatar');
+                    } else {
+                        // ✅ notLogin：ShowLoginButton
+                        userMenu.innerHTML = `
+                            <button onclick="window.location.href='auth.html'" style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.875rem;" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">Login</button>
+                        `;
+                        console.log('✅ UsernotLogin，ShowLoginButton');
+                    }
+                } catch (e) {
+                    console.log('❌ None法UpdateUserMenu:', e);
+                }
+            }
+            
+            // immediatelyTryUpdate
+            updateUserMenu();
+            
+            // Listen Firebase and Auth Event
+            window.addEventListener('firebase-ready', updateUserMenu);
+            window.addEventListener('user-logged-in', updateUserMenu);
+            window.addEventListener('user-logged-out', updateUserMenu);
+            
+            // DelayagaintimesCheck（in caseEventalreadyTrigger）
+            setTimeout(updateUserMenu, 1000);
+            setTimeout(updateUserMenu, 2000);
+            
+            // expose toggleDropdown toallbureau
+            window.toggleDropdown = toggleDropdown;
+        });
+    </script>
+
+    <!-- mainneedContent area -->
+    <main style="padding-top: 10px;">
+    <!-- Dashboard Container -->
+    <div class="dashboard-container">
+        <!-- leftSidebar -->
+        <aside class="sidebar"></aside>
+
+        <!-- mainContent area -->
+        <main class="main-content">
+            <div class="account-header">
+                <h1>Account Settings</h1>
+                <p>Manage your profile and account preferences</p>
+            </div>
+
+            <div class="settings-container">
+                <!-- Profile -->
+                <div class="settings-section">
+                    <h2 class="section-title">Profile</h2>
+                    
+                    <div class="avatar-section">
+                        <div class="avatar" id="user-avatar" data-user-avatar>Y</div>
+                        <div class="avatar-actions">
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                <div style="font-weight: 600; color: #1f2937; font-size: 0.875rem;">Current Plan</div>
+                                <div id="user-plan" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; font-weight: 600; font-size: 0.875rem;">
+                                    <i class="fas fa-crown"></i>
+                                    <span>Basic Plan</span>
+                                </div>
+                                
+                                <!-- Subscription management button (Pro Plan users only) -->
+                                <div id="subscription-management" style="display: none; flex-direction: column; gap: 0.5rem; margin-top: 0.25rem;">
+                                    <!-- Next billing date -->
+                                    <div id="next-billing-date" style="font-size: 0.75rem; color: #6b7280; display: none;">
+                                        <i class="fas fa-calendar-alt" style="margin-right: 0.25rem;"></i>
+                                        Next Billing: <span id="next-billing-date-text"></span>
+                                    </div>
+                                    
+                                    <!-- Manage SubscriptionButton -->
+                                    <button onclick="openStripeCustomerPortal()" style="padding: 0.5rem 1rem; background: white; color: #667eea; border: 1px solid #667eea; border-radius: 6px; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.5rem;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='white'">
+                                        <i class="fas fa-cog"></i>
+                                        <span>Manage Subscription</span>
+                                    </button>
+                                </div>
+                                
+                                <!-- Upgrade PlanButton（Free Plan UseronlyShow）-->
+                                <a id="upgrade-plan-link" href="billing.html#subscription-plans" style="color: #667eea; font-size: 0.875rem; text-decoration: none; font-weight: 500;">Upgrade Plan →</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Credits Usage -->
+                    <div id="credits-usage-card" style="background: white; border-radius: 12px; border: 1px solid #e5e7eb; padding: 1.5rem; margin-top: 1.5rem;">
+                        <h3 style="font-size: 1rem; font-weight: 600; color: #1f2937; margin: 0 0 1rem 0;">Credits Usage</h3>
+                        
+                        <!-- Credits Progress -->
+                        <div style="margin-bottom: 1rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <span id="credits-used-text" style="font-size: 1.5rem; font-weight: 700; color: #1f2937;">200</span>
+                                <!-- 🔥 Delete了 "/ totalamount" Show -->
+                            </div>
+                            
+                            <!-- Progress條 -->
+                            <div style="width: 100%; height: 8px; background: #f3f4f6; border-radius: 9999px; overflow: hidden;">
+                                <div id="credits-progress-bar" style="height: 100%; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); border-radius: 9999px; width: 100%; transition: width 0.3s ease;"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Useinstruction -->
+                        <div style="padding: 0.75rem; background: #f9fafb; border-radius: 8px; margin-bottom: 1rem;">
+                            <div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem;">Credits Usage</div>
+                            <div id="credits-usage-description" style="font-size: 0.875rem; color: #1f2937;">
+                                1 Credit is consumed per page processed
+                            </div>
+                            <div id="overage-info" style="display: none; font-size: 0.8125rem; color: #6366f1; margin-top: 0.375rem; padding: 0.5rem; background: #f0f4ff; border-left: 3px solid #6366f1; border-radius: 4px;">
+                                💡 <strong>Overage Billing</strong>: Additional pages beyond From $3.88/month/page</strong>
+                            </div>
+                            <div style="font-size: 0.75rem; color: #9ca3af; margin-top: 0.5rem;">
+                                Reset Date: <span id="credits-reset-date">11/4/2025</span> ⓘ
+                            </div>
+                        </div>
+                        
+                        <!-- ActionsButton -->
+                        <div style="display: flex; gap: 0.75rem;">
+                            <a href="billing.html" style="flex: 1; text-align: center; padding: 0.625rem 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; font-weight: 600; font-size: 0.875rem; text-decoration: none; transition: opacity 0.2s;">
+                                Purchase Credits
+                            </a>
+                            <a href="#purchase-history" onclick="document.getElementById('purchase-history').scrollIntoView({behavior: 'smooth'}); return false;" style="flex: 1; text-align: center; padding: 0.625rem 1rem; border: 1px solid #d1d5db; color: #374151; border-radius: 8px; font-weight: 600; font-size: 0.875rem; text-decoration: none; transition: border-color 0.2s; cursor: pointer;">
+                                View History
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Password -->
+                <div class="settings-section">
+                    <h2 class="section-title">Password</h2>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Current Password</label>
+                        <input type="password" class="form-input" id="current-password">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">New Password</label>
+                        <input type="password" class="form-input" id="new-password">
+                        <p class="form-description">Password must be at least 8 characters</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Confirm New Password</label>
+                        <input type="password" class="form-input" id="confirm-password">
+                    </div>
+                    
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="changePassword()">Update Password</button>
+                    </div>
+                </div>
+
+                
+<!-- Purchase History -->
+                <div class="settings-section" id="purchase-history">
+                    <h2 class="section-title">Purchase History</h2>
+                    
+                    <div style="margin-bottom: 1.5rem;">
+                        <select id="history-month-filter" onchange="filterCreditsHistory()" style="padding: 0.5rem 1rem; border: 1px solid #d1d5db; border-radius: 6px; background: white; cursor: pointer; font-size: 0.875rem;">
+                            <option value="all">All Records</option>
+                            <!-- Dynamically generatedmonthOptions -->
+                        </select>
+                    </div>
+
+                    <div style="overflow-x: auto; max-height: 600px; overflow-y: auto; background: white; border-radius: 8px; border: 1px solid #e5e7eb;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead style="background: #f9fafb; position: sticky; top: 0; z-index: 10;">
+                                <tr>
+                                    <th style="text-align: left; padding: 1rem; font-weight: 600; color: #6b7280; font-size: 0.875rem; border-bottom: 2px solid #e5e7eb;">Date</th>
+                                    <th style="text-align: left; padding: 1rem; font-weight: 600; color: #6b7280; font-size: 0.875rem; border-bottom: 2px solid #e5e7eb;">Description</th>
+                                    <!-- 🔥 Delete了Typecolumn -->
+                                    <th style="text-align: right; padding: 1rem; font-weight: 600; color: #6b7280; font-size: 0.875rem; border-bottom: 2px solid #e5e7eb;">Credits</th>
+                                </tr>
+                            </thead>
+                            <tbody id="credits-history-tbody">
+                                <!-- dynamicLoadrecord -->
+                                <tr>
+                                    <td colspan="3" style="text-align: center; padding: 3rem; color: #9ca3af;">
+                                        <i class="fas fa-history" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                                        <div>Loading records...</div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Danger Zone -->
+                <div class="settings-section danger-zone">
+                    <h2 class="section-title">Danger Zone</h2>
+                    
+                    <div class="form-group">
+                        <p style="color: #6b7280; font-size: 0.875rem; margin-bottom: 1rem;">
+                            DeleteYourAccountwillPermanentRemove所Hasdata，包括Project、Documentandsetset。thisActionsNonecannot restore。
+                        </p>
+                        <button class="btn btn-danger" onclick="deleteAccount()">DeleteAccount</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Initialize
+        window.addEventListener('auth-state-changed', async (e) => {
+            console.log('🔥 receiveto auth-state-changed Event');
+            
+            if (!e.detail.user) {
+                console.log('❌ UsernotLogin，redirecttoHome');
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            console.log('✅ UseralreadyLogin:', e.detail.user.email);
+            
+            // CreateSidebar
+            if (window.VaultCaddySidebar && !window.accountSidebar) {
+                console.log('🎨 CreateSidebar for account page');
+                console.log('   VaultCaddySidebar available:', !!window.VaultCaddySidebar);
+                console.log('   SimpleDataManager available:', !!window.simpleDataManager);
+                console.log('   SimpleDataManager initialized:', window.simpleDataManager?.initialized);
+                
+                // 延迟初始化以确保所有依赖已加载
+                setTimeout(() => {
+                    console.log('🎨 Initializing sidebar after delay...');
+                    window.accountSidebar = new VaultCaddySidebar('account');
+                }, 500);
+            } else {
+                console.warn('⚠️ Sidebar not initialized:', {
+                    VaultCaddySidebar: !!window.VaultCaddySidebar,
+                    accountSidebar: !!window.accountSidebar
+                });
+            }
+            
+            // LoadUserdata
+            loadUserData(e.detail.user);
+        });
+        
+        // LoadUserdata
+        function loadUserData(user) {
+            // Settingsavatar
+            const avatar = document.getElementById('user-avatar');
+            const savedAvatar = localStorage.getItem('userAvatar');
+            
+            // unifiedUseSign upNameShow（如 Google 的做法）
+            let avatarText = '';
+            
+            // unifiedShow 'YC'
+            avatarText = 'YC';
+            
+            if (avatarText) {
+                avatar.textContent = avatarText;
+                avatar.style.backgroundImage = 'none';
+                localStorage.setItem('userAvatar', avatarText);
+            }
+            
+            // LoadUserplan
+            loadUserPlan();
+            
+            // LoadPreferences
+            const savedLanguage = localStorage.getItem('userLanguage') | 'zh-TW';
+            const savedTimezone = localStorage.getItem('userTimezone') | 'Asia/Taipei';
+            document.getElementById('language-select').value = savedLanguage;
+            document.getElementById('timezone-select').value = savedTimezone;
+            
+            // LoadPurchase History
+            loadCreditsHistory();
+        }
+        
+        // LoadUserplan
+        async function loadUserPlan() {
+            const planElement = document.getElementById('user-plan');
+            
+            // CheckYesNoHasPurchase Historyorsubscribe
+            let savedPlan = 'Free'; // Defaultas Free Plan
+            
+            try {
+                // from Firestore CheckYesNoHasActivesubscribe
+                if (window.simpleAuth && window.simpleAuth.currentUser) {
+                    const userId = window.simpleAuth.currentUser.uid;
+                    const userDoc = await firebase.firestore()
+                        .collection('users')
+                        .doc(userId)
+                        .get();
+                    
+                    if (userDoc.exists) {
+                        const userData = userDoc.data();
+                        
+                        // 🔥 priorityChecknew的 planType field
+                        if (userData.planType) {
+                            savedPlan = userData.planType.replace(' Plan', ''); // Remove ' Plan' back綴
+                            console.log('✅ from planType fieldGetplan:', savedPlan);
+                        }
+                        // ChecksubscribeStatus（oldversionlogic）
+                        else if (userData.subscription && userData.subscription.status === 'active') {
+                            savedPlan = userData.subscription.planType | 'Free';
+                        }
+                    }
+                }
+            } catch (error) {
+                                clearTimeout(timeoutId); // ✅ Clear timeout
+                console.error('GetUserplanFailed:', error);
+            }
+            
+            // If Firestore NoneActivesubscribe，Remove localStorage middle的ErrorData
+            if (savedPlan === 'Free') {
+                const localPlan = localStorage.getItem('userPlan');
+                if (localPlan && localPlan !== 'Free') {
+                    console.warn('⚠️ localStorage middleHasplanbut Firestore NoneActivesubscribe，Remove localStorage');
+                    localStorage.removeItem('userPlan');
+                    localStorage.removeItem('userPlanPeriod');
+                }
+            }
+            
+            console.log('📋 Userplan:', savedPlan);
+            
+            // Root據planTypeSettingsdifferent的Styleandicon
+            const planConfig = {
+                'Free': {
+                    name: 'Free Plan',
+                    icon: 'fa-gift',
+                    gradient: 'linear-gradient(135deg, #9ca3af 0%, #6b7280 100%)'
+                },
+                'Basic': {
+                    name: 'Basic Plan',
+                    icon: 'fa-star',
+                    gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                },
+                'Pro': {
+                    name: 'Pro Plan',
+                    icon: 'fa-crown',
+                    gradient: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)'
+                },
+                'Business': {
+                    name: 'Business Plan',
+                    icon: 'fa-gem',
+                    gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
+                }
+            };
+            
+            const config = planConfig[savedPlan] | planConfig['Free'];
+            
+            planElement.innerHTML = `
+                <i class="fas ${config.icon}"></i>
+                <span>${config.name}</span>
+            `;
+            planElement.style.background = config.gradient;
+            
+            // Saveto localStorage
+            localStorage.setItem('userPlan', savedPlan);
+            
+            // 🔧 Root據planTypeShow/HidesubscribemanagementButton
+            const subscriptionManagement = document.getElementById('subscription-management');
+            const upgradePlanLink = document.getElementById('upgrade-plan-link');
+            
+            // 💡 Show/Hide overage billing information based on plan type
+            const overageInfo = document.getElementById('overage-info');
+            if (savedPlan === 'Pro' | savedPlan === 'Business') {
+                // Pro Plan or Business Plan User: Show overage billing information
+                if (overageInfo) {
+                    overageInfo.style.display = 'block';
+                }
+            } else {
+                // Free Plan or Basic Plan User: Hide overage billing information
+                if (overageInfo) {
+                    overageInfo.style.display = 'none';
+                }
+            }
+            
+            if (savedPlan === 'Pro' | savedPlan === 'Business') {
+                // Pro Plan or Business Plan User：Showsubscribemanagement，Hide升levellink
+                subscriptionManagement.style.display = 'flex';
+                upgradePlanLink.style.display = 'none';
+                
+                // LoadsubscribeDetails
+                await loadSubscriptionDetails();
+            } else {
+                // Free Plan or Basic Plan User：Hidesubscribemanagement，Show升levellink
+                subscriptionManagement.style.display = 'none';
+                upgradePlanLink.style.display = 'block';
+            }
+            
+            // Load Credits Usage
+            loadCreditsUsage();
+        }
+        
+        // LoadsubscribeDetails
+        async function loadSubscriptionDetails() {
+            try {
+                if (!window.simpleAuth | !window.simpleAuth.currentUser) {
+                    return;
+                }
+                
+                const userId = window.simpleAuth.currentUser.uid;
+                const userDoc = await firebase.firestore()
+                    .collection('users')
+                    .doc(userId)
+                    .get();
+                
+                if (!userDoc.exists) {
+                    return;
+                }
+                
+                const userData = userDoc.data();
+                
+                // Show next billing date
+                const nextBillingDateElement = document.getElementById('next-billing-date');
+                const nextBillingDateText = document.getElementById('next-billing-date-text');
+                
+                if (userData.resetDate && !userData.subscriptionCancelAtPeriodEnd) {
+                    nextBillingDateElement.style.display = 'block';
+                    const resetDate = userData.resetDate.toDate();
+                    nextBillingDateText.textContent = resetDate.toLocaleDateString('zh-TW', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                }
+                
+                console.log('✅ subscribeDetailsalreadyLoad');
+                
+            } catch (error) {
+                                clearTimeout(timeoutId); // ✅ Clear timeout
+                console.error('❌ LoadsubscribeDetailsFailed:', error);
+            }
+        }
+        
+        // Open Stripe Customer Portal（Manage Subscription）
+        async function openStripeCustomerPortal() {
+            const button = event?.target?.closest('button');
+            const originalHTML = button ? button.innerHTML : '';
+            
+            try {
+                console.log('🔧 Open Stripe Customer Portal');
+                
+                if (!window.simpleAuth | !window.simpleAuth.currentUser) {
+                    alert('Please firstLogin');
+                    return;
+                }
+                
+                // ShowLoadTips
+                if (button) {
+                    button.disabled = true;
+                    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+                }
+                
+                // adjustuse Cloud Function Create Customer Portal Session
+                const functions = firebase.functions();
+                const createPortalSession = functions.httpsCallable('createStripeCustomerPortalSession');
+                
+                console.log('📞 adjustuse createStripeCustomerPortalSession...');
+                
+                const result = await createPortalSession({
+                    returnUrl: window.location.href // BackWhenfrontpage
+                });
+                
+                console.log('✅ Cloud Function Back:', result);
+                
+                if (result.data && result.data.url) {
+                    // Jump toto Stripe Customer Portal
+                    console.log('🔗 Jump toto:', result.data.url);
+                    window.location.href = result.data.url;
+                } else {
+                    throw new Error('None法Create Customer Portal Session');
+                }
+                
+            } catch (error) {
+                                clearTimeout(timeoutId); // ✅ Clear timeout
+                console.error('❌ Open Customer Portal Failed:', error);
+                console.error('ErrorDetails:', error.code, error.message, error.details);
+                
+                // Root據ErrorTypeShowdifferent的Tips
+                let errorMessage = 'None法Opensubscribemanagementpage';
+                
+                if (error.code === 'unauthenticated') {
+                    errorMessage = 'Please firstLogin';
+                } else if (error.code === 'failed-precondition') {
+                    errorMessage = 'youreturnNonesubscriberecord。Please firstsubscribe Pro Plan。';
+                } else if (error.message) {
+                    errorMessage = `Error：${error.message}`;
+                }
+                
+                alert(errorMessage);
+                
+                // RestoreButtonStatus
+                if (button) {
+                    button.disabled = false;
+                    button.innerHTML = originalHTML;
+                }
+            }
+        }
+        
+        // Load Credits Usage
+        async function loadCreditsUsage() {
+            try {
+                // planPairshould的 Credits amountdegree
+                const planCredits = {
+                    'Free': { From $3.88/month, yearly: 10 }, // Free Plan Has 10 個onetimes性 Credits
+                    'Basic': { From $3.88/month, yearly: 2400 },
+                    'Pro': { From $3.88/month, yearly: 6000 },
+                    'Business': { From $3.88/month, yearly: 24000 } // fixas 2000/month
+                };
+                
+                // GetWhenfrontplan（priorityfrom Firestore，Then localStorage）
+                let currentPlan = 'Free';
+                let planPeriod = 'monthly';
+                
+                // from Firestore GetactualinternationalsubscribeStatus
+                if (window.simpleAuth && window.simpleAuth.currentUser) {
+                    try {
+                        const userId = window.simpleAuth.currentUser.uid;
+                        const userDoc = await firebase.firestore()
+                            .collection('users')
+                            .doc(userId)
+                            .get();
+                        
+                        if (userDoc.exists) {
+                            const userData = userDoc.data();
+                            
+                            // CheckYesNoHasActivesubscribe
+                            if (userData.subscription && userData.subscription.status === 'active') {
+                                currentPlan = userData.subscription.planType | 'Free';
+                                planPeriod = userData.subscription.period | 'monthly';
+                                console.log('✅ from Firestore Getplan:', currentPlan, planPeriod);
+                            } else {
+                                console.log('⚠️ Firestore middleNoneActivesubscribe，Use Free Plan');
+                            }
+                        }
+                    } catch (error) {
+                                        clearTimeout(timeoutId); // ✅ Clear timeout
+                console.error('❌ from Firestore GetplanFailed:', error);
+                    }
+                }
+                
+                // If Firestore NoneActivesubscribe，Check localStorage（butnot信任它）
+                if (currentPlan === 'Free') {
+                    const localPlan = localStorage.getItem('userPlan');
+                    if (localPlan && localPlan !== 'Free') {
+                        console.warn('⚠️ localStorage middleHasplanbut Firestore None，Remove localStorage');
+                        localStorage.removeItem('userPlan');
+                        localStorage.removeItem('userPlanPeriod');
+                    }
+                }
+                
+                console.log('📊 FinallyUseplan:', currentPlan, planPeriod);
+                
+                // Getplan的 Credits amountdegree
+                const totalCredits = planCredits[currentPlan][planPeriod] | 0;
+                
+                // from Firebase GetWhenfront Credits
+                let currentCredits = 0;
+                
+                if (window.simpleAuth && window.simpleAuth.currentUser) {
+                    try {
+                        const userId = window.simpleAuth.currentUser.uid;
+                        const userDoc = await firebase.firestore()
+                            .collection('users')
+                            .doc(userId)
+                            .get();
+                        
+                        if (userDoc.exists) {
+                            const userData = userDoc.data();
+                            currentCredits = userData.credits | 0;
+                            
+                            // 🔥 priorityChecknew的 resetDate field
+                            if (userData.resetDate) {
+                                const resetDate = userData.resetDate.toDate();
+                                document.getElementById('credits-reset-date').textContent = 
+                                    resetDate.toLocaleDateString('zh-TW', { 
+                                        year: 'numeric', 
+                                        month: 'long', 
+                                        day: 'numeric' 
+                                    });
+                                console.log('✅ Get reset date from resetDate field:', resetDate);
+                            }
+                            // If there is subscription information, get reset date (legacy logic)
+                            else if (userData.subscription && userData.subscription.currentPeriodEnd) {
+                                const resetDate = userData.subscription.currentPeriodEnd.toDate();
+                                document.getElementById('credits-reset-date').textContent = 
+                                    resetDate.toLocaleDateString('zh-TW', { 
+                                        year: 'numeric', 
+                                        month: 'long', 
+                                        day: 'numeric' 
+                                    });
+                            } else {
+                                // IfNonesubscribeInformation，calculatedown個month1號
+                                const nextMonth = new Date();
+                                nextMonth.setMonth(nextMonth.getMonth() + 1);
+                                nextMonth.setDate(1);
+                                document.getElementById('credits-reset-date').textContent = 
+                                    nextMonth.toLocaleDateString('zh-TW', { 
+                                        year: 'numeric', 
+                                        month: 'long', 
+                                        day: 'numeric' 
+                                    });
+                            }
+                        }
+                    } catch (error) {
+                                        clearTimeout(timeoutId); // ✅ Clear timeout
+                console.error('Get Credits Failed:', error);
+                    }
+                }
+                
+                // Root據planTypeShow Credits
+                // 所HasplanallShow "X / totalamount" Format
+                document.getElementById('credits-used-text').textContent = currentCredits;
+                document.getElementById('credits-total-text').parentElement.style.display = ''; // Show "/ X" partial
+                document.getElementById('credits-total-text').textContent = totalCredits;
+                
+                // calculateUsePercentage
+                const percentage = totalCredits > 0 ? (currentCredits / totalCredits) * 100 : 0;
+                document.getElementById('credits-progress-bar').style.width = percentage + '%';
+                
+                // If Credits notenough 20%，modifychangeProgress條顏色
+                if (percentage < 20) {
+                    document.getElementById('credits-progress-bar').style.background = 
+                        'linear-gradient(90deg, #ef4444 0%, #dc2626 100%)';
+                } else {
+                    // ResetasDefault顏色
+                    document.getElementById('credits-progress-bar').style.background = 
+                        'linear-gradient(90deg, #667eea 0%, #764ba2 100%)';
+                }
+                
+                // Update reset date information
+                if (currentPlan === 'Free') {
+                    // 🔥 Free Plan: Don't show any reset date information
+                    const resetDateElement = document.getElementById('credits-reset-date');
+                    if (resetDateElement && resetDateElement.parentElement) {
+                        resetDateElement.parentElement.innerHTML = '';
+                    }
+                } else {
+                    // Paid plans: Show reset date
+                    // Reset date is already set in the code above
+                }
+                
+                console.log(`✅ Credits LoadComplete: ${currentCredits} / ${totalCredits} (${percentage.toFixed(1)}%)`);
+
+            } catch (error) {
+                                clearTimeout(timeoutId); // ✅ Clear timeout
+                console.error('Load Credits UsageFailed:', error);
+            }
+        }
+
+        // updatemodifyPassword
+        async function changePassword() {
+            const currentPassword = document.getElementById('current-password').value;
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            
+            if (!currentPassword | !newPassword | !confirmPassword) {
+                alert('please填寫所HasPasswordfield');
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                alert('newPasswordandConfirmPasswordnot符');
+                return;
+            }
+            
+            if (newPassword.length < 8) {
+                alert('Passwordtofewneedneed 8 個character元');
+                return;
+            }
+            
+            try {
+                const user = window.simpleAuth.currentUser;
+                const credential = firebase.auth.EmailAuthProvider.credential(
+                    user.email,
+                    currentPassword
+                );
+                
+                await user.reauthenticateWithCredential(credential);
+                await user.updatePassword(newPassword);
+                
+                alert('PasswordUpdated');
+                
+                // ClearPasswordfield
+                document.getElementById('current-password').value = '';
+                document.getElementById('new-password').value = '';
+                document.getElementById('confirm-password').value = '';
+            } catch (error) {
+                                clearTimeout(timeoutId); // ✅ Clear timeout
+                console.error('❌ UpdatePasswordFailed:', error);
+                alert('UpdatePasswordFailed: ' + error.message);
+            }
+        }
+        
+        // storagePreferences
+        function savePreferences() {
+            const language = document.getElementById('language-select').value;
+            const timezone = document.getElementById('timezone-select').value;
+            
+            // storageto localStorage
+            localStorage.setItem('userLanguage', language);
+            localStorage.setItem('userTimezone', timezone);
+            
+            alert('PreferencesSaved');
+        }
+        
+        // storageNotificationssetset
+        function saveNotifications() {
+            const emailNotifications = document.getElementById('email-notifications').checked;
+            const marketingEmails = document.getElementById('marketing-emails').checked;
+            
+            // storageto localStorage
+            localStorage.setItem('emailNotifications', emailNotifications);
+            localStorage.setItem('marketingEmails', marketingEmails);
+            
+            alert('NotificationssetsetSaved');
+        }
+        
+        // Load Credits 歷史record
+        // dynamicLoadmonthOptions
+        async function loadMonthOptions() {
+            const select = document.getElementById('history-month-filter');
+            
+            try {
+                if (!window.simpleAuth | !window.simpleAuth.currentUser) {
+                    return;
+                }
+                
+                const userId = window.simpleAuth.currentUser.uid;
+                
+                // GetAll Records
+                const historySnapshot = await firebase.firestore()
+                    .collection('users')
+                    .doc(userId)
+                    .collection('creditsHistory')
+                    .orderBy('createdAt', 'desc')
+                    .get();
+                
+                if (historySnapshot.empty) {
+                    return;
+                }
+                
+                // extractnotduplicate的yearmonth
+                const months = new Set();
+                historySnapshot.forEach(doc => {
+                    const record = doc.data();
+                    if (record.createdAt) {
+                        const date = record.createdAt.toDate();
+                        const yearMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                        months.add(yearMonth);
+                    }
+                });
+                
+                // presstimebetween倒序Sort
+                const sortedMonths = Array.from(months).sort((a, b) => b.localeCompare(a));
+                
+                // SaveWhenfrontselectmiddle的Value
+                const currentValue = select.value;
+                
+                // Clear現HasOptions（remove了"All Records"）
+                select.innerHTML = '<option value="all">All Records</option>';
+                
+                // Dynamically generatedmonthOptions
+                sortedMonths.forEach(yearMonth => {
+                    const [year, month] = yearMonth.split('-');
+                    const option = document.createElement('option');
+                    option.value = yearMonth;
+                    option.textContent = `${parseInt(month)}/${year}`;
+                    select.appendChild(option);
+                });
+                
+                // Restoreselectmiddle的Value
+                if (sortedMonths.includes(currentValue)) {
+                    select.value = currentValue;
+                } else {
+                    select.value = 'all';
+                }
+                
+                console.log(`✅ Load了 ${sortedMonths.length} 個monthOptions:`, sortedMonths);
+                
+            } catch (error) {
+                                clearTimeout(timeoutId); // ✅ Clear timeout
+                console.error('LoadmonthOptionsFailed:', error);
+            }
+        }
+        
+
+        // ✅ 从查询结果生成月份选项（避免重复查询 Firebase）
+        function generateMonthOptionsFromSnapshot(historySnapshot) {
+            const select = document.getElementById('history-month-filter');
+            if (!select | historySnapshot.empty) {
+                return;
+            }
+            
+            const months = new Set();
+            historySnapshot.forEach(doc => {
+                const record = doc.data();
+                if (record.createdAt) {
+                    const date = record.createdAt.toDate();
+                    const yearMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                    months.add(yearMonth);
+                }
+            });
+            
+            const sortedMonths = Array.from(months).sort((a, b) => b.localeCompare(a));
+            const currentValue = select.value;
+            
+            // 保留第一个选项
+            const firstOption = select.options[0];
+            if (!firstOption) return;
+            
+            select.innerHTML = '';
+            select.appendChild(firstOption.cloneNode(true));
+            
+            sortedMonths.forEach(yearMonth => {
+                const [year, month] = yearMonth.split('-');
+                const option = document.createElement('option');
+                option.value = yearMonth;
+                option.textContent = `${parseInt(month)}/${year}`;
+                select.appendChild(option);
+            });
+            
+            if (sortedMonths.includes(currentValue)) {
+                select.value = currentValue;
+            }
+            
+            console.log(`✅ Generated ${sortedMonths.length} month options`);
+        }
+        
+        async function loadCreditsHistory() {
+            const tbody = document.getElementById('credits-history-tbody');
+            const filter = document.getElementById('history-month-filter').value;
+            
+            // 🔥 首timesLoadtime，Dynamically generatedmonthOptions
+            await loadMonthOptions();
+            
+            try {
+                // CheckYesNoHasLoginUser
+                if (!window.simpleAuth | !window.simpleAuth.currentUser) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="3" style="text-align: center; padding: 2rem; color: #9ca3af;">
+                                Please firstLogintoView History
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                const userId = window.simpleAuth.currentUser.uid;
+                
+                // 🔥 buildquery，Supportmonthfilter
+                let query = firebase.firestore()
+                    .collection('users')
+                    .doc(userId)
+                    .collection('creditsHistory')
+                    .orderBy('createdAt', 'desc');
+                
+                // IfSelect了specificmonth，AddDateRangefilter
+                if (filter !== 'all') {
+                    const [year, month] = filter.split('-').map(Number);
+                    const startDate = new Date(year, month - 1, 1); // month的No.oneday
+                    const endDate = new Date(year, month, 0, 23, 59, 59); // month的Finallyoneday
+                    
+                    query = query
+                        .where('createdAt', '>=', startDate)
+                        .where('createdAt', '<=', endDate);
+                    
+                    console.log(`📅 Filter records for ${month}/${year}`);
+                }
+                
+                const historySnapshot = await query.limit(50).get();
+                console.log('✅ Query complete, record count:', historySnapshot.size);
+                
+                // ✅ Clear timeout
+                clearTimeout(timeoutId);
+                
+                // ✅ Generate month options from query results
+                generateMonthOptionsFromSnapshot(historySnapshot);
+                
+                if (historySnapshot.empty) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="3" style="text-align: center; padding: 2rem; color: #9ca3af;">
+                                <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+                                <div>暫Nonerecord</div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                // Renderrecord
+                const rows = [];
+                historySnapshot.forEach(doc => {
+                    const record = doc.data();
+                    const date = record.createdAt ? 
+                        record.createdAt.toDate().toLocaleString('en-US', { 
+                            month: 'short',
+                            day: 'numeric', 
+                            hour: 'numeric',
+                            minute: '2-digit',
+                            hour12: true
+                        }) : '--';
+                    
+                    // certainTypeandDescription
+                    let type, typeColor, description, sign;
+                    
+                    if (record.type === 'add') {
+                        type = 'increase';
+                        typeColor = '#10b981';
+                        sign = '+';
+                        
+                        if (record.metadata?.source === 'subscription') {
+                            description = `subscribeplan - ${record.metadata.planType?.toUpperCase() | 'N/A'}`;
+                        } else if (record.metadata?.source === 'purchase') {
+                            description = record.metadata.productName | 'Purchase Credits';
+                        } else {
+                            description = 'Add Credits';
+                        }
+                    } else if (record.type === 'deduct') {
+                        type = 'Use';
+                        typeColor = '#ef4444';
+                        sign = '-';
+                        // 🔥 IfDocumentProcess，Show"FileConvert"
+                        description = record.metadata?.projectName | 'FileConvert';
+                    } else if (record.type === 'reset') {
+                        type = 'Reset';
+                        typeColor = '#6b7280';
+                        sign = '';
+                        description = `permonthReset - ${record.metadata?.planType?.toUpperCase() | 'N/A'}`;
+                    } else {
+                        type = 'Other';
+                        typeColor = '#9ca3af';
+                        sign = '';
+                        // 🔥 will"OtherActions"modifyas"FileConvert"
+                        description = 'FileConvert';
+                    }
+                    
+                    // 🔥 Delete了Typecolumn
+                    rows.push(`
+                        <tr style="border-bottom: 1px solid #e5e7eb;">
+                            <td style="padding: 1rem; color: #6b7280; font-size: 0.875rem;">${date}</td>
+                            <td style="padding: 1rem; color: #1f2937;">${description}</td>
+                            <td style="padding: 1rem; text-align: right; font-weight: 600; color: ${typeColor};">
+                                ${sign}${record.amount | 0}
+                            </td>
+                        </tr>
+                    `);
+                });
+                
+                tbody.innerHTML = rows.join('');
+                
+                console.log(`✅ Load了 ${rows.length} 條 Credits 歷史record`);
+                
+            } catch (error) {
+                                clearTimeout(timeoutId); // ✅ Clear timeout
+                console.error('Load Credits 歷史recordFailed:', error);
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="3" style="text-align: center; padding: 2rem; color: #ef4444;">
+                            <i class="fas fa-exclamation-circle" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                            <div>LoadrecordFailed</div>
+                            <div style="font-size: 0.875rem; margin-top: 0.5rem; color: #9ca3af;">${error.message}</div>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+        
+        // pressmonthfilterrecord
+        function filterCreditsHistory() {
+            const filter = document.getElementById('history-month-filter').value;
+            console.log('filterrecord:', filter);
+            
+            // heavynewLoadrecord（herecantoAddfilterlogic）
+            loadCreditsHistory();
+        }
+        
+        // DeleteAccount
+        async function deleteAccount() {
+            const confirmed = confirm('youConfirm toDeleteAccount嗎？thisActionsNonecannot restore。');
+            if (!confirmed) return;
+            
+            const doubleConfirm = confirm('這willPermanentDeleteYour所Hasdata。youConfirm toContinue嗎？');
+            if (!doubleConfirm) return;
+            
+            try {
+                const user = window.simpleAuth.currentUser;
+                await user.delete();
+                
+                alert('AccountalreadyDelete');
+                window.location.href = 'index.html';
+            } catch (error) {
+                                clearTimeout(timeoutId); // ✅ Clear timeout
+                console.error('❌ DeleteAccountFailed:', error);
+                alert('DeleteAccountFailed: ' + error.message);
+            }
+        }
+        
+        // ✅ Email Verification check
+        (async function initEmailVerification() {
+            // Wait Firebase Auth Initialize
+            await new Promise(resolve => {
+                const checkAuth = setInterval(() => {
+                    if (window.firebase && firebase.auth) {
+                        clearInterval(checkAuth);
+                        resolve();
+                    }
+                }, 100);
+            });
+            
+            // Check email verifyStatus（ShowTipsbutnotpreventpage）
+            if (window.checkEmailVerification) {
+                await checkEmailVerification({
+                    showNotice: true,  // ShowTipshorizontal幅
+                    blockPage: false   // notpreventpageUse
+                });
+            }
+        })();
+    </script>
+
+    <!-- 🔥 Hamburger menuexceedlevelSimplerepairPlan -->
+    <script>
+        console.log('🔥 StartInitializeHamburger menu...');
+        
+        // OpenSidebarFunction
+        function openSidebar() {
+            console.log('🔵 OpenSidebar');
+            const sidebar = document.getElementById('mobile-sidebar');
+            const overlay = document.getElementById('mobile-sidebar-overlay');
+            
+            if (sidebar && overlay) {
+                sidebar.style.left = '0';
+                overlay.style.display = 'block';
+                overlay.style.opacity = '1';
+                document.body.style.overflow = 'hidden';
+                console.log('✅ SidebarOpened');
+            }
+        }
+        
+        // CloseSidebarFunction
+        function closeSidebar() {
+            console.log('🔵 CloseSidebar');
+            const sidebar = document.getElementById('mobile-sidebar');
+            const overlay = document.getElementById('mobile-sidebar-overlay');
+            
+            if (sidebar && overlay) {
+                sidebar.style.left = '-100%';
+                overlay.style.opacity = '0';
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                }, 300); // WaitAnimationComplete（and CSS transition consistent）
+                document.body.style.overflow = 'auto';
+                console.log('✅ SidebaralreadyClose');
+            }
+        }
+        
+        // exceedlevelSimple的InitializeFunction
+        function simpleInitMenu() {
+            const btn = document.getElementById('mobile-menu-btn');
+            const overlay = document.getElementById('mobile-sidebar-overlay');
+            
+            if (!btn | !overlay) {
+                console.log('⏳ ElementNot found，200msbackRetry');
+                setTimeout(simpleInitMenu, 200);
+                return;
+            }
+            
+            console.log('✅ findto所HasElement！');
+            
+            // ButtonclickProcess
+            btn.addEventListener('click', function() {
+                console.log('🔵 Buttonbyclick！');
+                openSidebar();
+            });
+            
+            // touchProcess
+            btn.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                console.log('🔵 touchEvent！');
+                openSidebar();
+            });
+            
+            // MaskclickClose
+            overlay.addEventListener('click', function() {
+                console.log('🔵 clickMaskClose');
+                closeSidebar();
+            });
+            
+            // MasktouchClose
+            overlay.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                console.log('🔵 touchMaskClose');
+                closeSidebar();
+            });
+            
+            console.log('✅ 所HasEventListendevicealreadybind');
+        }
+        
+        // immediatelyTryInitialize
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', simpleInitMenu);
+        } else {
+            setTimeout(simpleInitMenu, 100);
+        }
+        
+        // exposeFunctionsupplySidebarinnerlinkUse
+        window.closeMobileSidebar = closeSidebar;
+    </script>
+
+    <!-- CreateProjectModal -->
+    <div id="createProjectModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 12px; padding: 2rem; width: 90%; max-width: 500px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
+            <h2 style="font-size: 1.5rem; font-weight: 600; color: #1f2937; margin: 0 0 1rem 0;">CreatenewProject</h2>
+            <p style="color: #6b7280; font-size: 0.875rem; margin: 0 0 1.5rem 0;">inputProjectNametoCreatenew的DocumentProject</p>
+            
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem;">ProjectName</label>
+                <input 
+                    type="text" 
+                    id="projectName" 
+                    placeholder="for example: 01/2025 Invoice"
+                    style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem; color: #1f2937; box-sizing: border-box;"
+                    onkeypress="if(event.key==='Enter') createProject()">
+            </div>
+            
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button 
+                    onclick="closeCreateProjectModal()" 
+                    style="background: #ffffff; border: 1px solid #d1d5db; color: #374151; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500;">
+                    Cancel
+                </button>
+                <button 
+                    onclick="createProject()" 
+                    style="background: #3b82f6; border: none; color: white; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500;">
+                    Create
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // OpenCreateProjectModal
+        function openCreateProjectModal() {
+            const modal = document.getElementById('createProjectModal');
+            const input = document.getElementById('projectName');
+            modal.style.display = 'flex';
+            input.value = '';
+            input.focus();
+        }
+
+        // CloseCreateProjectModal
+        function closeCreateProjectModal() {
+            const modal = document.getElementById('createProjectModal');
+            modal.style.display = 'none';
+        }
+
+        // CreatenewProject
+        async function createProject() {
+            const input = document.getElementById('projectName');
+            const projectName = input.value.trim();
+            
+            if (!projectName) {
+                alert('Please enter a project name');
+                return;
+            }
+            
+            // CreatenewProjectObject
+            const newProject = {
+                id: 'project-' + Date.now(),
+                name: projectName,
+                thumbnail: null,
+                lastModified: new Date().toISOString(),
+                created: new Date().toISOString()
+            };
+            
+            // Saveto Firebase
+            try {
+                const projectData = await window.simpleDataManager.createProject(projectName);
+                console.log('✅ ProjectalreadySaveto Firebase:', projectData);
+                
+                // CloseModal
+                closeCreateProjectModal();
+                
+                // 🔥 repair：Use projectData.id 而Not projectData 本身
+                const projectId = projectData.id;
+                console.log('🚀 Jump totonewProjectpage:', projectId);
+                
+                // Jump totonewProjectpage
+                window.location.href = `firstproject.html?project=${projectId}`;
+            } catch (error) {
+                                clearTimeout(timeoutId); // ✅ Clear timeout
+                console.error('❌ Saveto Firebase Failed:', error);
+                alert('CreateProjectFailed，pleaseRetry');
+                return;
+            }
+        }
+
+        // clickMaskCloseModal
+        document.getElementById('createProjectModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeCreateProjectModal();
+            }
+        });
+    </script>
+
+
+    <!-- Google Analytics 事件跟踪 -->
+    <script src="/ga-event-tracking.js"></script>
+</body>
+</html>
