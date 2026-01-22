@@ -375,9 +375,9 @@ class VaultCaddySidebar {
         // 检测当前语言
         const path = window.location.pathname;
         let currentLang = 'zh';
-        if (path.startsWith('/en/')) currentLang = 'en';
-        else if (path.startsWith('/jp/')) currentLang = 'jp';
-        else if (path.startsWith('/kr/')) currentLang = 'kr';
+        if (path.includes('/en/')) currentLang = 'en';
+        else if (path.includes('/ja/')) currentLang = 'jp';
+        else if (path.includes('/ko/')) currentLang = 'kr';
         
         console.log('🌐 Sidebar: 应用翻译，当前语言:', currentLang);
         

@@ -322,31 +322,31 @@ class QwenVLMaxProcessor {
             const batchStartTime = Date.now();
             const results = await Promise.all(allPromises);
             const batchDuration = Date.now() - batchStartTime;
-            
+                    
             console.log(`\n✅ 所有页面并行处理完成！总耗时 ${batchDuration}ms (${(batchDuration/1000).toFixed(1)}秒)`);
             
             // 收集结果（按页码排序）
             results.sort((a, b) => a.pageNum - b.pageNum);
             
             for (const result of results) {
-                allResults.push(result.extractedData);
-                if (result.rawResponse) {
-                    allResponses.push(result.rawResponse);
+                    allResults.push(result.extractedData);
+                    if (result.rawResponse) {
+                        allResponses.push(result.rawResponse);
+                    }
+                    if (result.usage) {
+                        totalUsage.prompt_tokens += result.usage.prompt_tokens || 0;
+                        totalUsage.completion_tokens += result.usage.completion_tokens || 0;
+                        totalUsage.total_tokens += result.usage.total_tokens || 0;
                 }
-                if (result.usage) {
-                    totalUsage.prompt_tokens += result.usage.prompt_tokens || 0;
-                    totalUsage.completion_tokens += result.usage.completion_tokens || 0;
-                    totalUsage.total_tokens += result.usage.total_tokens || 0;
-                }
-            }
-            
-            // ✅ 调用进度回调
-            if (progressCallback) {
-                progressCallback({
+                    }
+                    
+                    // ✅ 调用进度回调
+                    if (progressCallback) {
+                        progressCallback({
                     currentBatch: 1,
                     totalBatches: 1,
                     progress: 100
-                });
+                        });
             }
             
             // 合并所有结果
