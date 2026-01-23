@@ -1039,7 +1039,7 @@
     <!-- Google Analytics 4 -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-LWPEKNC7RQ"></script>
     <script>
-      window.dataLayer = window.dataLayer | [];
+      window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'G-LWPEKNC7RQ');
@@ -1356,16 +1356,16 @@
                     if (isLoggedIn) {
                         // ✅ 이미로그인：표시사용자아바타
                         const currentUser = window.simpleAuth.getCurrentUser();
-                        userEmail = currentUser.email | '';
-                        userDisplayName = currentUser.displayName | '';
+                        userEmail = currentUser.email || '';
+                        userDisplayName = currentUser.displayName || '';
                         
                         // 🔥 부터 Firestore 가져오기 displayName 및 credits
                         if (window.simpleDataManager && window.simpleDataManager.initialized) {
                             try {
                                 const userDoc = await window.simpleDataManager.getUserDocument();
                                 if (userDoc) {
-                                    userDisplayName = userDoc.displayName | userDisplayName;
-                                    userCredits = userDoc.credits | 0;
+                                    userDisplayName = userDoc.displayName || userDisplayName;
+                                    userCredits = userDoc.credits || 0;
                                     console.log('✅ index.html 가져오기 Credits:', userCredits);
                                 }
                             } catch (error) {
@@ -1650,7 +1650,7 @@
         // 模擬支付성공및업데이트 Credits
         function simulatePaymentSuccess(credits) {
             // 업데이트本地 Credits 數量（實際위應該부터伺服기가져오기）
-            const currentCredits = parseInt(document.querySelector('.stat-value').textContent) | 0;
+            const currentCredits = parseInt(document.querySelector('.stat-value').textContent) || 0;
             const newCredits = currentCredits + credits;
             
             // 업데이트 UI 표시
@@ -1706,7 +1706,7 @@
             const paymentLink = stripeLinks[planType];
             const creditsInfo = creditsMap[planType];
             
-            if (!paymentLink | paymentLink.includes('REPLACE_WITH_YOUR')) {
+            if (!paymentLink || paymentLink.includes('REPLACE_WITH_YOUR')) {
                 console.error('⚠️ Payment link 아직설정');
                 alert('付費기능正에서설정중，요청稍후再試또는聯繫客服。\n\n힌트：관리員需要에서 Stripe 생성새로운的 Payment Links。');
                 return;
@@ -1793,7 +1793,7 @@
         
         // 授予구독 Credits
         function grantSubscriptionCredits(subscription) {
-            const currentCredits = parseInt(localStorage.getItem('userCredits') | '0');
+            const currentCredits = parseInt(localStorage.getItem('userCredits') || '0');
             const newCredits = currentCredits + subscription.credits;
             
             // 설정 Credits 까지期때사이
@@ -1823,7 +1823,7 @@
         // 확인 Credits 여부만료
         function checkCreditsExpiry() {
             const creditsExpiry = localStorage.getItem('creditsExpiry');
-            const subscriptionCredits = parseInt(localStorage.getItem('subscriptionCredits') | '0');
+            const subscriptionCredits = parseInt(localStorage.getItem('subscriptionCredits') || '0');
             
             if (creditsExpiry && subscriptionCredits > 0) {
                 const expiryDate = new Date(creditsExpiry);
@@ -1838,7 +1838,7 @@
                     // Credits 이미만료，제거구독 Credits
                     console.log('Credits 이미만료，正에서제거...');
                     
-                    const currentCredits = parseInt(localStorage.getItem('userCredits') | '0');
+                    const currentCredits = parseInt(localStorage.getItem('userCredits') || '0');
                     const newCredits = Math.max(0, currentCredits - subscriptionCredits);
                     
                     // 업데이트本地存儲
@@ -1874,8 +1874,8 @@
         
         // 가져오기 Credits 상태정보
         function getCreditsStatus() {
-            const userCredits = parseInt(localStorage.getItem('userCredits') | '0');
-            const subscriptionCredits = parseInt(localStorage.getItem('subscriptionCredits') | '0');
+            const userCredits = parseInt(localStorage.getItem('userCredits') || '0');
+            const subscriptionCredits = parseInt(localStorage.getItem('subscriptionCredits') || '0');
             const creditsExpiry = localStorage.getItem('creditsExpiry');
             const userPlan = localStorage.getItem('userPlan');
             
@@ -1883,7 +1883,7 @@
                 totalCredits: userCredits,
                 subscriptionCredits: subscriptionCredits,
                 purchasedCredits: userCredits - subscriptionCredits,
-                plan: userPlan | 'none',
+                plan: userPlan || 'none',
                 hasSubscription: subscriptionCredits > 0 && creditsExpiry,
                 daysLeft: 0
             };
@@ -2000,7 +2000,7 @@
             const btn = document.getElementById('mobile-menu-btn');
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
-            if (!btn | !overlay) {
+            if (!btn || !overlay) {
                 console.log('⏳ 요소미찾기까지，200ms후재시도');
                 setTimeout(simpleInitMenu, 200);
                 return;
@@ -2060,15 +2060,15 @@
             console.log(`🛒 생성 ${planType} 구독...`, { isTest });
             
             // 확인사용자여부登錄
-            if (!window.simpleAuth | !window.simpleAuth.isLoggedIn()) {
+            if (!window.simpleAuth || !window.simpleAuth.isLoggedIn()) {
                 alert('요청먼저登錄');
                 window.location.href = 'auth.html';
                 return;
             }
             
             // 가져오기버튼요소（에서 try 외부정의，회피作用域問題）
-            const button = event?.target | event?.currentTarget;
-            const originalText = button?.textContent | '시작하기';
+            const button = event?.target || event?.currentTarget;
+            const originalText = button?.textContent || '시작하기';
             
             try {
                 // 표시로드상태

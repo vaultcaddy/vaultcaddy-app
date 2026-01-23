@@ -1039,7 +1039,7 @@
     <!-- Google Analytics 4 -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-LWPEKNC7RQ"></script>
     <script>
-      window.dataLayer = window.dataLayer | [];
+      window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'G-LWPEKNC7RQ');
@@ -1356,16 +1356,16 @@
                     if (isLoggedIn) {
                         // ✅ 已ログイン：顯示ユーザー頭像
                         const currentUser = window.simpleAuth.getCurrentUser();
-                        userEmail = currentUser.email | '';
-                        userDisplayName = currentUser.displayName | '';
+                        userEmail = currentUser.email || '';
+                        userDisplayName = currentUser.displayName || '';
                         
                         // 🔥 から Firestore 取得 displayName と credits
                         if (window.simpleDataManager && window.simpleDataManager.initialized) {
                             try {
                                 const userDoc = await window.simpleDataManager.getUserDocument();
                                 if (userDoc) {
-                                    userDisplayName = userDoc.displayName | userDisplayName;
-                                    userCredits = userDoc.credits | 0;
+                                    userDisplayName = userDoc.displayName || userDisplayName;
+                                    userCredits = userDoc.credits || 0;
                                     console.log('✅ index.html 取得 Credits:', userCredits);
                                 }
                             } catch (error) {
@@ -1650,7 +1650,7 @@
         // 模擬支付成功並更新 Credits
         function simulatePaymentSuccess(credits) {
             // 更新本地 Credits 數量（實際上應該から伺服器取得）
-            const currentCredits = parseInt(document.querySelector('.stat-value').textContent) | 0;
+            const currentCredits = parseInt(document.querySelector('.stat-value').textContent) || 0;
             const newCredits = currentCredits + credits;
             
             // 更新 UI 顯示
@@ -1706,7 +1706,7 @@
             const paymentLink = stripeLinks[planType];
             const creditsInfo = creditsMap[planType];
             
-            if (!paymentLink | paymentLink.includes('REPLACE_WITH_YOUR')) {
+            if (!paymentLink || paymentLink.includes('REPLACE_WITH_YOUR')) {
                 console.error('⚠️ Payment link 尚未設定');
                 alert('付費機能正で設置中，請稍後再試または聯繫客服。\n\n提示：管理員需要で Stripe 作成新の Payment Links。');
                 return;
@@ -1793,7 +1793,7 @@
         
         // 授予訂閱 Credits
         function grantSubscriptionCredits(subscription) {
-            const currentCredits = parseInt(localStorage.getItem('userCredits') | '0');
+            const currentCredits = parseInt(localStorage.getItem('userCredits') || '0');
             const newCredits = currentCredits + subscription.credits;
             
             // 設置 Credits まで期時間
@@ -1823,7 +1823,7 @@
         // チェック Credits 是否過期
         function checkCreditsExpiry() {
             const creditsExpiry = localStorage.getItem('creditsExpiry');
-            const subscriptionCredits = parseInt(localStorage.getItem('subscriptionCredits') | '0');
+            const subscriptionCredits = parseInt(localStorage.getItem('subscriptionCredits') || '0');
             
             if (creditsExpiry && subscriptionCredits > 0) {
                 const expiryDate = new Date(creditsExpiry);
@@ -1838,7 +1838,7 @@
                     // Credits 已過期，削除訂閱 Credits
                     console.log('Credits 已過期，正で削除...');
                     
-                    const currentCredits = parseInt(localStorage.getItem('userCredits') | '0');
+                    const currentCredits = parseInt(localStorage.getItem('userCredits') || '0');
                     const newCredits = Math.max(0, currentCredits - subscriptionCredits);
                     
                     // 更新本地存儲
@@ -1874,8 +1874,8 @@
         
         // 取得 Credits ステータス信息
         function getCreditsStatus() {
-            const userCredits = parseInt(localStorage.getItem('userCredits') | '0');
-            const subscriptionCredits = parseInt(localStorage.getItem('subscriptionCredits') | '0');
+            const userCredits = parseInt(localStorage.getItem('userCredits') || '0');
+            const subscriptionCredits = parseInt(localStorage.getItem('subscriptionCredits') || '0');
             const creditsExpiry = localStorage.getItem('creditsExpiry');
             const userPlan = localStorage.getItem('userPlan');
             
@@ -1883,7 +1883,7 @@
                 totalCredits: userCredits,
                 subscriptionCredits: subscriptionCredits,
                 purchasedCredits: userCredits - subscriptionCredits,
-                plan: userPlan | 'none',
+                plan: userPlan || 'none',
                 hasSubscription: subscriptionCredits > 0 && creditsExpiry,
                 daysLeft: 0
             };
@@ -2000,7 +2000,7 @@
             const btn = document.getElementById('mobile-menu-btn');
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
-            if (!btn | !overlay) {
+            if (!btn || !overlay) {
                 console.log('⏳ 要素未找まで，200ms後再試行');
                 setTimeout(simpleInitMenu, 200);
                 return;
@@ -2060,15 +2060,15 @@
             console.log(`🛒 作成 ${planType} 訂閱...`, { isTest });
             
             // チェックユーザー是否登錄
-            if (!window.simpleAuth | !window.simpleAuth.isLoggedIn()) {
+            if (!window.simpleAuth || !window.simpleAuth.isLoggedIn()) {
                 alert('請先登錄');
                 window.location.href = 'auth.html';
                 return;
             }
             
             // 取得ボタン要素（で try 外定義，回避作用域問題）
-            const button = event?.target | event?.currentTarget;
-            const originalText = button?.textContent | '始める';
+            const button = event?.target || event?.currentTarget;
+            const originalText = button?.textContent || '始める';
             
             try {
                 // 顯示加載ステータス

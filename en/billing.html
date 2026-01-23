@@ -1039,7 +1039,7 @@
     <!-- Google Analytics 4 -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-LWPEKNC7RQ"></script>
     <script>
-      window.dataLayer = window.dataLayer | [];
+      window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'G-LWPEKNC7RQ');
@@ -1321,16 +1321,16 @@
                     if (isLoggedIn) {
                         // ✅ 已登入：顯示用戶頭像
                         const currentUser = window.simpleAuth.getCurrentUser();
-                        userEmail = currentUser.email | '';
-                        userDisplayName = currentUser.displayName | '';
+                        userEmail = currentUser.email || '';
+                        userDisplayName = currentUser.displayName || '';
                         
                         // 🔥 從 Firestore 獲取 displayName 和 credits
                         if (window.simpleDataManager && window.simpleDataManager.initialized) {
                             try {
                                 const userDoc = await window.simpleDataManager.getUserDocument();
                                 if (userDoc) {
-                                    userDisplayName = userDoc.displayName | userDisplayName;
-                                    userCredits = userDoc.credits | 0;
+                                    userDisplayName = userDoc.displayName || userDisplayName;
+                                    userCredits = userDoc.credits || 0;
                                     console.log('✅ index.html 獲取 Credits:', userCredits);
                                 }
                             } catch (error) {
@@ -1615,7 +1615,7 @@
         // 模擬支付成功並更新 Credits
         function simulatePaymentSuccess(credits) {
             // 更新本地 Credits 數量（實際上應該從伺服器獲取）
-            const currentCredits = parseInt(document.querySelector('.stat-value').textContent) | 0;
+            const currentCredits = parseInt(document.querySelector('.stat-value').textContent) || 0;
             const newCredits = currentCredits + credits;
             
             // 更新 UI 顯示
@@ -1671,7 +1671,7 @@
             const paymentLink = stripeLinks[planType];
             const creditsInfo = creditsMap[planType];
             
-            if (!paymentLink | paymentLink.includes('REPLACE_WITH_YOUR')) {
+            if (!paymentLink || paymentLink.includes('REPLACE_WITH_YOUR')) {
                 console.error('⚠️ Payment link 尚未配置');
                 alert('Payment feature is being set up, please try again later or contact support。\n\n提示：Administrator needs to create new Payment Links in Stripe。');
                 return;
@@ -1758,7 +1758,7 @@ Click OK to proceed to secure payment page.`;
         
         // 授予訂閱 Credits
         function grantSubscriptionCredits(subscription) {
-            const currentCredits = parseInt(localStorage.getItem('userCredits') | '0');
+            const currentCredits = parseInt(localStorage.getItem('userCredits') || '0');
             const newCredits = currentCredits + subscription.credits;
             
             // 設置 Credits 到期時間
@@ -1788,7 +1788,7 @@ Click OK to proceed to secure payment page.`;
         // 檢查 Credits 是否過期
         function checkCreditsExpiry() {
             const creditsExpiry = localStorage.getItem('creditsExpiry');
-            const subscriptionCredits = parseInt(localStorage.getItem('subscriptionCredits') | '0');
+            const subscriptionCredits = parseInt(localStorage.getItem('subscriptionCredits') || '0');
             
             if (creditsExpiry && subscriptionCredits > 0) {
                 const expiryDate = new Date(creditsExpiry);
@@ -1803,7 +1803,7 @@ Click OK to proceed to secure payment page.`;
                     // Credits 已過期，移除訂閱 Credits
                     console.log('Credits 已過期，正在移除...');
                     
-                    const currentCredits = parseInt(localStorage.getItem('userCredits') | '0');
+                    const currentCredits = parseInt(localStorage.getItem('userCredits') || '0');
                     const newCredits = Math.max(0, currentCredits - subscriptionCredits);
                     
                     // 更新本地存儲
@@ -1839,8 +1839,8 @@ Click OK to proceed to secure payment page.`;
         
         // 獲取 Credits 狀態信息
         function getCreditsStatus() {
-            const userCredits = parseInt(localStorage.getItem('userCredits') | '0');
-            const subscriptionCredits = parseInt(localStorage.getItem('subscriptionCredits') | '0');
+            const userCredits = parseInt(localStorage.getItem('userCredits') || '0');
+            const subscriptionCredits = parseInt(localStorage.getItem('subscriptionCredits') || '0');
             const creditsExpiry = localStorage.getItem('creditsExpiry');
             const userPlan = localStorage.getItem('userPlan');
             
@@ -1848,7 +1848,7 @@ Click OK to proceed to secure payment page.`;
                 totalCredits: userCredits,
                 subscriptionCredits: subscriptionCredits,
                 purchasedCredits: userCredits - subscriptionCredits,
-                plan: userPlan | 'none',
+                plan: userPlan || 'none',
                 hasSubscription: subscriptionCredits > 0 && creditsExpiry,
                 daysLeft: 0
             };
@@ -1965,7 +1965,7 @@ Click OK to proceed to secure payment page.`;
             const btn = document.getElementById('mobile-menu-btn');
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
-            if (!btn | !overlay) {
+            if (!btn || !overlay) {
                 console.log('⏳ 元素未找到，200ms後重試');
                 setTimeout(simpleInitMenu, 200);
                 return;
@@ -2025,15 +2025,15 @@ Click OK to proceed to secure payment page.`;
             console.log(`🛒 創建 ${planType} 訂閱...`, { isTest });
             
             // 檢查用戶是否登錄
-            if (!window.simpleAuth | !window.simpleAuth.isLoggedIn()) {
+            if (!window.simpleAuth || !window.simpleAuth.isLoggedIn()) {
                 alert('請先登錄');
                 window.location.href = 'auth.html';
                 return;
             }
             
             // 獲取按鈕元素（在 try 外定義，避免作用域問題）
-            const button = event?.target | event?.currentTarget;
-            const originalText = button?.textContent | 'Get Started';
+            const button = event?.target || event?.currentTarget;
+            const originalText = button?.textContent || 'Get Started';
             
             try {
                 // 顯示加載狀態
