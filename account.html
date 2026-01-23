@@ -686,7 +686,7 @@
     <!-- Google Analytics 4 -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-LWPEKNC7RQ"></script>
     <script>
-      window.dataLayer = window.dataLayer | [];
+      window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'G-LWPEKNC7RQ');
@@ -962,16 +962,16 @@
                     if (isLoggedIn) {
                         // ✅ 已登入：顯示用戶頭像
                         const currentUser = window.simpleAuth.getCurrentUser();
-                        userEmail = currentUser.email | '';
-                        userDisplayName = currentUser.displayName | '';
+                        userEmail = currentUser.email || '';
+                        userDisplayName = currentUser.displayName || '';
                         
                         // 🔥 從 Firestore 獲取 displayName 和 credits
                         if (window.simpleDataManager && window.simpleDataManager.initialized) {
                             try {
                                 const userDoc = await window.simpleDataManager.getUserDocument();
                                 if (userDoc) {
-                                    userDisplayName = userDoc.displayName | userDisplayName;
-                                    userCredits = userDoc.credits | 0;
+                                    userDisplayName = userDoc.displayName || userDisplayName;
+                                    userCredits = userDoc.credits || 0;
                                     console.log('✅ index.html 獲取 Credits:', userCredits);
                                 }
                             } catch (error) {
@@ -1243,8 +1243,8 @@
             loadUserPlan();
             
             // 載入偏好設定
-            const savedLanguage = localStorage.getItem('userLanguage') | 'zh-TW';
-            const savedTimezone = localStorage.getItem('userTimezone') | 'Asia/Taipei';
+            const savedLanguage = localStorage.getItem('userLanguage') || 'zh-TW';
+            const savedTimezone = localStorage.getItem('userTimezone') || 'Asia/Taipei';
             document.getElementById('language-select').value = savedLanguage;
             document.getElementById('timezone-select').value = savedTimezone;
             
@@ -1278,7 +1278,7 @@
                         }
                         // 檢查訂閱狀態（舊版邏輯）
                         else if (userData.subscription && userData.subscription.status === 'active') {
-                            savedPlan = userData.subscription.planType | 'Free';
+                            savedPlan = userData.subscription.planType || 'Free';
                         }
                     }
                 }
@@ -1323,7 +1323,7 @@
                 }
             };
             
-            const config = planConfig[savedPlan] | planConfig['Free'];
+            const config = planConfig[savedPlan] || planConfig['Free'];
             
             planElement.innerHTML = `
                 <i class="fas ${config.icon}"></i>
@@ -1340,7 +1340,7 @@
             
             // 💡 根據計劃類型顯示/隱藏超額計費說明
             const overageInfo = document.getElementById('overage-info');
-            if (savedPlan === 'Pro' | savedPlan === 'Business') {
+            if (savedPlan === 'Pro' || savedPlan === 'Business') {
                 // Pro Plan 或 Business Plan 用戶：顯示超額計費說明
                 if (overageInfo) {
                     overageInfo.style.display = 'block';
@@ -1352,7 +1352,7 @@
                 }
             }
             
-            if (savedPlan === 'Pro' | savedPlan === 'Business') {
+            if (savedPlan === 'Pro' || savedPlan === 'Business') {
                 // Pro Plan 或 Business Plan 用戶：顯示訂閱管理，隱藏升級鏈接
                 subscriptionManagement.style.display = 'flex';
                 upgradePlanLink.style.display = 'none';
@@ -1372,7 +1372,7 @@
         // 載入訂閱詳情
         async function loadSubscriptionDetails() {
             try {
-                if (!window.simpleAuth | !window.simpleAuth.currentUser) {
+                if (!window.simpleAuth || !window.simpleAuth.currentUser) {
                     return;
                 }
                 
@@ -1418,7 +1418,7 @@
             try {
                 console.log('🔧 打開 Stripe Customer Portal');
                 
-                if (!window.simpleAuth | !window.simpleAuth.currentUser) {
+                if (!window.simpleAuth || !window.simpleAuth.currentUser) {
                     alert('請先登入');
                     return;
                 }
@@ -1504,8 +1504,8 @@
                             
                             // 檢查是否有活躍訂閱
                             if (userData.subscription && userData.subscription.status === 'active') {
-                                currentPlan = userData.subscription.planType | 'Free';
-                                planPeriod = userData.subscription.period | 'monthly';
+                                currentPlan = userData.subscription.planType || 'Free';
+                                planPeriod = userData.subscription.period || 'monthly';
                                 console.log('✅ 從 Firestore 獲取計劃:', currentPlan, planPeriod);
                             } else {
                                 console.log('⚠️ Firestore 中沒有活躍訂閱，使用 Free Plan');
@@ -1530,7 +1530,7 @@
                 console.log('📊 最終使用計劃:', currentPlan, planPeriod);
                 
                 // 獲取計劃的 Credits 額度
-                const totalCredits = planCredits[currentPlan][planPeriod] | 0;
+                const totalCredits = planCredits[currentPlan][planPeriod] || 0;
                 
                 // 從 Firebase 獲取當前 Credits
                 let currentCredits = 0;
@@ -1545,7 +1545,7 @@
                         
                         if (userDoc.exists) {
                             const userData = userDoc.data();
-                            currentCredits = userData.credits | 0;
+                            currentCredits = userData.credits || 0;
                             
                             // 🔥 優先檢查新的 resetDate 字段
                             if (userData.resetDate) {
@@ -1632,7 +1632,7 @@
             const newPassword = document.getElementById('new-password').value;
             const confirmPassword = document.getElementById('confirm-password').value;
             
-            if (!currentPassword | !newPassword | !confirmPassword) {
+            if (!currentPassword || !newPassword || !confirmPassword) {
                 alert('請填寫所有密碼欄位');
                 return;
             }
@@ -1700,7 +1700,7 @@
             const select = document.getElementById('history-month-filter');
             
             try {
-                if (!window.simpleAuth | !window.simpleAuth.currentUser) {
+                if (!window.simpleAuth || !window.simpleAuth.currentUser) {
                     return;
                 }
                 
@@ -1773,7 +1773,7 @@
             
             try {
                 // 檢查是否有登入用戶
-                if (!window.simpleAuth | !window.simpleAuth.currentUser) {
+                if (!window.simpleAuth || !window.simpleAuth.currentUser) {
                     tbody.innerHTML = `
                         <tr>
                             <td colspan="3" style="text-align: center; padding: 2rem; color: #9ca3af;">
@@ -1842,9 +1842,9 @@
                         sign = '+';
                         
                         if (record.metadata?.source === 'subscription') {
-                            description = `訂閱計劃 - ${record.metadata.planType?.toUpperCase() | 'N/A'}`;
+                            description = `訂閱計劃 - ${record.metadata.planType?.toUpperCase() || 'N/A'}`;
                         } else if (record.metadata?.source === 'purchase') {
-                            description = record.metadata.productName | '購買 Credits';
+                            description = record.metadata.productName || '購買 Credits';
                         } else {
                             description = '添加 Credits';
                         }
@@ -1853,12 +1853,12 @@
                         typeColor = '#ef4444';
                         sign = '-';
                         // 🔥 如果是文檔處理，顯示"文件轉換"
-                        description = record.metadata?.projectName | '文件轉換';
+                        description = record.metadata?.projectName || '文件轉換';
                     } else if (record.type === 'reset') {
                         type = '重置';
                         typeColor = '#6b7280';
                         sign = '';
-                        description = `每月重置 - ${record.metadata?.planType?.toUpperCase() | 'N/A'}`;
+                        description = `每月重置 - ${record.metadata?.planType?.toUpperCase() || 'N/A'}`;
                     } else {
                         type = '其他';
                         typeColor = '#9ca3af';
@@ -1873,7 +1873,7 @@
                             <td style="padding: 1rem; color: #6b7280; font-size: 0.875rem;">${date}</td>
                             <td style="padding: 1rem; color: #1f2937;">${description}</td>
                             <td style="padding: 1rem; text-align: right; font-weight: 600; color: ${typeColor};">
-                                ${sign}${record.amount | 0}
+                                ${sign}${record.amount || 0}
                             </td>
                         </tr>
                     `);
@@ -1991,7 +1991,7 @@
             const btn = document.getElementById('mobile-menu-btn');
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
-            if (!btn | !overlay) {
+            if (!btn || !overlay) {
                 console.log('⏳ 元素未找到，200ms後重試');
                 setTimeout(simpleInitMenu, 200);
                 return;

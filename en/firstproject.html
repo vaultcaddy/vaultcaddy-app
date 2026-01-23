@@ -4694,7 +4694,7 @@
                     data.tax || data.taxAmount || '',
                     data.taxRate || '',
                     data.totalAmount || data.total || data.amount || '',
-                    data.currency | 'HKD',
+                    data.currency || 'HKD',
                     `"${(data.paymentTerms || '').replace(/"/g, '""')}"`,
                     data.paymentMethod || '',
                     data.bankAccount || data.accountNumber || '',
@@ -4748,7 +4748,7 @@
                 if (data.items && Array.isArray(data.items) && data.items.length > 0) {
                     // If anyProjectDetails，asper個ProjectCreateoneline
                     data.items.forEach((item, itemIndex) => {
-                        const itemAmount = item.total | (item.quantity * item.unitPrice) | item.price | '0.00';
+                        const itemAmount = item.total || (item.quantity * item.unitPrice) || item.price || '0.00';
                         const itemMemo = item.description | item.name | `Item ${itemIndex + 1}`;
                         iif += `SPL\t${trnsId}-${itemIndex}\t${transactionType}\t${date}\tExpenses\t-${itemAmount}\t${invoiceNumber}\t${itemMemo}\tN\n`;
                     });

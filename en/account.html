@@ -686,7 +686,7 @@
     <!-- Google Analytics 4 -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-LWPEKNC7RQ"></script>
     <script>
-      window.dataLayer = window.dataLayer | [];
+      window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'G-LWPEKNC7RQ');
@@ -994,16 +994,16 @@
                     if (isLoggedIn) {
                         // ✅ alreadyLogin：ShowUseravatar
                         const currentUser = window.simpleAuth.getCurrentUser();
-                        userEmail = currentUser.email | '';
-                        userDisplayName = currentUser.displayName | '';
+                        userEmail = currentUser.email || '';
+                        userDisplayName = currentUser.displayName || '';
                         
                         // 🔥 from Firestore Get displayName and credits
                         if (window.simpleDataManager && window.simpleDataManager.initialized) {
                             try {
                                 const userDoc = await window.simpleDataManager.getUserDocument();
                                 if (userDoc) {
-                                    userDisplayName = userDoc.displayName | userDisplayName;
-                                    userCredits = userDoc.credits | 0;
+                                    userDisplayName = userDoc.displayName || userDisplayName;
+                                    userCredits = userDoc.credits || 0;
                                     console.log('✅ index.html Get Credits:', userCredits);
                                 }
                             } catch (error) {
@@ -1256,8 +1256,8 @@
             loadUserPlan();
             
             // LoadPreferences
-            const savedLanguage = localStorage.getItem('userLanguage') | 'zh-TW';
-            const savedTimezone = localStorage.getItem('userTimezone') | 'Asia/Taipei';
+            const savedLanguage = localStorage.getItem('userLanguage') || 'zh-TW';
+            const savedTimezone = localStorage.getItem('userTimezone') || 'Asia/Taipei';
             document.getElementById('language-select').value = savedLanguage;
             document.getElementById('timezone-select').value = savedTimezone;
             
@@ -1291,7 +1291,7 @@
                         }
                         // ChecksubscribeStatus（oldversionlogic）
                         else if (userData.subscription && userData.subscription.status === 'active') {
-                            savedPlan = userData.subscription.planType | 'Free';
+                            savedPlan = userData.subscription.planType || 'Free';
                         }
                     }
                 }
@@ -1336,7 +1336,7 @@
                 }
             };
             
-            const config = planConfig[savedPlan] | planConfig['Free'];
+            const config = planConfig[savedPlan] || planConfig['Free'];
             
             planElement.innerHTML = `
                 <i class="fas ${config.icon}"></i>
@@ -1353,7 +1353,7 @@
             
             // 💡 Show/Hide overage billing information based on plan type
             const overageInfo = document.getElementById('overage-info');
-            if (savedPlan === 'Pro' | savedPlan === 'Business') {
+            if (savedPlan === 'Pro' || savedPlan === 'Business') {
                 // Pro Plan or Business Plan User: Show overage billing information
                 if (overageInfo) {
                     overageInfo.style.display = 'block';
@@ -1365,7 +1365,7 @@
                 }
             }
             
-            if (savedPlan === 'Pro' | savedPlan === 'Business') {
+            if (savedPlan === 'Pro' || savedPlan === 'Business') {
                 // Pro Plan or Business Plan User：Showsubscribemanagement，Hide升levellink
                 subscriptionManagement.style.display = 'flex';
                 upgradePlanLink.style.display = 'none';
@@ -1385,7 +1385,7 @@
         // LoadsubscribeDetails
         async function loadSubscriptionDetails() {
             try {
-                if (!window.simpleAuth | !window.simpleAuth.currentUser) {
+                if (!window.simpleAuth || !window.simpleAuth.currentUser) {
                     return;
                 }
                 
@@ -1431,7 +1431,7 @@
             try {
                 console.log('🔧 Open Stripe Customer Portal');
                 
-                if (!window.simpleAuth | !window.simpleAuth.currentUser) {
+                if (!window.simpleAuth || !window.simpleAuth.currentUser) {
                     alert('Please firstLogin');
                     return;
                 }
@@ -1517,8 +1517,8 @@
                             
                             // CheckYesNoHasActivesubscribe
                             if (userData.subscription && userData.subscription.status === 'active') {
-                                currentPlan = userData.subscription.planType | 'Free';
-                                planPeriod = userData.subscription.period | 'monthly';
+                                currentPlan = userData.subscription.planType || 'Free';
+                                planPeriod = userData.subscription.period || 'monthly';
                                 console.log('✅ from Firestore Getplan:', currentPlan, planPeriod);
                             } else {
                                 console.log('⚠️ Firestore middleNoneActivesubscribe，Use Free Plan');
@@ -1543,7 +1543,7 @@
                 console.log('📊 FinallyUseplan:', currentPlan, planPeriod);
                 
                 // Getplan的 Credits amountdegree
-                const totalCredits = planCredits[currentPlan][planPeriod] | 0;
+                const totalCredits = planCredits[currentPlan][planPeriod] || 0;
                 
                 // from Firebase GetWhenfront Credits
                 let currentCredits = 0;
@@ -1558,7 +1558,7 @@
                         
                         if (userDoc.exists) {
                             const userData = userDoc.data();
-                            currentCredits = userData.credits | 0;
+                            currentCredits = userData.credits || 0;
                             
                             // 🔥 priorityChecknew的 resetDate field
                             if (userData.resetDate) {
@@ -1645,7 +1645,7 @@
             const newPassword = document.getElementById('new-password').value;
             const confirmPassword = document.getElementById('confirm-password').value;
             
-            if (!currentPassword | !newPassword | !confirmPassword) {
+            if (!currentPassword || !newPassword || !confirmPassword) {
                 alert('please填寫所HasPasswordfield');
                 return;
             }
@@ -1713,7 +1713,7 @@
             const select = document.getElementById('history-month-filter');
             
             try {
-                if (!window.simpleAuth | !window.simpleAuth.currentUser) {
+                if (!window.simpleAuth || !window.simpleAuth.currentUser) {
                     return;
                 }
                 
@@ -1786,7 +1786,7 @@
             
             try {
                 // CheckYesNoHasLoginUser
-                if (!window.simpleAuth | !window.simpleAuth.currentUser) {
+                if (!window.simpleAuth || !window.simpleAuth.currentUser) {
                     tbody.innerHTML = `
                         <tr>
                             <td colspan="3" style="text-align: center; padding: 2rem; color: #9ca3af;">
@@ -1855,9 +1855,9 @@
                         sign = '+';
                         
                         if (record.metadata?.source === 'subscription') {
-                            description = `subscribeplan - ${record.metadata.planType?.toUpperCase() | 'N/A'}`;
+                            description = `subscribeplan - ${record.metadata.planType?.toUpperCase() || 'N/A'}`;
                         } else if (record.metadata?.source === 'purchase') {
-                            description = record.metadata.productName | 'Purchase Credits';
+                            description = record.metadata.productName || 'Purchase Credits';
                         } else {
                             description = 'Add Credits';
                         }
@@ -1866,12 +1866,12 @@
                         typeColor = '#ef4444';
                         sign = '-';
                         // 🔥 IfDocumentProcess，Show"FileConvert"
-                        description = record.metadata?.projectName | 'FileConvert';
+                        description = record.metadata?.projectName || 'FileConvert';
                     } else if (record.type === 'reset') {
                         type = 'Reset';
                         typeColor = '#6b7280';
                         sign = '';
-                        description = `permonthReset - ${record.metadata?.planType?.toUpperCase() | 'N/A'}`;
+                        description = `permonthReset - ${record.metadata?.planType?.toUpperCase() || 'N/A'}`;
                     } else {
                         type = 'Other';
                         typeColor = '#9ca3af';
@@ -1886,7 +1886,7 @@
                             <td style="padding: 1rem; color: #6b7280; font-size: 0.875rem;">${date}</td>
                             <td style="padding: 1rem; color: #1f2937;">${description}</td>
                             <td style="padding: 1rem; text-align: right; font-weight: 600; color: ${typeColor};">
-                                ${sign}${record.amount | 0}
+                                ${sign}${record.amount || 0}
                             </td>
                         </tr>
                     `);
@@ -2004,7 +2004,7 @@
             const btn = document.getElementById('mobile-menu-btn');
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
-            if (!btn | !overlay) {
+            if (!btn || !overlay) {
                 console.log('⏳ ElementNot found，200msbackRetry');
                 setTimeout(simpleInitMenu, 200);
                 return;
