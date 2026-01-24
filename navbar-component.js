@@ -475,6 +475,18 @@ class VaultCaddyNavbar {
             this.loadUserState().then(() => this.render());
         });
         
+        // ✅ 監聽用戶資料加載完成事件
+        window.addEventListener('user-profile-loaded', (e) => {
+            console.log('📊 用戶資料加載完成，更新導航欄:', e.detail);
+            this.loadUserState().then(() => this.render());
+        });
+        
+        // ✅ 監聽用戶資料更新事件
+        window.addEventListener('user-profile-updated', (e) => {
+            console.log('🔄 用戶資料已更新，刷新導航欄:', e.detail);
+            this.loadUserState().then(() => this.render());
+        });
+        
         // 監聽auth系統的登入/登出事件（向後兼容）
         window.addEventListener('vaultcaddy:auth:login', (e) => {
             console.log('🔐 登入事件檢測到:', e.detail);
