@@ -1645,6 +1645,9 @@ function displayBankStatementContent(data) {
     const currentPageTransactions = transactions.slice(startIndex, endIndex);
     
     let transactionsHTML = '';
+    const currentLang = getCurrentLanguage();
+    const showRefAndCheck = (currentLang === 'zh-TW' || currentLang === 'en'); // 只有中文和英文版显示参考编号和支票号码
+    
     currentPageTransactions.forEach((tx, pageIndex) => {
         const actualIndex = startIndex + pageIndex; // 實際在完整數組中的索引
         
@@ -1747,8 +1750,8 @@ function displayBankStatementContent(data) {
                 <td contenteditable="true" class="editable-cell type-cell" data-field="transactionType" style="min-width: 75px; color: #6b7280; font-size: 0.8rem;">${transactionType}</td>
                 <td contenteditable="true" class="editable-cell desc-cell" data-field="description" style="min-width: 150px; max-width: 280px; font-size: 0.875rem;">${description}</td>
                 <td contenteditable="true" class="editable-cell payee-cell" data-field="payee" style="min-width: 120px; max-width: 200px; color: #6b7280; font-size: 0.8rem;">${payee}</td>
-                <td contenteditable="true" class="editable-cell ref-cell" data-field="referenceNumber" style="min-width: 85px; color: #6b7280; font-size: 0.8rem;">${referenceNumber}</td>
-                <td contenteditable="true" class="editable-cell check-cell" data-field="checkNumber" style="min-width: 65px; color: #6b7280; font-size: 0.8rem;">${checkNumber}</td>
+                ${showRefAndCheck ? `<td contenteditable="true" class="editable-cell ref-cell" data-field="referenceNumber" style="min-width: 85px; color: #6b7280; font-size: 0.8rem;">${referenceNumber}</td>` : ''}
+                ${showRefAndCheck ? `<td contenteditable="true" class="editable-cell check-cell" data-field="checkNumber" style="min-width: 65px; color: #6b7280; font-size: 0.8rem;">${checkNumber}</td>` : ''}
                 <td class="category-cell" style="min-width: 105px;">
                     <select class="category-select" data-index="${actualIndex}" onchange="handleCategoryChange(${actualIndex}, this.value)" style="width: 100%; padding: 0.3rem; font-size: 0.8rem; border: 1px solid #d1d5db; border-radius: 4px;">
                         <option value="">${t('uncategorized')}</option>
@@ -1829,6 +1832,9 @@ function displayBankStatementContent(data) {
         </div>
     ` : '';
     
+    const currentLang = getCurrentLanguage();
+    const showRefAndCheck = (currentLang === 'zh-TW' || currentLang === 'en'); // 只有中文和英文版显示参考编号和支票号码
+    
     dataSection.innerHTML = `
         <div class="transactions-section">
             <div class="transactions-header">
@@ -1848,8 +1854,8 @@ function displayBankStatementContent(data) {
                         <th class="type-cell" style="font-size: 0.875rem;">${t('type')}</th>
                         <th style="font-size: 0.875rem;">${t('description')}</th>
                         <th style="font-size: 0.875rem;">${t('payee')}</th>
-                        <th class="ref-cell" style="font-size: 0.875rem;">${t('reference')}</th>
-                        <th class="check-cell" style="font-size: 0.875rem;">${t('checkNumber')}</th>
+                        ${showRefAndCheck ? `<th class="ref-cell" style="font-size: 0.875rem;">${t('reference')}</th>` : ''}
+                        ${showRefAndCheck ? `<th class="check-cell" style="font-size: 0.875rem;">${t('checkNumber')}</th>` : ''}
                         <th class="category-cell" style="font-size: 0.875rem;">${t('category')}</th>
                         <th style="font-size: 0.875rem; text-align: right;">${t('amount')}</th>
                         <th style="font-size: 0.875rem; text-align: right;">${t('balance')}</th>
@@ -1858,7 +1864,7 @@ function displayBankStatementContent(data) {
                     </tr>
                 </thead>
                 <tbody>
-                    ${transactionsHTML || `<tr><td colspan="12" style="text-align: center; padding: 2rem; color: #6b7280;">${t('no_transactions')}</td></tr>`}
+                    ${transactionsHTML || `<tr><td colspan="${showRefAndCheck ? 12 : 10}" style="text-align: center; padding: 2rem; color: #6b7280;">${t('no_transactions')}</td></tr>`}
                 </tbody>
             </table>
             ${paginationHTML}
