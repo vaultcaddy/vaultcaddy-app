@@ -14,6 +14,17 @@
         document.documentElement.classList.add('auth-checking');
         if (document.body) { document.body.classList.add('auth-checking'); } 
         else { document.addEventListener('DOMContentLoaded', function() { document.body.classList.add('auth-checking'); }); }
+        
+        // ✅ タイムアウト保護：10秒後に強制的にページを表示（スタック防止）
+        setTimeout(function() {
+            if (document.body.classList.contains('auth-checking')) {
+                console.warn('⚠️ 認証タイムアウト - ページを強制表示');
+                document.body.classList.remove('auth-checking');
+                document.body.classList.add('auth-ready');
+                document.documentElement.classList.remove('auth-checking');
+                document.documentElement.classList.add('auth-ready');
+            }
+        }, 10000);
     </script>
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -680,6 +691,54 @@
         
         .icon-btn:hover {
             color: #1f2937;
+        }
+        
+        /* 🎨 請求書項目明細表専用スタイル */
+        .invoice-items-table th,
+        .invoice-items-table td {
+            width: auto !important;
+            min-width: auto !important;
+            max-width: none !important;
+        }
+        
+        /* 請求書表列幅 */
+        .invoice-items-table th:nth-child(1),  /* コード */
+        .invoice-items-table td:nth-child(1) {
+            width: 100px;
+            min-width: 80px;
+        }
+        
+        .invoice-items-table th:nth-child(2),  /* 説明 */
+        .invoice-items-table td:nth-child(2) {
+            min-width: 200px;
+        }
+        
+        .invoice-items-table th:nth-child(3),  /* 数量 */
+        .invoice-items-table td:nth-child(3) {
+            width: 80px;
+            min-width: 80px;
+            text-align: right;
+        }
+        
+        .invoice-items-table th:nth-child(4),  /* 単位 */
+        .invoice-items-table td:nth-child(4) {
+            width: 80px;
+            min-width: 80px;
+            text-align: right;
+        }
+        
+        .invoice-items-table th:nth-child(5),  /* 単価 */
+        .invoice-items-table td:nth-child(5) {
+            width: 100px;
+            min-width: 100px;
+            text-align: right;
+        }
+        
+        .invoice-items-table th:nth-child(6),  /* 金額 */
+        .invoice-items-table td:nth-child(6) {
+            width: 100px;
+            min-width: 100px;
+            text-align: right;
         }
         
         .icon-btn.delete:hover {

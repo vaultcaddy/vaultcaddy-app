@@ -1287,7 +1287,7 @@ function displayInvoiceContent(data) {
                 ${t('line_items')}
                 <span style="font-size: 0.875rem; color: #6b7280; font-weight: normal; margin-left: 0.5rem;">${t('editable')}</span>
             </h3>
-            <table class="transactions-table">
+            <table class="transactions-table invoice-items-table">
                 <thead>
                     <tr>
                         <th>${t('code')}</th>

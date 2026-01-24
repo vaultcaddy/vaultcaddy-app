@@ -14,6 +14,17 @@
         document.documentElement.classList.add('auth-checking');
         if (document.body) { document.body.classList.add('auth-checking'); } 
         else { document.addEventListener('DOMContentLoaded', function() { document.body.classList.add('auth-checking'); }); }
+        
+        // ✅ 超時保護：10秒後強制顯示頁面（防止卡住）
+        setTimeout(function() {
+            if (document.body.classList.contains('auth-checking')) {
+                console.warn('⚠️ Auth timeout - forcing page display');
+                document.body.classList.remove('auth-checking');
+                document.body.classList.add('auth-ready');
+                document.documentElement.classList.remove('auth-checking');
+                document.documentElement.classList.add('auth-ready');
+            }
+        }, 10000);
     </script>
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -922,6 +933,54 @@
             background: #e5e7eb;
             color: #1f2937;
             border-color: #d1d5db;
+        }
+        
+        /* 🎨 Invoice items table specific styles */
+        .invoice-items-table th,
+        .invoice-items-table td {
+            width: auto !important;
+            min-width: auto !important;
+            max-width: none !important;
+        }
+        
+        /* Invoice table column widths */
+        .invoice-items-table th:nth-child(1),  /* Code */
+        .invoice-items-table td:nth-child(1) {
+            width: 100px;
+            min-width: 80px;
+        }
+        
+        .invoice-items-table th:nth-child(2),  /* Description */
+        .invoice-items-table td:nth-child(2) {
+            min-width: 200px;
+        }
+        
+        .invoice-items-table th:nth-child(3),  /* Quantity */
+        .invoice-items-table td:nth-child(3) {
+            width: 80px;
+            min-width: 80px;
+            text-align: right;
+        }
+        
+        .invoice-items-table th:nth-child(4),  /* Unit */
+        .invoice-items-table td:nth-child(4) {
+            width: 80px;
+            min-width: 80px;
+            text-align: right;
+        }
+        
+        .invoice-items-table th:nth-child(5),  /* Unit Price */
+        .invoice-items-table td:nth-child(5) {
+            width: 100px;
+            min-width: 100px;
+            text-align: right;
+        }
+        
+        .invoice-items-table th:nth-child(6),  /* Amount */
+        .invoice-items-table td:nth-child(6) {
+            width: 100px;
+            min-width: 100px;
+            text-align: right;
         }
         
         /* Edit button hover */

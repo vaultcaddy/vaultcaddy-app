@@ -14,6 +14,17 @@
         document.documentElement.classList.add('auth-checking');
         if (document.body) { document.body.classList.add('auth-checking'); } 
         else { document.addEventListener('DOMContentLoaded', function() { document.body.classList.add('auth-checking'); }); }
+        
+        // ✅ 타임아웃 보호: 10초 후 강제로 페이지 표시 (멈춤 방지)
+        setTimeout(function() {
+            if (document.body.classList.contains('auth-checking')) {
+                console.warn('⚠️ 인증 시간 초과 - 페이지 강제 표시');
+                document.body.classList.remove('auth-checking');
+                document.body.classList.add('auth-ready');
+                document.documentElement.classList.remove('auth-checking');
+                document.documentElement.classList.add('auth-ready');
+            }
+        }, 10000);
     </script>
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -680,6 +691,54 @@
         
         .icon-btn:hover {
             color: #1f2937;
+        }
+        
+        /* 🎨 인보이스 항목 명세 표 전용 스타일 */
+        .invoice-items-table th,
+        .invoice-items-table td {
+            width: auto !important;
+            min-width: auto !important;
+            max-width: none !important;
+        }
+        
+        /* 인보이스 표 열 너비 */
+        .invoice-items-table th:nth-child(1),  /* 코드 */
+        .invoice-items-table td:nth-child(1) {
+            width: 100px;
+            min-width: 80px;
+        }
+        
+        .invoice-items-table th:nth-child(2),  /* 설명 */
+        .invoice-items-table td:nth-child(2) {
+            min-width: 200px;
+        }
+        
+        .invoice-items-table th:nth-child(3),  /* 수량 */
+        .invoice-items-table td:nth-child(3) {
+            width: 80px;
+            min-width: 80px;
+            text-align: right;
+        }
+        
+        .invoice-items-table th:nth-child(4),  /* 단위 */
+        .invoice-items-table td:nth-child(4) {
+            width: 80px;
+            min-width: 80px;
+            text-align: right;
+        }
+        
+        .invoice-items-table th:nth-child(5),  /* 단가 */
+        .invoice-items-table td:nth-child(5) {
+            width: 100px;
+            min-width: 100px;
+            text-align: right;
+        }
+        
+        .invoice-items-table th:nth-child(6),  /* 금액 */
+        .invoice-items-table td:nth-child(6) {
+            width: 100px;
+            min-width: 100px;
+            text-align: right;
         }
         
         .icon-btn.delete:hover {
