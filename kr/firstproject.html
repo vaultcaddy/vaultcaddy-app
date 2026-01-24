@@ -3924,12 +3924,12 @@
         // ==================== 기타기능 ====================
         // ==================== 보기문서 세부정보 ====================
         window.viewDocument = function(docId) {
-            logger.log('🔍 보기문서 세부정보:', docId);
+            logger.log('🔍 문서 세부정보 보기:', docId);
             if (!currentProjectId) {
-                console.error('❌ 찾을 수 없음프로젝트 ID');
+                console.error('❌ 프로젝트 ID를 찾을 수 없음');
                 return;
             }
-            window.location.href = `document-detail.html?project=${currentProjectId}&id=${docId}`;
+            window.open(`document-detail.html?project=${currentProjectId}&id=${docId}`, '_blank');
         };
         
         // ==================== 삭제문서 ====================
@@ -4949,8 +4949,8 @@
             const tbody = document.getElementById('team-project-tbody');
             const summaryDiv = document.getElementById('invoice-summary');
             
-            if (!tbody | !summaryDiv) {
-                logger.log('⚠️ 찾을 수 없음표또는합계요소');
+            if (!tbody || !summaryDiv) {
+                logger.log('⚠️ 테이블 또는 합계 요소를 찾을 수 없음');
                 return;
             }
             
@@ -4959,23 +4959,23 @@
             let totalAmount = 0;
             
             for (let row of rows) {
-                // 건너뛰기숨김的행（의해검색過濾掉的）
+                // 숨겨진 행 건너뛰기（검색으로 필터링됨）
                 if (row.style.display === 'none') continue;
                 
-                // 건너뛰기 "No results" 행
+                // "No results" 행 건너뛰기
                 if (row.querySelector('td[colspan]')) continue;
                 
-                // 확인유형필드여부로서 "송장"
+                // 유형 필드가 "송장"인지 확인
                 const typeCell = row.querySelector('.document-type-cell');
                 if (typeCell && typeCell.textContent.trim() === '송장') {
                     invoiceCount++;
                     
-                    // 추출금액
+                    // 금액 추출
                     const amountCell = row.querySelector('.document-amount-cell');
                     if (amountCell) {
                         const amountText = amountCell.textContent.trim();
-                        // 제거 $ 및逗號，변환數字
-                        const amount = parseFloat(amountText.replace(/[$,]/g, '')) | 0;
+                        // $ 및 쉼표 제거, 숫자로 변환
+                        const amount = parseFloat(amountText.replace(/[$,]/g, '')) || 0;
                         totalAmount += amount;
                     }
                 }

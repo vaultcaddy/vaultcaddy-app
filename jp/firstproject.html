@@ -3924,12 +3924,12 @@
         // ==================== その他機能 ====================
         // ==================== 表示文書詳細 ====================
         window.viewDocument = function(docId) {
-            logger.log('🔍 表示文書詳細:', docId);
+            logger.log('🔍 文書詳細を表示:', docId);
             if (!currentProjectId) {
-                console.error('❌ 見つかりませんプロジェクト ID');
+                console.error('❌ プロジェクト ID が見つかりません');
                 return;
             }
-            window.location.href = `document-detail.html?project=${currentProjectId}&id=${docId}`;
+            window.open(`document-detail.html?project=${currentProjectId}&id=${docId}`, '_blank');
         };
         
         // ==================== 削除文書 ====================
@@ -4949,8 +4949,8 @@
             const tbody = document.getElementById('team-project-tbody');
             const summaryDiv = document.getElementById('invoice-summary');
             
-            if (!tbody | !summaryDiv) {
-                logger.log('⚠️ 見つかりませんテーブルまたは合計要素');
+            if (!tbody || !summaryDiv) {
+                logger.log('⚠️ テーブルまたは合計要素が見つかりません');
                 return;
             }
             
@@ -4959,23 +4959,23 @@
             let totalAmount = 0;
             
             for (let row of rows) {
-                // スキップ隱藏の行（被検索過濾掉の）
+                // 非表示の行をスキップ（検索でフィルタリングされた）
                 if (row.style.display === 'none') continue;
                 
-                // スキップ "No results" 行
+                // "No results" 行をスキップ
                 if (row.querySelector('td[colspan]')) continue;
                 
-                // チェックタイプフィールド是否として "請求書"
+                // タイプフィールドが "請求書" かどうか確認
                 const typeCell = row.querySelector('.document-type-cell');
                 if (typeCell && typeCell.textContent.trim() === '請求書') {
                     invoiceCount++;
                     
-                    // 抽出金額
+                    // 金額を抽出
                     const amountCell = row.querySelector('.document-amount-cell');
                     if (amountCell) {
                         const amountText = amountCell.textContent.trim();
-                        // 削除 $ と逗號，変換數字
-                        const amount = parseFloat(amountText.replace(/[$,]/g, '')) | 0;
+                        // $ とカンマを削除、数字に変換
+                        const amount = parseFloat(amountText.replace(/[$,]/g, '')) || 0;
                         totalAmount += amount;
                     }
                 }

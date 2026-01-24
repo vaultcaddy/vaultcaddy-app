@@ -3947,12 +3947,12 @@
         // ==================== OtherFeatures ====================
         // ==================== ViewDocument details ====================
         window.viewDocument = function(docId) {
-            logger.log('🔍 ViewDocument details:', docId);
+            logger.log('🔍 View Document details:', docId);
             if (!currentProjectId) {
-                console.error('❌ Not foundProject ID');
+                console.error('❌ Project ID not found');
                 return;
             }
-            window.location.href = `document-detail.html?project=${currentProjectId}&id=${docId}`;
+            window.open(`document-detail.html?project=${currentProjectId}&id=${docId}`, '_blank');
         };
         
         // ==================== DeleteDocument ====================
@@ -4972,8 +4972,8 @@
             const tbody = document.getElementById('team-project-tbody');
             const summaryDiv = document.getElementById('invoice-summary');
             
-            if (!tbody | !summaryDiv) {
-                logger.log('⚠️ Not foundTableorTotalElement');
+            if (!tbody || !summaryDiv) {
+                logger.log('⚠️ Table or Total Element not found');
                 return;
             }
             
@@ -4982,23 +4982,23 @@
             let totalAmount = 0;
             
             for (let row of rows) {
-                // skipHide的line（bysearchfilter掉的）
+                // Skip hidden rows (filtered by search)
                 if (row.style.display === 'none') continue;
                 
-                // skip "No results" line
+                // Skip "No results" row
                 if (row.querySelector('td[colspan]')) continue;
                 
-                // CheckTypefieldYesNoas "Invoice"
+                // Check if type field is "Invoice"
                 const typeCell = row.querySelector('.document-type-cell');
                 if (typeCell && typeCell.textContent.trim() === 'Invoice') {
                     invoiceCount++;
                     
-                    // extractAmount
+                    // Extract amount
                     const amountCell = row.querySelector('.document-amount-cell');
                     if (amountCell) {
                         const amountText = amountCell.textContent.trim();
-                        // Remove $ and逗號，Convert toNumber
-                        const amount = parseFloat(amountText.replace(/[$,]/g, '')) | 0;
+                        // Remove $ and commas, convert to number
+                        const amount = parseFloat(amountText.replace(/[$,]/g, '')) || 0;
                         totalAmount += amount;
                     }
                 }
