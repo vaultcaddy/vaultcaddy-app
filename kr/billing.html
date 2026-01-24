@@ -46,6 +46,13 @@
     <link rel="stylesheet" href="../pages.css">
     <link rel="stylesheet" href="../dashboard.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- 优化后的公共组件 (2026-01-23) -->
+    <link rel="stylesheet" href="../user-menu-styles.css">
+    <script defer src="../logger.js"></script>
+    <script defer src="../init-manager.js"></script>
+    <script defer src="../user-menu-manager.js"></script>
+    <script defer src="../mobile-menu-manager.js"></script>
     <script defer src="../config.js"></script>
     <script defer src="../translations.js"></script>
     
@@ -998,7 +1005,7 @@
     <script>
         // 즉시 실행：보장페이지가능見
         (function() {
-            console.log('🚀 Billing페이지즉시초기화...');
+            logger.log('🚀 Billing페이지즉시초기화...');
             
             // 보장body가능見
             document.body.style.display = 'block';
@@ -1025,7 +1032,7 @@
                 mainContent.style.visibility = 'visible';
             }
             
-            console.log('✅ Billing페이지즉시초기화완료');
+            logger.log('✅ Billing페이지즉시초기화완료');
         })();
     </script>
     
@@ -1201,7 +1208,7 @@
     <!-- ✅ index.html 동적업데이트사용자상태 -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('✅ index.html 초기화');
+            logger.log('✅ index.html 초기화');
             
             let userCredits = 0;
             let userEmail = '';
@@ -1222,21 +1229,21 @@
             
             // 🔥 햄버거 메뉴기능（즉시 실행，아니대기 DOMContentLoaded）
             (function() {
-                console.log('🔵 초기화햄버거 메뉴...');
+                logger.log('🔵 초기화햄버거 메뉴...');
                 
                 // 열기사이드바
                 window.openMobileSidebar = function() {
-                    console.log('🔵 openMobileSidebar 호출됨');
+                    logger.log('🔵 openMobileSidebar 호출됨');
                     const sidebar = document.getElementById('mobile-sidebar');
                     const overlay = document.getElementById('mobile-sidebar-overlay');
-                    console.log('🔵 sidebar:', sidebar);
-                    console.log('🔵 overlay:', overlay);
+                    logger.log('🔵 sidebar:', sidebar);
+                    logger.log('🔵 overlay:', overlay);
                     
                     if (sidebar && overlay) {
                         sidebar.style.left = '0';
                         overlay.style.display = 'block';
                         document.body.style.overflow = 'hidden';
-                        console.log('✅ 사이드바열림');
+                        logger.log('✅ 사이드바열림');
                     } else {
                         console.error('❌ 찾을 수 없음사이드바또는마스크 요소');
                     }
@@ -1244,7 +1251,7 @@
                 
                 // 닫기사이드바
                 window.closeMobileSidebar = function() {
-                    console.log('🔵 closeMobileSidebar 호출됨');
+                    logger.log('🔵 closeMobileSidebar 호출됨');
                     const sidebar = document.getElementById('mobile-sidebar');
                     const overlay = document.getElementById('mobile-sidebar-overlay');
                     
@@ -1252,12 +1259,12 @@
                         sidebar.style.left = '-100%';
                         overlay.style.display = 'none';
                         document.body.style.overflow = 'auto';
-                        console.log('✅ 사이드바이미 닫힘');
+                        logger.log('✅ 사이드바이미 닫힘');
                     }
                 };
                 
                 // 햄버거 메뉴버튼사용 onclick，無需額외부바인딩
-                console.log('✅ 햄버거 메뉴기능준비됨（사용 onclick）');
+                logger.log('✅ 햄버거 메뉴기능준비됨（사용 onclick）');
             })();
                 
                 // 모바일 버전자동캐러셀（만에서모바일 버전활성화）
@@ -1306,7 +1313,7 @@
                     if (window.simpleDataManager && window.simpleDataManager.initialized) {
                         try {
                             userCredits = await window.simpleDataManager.getUserCredits();
-                            console.log('✅ 즉시 가져오기 Credits:', userCredits);
+                            logger.log('✅ 즉시 가져오기 Credits:', userCredits);
                         } catch (error) {
                             console.error('❌ 가져오기 실패 Credits:', error);
                         }
@@ -1366,19 +1373,19 @@
                                 if (userDoc) {
                                     userDisplayName = userDoc.displayName || userDisplayName;
                                     userCredits = userDoc.credits || 0;
-                                    console.log('✅ index.html 가져오기 Credits:', userCredits);
+                                    logger.log('✅ index.html 가져오기 Credits:', userCredits);
                                 }
                             } catch (error) {
-                                console.log('⚠️ 불가능부터 Firestore 가져오기사용자자료:', error);
+                                logger.log('⚠️ 불가능부터 Firestore 가져오기사용자자료:', error);
                             }
                         } else {
-                            console.log('⏳ SimpleDataManager 아직초기화，대기중...');
+                            logger.log('⏳ SimpleDataManager 아직초기화，대기중...');
                             // 지연재시도
                             setTimeout(async () => {
                                 if (window.simpleDataManager && window.simpleDataManager.initialized) {
                                     try {
                                         userCredits = await window.simpleDataManager.getUserCredits();
-                                        console.log('✅ 지연 가져오기 Credits:', userCredits);
+                                        logger.log('✅ 지연 가져오기 Credits:', userCredits);
                                     } catch (error) {
                                         console.error('❌ 지연 가져오기실패:', error);
                                     }
@@ -1387,23 +1394,23 @@
                         }
                         
                         const userInitial = getUserInitial();
-                        console.log(`👤 사용자첫 글자: "${userInitial}" (displayName: "${userDisplayName}")`);
+                        logger.log(`👤 사용자첫 글자: "${userInitial}" (displayName: "${userDisplayName}")`);
                         
                         userMenu.innerHTML = `
-                            <div onclick="toggleDropdown()" style="cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
-                                <div style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem; opacity: 1; transition: opacity 0.3s;">${userInitial}</div>
+                            <div onclick="toggleDropdown()" class="user-menu-trigger">
+                                <div class="user-avatar">${userInitial}</div>
                             </div>
                         `;
-                        console.log('✅ 사용자이미로그인，표시아바타');
+                        logger.log('✅ 사용자이미로그인，표시아바타');
                     } else {
                         // ✅ 미로그인：표시로그인버튼
                         userMenu.innerHTML = `
-                            <button onclick="window.location.href='auth.html'" style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.875rem;" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">로그인</button>
+                            <button onclick="window.location.href='auth.html'" class="login-button">로그인</button>
                         `;
-                        console.log('✅ 사용자미로그인，표시로그인버튼');
+                        logger.log('✅ 사용자미로그인，표시로그인버튼');
                     }
                 } catch (e) {
-                    console.log('❌ 불가능업데이트사용자메뉴:', e);
+                    logger.log('❌ 불가능업데이트사용자메뉴:', e);
                 }
             }
             
@@ -1525,7 +1532,7 @@
         }
         
         function showAuthNotificationInBilling() {
-            console.log('💡 에서 Billing 페이지표시身份검증힌트');
+            logger.log('💡 에서 Billing 페이지표시身份검증힌트');
             
             const notification = document.createElement('div');
             notification.id = 'billing-auth-notification';
@@ -1549,7 +1556,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Billing 페이지로드 중...');
+            logger.log('Billing 페이지로드 중...');
             
             // 🔥 모바일 버전강제修변경가격카드너비
             function forceMobilePricingWidth() {
@@ -1563,7 +1570,7 @@
                         monthlyPlan.style.width = '100%';
                         monthlyPlan.style.marginLeft = '0';
                         monthlyPlan.style.marginRight = '0';
-                        console.log('✅ 월간카드너비이미강제設로서 100%');
+                        logger.log('✅ 월간카드너비이미강제設로서 100%');
                     }
                     
                     if (yearlyPlan) {
@@ -1571,20 +1578,20 @@
                         yearlyPlan.style.width = '100%';
                         yearlyPlan.style.marginLeft = '0';
                         yearlyPlan.style.marginRight = '0';
-                        console.log('✅ 연간카드너비이미강제設로서 100%');
+                        logger.log('✅ 연간카드너비이미강제設로서 100%');
                     }
                     
                     if (pricingContainer) {
                         pricingContainer.style.padding = '0';
                         pricingContainer.style.maxWidth = '100%';
-                        console.log('✅ 가격컨테이너내부거리이미조정');
+                        logger.log('✅ 가격컨테이너내부거리이미조정');
                     }
                     
                     // 조정 plans-section 的 padding
                     const plansSection = document.querySelector('.plans-section');
                     if (plansSection) {
                         plansSection.style.padding = '0.25rem'; // 왼쪽오른쪽各留 0.25rem 边거리
-                        console.log('✅ plans-section 내부거리이미조정로서 0.25rem');
+                        logger.log('✅ plans-section 내부거리이미조정로서 0.25rem');
                     }
                 }
             }
@@ -1607,7 +1614,7 @@
             
             // 리스닝언어變更이벤트
             window.addEventListener('languageChanged', function(e) {
-                console.log('Billing: 언어이미變更로서', e.detail.language);
+                logger.log('Billing: 언어이미變更로서', e.detail.language);
                 // 중새로운應用翻譯
                 if (window.languageManager) {
                     window.languageManager.loadLanguage(e.detail.language);
@@ -1616,7 +1623,7 @@
         });
 
         function initBillingPage() {
-            console.log('Billing page initialized');
+            logger.log('Billing page initialized');
         }
 
         // 관리방안
@@ -1626,7 +1633,7 @@
 
         // 크레딧 구매
         function purchaseCredits(credits, price) {
-            console.log(`購買 ${credits} credits，가격 $${price}`);
+            logger.log(`購買 ${credits} credits，가격 $${price}`);
             
             // 사용 StripeManager 처리購買
             if (window.StripeManager) {
@@ -1661,7 +1668,7 @@
 
         // ✅ 통일的구독방안함수（2025-11-22 업데이트）
         function subscribeToPlan(planType) {
-            console.log(`시작 ${planType} 방안구독流程`);
+            logger.log(`시작 ${planType} 방안구독流程`);
             
             // 사용 StripeManager 처리구독
             if (window.StripeManager && window.StripeManager.subscribeToPlan) {
@@ -1712,12 +1719,12 @@
                 return;
             }
             
-            console.log('=== 구독상세정보 ===');
-            console.log('청구週期:', planType === 'yearly' ? '연간 요금' : '월 요금');
-            console.log('Credits:', creditsInfo.credits);
-            console.log('있음效期:', creditsInfo.duration);
-            console.log('가격:', creditsInfo.displayPrice);
-            console.log('支付連結:', paymentLink);
+            logger.log('=== 구독상세정보 ===');
+            logger.log('청구週期:', planType === 'yearly' ? '연간 요금' : '월 요금');
+            logger.log('Credits:', creditsInfo.credits);
+            logger.log('있음效期:', creditsInfo.duration);
+            logger.log('가격:', creditsInfo.displayPrice);
+            logger.log('支付連結:', paymentLink);
             
             // 표시확인訊息
             const confirmMessage = `확인구독 VaultCaddy Pro (${planType === 'yearly' ? '연간 요금' : '월 요금'})？
@@ -1765,7 +1772,7 @@
             if (pendingSubscription) {
                 try {
                     const subscription = JSON.parse(pendingSubscription);
-                    console.log('검측까지待처리的구독:', subscription);
+                    logger.log('검측까지待처리的구독:', subscription);
                     
                     // 授予 Credits
                     grantSubscriptionCredits(subscription);
@@ -1809,8 +1816,8 @@
             localStorage.setItem('creditsExpiry', expiryDate.toISOString());
             localStorage.setItem('subscriptionCredits', subscription.credits.toString());
             
-            console.log(`이미授予 ${subscription.credits} Credits，새로운잔액: ${newCredits}`);
-            console.log(`Credits 까지期때사이: ${expiryDate.toLocaleDateString()}`);
+            logger.log(`이미授予 ${subscription.credits} Credits，새로운잔액: ${newCredits}`);
+            logger.log(`Credits 까지期때사이: ${expiryDate.toLocaleDateString()}`);
             
             // 업데이트 UI 표시
             const creditsElements = document.querySelectorAll('.stat-value');
@@ -1829,14 +1836,14 @@
                 const expiryDate = new Date(creditsExpiry);
                 const now = new Date();
                 
-                console.log('Credits 확인：');
-                console.log('까지期때사이:', expiryDate.toLocaleDateString());
-                console.log('때앞때사이:', now.toLocaleDateString());
-                console.log('구독 Credits:', subscriptionCredits);
+                logger.log('Credits 확인：');
+                logger.log('까지期때사이:', expiryDate.toLocaleDateString());
+                logger.log('때앞때사이:', now.toLocaleDateString());
+                logger.log('구독 Credits:', subscriptionCredits);
                 
                 if (now > expiryDate) {
                     // Credits 이미만료，제거구독 Credits
-                    console.log('Credits 이미만료，正에서제거...');
+                    logger.log('Credits 이미만료，正에서제거...');
                     
                     const currentCredits = parseInt(localStorage.getItem('userCredits') || '0');
                     const newCredits = Math.max(0, currentCredits - subscriptionCredits);
@@ -1863,11 +1870,11 @@
                         );
                     }
                     
-                    console.log(`이미제거 ${subscriptionCredits} 만료 Credits，새로운잔액: ${newCredits}`);
+                    logger.log(`이미제거 ${subscriptionCredits} 만료 Credits，새로운잔액: ${newCredits}`);
                 } else {
                     // Credits 아직만료，표시剩餘때사이
                     const timeLeft = Math.ceil((expiryDate - now) / (1000 * 60 * 60 * 24));
-                    console.log(`구독 Credits 還있음 ${timeLeft} 天까지期`);
+                    logger.log(`구독 Credits 還있음 ${timeLeft} 天까지期`);
                 }
             }
         }
@@ -1961,11 +1968,11 @@
 
     <!-- 🔥 햄버거 메뉴매우 간단한 수정방안 -->
     <script>
-        console.log('🔥 시작초기화햄버거 메뉴...');
+        logger.log('🔥 시작초기화햄버거 메뉴...');
         
         // 열기사이드바함수
         function openSidebar() {
-            console.log('🔵 열기사이드바');
+            logger.log('🔵 열기사이드바');
             const sidebar = document.getElementById('mobile-sidebar');
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
@@ -1974,13 +1981,13 @@
                 overlay.style.display = 'block';
                 overlay.style.opacity = '1';
                 document.body.style.overflow = 'hidden';
-                console.log('✅ 사이드바열림');
+                logger.log('✅ 사이드바열림');
             }
         }
         
         // 닫기사이드바함수
         function closeSidebar() {
-            console.log('🔵 닫기사이드바');
+            logger.log('🔵 닫기사이드바');
             const sidebar = document.getElementById('mobile-sidebar');
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
@@ -1991,7 +1998,7 @@
                     overlay.style.display = 'none';
                 }, 300); // 대기애니메이션완료（와 CSS transition 일치）
                 document.body.style.overflow = 'auto';
-                console.log('✅ 사이드바이미 닫힘');
+                logger.log('✅ 사이드바이미 닫힘');
             }
         }
         
@@ -2001,40 +2008,40 @@
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
             if (!btn || !overlay) {
-                console.log('⏳ 요소미찾기까지，200ms후재시도');
+                logger.log('⏳ 요소미찾기까지，200ms후재시도');
                 setTimeout(simpleInitMenu, 200);
                 return;
             }
             
-            console.log('✅ 찾기까지모든요소！');
+            logger.log('✅ 찾기까지모든요소！');
             
             // 버튼클릭처리
             btn.addEventListener('click', function() {
-                console.log('🔵 버튼의해클릭！');
+                logger.log('🔵 버튼의해클릭！');
                 openSidebar();
             });
             
             // 터치처리
             btn.addEventListener('touchend', function(e) {
                 e.preventDefault();
-                console.log('🔵 터치이벤트！');
+                logger.log('🔵 터치이벤트！');
                 openSidebar();
             });
             
             // 마스크클릭닫기
             overlay.addEventListener('click', function() {
-                console.log('🔵 클릭마스크닫기');
+                logger.log('🔵 클릭마스크닫기');
                 closeSidebar();
             });
             
             // 마스크터치닫기
             overlay.addEventListener('touchend', function(e) {
                 e.preventDefault();
-                console.log('🔵 터치마스크닫기');
+                logger.log('🔵 터치마스크닫기');
                 closeSidebar();
             });
             
-            console.log('✅ 모든이벤트리스닝기이미바인딩');
+            logger.log('✅ 모든이벤트리스닝기이미바인딩');
         }
         
         // 즉시시도초기화
@@ -2057,7 +2064,7 @@
          * @param {boolean} isTest - 여부로서測試模式（가능선택，默認 false）
          */
         async function createCheckoutSession(planType, event, isTest = false) {
-            console.log(`🛒 생성 ${planType} 구독...`, { isTest });
+            logger.log(`🛒 생성 ${planType} 구독...`, { isTest });
             
             // 확인사용자여부登錄
             if (!window.simpleAuth || !window.simpleAuth.isLoggedIn()) {
@@ -2083,12 +2090,12 @@
                 const userEmail = currentUser.email;
                 const userId = currentUser.uid;
                 
-                console.log(`👤 사용자정보:`, { userEmail, userId });
+                logger.log(`👤 사용자정보:`, { userEmail, userId });
                 
                 // 호출 Firebase Function 생성 Checkout Session
                 const createSession = firebase.functions().httpsCallable('createStripeCheckoutSession');
                 
-                console.log(`📞 호출 Firebase Function...`, { planType, userId, email: userEmail, isTest });
+                logger.log(`📞 호출 Firebase Function...`, { planType, userId, email: userEmail, isTest });
                 const result = await createSession({
                     planType: planType,
                     userId: userId,
@@ -2096,7 +2103,7 @@
                     isTest: isTest  // 🧪 傳遞測試模式標記
                 });
                 
-                console.log(`✅ Checkout Session 생성성공:`, result.data);
+                logger.log(`✅ Checkout Session 생성성공:`, result.data);
                 
                 // 이동까지 Stripe Checkout
                 if (result.data && result.data.url) {
@@ -2199,14 +2206,14 @@
             // 저장까지 Firebase
             try {
                 const projectData = await window.simpleDataManager.createProject(projectName);
-                console.log('✅ 프로젝트이미저장까지 Firebase:', projectData);
+                logger.log('✅ 프로젝트이미저장까지 Firebase:', projectData);
                 
                 // 닫기모달
                 closeCreateProjectModal();
                 
                 // 🔥 수정：사용 projectData.id 而非 projectData 本身
                 const projectId = projectData.id;
-                console.log('🚀 이동까지새로운프로젝트페이지:', projectId);
+                logger.log('🚀 이동까지새로운프로젝트페이지:', projectId);
                 
                 // 이동까지새로운프로젝트페이지
                 window.location.href = `firstproject.html?project=${projectId}`;

@@ -71,6 +71,13 @@
 <link href="../styles.css" rel="stylesheet"/>
 <link href="../dashboard.css" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
+    
+    <!-- 优化后的公共组件 (2026-01-23) -->
+    <link rel="stylesheet" href="../user-menu-styles.css">
+    <script defer src="../logger.js"></script>
+    <script defer src="../init-manager.js"></script>
+    <script defer src="../user-menu-manager.js"></script>
+    <script defer src="../mobile-menu-manager.js"></script>
 <script defer="" src="../config.js"></script>
 <script defer="" src="../translations.js?v=20251031"></script>
 <!-- ✅ 통일내비게이션열시스템：靜態 HTML + navbar-component.js -->
@@ -895,7 +902,7 @@
 <!-- ✅ index.html 동적업데이트사용자상태 -->
 <script>
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('✅ index.html 초기화');
+            logger.log('✅ index.html 초기화');
             
             let userCredits = 0;
             let userEmail = '';
@@ -916,21 +923,21 @@
             
             // 🔥 햄버거 메뉴기능（즉시 실행，아니대기 DOMContentLoaded）
             (function() {
-                console.log('🔵 초기화햄버거 메뉴...');
+                logger.log('🔵 초기화햄버거 메뉴...');
                 
                 // 열기사이드바
                 window.openMobileSidebar = function() {
-                    console.log('🔵 openMobileSidebar 호출됨');
+                    logger.log('🔵 openMobileSidebar 호출됨');
                     const sidebar = document.getElementById('mobile-sidebar');
                     const overlay = document.getElementById('mobile-sidebar-overlay');
-                    console.log('🔵 sidebar:', sidebar);
-                    console.log('🔵 overlay:', overlay);
+                    logger.log('🔵 sidebar:', sidebar);
+                    logger.log('🔵 overlay:', overlay);
                     
                     if (sidebar && overlay) {
                         sidebar.style.left = '0';
                         overlay.style.display = 'block';
                         document.body.style.overflow = 'hidden';
-                        console.log('✅ 사이드바열림');
+                        logger.log('✅ 사이드바열림');
                     } else {
                         console.error('❌ 찾을 수 없음사이드바또는마스크 요소');
                     }
@@ -938,7 +945,7 @@
                 
                 // 닫기사이드바
                 window.closeMobileSidebar = function() {
-                    console.log('🔵 closeMobileSidebar 호출됨');
+                    logger.log('🔵 closeMobileSidebar 호출됨');
                     const sidebar = document.getElementById('mobile-sidebar');
                     const overlay = document.getElementById('mobile-sidebar-overlay');
                     
@@ -946,12 +953,12 @@
                         sidebar.style.left = '-100%';
                         overlay.style.display = 'none';
                         document.body.style.overflow = 'auto';
-                        console.log('✅ 사이드바이미 닫힘');
+                        logger.log('✅ 사이드바이미 닫힘');
                     }
                 };
                 
                 // 햄버거 메뉴버튼사용 onclick，無需額외부바인딩
-                console.log('✅ 햄버거 메뉴기능준비됨（사용 onclick）');
+                logger.log('✅ 햄버거 메뉴기능준비됨（사용 onclick）');
             })();
                 
                 // 모바일 버전자동캐러셀（만에서모바일 버전활성화）
@@ -1000,7 +1007,7 @@
                     if (window.simpleDataManager && window.simpleDataManager.initialized) {
                         try {
                             userCredits = await window.simpleDataManager.getUserCredits();
-                            console.log('✅ 즉시 가져오기 Credits:', userCredits);
+                            logger.log('✅ 즉시 가져오기 Credits:', userCredits);
                         } catch (error) {
                             console.error('❌ 가져오기 실패 Credits:', error);
                         }
@@ -1060,19 +1067,19 @@
                                 if (userDoc) {
                                     userDisplayName = userDoc.displayName | userDisplayName;
                                     userCredits = userDoc.credits | 0;
-                                    console.log('✅ index.html 가져오기 Credits:', userCredits);
+                                    logger.log('✅ index.html 가져오기 Credits:', userCredits);
                                 }
                             } catch (error) {
-                                console.log('⚠️ 불가능부터 Firestore 가져오기사용자자료:', error);
+                                logger.log('⚠️ 불가능부터 Firestore 가져오기사용자자료:', error);
                             }
                         } else {
-                            console.log('⏳ SimpleDataManager 아직초기화，대기중...');
+                            logger.log('⏳ SimpleDataManager 아직초기화，대기중...');
                             // 지연재시도
                             setTimeout(async () => {
                                 if (window.simpleDataManager && window.simpleDataManager.initialized) {
                                     try {
                                         userCredits = await window.simpleDataManager.getUserCredits();
-                                        console.log('✅ 지연 가져오기 Credits:', userCredits);
+                                        logger.log('✅ 지연 가져오기 Credits:', userCredits);
                                     } catch (error) {
                                         console.error('❌ 지연 가져오기실패:', error);
                                     }
@@ -1081,23 +1088,23 @@
                         }
                         
                         const userInitial = getUserInitial();
-                        console.log(`👤 사용자첫 글자: "${userInitial}" (displayName: "${userDisplayName}")`);
+                        logger.log(`👤 사용자첫 글자: "${userInitial}" (displayName: "${userDisplayName}")`);
                         
                         userMenu.innerHTML = `
-                            <div onclick="toggleDropdown()" style="cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
-                                <div style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem; opacity: 1; transition: opacity 0.3s;">${userInitial}</div>
+                            <div onclick="toggleDropdown()" class="user-menu-trigger">
+                                <div class="user-avatar">${userInitial}</div>
                             </div>
                         `;
-                        console.log('✅ 사용자이미로그인，표시아바타');
+                        logger.log('✅ 사용자이미로그인，표시아바타');
                     } else {
                         // ✅ 미로그인：표시로그인버튼
                         userMenu.innerHTML = `
-                            <button onclick="window.location.href='auth.html'" style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.875rem;" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">로그인</button>
+                            <button onclick="window.location.href='auth.html'" class="login-button">로그인</button>
                         `;
-                        console.log('✅ 사용자미로그인，표시로그인버튼');
+                        logger.log('✅ 사용자미로그인，표시로그인버튼');
                     }
                 } catch (e) {
-                    console.log('❌ 불가능업데이트사용자메뉴:', e);
+                    logger.log('❌ 불가능업데이트사용자메뉴:', e);
                 }
             }
             
@@ -1239,14 +1246,14 @@
             // 저장까지 Firebase
             try {
                 const projectData = await window.simpleDataManager.createProject(projectName);
-                console.log('✅ 프로젝트이미저장까지 Firebase:', projectData);
+                logger.log('✅ 프로젝트이미저장까지 Firebase:', projectData);
             
             // 닫기모달
             closeCreateProjectModal();
             
                 // 🔥 수정：사용 Firebase 돌아가기的真實 projectId
                 const projectId = projectData.id;
-                console.log('🚀 이동까지새로운프로젝트페이지:', projectId);
+                logger.log('🚀 이동까지새로운프로젝트페이지:', projectId);
                 
                 // 이동까지새로운프로젝트페이지
                 window.location.href = `firstproject.html?project=${projectId}`;
@@ -1264,13 +1271,13 @@
 
         // 로드프로젝트목록
         async function loadProjects() {
-            console.log('🔄 로드프로젝트목록');
+            logger.log('🔄 로드프로젝트목록');
             
             // 부터 Firebase 가져오기프로젝트데이터
             let projects = [];
             try {
                 projects = await window.simpleDataManager.getProjects();
-                console.log(`✅ 부터 Firebase 로드 ${projects.length} 個프로젝트`);
+                logger.log(`✅ 부터 Firebase 로드 ${projects.length} 個프로젝트`);
             } catch (error) {
                 console.error('❌ 부터 Firebase 로드프로젝트실패:', error);
                 projects = [];
@@ -1407,7 +1414,7 @@
             
             try {
                 await window.simpleDataManager.deleteProject(projectToDelete.id);
-                console.log('✅ 프로젝트이미삭제:', projectToDelete.name);
+                logger.log('✅ 프로젝트이미삭제:', projectToDelete.name);
                 
                 // 트리거사이드바업데이트
                 window.dispatchEvent(new Event('projectDeleted'));
@@ -1435,16 +1442,16 @@
         let dataManagerInitialized = false;
         
         window.addEventListener('auth-state-changed', async function(e) {
-            console.log('🔥 收까지 auth-state-changed 이벤트');
+            logger.log('🔥 收까지 auth-state-changed 이벤트');
             authInitialized = true;
             
             // 확인여부이미로그인
             if (!e.detail.user) {
-                console.log('❌ 사용자미로그인');
+                logger.log('❌ 사용자미로그인');
                 return; // SimpleAuth 會자동처리중설정향해
             }
             
-            console.log('✅ 사용자이미로그인:', e.detail.user.email);
+            logger.log('✅ 사용자이미로그인:', e.detail.user.email);
             
             // 초기화사이드바
             initializeDashboard();
@@ -1452,17 +1459,17 @@
         
         // 초기화 Dashboard
         function initializeDashboard() {
-            console.log('🎯 초기화 Dashboard...');
+            logger.log('🎯 초기화 Dashboard...');
             
             // 초기화사이드바
             if (window.VaultCaddySidebar && !window.dashboardSidebar) {
                 window.dashboardSidebar = new VaultCaddySidebar('dashboard');
-                console.log('✅ 사이드바이미초기화');
+                logger.log('✅ 사이드바이미초기화');
             }
             
             // 만약 SimpleDataManager 이미초기화，로드프로젝트
             if (window.simpleDataManager && window.simpleDataManager.initialized) {
-                console.log('✅ SimpleDataManager 준비됨，로드프로젝트');
+                logger.log('✅ SimpleDataManager 준비됨，로드프로젝트');
                 loadProjects();
             }
         }
@@ -1473,11 +1480,11 @@
             if (window.simpleDataManager && window.simpleDataManager.initialized && !dataManagerInitialized) {
                 dataManagerInitialized = true;
                 clearInterval(checkDataManager);
-                console.log('✅ SimpleDataManager 이미초기화');
+                logger.log('✅ SimpleDataManager 이미초기화');
                 
                 // 만약사용자이미로그인，로드프로젝트
                 if (authInitialized && window.simpleAuth && window.simpleAuth.isLoggedIn()) {
-                    console.log('✅ 사용자이미로그인 + SimpleDataManager 준비됨，로드프로젝트');
+                    logger.log('✅ 사용자이미로그인 + SimpleDataManager 준비됨，로드프로젝트');
                     loadProjects();
                 }
             }
@@ -1518,11 +1525,11 @@
     </script>
 <!-- 🔥 햄버거 메뉴매우 간단한 수정방안 -->
 <script>
-        console.log('🔥 시작초기화햄버거 메뉴...');
+        logger.log('🔥 시작초기화햄버거 메뉴...');
         
         // 열기사이드바함수
         function openSidebar() {
-            console.log('🔵 열기사이드바');
+            logger.log('🔵 열기사이드바');
             const sidebar = document.getElementById('mobile-sidebar');
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
@@ -1531,13 +1538,13 @@
                 overlay.style.display = 'block';
                 overlay.style.opacity = '1';
                 document.body.style.overflow = 'hidden';
-                console.log('✅ 사이드바열림');
+                logger.log('✅ 사이드바열림');
             }
         }
         
         // 닫기사이드바함수
         function closeSidebar() {
-            console.log('🔵 닫기사이드바');
+            logger.log('🔵 닫기사이드바');
             const sidebar = document.getElementById('mobile-sidebar');
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
@@ -1548,7 +1555,7 @@
                     overlay.style.display = 'none';
                 }, 300); // 대기애니메이션완료（와 CSS transition 일치）
                 document.body.style.overflow = 'auto';
-                console.log('✅ 사이드바이미 닫힘');
+                logger.log('✅ 사이드바이미 닫힘');
             }
         }
         
@@ -1558,40 +1565,40 @@
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
             if (!btn | !overlay) {
-                console.log('⏳ 요소미찾기까지，200ms후재시도');
+                logger.log('⏳ 요소미찾기까지，200ms후재시도');
                 setTimeout(simpleInitMenu, 200);
                 return;
             }
             
-            console.log('✅ 찾기까지모든요소！');
+            logger.log('✅ 찾기까지모든요소！');
             
             // 버튼클릭처리
             btn.addEventListener('click', function() {
-                console.log('🔵 버튼의해클릭！');
+                logger.log('🔵 버튼의해클릭！');
                 openSidebar();
             });
             
             // 터치처리
             btn.addEventListener('touchend', function(e) {
                 e.preventDefault();
-                console.log('🔵 터치이벤트！');
+                logger.log('🔵 터치이벤트！');
                 openSidebar();
             });
             
             // 마스크클릭닫기
             overlay.addEventListener('click', function() {
-                console.log('🔵 클릭마스크닫기');
+                logger.log('🔵 클릭마스크닫기');
                 closeSidebar();
             });
             
             // 마스크터치닫기
             overlay.addEventListener('touchend', function(e) {
                 e.preventDefault();
-                console.log('🔵 터치마스크닫기');
+                logger.log('🔵 터치마스크닫기');
                 closeSidebar();
             });
             
-            console.log('✅ 모든이벤트리스닝기이미바인딩');
+            logger.log('✅ 모든이벤트리스닝기이미바인딩');
         }
         
         // 즉시시도초기화

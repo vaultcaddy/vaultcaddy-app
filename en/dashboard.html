@@ -71,6 +71,13 @@
 <link href="../styles.css" rel="stylesheet"/>
 <link href="../dashboard.css" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
+    
+    <!-- 优化后的公共组件 (2026-01-23) -->
+    <link rel="stylesheet" href="../user-menu-styles.css">
+    <script defer src="../logger.js"></script>
+    <script defer src="../init-manager.js"></script>
+    <script defer src="../user-menu-manager.js"></script>
+    <script defer src="../mobile-menu-manager.js"></script>
 <script defer="" src="../config.js"></script>
 <script defer="" src="../translations.js?v=20251031"></script>
 <!-- ✅ unifiednavigationcolumnsystem：static HTML + navbar-component.js -->
@@ -890,7 +897,7 @@
 <!-- ✅ index.html dynamicUpdateUserStatus -->
 <script>
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('✅ index.html Initialize');
+            logger.log('✅ index.html Initialize');
             
             let userCredits = 0;
             let userEmail = '';
@@ -911,21 +918,21 @@
             
             // 🔥 Hamburger menuFeatures（Execute immediately，notWait DOMContentLoaded）
             (function() {
-                console.log('🔵 InitializeHamburger menu...');
+                logger.log('🔵 InitializeHamburger menu...');
                 
                 // OpenSidebar
                 window.openMobileSidebar = function() {
-                    console.log('🔵 openMobileSidebar Called');
+                    logger.log('🔵 openMobileSidebar Called');
                     const sidebar = document.getElementById('mobile-sidebar');
                     const overlay = document.getElementById('mobile-sidebar-overlay');
-                    console.log('🔵 sidebar:', sidebar);
-                    console.log('🔵 overlay:', overlay);
+                    logger.log('🔵 sidebar:', sidebar);
+                    logger.log('🔵 overlay:', overlay);
                     
                     if (sidebar && overlay) {
                         sidebar.style.left = '0';
                         overlay.style.display = 'block';
                         document.body.style.overflow = 'hidden';
-                        console.log('✅ SidebarOpened');
+                        logger.log('✅ SidebarOpened');
                     } else {
                         console.error('❌ Not foundSidebarorMask element');
                     }
@@ -933,7 +940,7 @@
                 
                 // CloseSidebar
                 window.closeMobileSidebar = function() {
-                    console.log('🔵 closeMobileSidebar Called');
+                    logger.log('🔵 closeMobileSidebar Called');
                     const sidebar = document.getElementById('mobile-sidebar');
                     const overlay = document.getElementById('mobile-sidebar-overlay');
                     
@@ -941,12 +948,12 @@
                         sidebar.style.left = '-100%';
                         overlay.style.display = 'none';
                         document.body.style.overflow = 'auto';
-                        console.log('✅ SidebaralreadyClose');
+                        logger.log('✅ SidebaralreadyClose');
                     }
                 };
                 
                 // Hamburger menuButtonUse onclick，Noneneedamountouterbind
-                console.log('✅ Hamburger menuFeaturesalreadyready（Use onclick）');
+                logger.log('✅ Hamburger menuFeaturesalreadyready（Use onclick）');
             })();
                 
                 // Mobileautocarousel（onlyinMobileEnable）
@@ -995,7 +1002,7 @@
                     if (window.simpleDataManager && window.simpleDataManager.initialized) {
                         try {
                             userCredits = await window.simpleDataManager.getUserCredits();
-                            console.log('✅ Fetch immediately Credits:', userCredits);
+                            logger.log('✅ Fetch immediately Credits:', userCredits);
                         } catch (error) {
                             console.error('❌ Failed to fetch Credits:', error);
                         }
@@ -1055,19 +1062,19 @@
                                 if (userDoc) {
                                     userDisplayName = userDoc.displayName | userDisplayName;
                                     userCredits = userDoc.credits | 0;
-                                    console.log('✅ index.html Get Credits:', userCredits);
+                                    logger.log('✅ index.html Get Credits:', userCredits);
                                 }
                             } catch (error) {
-                                console.log('⚠️ None法from Firestore GetUserdata:', error);
+                                logger.log('⚠️ None法from Firestore GetUserdata:', error);
                             }
                         } else {
-                            console.log('⏳ SimpleDataManager yetnotInitialize，Waitmiddle...');
+                            logger.log('⏳ SimpleDataManager yetnotInitialize，Waitmiddle...');
                             // DelayRetry
                             setTimeout(async () => {
                                 if (window.simpleDataManager && window.simpleDataManager.initialized) {
                                     try {
                                         userCredits = await window.simpleDataManager.getUserCredits();
-                                        console.log('✅ Delayed fetch Credits:', userCredits);
+                                        logger.log('✅ Delayed fetch Credits:', userCredits);
                                     } catch (error) {
                                         console.error('❌ Delayed fetchFailed:', error);
                                     }
@@ -1076,23 +1083,23 @@
                         }
                         
                         const userInitial = getUserInitial();
-                        console.log(`👤 UserFirst letter: "${userInitial}" (displayName: "${userDisplayName}")`);
+                        logger.log(`👤 UserFirst letter: "${userInitial}" (displayName: "${userDisplayName}")`);
                         
                         userMenu.innerHTML = `
-                            <div onclick="toggleDropdown()" style="cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
-                                <div style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem; opacity: 1; transition: opacity 0.3s;">${userInitial}</div>
+                            <div onclick="toggleDropdown()" class="user-menu-trigger">
+                                <div class="user-avatar">${userInitial}</div>
                             </div>
                         `;
-                        console.log('✅ UseralreadyLogin，Showavatar');
+                        logger.log('✅ UseralreadyLogin，Showavatar');
                     } else {
                         // ✅ notLogin：ShowLoginButton
                         userMenu.innerHTML = `
-                            <button onclick="window.location.href='auth.html'" style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.875rem;" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">Login</button>
+                            <button onclick="window.location.href='auth.html'" class="login-button">Login</button>
                         `;
-                        console.log('✅ UsernotLogin，ShowLoginButton');
+                        logger.log('✅ UsernotLogin，ShowLoginButton');
                     }
                 } catch (e) {
-                    console.log('❌ None法UpdateUserMenu:', e);
+                    logger.log('❌ None法UpdateUserMenu:', e);
                 }
             }
             
@@ -1232,14 +1239,14 @@
             // Saveto Firebase
             try {
                 const projectData = await window.simpleDataManager.createProject(projectName);
-                console.log('✅ ProjectalreadySaveto Firebase:', projectData);
+                logger.log('✅ ProjectalreadySaveto Firebase:', projectData);
             
             // CloseModal
             closeCreateProjectModal();
             
                 // 🔥 repair：Use Firebase Back的Trueactual projectId
                 const projectId = projectData.id;
-                console.log('🚀 Jump totonewProjectpage:', projectId);
+                logger.log('🚀 Jump totonewProjectpage:', projectId);
                 
                 // Jump totonewProjectpage
                 window.location.href = `firstproject.html?project=${projectId}`;
@@ -1257,13 +1264,13 @@
 
         // LoadProjectList
         async function loadProjects() {
-            console.log('🔄 LoadProjectList');
+            logger.log('🔄 LoadProjectList');
             
             // from Firebase GetProjectData
             let projects = [];
             try {
                 projects = await window.simpleDataManager.getProjects();
-                console.log(`✅ from Firebase Load ${projects.length} 個Project`);
+                logger.log(`✅ from Firebase Load ${projects.length} 個Project`);
             } catch (error) {
                 console.error('❌ from Firebase LoadProjectFailed:', error);
                 projects = [];
@@ -1400,7 +1407,7 @@
             
             try {
                 await window.simpleDataManager.deleteProject(projectToDelete.id);
-                console.log('✅ ProjectalreadyDelete:', projectToDelete.name);
+                logger.log('✅ ProjectalreadyDelete:', projectToDelete.name);
                 
                 // TriggerSidebarUpdate
                 window.dispatchEvent(new Event('projectDeleted'));
@@ -1428,16 +1435,16 @@
         let dataManagerInitialized = false;
         
         window.addEventListener('auth-state-changed', async function(e) {
-            console.log('🔥 receiveto auth-state-changed Event');
+            logger.log('🔥 receiveto auth-state-changed Event');
             authInitialized = true;
             
             // CheckYesNoalreadyLogin
             if (!e.detail.user) {
-                console.log('❌ UsernotLogin');
+                logger.log('❌ UsernotLogin');
                 return; // SimpleAuth willautoProcessredirect
             }
             
-            console.log('✅ UseralreadyLogin:', e.detail.user.email);
+            logger.log('✅ UseralreadyLogin:', e.detail.user.email);
             
             // InitializeSidebar
             initializeDashboard();
@@ -1445,17 +1452,17 @@
         
         // Initialize Dashboard
         function initializeDashboard() {
-            console.log('🎯 Initialize Dashboard...');
+            logger.log('🎯 Initialize Dashboard...');
             
             // InitializeSidebar
             if (window.VaultCaddySidebar && !window.dashboardSidebar) {
                 window.dashboardSidebar = new VaultCaddySidebar('dashboard');
-                console.log('✅ SidebaralreadyInitialize');
+                logger.log('✅ SidebaralreadyInitialize');
             }
             
             // If SimpleDataManager alreadyInitialize，LoadProject
             if (window.simpleDataManager && window.simpleDataManager.initialized) {
-                console.log('✅ SimpleDataManager alreadyready，LoadProject');
+                logger.log('✅ SimpleDataManager alreadyready，LoadProject');
                 loadProjects();
             }
         }
@@ -1466,11 +1473,11 @@
             if (window.simpleDataManager && window.simpleDataManager.initialized && !dataManagerInitialized) {
                 dataManagerInitialized = true;
                 clearInterval(checkDataManager);
-                console.log('✅ SimpleDataManager alreadyInitialize');
+                logger.log('✅ SimpleDataManager alreadyInitialize');
                 
                 // IfUseralreadyLogin，LoadProject
                 if (authInitialized && window.simpleAuth && window.simpleAuth.isLoggedIn()) {
-                    console.log('✅ UseralreadyLogin + SimpleDataManager alreadyready，LoadProject');
+                    logger.log('✅ UseralreadyLogin + SimpleDataManager alreadyready，LoadProject');
                     loadProjects();
                 }
             }
@@ -1511,11 +1518,11 @@
     </script>
 <!-- 🔥 Hamburger menuexceedlevelSimplerepairPlan -->
 <script>
-        console.log('🔥 StartInitializeHamburger menu...');
+        logger.log('🔥 StartInitializeHamburger menu...');
         
         // OpenSidebarFunction
         function openSidebar() {
-            console.log('🔵 OpenSidebar');
+            logger.log('🔵 OpenSidebar');
             const sidebar = document.getElementById('mobile-sidebar');
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
@@ -1524,13 +1531,13 @@
                 overlay.style.display = 'block';
                 overlay.style.opacity = '1';
                 document.body.style.overflow = 'hidden';
-                console.log('✅ SidebarOpened');
+                logger.log('✅ SidebarOpened');
             }
         }
         
         // CloseSidebarFunction
         function closeSidebar() {
-            console.log('🔵 CloseSidebar');
+            logger.log('🔵 CloseSidebar');
             const sidebar = document.getElementById('mobile-sidebar');
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
@@ -1541,7 +1548,7 @@
                     overlay.style.display = 'none';
                 }, 300); // WaitAnimationComplete（and CSS transition consistent）
                 document.body.style.overflow = 'auto';
-                console.log('✅ SidebaralreadyClose');
+                logger.log('✅ SidebaralreadyClose');
             }
         }
         
@@ -1551,40 +1558,40 @@
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
             if (!btn | !overlay) {
-                console.log('⏳ ElementNot found，200msbackRetry');
+                logger.log('⏳ ElementNot found，200msbackRetry');
                 setTimeout(simpleInitMenu, 200);
                 return;
             }
             
-            console.log('✅ findto所HasElement！');
+            logger.log('✅ findto所HasElement！');
             
             // ButtonclickProcess
             btn.addEventListener('click', function() {
-                console.log('🔵 Buttonbyclick！');
+                logger.log('🔵 Buttonbyclick！');
                 openSidebar();
             });
             
             // touchProcess
             btn.addEventListener('touchend', function(e) {
                 e.preventDefault();
-                console.log('🔵 touchEvent！');
+                logger.log('🔵 touchEvent！');
                 openSidebar();
             });
             
             // MaskclickClose
             overlay.addEventListener('click', function() {
-                console.log('🔵 clickMaskClose');
+                logger.log('🔵 clickMaskClose');
                 closeSidebar();
             });
             
             // MasktouchClose
             overlay.addEventListener('touchend', function(e) {
                 e.preventDefault();
-                console.log('🔵 touchMaskClose');
+                logger.log('🔵 touchMaskClose');
                 closeSidebar();
             });
             
-            console.log('✅ 所HasEventListendevicealreadybind');
+            logger.log('✅ 所HasEventListendevicealreadybind');
         }
         
         // immediatelyTryInitialize

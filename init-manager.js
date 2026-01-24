@@ -1,188 +1,120 @@
 /**
- * 統一初始化管理器
- * 目的：協調所有組件的初始化順序，避免重複和延遲
+ * 初始化管理器 (Initialization Manager)
+ * 作用: 统一管理异步初始化，避免多次 setTimeout 重试
+ * 版本: 1.0.0
+ * 日期: 2026-01-23
  * 
- * 初始化順序：
- * 1. Firebase SDK
- * 2. SimpleAuth (認證)
- * 3. SimpleDataManager (數據)
- * 4. Unified Components (UI 組件)
+ * 功能:
+ *   - Promise 基础的等待机制
+ *   - 避免重复初始化
+ *   - 超时控制
+ * 
+ * 使用示例:
+ *   await window.initManager.waitFor('simpleAuth', 
+ *     () => window.simpleAuth && window.simpleAuth.isReady
+ *   );
  */
 
-(function() {
-    'use strict';
-    
-    console.log('🚀 InitManager: 開始載入');
-    
-    // 初始化狀態追蹤
-    const initState = {
-        firebase: false,
-        auth: false,
-        dataManager: false,
-        ui: false
-    };
-    
-    // 初始化完成回調列表
-    const readyCallbacks = [];
-    
-    /**
-     * 註冊初始化完成回調
-     */
-    window.onAppReady = function(callback) {
-        if (typeof callback === 'function') {
-            if (isFullyReady()) {
-                callback();
-            } else {
-                readyCallbacks.push(callback);
-            }
-        }
-    };
-    
-    /**
-     * 檢查是否完全就緒
-     */
-    function isFullyReady() {
-        return initState.firebase && 
-               initState.auth && 
-               initState.dataManager && 
-               initState.ui;
+class InitializationManager {
+    constructor() {
+        this.promises = new Map();
+        this.initialized = new Set();
+        logger.log('初始化管理器已创建');
     }
     
     /**
-     * 標記組件就緒
+     * 等待某个条件满足
+     * @param {string} key - 唯一标识
+     * @param {Function} checkFn - 检查函数，返回 true 表示已就绪
+     * @param {number} timeout - 超时时间（毫秒），默认 5000ms
+     * @param {number} interval - 检查间隔（毫秒），默认 100ms
+     * @returns {Promise} 
      */
-    function markReady(component) {
-        if (initState[component] === false) {
-            initState[component] = true;
-            console.log(`✅ InitManager: ${component} 就緒`);
+    async waitFor(key, checkFn, timeout = 5000, interval = 100) {
+        // 如果已经初始化过，直接返回
+        if (this.initialized.has(key)) {
+            logger.log(`${key} 已初始化，立即返回`);
+            return Promise.resolve();
+        }
+        
+        // 如果正在等待，返回现有的 Promise
+        if (this.promises.has(key)) {
+            logger.log(`${key} 正在等待中，返回现有 Promise`);
+            return this.promises.get(key);
+        }
+        
+        // 创建新的等待 Promise
+        const promise = new Promise((resolve, reject) => {
+            const startTime = Date.now();
             
-            // 檢查是否全部就緒
-            if (isFullyReady()) {
-                console.log('🎉 InitManager: 所有組件就緒！');
-                
-                // 執行所有回調
-                readyCallbacks.forEach(callback => {
-                    try {
-                        callback();
-                    } catch (error) {
-                        console.error('❌ InitManager: 回調執行失敗', error);
+            const check = () => {
+                try {
+                    if (checkFn()) {
+                        this.initialized.add(key);
+                        this.promises.delete(key);
+                        logger.log(`${key} 已就绪`);
+                        resolve();
+                    } else if (Date.now() - startTime > timeout) {
+                        this.promises.delete(key);
+                        logger.error(`等待 ${key} 超时`);
+                        reject(new Error(`Timeout waiting for ${key}`));
+                    } else {
+                        setTimeout(check, interval);
                     }
-                });
-                
-                // 清空回調列表
-                readyCallbacks.length = 0;
-                
-                // 觸發全局事件
-                window.dispatchEvent(new Event('app-ready'));
-            }
-        }
-    }
-    
-    /**
-     * 初始化流程
-     */
-    async function init() {
-        console.log('🔄 InitManager: 開始初始化流程');
-        
-        // 1. 等待 Firebase SDK 載入
-        await waitForFirebase();
-        
-        // 2. 等待 SimpleAuth 初始化
-        await waitForAuth();
-        
-        // 3. 等待 SimpleDataManager 初始化
-        await waitForDataManager();
-        
-        // 4. UI 組件就緒
-        markReady('ui');
-    }
-    
-    /**
-     * 等待 Firebase SDK
-     */
-    async function waitForFirebase() {
-        console.log('⏳ InitManager: 等待 Firebase SDK...');
-        
-        let attempts = 0;
-        const maxAttempts = 50; // 5 秒
-        
-        while (attempts < maxAttempts) {
-            if (window.firebase && window.firebase.apps && window.firebase.apps.length > 0) {
-                console.log('✅ InitManager: Firebase SDK 就緒');
-                markReady('firebase');
-                return;
-            }
+                } catch (error) {
+                    this.promises.delete(key);
+                    logger.error(`检查 ${key} 时出错:`, error);
+                    reject(error);
+                }
+            };
             
-            await new Promise(resolve => setTimeout(resolve, 100));
-            attempts++;
-        }
+            logger.log(`开始等待 ${key}`);
+            check();
+        });
         
-        console.error('❌ InitManager: Firebase SDK 載入超時');
+        this.promises.set(key, promise);
+        return promise;
     }
     
     /**
-     * 等待 SimpleAuth
+     * 手动标记为已初始化
+     * @param {string} key - 唯一标识
      */
-    async function waitForAuth() {
-        console.log('⏳ InitManager: 等待 SimpleAuth...');
-        
-        let attempts = 0;
-        const maxAttempts = 50; // 5 秒
-        
-        while (attempts < maxAttempts) {
-            if (window.simpleAuth && window.simpleAuth.initialized) {
-                console.log('✅ InitManager: SimpleAuth 就緒');
-                markReady('auth');
-                return;
-            }
-            
-            await new Promise(resolve => setTimeout(resolve, 100));
-            attempts++;
-        }
-        
-        console.error('❌ InitManager: SimpleAuth 初始化超時');
-        // 即使超時也標記為就緒，避免阻塞
-        markReady('auth');
+    markInitialized(key) {
+        this.initialized.add(key);
+        logger.log(`${key} 被手动标记为已初始化`);
     }
     
     /**
-     * 等待 SimpleDataManager
+     * 检查是否已初始化
+     * @param {string} key - 唯一标识
+     * @returns {boolean}
      */
-    async function waitForDataManager() {
-        console.log('⏳ InitManager: 等待 SimpleDataManager...');
-        
-        let attempts = 0;
-        const maxAttempts = 50; // 5 秒
-        
-        while (attempts < maxAttempts) {
-            if (window.simpleDataManager && window.simpleDataManager.initialized) {
-                console.log('✅ InitManager: SimpleDataManager 就緒');
-                markReady('dataManager');
-                return;
-            }
-            
-            await new Promise(resolve => setTimeout(resolve, 100));
-            attempts++;
-        }
-        
-        console.error('❌ InitManager: SimpleDataManager 初始化超時');
-        // 即使超時也標記為就緒，避免阻塞
-        markReady('dataManager');
+    isInitialized(key) {
+        return this.initialized.has(key);
     }
     
-    // 當 DOM 載入完成後開始初始化
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
+    /**
+     * 重置初始化状态（用于测试或重新初始化）
+     * @param {string} key - 唯一标识
+     */
+    reset(key) {
+        this.initialized.delete(key);
+        this.promises.delete(key);
+        logger.log(`${key} 已重置`);
     }
     
-    // 暴露狀態檢查函數
-    window.getInitState = function() {
-        return { ...initState };
-    };
-    
-    console.log('✅ InitManager: 腳本載入完成');
-    
-})();
+    /**
+     * 重置所有
+     */
+    resetAll() {
+        this.initialized.clear();
+        this.promises.clear();
+        logger.log('所有初始化状态已重置');
+    }
+}
 
+// 创建全局实例
+window.initManager = new InitializationManager();
+
+logger.log('初始化管理器已加载');

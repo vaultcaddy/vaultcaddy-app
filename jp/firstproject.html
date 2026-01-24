@@ -63,6 +63,13 @@
 <link href="../dashboard.css" rel="stylesheet"/>
 <link href="../pages.css" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
+    
+    <!-- 优化后的公共组件 (2026-01-23) -->
+    <link rel="stylesheet" href="../user-menu-styles.css">
+    <script defer src="../logger.js"></script>
+    <script defer src="../init-manager.js"></script>
+    <script defer src="../user-menu-manager.js"></script>
+    <script defer src="../mobile-menu-manager.js"></script>
 <!-- ✅ 核心設定 -->
 <script defer="" src="../config.js"></script>
 <script defer="" src="../translations.js?v=20251102"></script>
@@ -2005,7 +2012,7 @@
 <!-- ✅ index.html 動態更新ユーザーステータス -->
 <script>
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('✅ index.html 初期化');
+            logger.log('✅ index.html 初期化');
             
             // 🔥 モバイル版：調整コンテンツ距離ナビゲーション欄の距離
             function adjustMobileLayout() {
@@ -2014,13 +2021,13 @@
                     if (header) {
                         header.style.setProperty('margin-top', '0', 'important');
                         header.style.setProperty('padding-top', '0', 'important');
-                        console.log('📱 モバイル版：調整 header margin-top と padding-top として 0');
+                        logger.log('📱 モバイル版：調整 header margin-top と padding-top として 0');
                     }
                     // 同時調整 team-project-view の padding
                     const teamProjectView = document.getElementById('team-project-view');
                     if (teamProjectView) {
                         teamProjectView.style.setProperty('padding-top', '0.5rem', 'important');
-                        console.log('📱 モバイル版：調整 team-project-view padding-top として 0.5rem');
+                        logger.log('📱 モバイル版：調整 team-project-view padding-top として 0.5rem');
                     }
                 } else {
                     // デスクトップ版恢復元のスタイル
@@ -2063,21 +2070,21 @@
             
             // 🔥 ハンバーガーメニュー機能（即座に実行，ない待機 DOMContentLoaded）
             (function() {
-                console.log('🔵 初期化ハンバーガーメニュー...');
+                logger.log('🔵 初期化ハンバーガーメニュー...');
                 
                 // 開くサイドバー
                 window.openMobileSidebar = function() {
-                    console.log('🔵 openMobileSidebar 呼び出された');
+                    logger.log('🔵 openMobileSidebar 呼び出された');
                     const sidebar = document.getElementById('mobile-sidebar');
                     const overlay = document.getElementById('mobile-sidebar-overlay');
-                    console.log('🔵 sidebar:', sidebar);
-                    console.log('🔵 overlay:', overlay);
+                    logger.log('🔵 sidebar:', sidebar);
+                    logger.log('🔵 overlay:', overlay);
                     
                     if (sidebar && overlay) {
                         sidebar.style.left = '0';
                         overlay.style.display = 'block';
                         document.body.style.overflow = 'hidden';
-                        console.log('✅ サイドバー開いた');
+                        logger.log('✅ サイドバー開いた');
                     } else {
                         console.error('❌ 見つかりませんサイドバーまたはマスク要素');
                     }
@@ -2085,7 +2092,7 @@
                 
                 // 關閉サイドバー
                 window.closeMobileSidebar = function() {
-                    console.log('🔵 closeMobileSidebar 呼び出された');
+                    logger.log('🔵 closeMobileSidebar 呼び出された');
                     const sidebar = document.getElementById('mobile-sidebar');
                     const overlay = document.getElementById('mobile-sidebar-overlay');
                     
@@ -2093,12 +2100,12 @@
                         sidebar.style.left = '-100%';
                         overlay.style.display = 'none';
                         document.body.style.overflow = 'auto';
-                        console.log('✅ サイドバー已關閉');
+                        logger.log('✅ サイドバー已關閉');
                     }
                 };
                 
                 // ハンバーガーメニューボタン使用 onclick，無需額外綁定
-                console.log('✅ ハンバーガーメニュー機能已就緒（使用 onclick）');
+                logger.log('✅ ハンバーガーメニュー機能已就緒（使用 onclick）');
             })();
                 
                 // モバイル版自動カルーセル（僅でモバイル版啟用）
@@ -2147,7 +2154,7 @@
                     if (window.simpleDataManager && window.simpleDataManager.initialized) {
                         try {
                             userCredits = await window.simpleDataManager.getUserCredits();
-                            console.log('✅ 即座に取得 Credits:', userCredits);
+                            logger.log('✅ 即座に取得 Credits:', userCredits);
                         } catch (error) {
                             console.error('❌ 取得失敗 Credits:', error);
                         }
@@ -2207,19 +2214,19 @@
                                 if (userDoc) {
                                     userDisplayName = userDoc.displayName || userDisplayName;
                                     userCredits = userDoc.credits || 0;
-                                    console.log('✅ index.html 取得 Credits:', userCredits);
+                                    logger.log('✅ index.html 取得 Credits:', userCredits);
                                 }
                             } catch (error) {
-                                console.log('⚠️ 無法から Firestore 取得ユーザー資料:', error);
+                                logger.log('⚠️ 無法から Firestore 取得ユーザー資料:', error);
                             }
                         } else {
-                            console.log('⏳ SimpleDataManager 尚未初期化，待機中...');
+                            logger.log('⏳ SimpleDataManager 尚未初期化，待機中...');
                             // 延遲再試行
                             setTimeout(async () => {
                                 if (window.simpleDataManager && window.simpleDataManager.initialized) {
                                     try {
                                         userCredits = await window.simpleDataManager.getUserCredits();
-                                        console.log('✅ 遅延取得 Credits:', userCredits);
+                                        logger.log('✅ 遅延取得 Credits:', userCredits);
                                     } catch (error) {
                                         console.error('❌ 遅延取得失敗:', error);
                                     }
@@ -2228,23 +2235,23 @@
                         }
                         
                         const userInitial = getUserInitial();
-                        console.log(`👤 ユーザー頭テキスト: "${userInitial}" (displayName: "${userDisplayName}")`);
+                        logger.log(`👤 ユーザー頭テキスト: "${userInitial}" (displayName: "${userDisplayName}")`);
                         
                         userMenu.innerHTML = `
-                            <div onclick="toggleDropdown()" style="cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
-                                <div style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem; opacity: 1; transition: opacity 0.3s;">${userInitial}</div>
+                            <div onclick="toggleDropdown()" class="user-menu-trigger">
+                                <div class="user-avatar">${userInitial}</div>
                             </div>
                         `;
-                        console.log('✅ ユーザー已ログイン，顯示頭像');
+                        logger.log('✅ ユーザー已ログイン，顯示頭像');
                     } else {
                         // ✅ 未ログイン：顯示ログインボタン
                         userMenu.innerHTML = `
-                            <button onclick="window.location.href='auth.html'" style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.875rem;" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">ログイン</button>
+                            <button onclick="window.location.href='auth.html'" class="login-button">ログイン</button>
                         `;
-                        console.log('✅ ユーザー未ログイン，顯示ログインボタン');
+                        logger.log('✅ ユーザー未ログイン，顯示ログインボタン');
                     }
                 } catch (e) {
-                    console.log('❌ 無法更新ユーザーメニュー:', e);
+                    logger.log('❌ 無法更新ユーザーメニュー:', e);
                 }
             }
             
@@ -2695,23 +2702,23 @@
         
         // ==================== 初期化 ====================
         window.addEventListener('auth-state-changed', async (e) => {
-            console.log('🔥 收まで auth-state-changed 事件');
+            logger.log('🔥 收まで auth-state-changed 事件');
             
             // 削除 auth-checking 類別，顯示ページ
             document.body.classList.remove('auth-checking');
             document.body.classList.add('auth-ready');
             
             if (!e.detail.user) {
-                console.log('❌ ユーザー未ログイン，重定向までホーム');
+                logger.log('❌ ユーザー未ログイン，重定向までホーム');
                 window.location.href = 'index.html';
                 return;
             }
             
-            console.log('✅ ユーザー已ログイン:', e.detail.user.email);
+            logger.log('✅ ユーザー已ログイン:', e.detail.user.email);
             
             // 作成サイドバー
             if (window.VaultCaddySidebar && !window.unifiedSidebar) {
-                console.log('🎨 作成サイドバー');
+                logger.log('🎨 作成サイドバー');
                 window.unifiedSidebar = new VaultCaddySidebar();
             }
             
@@ -2736,17 +2743,17 @@
                     return;
                 }
                 
-                console.log('📂 プロジェクト読み込み:', currentProjectId);
+                logger.log('📂 プロジェクト読み込み:', currentProjectId);
                 
                 const projects = await window.simpleDataManager.getProjects();
                 currentProject = projects.find(p => p.id === currentProjectId);
                 
                 if (currentProject) {
                     document.getElementById('team-project-title').textContent = currentProject.name;
-                    console.log('✅ プロジェクト名:', currentProject.name);
+                    logger.log('✅ プロジェクト名:', currentProject.name);
                 } else {
                     // プロジェクトが存在しない、削除された可能性があります
-                    console.warn('⚠️ プロジェクトが見つかりません。削除された可能性があります:', currentProjectId);
+                    logger.warn('⚠️ プロジェクトが見つかりません。削除された可能性があります:', currentProjectId);
                     alert('このプロジェクトは存在しないか削除されました。ホームページに戻ります。');
                     window.location.href = 'index.html';
                 }
@@ -2801,7 +2808,7 @@
         
         // 應用日付篩選
         function applyDateFilters() {
-            console.log('🗓️ 應用日付篩選', dateFilters);
+            logger.log('🗓️ 應用日付篩選', dateFilters);
             
             // から元の文書開始篩選
             let filtered = [...allDocuments];
@@ -2875,7 +2882,7 @@
         };
         
         function clearDateFilters() {
-            console.log('🗑️ 清除日付篩選');
+            logger.log('🗑️ 清除日付篩選');
             
             // 重置篩選ステータス
             dateFilters = {
@@ -2933,7 +2940,7 @@
                 });
             }
             
-            console.log('✅ 日付フィルター已初期化');
+            logger.log('✅ 日付フィルター已初期化');
         }
         
         // ==================== レンダリング文書テーブル ====================
@@ -3217,10 +3224,10 @@
             try {
                 if (!currentProjectId) return;
                 
-                console.log('📄 読み込み文書リスト');
+                logger.log('📄 読み込み文書リスト');
                 
                 const documents = await window.simpleDataManager.getDocuments(currentProjectId);
-                console.log('✅ 找まで', documents.length, '件の文書');
+                logger.log('✅ 找まで', documents.length, '件の文書');
                 
                 // 保存までグローバル変数
                 allDocuments = documents;
@@ -3270,7 +3277,7 @@
                 return;
             }
             
-            console.log(`🔄 發現 ${pendingDocs.length} 個待処理文書，開始恢復処理...`);
+            logger.log(`🔄 發現 ${pendingDocs.length} 個待処理文書，開始恢復処理...`);
             
             for (const doc of pendingDocs) {
                 try {
@@ -3281,7 +3288,7 @@
                     
                     const pages = doc.pages | 1;
                     
-                    console.log(`🔄 恢復処理: ${doc.fileName} (${pages} 頁)`);
+                    logger.log(`🔄 恢復処理: ${doc.fileName} (${pages} 頁)`);
                     
                     // 繼續 AI 処理
                     processFileWithAI(file, doc.id, pages).catch(err => {
@@ -3296,7 +3303,7 @@
         
         // ==================== アップロードモーダル ====================
         window.openUploadModal = function() {
-            console.log('🎯 開くアップロードモーダル');
+            logger.log('🎯 開くアップロードモーダル');
             const modal = document.getElementById('aiUploadModal');
             if (modal) {
                 modal.style.display = 'flex';
@@ -3356,14 +3363,14 @@
                 
                 const files = Array.from(e.dataTransfer.files);
                 if (files.length > 0) {
-                    console.log('📥 拖放ファイル:', files.length, '個');
+                    logger.log('📥 拖放ファイル:', files.length, '個');
                     handleUpload(files);
                 }
             });
         }
         
         window.selectDocumentType = function(type) {
-            console.log('📋 選択文書タイプ:', type);
+            logger.log('📋 選択文書タイプ:', type);
             selectedDocumentType = type;
             
             document.querySelectorAll('.doc-type-card').forEach(card => {
@@ -3383,7 +3390,7 @@
         };
         
         async function handleUpload(files) {
-            console.log('📤 準備アップロード', files.length, '個のファイル');
+            logger.log('📤 準備アップロード', files.length, '個のファイル');
             
             // 1. 計算すべてファイルの總ページ数
             let totalPages = 0;
@@ -3395,13 +3402,13 @@
                 totalPages += pages;
             }
             
-            console.log(`📊 總ページ数: ${totalPages}`);
+            logger.log(`📊 總ページ数: ${totalPages}`);
             
             // 2. チェック Credits 是否足夠
             if (window.creditsManager) {
                 const hasEnoughCredits = await window.creditsManager.checkCredits(totalPages);
                 if (!hasEnoughCredits) {
-                    console.log('❌ Credits ない足，キャンセルバッチアップロード');
+                    logger.log('❌ Credits ない足，キャンセルバッチアップロード');
                     return;
                 }
             }
@@ -3421,7 +3428,7 @@
          */
         async function uploadFileDirect(file, pages) {
             try {
-                console.log('📤 ファイルをアップロード:', file.name, `(${pages} 頁)`);
+                logger.log('📤 ファイルをアップロード:', file.name, `(${pages} 頁)`);
                 
                 // ✅ もし PDF，先変換画像（と uploadFile 函數保持一致）
                 let filesToProcess = [file];
@@ -3429,12 +3436,12 @@
                 
                 if (window.pdfToImageConverter && window.pdfToImageConverter.isPDF(file)) {
                     try {
-                        console.log('📄 檢測まで PDF ファイル，開始変換画像...');
+                        logger.log('📄 檢測まで PDF ファイル，開始変換画像...');
                         const imageFiles = await window.pdfToImageConverter.convertPDFToImages(file);
-                        console.log(`✅ PDF 変換完了，生成 ${imageFiles.length} 張画像`);
+                        logger.log(`✅ PDF 変換完了，生成 ${imageFiles.length} 張画像`);
                         filesToProcess = imageFiles;
                         isPDFConverted = true;
-                        console.log(`📄 將処理すべて ${imageFiles.length} 頁`);
+                        logger.log(`📄 將処理すべて ${imageFiles.length} 頁`);
                     } catch (pdfError) {
                         console.error('❌ PDF 変換失敗:', pdfError);
                         alert(`PDF 変換失敗: ${pdfError.message}\n\n請確認ファイル是否有效。`);
@@ -3443,12 +3450,12 @@
                 }
                 
                 // アップロードすべてファイルまで Storage
-                console.log(`📤 開始アップロード ${filesToProcess.length} 個のファイル...`);
+                logger.log(`📤 開始アップロード ${filesToProcess.length} 個のファイル...`);
                 const uploadPromises = filesToProcess.map(f => 
                     window.simpleDataManager.uploadFile(currentProjectId, f)
                 );
                 const imageUrls = await Promise.all(uploadPromises);
-                console.log(`✅ ${imageUrls.length} 個のファイル已アップロードまで Storage`);
+                logger.log(`✅ ${imageUrls.length} 個のファイル已アップロードまで Storage`);
                 
                 const docData = {
                     name: file.name,
@@ -3468,7 +3475,7 @@
                 };
                 
                 const docId = await window.simpleDataManager.createDocument(currentProjectId, docData);
-                console.log('✅ 文書記録已作成:', docId);
+                logger.log('✅ 文書記録已作成:', docId);
                 
                 // ✅ 即座に重新読み込み文書リスト，顯示新アップロードのファイル
                 await loadDocuments();
@@ -3476,7 +3483,7 @@
                 // 扣除 Credits（按實際ページ数）
                 if (window.creditsManager) {
                     await window.creditsManager.deductCredits(filesToProcess.length);
-                    console.log(`💰 已扣除 ${filesToProcess.length} Credits`);
+                    logger.log(`💰 已扣除 ${filesToProcess.length} Credits`);
                 }
                 
                 // 後台処理 AI（処理すべてページ）
@@ -3492,17 +3499,17 @@
         
         async function uploadFile(file) {
             try {
-                console.log('📤 準備ファイルをアップロード:', file.name);
+                logger.log('📤 準備ファイルをアップロード:', file.name);
                 
                 // 1. 計算ファイルページ数
                 const pages = await getFilePageCount(file);
-                console.log(`📄 ファイルページ数: ${pages}`);
+                logger.log(`📄 ファイルページ数: ${pages}`);
                 
                 // 2. チェック Credits 是否足夠
                 if (window.creditsManager) {
                     const hasEnoughCredits = await window.creditsManager.checkCredits(pages);
                     if (!hasEnoughCredits) {
-                        console.log('❌ Credits ない足，キャンセルアップロード');
+                        logger.log('❌ Credits ない足，キャンセルアップロード');
                         return;
                     }
                 }
@@ -3513,12 +3520,12 @@
                 
                 if (window.pdfToImageConverter && window.pdfToImageConverter.isPDF(file)) {
                     try {
-                        console.log('📄 檢測まで PDF ファイル，開始変換画像...');
+                        logger.log('📄 檢測まで PDF ファイル，開始変換画像...');
                         const imageFiles = await window.pdfToImageConverter.convertPDFToImages(file);
-                        console.log(`✅ PDF 変換完了，生成 ${imageFiles.length} 張画像`);
+                        logger.log(`✅ PDF 変換完了，生成 ${imageFiles.length} 張画像`);
                         filesToProcess = imageFiles; // ✅ 使用すべてページ
                         isPDFConverted = true;
-                        console.log(`📄 將処理すべて ${imageFiles.length} 頁`);
+                        logger.log(`📄 將処理すべて ${imageFiles.length} 頁`);
                     } catch (pdfError) {
                         console.error('❌ PDF 変換失敗:', pdfError);
                         alert(`PDF 変換失敗: ${pdfError.message}\n\n請確認ファイル是否有效，または嘗試直接アップロード JPG/PNG 画像。`);
@@ -3527,12 +3534,12 @@
                 }
                 
                 // 4. アップロードすべてファイルまで Storage（サポート複数ページ PDF）
-                console.log(`📤 開始アップロード ${filesToProcess.length} 個のファイル...`);
+                logger.log(`📤 開始アップロード ${filesToProcess.length} 個のファイル...`);
                 const uploadPromises = filesToProcess.map(f => 
                     window.simpleDataManager.uploadFile(currentProjectId, f)
                 );
                 const imageUrls = await Promise.all(uploadPromises);
-                console.log(`✅ ${imageUrls.length} 個のファイル已アップロードまで Storage`);
+                logger.log(`✅ ${imageUrls.length} 個のファイル已アップロードまで Storage`);
                 
                 const docData = {
                     name: file.name, // 保留元のファイル名
@@ -3552,22 +3559,22 @@
                 };
                 
                 const docId = await window.simpleDataManager.createDocument(currentProjectId, docData);
-                console.log('✅ 文書記録已作成:', docId);
+                logger.log('✅ 文書記録已作成:', docId);
                 
                 // 5. 扣除 Credits（すべてページ数）
                 if (window.creditsManager) {
                     await window.creditsManager.deductCredits(filesToProcess.length);
-                    console.log(`💰 已扣除 ${filesToProcess.length} Credits（${filesToProcess.length} 頁）`);
+                    logger.log(`💰 已扣除 ${filesToProcess.length} Credits（${filesToProcess.length} 頁）`);
                 }
                 
                 // 6. 重新読み込み列表以顯示新文書
                 await loadDocuments();
                 
                 // 7. 後台処理 AI（処理すべてページ）
-                console.log(`🔍 [DEBUG] 準備調用 processMultiPageFileWithAI`);
-                console.log(`   - 文件數量: ${filesToProcess.length}`);
-                console.log(`   - 文檔ID: ${docId}`);
-                console.log(`   - 文檔類型: ${selectedDocumentType}`);
+                logger.log(`🔍 [DEBUG] 準備調用 processMultiPageFileWithAI`);
+                logger.log(`   - 文件數量: ${filesToProcess.length}`);
+                logger.log(`   - 文檔ID: ${docId}`);
+                logger.log(`   - 文檔類型: ${selectedDocumentType}`);
                 processMultiPageFileWithAI(filesToProcess, docId, selectedDocumentType).catch(err => {
                     console.error('❌ AI 処理失敗:', err);
                 });
@@ -3601,7 +3608,7 @@
                         return pageMatches.length;
                     }
                 } catch (error) {
-                    console.warn('⚠️ 無法讀取 PDF ページ数:', error);
+                    logger.warn('⚠️ 無法讀取 PDF ページ数:', error);
                 }
             }
             
@@ -3623,7 +3630,7 @@
             async add(task, taskName = '') {
                 // 如果超過並行限制，放入キュー
                 if (this.running >= this.maxConcurrent) {
-                    console.log(`📝 ${taskName} 加入キュー（現で実行中：${this.running}，キュー：${this.queue.length}）`);
+                    logger.log(`📝 ${taskName} 加入キュー（現で実行中：${this.running}，キュー：${this.queue.length}）`);
                     return new Promise((resolve, reject) => {
                         this.queue.push({ task, taskName, resolve, reject });
                     });
@@ -3635,14 +3642,14 @@
             
             async run(task, taskName = '') {
                 this.running++;
-                console.log(`▶️ ${taskName} 開始執行（現で実行中：${this.running}，キュー：${this.queue.length}）`);
+                logger.log(`▶️ ${taskName} 開始執行（現で実行中：${this.running}，キュー：${this.queue.length}）`);
                 
                 try {
                     const result = await task();
                     return result;
                 } finally {
                     this.running--;
-                    console.log(`✅ ${taskName} 完了（現で実行中：${this.running}，キュー：${this.queue.length}）`);
+                    logger.log(`✅ ${taskName} 完了（現で実行中：${this.running}，キュー：${this.queue.length}）`);
                     
                     // からキュー中取出下一個任務
                     if (this.queue.length > 0) {
@@ -3658,7 +3665,7 @@
         
         async function processFileWithAI(file, docId, pages = 1) {
             try {
-                console.log('🤖 開始 AI 処理 (Qwen-VL Max):', file.name, `(${pages} 頁)`);
+                logger.log('🤖 開始 AI 処理 (Qwen-VL Max):', file.name, `(${pages} 頁)`);
                 
                 if (!window.QwenVLMaxProcessor) {
                     throw new Error('AI 処理器未読み込み');
@@ -3667,7 +3674,7 @@
                 const processor = new window.QwenVLMaxProcessor();
                 const result = await processor.processDocument(file, selectedDocumentType);
                 
-                console.log('✅ AI 処理完了');
+                logger.log('✅ AI 処理完了');
                 
                 await window.simpleDataManager.updateDocument(currentProjectId, docId, {
                     status: 'completed',
@@ -3679,7 +3686,7 @@
                     usage: result.usage
                 });
                 
-                console.log('✅ 文書ステータス已更新');
+                logger.log('✅ 文書ステータス已更新');
                 await loadDocuments();
                 
             } catch (error) {
@@ -3688,16 +3695,16 @@
                 // ✅ 戻る Credits（重複返却を防止）
                 if (window.creditsManager && pages > 0 && !refundedDocuments.has(docId)) {
                     try {
-                        console.log(`💰 準備戻る ${pages} Credits（文書 ID: ${docId}）`);
+                        logger.log(`💰 準備戻る ${pages} Credits（文書 ID: ${docId}）`);
                         await window.creditsManager.refundCredits(pages);
                         refundedDocuments.add(docId); // 標記已戻る
-                        console.log(`✅ 已戻る ${pages} Credits（文書 ID: ${docId}）`);
-                        console.log(`📋 已戻るの文書リスト:`, Array.from(refundedDocuments));
+                        logger.log(`✅ 已戻る ${pages} Credits（文書 ID: ${docId}）`);
+                        logger.log(`📋 已戻るの文書リスト:`, Array.from(refundedDocuments));
                     } catch (refundError) {
                         console.error('❌ 戻る Credits 失敗:', refundError);
                     }
                 } else if (refundedDocuments.has(docId)) {
-                    console.warn(`⚠️ 文書 ${docId} の Credits 既に戻る過，スキップ重複戻る`);
+                    logger.warn(`⚠️ 文書 ${docId} の Credits 既に戻る過，スキップ重複戻る`);
                 }
                 
                 await window.simpleDataManager.updateDocument(currentProjectId, docId, {
@@ -3715,7 +3722,7 @@
         async function processMultiPageFileWithAI(files, docId, documentType) {
             // ✅ チェック是否処理中
             if (processingDocuments.has(docId)) {
-                console.warn(`⚠️ 文書 ${docId} 処理中中，スキップ重複処理`);
+                logger.warn(`⚠️ 文書 ${docId} 処理中中，スキップ重複処理`);
                 return;
             }
             
@@ -3725,8 +3732,8 @@
                 try {
                     // ✅ 添加まで処理鎖
                     processingDocuments.add(docId);
-                    console.log(`🔒 鎖定文書 ${docId}，開始処理`);
-                    console.log(`🤖 開始複数ページ AI 処理 (Qwen-VL Max): ${files.length} 頁`);
+                    logger.log(`🔒 鎖定文書 ${docId}，開始処理`);
+                    logger.log(`🤖 開始複数ページ AI 処理 (Qwen-VL Max): ${files.length} 頁`);
                 
                 if (!window.QwenVLMaxProcessor) {
                     throw new Error('AI 処理器未読み込み');
@@ -3736,7 +3743,7 @@
                 
                 // ✅ プラン B：使用バッチ処理方法（バッチ OCR + 單次 DeepSeek）
                 if (files.length > 1) {
-                    console.log(`📚 バッチ処理モード使用 (${files.length} ページ)`);
+                    logger.log(`📚 バッチ処理モード使用 (${files.length} ページ)`);
                     
                     // ステータスを処理中に更新
                     await window.simpleDataManager.updateDocument(currentProjectId, docId, {
@@ -3746,7 +3753,7 @@
                     
                     // ✅ 進行状況コールバック関数を定義
                     const progressCallback = async (currentBatch, totalBatches, progress) => {
-                        console.log(`🔄 [進行状況更新] バッチ ${currentBatch}/${totalBatches} - ${progress}%`);
+                        logger.log(`🔄 [進行状況更新] バッチ ${currentBatch}/${totalBatches} - ${progress}%`);
                         await window.simpleDataManager.updateDocument(currentProjectId, docId, {
                             status: 'processing',  // ⚠️ processing のまま維持、completed に変更しないでください
                             processingProgress: progress
@@ -3769,11 +3776,11 @@
                         processingProgress: 100
                     });
                     
-                    console.log('✅ バッチ処理完了');
+                    logger.log('✅ バッチ処理完了');
                     
                 } else {
                     // 單頁文書，使用原有邏輯
-                    console.log(`📄 使用單頁処理模式`);
+                    logger.log(`📄 使用單頁処理模式`);
                     
                     await window.simpleDataManager.updateDocument(currentProjectId, docId, {
                         status: 'processing',
@@ -3793,7 +3800,7 @@
                         processingProgress: 100
                     });
                     
-                    console.log('✅ 單頁処理完了');
+                    logger.log('✅ 單頁処理完了');
                 }
                 
                 await loadDocuments();
@@ -3804,15 +3811,15 @@
                 // ✅ 戻る Credits（重複返却を防止）
                 if (window.creditsManager && files.length > 0 && !refundedDocuments.has(docId)) {
                     try {
-                        console.log(`💰 準備戻る ${files.length} Credits（文書 ID: ${docId}）`);
+                        logger.log(`💰 準備戻る ${files.length} Credits（文書 ID: ${docId}）`);
                         await window.creditsManager.refundCredits(files.length);
                         refundedDocuments.add(docId); // 標記已戻る
-                        console.log(`✅ 已戻る ${files.length} Credits（文書 ID: ${docId}）`);
+                        logger.log(`✅ 已戻る ${files.length} Credits（文書 ID: ${docId}）`);
                     } catch (refundError) {
                         console.error('❌ 戻る Credits 失敗:', refundError);
                     }
                 } else if (refundedDocuments.has(docId)) {
-                    console.warn(`⚠️ 文書 ${docId} の Credits 既に戻る過，スキップ重複戻る`);
+                    logger.warn(`⚠️ 文書 ${docId} の Credits 既に戻る過，スキップ重複戻る`);
                 }
                 
                 await window.simpleDataManager.updateDocument(currentProjectId, docId, {
@@ -3823,7 +3830,7 @@
                 } finally {
                     // ✅ 無論成功または失敗，都釋放鎖
                     processingDocuments.delete(docId);
-                    console.log(`🔓 解鎖文書 ${docId}，処理完了`);
+                    logger.log(`🔓 解鎖文書 ${docId}，処理完了`);
                 }
             }, fileName); // ✅ 傳遞ファイル名用に日誌
         }
@@ -3917,7 +3924,7 @@
         // ==================== その他機能 ====================
         // ==================== 表示文書詳細 ====================
         window.viewDocument = function(docId) {
-            console.log('🔍 表示文書詳細:', docId);
+            logger.log('🔍 表示文書詳細:', docId);
             if (!currentProjectId) {
                 console.error('❌ 見つかりませんプロジェクト ID');
                 return;
@@ -3931,7 +3938,7 @@
             
             try {
                 await window.simpleDataManager.deleteDocument(currentProjectId, docId);
-                console.log('✅ 文書已削除');
+                logger.log('✅ 文書已削除');
                 await loadDocuments();
             } catch (error) {
                 console.error('❌ 削除失敗:', error);
@@ -3953,7 +3960,7 @@
             }
             
             lastSelectedCount = selectedCount;
-            console.log(`📊 更新ボタン: ${selectedCount} 件の文書被選中`);
+            logger.log(`📊 更新ボタン: ${selectedCount} 件の文書被選中`);
             
             // 更新 Delete ボタン（デスクトップ版とモバイル版）
             const deleteBtnDesktop = document.getElementById('delete-selected-btn-desktop');
@@ -4016,7 +4023,7 @@
                 });
                 
                 await Promise.all(deletePromises);
-                console.log(`✅ 已削除 ${count} 件の文書`);
+                logger.log(`✅ 已削除 ${count} 件の文書`);
                 alert(`成功削除 ${count} 件の文書`);
                 await loadDocuments();
             } catch (error) {
@@ -4036,7 +4043,7 @@
         };
         
         window.toggleProjectNameEdit = function() {
-            console.log('編集<span data-translate="project_name">專案名稱</span>機能待實現');
+            logger.log('編集<span data-translate="project_name">專案名稱</span>機能待實現');
         };
         
         // ==================== 作成プロジェクトモーダル ====================
@@ -4064,7 +4071,7 @@
             
             try {
                 const newProject = await window.simpleDataManager.createProject(projectName);
-                console.log('✅ プロジェクト已作成:', newProject.id);
+                logger.log('✅ プロジェクト已作成:', newProject.id);
                 window.closeCreateProjectModal();
                 
                 // 觸發サイドバー再レンダリング
@@ -4197,15 +4204,15 @@
             if (overlay) {
                 overlay.style.display = 'none';
             }
-            console.log('🔒 メニュー已關閉');
+            logger.log('🔒 メニュー已關閉');
         };
         
         // 🔄 切り替え Export メニュー顯示/隱藏
         window.toggleExportMenu = function() {
-            console.log('🔍 toggleExportMenu 呼び出された');
+            logger.log('🔍 toggleExportMenu 呼び出された');
             const menu = document.getElementById('exportMenu');
             const overlay = document.getElementById('exportMenuOverlay');
-            console.log('📋 メニュー要素:', menu);
+            logger.log('📋 メニュー要素:', menu);
             
             if (!menu) {
                 console.error('❌ 見つかりません #exportMenu 要素');
@@ -4220,7 +4227,7 @@
             
             // 選択されたものを取得文書
             const checkboxes = document.querySelectorAll('.document-checkbox:checked');
-            console.log('✅ 已選中文書數量:', checkboxes.length);
+            logger.log('✅ 已選中文書數量:', checkboxes.length);
             
             if (checkboxes.length === 0) {
                 alert('請先選択導出の文書');
@@ -4228,7 +4235,7 @@
             }
             
             // 更新メニューコンテンツ並顯示
-            console.log('🔄 更新メニューコンテンツ...');
+            logger.log('🔄 更新メニューコンテンツ...');
             updateExportMenuContent();
             
             // 🔥 根據屏幕大小設置メニュースタイル
@@ -4245,7 +4252,7 @@
                 menu.style.border = 'none'; // 🔥 枠なし
                 menu.style.boxShadow = 'none'; // 🔥 影なし
                 menu.style.borderRadius = '12px';
-                console.log('📱 モバイル版：メニュー中央表示（全て白色）');
+                logger.log('📱 モバイル版：メニュー中央表示（全て白色）');
                 
                 // 顯示マスク
                 if (overlay) {
@@ -4265,7 +4272,7 @@
                     menu.style.minWidth = '280px';
                     menu.style.maxWidth = '400px';
                 }
-                console.log('💻 デスクトップ版：メニュー位置ボタン下方');
+                logger.log('💻 デスクトップ版：メニュー位置ボタン下方');
                 
                 // デスクトップ版ない顯示マスク
                 if (overlay) {
@@ -4276,7 +4283,7 @@
             menu.style.display = 'block';
             menu.classList.add('active');
             
-            console.log('✅ メニュー已顯示');
+            logger.log('✅ メニュー已顯示');
         };
         
         // 🔄 監聽 checkbox 変化，實時更新 Export メニュー
@@ -4293,7 +4300,7 @@
         // ✅ 按タイプ導出文書（內部輔助函數）
         async function exportByType(docs, format) {
             if (!docs || docs.length === 0) {
-                console.log('⚠️ なし文書需要導出');
+                logger.log('⚠️ なし文書需要導出');
                 return;
             }
             
@@ -4338,11 +4345,11 @@
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
             
-            console.log(`✅ 已導出: ${fileName}`);
+            logger.log(`✅ 已導出: ${fileName}`);
         }
         
         window.exportDocuments = async function(format) {
-            console.log('📤 開始導出:', format);
+            logger.log('📤 開始導出:', format);
             
             // 🔥 關閉メニュー
             closeExportMenu();
@@ -4352,7 +4359,7 @@
                 const selectedCheckboxes = document.querySelectorAll('.document-checkbox:checked');
                 const selectedDocIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.docId);
                 
-                console.log('📋 選中の文書 ID:', selectedDocIds);
+                logger.log('📋 選中の文書 ID:', selectedDocIds);
                 
                 let docsToExport;
                 
@@ -4363,7 +4370,7 @@
                         doc.status === 'completed' && 
                         doc.processedData
                     );
-                    console.log(`📋 導出 ${docsToExport.length} 個已勾選の文書（共選中 ${selectedDocIds.length} 個）`);
+                    logger.log(`📋 導出 ${docsToExport.length} 個已勾選の文書（共選中 ${selectedDocIds.length} 個）`);
                 } else {
                     // 如果なし勾選，提示ユーザー
                     alert('請先選択導出の文書');
@@ -4396,7 +4403,7 @@
                     }
                 });
                 
-                console.log('📊 文書分組結果:', {
+                logger.log('📊 文書分組結果:', {
                     bank_statements: groupedDocs.bank_statements.length,
                     invoices: groupedDocs.invoices.length,
                     receipts: groupedDocs.receipts.length,
@@ -4437,10 +4444,10 @@
                         // 使用最適化版 ExportOptimizer（如果可用）
                         if (window.ExportOptimizer) {
                             exportContent = ExportOptimizer.generateCSV(docsToExport);
-                            console.log('✅ 使用最適化版 CSV 導出');
+                            logger.log('✅ 使用最適化版 CSV 導出');
                         } else {
                             exportContent = generateCSV(docsToExport);
-                            console.log('⚠️ 使用舊版 CSV 導出');
+                            logger.log('⚠️ 使用舊版 CSV 導出');
                         }
                         fileName = `vaultcaddy_export_${new Date().toISOString().split('T')[0]}.csv`;
                         mimeType = 'text/csv;charset=utf-8;';
@@ -4452,7 +4459,7 @@
                             exportContent = window.BankStatementExport.generateBankStatementCSV(docsToExport);
                             fileName = `BankStatement_${new Date().toISOString().split('T')[0]}.csv`;
                             mimeType = 'text/csv;charset=utf-8;';
-                            console.log('✅ 標準銀行取引明細書 CSV 導出');
+                            logger.log('✅ 標準銀行取引明細書 CSV 導出');
                         } else {
                             alert('銀行取引明細書エクスポートモジュール未読み込み，ページを更新してください再試行');
                             return;
@@ -4472,14 +4479,14 @@
                         if (xeroBankDocs.length > 0 && window.BankStatementExport) {
                             exportContent = window.BankStatementExport.generateXeroCSV(xeroBankDocs);
                             fileName = `BankStatement_${new Date().toISOString().split('T')[0]}_Xero.csv`;
-                            console.log('✅ Xero CSV 導出（銀行取引明細書）');
+                            logger.log('✅ Xero CSV 導出（銀行取引明細書）');
                         } else if (xeroInvoiceDocs.length > 0 && window.InvoiceExport) {
                             // 🔥 請求書導出 Xero フォーマット
                             exportContent = window.InvoiceExport.generateXeroCSV ? 
                                 window.InvoiceExport.generateXeroCSV(xeroInvoiceDocs) :
                                 window.InvoiceExport.generateInvoiceSummaryCSV(xeroInvoiceDocs);
                             fileName = `Invoice_${new Date().toISOString().split('T')[0]}_Xero.csv`;
-                            console.log('✅ Xero CSV 導出（請求書）');
+                            logger.log('✅ Xero CSV 導出（請求書）');
                         } else {
                             alert('なし可導出の文書またはエクスポートモジュール未読み込み');
                             return;
@@ -4499,14 +4506,14 @@
                         if (qbBankDocs.length > 0 && window.BankStatementExport) {
                             exportContent = window.BankStatementExport.generateQuickBooksCSV(qbBankDocs);
                             fileName = `BankStatement_${new Date().toISOString().split('T')[0]}_QuickBooks.csv`;
-                            console.log('✅ QuickBooks CSV 導出（銀行取引明細書）');
+                            logger.log('✅ QuickBooks CSV 導出（銀行取引明細書）');
                         } else if (qbInvoiceDocs.length > 0 && window.InvoiceExport) {
                             // 🔥 請求書導出 QuickBooks フォーマット
                             exportContent = window.InvoiceExport.generateQuickBooksCSV ? 
                                 window.InvoiceExport.generateQuickBooksCSV(qbInvoiceDocs) :
                                 window.InvoiceExport.generateInvoiceSummaryCSV(qbInvoiceDocs);
                             fileName = `Invoice_${new Date().toISOString().split('T')[0]}_QuickBooks.csv`;
-                            console.log('✅ QuickBooks CSV 導出（請求書）');
+                            logger.log('✅ QuickBooks CSV 導出（請求書）');
                         } else {
                             alert('なし可導出の文書またはエクスポートモジュール未読み込み');
                             return;
@@ -4520,7 +4527,7 @@
                             exportContent = window.InvoiceExport.generateInvoiceSummaryCSV(docsToExport);
                             fileName = `Invoice_Summary_${new Date().toISOString().split('T')[0]}.csv`;
                             mimeType = 'text/csv;charset=utf-8;';
-                            console.log('✅ 請求書合計 CSV 導出');
+                            logger.log('✅ 請求書合計 CSV 導出');
                         } else {
                             alert('請求書エクスポートモジュール未読み込み，ページを更新してください再試行');
                             return;
@@ -4533,7 +4540,7 @@
                             exportContent = window.InvoiceExport.generateInvoiceDetailedCSV(docsToExport);
                             fileName = `Invoice_Detailed_${new Date().toISOString().split('T')[0]}.csv`;
                             mimeType = 'text/csv;charset=utf-8;';
-                            console.log('✅ 請求書詳細取引數據 CSV 導出');
+                            logger.log('✅ 請求書詳細取引數據 CSV 導出');
                         } else {
                             alert('請求書エクスポートモジュール未読み込み，ページを更新してください再試行');
                             return;
@@ -4604,7 +4611,7 @@
                 // 隱藏ドロップダウンメニュー
                 toggleExportMenu();
                 
-                console.log('✅ 導出成功:', fileName);
+                logger.log('✅ 導出成功:', fileName);
                 
             } catch (error) {
                 console.error('❌ 導出失敗:', error);
@@ -4887,14 +4894,14 @@
             const rows = tbody.getElementsByTagName('tr');
             const term = searchTerm.toLowerCase().trim();
             
-            console.log(`🔍 検索文書: "${term}", 總共 ${rows.length} 行`);
+            logger.log(`🔍 検索文書: "${term}", 總共 ${rows.length} 行`);
             
             // 如果検索欄是空の，顯示すべて行
             if (term === '') {
                 for (let row of rows) {
                     row.style.display = '';
                 }
-                console.log(`✅ 顯示すべて ${rows.length} 件の文書`);
+                logger.log(`✅ 顯示すべて ${rows.length} 件の文書`);
                 updateDocumentTotal(); // 更新合計
                 return;
             }
@@ -4919,18 +4926,18 @@
                     rowText += cell.textContent.toLowerCase() + ' ';
                 }
                 
-                console.log(`🔍 行コンテンツ: "${rowText.substring(0, 50)}..."`);
+                logger.log(`🔍 行コンテンツ: "${rowText.substring(0, 50)}..."`);
                 
                 if (rowText.includes(term)) {
                     row.style.display = '';
                     visibleCount++;
-                    console.log(`✅ 匹配！`);
+                    logger.log(`✅ 匹配！`);
                 } else {
                     row.style.display = 'none';
                 }
             }
             
-            console.log(`✅ 顯示 ${visibleCount} 件の文書（検索: "${term}"）`);
+            logger.log(`✅ 顯示 ${visibleCount} 件の文書（検索: "${term}"）`);
             updateDocumentTotal(); // 更新合計
         }
         
@@ -4943,7 +4950,7 @@
             const summaryDiv = document.getElementById('invoice-summary');
             
             if (!tbody | !summaryDiv) {
-                console.log('⚠️ 見つかりませんテーブルまたは合計要素');
+                logger.log('⚠️ 見つかりませんテーブルまたは合計要素');
                 return;
             }
             
@@ -4986,7 +4993,7 @@
                 summaryDiv.style.display = 'none';
             }
             
-            console.log(`📊 請求書統計: ${invoiceCount} 張, 總額: $${totalAmount.toFixed(2)}`);
+            logger.log(`📊 請求書統計: ${invoiceCount} 張, 總額: $${totalAmount.toFixed(2)}`);
         }
         
         // 公開まで全局
@@ -5011,11 +5018,11 @@
 </div>
 <!-- 🔥 ハンバーガーメニュー超級簡單修復プラン -->
 <script>
-        console.log('🔥 開始初期化ハンバーガーメニュー...');
+        logger.log('🔥 開始初期化ハンバーガーメニュー...');
         
         // 開くサイドバー函數
         function openSidebar() {
-            console.log('🔵 開くサイドバー');
+            logger.log('🔵 開くサイドバー');
             const sidebar = document.getElementById('mobile-sidebar');
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
@@ -5024,13 +5031,13 @@
                 overlay.style.display = 'block';
                 overlay.style.opacity = '1';
                 document.body.style.overflow = 'hidden';
-                console.log('✅ サイドバー開いた');
+                logger.log('✅ サイドバー開いた');
             }
         }
         
         // 關閉サイドバー函數
         function closeSidebar() {
-            console.log('🔵 關閉サイドバー');
+            logger.log('🔵 關閉サイドバー');
             const sidebar = document.getElementById('mobile-sidebar');
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
@@ -5041,7 +5048,7 @@
                     overlay.style.display = 'none';
                 }, 300); // 待機動畫完了（と CSS transition 一致）
                 document.body.style.overflow = 'auto';
-                console.log('✅ サイドバー已關閉');
+                logger.log('✅ サイドバー已關閉');
             }
         }
         
@@ -5051,40 +5058,40 @@
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
             if (!btn | !overlay) {
-                console.log('⏳ 要素未找まで，200ms後再試行');
+                logger.log('⏳ 要素未找まで，200ms後再試行');
                 setTimeout(simpleInitMenu, 200);
                 return;
             }
             
-            console.log('✅ 找まですべて要素！');
+            logger.log('✅ 找まですべて要素！');
             
             // ボタンクリック処理
             btn.addEventListener('click', function() {
-                console.log('🔵 ボタン被クリック！');
+                logger.log('🔵 ボタン被クリック！');
                 openSidebar();
             });
             
             // タッチ処理
             btn.addEventListener('touchend', function(e) {
                 e.preventDefault();
-                console.log('🔵 タッチ事件！');
+                logger.log('🔵 タッチ事件！');
                 openSidebar();
             });
             
             // マスククリック關閉
             overlay.addEventListener('click', function() {
-                console.log('🔵 クリックマスク關閉');
+                logger.log('🔵 クリックマスク關閉');
                 closeSidebar();
             });
             
             // マスクタッチ關閉
             overlay.addEventListener('touchend', function(e) {
                 e.preventDefault();
-                console.log('🔵 タッチマスク關閉');
+                logger.log('🔵 タッチマスク關閉');
                 closeSidebar();
             });
             
-            console.log('✅ すべて事件監聽器已綁定');
+            logger.log('✅ すべて事件監聽器已綁定');
         }
         
         // 即座に嘗試初期化
@@ -5139,7 +5146,7 @@ document.addEventListener('DOMContentLoaded', function() {
         flatpickr(uploadDateTo, flatpickrConfig);
     }
     
-    console.log('✅ Flatpickr日付選択器初期化完了（日本語）');
+    logger.log('✅ Flatpickr日付選択器初期化完了（日本語）');
     
     // ==================== ページネーション機能初期化 ====================
     // ページネーションパラメータ初期化
@@ -5156,7 +5163,7 @@ document.addEventListener('DOMContentLoaded', function() {
         rowsPerPageSelect.addEventListener('change', function(e) {
             window.rowsPerPage = parseInt(e.target.value);
             window.currentPage = 1;  // 最初のページにリセット
-            console.log('📄 ページあたりの行数変更:', window.rowsPerPage);
+            logger.log('📄 ページあたりの行数変更:', window.rowsPerPage);
             
             // ドキュメントリストを再レンダリング
             if (window.renderDocuments) {
@@ -5167,12 +5174,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // ページネーションボタンを監視
     const paginationButtons = document.querySelectorAll('.pagination-controls button');
-    console.log('🔍 [DEBUG] 找到分页按钮数量:', paginationButtons.length);
+    logger.log('🔍 [DEBUG] 找到分页按钮数量:', paginationButtons.length);
     
     if (paginationButtons.length === 4) {
         // 最初のページ
         paginationButtons[0].onclick = function() {
-            console.log('🔵 点击：第一页');
+            logger.log('🔵 点击：第一页');
             if (window.currentPage !== 1) {
                 window.currentPage = 1;
                 if (window.renderDocuments) {
@@ -5183,7 +5190,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 前のページ
         paginationButtons[1].onclick = function() {
-            console.log('🔵 点击：上一页，当前页:', window.currentPage);
+            logger.log('🔵 点击：上一页，当前页:', window.currentPage);
             if (window.currentPage > 1) {
                 window.currentPage--;
                 if (window.renderDocuments) {
@@ -5195,10 +5202,10 @@ document.addEventListener('DOMContentLoaded', function() {
         // 次のページ
         paginationButtons[2].onclick = function() {
             const totalPages = Math.ceil((window.allDocuments || []).length / window.rowsPerPage);
-            console.log('🟢 点击：下一页，当前页:', window.currentPage, '总页数:', totalPages);
+            logger.log('🟢 点击：下一页，当前页:', window.currentPage, '总页数:', totalPages);
             if (window.currentPage < totalPages) {
                 window.currentPage++;
-                console.log('🟢 跳转到页面:', window.currentPage);
+                logger.log('🟢 跳转到页面:', window.currentPage);
                 if (window.renderDocuments) {
                     window.renderDocuments();
                 }
@@ -5208,7 +5215,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // 最後のページ
         paginationButtons[3].onclick = function() {
             const totalPages = Math.ceil((window.allDocuments || []).length / window.rowsPerPage);
-            console.log('🔴 点击：最后一页，总页数:', totalPages);
+            logger.log('🔴 点击：最后一页，总页数:', totalPages);
             if (window.currentPage !== totalPages && totalPages > 0) {
                 window.currentPage = totalPages;
                 if (window.renderDocuments) {
@@ -5217,12 +5224,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         };
         
-        console.log('✅ 分页按钮事件绑定完成');
+        logger.log('✅ 分页按钮事件绑定完成');
     } else {
         console.error('❌ 分页按钮数量不正确:', paginationButtons.length);
     }
     
-    console.log('✅ ページネーション機能初期化完了');
+    logger.log('✅ ページネーション機能初期化完了');
 });
 </script>
 </main>

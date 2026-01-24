@@ -58,13 +58,13 @@
         // ✅ Timeout Protection: Force show page after 10s (prevent stuck)
         setTimeout(function() {
             if (document.body.classList.contains('auth-checking')) {
-                console.warn('⚠️ Auth initialization timeout (10s), force showing page');
+                logger.warn('⚠️ Auth initialization timeout (10s), force showing page');
                 document.body.classList.remove('auth-checking');
                 document.body.classList.add('auth-ready');
                 
                 // If not logged in, redirect to home
                 if (!window.simpleAuth | !window.simpleAuth.currentUser) {
-                    console.log('❌ Timeout and not logged in, redirecting to home');
+                    logger.log('❌ Timeout and not logged in, redirecting to home');
                     setTimeout(function() {
                         window.location.href = '../index.html';
                     }, 1000);
@@ -80,6 +80,13 @@
 <link href="../dashboard.css" rel="stylesheet"/>
 <link href="../pages.css" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
+    
+    <!-- 优化后的公共组件 (2026-01-23) -->
+    <link rel="stylesheet" href="../user-menu-styles.css">
+    <script defer src="../logger.js"></script>
+    <script defer src="../init-manager.js"></script>
+    <script defer src="../user-menu-manager.js"></script>
+    <script defer src="../mobile-menu-manager.js"></script>
 <!-- ✅ 核心Settings -->
 <script defer="" src="../config.js"></script>
 <script defer="" src="../translations.js?v=20251102"></script>
@@ -2016,7 +2023,7 @@
 <!-- ✅ index.html dynamicUpdateUserStatus -->
 <script>
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('✅ index.html Initialize');
+            logger.log('✅ index.html Initialize');
             
             // 🔥 Mobile：adjustContent距離navigationcolumn distance
             function adjustMobileLayout() {
@@ -2025,13 +2032,13 @@
                     if (header) {
                         header.style.setProperty('margin-top', '0', 'important');
                         header.style.setProperty('padding-top', '0', 'important');
-                        console.log('📱 Mobile：adjust header margin-top and padding-top as 0');
+                        logger.log('📱 Mobile：adjust header margin-top and padding-top as 0');
                     }
                     // meanwhileadjust team-project-view 的 padding
                     const teamProjectView = document.getElementById('team-project-view');
                     if (teamProjectView) {
                         teamProjectView.style.setProperty('padding-top', '0.5rem', 'important');
-                        console.log('📱 Mobile：adjust team-project-view padding-top as 0.5rem');
+                        logger.log('📱 Mobile：adjust team-project-view padding-top as 0.5rem');
                     }
                 } else {
                     // DesktopRestoreoriginalStyle
@@ -2074,21 +2081,21 @@
             
             // 🔥 Hamburger menuFeatures（Execute immediately，notWait DOMContentLoaded）
             (function() {
-                console.log('🔵 InitializeHamburger menu...');
+                logger.log('🔵 InitializeHamburger menu...');
                 
                 // OpenSidebar
                 window.openMobileSidebar = function() {
-                    console.log('🔵 openMobileSidebar Called');
+                    logger.log('🔵 openMobileSidebar Called');
                     const sidebar = document.getElementById('mobile-sidebar');
                     const overlay = document.getElementById('mobile-sidebar-overlay');
-                    console.log('🔵 sidebar:', sidebar);
-                    console.log('🔵 overlay:', overlay);
+                    logger.log('🔵 sidebar:', sidebar);
+                    logger.log('🔵 overlay:', overlay);
                     
                     if (sidebar && overlay) {
                         sidebar.style.left = '0';
                         overlay.style.display = 'block';
                         document.body.style.overflow = 'hidden';
-                        console.log('✅ SidebarOpened');
+                        logger.log('✅ SidebarOpened');
                     } else {
                         console.error('❌ Not foundSidebarorMask element');
                     }
@@ -2096,7 +2103,7 @@
                 
                 // CloseSidebar
                 window.closeMobileSidebar = function() {
-                    console.log('🔵 closeMobileSidebar Called');
+                    logger.log('🔵 closeMobileSidebar Called');
                     const sidebar = document.getElementById('mobile-sidebar');
                     const overlay = document.getElementById('mobile-sidebar-overlay');
                     
@@ -2104,12 +2111,12 @@
                         sidebar.style.left = '-100%';
                         overlay.style.display = 'none';
                         document.body.style.overflow = 'auto';
-                        console.log('✅ SidebaralreadyClose');
+                        logger.log('✅ SidebaralreadyClose');
                     }
                 };
                 
                 // Hamburger menuButtonUse onclick，Noneneedamountouterbind
-                console.log('✅ Hamburger menuFeaturesalreadyready（Use onclick）');
+                logger.log('✅ Hamburger menuFeaturesalreadyready（Use onclick）');
             })();
                 
                 // Mobileautocarousel（onlyinMobileEnable）
@@ -2158,7 +2165,7 @@
                     if (window.simpleDataManager && window.simpleDataManager.initialized) {
                         try {
                             userCredits = await window.simpleDataManager.getUserCredits();
-                            console.log('✅ Fetch immediately Credits:', userCredits);
+                            logger.log('✅ Fetch immediately Credits:', userCredits);
                         } catch (error) {
                             console.error('❌ Failed to fetch Credits:', error);
                         }
@@ -2218,19 +2225,19 @@
                                 if (userDoc) {
                                     userDisplayName = userDoc.displayName || userDisplayName;
                                     userCredits = userDoc.credits || 0;
-                                    console.log('✅ index.html Get Credits:', userCredits);
+                                    logger.log('✅ index.html Get Credits:', userCredits);
                                 }
                             } catch (error) {
-                                console.log('⚠️ None法from Firestore GetUserdata:', error);
+                                logger.log('⚠️ None法from Firestore GetUserdata:', error);
                             }
                         } else {
-                            console.log('⏳ SimpleDataManager yetnotInitialize，Waitmiddle...');
+                            logger.log('⏳ SimpleDataManager yetnotInitialize，Waitmiddle...');
                             // DelayRetry
                             setTimeout(async () => {
                                 if (window.simpleDataManager && window.simpleDataManager.initialized) {
                                     try {
                                         userCredits = await window.simpleDataManager.getUserCredits();
-                                        console.log('✅ Delayed fetch Credits:', userCredits);
+                                        logger.log('✅ Delayed fetch Credits:', userCredits);
                                     } catch (error) {
                                         console.error('❌ Delayed fetchFailed:', error);
                                     }
@@ -2239,23 +2246,23 @@
                         }
                         
                         const userInitial = getUserInitial();
-                        console.log(`👤 UserFirst letter: "${userInitial}" (displayName: "${userDisplayName}")`);
+                        logger.log(`👤 UserFirst letter: "${userInitial}" (displayName: "${userDisplayName}")`);
                         
                         userMenu.innerHTML = `
-                            <div onclick="toggleDropdown()" style="cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
-                                <div style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem; opacity: 1; transition: opacity 0.3s;">${userInitial}</div>
+                            <div onclick="toggleDropdown()" class="user-menu-trigger">
+                                <div class="user-avatar">${userInitial}</div>
                             </div>
                         `;
-                        console.log('✅ UseralreadyLogin，Showavatar');
+                        logger.log('✅ UseralreadyLogin，Showavatar');
                     } else {
                         // ✅ notLogin：ShowLoginButton
                         userMenu.innerHTML = `
-                            <button onclick="window.location.href='auth.html'" style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.875rem;" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">Login</button>
+                            <button onclick="window.location.href='auth.html'" class="login-button">Login</button>
                         `;
-                        console.log('✅ UsernotLogin，ShowLoginButton');
+                        logger.log('✅ UsernotLogin，ShowLoginButton');
                     }
                 } catch (e) {
-                    console.log('❌ None法UpdateUserMenu:', e);
+                    logger.log('❌ None法UpdateUserMenu:', e);
                 }
             }
             
@@ -2706,23 +2713,23 @@
         
         // ==================== Initialize ====================
         window.addEventListener('auth-state-changed', async (e) => {
-            console.log('🔥 receiveto auth-state-changed Event');
+            logger.log('🔥 receiveto auth-state-changed Event');
             
             // Remove auth-checking typedo not，Showpage
             document.body.classList.remove('auth-checking');
             document.body.classList.add('auth-ready');
             
             if (!e.detail.user) {
-                console.log('❌ UsernotLogin，redirecttoHome');
+                logger.log('❌ UsernotLogin，redirecttoHome');
                 window.location.href = 'index.html';
                 return;
             }
             
-            console.log('✅ UseralreadyLogin:', e.detail.user.email);
+            logger.log('✅ UseralreadyLogin:', e.detail.user.email);
             
             // CreateSidebar
             if (window.VaultCaddySidebar && !window.unifiedSidebar) {
-                console.log('🎨 CreateSidebar');
+                logger.log('🎨 CreateSidebar');
                 window.unifiedSidebar = new VaultCaddySidebar();
             }
             
@@ -2747,17 +2754,17 @@
                     return;
                 }
                 
-                console.log('📂 Load Project:', currentProjectId);
+                logger.log('📂 Load Project:', currentProjectId);
                 
                 const projects = await window.simpleDataManager.getProjects();
                 currentProject = projects.find(p => p.id === currentProjectId);
                 
                 if (currentProject) {
                     document.getElementById('team-project-title').textContent = currentProject.name;
-                    console.log('✅ Project Name:', currentProject.name);
+                    logger.log('✅ Project Name:', currentProject.name);
                 } else {
                     // Project doesn't exist, may have been deleted
-                    console.warn('⚠️ Project not found, may have been deleted:', currentProjectId);
+                    logger.warn('⚠️ Project not found, may have been deleted:', currentProjectId);
                     alert('This project does not exist or has been deleted. Returning to home page.');
                     window.location.href = 'index.html';
                 }
@@ -2812,7 +2819,7 @@
         
         // ApplyDateFilter
         function applyDateFilters() {
-            console.log('🗓️ ApplyDateFilter', dateFilters);
+            logger.log('🗓️ ApplyDateFilter', dateFilters);
             
             // fromoriginalDocumentStartFilter
             let filtered = [...allDocuments];
@@ -2886,7 +2893,7 @@
         };
         
         function clearDateFilters() {
-            console.log('🗑️ RemoveDateFilter');
+            logger.log('🗑️ RemoveDateFilter');
             
             // ResetFilterStatus
             dateFilters = {
@@ -2944,7 +2951,7 @@
                 });
             }
             
-            console.log('✅ DateFilteralreadyInitialize');
+            logger.log('✅ DateFilteralreadyInitialize');
         }
         
         // ==================== RenderDocumentTable ====================
@@ -3228,10 +3235,10 @@
             try {
                 if (!currentProjectId) return;
                 
-                console.log('📄 LoadDocument list');
+                logger.log('📄 LoadDocument list');
                 
                 const documents = await window.simpleDataManager.getDocuments(currentProjectId);
-                console.log('✅ findto', documents.length, ' documents');
+                logger.log('✅ findto', documents.length, ' documents');
                 
                 // SavetoGlobal variable
                 allDocuments = documents;
@@ -3281,17 +3288,17 @@
                 return;
             }
             
-            console.log(`🔄 發現 ${pendingDocs.length} 個PendingDocument，StartRestoreProcess...`);
+            logger.log(`🔄 發現 ${pendingDocs.length} 個PendingDocument，StartRestoreProcess...`);
             
             for (const doc of pendingDocs) {
                 try {
                     const pages = doc.pages || 1;  // ✅ Fix: Use logical OR ||
                     
-                    console.log(`🔄 Restore Process: ${doc.fileName} (${pages} page)`);
+                    logger.log(`🔄 Restore Process: ${doc.fileName} (${pages} page)`);
                     
                     // ✅ Fix: Multi-page documents don't support auto-resume (need PDF to images), prompt user to re-upload
                     if (pages > 1) {
-                        console.warn(`⚠️  Multi-page document ${doc.fileName} needs to be re-uploaded (auto-resume not supported)`);
+                        logger.warn(`⚠️  Multi-page document ${doc.fileName} needs to be re-uploaded (auto-resume not supported)`);
                         
                         // Update to failed status, prompt user to re-upload
                         await window.simpleDataManager.updateDocument(currentProjectId, doc.id, {
@@ -3305,7 +3312,7 @@
                         const blob = await response.blob();
                         const file = new File([blob], doc.fileName, { type: blob.type });
                         
-                        console.log(`📄 Resume single-page document processing: ${doc.fileName}`);
+                        logger.log(`📄 Resume single-page document processing: ${doc.fileName}`);
                         processFileWithAI(file, doc.id, pages).catch(err => {
                             console.error('❌ Restore Processing Failed:', err);
                         });
@@ -3319,7 +3326,7 @@
         
         // ==================== Upload modal ====================
         window.openUploadModal = function() {
-            console.log('🎯 OpenUpload modal');
+            logger.log('🎯 OpenUpload modal');
             const modal = document.getElementById('aiUploadModal');
             if (modal) {
                 modal.style.display = 'flex';
@@ -3379,14 +3386,14 @@
                 
                 const files = Array.from(e.dataTransfer.files);
                 if (files.length > 0) {
-                    console.log('📥 拖placeFile:', files.length, '個');
+                    logger.log('📥 拖placeFile:', files.length, '個');
                     handleUpload(files);
                 }
             });
         }
         
         window.selectDocumentType = function(type) {
-            console.log('📋 <span data-translate="select_document_type">Select Document Type</span>:', type);
+            logger.log('📋 <span data-translate="select_document_type">Select Document Type</span>:', type);
             selectedDocumentType = type;
             
             document.querySelectorAll('.doc-type-card').forEach(card => {
@@ -3406,7 +3413,7 @@
         };
         
         async function handleUpload(files) {
-            console.log('📤 prepareUpload', files.length, ' files');
+            logger.log('📤 prepareUpload', files.length, ' files');
             
             // 1. calculate所HasFile的totalpage count
             let totalPages = 0;
@@ -3418,13 +3425,13 @@
                 totalPages += pages;
             }
             
-            console.log(`📊 totalpage count: ${totalPages}`);
+            logger.log(`📊 totalpage count: ${totalPages}`);
             
             // 2. Check Credits YesNoenough夠
             if (window.creditsManager) {
                 const hasEnoughCredits = await window.creditsManager.checkCredits(totalPages);
                 if (!hasEnoughCredits) {
-                    console.log('❌ Credits notenough，CancelBatchUpload');
+                    logger.log('❌ Credits notenough，CancelBatchUpload');
                     return;
                 }
             }
@@ -3444,7 +3451,7 @@
          */
         async function uploadFileDirect(file, pages) {
             try {
-                console.log('📤 Upload Files:', file.name, `(${pages} page)`);
+                logger.log('📤 Upload Files:', file.name, `(${pages} page)`);
                 
                 // ✅ If PDF，firstConvert toImage（and uploadFile Function保持consistent）
                 let filesToProcess = [file];
@@ -3452,12 +3459,12 @@
                 
                 if (window.pdfToImageConverter && window.pdfToImageConverter.isPDF(file)) {
                     try {
-                        console.log('📄 detectto PDF File，StartConvert toImage...');
+                        logger.log('📄 detectto PDF File，StartConvert toImage...');
                         const imageFiles = await window.pdfToImageConverter.convertPDFToImages(file);
-                        console.log(`✅ PDF ConvertComplete，Generate ${imageFiles.length} sheetImage`);
+                        logger.log(`✅ PDF ConvertComplete，Generate ${imageFiles.length} sheetImage`);
                         filesToProcess = imageFiles;
                         isPDFConverted = true;
-                        console.log(`📄 willProcess所Has ${imageFiles.length} page`);
+                        logger.log(`📄 willProcess所Has ${imageFiles.length} page`);
                     } catch (pdfError) {
                         console.error('❌ PDF ConvertFailed:', pdfError);
                         alert(`PDF ConvertFailed: ${pdfError.message}\n\npleaseConfirmFileYesNoHaseffect。`);
@@ -3466,12 +3473,12 @@
                 }
                 
                 // Upload所HasFileto Storage
-                console.log(`📤 StartUpload ${filesToProcess.length}  files...`);
+                logger.log(`📤 StartUpload ${filesToProcess.length}  files...`);
                 const uploadPromises = filesToProcess.map(f => 
                     window.simpleDataManager.uploadFile(currentProjectId, f)
                 );
                 const imageUrls = await Promise.all(uploadPromises);
-                console.log(`✅ ${imageUrls.length}  filesalreadyUploadto Storage`);
+                logger.log(`✅ ${imageUrls.length}  filesalreadyUploadto Storage`);
                 
                 const docData = {
                     name: file.name,
@@ -3491,7 +3498,7 @@
                 };
                 
                 const docId = await window.simpleDataManager.createDocument(currentProjectId, docData);
-                console.log('✅ DocumentrecordalreadyCreate:', docId);
+                logger.log('✅ DocumentrecordalreadyCreate:', docId);
                 
                 // ✅ immediatelyheavynewLoadDocument list，ShownewUpload的File
                 await loadDocuments();
@@ -3499,7 +3506,7 @@
                 // deductremove Credits（by actualpage count）
                 if (window.creditsManager) {
                     await window.creditsManager.deductCredits(filesToProcess.length);
-                    console.log(`💰 alreadydeductremove ${filesToProcess.length} Credits`);
+                    logger.log(`💰 alreadydeductremove ${filesToProcess.length} Credits`);
                 }
                 
                 // backdeviceProcess AI（Process所Haspage）
@@ -3515,17 +3522,17 @@
         
         async function uploadFile(file) {
             try {
-                console.log('📤 prepareUpload Files:', file.name);
+                logger.log('📤 prepareUpload Files:', file.name);
                 
                 // 1. calculateFilepage count
                 const pages = await getFilePageCount(file);
-                console.log(`📄 Filepage count: ${pages}`);
+                logger.log(`📄 Filepage count: ${pages}`);
                 
                 // 2. Check Credits YesNoenough夠
                 if (window.creditsManager) {
                     const hasEnoughCredits = await window.creditsManager.checkCredits(pages);
                     if (!hasEnoughCredits) {
-                        console.log('❌ Credits notenough，CancelUpload');
+                        logger.log('❌ Credits notenough，CancelUpload');
                         return;
                     }
                 }
@@ -3536,12 +3543,12 @@
                 
                 if (window.pdfToImageConverter && window.pdfToImageConverter.isPDF(file)) {
                     try {
-                        console.log('📄 detectto PDF File，StartConvert toImage...');
+                        logger.log('📄 detectto PDF File，StartConvert toImage...');
                         const imageFiles = await window.pdfToImageConverter.convertPDFToImages(file);
-                        console.log(`✅ PDF ConvertComplete，Generate ${imageFiles.length} sheetImage`);
+                        logger.log(`✅ PDF ConvertComplete，Generate ${imageFiles.length} sheetImage`);
                         filesToProcess = imageFiles; // ✅ Use所Haspage
                         isPDFConverted = true;
-                        console.log(`📄 willProcess所Has ${imageFiles.length} page`);
+                        logger.log(`📄 willProcess所Has ${imageFiles.length} page`);
                     } catch (pdfError) {
                         console.error('❌ PDF ConvertFailed:', pdfError);
                         alert(`PDF ConvertFailed: ${pdfError.message}\n\npleaseConfirmFileYesNoHaseffect，orTrydirectUpload JPG/PNG Image。`);
@@ -3550,12 +3557,12 @@
                 }
                 
                 // 4. Upload所HasFileto Storage（Supportmulti-page PDF）
-                console.log(`📤 StartUpload ${filesToProcess.length}  files...`);
+                logger.log(`📤 StartUpload ${filesToProcess.length}  files...`);
                 const uploadPromises = filesToProcess.map(f => 
                     window.simpleDataManager.uploadFile(currentProjectId, f)
                 );
                 const imageUrls = await Promise.all(uploadPromises);
-                console.log(`✅ ${imageUrls.length}  filesalreadyUploadto Storage`);
+                logger.log(`✅ ${imageUrls.length}  filesalreadyUploadto Storage`);
                 
                 const docData = {
                     name: file.name, // reserveoriginalFile名
@@ -3575,22 +3582,22 @@
                 };
                 
                 const docId = await window.simpleDataManager.createDocument(currentProjectId, docData);
-                console.log('✅ DocumentrecordalreadyCreate:', docId);
+                logger.log('✅ DocumentrecordalreadyCreate:', docId);
                 
                 // 5. deductremove Credits（所Haspage count）
                 if (window.creditsManager) {
                     await window.creditsManager.deductCredits(filesToProcess.length);
-                    console.log(`💰 alreadydeductremove ${filesToProcess.length} Credits（${filesToProcess.length} page）`);
+                    logger.log(`💰 alreadydeductremove ${filesToProcess.length} Credits（${filesToProcess.length} page）`);
                 }
                 
                 // 6. heavynewLoadListtoShownewDocument
                 await loadDocuments();
                 
                 // 7. backdeviceProcess AI（Process所Haspage）
-                console.log(`🔍 [DEBUG] 準備調用 processMultiPageFileWithAI`);
-                console.log(`   - 文件數量: ${filesToProcess.length}`);
-                console.log(`   - 文檔ID: ${docId}`);
-                console.log(`   - 文檔類型: ${selectedDocumentType}`);
+                logger.log(`🔍 [DEBUG] 準備調用 processMultiPageFileWithAI`);
+                logger.log(`   - 文件數量: ${filesToProcess.length}`);
+                logger.log(`   - 文檔ID: ${docId}`);
+                logger.log(`   - 文檔類型: ${selectedDocumentType}`);
                 processMultiPageFileWithAI(filesToProcess, docId, selectedDocumentType).catch(err => {
                     console.error('❌ AI Processing failed:', err);
                 });
@@ -3624,7 +3631,7 @@
                         return pageMatches.length;
                     }
                 } catch (error) {
-                    console.warn('⚠️ Nonecannot read PDF page count:', error);
+                    logger.warn('⚠️ Nonecannot read PDF page count:', error);
                 }
             }
             
@@ -3646,7 +3653,7 @@
             async add(task, taskName = '') {
                 // Ifexceed concurrency limit，placeenterQueue
                 if (this.running >= this.maxConcurrent) {
-                    console.log(`📝 ${taskName} addenterqueue（Currently running：${this.running}，Queue：${this.queue.length}）`);
+                    logger.log(`📝 ${taskName} addenterqueue（Currently running：${this.running}，Queue：${this.queue.length}）`);
                     return new Promise((resolve, reject) => {
                         this.queue.push({ task, taskName, resolve, reject });
                     });
@@ -3658,14 +3665,14 @@
             
             async run(task, taskName = '') {
                 this.running++;
-                console.log(`▶️ ${taskName} Startexecuteline（Currently running：${this.running}，Queue：${this.queue.length}）`);
+                logger.log(`▶️ ${taskName} Startexecuteline（Currently running：${this.running}，Queue：${this.queue.length}）`);
                 
                 try {
                     const result = await task();
                     return result;
                 } finally {
                     this.running--;
-                    console.log(`✅ ${taskName} Complete（Currently running：${this.running}，Queue：${this.queue.length}）`);
+                    logger.log(`✅ ${taskName} Complete（Currently running：${this.running}，Queue：${this.queue.length}）`);
                     
                     // fromQueuemiddlegetexitdownone task
                     if (this.queue.length > 0) {
@@ -3681,7 +3688,7 @@
         
         async function processFileWithAI(file, docId, pages = 1) {
             try {
-                console.log('🤖 Start AI Process (Qwen-VL Max):', file.name, `(${pages} page)`);
+                logger.log('🤖 Start AI Process (Qwen-VL Max):', file.name, `(${pages} page)`);
                 
                 if (!window.QwenVLMaxProcessor) {
                     throw new Error('AI HandlernotLoad');
@@ -3690,7 +3697,7 @@
                 const processor = new window.QwenVLMaxProcessor();
                 const result = await processor.processDocument(file, selectedDocumentType);
                 
-                console.log('✅ AI ProcessComplete');
+                logger.log('✅ AI ProcessComplete');
                 
                 await window.simpleDataManager.updateDocument(currentProjectId, docId, {
                     status: 'completed',
@@ -3702,7 +3709,7 @@
                     usage: result.usage
                 });
                 
-                console.log('✅ DocumentStatusUpdated');
+                logger.log('✅ DocumentStatusUpdated');
                 await loadDocuments();
                 
             } catch (error) {
@@ -3711,16 +3718,16 @@
                 // ✅ Return Credits（Prevent duplicate return）
                 if (window.creditsManager && pages > 0 && !refundedDocuments.has(docId)) {
                     try {
-                        console.log(`💰 prepareReturn ${pages} Credits（Document ID: ${docId}）`);
+                        logger.log(`💰 prepareReturn ${pages} Credits（Document ID: ${docId}）`);
                         await window.creditsManager.refundCredits(pages);
                         refundedDocuments.add(docId); // markalreadyReturn
-                        console.log(`✅ alreadyReturn ${pages} Credits（Document ID: ${docId}）`);
-                        console.log(`📋 alreadyReturn的Document list:`, Array.from(refundedDocuments));
+                        logger.log(`✅ alreadyReturn ${pages} Credits（Document ID: ${docId}）`);
+                        logger.log(`📋 alreadyReturn的Document list:`, Array.from(refundedDocuments));
                     } catch (refundError) {
                         console.error('❌ Return Credits Failed:', refundError);
                     }
                 } else if (refundedDocuments.has(docId)) {
-                    console.warn(`⚠️ Document ${docId} 的 Credits alreadyReturnexceed，skipduplicateReturn`);
+                    logger.warn(`⚠️ Document ${docId} 的 Credits alreadyReturnexceed，skipduplicateReturn`);
                 }
                 
                 await window.simpleDataManager.updateDocument(currentProjectId, docId, {
@@ -3738,7 +3745,7 @@
         async function processMultiPageFileWithAI(files, docId, documentType) {
             // ✅ CheckYesNoProcessing
             if (processingDocuments.has(docId)) {
-                console.warn(`⚠️ Document ${docId} Processingmiddle，skipduplicateProcess`);
+                logger.warn(`⚠️ Document ${docId} Processingmiddle，skipduplicateProcess`);
                 return;
             }
             
@@ -3748,8 +3755,8 @@
                 try {
                     // ✅ AddtoProcess鎖
                     processingDocuments.add(docId);
-                    console.log(`🔒 鎖setDocument ${docId}，StartProcess`);
-                    console.log(`🤖 Startmulti-page AI Process (Qwen-VL Max): ${files.length} page`);
+                    logger.log(`🔒 鎖setDocument ${docId}，StartProcess`);
+                    logger.log(`🤖 Startmulti-page AI Process (Qwen-VL Max): ${files.length} page`);
                 
                 if (!window.QwenVLMaxProcessor) {
                     throw new Error('AI HandlernotLoad');
@@ -3759,7 +3766,7 @@
                 
                 // ✅ Plan B：UseBatchProcessMethod（Batch OCR + singletimes DeepSeek）
                 if (files.length > 1) {
-                    console.log(`📚 Using batch processing mode (${files.length} pages)`);
+                    logger.log(`📚 Using batch processing mode (${files.length} pages)`);
                     
                     // Update status to processing
                     await window.simpleDataManager.updateDocument(currentProjectId, docId, {
@@ -3769,7 +3776,7 @@
                     
                     // ✅ Define progress callback function
                     const progressCallback = async (currentBatch, totalBatches, progress) => {
-                        console.log(`🔄 [Progress Update] Batch ${currentBatch}/${totalBatches} - ${progress}%`);
+                        logger.log(`🔄 [Progress Update] Batch ${currentBatch}/${totalBatches} - ${progress}%`);
                         await window.simpleDataManager.updateDocument(currentProjectId, docId, {
                             status: 'processing',  // ⚠️ Keep as processing, don't change to completed
                             processingProgress: progress
@@ -3792,11 +3799,11 @@
                         processingProgress: 100
                     });
                     
-                    console.log('✅ Batch processing completed');
+                    logger.log('✅ Batch processing completed');
                     
                 } else {
                     // singlepageDocument，UseoriginalHaslogic
-                    console.log(`📄 UsesinglepageProcessmode`);
+                    logger.log(`📄 UsesinglepageProcessmode`);
                     
                     await window.simpleDataManager.updateDocument(currentProjectId, docId, {
                         status: 'processing',
@@ -3816,7 +3823,7 @@
                         processingProgress: 100
                     });
                     
-                    console.log('✅ singlepageProcessComplete');
+                    logger.log('✅ singlepageProcessComplete');
                 }
                 
                 await loadDocuments();
@@ -3827,15 +3834,15 @@
                 // ✅ Return Credits（Prevent duplicate return）
                 if (window.creditsManager && files.length > 0 && !refundedDocuments.has(docId)) {
                     try {
-                        console.log(`💰 prepareReturn ${files.length} Credits（Document ID: ${docId}）`);
+                        logger.log(`💰 prepareReturn ${files.length} Credits（Document ID: ${docId}）`);
                         await window.creditsManager.refundCredits(files.length);
                         refundedDocuments.add(docId); // markalreadyReturn
-                        console.log(`✅ alreadyReturn ${files.length} Credits（Document ID: ${docId}）`);
+                        logger.log(`✅ alreadyReturn ${files.length} Credits（Document ID: ${docId}）`);
                     } catch (refundError) {
                         console.error('❌ Return Credits Failed:', refundError);
                     }
                 } else if (refundedDocuments.has(docId)) {
-                    console.warn(`⚠️ Document ${docId} 的 Credits alreadyReturnexceed，skipduplicateReturn`);
+                    logger.warn(`⚠️ Document ${docId} 的 Credits alreadyReturnexceed，skipduplicateReturn`);
                 }
                 
                 await window.simpleDataManager.updateDocument(currentProjectId, docId, {
@@ -3846,7 +3853,7 @@
                 } finally {
                     // ✅ None論SuccessorFailed，release all locks
                     processingDocuments.delete(docId);
-                    console.log(`🔓 解鎖Document ${docId}，ProcessComplete`);
+                    logger.log(`🔓 解鎖Document ${docId}，ProcessComplete`);
                 }
             }, fileName); // ✅ passFile名useatlog
         }
@@ -3940,7 +3947,7 @@
         // ==================== OtherFeatures ====================
         // ==================== ViewDocument details ====================
         window.viewDocument = function(docId) {
-            console.log('🔍 ViewDocument details:', docId);
+            logger.log('🔍 ViewDocument details:', docId);
             if (!currentProjectId) {
                 console.error('❌ Not foundProject ID');
                 return;
@@ -3954,7 +3961,7 @@
             
             try {
                 await window.simpleDataManager.deleteDocument(currentProjectId, docId);
-                console.log('✅ DocumentalreadyDelete');
+                logger.log('✅ DocumentalreadyDelete');
                 await loadDocuments();
             } catch (error) {
                 console.error('❌ DeleteFailed:', error);
@@ -3976,7 +3983,7 @@
             }
             
             lastSelectedCount = selectedCount;
-            console.log(`📊 UpdateButton: ${selectedCount}  documentsbyselectmiddle`);
+            logger.log(`📊 UpdateButton: ${selectedCount}  documentsbyselectmiddle`);
             
             // Update Delete Button（DesktopandMobile）
             const deleteBtnDesktop = document.getElementById('delete-selected-btn-desktop');
@@ -4039,7 +4046,7 @@
                 });
                 
                 await Promise.all(deletePromises);
-                console.log(`✅ alreadyDelete ${count}  documents`);
+                logger.log(`✅ alreadyDelete ${count}  documents`);
                 alert(`SuccessDelete ${count}  documents`);
                 await loadDocuments();
             } catch (error) {
@@ -4059,7 +4066,7 @@
         };
         
         window.toggleProjectNameEdit = function() {
-            console.log('EditProjectNameFeaturesto be implemented');
+            logger.log('EditProjectNameFeaturesto be implemented');
         };
         
         // ==================== CreateProjectModal ====================
@@ -4087,7 +4094,7 @@
             
             try {
                 const newProject = await window.simpleDataManager.createProject(projectName);
-                console.log('✅ ProjectalreadyCreate:', newProject.id);
+                logger.log('✅ ProjectalreadyCreate:', newProject.id);
                 window.closeCreateProjectModal();
                 
                 // TriggerSidebarRe-render
@@ -4220,15 +4227,15 @@
             if (overlay) {
                 overlay.style.display = 'none';
             }
-            console.log('🔒 MenualreadyClose');
+            logger.log('🔒 MenualreadyClose');
         };
         
         // 🔄 Switch Export MenuShow/Hide
         window.toggleExportMenu = function() {
-            console.log('🔍 toggleExportMenu Called');
+            logger.log('🔍 toggleExportMenu Called');
             const menu = document.getElementById('exportMenu');
             const overlay = document.getElementById('exportMenuOverlay');
-            console.log('📋 MenuElement:', menu);
+            logger.log('📋 MenuElement:', menu);
             
             if (!menu) {
                 console.error('❌ Not found #exportMenu Element');
@@ -4243,7 +4250,7 @@
             
             // Get selectedDocument
             const checkboxes = document.querySelectorAll('.document-checkbox:checked');
-            console.log('✅ alreadyselectmiddleDocumentQuantity:', checkboxes.length);
+            logger.log('✅ alreadyselectmiddleDocumentQuantity:', checkboxes.length);
             
             if (checkboxes.length === 0) {
                 alert('Please firstSelect toExport的Document');
@@ -4251,7 +4258,7 @@
             }
             
             // UpdateMenuContentandShow
-            console.log('🔄 UpdateMenuContent...');
+            logger.log('🔄 UpdateMenuContent...');
             updateExportMenuContent();
             
             // 🔥 Root據屏幕SizeSettingsMenuStyle
@@ -4268,7 +4275,7 @@
                 menu.style.border = 'none'; // 🔥 No border
                 menu.style.boxShadow = 'none'; // 🔥 No shadow
                 menu.style.borderRadius = '12px';
-                console.log('📱 Mobile：MenuCenter display（All white）');
+                logger.log('📱 Mobile：MenuCenter display（All white）');
                 
                 // ShowMask
                 if (overlay) {
@@ -4288,7 +4295,7 @@
                     menu.style.minWidth = '280px';
                     menu.style.maxWidth = '400px';
                 }
-                console.log('💻 Desktop：Menu atButtondownway');
+                logger.log('💻 Desktop：Menu atButtondownway');
                 
                 // DesktopnotShowMask
                 if (overlay) {
@@ -4299,7 +4306,7 @@
             menu.style.display = 'block';
             menu.classList.add('active');
             
-            console.log('✅ MenualreadyShow');
+            logger.log('✅ MenualreadyShow');
         };
         
         // 🔄 Listen checkbox change，real-timeUpdate Export Menu
@@ -4316,7 +4323,7 @@
         // ✅ pressTypeExportDocument（innerpart輔助Function）
         async function exportByType(docs, format) {
             if (!docs || docs.length === 0) {
-                console.log('⚠️ NoneDocumentneedneedExport');
+                logger.log('⚠️ NoneDocumentneedneedExport');
                 return;
             }
             
@@ -4361,11 +4368,11 @@
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
             
-            console.log(`✅ alreadyExport: ${fileName}`);
+            logger.log(`✅ alreadyExport: ${fileName}`);
         }
         
         window.exportDocuments = async function(format) {
-            console.log('📤 StartExport:', format);
+            logger.log('📤 StartExport:', format);
             
             // 🔥 CloseMenu
             closeExportMenu();
@@ -4375,7 +4382,7 @@
                 const selectedCheckboxes = document.querySelectorAll('.document-checkbox:checked');
                 const selectedDocIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.docId);
                 
-                console.log('📋 selectmiddle的Document ID:', selectedDocIds);
+                logger.log('📋 selectmiddle的Document ID:', selectedDocIds);
                 
                 let docsToExport;
                 
@@ -4386,7 +4393,7 @@
                         doc.status === 'completed' && 
                         doc.processedData
                     );
-                    console.log(`📋 Export ${docsToExport.length} 個alreadycheckedDocument（totalselectmiddle ${selectedDocIds.length} 個）`);
+                    logger.log(`📋 Export ${docsToExport.length} 個alreadycheckedDocument（totalselectmiddle ${selectedDocIds.length} 個）`);
                 } else {
                     // IfNonecheck，TipsUser
                     alert('Please firstSelect toExport的Document');
@@ -4419,7 +4426,7 @@
                     }
                 });
                 
-                console.log('📊 Documentgroupresult:', {
+                logger.log('📊 Documentgroupresult:', {
                     bank_statements: groupedDocs.bank_statements.length,
                     invoices: groupedDocs.invoices.length,
                     receipts: groupedDocs.receipts.length,
@@ -4460,10 +4467,10 @@
                         // Useoptimizeversion ExportOptimizer（IfAvailable）
                         if (window.ExportOptimizer) {
                             exportContent = ExportOptimizer.generateCSV(docsToExport);
-                            console.log('✅ Useoptimizeversion CSV Export');
+                            logger.log('✅ Useoptimizeversion CSV Export');
                         } else {
                             exportContent = generateCSV(docsToExport);
-                            console.log('⚠️ Useoldversion CSV Export');
+                            logger.log('⚠️ Useoldversion CSV Export');
                         }
                         fileName = `vaultcaddy_export_${new Date().toISOString().split('T')[0]}.csv`;
                         mimeType = 'text/csv;charset=utf-8;';
@@ -4475,7 +4482,7 @@
                             exportContent = window.BankStatementExport.generateBankStatementCSV(docsToExport);
                             fileName = `BankStatement_${new Date().toISOString().split('T')[0]}.csv`;
                             mimeType = 'text/csv;charset=utf-8;';
-                            console.log('✅ StandardBank Statement CSV Export');
+                            logger.log('✅ StandardBank Statement CSV Export');
                         } else {
                             alert('Bank StatementExport module not loaded，Please refresh pageRetry');
                             return;
@@ -4495,14 +4502,14 @@
                         if (xeroBankDocs.length > 0 && window.BankStatementExport) {
                             exportContent = window.BankStatementExport.generateXeroCSV(xeroBankDocs);
                             fileName = `BankStatement_${new Date().toISOString().split('T')[0]}_Xero.csv`;
-                            console.log('✅ Xero CSV Export（Bank Statement）');
+                            logger.log('✅ Xero CSV Export（Bank Statement）');
                         } else if (xeroInvoiceDocs.length > 0 && window.InvoiceExport) {
                             // 🔥 InvoiceExport Xero Format
                             exportContent = window.InvoiceExport.generateXeroCSV ? 
                                 window.InvoiceExport.generateXeroCSV(xeroInvoiceDocs) :
                                 window.InvoiceExport.generateInvoiceSummaryCSV(xeroInvoiceDocs);
                             fileName = `Invoice_${new Date().toISOString().split('T')[0]}_Xero.csv`;
-                            console.log('✅ Xero CSV Export（Invoice）');
+                            logger.log('✅ Xero CSV Export（Invoice）');
                         } else {
                             alert('NonecanExport的DocumentorExport module not loaded');
                             return;
@@ -4522,14 +4529,14 @@
                         if (qbBankDocs.length > 0 && window.BankStatementExport) {
                             exportContent = window.BankStatementExport.generateQuickBooksCSV(qbBankDocs);
                             fileName = `BankStatement_${new Date().toISOString().split('T')[0]}_QuickBooks.csv`;
-                            console.log('✅ QuickBooks CSV Export（Bank Statement）');
+                            logger.log('✅ QuickBooks CSV Export（Bank Statement）');
                         } else if (qbInvoiceDocs.length > 0 && window.InvoiceExport) {
                             // 🔥 InvoiceExport QuickBooks Format
                             exportContent = window.InvoiceExport.generateQuickBooksCSV ? 
                                 window.InvoiceExport.generateQuickBooksCSV(qbInvoiceDocs) :
                                 window.InvoiceExport.generateInvoiceSummaryCSV(qbInvoiceDocs);
                             fileName = `Invoice_${new Date().toISOString().split('T')[0]}_QuickBooks.csv`;
-                            console.log('✅ QuickBooks CSV Export（Invoice）');
+                            logger.log('✅ QuickBooks CSV Export（Invoice）');
                         } else {
                             alert('NonecanExport的DocumentorExport module not loaded');
                             return;
@@ -4543,7 +4550,7 @@
                             exportContent = window.InvoiceExport.generateInvoiceSummaryCSV(docsToExport);
                             fileName = `Invoice_Summary_${new Date().toISOString().split('T')[0]}.csv`;
                             mimeType = 'text/csv;charset=utf-8;';
-                            console.log('✅ InvoiceTotal CSV Export');
+                            logger.log('✅ InvoiceTotal CSV Export');
                         } else {
                             alert('InvoiceExport module not loaded，Please refresh pageRetry');
                             return;
@@ -4556,7 +4563,7 @@
                             exportContent = window.InvoiceExport.generateInvoiceDetailedCSV(docsToExport);
                             fileName = `Invoice_Detailed_${new Date().toISOString().split('T')[0]}.csv`;
                             mimeType = 'text/csv;charset=utf-8;';
-                            console.log('✅ InvoicedetailstransactionData CSV Export');
+                            logger.log('✅ InvoicedetailstransactionData CSV Export');
                         } else {
                             alert('InvoiceExport module not loaded，Please refresh pageRetry');
                             return;
@@ -4627,7 +4634,7 @@
                 // HideDropdown menu
                 toggleExportMenu();
                 
-                console.log('✅ ExportSuccess:', fileName);
+                logger.log('✅ ExportSuccess:', fileName);
                 
             } catch (error) {
                 console.error('❌ ExportFailed:', error);
@@ -4910,14 +4917,14 @@
             const rows = tbody.getElementsByTagName('tr');
             const term = searchTerm.toLowerCase().trim();
             
-            console.log(`🔍 searchDocument: "${term}", totaltotal ${rows.length} line`);
+            logger.log(`🔍 searchDocument: "${term}", totaltotal ${rows.length} line`);
             
             // IfsearchcolumnYesempty的，Show所Hasline
             if (term === '') {
                 for (let row of rows) {
                     row.style.display = '';
                 }
-                console.log(`✅ Show所Has ${rows.length}  documents`);
+                logger.log(`✅ Show所Has ${rows.length}  documents`);
                 updateDocumentTotal(); // UpdateTotal
                 return;
             }
@@ -4942,18 +4949,18 @@
                     rowText += cell.textContent.toLowerCase() + ' ';
                 }
                 
-                console.log(`🔍 lineContent: "${rowText.substring(0, 50)}..."`);
+                logger.log(`🔍 lineContent: "${rowText.substring(0, 50)}..."`);
                 
                 if (rowText.includes(term)) {
                     row.style.display = '';
                     visibleCount++;
-                    console.log(`✅ match！`);
+                    logger.log(`✅ match！`);
                 } else {
                     row.style.display = 'none';
                 }
             }
             
-            console.log(`✅ Show ${visibleCount}  documents（search: "${term}"）`);
+            logger.log(`✅ Show ${visibleCount}  documents（search: "${term}"）`);
             updateDocumentTotal(); // UpdateTotal
         }
         
@@ -4966,7 +4973,7 @@
             const summaryDiv = document.getElementById('invoice-summary');
             
             if (!tbody | !summaryDiv) {
-                console.log('⚠️ Not foundTableorTotalElement');
+                logger.log('⚠️ Not foundTableorTotalElement');
                 return;
             }
             
@@ -5009,7 +5016,7 @@
                 summaryDiv.style.display = 'none';
             }
             
-            console.log(`📊 Invoicestatistics: ${invoiceCount} sheet, totalamount: $${totalAmount.toFixed(2)}`);
+            logger.log(`📊 Invoicestatistics: ${invoiceCount} sheet, totalamount: $${totalAmount.toFixed(2)}`);
         }
         
         // exposetoallbureau
@@ -5038,11 +5045,11 @@
 </div>
 <!-- 🔥 Hamburger menuexceedlevelSimplerepairPlan -->
 <script>
-        console.log('🔥 StartInitializeHamburger menu...');
+        logger.log('🔥 StartInitializeHamburger menu...');
         
         // OpenSidebarFunction
         function openSidebar() {
-            console.log('🔵 OpenSidebar');
+            logger.log('🔵 OpenSidebar');
             const sidebar = document.getElementById('mobile-sidebar');
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
@@ -5051,13 +5058,13 @@
                 overlay.style.display = 'block';
                 overlay.style.opacity = '1';
                 document.body.style.overflow = 'hidden';
-                console.log('✅ SidebarOpened');
+                logger.log('✅ SidebarOpened');
             }
         }
         
         // CloseSidebarFunction
         function closeSidebar() {
-            console.log('🔵 CloseSidebar');
+            logger.log('🔵 CloseSidebar');
             const sidebar = document.getElementById('mobile-sidebar');
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
@@ -5068,7 +5075,7 @@
                     overlay.style.display = 'none';
                 }, 300); // WaitAnimationComplete（and CSS transition consistent）
                 document.body.style.overflow = 'auto';
-                console.log('✅ SidebaralreadyClose');
+                logger.log('✅ SidebaralreadyClose');
             }
         }
         
@@ -5078,40 +5085,40 @@
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
             if (!btn | !overlay) {
-                console.log('⏳ ElementNot found，200msbackRetry');
+                logger.log('⏳ ElementNot found，200msbackRetry');
                 setTimeout(simpleInitMenu, 200);
                 return;
             }
             
-            console.log('✅ findto所HasElement！');
+            logger.log('✅ findto所HasElement！');
             
             // ButtonclickProcess
             btn.addEventListener('click', function() {
-                console.log('🔵 Buttonbyclick！');
+                logger.log('🔵 Buttonbyclick！');
                 openSidebar();
             });
             
             // touchProcess
             btn.addEventListener('touchend', function(e) {
                 e.preventDefault();
-                console.log('🔵 touchEvent！');
+                logger.log('🔵 touchEvent！');
                 openSidebar();
             });
             
             // MaskclickClose
             overlay.addEventListener('click', function() {
-                console.log('🔵 clickMaskClose');
+                logger.log('🔵 clickMaskClose');
                 closeSidebar();
             });
             
             // MasktouchClose
             overlay.addEventListener('touchend', function(e) {
                 e.preventDefault();
-                console.log('🔵 touchMaskClose');
+                logger.log('🔵 touchMaskClose');
                 closeSidebar();
             });
             
-            console.log('✅ 所HasEventListendevicealreadybind');
+            logger.log('✅ 所HasEventListendevicealreadybind');
         }
         
         // immediatelyTryInitialize
@@ -5166,7 +5173,7 @@ document.addEventListener('DOMContentLoaded', function() {
         flatpickr(uploadDateTo, flatpickrConfig);
     }
     
-    console.log('✅ Flatpickr date picker initialized (English)');
+    logger.log('✅ Flatpickr date picker initialized (English)');
     
     // ==================== Pagination Feature Initialization ====================
     // Initialize pagination parameters
@@ -5183,7 +5190,7 @@ document.addEventListener('DOMContentLoaded', function() {
         rowsPerPageSelect.addEventListener('change', function(e) {
             window.rowsPerPage = parseInt(e.target.value);
             window.currentPage = 1;  // Reset to first page
-            console.log('📄 Rows per page changed:', window.rowsPerPage);
+            logger.log('📄 Rows per page changed:', window.rowsPerPage);
             
             // Re-render document list
             if (window.renderDocuments) {
@@ -5194,12 +5201,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Monitor pagination buttons
     const paginationButtons = document.querySelectorAll('.pagination-controls button');
-    console.log('🔍 [DEBUG] Found pagination buttons:', paginationButtons.length);
+    logger.log('🔍 [DEBUG] Found pagination buttons:', paginationButtons.length);
     
     if (paginationButtons.length === 4) {
         // First page
         paginationButtons[0].onclick = function() {
-            console.log('🔵 Click: First page');
+            logger.log('🔵 Click: First page');
             if (window.currentPage !== 1) {
                 window.currentPage = 1;
                 if (window.renderDocuments) {
@@ -5210,7 +5217,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Previous page
         paginationButtons[1].onclick = function() {
-            console.log('🔵 Click: Previous page, current:', window.currentPage);
+            logger.log('🔵 Click: Previous page, current:', window.currentPage);
             if (window.currentPage > 1) {
                 window.currentPage--;
                 if (window.renderDocuments) {
@@ -5222,10 +5229,10 @@ document.addEventListener('DOMContentLoaded', function() {
         // Next page
         paginationButtons[2].onclick = function() {
             const totalPages = Math.ceil((window.allDocuments || []).length / window.rowsPerPage);
-            console.log('🟢 Click: Next page, current:', window.currentPage, 'total:', totalPages);
+            logger.log('🟢 Click: Next page, current:', window.currentPage, 'total:', totalPages);
             if (window.currentPage < totalPages) {
                 window.currentPage++;
-                console.log('🟢 Navigate to page:', window.currentPage);
+                logger.log('🟢 Navigate to page:', window.currentPage);
                 if (window.renderDocuments) {
                     window.renderDocuments();
                 }
@@ -5235,7 +5242,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Last page
         paginationButtons[3].onclick = function() {
             const totalPages = Math.ceil((window.allDocuments || []).length / window.rowsPerPage);
-            console.log('🔴 Click: Last page, total:', totalPages);
+            logger.log('🔴 Click: Last page, total:', totalPages);
             if (window.currentPage !== totalPages && totalPages > 0) {
                 window.currentPage = totalPages;
                 if (window.renderDocuments) {
@@ -5244,12 +5251,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         };
         
-        console.log('✅ Pagination button events bound');
+        logger.log('✅ Pagination button events bound');
     } else {
         console.error('❌ Incorrect pagination button count:', paginationButtons.length);
     }
     
-    console.log('✅ Pagination feature initialized');
+    logger.log('✅ Pagination feature initialized');
 });
 </script>
 </main>

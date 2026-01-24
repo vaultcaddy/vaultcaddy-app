@@ -28,6 +28,13 @@
     <link rel="stylesheet" href="dashboard.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
+    <!-- 优化后的公共组件 (2026-01-23) -->
+    <link rel="stylesheet" href="user-menu-styles.css">
+    <script defer src="logger.js"></script>
+    <script defer src="init-manager.js"></script>
+    <script defer src="user-menu-manager.js"></script>
+    <script defer src="mobile-menu-manager.js"></script>
+    
     <!-- 核心配置 -->
     <script defer src="config.js"></script>
     <script defer src="translations.js?v=20251102"></script>
@@ -805,7 +812,7 @@
     <!-- ✅ index.html 動態更新用戶狀態 -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('✅ index.html 初始化');
+            logger.log('✅ index.html 初始化');
             
             let userCredits = 0;
             let userEmail = '';
@@ -826,21 +833,21 @@
             
             // 🔥 漢堡菜單功能（立即執行，不等待 DOMContentLoaded）
             (function() {
-                console.log('🔵 初始化漢堡菜單...');
+                logger.log('🔵 初始化漢堡菜單...');
                 
                 // 打開側邊欄
                 window.openMobileSidebar = function() {
-                    console.log('🔵 openMobileSidebar 被調用');
+                    logger.log('🔵 openMobileSidebar 被調用');
                     const sidebar = document.getElementById('mobile-sidebar');
                     const overlay = document.getElementById('mobile-sidebar-overlay');
-                    console.log('🔵 sidebar:', sidebar);
-                    console.log('🔵 overlay:', overlay);
+                    logger.log('🔵 sidebar:', sidebar);
+                    logger.log('🔵 overlay:', overlay);
                     
                     if (sidebar && overlay) {
                         sidebar.style.left = '0';
                         overlay.style.display = 'block';
                         document.body.style.overflow = 'hidden';
-                        console.log('✅ 側邊欄已打開');
+                        logger.log('✅ 側邊欄已打開');
                     } else {
                         console.error('❌ 找不到側邊欄或遮罩元素');
                     }
@@ -848,7 +855,7 @@
                 
                 // 關閉側邊欄
                 window.closeMobileSidebar = function() {
-                    console.log('🔵 closeMobileSidebar 被調用');
+                    logger.log('🔵 closeMobileSidebar 被調用');
                     const sidebar = document.getElementById('mobile-sidebar');
                     const overlay = document.getElementById('mobile-sidebar-overlay');
                     
@@ -856,12 +863,12 @@
                         sidebar.style.left = '-100%';
                         overlay.style.display = 'none';
                         document.body.style.overflow = 'auto';
-                        console.log('✅ 側邊欄已關閉');
+                        logger.log('✅ 側邊欄已關閉');
                     }
                 };
                 
                 // 漢堡菜單按鈕使用 onclick，無需額外綁定
-                console.log('✅ 漢堡菜單功能已就緒（使用 onclick）');
+                logger.log('✅ 漢堡菜單功能已就緒（使用 onclick）');
             })();
                 
                 // 手機版自動輪播（僅在手機版啟用）
@@ -910,7 +917,7 @@
                     if (window.simpleDataManager && window.simpleDataManager.initialized) {
                         try {
                             userCredits = await window.simpleDataManager.getUserCredits();
-                            console.log('✅ 即時獲取 Credits:', userCredits);
+                            logger.log('✅ 即時獲取 Credits:', userCredits);
                         } catch (error) {
                                             clearTimeout(timeoutId); // ✅ 清除超时
                 console.error('❌ 無法獲取 Credits:', error);
@@ -972,19 +979,19 @@
                                 if (userDoc) {
                                     userDisplayName = userDoc.displayName || userDisplayName;
                                     userCredits = userDoc.credits || 0;
-                                    console.log('✅ index.html 獲取 Credits:', userCredits);
+                                    logger.log('✅ index.html 獲取 Credits:', userCredits);
                                 }
                             } catch (error) {
-                                console.log('⚠️ 無法從 Firestore 獲取用戶資料:', error);
+                                logger.log('⚠️ 無法從 Firestore 獲取用戶資料:', error);
                             }
                         } else {
-                            console.log('⏳ SimpleDataManager 尚未初始化，等待中...');
+                            logger.log('⏳ SimpleDataManager 尚未初始化，等待中...');
                             // 延遲重試
                             setTimeout(async () => {
                                 if (window.simpleDataManager && window.simpleDataManager.initialized) {
                                     try {
                                         userCredits = await window.simpleDataManager.getUserCredits();
-                                        console.log('✅ 延遲獲取 Credits:', userCredits);
+                                        logger.log('✅ 延遲獲取 Credits:', userCredits);
                                     } catch (error) {
                                                         clearTimeout(timeoutId); // ✅ 清除超时
                 console.error('❌ 延遲獲取失敗:', error);
@@ -994,23 +1001,23 @@
                         }
                         
                         const userInitial = getUserInitial();
-                        console.log(`👤 用戶首字母: "${userInitial}" (displayName: "${userDisplayName}")`);
+                        logger.log(`👤 用戶首字母: "${userInitial}" (displayName: "${userDisplayName}")`);
                         
                         userMenu.innerHTML = `
-                            <div onclick="toggleDropdown()" style="cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
-                                <div style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem; opacity: 1; transition: opacity 0.3s;">${userInitial}</div>
+                            <div onclick="toggleDropdown()" class="user-menu-trigger">
+                                <div class="user-avatar">${userInitial}</div>
                             </div>
                         `;
-                        console.log('✅ 用戶已登入，顯示頭像');
+                        logger.log('✅ 用戶已登入，顯示頭像');
                     } else {
                         // ✅ 未登入：顯示登入按鈕
                         userMenu.innerHTML = `
-                            <button onclick="window.location.href='auth.html'" style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.875rem;" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">登入</button>
+                            <button onclick="window.location.href='auth.html'" class="login-button">登入</button>
                         `;
-                        console.log('✅ 用戶未登入，顯示登入按鈕');
+                        logger.log('✅ 用戶未登入，顯示登入按鈕');
                     }
                 } catch (e) {
-                    console.log('❌ 無法更新用戶菜單:', e);
+                    logger.log('❌ 無法更新用戶菜單:', e);
                 }
             }
             
@@ -1201,19 +1208,19 @@
     <script>
         // 初始化
         window.addEventListener('auth-state-changed', async (e) => {
-            console.log('🔥 收到 auth-state-changed 事件');
+            logger.log('🔥 收到 auth-state-changed 事件');
             
             if (!e.detail.user) {
-                console.log('❌ 用戶未登入，重定向到首頁');
+                logger.log('❌ 用戶未登入，重定向到首頁');
                 window.location.href = 'index.html';
                 return;
             }
             
-            console.log('✅ 用戶已登入:', e.detail.user.email);
+            logger.log('✅ 用戶已登入:', e.detail.user.email);
             
             // 創建側邊欄
             if (window.VaultCaddySidebar && !window.accountSidebar) {
-                console.log('🎨 創建側邊欄');
+                logger.log('🎨 創建側邊欄');
                 window.accountSidebar = new VaultCaddySidebar('account');
             }
             
@@ -1274,7 +1281,7 @@
                         // 🔥 優先檢查新的 planType 字段
                         if (userData.planType) {
                             savedPlan = userData.planType.replace(' Plan', ''); // 移除 ' Plan' 後綴
-                            console.log('✅ 從 planType 字段獲取計劃:', savedPlan);
+                            logger.log('✅ 從 planType 字段獲取計劃:', savedPlan);
                         }
                         // 檢查訂閱狀態（舊版邏輯）
                         else if (userData.subscription && userData.subscription.status === 'active') {
@@ -1291,13 +1298,13 @@
             if (savedPlan === 'Free') {
                 const localPlan = localStorage.getItem('userPlan');
                 if (localPlan && localPlan !== 'Free') {
-                    console.warn('⚠️ localStorage 中有計劃但 Firestore 沒有活躍訂閱，清除 localStorage');
+                    logger.warn('⚠️ localStorage 中有計劃但 Firestore 沒有活躍訂閱，清除 localStorage');
                     localStorage.removeItem('userPlan');
                     localStorage.removeItem('userPlanPeriod');
                 }
             }
             
-            console.log('📋 用戶計劃:', savedPlan);
+            logger.log('📋 用戶計劃:', savedPlan);
             
             // 根據計劃類型設置不同的樣式和圖標
             const planConfig = {
@@ -1402,7 +1409,7 @@
                     });
                 }
                 
-                console.log('✅ 訂閱詳情已加載');
+                logger.log('✅ 訂閱詳情已加載');
                 
             } catch (error) {
                                 clearTimeout(timeoutId); // ✅ 清除超时
@@ -1416,7 +1423,7 @@
             const originalHTML = button ? button.innerHTML : '';
             
             try {
-                console.log('🔧 打開 Stripe Customer Portal');
+                logger.log('🔧 打開 Stripe Customer Portal');
                 
                 if (!window.simpleAuth || !window.simpleAuth.currentUser) {
                     alert('請先登入');
@@ -1433,17 +1440,17 @@
                 const functions = firebase.functions();
                 const createPortalSession = functions.httpsCallable('createStripeCustomerPortalSession');
                 
-                console.log('📞 調用 createStripeCustomerPortalSession...');
+                logger.log('📞 調用 createStripeCustomerPortalSession...');
                 
                 const result = await createPortalSession({
                     returnUrl: window.location.href // 返回當前頁面
                 });
                 
-                console.log('✅ Cloud Function 返回:', result);
+                logger.log('✅ Cloud Function 返回:', result);
                 
                 if (result.data && result.data.url) {
                     // 跳轉到 Stripe Customer Portal
-                    console.log('🔗 跳轉到:', result.data.url);
+                    logger.log('🔗 跳轉到:', result.data.url);
                     window.location.href = result.data.url;
                 } else {
                     throw new Error('無法創建 Customer Portal Session');
@@ -1506,9 +1513,9 @@
                             if (userData.subscription && userData.subscription.status === 'active') {
                                 currentPlan = userData.subscription.planType || 'Free';
                                 planPeriod = userData.subscription.period || 'monthly';
-                                console.log('✅ 從 Firestore 獲取計劃:', currentPlan, planPeriod);
+                                logger.log('✅ 從 Firestore 獲取計劃:', currentPlan, planPeriod);
                             } else {
-                                console.log('⚠️ Firestore 中沒有活躍訂閱，使用 Free Plan');
+                                logger.log('⚠️ Firestore 中沒有活躍訂閱，使用 Free Plan');
                             }
                         }
                     } catch (error) {
@@ -1521,13 +1528,13 @@
                 if (currentPlan === 'Free') {
                     const localPlan = localStorage.getItem('userPlan');
                     if (localPlan && localPlan !== 'Free') {
-                        console.warn('⚠️ localStorage 中有計劃但 Firestore 沒有，清除 localStorage');
+                        logger.warn('⚠️ localStorage 中有計劃但 Firestore 沒有，清除 localStorage');
                         localStorage.removeItem('userPlan');
                         localStorage.removeItem('userPlanPeriod');
                     }
                 }
                 
-                console.log('📊 最終使用計劃:', currentPlan, planPeriod);
+                logger.log('📊 最終使用計劃:', currentPlan, planPeriod);
                 
                 // 獲取計劃的 Credits 額度
                 const totalCredits = planCredits[currentPlan][planPeriod] || 0;
@@ -1556,7 +1563,7 @@
                                         month: 'long', 
                                         day: 'numeric' 
                                     });
-                                console.log('✅ 從 resetDate 字段獲取重置日期:', resetDate);
+                                logger.log('✅ 從 resetDate 字段獲取重置日期:', resetDate);
                             }
                             // 如果有訂閱信息，獲取重置日期（舊版邏輯）
                             else if (userData.subscription && userData.subscription.currentPeriodEnd) {
@@ -1618,7 +1625,7 @@
                     // 重置日期已經在上面的代碼中設置
                 }
                 
-                console.log(`✅ Credits 載入完成: ${currentCredits} / ${totalCredits} (${percentage.toFixed(1)}%)`);
+                logger.log(`✅ Credits 載入完成: ${currentCredits} / ${totalCredits} (${percentage.toFixed(1)}%)`);
 
             } catch (error) {
                                 clearTimeout(timeoutId); // ✅ 清除超时
@@ -1754,7 +1761,7 @@
                     select.value = 'all';
                 }
                 
-                console.log(`✅ 載入了 ${sortedMonths.length} 個月份選項:`, sortedMonths);
+                logger.log(`✅ 載入了 ${sortedMonths.length} 個月份選項:`, sortedMonths);
                 
             } catch (error) {
                                 clearTimeout(timeoutId); // ✅ 清除超时
@@ -1803,7 +1810,7 @@
                         .where('createdAt', '>=', startDate)
                         .where('createdAt', '<=', endDate);
                     
-                    console.log(`📅 過濾 ${year}年${month}月 的記錄`);
+                    logger.log(`📅 過濾 ${year}年${month}月 的記錄`);
                 }
                 
                 const historySnapshot = await query.limit(50).get();
@@ -1881,7 +1888,7 @@
                 
                 tbody.innerHTML = rows.join('');
                 
-                console.log(`✅ 載入了 ${rows.length} 條 Credits 歷史記錄`);
+                logger.log(`✅ 載入了 ${rows.length} 條 Credits 歷史記錄`);
                 
             } catch (error) {
                                 clearTimeout(timeoutId); // ✅ 清除超时
@@ -1901,7 +1908,7 @@
         // 按月份過濾記錄
         function filterCreditsHistory() {
             const filter = document.getElementById('history-month-filter').value;
-            console.log('過濾記錄:', filter);
+            logger.log('過濾記錄:', filter);
             
             // 重新載入記錄（這裡可以添加過濾邏輯）
             loadCreditsHistory();
@@ -1952,11 +1959,11 @@
 
     <!-- 🔥 漢堡菜單超級簡單修復方案 -->
     <script>
-        console.log('🔥 開始初始化漢堡菜單...');
+        logger.log('🔥 開始初始化漢堡菜單...');
         
         // 打開側邊欄函數
         function openSidebar() {
-            console.log('🔵 打開側邊欄');
+            logger.log('🔵 打開側邊欄');
             const sidebar = document.getElementById('mobile-sidebar');
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
@@ -1965,13 +1972,13 @@
                 overlay.style.display = 'block';
                 overlay.style.opacity = '1';
                 document.body.style.overflow = 'hidden';
-                console.log('✅ 側邊欄已打開');
+                logger.log('✅ 側邊欄已打開');
             }
         }
         
         // 關閉側邊欄函數
         function closeSidebar() {
-            console.log('🔵 關閉側邊欄');
+            logger.log('🔵 關閉側邊欄');
             const sidebar = document.getElementById('mobile-sidebar');
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
@@ -1982,7 +1989,7 @@
                     overlay.style.display = 'none';
                 }, 300); // 等待動畫完成（與 CSS transition 一致）
                 document.body.style.overflow = 'auto';
-                console.log('✅ 側邊欄已關閉');
+                logger.log('✅ 側邊欄已關閉');
             }
         }
         
@@ -1992,40 +1999,40 @@
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
             if (!btn || !overlay) {
-                console.log('⏳ 元素未找到，200ms後重試');
+                logger.log('⏳ 元素未找到，200ms後重試');
                 setTimeout(simpleInitMenu, 200);
                 return;
             }
             
-            console.log('✅ 找到所有元素！');
+            logger.log('✅ 找到所有元素！');
             
             // 按鈕點擊處理
             btn.addEventListener('click', function() {
-                console.log('🔵 按鈕被點擊！');
+                logger.log('🔵 按鈕被點擊！');
                 openSidebar();
             });
             
             // 觸摸處理
             btn.addEventListener('touchend', function(e) {
                 e.preventDefault();
-                console.log('🔵 觸摸事件！');
+                logger.log('🔵 觸摸事件！');
                 openSidebar();
             });
             
             // 遮罩點擊關閉
             overlay.addEventListener('click', function() {
-                console.log('🔵 點擊遮罩關閉');
+                logger.log('🔵 點擊遮罩關閉');
                 closeSidebar();
             });
             
             // 遮罩觸摸關閉
             overlay.addEventListener('touchend', function(e) {
                 e.preventDefault();
-                console.log('🔵 觸摸遮罩關閉');
+                logger.log('🔵 觸摸遮罩關閉');
                 closeSidebar();
             });
             
-            console.log('✅ 所有事件監聽器已綁定');
+            logger.log('✅ 所有事件監聽器已綁定');
         }
         
         // 立即嘗試初始化
@@ -2108,14 +2115,14 @@
             // 保存到 Firebase
             try {
                 const projectData = await window.simpleDataManager.createProject(projectName);
-                console.log('✅ 項目已保存到 Firebase:', projectData);
+                logger.log('✅ 項目已保存到 Firebase:', projectData);
                 
                 // 關閉模態框
                 closeCreateProjectModal();
                 
                 // 🔥 修復：使用 projectData.id 而非 projectData 本身
                 const projectId = projectData.id;
-                console.log('🚀 跳轉到新項目頁面:', projectId);
+                logger.log('🚀 跳轉到新項目頁面:', projectId);
                 
                 // 跳轉到新項目頁面
                 window.location.href = `firstproject.html?project=${projectId}`;

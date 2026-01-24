@@ -58,13 +58,13 @@
         // ✅ 超時保護：10秒後強制顯示頁面（防止卡住）
         setTimeout(function() {
             if (document.body.classList.contains('auth-checking')) {
-                console.warn('⚠️ Auth 初始化超時（10秒），強制顯示頁面');
+                logger.warn('⚠️ Auth 初始化超時（10秒），強制顯示頁面');
                 document.body.classList.remove('auth-checking');
                 document.body.classList.add('auth-ready');
                 
                 // 如果沒有登入，重定向到首頁
                 if (!window.simpleAuth | !window.simpleAuth.currentUser) {
-                    console.log('❌ 超時且未登入，重定向到首頁');
+                    logger.log('❌ 超時且未登入，重定向到首頁');
                     setTimeout(function() {
                         window.location.href = 'index.html';
                     }, 1000);
@@ -80,6 +80,13 @@
 <link href="dashboard.css" rel="stylesheet"/>
 <link href="pages.css" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
+    
+    <!-- 优化后的公共组件 (2026-01-23) -->
+    <link rel="stylesheet" href="user-menu-styles.css">
+    <script defer src="logger.js"></script>
+    <script defer src="init-manager.js"></script>
+    <script defer src="user-menu-manager.js"></script>
+    <script defer src="mobile-menu-manager.js"></script>
 <!-- ✅ 核心配置 -->
 <script defer="" src="config.js"></script>
 <script defer="" src="translations.js?v=20251102"></script>
@@ -1982,7 +1989,7 @@
 <!-- ✅ index.html 動態更新用戶狀態 -->
 <script>
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('✅ index.html 初始化');
+            logger.log('✅ index.html 初始化');
             
             // 🔥 手機版：調整內容距離導航欄的距離
             function adjustMobileLayout() {
@@ -1991,13 +1998,13 @@
                     if (header) {
                         header.style.setProperty('margin-top', '0', 'important');
                         header.style.setProperty('padding-top', '0', 'important');
-                        console.log('📱 手機版：調整 header margin-top 和 padding-top 為 0');
+                        logger.log('📱 手機版：調整 header margin-top 和 padding-top 為 0');
                     }
                     // 同時調整 team-project-view 的 padding
                     const teamProjectView = document.getElementById('team-project-view');
                     if (teamProjectView) {
                         teamProjectView.style.setProperty('padding-top', '0.5rem', 'important');
-                        console.log('📱 手機版：調整 team-project-view padding-top 為 0.5rem');
+                        logger.log('📱 手機版：調整 team-project-view padding-top 為 0.5rem');
                     }
                 } else {
                     // 桌面版恢復原始樣式
@@ -2040,21 +2047,21 @@
             
             // 🔥 漢堡菜單功能（立即執行，不等待 DOMContentLoaded）
             (function() {
-                console.log('🔵 初始化漢堡菜單...');
+                logger.log('🔵 初始化漢堡菜單...');
                 
                 // 打開側邊欄
                 window.openMobileSidebar = function() {
-                    console.log('🔵 openMobileSidebar 被調用');
+                    logger.log('🔵 openMobileSidebar 被調用');
                     const sidebar = document.getElementById('mobile-sidebar');
                     const overlay = document.getElementById('mobile-sidebar-overlay');
-                    console.log('🔵 sidebar:', sidebar);
-                    console.log('🔵 overlay:', overlay);
+                    logger.log('🔵 sidebar:', sidebar);
+                    logger.log('🔵 overlay:', overlay);
                     
                     if (sidebar && overlay) {
                         sidebar.style.left = '0';
                         overlay.style.display = 'block';
                         document.body.style.overflow = 'hidden';
-                        console.log('✅ 側邊欄已打開');
+                        logger.log('✅ 側邊欄已打開');
                     } else {
                         console.error('❌ 找不到側邊欄或遮罩元素');
                     }
@@ -2062,7 +2069,7 @@
                 
                 // 關閉側邊欄
                 window.closeMobileSidebar = function() {
-                    console.log('🔵 closeMobileSidebar 被調用');
+                    logger.log('🔵 closeMobileSidebar 被調用');
                     const sidebar = document.getElementById('mobile-sidebar');
                     const overlay = document.getElementById('mobile-sidebar-overlay');
                     
@@ -2070,12 +2077,12 @@
                         sidebar.style.left = '-100%';
                         overlay.style.display = 'none';
                         document.body.style.overflow = 'auto';
-                        console.log('✅ 側邊欄已關閉');
+                        logger.log('✅ 側邊欄已關閉');
                     }
                 };
                 
                 // 漢堡菜單按鈕使用 onclick，無需額外綁定
-                console.log('✅ 漢堡菜單功能已就緒（使用 onclick）');
+                logger.log('✅ 漢堡菜單功能已就緒（使用 onclick）');
             })();
                 
                 // 手機版自動輪播（僅在手機版啟用）
@@ -2124,7 +2131,7 @@
                     if (window.simpleDataManager && window.simpleDataManager.initialized) {
                         try {
                             userCredits = await window.simpleDataManager.getUserCredits();
-                            console.log('✅ 即時獲取 Credits:', userCredits);
+                            logger.log('✅ 即時獲取 Credits:', userCredits);
                         } catch (error) {
                             console.error('❌ 無法獲取 Credits:', error);
                         }
@@ -2184,19 +2191,19 @@
                                 if (userDoc) {
                                     userDisplayName = userDoc.displayName || userDisplayName;
                                     userCredits = userDoc.credits || 0;
-                                    console.log('✅ index.html 獲取 Credits:', userCredits);
+                                    logger.log('✅ index.html 獲取 Credits:', userCredits);
                                 }
                             } catch (error) {
-                                console.log('⚠️ 無法從 Firestore 獲取用戶資料:', error);
+                                logger.log('⚠️ 無法從 Firestore 獲取用戶資料:', error);
                             }
                         } else {
-                            console.log('⏳ SimpleDataManager 尚未初始化，等待中...');
+                            logger.log('⏳ SimpleDataManager 尚未初始化，等待中...');
                             // 延遲重試
                             setTimeout(async () => {
                                 if (window.simpleDataManager && window.simpleDataManager.initialized) {
                                     try {
                                         userCredits = await window.simpleDataManager.getUserCredits();
-                                        console.log('✅ 延遲獲取 Credits:', userCredits);
+                                        logger.log('✅ 延遲獲取 Credits:', userCredits);
                                     } catch (error) {
                                         console.error('❌ 延遲獲取失敗:', error);
                                     }
@@ -2205,23 +2212,23 @@
                         }
                         
                         const userInitial = getUserInitial();
-                        console.log(`👤 用戶首字母: "${userInitial}" (displayName: "${userDisplayName}")`);
+                        logger.log(`👤 用戶首字母: "${userInitial}" (displayName: "${userDisplayName}")`);
                         
                         userMenu.innerHTML = `
-                            <div onclick="toggleDropdown()" style="cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
-                                <div style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem; opacity: 1; transition: opacity 0.3s;">${userInitial}</div>
+                            <div onclick="toggleDropdown()" class="user-menu-trigger">
+                                <div class="user-avatar">${userInitial}</div>
                             </div>
                         `;
-                        console.log('✅ 用戶已登入，顯示頭像');
+                        logger.log('✅ 用戶已登入，顯示頭像');
                     } else {
                         // ✅ 未登入：顯示登入按鈕
                         userMenu.innerHTML = `
-                            <button onclick="window.location.href='auth.html'" style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.875rem;" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">登入</button>
+                            <button onclick="window.location.href='auth.html'" class="login-button">登入</button>
                         `;
-                        console.log('✅ 用戶未登入，顯示登入按鈕');
+                        logger.log('✅ 用戶未登入，顯示登入按鈕');
                     }
                 } catch (e) {
-                    console.log('❌ 無法更新用戶菜單:', e);
+                    logger.log('❌ 無法更新用戶菜單:', e);
                 }
             }
             
@@ -2672,23 +2679,23 @@
         
         // ==================== 初始化 ====================
         window.addEventListener('auth-state-changed', async (e) => {
-            console.log('🔥 收到 auth-state-changed 事件');
+            logger.log('🔥 收到 auth-state-changed 事件');
             
             // 移除 auth-checking 類別，顯示頁面
             document.body.classList.remove('auth-checking');
             document.body.classList.add('auth-ready');
             
             if (!e.detail.user) {
-                console.log('❌ 用戶未登入，重定向到首頁');
+                logger.log('❌ 用戶未登入，重定向到首頁');
                 window.location.href = 'index.html';
                 return;
             }
             
-            console.log('✅ 用戶已登入:', e.detail.user.email);
+            logger.log('✅ 用戶已登入:', e.detail.user.email);
             
             // 創建側邊欄
             if (window.VaultCaddySidebar && !window.unifiedSidebar) {
-                console.log('🎨 創建側邊欄');
+                logger.log('🎨 創建側邊欄');
                 window.unifiedSidebar = new VaultCaddySidebar();
             }
             
@@ -2713,17 +2720,17 @@
                     return;
                 }
                 
-                console.log('📂 載入項目:', currentProjectId);
+                logger.log('📂 載入項目:', currentProjectId);
                 
                 const projects = await window.simpleDataManager.getProjects();
                 currentProject = projects.find(p => p.id === currentProjectId);
                 
                 if (currentProject) {
                     document.getElementById('team-project-title').textContent = currentProject.name;
-                    console.log('✅ 項目名稱:', currentProject.name);
+                    logger.log('✅ 項目名稱:', currentProject.name);
                 } else {
                     // 項目不存在，可能已被刪除
-                    console.warn('⚠️ 項目不存在，可能已被刪除:', currentProjectId);
+                    logger.warn('⚠️ 項目不存在，可能已被刪除:', currentProjectId);
                     alert('此項目不存在或已被刪除，將返回首頁');
                     window.location.href = 'index.html';
                 }
@@ -2778,7 +2785,7 @@
         
         // 應用日期篩選
         function applyDateFilters() {
-            console.log('🗓️ 應用日期篩選', dateFilters);
+            logger.log('🗓️ 應用日期篩選', dateFilters);
             
             // 從原始文檔開始篩選
             let filtered = [...allDocuments];
@@ -2852,7 +2859,7 @@
         };
         
         function clearDateFilters() {
-            console.log('🗑️ 清除日期篩選');
+            logger.log('🗑️ 清除日期篩選');
             
             // 重置篩選狀態
             dateFilters = {
@@ -2910,7 +2917,7 @@
                 });
             }
             
-            console.log('✅ 日期篩選器已初始化');
+            logger.log('✅ 日期篩選器已初始化');
         }
         
         // ==================== 渲染文檔表格 ====================
@@ -3198,10 +3205,10 @@
             try {
                 if (!currentProjectId) return;
                 
-                console.log('📄 載入文檔列表');
+                logger.log('📄 載入文檔列表');
                 
                 const documents = await window.simpleDataManager.getDocuments(currentProjectId);
-                console.log('✅ 找到', documents.length, '個文檔');
+                logger.log('✅ 找到', documents.length, '個文檔');
                 
                 // 保存到全局變量
                 allDocuments = documents;
@@ -3251,17 +3258,17 @@
                 return;
             }
             
-            console.log(`🔄 發現 ${pendingDocs.length} 個待處理文檔，開始恢復處理...`);
+            logger.log(`🔄 發現 ${pendingDocs.length} 個待處理文檔，開始恢復處理...`);
             
             for (const doc of pendingDocs) {
                 try {
                     const pages = doc.pages || 1;  // ✅ 修复：使用逻辑或 ||
                     
-                    console.log(`🔄 恢復處理: ${doc.fileName} (${pages} 頁)`);
+                    logger.log(`🔄 恢復處理: ${doc.fileName} (${pages} 頁)`);
                     
                     // ✅ 修复：多页文档不支持自动恢复（需要PDF转图片），提示用户重新上传
                     if (pages > 1) {
-                        console.warn(`⚠️  多页文档 ${doc.fileName} 需要重新上传（不支持自动恢复）`);
+                        logger.warn(`⚠️  多页文档 ${doc.fileName} 需要重新上传（不支持自动恢复）`);
                         
                         // 更新为失败状态，提示用户重新上传
                         await window.simpleDataManager.updateDocument(currentProjectId, doc.id, {
@@ -3275,7 +3282,7 @@
                         const blob = await response.blob();
                         const file = new File([blob], doc.fileName, { type: blob.type });
                         
-                        console.log(`📄 恢復单页文档处理: ${doc.fileName}`);
+                        logger.log(`📄 恢復单页文档处理: ${doc.fileName}`);
                         processFileWithAI(file, doc.id, pages).catch(err => {
                             console.error('❌ 恢復處理失敗:', err);
                         });
@@ -3289,7 +3296,7 @@
         
         // ==================== 上傳模態框 ====================
         window.openUploadModal = function() {
-            console.log('🎯 打開上傳模態框');
+            logger.log('🎯 打開上傳模態框');
             const modal = document.getElementById('aiUploadModal');
             if (modal) {
                 modal.style.display = 'flex';
@@ -3349,14 +3356,14 @@
                 
                 const files = Array.from(e.dataTransfer.files);
                 if (files.length > 0) {
-                    console.log('📥 拖放文件:', files.length, '個');
+                    logger.log('📥 拖放文件:', files.length, '個');
                     handleUpload(files);
                 }
             });
         }
         
         window.selectDocumentType = function(type) {
-            console.log('📋 選擇文檔類型:', type);
+            logger.log('📋 選擇文檔類型:', type);
             selectedDocumentType = type;
             
             document.querySelectorAll('.doc-type-card').forEach(card => {
@@ -3376,7 +3383,7 @@
         };
         
         async function handleUpload(files) {
-            console.log('📤 準備上傳', files.length, '個文件');
+            logger.log('📤 準備上傳', files.length, '個文件');
             
             // 1. 計算所有文件的總頁數
             let totalPages = 0;
@@ -3388,13 +3395,13 @@
                 totalPages += pages;
             }
             
-            console.log(`📊 總頁數: ${totalPages}`);
+            logger.log(`📊 總頁數: ${totalPages}`);
             
             // 2. 檢查 Credits 是否足夠
             if (window.creditsManager) {
                 const hasEnoughCredits = await window.creditsManager.checkCredits(totalPages);
                 if (!hasEnoughCredits) {
-                    console.log('❌ Credits 不足，取消批量上傳');
+                    logger.log('❌ Credits 不足，取消批量上傳');
                     return;
                 }
             }
@@ -3403,7 +3410,7 @@
             closeAIUploadModal();
             
             // 4. ✅ 並行上傳所有文件（減少總時間）
-            console.log(`🚀 開始並行上傳 ${filePages.length} 個文件...`);
+            logger.log(`🚀 開始並行上傳 ${filePages.length} 個文件...`);
             const uploadPromises = filePages.map(({ file, pages }) => 
                 uploadFileDirect(file, pages).catch(err => {
                     console.error(`❌ 上傳 ${file.name} 失敗:`, err);
@@ -3412,7 +3419,7 @@
             );
             
             await Promise.all(uploadPromises);
-            console.log(`✅ 所有文件已並行上傳完成！`);
+            logger.log(`✅ 所有文件已並行上傳完成！`);
             
             // ✅ 最後重新載入一次文檔列表
             await loadDocuments();
@@ -3423,7 +3430,7 @@
          */
         async function uploadFileDirect(file, pages) {
             try {
-                console.log('📤 上傳文件:', file.name, `(${pages} 頁)`);
+                logger.log('📤 上傳文件:', file.name, `(${pages} 頁)`);
                 
                 // ✅ 如果是 PDF，先轉換為圖片（與 uploadFile 函數保持一致）
                 let filesToProcess = [file];
@@ -3431,12 +3438,12 @@
                 
                 if (window.pdfToImageConverter && window.pdfToImageConverter.isPDF(file)) {
                     try {
-                        console.log('📄 檢測到 PDF 文件，開始轉換為圖片...');
+                        logger.log('📄 檢測到 PDF 文件，開始轉換為圖片...');
                         const imageFiles = await window.pdfToImageConverter.convertPDFToImages(file);
-                        console.log(`✅ PDF 轉換完成，生成 ${imageFiles.length} 張圖片`);
+                        logger.log(`✅ PDF 轉換完成，生成 ${imageFiles.length} 張圖片`);
                         filesToProcess = imageFiles;
                         isPDFConverted = true;
-                        console.log(`📄 將處理所有 ${imageFiles.length} 頁`);
+                        logger.log(`📄 將處理所有 ${imageFiles.length} 頁`);
                     } catch (pdfError) {
                         console.error('❌ PDF 轉換失敗:', pdfError);
                         alert(`PDF 轉換失敗: ${pdfError.message}\n\n請確認文件是否有效。`);
@@ -3445,12 +3452,12 @@
                 }
                 
                 // 上傳所有文件到 Storage
-                console.log(`📤 開始上傳 ${filesToProcess.length} 個文件...`);
+                logger.log(`📤 開始上傳 ${filesToProcess.length} 個文件...`);
                 const uploadPromises = filesToProcess.map(f => 
                     window.simpleDataManager.uploadFile(currentProjectId, f)
                 );
                 const imageUrls = await Promise.all(uploadPromises);
-                console.log(`✅ ${imageUrls.length} 個文件已上傳到 Storage`);
+                logger.log(`✅ ${imageUrls.length} 個文件已上傳到 Storage`);
                 
                 const docData = {
                     name: file.name,
@@ -3470,12 +3477,12 @@
                 };
                 
                 const docId = await window.simpleDataManager.createDocument(currentProjectId, docData);
-                console.log('✅ 文檔記錄已創建:', docId);
+                logger.log('✅ 文檔記錄已創建:', docId);
                 
                 // 扣除 Credits（按實際頁數）
                 if (window.creditsManager) {
                     await window.creditsManager.deductCredits(filesToProcess.length);
-                    console.log(`💰 已扣除 ${filesToProcess.length} Credits`);
+                    logger.log(`💰 已扣除 ${filesToProcess.length} Credits`);
                 }
                 
                 // ✅ 立即開始 AI 處理（並行處理，不阻塞其他文件上傳）
@@ -3491,17 +3498,17 @@
         
         async function uploadFile(file) {
             try {
-                console.log('📤 準備上傳文件:', file.name);
+                logger.log('📤 準備上傳文件:', file.name);
                 
                 // 1. 計算文件頁數
                 const pages = await getFilePageCount(file);
-                console.log(`📄 文件頁數: ${pages}`);
+                logger.log(`📄 文件頁數: ${pages}`);
                 
                 // 2. 檢查 Credits 是否足夠
                 if (window.creditsManager) {
                     const hasEnoughCredits = await window.creditsManager.checkCredits(pages);
                     if (!hasEnoughCredits) {
-                        console.log('❌ Credits 不足，取消上傳');
+                        logger.log('❌ Credits 不足，取消上傳');
                         return;
                     }
                 }
@@ -3512,12 +3519,12 @@
                 
                 if (window.pdfToImageConverter && window.pdfToImageConverter.isPDF(file)) {
                     try {
-                        console.log('📄 檢測到 PDF 文件，開始轉換為圖片...');
+                        logger.log('📄 檢測到 PDF 文件，開始轉換為圖片...');
                         const imageFiles = await window.pdfToImageConverter.convertPDFToImages(file);
-                        console.log(`✅ PDF 轉換完成，生成 ${imageFiles.length} 張圖片`);
+                        logger.log(`✅ PDF 轉換完成，生成 ${imageFiles.length} 張圖片`);
                         filesToProcess = imageFiles; // ✅ 使用所有頁面
                         isPDFConverted = true;
-                        console.log(`📄 將處理所有 ${imageFiles.length} 頁`);
+                        logger.log(`📄 將處理所有 ${imageFiles.length} 頁`);
                     } catch (pdfError) {
                         console.error('❌ PDF 轉換失敗:', pdfError);
                         alert(`PDF 轉換失敗: ${pdfError.message}\n\n請確認文件是否有效，或嘗試直接上傳 JPG/PNG 圖片。`);
@@ -3526,12 +3533,12 @@
                 }
                 
                 // 4. 上傳所有文件到 Storage（支持多頁 PDF）
-                console.log(`📤 開始上傳 ${filesToProcess.length} 個文件...`);
+                logger.log(`📤 開始上傳 ${filesToProcess.length} 個文件...`);
                 const uploadPromises = filesToProcess.map(f => 
                     window.simpleDataManager.uploadFile(currentProjectId, f)
                 );
                 const imageUrls = await Promise.all(uploadPromises);
-                console.log(`✅ ${imageUrls.length} 個文件已上傳到 Storage`);
+                logger.log(`✅ ${imageUrls.length} 個文件已上傳到 Storage`);
                 
                 const docData = {
                     name: file.name, // 保留原始文件名
@@ -3551,22 +3558,22 @@
                 };
                 
                 const docId = await window.simpleDataManager.createDocument(currentProjectId, docData);
-                console.log('✅ 文檔記錄已創建:', docId);
+                logger.log('✅ 文檔記錄已創建:', docId);
                 
                 // 5. 扣除 Credits（所有頁數）
                 if (window.creditsManager) {
                     await window.creditsManager.deductCredits(filesToProcess.length);
-                    console.log(`💰 已扣除 ${filesToProcess.length} Credits（${filesToProcess.length} 頁）`);
+                    logger.log(`💰 已扣除 ${filesToProcess.length} Credits（${filesToProcess.length} 頁）`);
                 }
                 
                 // 6. 重新載入列表以顯示新文檔
                 await loadDocuments();
                 
                 // 7. 後台處理 AI（處理所有頁面）
-                console.log(`🔍 [DEBUG] 準備調用 processMultiPageFileWithAI`);
-                console.log(`   - 文件數量: ${filesToProcess.length}`);
-                console.log(`   - 文檔ID: ${docId}`);
-                console.log(`   - 文檔類型: ${selectedDocumentType}`);
+                logger.log(`🔍 [DEBUG] 準備調用 processMultiPageFileWithAI`);
+                logger.log(`   - 文件數量: ${filesToProcess.length}`);
+                logger.log(`   - 文檔ID: ${docId}`);
+                logger.log(`   - 文檔類型: ${selectedDocumentType}`);
                 processMultiPageFileWithAI(filesToProcess, docId, selectedDocumentType).catch(err => {
                     console.error('❌ AI 處理失敗:', err);
                 });
@@ -3600,7 +3607,7 @@
                         return pageMatches.length;
                     }
                 } catch (error) {
-                    console.warn('⚠️ 無法讀取 PDF 頁數:', error);
+                    logger.warn('⚠️ 無法讀取 PDF 頁數:', error);
                 }
             }
             
@@ -3622,7 +3629,7 @@
             async add(task, taskName = '') {
                 // 如果超過並發限制，放入隊列
                 if (this.running >= this.maxConcurrent) {
-                    console.log(`📝 ${taskName} 加入排隊（當前運行：${this.running}，隊列：${this.queue.length}）`);
+                    logger.log(`📝 ${taskName} 加入排隊（當前運行：${this.running}，隊列：${this.queue.length}）`);
                     return new Promise((resolve, reject) => {
                         this.queue.push({ task, taskName, resolve, reject });
                     });
@@ -3634,14 +3641,14 @@
             
             async run(task, taskName = '') {
                 this.running++;
-                console.log(`▶️ ${taskName} 開始執行（當前運行：${this.running}，隊列：${this.queue.length}）`);
+                logger.log(`▶️ ${taskName} 開始執行（當前運行：${this.running}，隊列：${this.queue.length}）`);
                 
                 try {
                     const result = await task();
                     return result;
                 } finally {
                     this.running--;
-                    console.log(`✅ ${taskName} 完成（當前運行：${this.running}，隊列：${this.queue.length}）`);
+                    logger.log(`✅ ${taskName} 完成（當前運行：${this.running}，隊列：${this.queue.length}）`);
                     
                     // 從隊列中取出下一個任務
                     if (this.queue.length > 0) {
@@ -3657,7 +3664,7 @@
         
         async function processFileWithAI(file, docId, pages = 1) {
             try {
-                console.log('🤖 開始 AI 處理 (Qwen-VL Max):', file.name, `(${pages} 頁)`);
+                logger.log('🤖 開始 AI 處理 (Qwen-VL Max):', file.name, `(${pages} 頁)`);
                 
                 if (!window.QwenVLMaxProcessor) {
                     throw new Error('AI 處理器未載入');
@@ -3666,7 +3673,7 @@
                 const processor = new window.QwenVLMaxProcessor();
                 const result = await processor.processDocument(file, selectedDocumentType);
                 
-                console.log('✅ AI 處理完成');
+                logger.log('✅ AI 處理完成');
                 
                 await window.simpleDataManager.updateDocument(currentProjectId, docId, {
                     status: 'completed',
@@ -3678,7 +3685,7 @@
                     usage: result.usage
                 });
                 
-                console.log('✅ 文檔狀態已更新');
+                logger.log('✅ 文檔狀態已更新');
                 await loadDocuments();
                 
             } catch (error) {
@@ -3687,16 +3694,16 @@
                 // ✅ 退回 Credits（防止重複退回）
                 if (window.creditsManager && pages > 0 && !refundedDocuments.has(docId)) {
                     try {
-                        console.log(`💰 準備退回 ${pages} Credits（文檔 ID: ${docId}）`);
+                        logger.log(`💰 準備退回 ${pages} Credits（文檔 ID: ${docId}）`);
                         await window.creditsManager.refundCredits(pages);
                         refundedDocuments.add(docId); // 標記已退回
-                        console.log(`✅ 已退回 ${pages} Credits（文檔 ID: ${docId}）`);
-                        console.log(`📋 已退回的文檔列表:`, Array.from(refundedDocuments));
+                        logger.log(`✅ 已退回 ${pages} Credits（文檔 ID: ${docId}）`);
+                        logger.log(`📋 已退回的文檔列表:`, Array.from(refundedDocuments));
                     } catch (refundError) {
                         console.error('❌ 退回 Credits 失敗:', refundError);
                     }
                 } else if (refundedDocuments.has(docId)) {
-                    console.warn(`⚠️ 文檔 ${docId} 的 Credits 已經退回過，跳過重複退回`);
+                    logger.warn(`⚠️ 文檔 ${docId} 的 Credits 已經退回過，跳過重複退回`);
                 }
                 
                 await window.simpleDataManager.updateDocument(currentProjectId, docId, {
@@ -3714,7 +3721,7 @@
         async function processMultiPageFileWithAI(files, docId, documentType) {
             // ✅ 檢查是否正在處理
             if (processingDocuments.has(docId)) {
-                console.warn(`⚠️ 文檔 ${docId} 正在處理中，跳過重複處理`);
+                logger.warn(`⚠️ 文檔 ${docId} 正在處理中，跳過重複處理`);
                 return;
             }
             
@@ -3724,12 +3731,12 @@
                 try {
                     // ✅ 添加到處理鎖
                     processingDocuments.add(docId);
-                    console.log(`🔒 鎖定文檔 ${docId}，開始處理`);
-                    console.log(`🤖 開始多頁 AI 處理 (Qwen-VL Max): ${files.length} 頁`);
-                    console.log(`🔍 [DEBUG] processMultiPageFileWithAI 收到的參數：`);
-                    console.log(`   - documentType 類型: ${typeof documentType}`);
-                    console.log(`   - documentType 值: "${documentType}"`);
-                    console.log(`   - documentType 是否為 undefined: ${documentType === undefined}`);
+                    logger.log(`🔒 鎖定文檔 ${docId}，開始處理`);
+                    logger.log(`🤖 開始多頁 AI 處理 (Qwen-VL Max): ${files.length} 頁`);
+                    logger.log(`🔍 [DEBUG] processMultiPageFileWithAI 收到的參數：`);
+                    logger.log(`   - documentType 類型: ${typeof documentType}`);
+                    logger.log(`   - documentType 值: "${documentType}"`);
+                    logger.log(`   - documentType 是否為 undefined: ${documentType === undefined}`);
                 
                 if (!window.QwenVLMaxProcessor) {
                     throw new Error('AI 處理器未載入');
@@ -3739,7 +3746,7 @@
                 
                 // ✅ 方案 B：使用批量處理方法（批量 OCR + 單次 DeepSeek）
                 if (files.length > 1) {
-                    console.log(`📚 使用批量處理模式（${files.length} 頁）`);
+                    logger.log(`📚 使用批量處理模式（${files.length} 頁）`);
                     
                     // 更新狀態為處理中
                     await window.simpleDataManager.updateDocument(currentProjectId, docId, {
@@ -3747,10 +3754,10 @@
                     });
                     
                     // 批量處理所有頁面（並行處理，無需進度回調）
-                    console.log(`🚀 开始并行处理 ${files.length} 页文档...`);
+                    logger.log(`🚀 开始并行处理 ${files.length} 页文档...`);
                     const result = await processor.processMultiPageDocument(files, documentType);
                     
-                    console.log(`✅ 所有批次处理完成，开始合并结果...`);
+                    logger.log(`✅ 所有批次处理完成，开始合并结果...`);
                     
                     // ✅ 並行處理完成後，更新為 'completed'
                     await window.simpleDataManager.updateDocument(currentProjectId, docId, {
@@ -3764,15 +3771,15 @@
                         usage: result.usage
                     });
                     
-                    console.log(`🎉 文档 ${docId} 已完成处理并标记为 'completed'`);
-                    console.log('✅ 批量處理完成');
+                    logger.log(`🎉 文档 ${docId} 已完成处理并标记为 'completed'`);
+                    logger.log('✅ 批量處理完成');
                     
                     // ✅ 最终刷新UI，显示完成状态
                     await loadDocuments();
                     
                 } else {
                     // 單頁文檔，使用原有邏輯
-                    console.log(`📄 使用單頁處理模式`);
+                    logger.log(`📄 使用單頁處理模式`);
                     
                     await window.simpleDataManager.updateDocument(currentProjectId, docId, {
                         status: 'processing'
@@ -3790,7 +3797,7 @@
                         usage: result.usage
                     });
                     
-                    console.log('✅ 單頁處理完成');
+                    logger.log('✅ 單頁處理完成');
                 }
                 
                 await loadDocuments();
@@ -3801,15 +3808,15 @@
                 // ✅ 退回 Credits（防止重複退回）
                 if (window.creditsManager && files.length > 0 && !refundedDocuments.has(docId)) {
                     try {
-                        console.log(`💰 準備退回 ${files.length} Credits（文檔 ID: ${docId}）`);
+                        logger.log(`💰 準備退回 ${files.length} Credits（文檔 ID: ${docId}）`);
                         await window.creditsManager.refundCredits(files.length);
                         refundedDocuments.add(docId); // 標記已退回
-                        console.log(`✅ 已退回 ${files.length} Credits（文檔 ID: ${docId}）`);
+                        logger.log(`✅ 已退回 ${files.length} Credits（文檔 ID: ${docId}）`);
                     } catch (refundError) {
                         console.error('❌ 退回 Credits 失敗:', refundError);
                     }
                 } else if (refundedDocuments.has(docId)) {
-                    console.warn(`⚠️ 文檔 ${docId} 的 Credits 已經退回過，跳過重複退回`);
+                    logger.warn(`⚠️ 文檔 ${docId} 的 Credits 已經退回過，跳過重複退回`);
                 }
                 
                 await window.simpleDataManager.updateDocument(currentProjectId, docId, {
@@ -3820,7 +3827,7 @@
                 } finally {
                     // ✅ 無論成功或失敗，都釋放鎖
                     processingDocuments.delete(docId);
-                    console.log(`🔓 解鎖文檔 ${docId}，處理完成`);
+                    logger.log(`🔓 解鎖文檔 ${docId}，處理完成`);
                 }
             }, fileName); // ✅ 傳遞文件名用於日誌
         }
@@ -3914,7 +3921,7 @@
         // ==================== 其他功能 ====================
         // ==================== 查看文檔詳情 ====================
         window.viewDocument = function(docId) {
-            console.log('🔍 查看文檔詳情:', docId);
+            logger.log('🔍 查看文檔詳情:', docId);
             if (!currentProjectId) {
                 console.error('❌ 找不到項目 ID');
                 return;
@@ -3928,7 +3935,7 @@
             
             try {
                 await window.simpleDataManager.deleteDocument(currentProjectId, docId);
-                console.log('✅ 文檔已刪除');
+                logger.log('✅ 文檔已刪除');
                 await loadDocuments();
             } catch (error) {
                 console.error('❌ 刪除失敗:', error);
@@ -3950,7 +3957,7 @@
             }
             
             lastSelectedCount = selectedCount;
-            console.log(`📊 更新按鈕: ${selectedCount} 個文檔被選中`);
+            logger.log(`📊 更新按鈕: ${selectedCount} 個文檔被選中`);
             
             // 更新 Delete 按鈕（桌面版和手機版）
             const deleteBtnDesktop = document.getElementById('delete-selected-btn-desktop');
@@ -4013,7 +4020,7 @@
                 });
                 
                 await Promise.all(deletePromises);
-                console.log(`✅ 已刪除 ${count} 個文檔`);
+                logger.log(`✅ 已刪除 ${count} 個文檔`);
                 alert(`成功刪除 ${count} 個文檔`);
                 await loadDocuments();
             } catch (error) {
@@ -4033,7 +4040,7 @@
         };
         
         window.toggleProjectNameEdit = function() {
-            console.log('編輯項目名稱功能待實現');
+            logger.log('編輯項目名稱功能待實現');
         };
         
         // ==================== 創建項目模態框 ====================
@@ -4061,7 +4068,7 @@
             
             try {
                 const newProject = await window.simpleDataManager.createProject(projectName);
-                console.log('✅ 項目已創建:', newProject.id);
+                logger.log('✅ 項目已創建:', newProject.id);
                 window.closeCreateProjectModal();
                 
                 // 觸發側邊欄重新渲染
@@ -4239,15 +4246,15 @@
             if (overlay) {
                 overlay.style.display = 'none';
             }
-            console.log('🔒 菜單已關閉');
+            logger.log('🔒 菜單已關閉');
         };
         
         // 🔄 切換 Export 菜單顯示/隱藏
         window.toggleExportMenu = function() {
-            console.log('🔍 toggleExportMenu 被調用');
+            logger.log('🔍 toggleExportMenu 被調用');
             const menu = document.getElementById('exportMenu');
             const overlay = document.getElementById('exportMenuOverlay');
-            console.log('📋 菜單元素:', menu);
+            logger.log('📋 菜單元素:', menu);
             
             if (!menu) {
                 console.error('❌ 找不到 #exportMenu 元素');
@@ -4262,7 +4269,7 @@
             
             // 獲取選中的文檔
             const checkboxes = document.querySelectorAll('.document-checkbox:checked');
-            console.log('✅ 已選中文檔數量:', checkboxes.length);
+            logger.log('✅ 已選中文檔數量:', checkboxes.length);
             
             if (checkboxes.length === 0) {
                 alert('請先選擇要導出的文檔');
@@ -4270,7 +4277,7 @@
             }
             
             // 更新菜單內容並顯示
-            console.log('🔄 更新菜單內容...');
+            logger.log('🔄 更新菜單內容...');
             updateExportMenuContent();
             
             // 🔥 根據屏幕大小設置菜單樣式
@@ -4287,7 +4294,7 @@
                 menu.style.border = 'none'; // 🔥 無邊框
                 menu.style.boxShadow = 'none'; // 🔥 無陰影
                 menu.style.borderRadius = '12px';
-                console.log('📱 手機版：菜單居中顯示（全白色）');
+                logger.log('📱 手機版：菜單居中顯示（全白色）');
                 
                 // 顯示遮罩
                 if (overlay) {
@@ -4307,7 +4314,7 @@
                     menu.style.minWidth = '280px';
                     menu.style.maxWidth = '400px';
                 }
-                console.log('💻 桌面版：菜單在按鈕下方');
+                logger.log('💻 桌面版：菜單在按鈕下方');
                 
                 // 桌面版不顯示遮罩
                 if (overlay) {
@@ -4318,7 +4325,7 @@
             menu.style.display = 'block';
             menu.classList.add('active');
             
-            console.log('✅ 菜單已顯示');
+            logger.log('✅ 菜單已顯示');
         };
         
         // 🔄 監聽 checkbox 變化，實時更新 Export 菜單
@@ -4335,7 +4342,7 @@
         // ✅ 按類型導出文檔（內部輔助函數）
         async function exportByType(docs, format) {
             if (!docs || docs.length === 0) {
-                console.log('⚠️ 沒有文檔需要導出');
+                logger.log('⚠️ 沒有文檔需要導出');
                 return;
             }
             
@@ -4394,11 +4401,11 @@
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
             
-            console.log(`✅ 已導出: ${fileName}`);
+            logger.log(`✅ 已導出: ${fileName}`);
         }
         
         window.exportDocuments = async function(format) {
-            console.log('📤 開始導出:', format);
+            logger.log('📤 開始導出:', format);
             
             // 🔥 關閉菜單
             closeExportMenu();
@@ -4408,7 +4415,7 @@
                 const selectedCheckboxes = document.querySelectorAll('.document-checkbox:checked');
                 const selectedDocIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.docId);
                 
-                console.log('📋 選中的文檔 ID:', selectedDocIds);
+                logger.log('📋 選中的文檔 ID:', selectedDocIds);
                 
                 let docsToExport;
                 
@@ -4419,7 +4426,7 @@
                         doc.status === 'completed' && 
                         doc.processedData
                     );
-                    console.log(`📋 導出 ${docsToExport.length} 個已勾選的文檔（共選中 ${selectedDocIds.length} 個）`);
+                    logger.log(`📋 導出 ${docsToExport.length} 個已勾選的文檔（共選中 ${selectedDocIds.length} 個）`);
                 } else {
                     // 如果沒有勾選，提示用戶
                     alert('請先選擇要導出的文檔');
@@ -4452,7 +4459,7 @@
                     }
                 });
                 
-                console.log('📊 文檔分組結果:', {
+                logger.log('📊 文檔分組結果:', {
                     bank_statements: groupedDocs.bank_statements.length,
                     invoices: groupedDocs.invoices.length,
                     receipts: groupedDocs.receipts.length,
@@ -4523,7 +4530,7 @@
                                 
                                 fileName = `BankStatement_${dateStr}.xlsx`;
                                 XLSX.writeFile(wb, fileName);
-                                console.log('✅ 銀行對帳單 Excel 文件已下載:', fileName);
+                                logger.log('✅ 銀行對帳單 Excel 文件已下載:', fileName);
                                 exportedCount++;
                             }
                             
@@ -4637,7 +4644,7 @@
                                 
                                 fileName = `Invoice_${dateStr}.xlsx`;
                                 XLSX.writeFile(wb, fileName);
-                                console.log('✅ 發票 Excel 文件已下載:', fileName);
+                                logger.log('✅ 發票 Excel 文件已下載:', fileName);
                                 exportedCount++;
                             }
                             
@@ -4658,10 +4665,10 @@
                         // 使用優化版 ExportOptimizer（如果可用）
                         if (window.ExportOptimizer) {
                             exportContent = ExportOptimizer.generateCSV(docsToExport);
-                            console.log('✅ 使用優化版 CSV 導出');
+                            logger.log('✅ 使用優化版 CSV 導出');
                         } else {
                             exportContent = generateCSV(docsToExport);
-                            console.log('⚠️ 使用舊版 CSV 導出');
+                            logger.log('⚠️ 使用舊版 CSV 導出');
                         }
                         fileName = `vaultcaddy_export_${new Date().toISOString().split('T')[0]}.csv`;
                         mimeType = 'text/csv;charset=utf-8;';
@@ -4673,7 +4680,7 @@
                             exportContent = window.BankStatementExport.generateBankStatementCSV(docsToExport);
                             fileName = `BankStatement_${new Date().toISOString().split('T')[0]}.csv`;
                             mimeType = 'text/csv;charset=utf-8;';
-                            console.log('✅ 標準銀行對帳單 CSV 導出');
+                            logger.log('✅ 標準銀行對帳單 CSV 導出');
                         } else {
                             alert('銀行對帳單導出模塊未載入，請刷新頁面後重試');
                             return;
@@ -4686,7 +4693,7 @@
                             exportContent = window.BankStatementExport.generateUniversalCSV(docsToExport);
                             fileName = `Universal_BankStatement_${new Date().toISOString().split('T')[0]}.csv`;
                             mimeType = 'text/csv;charset=utf-8;';
-                            console.log('✅ 通用 CSV 導出');
+                            logger.log('✅ 通用 CSV 導出');
                         } else {
                             alert('導出模塊未載入，請刷新頁面後重試');
                             return;
@@ -4699,7 +4706,7 @@
                             exportContent = window.BankStatementExport.generateSageCSV(docsToExport);
                             fileName = `Sage_BankStatement_${new Date().toISOString().split('T')[0]}.csv`;
                             mimeType = 'text/csv;charset=utf-8;';
-                            console.log('✅ Sage CSV 導出');
+                            logger.log('✅ Sage CSV 導出');
                         } else {
                             alert('導出模塊未載入，請刷新頁面後重試');
                             return;
@@ -4712,7 +4719,7 @@
                             exportContent = window.BankStatementExport.generateZohoCSV(docsToExport);
                             fileName = `ZohoBooks_BankStatement_${new Date().toISOString().split('T')[0]}.csv`;
                             mimeType = 'text/csv;charset=utf-8;';
-                            console.log('✅ Zoho Books CSV 導出');
+                            logger.log('✅ Zoho Books CSV 導出');
                         } else {
                             alert('導出模塊未載入，請刷新頁面後重試');
                             return;
@@ -4732,14 +4739,14 @@
                         if (xeroBankDocs.length > 0 && window.BankStatementExport) {
                             exportContent = window.BankStatementExport.generateXeroCSV(xeroBankDocs);
                             fileName = `BankStatement_${new Date().toISOString().split('T')[0]}_Xero.csv`;
-                            console.log('✅ Xero CSV 導出（銀行對帳單）');
+                            logger.log('✅ Xero CSV 導出（銀行對帳單）');
                         } else if (xeroInvoiceDocs.length > 0 && window.InvoiceExport) {
                             // 🔥 發票導出 Xero 格式
                             exportContent = window.InvoiceExport.generateXeroCSV ? 
                                 window.InvoiceExport.generateXeroCSV(xeroInvoiceDocs) :
                                 window.InvoiceExport.generateInvoiceSummaryCSV(xeroInvoiceDocs);
                             fileName = `Invoice_${new Date().toISOString().split('T')[0]}_Xero.csv`;
-                            console.log('✅ Xero CSV 導出（發票）');
+                            logger.log('✅ Xero CSV 導出（發票）');
                         } else {
                             alert('沒有可導出的文檔或導出模塊未載入');
                             return;
@@ -4759,14 +4766,14 @@
                         if (qbBankDocs.length > 0 && window.BankStatementExport) {
                             exportContent = window.BankStatementExport.generateQuickBooksCSV(qbBankDocs);
                             fileName = `BankStatement_${new Date().toISOString().split('T')[0]}_QuickBooks.csv`;
-                            console.log('✅ QuickBooks CSV 導出（銀行對帳單）');
+                            logger.log('✅ QuickBooks CSV 導出（銀行對帳單）');
                         } else if (qbInvoiceDocs.length > 0 && window.InvoiceExport) {
                             // 🔥 發票導出 QuickBooks 格式
                             exportContent = window.InvoiceExport.generateQuickBooksCSV ? 
                                 window.InvoiceExport.generateQuickBooksCSV(qbInvoiceDocs) :
                                 window.InvoiceExport.generateInvoiceSummaryCSV(qbInvoiceDocs);
                             fileName = `Invoice_${new Date().toISOString().split('T')[0]}_QuickBooks.csv`;
-                            console.log('✅ QuickBooks CSV 導出（發票）');
+                            logger.log('✅ QuickBooks CSV 導出（發票）');
                         } else {
                             alert('沒有可導出的文檔或導出模塊未載入');
                             return;
@@ -4780,7 +4787,7 @@
                             exportContent = window.InvoiceExport.generateInvoiceSummaryCSV(docsToExport);
                             fileName = `Invoice_Summary_${new Date().toISOString().split('T')[0]}.csv`;
                             mimeType = 'text/csv;charset=utf-8;';
-                            console.log('✅ 發票總數 CSV 導出');
+                            logger.log('✅ 發票總數 CSV 導出');
                         } else {
                             alert('發票導出模塊未載入，請刷新頁面後重試');
                             return;
@@ -4793,7 +4800,7 @@
                             exportContent = window.InvoiceExport.generateUniversalCSV(docsToExport);
                             fileName = `Invoice_Universal_${new Date().toISOString().split('T')[0]}.csv`;
                             mimeType = 'text/csv;charset=utf-8;';
-                            console.log('✅ 通用發票 CSV 導出');
+                            logger.log('✅ 通用發票 CSV 導出');
                         } else {
                             alert('通用發票導出模塊未載入，請刷新頁面後重試');
                             return;
@@ -4806,7 +4813,7 @@
                             exportContent = window.InvoiceExport.generateSageCSV(docsToExport);
                             fileName = `Invoice_Sage_${new Date().toISOString().split('T')[0]}.csv`;
                             mimeType = 'text/csv;charset=utf-8;';
-                            console.log('✅ Sage 發票 CSV 導出');
+                            logger.log('✅ Sage 發票 CSV 導出');
                         } else {
                             alert('Sage 發票導出模塊未載入，請刷新頁面後重試');
                             return;
@@ -4819,7 +4826,7 @@
                             exportContent = window.InvoiceExport.generateZohoCSV(docsToExport);
                             fileName = `Invoice_ZohoBooks_${new Date().toISOString().split('T')[0]}.csv`;
                             mimeType = 'text/csv;charset=utf-8;';
-                            console.log('✅ Zoho Books 發票 CSV 導出');
+                            logger.log('✅ Zoho Books 發票 CSV 導出');
                         } else {
                             alert('Zoho Books 發票導出模塊未載入，請刷新頁面後重試');
                             return;
@@ -4850,7 +4857,7 @@
                             
                             fileName = `Invoice_Summary_${new Date().toISOString().split('T')[0]}.xlsx`;
                             XLSX.writeFile(wb, fileName);
-                            console.log('✅ 發票標準 Excel 已下載');
+                            logger.log('✅ 發票標準 Excel 已下載');
                             return;
                         } catch (error) {
                             console.error('❌ 發票 Excel 導出失敗:', error);
@@ -4915,7 +4922,7 @@
                             
                             fileName = `Invoice_Detailed_${new Date().toISOString().split('T')[0]}.xlsx`;
                             XLSX.writeFile(wb, fileName);
-                            console.log('✅ 發票完整 Excel 已下載');
+                            logger.log('✅ 發票完整 Excel 已下載');
                             return;
                         } catch (error) {
                             console.error('❌ 發票 Excel 導出失敗:', error);
@@ -4962,7 +4969,7 @@
                                 link.href = URL.createObjectURL(blob);
                                 link.download = `BankStatement_${dateStr}.qbo`;
                                 link.click();
-                                console.log('✅ 銀行對帳單 QBO 文件已下載');
+                                logger.log('✅ 銀行對帳單 QBO 文件已下載');
                                 exportedCount++;
                             }
                             
@@ -4976,7 +4983,7 @@
                                 link.href = URL.createObjectURL(blob);
                                 link.download = `Invoice_${dateStr}.qbo`;
                                 link.click();
-                                console.log('✅ 發票 QBO 文件已下載');
+                                logger.log('✅ 發票 QBO 文件已下載');
                                 exportedCount++;
                             }
                             
@@ -5007,7 +5014,7 @@
                 // 隱藏下拉菜單
                 toggleExportMenu();
                 
-                console.log('✅ 導出成功:', fileName);
+                logger.log('✅ 導出成功:', fileName);
                 
             } catch (error) {
                 console.error('❌ 導出失敗:', error);
@@ -5290,14 +5297,14 @@
             const rows = tbody.getElementsByTagName('tr');
             const term = searchTerm.toLowerCase().trim();
             
-            console.log(`🔍 搜尋文檔: "${term}", 總共 ${rows.length} 行`);
+            logger.log(`🔍 搜尋文檔: "${term}", 總共 ${rows.length} 行`);
             
             // 如果搜尋欄是空的，顯示所有行
             if (term === '') {
                 for (let row of rows) {
                     row.style.display = '';
                 }
-                console.log(`✅ 顯示所有 ${rows.length} 個文檔`);
+                logger.log(`✅ 顯示所有 ${rows.length} 個文檔`);
                 updateDocumentTotal(); // 更新總計
                 return;
             }
@@ -5322,18 +5329,18 @@
                     rowText += cell.textContent.toLowerCase() + ' ';
                 }
                 
-                console.log(`🔍 行內容: "${rowText.substring(0, 50)}..."`);
+                logger.log(`🔍 行內容: "${rowText.substring(0, 50)}..."`);
                 
                 if (rowText.includes(term)) {
                     row.style.display = '';
                     visibleCount++;
-                    console.log(`✅ 匹配！`);
+                    logger.log(`✅ 匹配！`);
                 } else {
                     row.style.display = 'none';
                 }
             }
             
-            console.log(`✅ 顯示 ${visibleCount} 個文檔（搜尋: "${term}"）`);
+            logger.log(`✅ 顯示 ${visibleCount} 個文檔（搜尋: "${term}"）`);
             updateDocumentTotal(); // 更新總計
         }
         
@@ -5346,7 +5353,7 @@
             const summaryDiv = document.getElementById('invoice-summary');
             
             if (!tbody | !summaryDiv) {
-                console.log('⚠️ 找不到表格或總計元素');
+                logger.log('⚠️ 找不到表格或總計元素');
                 return;
             }
             
@@ -5389,7 +5396,7 @@
                 summaryDiv.style.display = 'none';
             }
             
-            console.log(`📊 發票統計: ${invoiceCount} 張, 總額: $${totalAmount.toFixed(2)}`);
+            logger.log(`📊 發票統計: ${invoiceCount} 張, 總額: $${totalAmount.toFixed(2)}`);
         }
         
         // 暴露到全局
@@ -5418,11 +5425,11 @@
 </div>
 <!-- 🔥 漢堡菜單超級簡單修復方案 -->
 <script>
-        console.log('🔥 開始初始化漢堡菜單...');
+        logger.log('🔥 開始初始化漢堡菜單...');
         
         // 打開側邊欄函數
         function openSidebar() {
-            console.log('🔵 打開側邊欄');
+            logger.log('🔵 打開側邊欄');
             const sidebar = document.getElementById('mobile-sidebar');
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
@@ -5431,13 +5438,13 @@
                 overlay.style.display = 'block';
                 overlay.style.opacity = '1';
                 document.body.style.overflow = 'hidden';
-                console.log('✅ 側邊欄已打開');
+                logger.log('✅ 側邊欄已打開');
             }
         }
         
         // 關閉側邊欄函數
         function closeSidebar() {
-            console.log('🔵 關閉側邊欄');
+            logger.log('🔵 關閉側邊欄');
             const sidebar = document.getElementById('mobile-sidebar');
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
@@ -5448,7 +5455,7 @@
                     overlay.style.display = 'none';
                 }, 300); // 等待動畫完成（與 CSS transition 一致）
                 document.body.style.overflow = 'auto';
-                console.log('✅ 側邊欄已關閉');
+                logger.log('✅ 側邊欄已關閉');
             }
         }
         
@@ -5458,40 +5465,40 @@
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
             if (!btn | !overlay) {
-                console.log('⏳ 元素未找到，200ms後重試');
+                logger.log('⏳ 元素未找到，200ms後重試');
                 setTimeout(simpleInitMenu, 200);
                 return;
             }
             
-            console.log('✅ 找到所有元素！');
+            logger.log('✅ 找到所有元素！');
             
             // 按鈕點擊處理
             btn.addEventListener('click', function() {
-                console.log('🔵 按鈕被點擊！');
+                logger.log('🔵 按鈕被點擊！');
                 openSidebar();
             });
             
             // 觸摸處理
             btn.addEventListener('touchend', function(e) {
                 e.preventDefault();
-                console.log('🔵 觸摸事件！');
+                logger.log('🔵 觸摸事件！');
                 openSidebar();
             });
             
             // 遮罩點擊關閉
             overlay.addEventListener('click', function() {
-                console.log('🔵 點擊遮罩關閉');
+                logger.log('🔵 點擊遮罩關閉');
                 closeSidebar();
             });
             
             // 遮罩觸摸關閉
             overlay.addEventListener('touchend', function(e) {
                 e.preventDefault();
-                console.log('🔵 觸摸遮罩關閉');
+                logger.log('🔵 觸摸遮罩關閉');
                 closeSidebar();
             });
             
-            console.log('✅ 所有事件監聽器已綁定');
+            logger.log('✅ 所有事件監聽器已綁定');
         }
         
         // 立即嘗試初始化
@@ -5536,7 +5543,7 @@
             flatpickr(input, flatpickrConfig);
         });
         
-        console.log("✅ Flatpickr 日期選擇器初始化完成（繁體中文）");
+        logger.log("✅ Flatpickr 日期選擇器初始化完成（繁體中文）");
         
         // ==================== 分頁功能初始化 ====================
         // 初始化分頁參數
@@ -5553,7 +5560,7 @@
             rowsPerPageSelect.addEventListener('change', function(e) {
                 window.rowsPerPage = parseInt(e.target.value);
                 window.currentPage = 1;  // 重置到第一頁
-                console.log('📄 每頁行數改變:', window.rowsPerPage);
+                logger.log('📄 每頁行數改變:', window.rowsPerPage);
                 
                 // 重新渲染文檔列表
                 if (window.renderDocuments) {
@@ -5564,12 +5571,12 @@
         
         // 監聽分頁按鈕
         const paginationButtons = document.querySelectorAll('.pagination-controls button');
-        console.log('🔍 [调试] 找到分页按钮数量:', paginationButtons.length);
+        logger.log('🔍 [调试] 找到分页按钮数量:', paginationButtons.length);
         
         if (paginationButtons.length === 4) {
             // 第一頁
             paginationButtons[0].onclick = function() {
-                console.log('🔵 点击：第一页');
+                logger.log('🔵 点击：第一页');
                 if (window.currentPage !== 1) {
                     window.currentPage = 1;
                     if (window.renderDocuments) {
@@ -5580,7 +5587,7 @@
             
             // 上一頁
             paginationButtons[1].onclick = function() {
-                console.log('🔵 点击：上一页，当前页:', window.currentPage);
+                logger.log('🔵 点击：上一页，当前页:', window.currentPage);
                 if (window.currentPage > 1) {
                     window.currentPage--;
                     if (window.renderDocuments) {
@@ -5592,10 +5599,10 @@
             // 下一頁
             paginationButtons[2].onclick = function() {
                 const totalPages = Math.ceil((window.allDocuments || []).length / window.rowsPerPage);
-                console.log('🟢 点击：下一页，当前页:', window.currentPage, '总页数:', totalPages);
+                logger.log('🟢 点击：下一页，当前页:', window.currentPage, '总页数:', totalPages);
                 if (window.currentPage < totalPages) {
                     window.currentPage++;
-                    console.log('🟢 跳转到页面:', window.currentPage);
+                    logger.log('🟢 跳转到页面:', window.currentPage);
                     if (window.renderDocuments) {
                         window.renderDocuments();
                     }
@@ -5605,7 +5612,7 @@
             // 最後一頁
             paginationButtons[3].onclick = function() {
                 const totalPages = Math.ceil((window.allDocuments || []).length / window.rowsPerPage);
-                console.log('🔴 点击：最后一页，总页数:', totalPages);
+                logger.log('🔴 点击：最后一页，总页数:', totalPages);
                 if (window.currentPage !== totalPages && totalPages > 0) {
                     window.currentPage = totalPages;
                     if (window.renderDocuments) {
@@ -5614,12 +5621,12 @@
                 }
             };
             
-            console.log('✅ 分页按钮事件绑定完成');
+            logger.log('✅ 分页按钮事件绑定完成');
         } else {
             console.error('❌ 分页按钮数量不正确:', paginationButtons.length);
         }
         
-        console.log("✅ 分頁功能初始化完成");
+        logger.log("✅ 分頁功能初始化完成");
     });
 </script>
 

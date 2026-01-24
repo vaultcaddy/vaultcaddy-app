@@ -46,6 +46,13 @@
     <link rel="stylesheet" href="../pages.css">
     <link rel="stylesheet" href="../dashboard.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- 优化后的公共组件 (2026-01-23) -->
+    <link rel="stylesheet" href="../user-menu-styles.css">
+    <script defer src="../logger.js"></script>
+    <script defer src="../init-manager.js"></script>
+    <script defer src="../user-menu-manager.js"></script>
+    <script defer src="../mobile-menu-manager.js"></script>
     <script defer src="../config.js"></script>
     <script defer src="../translations.js"></script>
     
@@ -998,7 +1005,7 @@
     <script>
         // 即座に実行：確保ページ可見
         (function() {
-            console.log('🚀 Billingページ即座に初期化...');
+            logger.log('🚀 Billingページ即座に初期化...');
             
             // 確保body可見
             document.body.style.display = 'block';
@@ -1025,7 +1032,7 @@
                 mainContent.style.visibility = 'visible';
             }
             
-            console.log('✅ Billingページ即座に初期化完了');
+            logger.log('✅ Billingページ即座に初期化完了');
         })();
     </script>
     
@@ -1201,7 +1208,7 @@
     <!-- ✅ index.html 動態更新ユーザーステータス -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('✅ index.html 初期化');
+            logger.log('✅ index.html 初期化');
             
             let userCredits = 0;
             let userEmail = '';
@@ -1222,21 +1229,21 @@
             
             // 🔥 ハンバーガーメニュー機能（即座に実行，ない待機 DOMContentLoaded）
             (function() {
-                console.log('🔵 初期化ハンバーガーメニュー...');
+                logger.log('🔵 初期化ハンバーガーメニュー...');
                 
                 // 開くサイドバー
                 window.openMobileSidebar = function() {
-                    console.log('🔵 openMobileSidebar 呼び出された');
+                    logger.log('🔵 openMobileSidebar 呼び出された');
                     const sidebar = document.getElementById('mobile-sidebar');
                     const overlay = document.getElementById('mobile-sidebar-overlay');
-                    console.log('🔵 sidebar:', sidebar);
-                    console.log('🔵 overlay:', overlay);
+                    logger.log('🔵 sidebar:', sidebar);
+                    logger.log('🔵 overlay:', overlay);
                     
                     if (sidebar && overlay) {
                         sidebar.style.left = '0';
                         overlay.style.display = 'block';
                         document.body.style.overflow = 'hidden';
-                        console.log('✅ サイドバー開いた');
+                        logger.log('✅ サイドバー開いた');
                     } else {
                         console.error('❌ 見つかりませんサイドバーまたはマスク要素');
                     }
@@ -1244,7 +1251,7 @@
                 
                 // 關閉サイドバー
                 window.closeMobileSidebar = function() {
-                    console.log('🔵 closeMobileSidebar 呼び出された');
+                    logger.log('🔵 closeMobileSidebar 呼び出された');
                     const sidebar = document.getElementById('mobile-sidebar');
                     const overlay = document.getElementById('mobile-sidebar-overlay');
                     
@@ -1252,12 +1259,12 @@
                         sidebar.style.left = '-100%';
                         overlay.style.display = 'none';
                         document.body.style.overflow = 'auto';
-                        console.log('✅ サイドバー已關閉');
+                        logger.log('✅ サイドバー已關閉');
                     }
                 };
                 
                 // ハンバーガーメニューボタン使用 onclick，無需額外綁定
-                console.log('✅ ハンバーガーメニュー機能已就緒（使用 onclick）');
+                logger.log('✅ ハンバーガーメニュー機能已就緒（使用 onclick）');
             })();
                 
                 // モバイル版自動カルーセル（僅でモバイル版啟用）
@@ -1306,7 +1313,7 @@
                     if (window.simpleDataManager && window.simpleDataManager.initialized) {
                         try {
                             userCredits = await window.simpleDataManager.getUserCredits();
-                            console.log('✅ 即座に取得 Credits:', userCredits);
+                            logger.log('✅ 即座に取得 Credits:', userCredits);
                         } catch (error) {
                             console.error('❌ 取得失敗 Credits:', error);
                         }
@@ -1366,19 +1373,19 @@
                                 if (userDoc) {
                                     userDisplayName = userDoc.displayName || userDisplayName;
                                     userCredits = userDoc.credits || 0;
-                                    console.log('✅ index.html 取得 Credits:', userCredits);
+                                    logger.log('✅ index.html 取得 Credits:', userCredits);
                                 }
                             } catch (error) {
-                                console.log('⚠️ 無法から Firestore 取得ユーザー資料:', error);
+                                logger.log('⚠️ 無法から Firestore 取得ユーザー資料:', error);
                             }
                         } else {
-                            console.log('⏳ SimpleDataManager 尚未初期化，待機中...');
+                            logger.log('⏳ SimpleDataManager 尚未初期化，待機中...');
                             // 延遲再試行
                             setTimeout(async () => {
                                 if (window.simpleDataManager && window.simpleDataManager.initialized) {
                                     try {
                                         userCredits = await window.simpleDataManager.getUserCredits();
-                                        console.log('✅ 遅延取得 Credits:', userCredits);
+                                        logger.log('✅ 遅延取得 Credits:', userCredits);
                                     } catch (error) {
                                         console.error('❌ 遅延取得失敗:', error);
                                     }
@@ -1387,23 +1394,23 @@
                         }
                         
                         const userInitial = getUserInitial();
-                        console.log(`👤 ユーザー頭テキスト: "${userInitial}" (displayName: "${userDisplayName}")`);
+                        logger.log(`👤 ユーザー頭テキスト: "${userInitial}" (displayName: "${userDisplayName}")`);
                         
                         userMenu.innerHTML = `
-                            <div onclick="toggleDropdown()" style="cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
-                                <div style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem; opacity: 1; transition: opacity 0.3s;">${userInitial}</div>
+                            <div onclick="toggleDropdown()" class="user-menu-trigger">
+                                <div class="user-avatar">${userInitial}</div>
                             </div>
                         `;
-                        console.log('✅ ユーザー已ログイン，顯示頭像');
+                        logger.log('✅ ユーザー已ログイン，顯示頭像');
                     } else {
                         // ✅ 未ログイン：顯示ログインボタン
                         userMenu.innerHTML = `
-                            <button onclick="window.location.href='auth.html'" style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.875rem;" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">ログイン</button>
+                            <button onclick="window.location.href='auth.html'" class="login-button">ログイン</button>
                         `;
-                        console.log('✅ ユーザー未ログイン，顯示ログインボタン');
+                        logger.log('✅ ユーザー未ログイン，顯示ログインボタン');
                     }
                 } catch (e) {
-                    console.log('❌ 無法更新ユーザーメニュー:', e);
+                    logger.log('❌ 無法更新ユーザーメニュー:', e);
                 }
             }
             
@@ -1525,7 +1532,7 @@
         }
         
         function showAuthNotificationInBilling() {
-            console.log('💡 で Billing ページ顯示身份検証提示');
+            logger.log('💡 で Billing ページ顯示身份検証提示');
             
             const notification = document.createElement('div');
             notification.id = 'billing-auth-notification';
@@ -1549,7 +1556,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Billing ページ読み込み中...');
+            logger.log('Billing ページ読み込み中...');
             
             // 🔥 モバイル版強制修改定價カード寬度
             function forceMobilePricingWidth() {
@@ -1563,7 +1570,7 @@
                         monthlyPlan.style.width = '100%';
                         monthlyPlan.style.marginLeft = '0';
                         monthlyPlan.style.marginRight = '0';
-                        console.log('✅ 月払いカード寬度已強制設として 100%');
+                        logger.log('✅ 月払いカード寬度已強制設として 100%');
                     }
                     
                     if (yearlyPlan) {
@@ -1571,20 +1578,20 @@
                         yearlyPlan.style.width = '100%';
                         yearlyPlan.style.marginLeft = '0';
                         yearlyPlan.style.marginRight = '0';
-                        console.log('✅ 年払いカード寬度已強制設として 100%');
+                        logger.log('✅ 年払いカード寬度已強制設として 100%');
                     }
                     
                     if (pricingContainer) {
                         pricingContainer.style.padding = '0';
                         pricingContainer.style.maxWidth = '100%';
-                        console.log('✅ 定價容器內距已調整');
+                        logger.log('✅ 定價容器內距已調整');
                     }
                     
                     // 調整 plans-section の padding
                     const plansSection = document.querySelector('.plans-section');
                     if (plansSection) {
                         plansSection.style.padding = '0.25rem'; // 左右各留 0.25rem 边距
-                        console.log('✅ plans-section 內距已調整として 0.25rem');
+                        logger.log('✅ plans-section 內距已調整として 0.25rem');
                     }
                 }
             }
@@ -1607,7 +1614,7 @@
             
             // 監聽言語變更事件
             window.addEventListener('languageChanged', function(e) {
-                console.log('Billing: 言語已變更として', e.detail.language);
+                logger.log('Billing: 言語已變更として', e.detail.language);
                 // 重新應用翻譯
                 if (window.languageManager) {
                     window.languageManager.loadLanguage(e.detail.language);
@@ -1616,7 +1623,7 @@
         });
 
         function initBillingPage() {
-            console.log('Billing page initialized');
+            logger.log('Billing page initialized');
         }
 
         // 管理プラン
@@ -1626,7 +1633,7 @@
 
         // クレジット購入
         function purchaseCredits(credits, price) {
-            console.log(`購買 ${credits} credits，価格 $${price}`);
+            logger.log(`購買 ${credits} credits，価格 $${price}`);
             
             // 使用 StripeManager 処理購買
             if (window.StripeManager) {
@@ -1661,7 +1668,7 @@
 
         // ✅ 統一の訂閱プラン函數（2025-11-22 更新）
         function subscribeToPlan(planType) {
-            console.log(`開始 ${planType} プラン訂閱流程`);
+            logger.log(`開始 ${planType} プラン訂閱流程`);
             
             // 使用 StripeManager 処理訂閱
             if (window.StripeManager && window.StripeManager.subscribeToPlan) {
@@ -1712,12 +1719,12 @@
                 return;
             }
             
-            console.log('=== 訂閱詳細信息 ===');
-            console.log('請求週期:', planType === 'yearly' ? '年費' : '月費');
-            console.log('Credits:', creditsInfo.credits);
-            console.log('有效期:', creditsInfo.duration);
-            console.log('価格:', creditsInfo.displayPrice);
-            console.log('支付連結:', paymentLink);
+            logger.log('=== 訂閱詳細信息 ===');
+            logger.log('請求週期:', planType === 'yearly' ? '年費' : '月費');
+            logger.log('Credits:', creditsInfo.credits);
+            logger.log('有效期:', creditsInfo.duration);
+            logger.log('価格:', creditsInfo.displayPrice);
+            logger.log('支付連結:', paymentLink);
             
             // 顯示確認訊息
             const confirmMessage = `確認訂閱 VaultCaddy Pro (${planType === 'yearly' ? '年費' : '月費'})？
@@ -1765,7 +1772,7 @@
             if (pendingSubscription) {
                 try {
                     const subscription = JSON.parse(pendingSubscription);
-                    console.log('檢測まで待処理の訂閱:', subscription);
+                    logger.log('檢測まで待処理の訂閱:', subscription);
                     
                     // 授予 Credits
                     grantSubscriptionCredits(subscription);
@@ -1809,8 +1816,8 @@
             localStorage.setItem('creditsExpiry', expiryDate.toISOString());
             localStorage.setItem('subscriptionCredits', subscription.credits.toString());
             
-            console.log(`已授予 ${subscription.credits} Credits，新残高: ${newCredits}`);
-            console.log(`Credits まで期時間: ${expiryDate.toLocaleDateString()}`);
+            logger.log(`已授予 ${subscription.credits} Credits，新残高: ${newCredits}`);
+            logger.log(`Credits まで期時間: ${expiryDate.toLocaleDateString()}`);
             
             // 更新 UI 顯示
             const creditsElements = document.querySelectorAll('.stat-value');
@@ -1829,14 +1836,14 @@
                 const expiryDate = new Date(creditsExpiry);
                 const now = new Date();
                 
-                console.log('Credits チェック：');
-                console.log('まで期時間:', expiryDate.toLocaleDateString());
-                console.log('當前時間:', now.toLocaleDateString());
-                console.log('訂閱 Credits:', subscriptionCredits);
+                logger.log('Credits チェック：');
+                logger.log('まで期時間:', expiryDate.toLocaleDateString());
+                logger.log('當前時間:', now.toLocaleDateString());
+                logger.log('訂閱 Credits:', subscriptionCredits);
                 
                 if (now > expiryDate) {
                     // Credits 已過期，削除訂閱 Credits
-                    console.log('Credits 已過期，正で削除...');
+                    logger.log('Credits 已過期，正で削除...');
                     
                     const currentCredits = parseInt(localStorage.getItem('userCredits') || '0');
                     const newCredits = Math.max(0, currentCredits - subscriptionCredits);
@@ -1863,11 +1870,11 @@
                         );
                     }
                     
-                    console.log(`已削除 ${subscriptionCredits} 過期 Credits，新残高: ${newCredits}`);
+                    logger.log(`已削除 ${subscriptionCredits} 過期 Credits，新残高: ${newCredits}`);
                 } else {
                     // Credits 尚未過期，顯示剩餘時間
                     const timeLeft = Math.ceil((expiryDate - now) / (1000 * 60 * 60 * 24));
-                    console.log(`訂閱 Credits 還有 ${timeLeft} 天まで期`);
+                    logger.log(`訂閱 Credits 還有 ${timeLeft} 天まで期`);
                 }
             }
         }
@@ -1961,11 +1968,11 @@
 
     <!-- 🔥 ハンバーガーメニュー超級簡單修復プラン -->
     <script>
-        console.log('🔥 開始初期化ハンバーガーメニュー...');
+        logger.log('🔥 開始初期化ハンバーガーメニュー...');
         
         // 開くサイドバー函數
         function openSidebar() {
-            console.log('🔵 開くサイドバー');
+            logger.log('🔵 開くサイドバー');
             const sidebar = document.getElementById('mobile-sidebar');
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
@@ -1974,13 +1981,13 @@
                 overlay.style.display = 'block';
                 overlay.style.opacity = '1';
                 document.body.style.overflow = 'hidden';
-                console.log('✅ サイドバー開いた');
+                logger.log('✅ サイドバー開いた');
             }
         }
         
         // 關閉サイドバー函數
         function closeSidebar() {
-            console.log('🔵 關閉サイドバー');
+            logger.log('🔵 關閉サイドバー');
             const sidebar = document.getElementById('mobile-sidebar');
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
@@ -1991,7 +1998,7 @@
                     overlay.style.display = 'none';
                 }, 300); // 待機動畫完了（と CSS transition 一致）
                 document.body.style.overflow = 'auto';
-                console.log('✅ サイドバー已關閉');
+                logger.log('✅ サイドバー已關閉');
             }
         }
         
@@ -2001,40 +2008,40 @@
             const overlay = document.getElementById('mobile-sidebar-overlay');
             
             if (!btn || !overlay) {
-                console.log('⏳ 要素未找まで，200ms後再試行');
+                logger.log('⏳ 要素未找まで，200ms後再試行');
                 setTimeout(simpleInitMenu, 200);
                 return;
             }
             
-            console.log('✅ 找まですべて要素！');
+            logger.log('✅ 找まですべて要素！');
             
             // ボタンクリック処理
             btn.addEventListener('click', function() {
-                console.log('🔵 ボタン被クリック！');
+                logger.log('🔵 ボタン被クリック！');
                 openSidebar();
             });
             
             // タッチ処理
             btn.addEventListener('touchend', function(e) {
                 e.preventDefault();
-                console.log('🔵 タッチ事件！');
+                logger.log('🔵 タッチ事件！');
                 openSidebar();
             });
             
             // マスククリック關閉
             overlay.addEventListener('click', function() {
-                console.log('🔵 クリックマスク關閉');
+                logger.log('🔵 クリックマスク關閉');
                 closeSidebar();
             });
             
             // マスクタッチ關閉
             overlay.addEventListener('touchend', function(e) {
                 e.preventDefault();
-                console.log('🔵 タッチマスク關閉');
+                logger.log('🔵 タッチマスク關閉');
                 closeSidebar();
             });
             
-            console.log('✅ すべて事件監聽器已綁定');
+            logger.log('✅ すべて事件監聽器已綁定');
         }
         
         // 即座に嘗試初期化
@@ -2057,7 +2064,7 @@
          * @param {boolean} isTest - 是否として測試模式（可選，默認 false）
          */
         async function createCheckoutSession(planType, event, isTest = false) {
-            console.log(`🛒 作成 ${planType} 訂閱...`, { isTest });
+            logger.log(`🛒 作成 ${planType} 訂閱...`, { isTest });
             
             // チェックユーザー是否登錄
             if (!window.simpleAuth || !window.simpleAuth.isLoggedIn()) {
@@ -2083,12 +2090,12 @@
                 const userEmail = currentUser.email;
                 const userId = currentUser.uid;
                 
-                console.log(`👤 ユーザー信息:`, { userEmail, userId });
+                logger.log(`👤 ユーザー信息:`, { userEmail, userId });
                 
                 // 調用 Firebase Function 作成 Checkout Session
                 const createSession = firebase.functions().httpsCallable('createStripeCheckoutSession');
                 
-                console.log(`📞 調用 Firebase Function...`, { planType, userId, email: userEmail, isTest });
+                logger.log(`📞 調用 Firebase Function...`, { planType, userId, email: userEmail, isTest });
                 const result = await createSession({
                     planType: planType,
                     userId: userId,
@@ -2096,7 +2103,7 @@
                     isTest: isTest  // 🧪 傳遞測試模式標記
                 });
                 
-                console.log(`✅ Checkout Session 作成成功:`, result.data);
+                logger.log(`✅ Checkout Session 作成成功:`, result.data);
                 
                 // 跳轉まで Stripe Checkout
                 if (result.data && result.data.url) {
@@ -2195,14 +2202,14 @@
             // 保存まで Firebase
             try {
                 const projectData = await window.simpleDataManager.createProject(projectName);
-                console.log('✅ プロジェクト已保存まで Firebase:', projectData);
+                logger.log('✅ プロジェクト已保存まで Firebase:', projectData);
                 
                 // 關閉モーダル
                 closeCreateProjectModal();
                 
                 // 🔥 修復：使用 projectData.id 而非 projectData 本身
                 const projectId = projectData.id;
-                console.log('🚀 跳轉まで新プロジェクトページ:', projectId);
+                logger.log('🚀 跳轉まで新プロジェクトページ:', projectId);
                 
                 // 跳轉まで新プロジェクトページ
                 window.location.href = `firstproject.html?project=${projectId}`;
