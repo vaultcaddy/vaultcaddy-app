@@ -702,6 +702,268 @@
             color: #1f2937;
         }
         
+        /* 🎨 優化：默認隱藏次要列（適配所有屏幕，避免滾動） */
+        
+        /* 列結構（從左到右）：
+         * 1. checkbox（已對賬）✅ 保留
+         * 2. date（日期）✅ 保留
+         * 3. type（類型）❌ 隱藏
+         * 4. description（描述）✅ 保留
+         * 5. payee（收款人）❌ 隱藏（大多數銀行不單獨顯示，已包含在描述中）
+         * 6. reference（參考編號）❌ 隱藏
+         * 7. check#（支票號）❌ 隱藏
+         * 8. category（分類）✅ 保留（用戶需要）
+         * 9. amount（金額）✅ 保留
+         * 10. balance（余額）✅ 保留
+         * 11. attachment（附件）❌ 隱藏
+         * 12. actions（操作）✅ 保留
+         */
+        
+        /* 默認隱藏次要列 */
+        .type-cell,
+        .payee-cell,
+        .ref-cell,
+        .check-cell,
+        .attachment-cell,
+        .transactions-table th:nth-child(3),  /* Type header */
+        .transactions-table th:nth-child(5),  /* Payee header - 隱藏（2026-01-11：大多數銀行對賬單不單獨顯示） */
+        .transactions-table th:nth-child(6),  /* Reference header */
+        .transactions-table th:nth-child(7),  /* Check# header */
+        .transactions-table th:nth-child(11)  /* Attachment header */
+        {
+            display: none !important;
+        }
+        
+        /* ✅ 分類列始終顯示（用戶需要） */
+        .category-cell,
+        .transactions-table th:nth-child(8) {
+            display: table-cell !important;
+        }
+        
+        /* 🔍 超大屏幕（>2000px）：顯示所有列 */
+        @media (min-width: 2000px) {
+            .type-cell,
+            .ref-cell,
+            .check-cell,
+            .transactions-table th:nth-child(3),  /* Type header */
+            .transactions-table th:nth-child(6),  /* Reference header */
+            .transactions-table th:nth-child(7)   /* Check# header */
+            {
+                display: table-cell !important;
+            }
+        }
+        
+        /* 🔍 大屏幕（>1600px）：顯示部分列 */
+        @media (min-width: 1600px) and (max-width: 1999px) {
+            .type-cell,
+            .transactions-table th:nth-child(3)  /* Type header */
+            {
+                display: table-cell !important;
+            }
+        }
+        
+        /* 📱 平板（<1400px）：無需額外隱藏（payee 已在默認隱藏列表中） */
+        
+        /* 📱 小屏（<1200px）：極簡模式 */
+        @media (max-width: 1200px) {
+            /* 分類已默認隱藏，無需額外處理 */
+        }
+        
+        /* 🎨 顯示隱藏列提示 */
+        .transactions-section::before {
+            content: '💡 精簡模式：已隱藏次要欄位（類型、參考編號、支票號、附件）。📊 如需查看完整數據（包括備注、附件等），請點擊頂部「Export」按鈕導出。';
+            display: block;
+            padding: 0.75rem 1rem;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            color: #1e40af;
+            font-size: 0.8rem;
+            text-align: center;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+        
+        /* 大屏幕更新提示 */
+        @media (min-width: 1600px) {
+            .transactions-section::before {
+                content: '✅ 標準模式：顯示類型欄位。已隱藏：參考編號、支票號、附件。';
+                background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+                color: #166534;
+                border-color: #bbf7d0;
+            }
+        }
+        
+        @media (min-width: 2000px) {
+            .transactions-section::before {
+                content: '🎉 完整模式：顯示所有欄位（已隱藏附件圖標以保持簡潔）。';
+                background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+                color: #92400e;
+                border-color: #fcd34d;
+            }
+        }
+        
+        /* 🎨 設計大師美化：表頭更醒目 */
+        .transactions-table thead {
+            background: #f3f4f6;  /* 更深的背景色 */
+            border-bottom: 2px solid #d1d5db;  /* 更粗的底部邊框 */
+        }
+        
+        .transactions-table th {
+            padding: 1rem 0.75rem;  /* 增加垂直間距 */
+            text-align: left;
+            font-size: 0.875rem;  /* 略微增大 */
+            font-weight: 700;  /* 從 600 增加到 700 */
+            color: #374151;  /* 更深的顏色 */
+            text-transform: uppercase;  /* 大寫字母 */
+            letter-spacing: 0.05em;  /* 增加字間距 */
+            border-bottom: 2px solid #d1d5db;
+        }
+        
+        /* 🎨 設計大師靜態美化：斑馬紋表格 + 清晰hover效果 */
+        .transactions-table tbody tr {
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        /* 斑馬紋：交替背景色提高可讀性 */
+        .transactions-table tbody tr:nth-child(even) {
+            background: #f9fafb;
+        }
+        
+        /* hover效果：更深的背景色，無動畫 */
+        .transactions-table tbody tr:hover {
+            background: #f3f4f6;
+        }
+        
+        /* 🎨 設計大師美化：表格單元格 */
+        .transactions-table td {
+            padding: 1rem 0.75rem;  /* 增加垂直間距 */
+            font-size: 0.9rem;
+            color: #1f2937;
+            vertical-align: middle;  /* 垂直居中 */
+        }
+        
+        /* 🎨 設計大師優化：智能列寬分配（緊湊版） */
+        .transactions-table th:nth-child(1),  /* 復選框 */
+        .transactions-table td:nth-child(1) {
+            width: 45px;
+            min-width: 45px;
+        }
+        
+        .transactions-table th:nth-child(2),  /* 日期 */
+        .transactions-table td:nth-child(2) {
+            width: 100px;
+            min-width: 100px;
+            white-space: nowrap;
+        }
+        
+        .transactions-table th:nth-child(4),  /* 描述 */
+        .transactions-table td:nth-child(4) {
+            min-width: 150px;
+            max-width: 280px;
+        }
+        
+        .transactions-table th:nth-child(5),  /* 收款人 */
+        .transactions-table td:nth-child(5) {
+            min-width: 120px;
+            max-width: 200px;
+        }
+        
+        .transactions-table th:nth-child(8),  /* 分類 */
+        .transactions-table td:nth-child(8) {
+            width: 105px;
+            min-width: 105px;
+        }
+        
+        .transactions-table th:nth-child(9),  /* 金額 */
+        .transactions-table td:nth-child(9) {
+            width: 145px;
+            min-width: 145px;
+            text-align: right;
+        }
+        
+        .transactions-table th:nth-child(10),  /* 餘額 */
+        .transactions-table td:nth-child(10) {
+            width: 120px;
+            min-width: 120px;
+            text-align: right;
+        }
+        
+        .transactions-table th:last-child,  /* 操作 */
+        .transactions-table td:last-child {
+            width: 70px;
+            min-width: 70px;
+        }
+        
+        /* 🎨 設計大師優化：描述列文字處理 */
+        .transactions-table td:nth-child(6),
+        .transactions-table td:nth-child(7) {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        /* Hover時顯示完整文字 */
+        .transactions-table tr:hover td:nth-child(6),
+        .transactions-table tr:hover td:nth-child(7) {
+            white-space: normal;
+            word-break: break-word;
+        }
+        
+        /* 🎨 美化復選框：更大更易點擊 */
+        /* 已對賬列樣式已移至響應式優化區域 */
+        
+        /* 🎨 設計大師美化：金額顯示更突出 */
+        .amount-cell {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;  /* 從 500 增加到 600 */
+            font-size: 1rem;   /* 增大字號 */
+            text-align: right;
+        }
+        
+        /* 正數金額：更鮮明的綠色 */
+        .amount-positive {
+            color: #059669;
+            font-weight: 700;  /* 更粗 */
+        }
+        
+        /* 負數金額：更鮮明的紅色 */
+        .amount-negative {
+            color: #dc2626;
+            font-weight: 700;  /* 更粗 */
+        }
+        
+        /* 🎨 設計大師美化：操作按鈕區域 */
+        .action-cell {
+            width: 100px;
+            text-align: center;
+        }
+        
+        .action-btns {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+        
+        /* 🎨 美化圖標按鈕：更清晰，無動畫 */
+        .icon-btn {
+            background: #f3f4f6;  /* 添加淺灰背景 */
+            border: 1px solid #e5e7eb;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 0.375rem;  /* 增加內邊距 */
+            border-radius: 6px;  /* 圓角 */
+            font-size: 1rem;
+        }
+        
+        /* hover時改變背景和顏色，無動畫 */
+        .icon-btn:hover {
+            background: #e5e7eb;
+            color: #1f2937;
+            border-color: #d1d5db;
+        }
+        
+        
         /* 🎨 請求書項目明細表専用スタイル */
         .invoice-items-table th,
         .invoice-items-table td {
