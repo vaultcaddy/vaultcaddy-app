@@ -15,14 +15,20 @@
         if (document.body) { document.body.classList.add('auth-checking'); } 
         else { document.addEventListener('DOMContentLoaded', function() { document.body.classList.add('auth-checking'); }); }
         
-        // ✅ 超時保護：10秒後強制顯示頁面（防止卡住）
+        // ✅ Timeout Protection: Force display page after 10 seconds (prevent stuck)
         setTimeout(function() {
             if (document.body.classList.contains('auth-checking')) {
-                console.warn('⚠️ Auth timeout - forcing page display');
+                console.warn('⚠️ Auth initialization timeout (10s), forcing page display');
                 document.body.classList.remove('auth-checking');
                 document.body.classList.add('auth-ready');
-                document.documentElement.classList.remove('auth-checking');
-                document.documentElement.classList.add('auth-ready');
+                
+                // If not logged in, redirect to homepage
+                if (!window.simpleAuth || !window.simpleAuth.currentUser) {
+                    console.log('❌ Timeout and not logged in, redirecting to homepage');
+                    setTimeout(function() {
+                        window.location.href = 'index.html';
+                    }, 1000);
+                }
             }
         }, 10000);
     </script>
@@ -46,6 +52,9 @@
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    
+    <!-- SheetJS (Excel Export) -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     
     <!-- Firebase SettingsandDatamanager -->
     <script src="../firebase-config.js?v=20251106-editable"></script>
@@ -2041,562 +2050,596 @@
     <!-- Google Analytics 事件跟踪 -->
     <script src="/ga-event-tracking.js"></script>
 
-    <!-- 🔥 Export Menu（完全基于 firstproject.html）-->
-    <div class="export-menu" id="exportMenu" style="display: none; position: fixed; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); min-width: 280px; max-width: 400px; z-index: 999999; padding: 1rem; overflow: hidden;">
+    <!-- ========== 🆕 全新独立的Export系统（避开旧代码）========== -->
+    
+    <!-- 新Export菜单容器 -->
+    <div id="vaultcaddyExportMenu" style="display: none; position: fixed; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); min-width: 280px; max-width: 400px; z-index: 999999; padding: 1rem;">
         <!-- 动态生成内容 -->
     </div>
     
-    <!-- Export Menu 背景遮罩 -->
-    <div id="exportMenuOverlay" onclick="closeExportMenu()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999998;"></div>
+    <!-- 新Export遮罩 -->
+    <div id="vaultcaddyExportOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999998;"></div>
     
     <script>
-        // 🔥 Export 功能 - 完全基于 firstproject.html（适配单文档）
+    // ========== 🆕 VaultCaddy Export System（完全独立）==========
+    
+    // 关闭菜单
+    window.closeVaultcaddyExportMenu = function() {
+        const menu = document.getElementById('vaultcaddyExportMenu');
+        const overlay = document.getElementById('vaultcaddyExportOverlay');
+        if (menu) menu.style.display = 'none';
+        if (overlay) overlay.style.display = 'none';
+    };
+    
+    // 点击遮罩关闭
+    document.getElementById('vaultcaddyExportOverlay')?.addEventListener('click', closeVaultcaddyExportMenu);
+    
+    // 打开/关闭菜单（切换）
+    window.openVaultcaddyExportMenu = function(event) {
+        if (event) event.stopPropagation();
         
-        // 关闭菜单
-        window.closeExportMenu = function() {
-            const menu = document.getElementById('exportMenu');
-            const overlay = document.getElementById('exportMenuOverlay');
-            if (menu) {
-                menu.style.display = 'none';
-            }
-            if (overlay) {
-                overlay.style.display = 'none';
-            }
-            console.log('🔒 菜单已关闭');
-        };
+        const menu = document.getElementById('vaultcaddyExportMenu');
         
-        // 更新菜单内容
-        function updateExportMenuContent() {
-            const menu = document.getElementById('exportMenu');
-            if (!menu) {
-                console.error('❌ exportMenu 元素不存在');
-                return;
-            }
-            
-            // 获取当前文档类型
-            let docType = 'bank_statement';  // 默认
-            if (window.currentDocument) {
-                docType = (window.currentDocument.type || window.currentDocument.documentType || 'bank_statement').toLowerCase();
-                console.log('📄 文档类型:', docType);
-            } else {
-                console.warn('⚠️ window.currentDocument 不存在，使用默认类型');
-            }
-            
-            // 判断文档类型
-            const hasBankStatement = docType.includes('bank') || docType.includes('statement');
-            const hasInvoice = docType.includes('invoice') || docType.includes('receipt');
-            
-            // 生成菜单 HTML（与 firstproject 完全相同的结构）
-            let menuHTML = '<div style="padding: 0.5rem 0; background: #ffffff;">';
-            
-            // Bank Statement 选项
-            if (hasBankStatement) {
-                menuHTML += `
-                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Bank Statement</div>
-                    <button onclick="exportDocuments('bank_statement_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                        <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
-                        <div>
-                            <div style="font-weight: 500;">Standard CSV</div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">complete fields Format</div>
-                        </div>
-                    </button>
-                `;
-            }
-            
-            // Invoice 选项
-            if (hasInvoice) {
-                menuHTML += `
-                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Invoice</div>
-                    <button onclick="exportDocuments('invoice_summary_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                        <i class="fas fa-file-invoice" style="color: #f59e0b; width: 20px;"></i>
-                        <div>
-                            <div style="font-weight: 500;">Standard CSV (Total)</div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">fast Pair account</div>
-                        </div>
-                    </button>
-                    <button onclick="exportDocuments('invoice_detailed_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                        <i class="fas fa-file-invoice" style="color: #f59e0b; width: 20px;"></i>
-                        <div>
-                            <div style="font-weight: 500;">complete whole transaction Data CSV</div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">details record</div>
-                        </div>
-                    </button>
-                `;
-            }
-            
-            // 确保至少有 Bank Statement 或 Other 显示
-            if (!hasBankStatement && !hasInvoice) {
-                // 如果没有匹配到类型，至少显示 Bank Statement
-                menuHTML += `
-                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Bank Statement</div>
-                    <button onclick="exportDocuments('bank_statement_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                        <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
-                        <div>
-                            <div style="font-weight: 500;">Standard CSV</div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">complete fields Format</div>
-                        </div>
-                    </button>
-                `;
-            }
-            
-            // Other 选项（始终显示）
+        // 如果菜单已经打开，则关闭
+        if (menu && menu.style.display === 'block') {
+            closeVaultcaddyExportMenu();
+            return;
+        }
+        
+        // 否则打开菜单
+        openVaultcaddyExportMenuInternal();
+    };
+    
+    // 内部函数：打开菜单
+    function openVaultcaddyExportMenuInternal() {
+        const menu = document.getElementById('vaultcaddyExportMenu');
+        const overlay = document.getElementById('vaultcaddyExportOverlay');
+        const btn = document.getElementById('vaultcaddyExportBtn');
+        
+        if (!menu) return;
+        
+        // 🔍 检测当前文档类型
+        const doc = window.currentDocument;
+        const docType = doc?.type || doc?.documentType || '';
+        const isInvoice = docType.toLowerCase().includes('invoice');
+        
+        console.log('📋 文档类型:', docType, '是否发票:', isInvoice);
+        
+        let menuHTML = '<div style="padding: 0.5rem 0; background: #ffffff;">';
+        
+        if (isInvoice) {
+            // 🧾 发票导出菜单
             menuHTML += `
-                <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Other</div>
-                <button onclick="exportDocuments('xero_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">CSV 格式</div>
+                
+                <button onclick="vaultcaddyExportDocument('invoice_universal_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s; background: linear-gradient(90deg, rgba(16,185,129,0.05) 0%, transparent 100%);">
+                    <i class="fas fa-globe" style="color: #10b981; width: 20px;"></i>
+                    <div>
+                        <div style="font-weight: 600;">🌐 通用 CSV</div>
+                        <div style="font-size: 0.75rem; color: #059669; font-weight: 500;">✨ Xero, Wave, QuickBooks, MYOB</div>
+                    </div>
+                </button>
+                
+                <button onclick="vaultcaddyExportDocument('invoice_sage_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
                     <i class="fas fa-file-csv" style="color: #3b82f6; width: 20px;"></i>
                     <div>
-                        <div style="font-weight: 500;">Xero CSV</div>
-                        <div style="font-size: 0.75rem; color: #6b7280;">official Minimum Format</div>
+                        <div style="font-weight: 500;">📄 Sage CSV</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">🇬🇧 Sage 50, Sage Accounting</div>
                     </div>
                 </button>
-                <button onclick="exportDocuments('quickbooks_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                    <i class="fas fa-file-csv" style="color: #10b981; width: 20px;"></i>
+                
+                <button onclick="vaultcaddyExportDocument('invoice_zoho_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                    <i class="fas fa-file-csv" style="color: #f59e0b; width: 20px;"></i>
                     <div>
-                        <div style="font-weight: 500;">QuickBooks CSV</div>
-                        <div style="font-size: 0.75rem; color: #6b7280;">official Minimum Format</div>
+                        <div style="font-weight: 500;">📄 Zoho Books CSV</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">🇮🇳 Zoho Books 格式</div>
                     </div>
                 </button>
-                <button onclick="exportDocuments('iif')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                    <i class="fas fa-file-alt" style="color: #3b82f6; width: 20px;"></i>
+                
+                <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.5rem;">Excel 格式</div>
+                
+                <button onclick="vaultcaddyExportDocument('invoice_summary_excel')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                    <i class="fas fa-file-excel" style="color: #059669; width: 20px;"></i>
                     <div>
-                        <div style="font-weight: 500;">IIF</div>
-                        <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Desktop</div>
+                        <div style="font-weight: 500;">標準 Excel（總數）</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">快速對帳</div>
                     </div>
                 </button>
-                <button onclick="exportDocuments('qbo')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                    <i class="fas fa-cloud" style="color: #8b5cf6; width: 20px;"></i>
+                
+                <button onclick="vaultcaddyExportDocument('invoice_detailed_excel')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                    <i class="fas fa-file-excel" style="color: #059669; width: 20px;"></i>
                     <div>
-                        <div style="font-weight: 500;">QBO</div>
-                        <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Online</div>
+                        <div style="font-weight: 500;">完整交易數據 Excel</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">詳細記錄</div>
                     </div>
                 </button>
             `;
-            
-            menuHTML += '</div>';
-            
-            // 更新菜单内容
-            menu.innerHTML = menuHTML;
-            console.log('✅ 菜单内容已更新');
+        } else {
+            // 🏦 银行对账单导出菜单
+            menuHTML += `
+                <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">CSV 格式</div>
+                
+                <button onclick="vaultcaddyExportDocument('universal_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s; background: linear-gradient(90deg, rgba(16,185,129,0.05) 0%, transparent 100%);">
+                    <i class="fas fa-globe" style="color: #10b981; width: 20px;"></i>
+                    <div>
+                        <div style="font-weight: 600;">🌐 通用 CSV</div>
+                        <div style="font-size: 0.75rem; color: #059669; font-weight: 500;">✨ Xero, Wave, QuickBooks, MYOB</div>
+                    </div>
+                </button>
+                
+                <button onclick="vaultcaddyExportDocument('sage_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                    <i class="fas fa-file-csv" style="color: #3b82f6; width: 20px;"></i>
+                    <div>
+                        <div style="font-weight: 500;">📄 Sage CSV</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">🇬🇧 Sage 50, Sage Accounting</div>
+                    </div>
+                </button>
+                
+                <button onclick="vaultcaddyExportDocument('zoho_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                    <i class="fas fa-file-csv" style="color: #f59e0b; width: 20px;"></i>
+                    <div>
+                        <div style="font-weight: 500;">📄 Zoho Books CSV</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">🇮🇳 Zoho Books 格式</div>
+                    </div>
+                </button>
+            `;
         }
         
-                // 切换菜单显示（简化版，确保能显示）
-        window.toggleExportMenu = function(event) {
-            console.log('🔍 toggleExportMenu Called');
+        // 其他格式（通用）
+        menuHTML += `
+            <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.5rem;">其他格式</div>
             
-            // 🔥 强制更新菜单内容（确保有内容）
-            console.log('🔄 强制更新菜单内容...');
-            updateExportMenuContent();
-            const menu = document.getElementById('exportMenu');
-            const overlay = document.getElementById('exportMenuOverlay');
-            console.log('📋 菜单元素:', menu);
-            
-            if (!menu) {
-                console.error('❌ 未找到 #exportMenu 元素');
-                return;
-            }
-            
-            // 如果菜单已显示，则关闭
-            if (menu.style.display === 'block') {
-                console.log('🔒 菜单已显示，关闭中...');
-                closeExportMenu();
-                return;
-            }
-            
-            // 检查当前文档
-            console.log('📄 window.currentDocument:', window.currentDocument);
-
-            console.log('📱 设置菜单样式...');
-            
-            // 🔥 使用简化的、确保有效的样式设置（参考强制显示测试）
-            menu.style.display = 'block';
-            menu.style.position = 'fixed';
-            menu.style.zIndex = '9999999';
-            menu.style.backgroundColor = '#ffffff';
-            menu.style.padding = '1.5rem';
-            menu.style.borderRadius = '12px';
-            menu.style.minWidth = '300px';
-            menu.style.maxWidth = '90%';
-            
-            if (window.innerWidth <= 768) {
-                // 📱 移动端：居中显示
-                menu.style.top = '50%';
-                menu.style.left = '50%';
-                menu.style.transform = 'translate(-50%, -50%)';
-                menu.style.width = '90%';
-                menu.style.maxWidth = '400px';
-                menu.style.border = 'none';
-                menu.style.boxShadow = '0 25px 50px rgba(0,0,0,0.25)';
-                console.log('📱 移动端：菜单居中显示');
-                
-                // 显示遮罩
-                if (overlay) {
-                    overlay.style.display = 'block';
-                }
-            } else {
-                // 💻 桌面端：在按钮下方
-                const exportBtn = document.querySelector('button[onclick*="toggleExportMenu"]');
-                if (exportBtn) {
-                    const rect = exportBtn.getBoundingClientRect();
-                    menu.style.top = (rect.bottom + 8) + 'px';
-                    menu.style.right = (window.innerWidth - rect.right) + 'px';
-                    menu.style.left = 'auto';
-                    menu.style.transform = 'none';
-                    menu.style.width = 'auto';
-                    menu.style.minWidth = '300px';
-                    menu.style.maxWidth = '450px';
-                    menu.style.border = '1px solid #e5e7eb';
-                    menu.style.boxShadow = '0 10px 25px rgba(0,0,0,0.15)';
-                    console.log('💻 桌面端：菜单在按钮下方 (top=' + menu.style.top + ', right=' + menu.style.right + ')');
-                } else {
-                    // 如果找不到按钮，居中显示
-                    console.warn('⚠️ 未找到 Export 按钮，使用居中显示');
-                    menu.style.top = '50%';
-                    menu.style.left = '50%';
-                    menu.style.transform = 'translate(-50%, -50%)';
-                    menu.style.border = '1px solid #e5e7eb';
-                    menu.style.boxShadow = '0 10px 25px rgba(0,0,0,0.15)';
-                }
-                
-                // 桌面端不显示遮罩
-                if (overlay) {
-                    overlay.style.display = 'none';
-                }
-            }
-            
-            menu.classList.add('active');
-            
-            console.log('✅ 菜单已显示');
-            console.log('📊 最终样式: display=' + menu.style.display + ', position=' + menu.style.position + ', zIndex=' + menu.style.zIndex);
-        };
+            <button onclick="vaultcaddyExportDocument('qbo')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                <i class="fas fa-cloud" style="color: #8b5cf6; width: 20px;"></i>
+                <div>
+                    <div style="font-weight: 500;">☁️ QBO 文件</div>
+                    <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Online 官方格式</div>
+                </div>
+            </button>
+        `;
         
-        // 导出文档（简化版，适配单文档）
-        window.exportDocuments = async function(format) {
-            console.log('📤 开始导出:', format);
-            
-            // 关闭菜单
-            closeExportMenu();
-            
-            // 获取当前文档
-            const currentDoc = window.currentDocument;
-            if (!currentDoc) {
-                alert('文档数据未加载');
-                return;
-            }
-            
-            if (currentDoc.status !== 'completed' || !currentDoc.processedData) {
-                alert('文档尚未完成处理');
-                return;
-            }
-            
-            // 简单的导出逻辑
-            try {
-                const data = currentDoc.processedData;
-                let csv = '';
-                let filename = '';
-                
-                switch(format) {
-                    case 'bank_statement_csv':
-                        if (data.transactions && data.transactions.length > 0) {
-                            csv = 'Date,Description,Amount,Balance\n';
-                            data.transactions.forEach(t => {
-                                csv += `"${t.date || ''}","${t.description || ''}","${t.amount || 0}","${t.balance || 0}"\n`;
-                            });
-                            filename = `BankStatement_${Date.now()}.csv`;
-                        }
-                        break;
-                        
-                    case 'invoice_summary_csv':
-                    case 'invoice_detailed_csv':
-                        if (data.items && data.items.length > 0) {
-                            csv = 'Code,Description,Quantity,Unit Price,Amount\n';
-                            data.items.forEach(item => {
-                                csv += `"${item.code || ''}","${item.description || ''}","${item.quantity || 0}","${item.unit_price || item.unitPrice || 0}","${item.amount || 0}"\n`;
-                            });
-                            filename = `Invoice_${Date.now()}.csv`;
-                        }
-                        break;
-                        
-                    default:
-                        alert(`${format} 格式即将推出...`);
-                        return;
-                }
-                
-                if (!csv) {
-                    alert('无数据可导出');
-                    return;
-                }
-                
-                // 下载文件
-                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                
-                console.log('✅ 已下载:', filename);
-            } catch (error) {
-                console.error('❌ 导出失败:', error);
-                alert('导出失败: ' + error.message);
-            }
-        };
+        if (!isInvoice) {
+            // 银行对账单才显示Excel选项
+            menuHTML += `
+                <button onclick="vaultcaddyExportDocument('excel')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
+                    <i class="fas fa-file-excel" style="color: #059669; width: 20px;"></i>
+                    <div>
+                        <div style="font-weight: 500;">📊 Excel (.xlsx)</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">Microsoft Excel 試算表</div>
+                    </div>
+                </button>
+            `;
+        }
         
+        menuHTML += `
+            <div style="padding: 1rem; margin-top: 0.5rem; background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border-radius: 8px; border-left: 3px solid #10b981;">
+                <div style="font-size: 0.75rem; color: #065f46; font-weight: 500; margin-bottom: 0.25rem;">
+                    💡 不確定選哪個？
+                </div>
+                <div style="font-size: 0.7rem; color: #059669; line-height: 1.4;">
+                    大多數用戶選擇 <strong>通用 CSV</strong> 或 <strong>QBO 文件</strong>
+                </div>
+            </div>
+        </div>
+        `;
         
-        // 🔥 备用：直接添加 event listener（防止 onclick 被阻止）
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🔍 DOMContentLoaded - 开始绑定 Export 按钮');
-            
-            const exportBtn = document.querySelector('button[onclick*="toggleExportMenu"]');
-            console.log('📋 Export 按钮:', exportBtn);
-            
-            if (exportBtn) {
-                // 移除旧的 listener（如果有）
-                exportBtn.removeAttribute('data-listener-attached');
-                
-                // 添加新的 listener
-                exportBtn.addEventListener('click', function(e) {
-                    console.log('🎯 Export 按钮被点击（event listener）');
-                    console.log('📋 Event:', e);
-                    
-                    // 确保函数存在
-                    if (typeof window.toggleExportMenu === 'function') {
-                        console.log('✅ toggleExportMenu 函数存在，调用中...');
-                        window.toggleExportMenu(e);
-                    } else {
-                        console.error('❌ toggleExportMenu 函数不存在');
-                        console.log('window.toggleExportMenu:', window.toggleExportMenu);
-                    }
-                });
-                
-                exportBtn.setAttribute('data-listener-attached', 'true');
-                console.log('✅ Export 按钮 event listener 已绑定');
-            } else {
-                console.error('❌ 未找到 Export 按钮');
-            }
-        });
+        menu.innerHTML = menuHTML;
         
-        console.log('✅ Export 功能已加载（全新版本 + 备用 listener）');
+        // 定位菜单
+        if (window.innerWidth <= 768) {
+            // 移动端：居中
+            menu.style.top = '50%';
+            menu.style.left = '50%';
+            menu.style.transform = 'translate(-50%, -50%)';
+            menu.style.right = 'auto';
+            menu.style.width = '90%';
+            if (overlay) overlay.style.display = 'block';
+        } else {
+            // 桌面端：按钮下方
+            if (btn) {
+                const rect = btn.getBoundingClientRect();
+                menu.style.top = (rect.bottom + 8) + 'px';
+                menu.style.right = (window.innerWidth - rect.right) + 'px';
+                menu.style.left = 'auto';
+                menu.style.transform = 'none';
+                menu.style.width = 'auto';
+            }
+        }
         
-        // 🔍 终极诊断：找出为什么点击不工作
-        setTimeout(function() {
-            console.log('');
-            console.log('🔍🔍🔍 开始终极诊断 🔍🔍🔍');
-            console.log('');
-            
-            const exportBtn = document.querySelector('button[onclick*="toggleExportMenu"]');
-            
-            if (!exportBtn) {
-                console.error('❌ Export 按钮不存在');
-                return;
-            }
-            
-            console.log('✅ Export 按钮存在:', exportBtn);
-            
-            // 1. 检查按钮的 CSS 属性
-            const computedStyle = window.getComputedStyle(exportBtn);
-            console.log('📊 按钮样式:');
-            console.log('  - display:', computedStyle.display);
-            console.log('  - visibility:', computedStyle.visibility);
-            console.log('  - opacity:', computedStyle.opacity);
-            console.log('  - pointer-events:', computedStyle.pointerEvents);
-            console.log('  - z-index:', computedStyle.zIndex);
-            console.log('  - position:', computedStyle.position);
-            
-            // 2. 检查按钮的位置
-            const rect = exportBtn.getBoundingClientRect();
-            console.log('📍 按钮位置:');
-            console.log('  - top:', rect.top);
-            console.log('  - left:', rect.left);
-            console.log('  - width:', rect.width);
-            console.log('  - height:', rect.height);
-            
-            // 3. 检查按钮中心点的元素
-            const centerX = rect.left + rect.width / 2;
-            const centerY = rect.top + rect.height / 2;
-            const elementAtCenter = document.elementFromPoint(centerX, centerY);
-            
-            console.log('🎯 按钮中心点 (' + centerX + ', ' + centerY + ') 的元素:');
-            console.log('  - 元素:', elementAtCenter);
-            console.log('  - 是否是按钮本身?', elementAtCenter === exportBtn);
-            console.log('  - 是否在按钮内部?', exportBtn.contains(elementAtCenter));
-            
-            if (elementAtCenter !== exportBtn && !exportBtn.contains(elementAtCenter)) {
-                console.error('❌❌❌ 发现问题！按钮被其他元素覆盖了！');
-                console.error('覆盖元素:', elementAtCenter);
-                console.error('覆盖元素的 class:', elementAtCenter.className);
-                console.error('覆盖元素的 id:', elementAtCenter.id);
-                
-                // 检查覆盖元素的 z-index
-                const overlayStyle = window.getComputedStyle(elementAtCenter);
-                console.error('覆盖元素的 z-index:', overlayStyle.zIndex);
-                console.error('覆盖元素的 position:', overlayStyle.position);
-            }
-            
-            // 4. 手动触发点击测试
-            console.log('');
-            console.log('🧪 测试：手动触发点击事件...');
-            
-            // 测试 1: 直接调用函数
-            if (typeof window.toggleExportMenu === 'function') {
-                console.log('✅ toggleExportMenu 函数存在');
-                console.log('🧪 测试 1: 直接调用 window.toggleExportMenu()...');
-                try {
-                    window.toggleExportMenu();
-                    console.log('✅ 函数调用成功');
-                } catch (e) {
-                    console.error('❌ 函数调用失败:', e);
-                }
-            } else {
-                console.error('❌ toggleExportMenu 函数不存在');
-            }
-            
-            console.log('');
-            
-            
-            // 🔍 深度诊断：检查 exportMenu 元素
-            console.log('');
-            console.log('🔍🔍🔍 exportMenu 元素深度检查 🔍🔍🔍');
-            
-            const menu = document.getElementById('exportMenu');
-            const overlay = document.getElementById('exportMenuOverlay');
-            
-            console.log('1️⃣ exportMenu 存在?', menu !== null);
-            console.log('   元素:', menu);
-            
-            if (menu) {
-                console.log('2️⃣ exportMenu 的样式:');
-                const menuStyle = window.getComputedStyle(menu);
-                console.log('   - display:', menuStyle.display);
-                console.log('   - visibility:', menuStyle.visibility);
-                console.log('   - opacity:', menuStyle.opacity);
-                console.log('   - position:', menuStyle.position);
-                console.log('   - top:', menuStyle.top);
-                console.log('   - left:', menuStyle.left);
-                console.log('   - transform:', menuStyle.transform);
-                console.log('   - z-index:', menuStyle.zIndex);
-                console.log('   - width:', menuStyle.width);
-                console.log('   - height:', menuStyle.height);
-                
-                console.log('3️⃣ exportMenu 的位置:');
-                const menuRect = menu.getBoundingClientRect();
-                console.log('   - top:', menuRect.top);
-                console.log('   - left:', menuRect.left);
-                console.log('   - right:', menuRect.right);
-                console.log('   - bottom:', menuRect.bottom);
-                console.log('   - width:', menuRect.width);
-                console.log('   - height:', menuRect.height);
-                
-                console.log('4️⃣ exportMenu 的内容:');
-                console.log('   - innerHTML 长度:', menu.innerHTML.length);
-                console.log('   - innerHTML 前 100 字符:', menu.innerHTML.substring(0, 100));
-                
-                if (menu.innerHTML.length === 0 || menu.innerHTML.trim() === '') {
-                    console.error('❌❌❌ exportMenu 没有内容！');
-                }
-            } else {
-                console.error('❌❌❌ exportMenu 元素不存在！');
-            }
-            
-            console.log('5️⃣ exportMenuOverlay 存在?', overlay !== null);
-            if (overlay) {
-                const overlayStyle = window.getComputedStyle(overlay);
-                console.log('   - display:', overlayStyle.display);
-                console.log('   - z-index:', overlayStyle.zIndex);
-            }
-            
-            console.log('');
-            console.log('🧪 手动测试：强制显示菜单...');
-            
-            if (menu) {
-                // 保存原始样式
-                console.log('📝 原始 inline style:', menu.getAttribute('style'));
-                
-                // 强制设置样式
-                menu.style.display = 'block';
-                menu.style.position = 'fixed';
-                menu.style.top = '50%';
-                menu.style.left = '50%';
-                menu.style.transform = 'translate(-50%, -50%)';
-                menu.style.zIndex = '9999999';
-                menu.style.backgroundColor = '#ffffff';
-                menu.style.border = '5px solid red';  // 红色边框用于调试
-                menu.style.padding = '2rem';
-                menu.style.minWidth = '300px';
-                menu.style.minHeight = '200px';
-                
-                console.log('✅ 已强制设置样式，菜单应该在屏幕中央显示（红色边框）');
-                console.log('👀 请查看页面，是否看到红色边框的菜单？');
-                
-                setTimeout(function() {
-                    const newMenuStyle = window.getComputedStyle(menu);
-                    console.log('🔍 强制设置后的样式:');
-                    console.log('   - display:', newMenuStyle.display);
-                    console.log('   - position:', newMenuStyle.position);
-                    console.log('   - top:', newMenuStyle.top);
-                    console.log('   - left:', newMenuStyle.left);
-                    console.log('   - z-index:', newMenuStyle.zIndex);
-                    
-                    const newRect = menu.getBoundingClientRect();
-                    console.log('   - 位置: top=' + newRect.top + ', left=' + newRect.left);
-                    console.log('   - 尺寸: width=' + newRect.width + ', height=' + newRect.height);
-                    
-                    if (newRect.width === 0 || newRect.height === 0) {
-                        console.error('❌❌❌ 菜单的尺寸是 0！可能是内容为空或 CSS 问题');
-                    }
-                    
-                    if (newMenuStyle.display === 'none') {
-                        console.error('❌❌❌ display 还是 none！可能被其他 CSS 规则覆盖');
-                    }
-                }, 100);
-            }
-            
-            console.log('');
-            console.log('🔍🔍🔍 深度检查完成 🔍🔍🔍');
-            console.log('');
-            console.log('📋 请告诉我：');
-            console.log('1. exportMenu 存在吗？');
-            console.log('2. exportMenu 的 display 是什么？');
-            console.log('3. exportMenu 的内容长度是多少？');
-            console.log('4. 是否看到红色边框的菜单？');
-
-            console.log('🔍🔍🔍 诊断完成 🔍🔍🔍');
-            console.log('');
-            console.log('📋 如果看到 "按钮被其他元素覆盖"，请告诉我覆盖元素的信息');
-            console.log('📋 如果没有看到菜单弹出，请截图整个 Console');
-            
-        }, 2000);  // 等待2秒后执行，确保页面完全加载
-
-
-    </script>
+        menu.style.display = 'block';
+    }
     
-    <style>
-        /* Export Menu 样式 */
-        .export-menu-item:hover {
-            background: #f3f4f6 !important;
+    // 点击页面其他位置关闭菜单
+    document.addEventListener('click', function(e) {
+        const menu = document.getElementById('vaultcaddyExportMenu');
+        const btn = document.querySelector('[onclick*="openVaultcaddyExportMenu"]');
+        
+        // 如果点击的不是菜单、按钮，且菜单已打开，则关闭菜单
+        if (menu && menu.style.display === 'block' && 
+            !menu.contains(e.target) && 
+            !btn?.contains(e.target)) {
+            closeVaultcaddyExportMenu();
+        }
+    });
+    
+    // 🎯 导出函数（完全支持 firstproject.html 的所有格式）
+    window.vaultcaddyExportDocument = async function(format) {
+        console.log('📤 開始導出:', format);
+        closeVaultcaddyExportMenu();
+        
+        // 获取当前文档
+        const doc = window.currentDocument;
+        if (!doc || !doc.processedData) {
+            alert('文檔數據未載入');
+            return;
         }
         
-        /* 移动端样式 */
-        @media (max-width: 768px) {
-            #exportMenu {
-                position: fixed !important;
-                top: 50% !important;
-                left: 50% !important;
-                transform: translate(-50%, -50%) !important;
-                right: auto !important;
-                width: 90% !important;
-                max-width: 400px !important;
-                background-color: #ffffff !important;
-                box-shadow: none !important;
-                border: none !important;
-                border-radius: 12px !important;
-                padding: 1.5rem !important;
-                overflow: hidden !important;
+        const data = doc.processedData;
+        const fileName = (doc.name || 'document').replace(/\.(pdf|jpg|png)$/i, '');
+        const dateStr = new Date().toISOString().split('T')[0];
+        
+        try {
+            let exportContent = '';
+            let exportFileName = '';
+            let mimeType = '';
+            
+            switch(format) {
+                case 'excel':
+                    // 📊 Excel (.xlsx) 格式 - 完整银行对账单格式
+                    if (typeof XLSX === 'undefined') {
+                        alert('Excel 庫未載入，請刷新頁面');
+                        return;
+                    }
+                    
+                    // 提取基本信息
+                    const customerName = data.accountHolder || data.account_holder || data.customerName || '';
+                    const accountNumber = data.accountNumber || data.account_number || '';
+                    const accountType = data.accountType || 'Integrated Account';
+                    const bankName = data.bankName || data.bank_name || data.bank || '';
+                    // 🔥 分行地址：优先使用 branchName (页面上的"分行地址"字段)
+                    const bankAddress = data.branchName || data.branch_name || data.bankAddress || data.bank_address || '';
+                    
+                    // 提取日期
+                    const statementPeriod = data.statementPeriod || data.statement_period || data.period || '';
+                    let populatedDate = '';
+                    let endDate = '';
+                    
+                    if (statementPeriod && statementPeriod.includes('to')) {
+                        const parts = statementPeriod.split(' to ');
+                        if (parts.length === 2) {
+                            populatedDate = parts[0];
+                            endDate = parts[1];
+                        }
+                    } else {
+                        populatedDate = data.statementDate || data.statement_date || '';
+                        endDate = data.statementDate || data.statement_date || '';
+                    }
+                    
+                    // 提取餘額
+                    const openingBalance = parseFloat(data.openingBalance || data.opening_balance || 0).toFixed(2);
+                    const closingBalance = parseFloat(data.closingBalance || data.closing_balance || data.balance || 0).toFixed(2);
+                    
+                    // CSV 标题（12列格式）
+                    const excelData = [[
+                        'CustomerName', 'AccountNumber', 'AccountType', 'BankName', 'BankAddress',
+                        'OpeningBalance', 'EndingBalance',
+                        'LineItems_Date', 'LineItems_Description', 'LineItems_Category', 'LineItems_Credits', 'LineItems_Debits', 'LineItems_Balance'
+                    ]];
+                    
+                    // 为每笔交易生成一行
+                    if (data.transactions && data.transactions.length > 0) {
+                        data.transactions.forEach(tx => {
+                            // 判断是存入(Credits)还是支出(Debits)
+                            let credits = '';
+                            let debits = '';
+                            const amount = parseFloat(tx.amount || 0);
+                            
+                            // 🔥 修正判断逻辑：优先使用 transactionSign
+                            if (tx.transactionSign === 'income') {
+                                // 收入 = Credits
+                                credits = Math.abs(amount).toFixed(2);
+                                debits = '';
+                            } else if (tx.transactionSign === 'expense') {
+                                // 支出 = Debits
+                                credits = '';
+                                debits = Math.abs(amount).toFixed(2);
+                            } else {
+                                // 如果没有 transactionSign，根据金额符号判断
+                                if (amount >= 0) {
+                                    credits = Math.abs(amount).toFixed(2);
+                                    debits = '';
+                                } else {
+                                    credits = '';
+                                    debits = Math.abs(amount).toFixed(2);
+                                }
+                            }
+                            
+                            // 获取分类显示文本（如果未分类则为空白）
+                            const getCategoryLabel = (categoryValue) => {
+                                if (!categoryValue) return '';
+                                
+                                const categoryMap = {
+                                    // 收入类别
+                                    'salary': '工資',
+                                    'sales': '銷售收入',
+                                    'interest': '利息收入',
+                                    'other-income': '其他收入',
+                                    // 支出类别
+                                    'office': '辦公費用',
+                                    'transport': '交通費用',
+                                    'meal': '餐飲費用',
+                                    'utilities': '水電費',
+                                    'rent': '租金',
+                                    'salary-expense': '工資支出',
+                                    'marketing': '營銷費用',
+                                    'supplies': '辦公用品',
+                                    'other-expense': '其他支出'
+                                };
+                                
+                                return categoryMap[categoryValue] || categoryValue;
+                            };
+                            
+                            const category = getCategoryLabel(tx.category);
+                            
+                            excelData.push([
+                                customerName,
+                                accountNumber,
+                                accountType,
+                                bankName,
+                                bankAddress,
+                                openingBalance,
+                                closingBalance,
+                                tx.date || '',
+                                tx.description || '',
+                                category,
+                                credits,
+                                debits,
+                                parseFloat(tx.balance || 0).toFixed(2)
+                            ]);
+                        });
+                    }
+                    
+                    const wb = XLSX.utils.book_new();
+                    const ws = XLSX.utils.aoa_to_sheet(excelData);
+                    ws['!cols'] = [
+                        {wch: 20}, {wch: 15}, {wch: 18}, {wch: 20}, {wch: 40},
+                        {wch: 15}, {wch: 15},
+                        {wch: 12}, {wch: 40}, {wch: 15}, {wch: 12}, {wch: 12}, {wch: 15}
+                    ];
+                    XLSX.utils.book_append_sheet(wb, ws, "Bank Statement");
+                    XLSX.writeFile(wb, `${fileName}.xlsx`);
+                    console.log('✅ Excel 文件已下載（12列格式，含分類）');
+                    break;
+                    
+                case 'universal_csv':
+                    // 🌐 通用 CSV (適用於 Xero, Wave, QuickBooks, MYOB)
+                    if (!window.BankStatementExport) {
+                        alert('導出模塊未載入，請刷新頁面後重試');
+                        return;
+                    }
+                    exportContent = window.BankStatementExport.generateUniversalCSV([doc]);
+                    exportFileName = `${fileName}_Universal_${dateStr}.csv`;
+                    mimeType = 'text/csv;charset=utf-8;';
+                    console.log('✅ 通用 CSV 生成完成');
+                    break;
+                    
+                case 'sage_csv':
+                    // 📄 Sage CSV (英國格式 - 借貸分離)
+                    if (!window.BankStatementExport) {
+                        alert('導出模塊未載入，請刷新頁面後重試');
+                        return;
+                    }
+                    exportContent = window.BankStatementExport.generateSageCSV([doc]);
+                    exportFileName = `${fileName}_Sage_${dateStr}.csv`;
+                    mimeType = 'text/csv;charset=utf-8;';
+                    console.log('✅ Sage CSV 生成完成');
+                    break;
+                    
+                case 'zoho_csv':
+                    // 📄 Zoho Books CSV (印度格式 - 借貸分離)
+                    if (!window.BankStatementExport) {
+                        alert('導出模塊未載入，請刷新頁面後重試');
+                        return;
+                    }
+                    exportContent = window.BankStatementExport.generateZohoCSV([doc]);
+                    exportFileName = `${fileName}_Zoho_${dateStr}.csv`;
+                    mimeType = 'text/csv;charset=utf-8;';
+                    console.log('✅ Zoho Books CSV 生成完成');
+                    break;
+                    
+                // ========== 发票导出格式 ==========
+                case 'invoice_universal_csv':
+                    // 🌐 发票通用 CSV
+                    if (!window.InvoiceExport || !window.InvoiceExport.generateUniversalCSV) {
+                        alert('發票導出模塊未載入，請刷新頁面後重試');
+                        return;
+                    }
+                    exportContent = window.InvoiceExport.generateUniversalCSV([doc]);
+                    exportFileName = `Invoice_Universal_${dateStr}.csv`;
+                    mimeType = 'text/csv;charset=utf-8;';
+                    console.log('✅ 發票通用 CSV 生成完成');
+                    break;
+                
+                case 'invoice_sage_csv':
+                    // 📄 发票 Sage CSV
+                    if (!window.InvoiceExport || !window.InvoiceExport.generateSageCSV) {
+                        alert('發票導出模塊未載入，請刷新頁面後重試');
+                        return;
+                    }
+                    exportContent = window.InvoiceExport.generateSageCSV([doc]);
+                    exportFileName = `Invoice_Sage_${dateStr}.csv`;
+                    mimeType = 'text/csv;charset=utf-8;';
+                    console.log('✅ 發票 Sage CSV 生成完成');
+                    break;
+                
+                case 'invoice_zoho_csv':
+                    // 📄 发票 Zoho Books CSV
+                    if (!window.InvoiceExport || !window.InvoiceExport.generateZohoCSV) {
+                        alert('發票導出模塊未載入，請刷新頁面後重試');
+                        return;
+                    }
+                    exportContent = window.InvoiceExport.generateZohoCSV([doc]);
+                    exportFileName = `Invoice_ZohoBooks_${dateStr}.csv`;
+                    mimeType = 'text/csv;charset=utf-8;';
+                    console.log('✅ 發票 Zoho Books CSV 生成完成');
+                    break;
+                
+                case 'invoice_summary_excel':
+                    // 📊 发票標準 Excel（總數）
+                    if (typeof XLSX === 'undefined') {
+                        alert('Excel 庫未載入，請刷新頁面');
+                        return;
+                    }
+                    try {
+                        const wb = XLSX.utils.book_new();
+                        const excelData = [['Invoice Number', 'Date', 'Supplier', 'Amount', 'Tax', 'Status']];
+                        
+                        excelData.push([
+                            data.invoiceNumber || data.invoice_number || '',
+                            data.invoiceDate || data.date || '',
+                            data.vendorName || data.vendor || data.supplier || '',
+                            parseFloat(data.totalAmount || data.total || 0).toFixed(2),
+                            parseFloat(data.taxAmount || data.tax || 0).toFixed(2),
+                            data.status || data.paymentStatus || '未付款'
+                        ]);
+                        
+                        const ws = XLSX.utils.aoa_to_sheet(excelData);
+                        ws['!cols'] = [{wch: 15}, {wch: 12}, {wch: 25}, {wch: 12}, {wch: 10}, {wch: 12}];
+                        XLSX.utils.book_append_sheet(wb, ws, "Invoice Summary");
+                        
+                        XLSX.writeFile(wb, `Invoice_Summary_${dateStr}.xlsx`);
+                        console.log('✅ 發票標準 Excel 已下載');
+                        return; // Excel导出不走后续的blob下载逻辑
+                    } catch (error) {
+                        console.error('❌ 發票 Excel 導出失敗:', error);
+                        alert('Excel 導出失敗，請重試');
+                        return;
+                    }
+                
+                case 'invoice_detailed_excel':
+                    // 📊 发票完整交易數據 Excel
+                    if (typeof XLSX === 'undefined') {
+                        alert('Excel 庫未載入，請刷新頁面');
+                        return;
+                    }
+                    try {
+                        const wb = XLSX.utils.book_new();
+                        const excelData = [[
+                            'Invoice Number', 'Date', 'Supplier Name', 'Supplier Phone', 'Supplier Email',
+                            'Item Code', 'Item Description', 'Quantity', 'Unit', 'Unit Price',
+                            'Amount', 'Total Amount', 'Tax', 'Status'
+                        ]];
+                        
+                        const invoiceNumber = data.invoiceNumber || data.invoice_number || '';
+                        const invoiceDate = data.invoiceDate || data.date || '';
+                        const supplierName = data.vendorName || data.vendor || data.supplier || '';
+                        const supplierPhone = data.vendorPhone || data.phone || '';
+                        const supplierEmail = data.vendorEmail || data.email || '';
+                        const totalAmount = parseFloat(data.totalAmount || data.total || 0);
+                        const tax = parseFloat(data.taxAmount || data.tax || 0);
+                        const status = data.status || '未付款';
+                        
+                        const items = data.items || data.lineItems || [];
+                        
+                        if (items.length === 0) {
+                            excelData.push([
+                                invoiceNumber, invoiceDate, supplierName, supplierPhone, supplierEmail,
+                                '', '總計', 1, '', totalAmount.toFixed(2),
+                                totalAmount.toFixed(2), totalAmount.toFixed(2), tax.toFixed(2), status
+                            ]);
+                        } else {
+                            items.forEach(item => {
+                                const itemCode = item.code || item.itemCode || '';
+                                const itemDescription = item.description || item.itemName || '';
+                                const quantity = parseFloat(item.quantity || 1);
+                                const unit = item.unit || '件';
+                                const unitPrice = parseFloat(item.unitPrice || item.price || 0);
+                                const amount = parseFloat(item.amount || (quantity * unitPrice));
+                                
+                                excelData.push([
+                                    invoiceNumber, invoiceDate, supplierName, supplierPhone, supplierEmail,
+                                    itemCode, itemDescription, quantity, unit, unitPrice.toFixed(2),
+                                    amount.toFixed(2), totalAmount.toFixed(2), tax.toFixed(2), status
+                                ]);
+                            });
+                        }
+                        
+                        const ws = XLSX.utils.aoa_to_sheet(excelData);
+                        ws['!cols'] = [
+                            {wch: 15}, {wch: 12}, {wch: 25}, {wch: 15}, {wch: 25},
+                            {wch: 12}, {wch: 40}, {wch: 10}, {wch: 8}, {wch: 12},
+                            {wch: 12}, {wch: 12}, {wch: 10}, {wch: 10}
+                        ];
+                        XLSX.utils.book_append_sheet(wb, ws, "Invoice Details");
+                        
+                        XLSX.writeFile(wb, `Invoice_Detailed_${dateStr}.xlsx`);
+                        console.log('✅ 發票完整 Excel 已下載');
+                        return; // Excel导出不走后续的blob下载逻辑
+                    } catch (error) {
+                        console.error('❌ 發票 Excel 導出失敗:', error);
+                        alert('Excel 導出失敗，請重試');
+                        return;
+                    }
+                
+                // ========== 通用格式（银行对账单和发票都支持）==========
+                case 'qbo':
+                    // ☁️ QBO 文件 (QuickBooks Online 官方格式)
+                    try {
+                        if (!data.transactions || data.transactions.length === 0) {
+                            alert('沒有交易記錄可導出');
+                            return;
+                        }
+                        
+                        console.log('📊 生成 QBO 文件...');
+                        const qboContent = generateQBOFile(data);
+                        const blob = new Blob([qboContent], { type: 'application/x-qbo;charset=utf-8;' });
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = `${fileName}_${dateStr}.qbo`;
+                        link.style.visibility = 'hidden';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(url);
+                        console.log('✅ QBO 文件已下載');
+                    } catch (error) {
+                        console.error('❌ QBO 生成失敗:', error);
+                        alert('QBO 文件生成失敗: ' + error.message);
+                    }
+                    return;
+                    
+                default:
+                    alert('未知格式: ' + format);
+                    return;
             }
+            
+            // 下载 CSV 文件
+            if (exportContent) {
+                const blob = new Blob(['\uFEFF' + exportContent], { type: mimeType });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                
+                link.setAttribute('href', url);
+                link.setAttribute('download', exportFileName);
+                link.style.visibility = 'hidden';
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                URL.revokeObjectURL(url);
+                console.log('✅ 文件已下載:', exportFileName);
+            }
+            
+        } catch (error) {
+            console.error('❌ 導出失敗:', error);
+            alert('導出失敗: ' + error.message);
         }
-    </style>
+    };
+    
+    console.log('✅ VaultCaddy Export System 已載入');
+    </script>
 
 </body>
 </html>
