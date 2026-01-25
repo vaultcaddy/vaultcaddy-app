@@ -66,21 +66,18 @@
                 console.log('✅ Credits 已加載:', credits);
                 return credits;
             } else {
-                console.log('⚠️ 用戶文檔不存在，初始化 Credits 為 0');
+                // ⚠️ 用戶文檔不存在 - 應該在註冊時由 simple-auth.js 創建
+                // 不在這裡創建文檔，避免產生不完整的用戶數據
+                console.error('⚠️ 用戶文檔不存在，應該在註冊時創建:', user.uid);
+                console.error('   這可能是註冊流程異常導致的問題');
                 
-                // 創建用戶文檔
-                await db.collection('users').doc(user.uid).set({
-                    email: user.email,
-                    credits: 10, // 新用戶贈送 10 個 Credits
-                    createdAt: new Date().toISOString()
-                }, { merge: true });
-                
-                window.creditsManager.currentCredits = 10;
+                // 返回 0，但不創建文檔
+                window.creditsManager.currentCredits = 0;
                 window.creditsManager.isLoaded = true;
-                updateCreditsDisplay(10);
-                notifyCreditsListeners(10);
+                updateCreditsDisplay(0);
+                notifyCreditsListeners(0);
                 
-                return 10;
+                return 0;
             }
         } catch (error) {
             console.error('❌ 加載 Credits 失敗:', error);

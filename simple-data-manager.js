@@ -127,13 +127,12 @@ class SimpleDataManager {
             if (userDoc.exists) {
                 return userDoc.data().credits || 0;
             } else {
-                // 創建用戶文檔（初始 0 Credits，驗證後贈送 20）
-                await this.db.collection('users').doc(userId).set({
-                    credits: 0,
-                    currentCredits: 0,
-                    emailVerified: false,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                // ⚠️ 用戶文檔不存在 - 應該在註冊時由 simple-auth.js 創建
+                // 不在這裡創建文檔，避免產生不完整的用戶數據
+                console.error('⚠️ 用戶文檔不存在，應該在註冊時創建:', userId);
+                console.error('   這可能是註冊流程異常導致的問題');
+                
+                // 返回 0，但不創建文檔
                 return 0;
             }
         } catch (error) {
