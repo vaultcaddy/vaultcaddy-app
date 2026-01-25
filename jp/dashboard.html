@@ -1138,16 +1138,33 @@
             }
             
             // 即座に嘗試更新
-            updateUserMenu();
+            // ✅ simpleAuth初期化を待ってからユーザーメニューを更新
+            async function waitForAuthAndUpdate() {
+                if (window.simpleAuth && window.simpleAuth.initialized) {
+                    updateUserMenu();
+                    return;
+                }
+                let attempts = 0;
+                const checkInterval = setInterval(() => {
+                    attempts++;
+                    if (window.simpleAuth && window.simpleAuth.initialized) {
+                        clearInterval(checkInterval);
+                        console.log('✅ simpleAuth初期化完了、ユーザーメニュー更新');
+                        updateUserMenu();
+                    } else if (attempts > 50) {
+                        clearInterval(checkInterval);
+                        console.warn('⚠️ simpleAuth初期化タイムアウト、強制更新');
+                        updateUserMenu();
+                    }
+                }, 100);
+            }
+            waitForAuthAndUpdate();
             
-            // 監聽 Firebase と Auth 事件
+            // FirebaseとAuthイベントを監視
             window.addEventListener('firebase-ready', updateUserMenu);
             window.addEventListener('user-logged-in', updateUserMenu);
             window.addEventListener('user-logged-out', updateUserMenu);
-            
-            // 延遲再次チェック（以防事件既に觸發）
-            setTimeout(updateUserMenu, 1000);
-            setTimeout(updateUserMenu, 2000);
+            window.addEventListener('auth-state-changed', updateUserMenu);
             
             // 公開 toggleDropdown まで全局
             window.toggleDropdown = toggleDropdown;

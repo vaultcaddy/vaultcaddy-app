@@ -1152,17 +1152,33 @@
                 }
             }
             
-            // 立即嘗試更新
-            updateUserMenu();
+            // ✅ 等待 simpleAuth 初始化後再更新用戶菜單
+            async function waitForAuthAndUpdate() {
+                if (window.simpleAuth && window.simpleAuth.initialized) {
+                    updateUserMenu();
+                    return;
+                }
+                let attempts = 0;
+                const checkInterval = setInterval(() => {
+                    attempts++;
+                    if (window.simpleAuth && window.simpleAuth.initialized) {
+                        clearInterval(checkInterval);
+                        console.log('✅ simpleAuth 初始化完成，更新用戶菜單');
+                        updateUserMenu();
+                    } else if (attempts > 50) {
+                        clearInterval(checkInterval);
+                        console.warn('⚠️ simpleAuth 初始化超時，強制更新用戶菜單');
+                        updateUserMenu();
+                    }
+                }, 100);
+            }
+            waitForAuthAndUpdate();
             
             // 監聽 Firebase 和 Auth 事件
             window.addEventListener('firebase-ready', updateUserMenu);
             window.addEventListener('user-logged-in', updateUserMenu);
             window.addEventListener('user-logged-out', updateUserMenu);
-            
-            // 延遲再次檢查（以防事件已經觸發）
-            setTimeout(updateUserMenu, 1000);
-            setTimeout(updateUserMenu, 2000);
+            window.addEventListener('auth-state-changed', updateUserMenu);
             
             // 暴露 toggleDropdown 到全局
             window.toggleDropdown = toggleDropdown;

@@ -772,7 +772,7 @@
             
             <div id="language-switcher" style="display: inline-block; margin-right: 1rem;"></div>
                 <div id="user-menu" style="position: relative; display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;">
-                <div id="user-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">Y</div>
+                <div id="user-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">-</div>
             </div>
         </div>
     </nav>
@@ -828,7 +828,7 @@
     <!-- 用戶信息頭部（漸變背景）-->
     <div style="padding: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
         <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-            <div id="dropdown-avatar" style="width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: 600; border: 2px solid rgba(255,255,255,0.3);">U</div>
+            <div id="dropdown-avatar" style="width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: 600; border: 2px solid rgba(255,255,255,0.3);">-</div>
             <div style="flex: 1; min-width: 0;">
                 <div id="dropdown-name" style="font-weight: 600; font-size: 1rem; margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">User</div>
                 <div id="dropdown-email" style="font-size: 0.75rem; opacity: 0.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">user@example.com</div>
@@ -1089,17 +1089,33 @@
                 }
             }
             
-            // 즉시시도업데이트
-            updateUserMenu();
+            // ✅ simpleAuth 초기화를 기다린 후 사용자 메뉴 업데이트
+            async function waitForAuthAndUpdate() {
+                if (window.simpleAuth && window.simpleAuth.initialized) {
+                    updateUserMenu();
+                    return;
+                }
+                let attempts = 0;
+                const checkInterval = setInterval(() => {
+                    attempts++;
+                    if (window.simpleAuth && window.simpleAuth.initialized) {
+                        clearInterval(checkInterval);
+                        console.log('✅ simpleAuth 초기화 완료, 사용자 메뉴 업데이트');
+                        updateUserMenu();
+                    } else if (attempts > 50) {
+                        clearInterval(checkInterval);
+                        console.warn('⚠️ simpleAuth 초기화 타임아웃, 강제 업데이트');
+                        updateUserMenu();
+                    }
+                }, 100);
+            }
+            waitForAuthAndUpdate();
             
-            // 리스닝 Firebase 및 Auth 이벤트
+            // Firebase 및 Auth 이벤트 리스닝
             window.addEventListener('firebase-ready', updateUserMenu);
             window.addEventListener('user-logged-in', updateUserMenu);
             window.addEventListener('user-logged-out', updateUserMenu);
-            
-            // 지연다시확인（방지이벤트이미트리거）
-            setTimeout(updateUserMenu, 1000);
-            setTimeout(updateUserMenu, 2000);
+            window.addEventListener('auth-state-changed', updateUserMenu);
             
             // 노출 toggleDropdown 까지전역
             window.toggleDropdown = toggleDropdown;
@@ -1126,7 +1142,7 @@
                     <h2 class="section-title">프로필</h2>
                     
                     <div class="avatar-section">
-                        <div class="avatar" id="user-avatar" data-user-avatar>Y</div>
+                        <div class="avatar" id="profile-avatar" data-user-avatar>-</div>
                         <div class="avatar-actions">
                             <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                                 <div style="font-weight: 600; color: #1f2937; font-size: 0.875rem;">현재 플랜</div>
@@ -1298,21 +1314,35 @@
         
         // 로드사용자자료
         function loadUserData(user) {
-            // 설정아바타
-            const avatar = document.getElementById('user-avatar');
-            const savedAvatar = localStorage.getItem('userAvatar');
-            
-            // 통일사용가입이름표시（如 Google 的做法）
+            // ✅ 사용자 이니셜 계산 (displayName 우선, 없으면 email)
             let avatarText = '';
-            
-            // 통일표시 'YC'
-            avatarText = 'YC';
-            
-            if (avatarText) {
-                avatar.textContent = avatarText;
-                avatar.style.backgroundImage = 'none';
-                localStorage.setItem('userAvatar', avatarText);
+            if (user && user.displayName && user.displayName.trim()) {
+                avatarText = user.displayName.charAt(0).toUpperCase();
+            } else if (user && user.email && user.email.trim()) {
+                avatarText = user.email.charAt(0).toUpperCase();
+            } else {
+                avatarText = 'U';
             }
+            
+            // ✅ 모든 아바타 요소 통합 업데이트
+            const navbarAvatar = document.getElementById('user-avatar');
+            const profileAvatar = document.getElementById('profile-avatar');
+            const dropdownAvatar = document.getElementById('dropdown-avatar');
+            
+            if (navbarAvatar) {
+                navbarAvatar.textContent = avatarText;
+                navbarAvatar.style.backgroundImage = 'none';
+            }
+            if (profileAvatar) {
+                profileAvatar.textContent = avatarText;
+                profileAvatar.style.backgroundImage = 'none';
+            }
+            if (dropdownAvatar) {
+                dropdownAvatar.textContent = avatarText;
+            }
+            
+            localStorage.setItem('userAvatar', avatarText);
+            logger.log(`✅ 아바타 설정 완료: ${avatarText}`);
             
             // 로드사용자계획
             loadUserPlan();

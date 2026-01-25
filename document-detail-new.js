@@ -314,7 +314,7 @@ let hasUnsavedChanges = false;
 
 // 交易記錄分頁變量（圖3需求）
 let currentTransactionPage = 1;
-let transactionsPerPage = 10;
+let transactionsPerPage = 20;  // ✅ 從 10 改為 20
 let totalTransactions = 0;
 
 console.log('✅ 交易記錄分頁變量已初始化:', { currentTransactionPage, transactionsPerPage });
