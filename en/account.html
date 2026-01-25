@@ -1340,12 +1340,15 @@
             loadUserPlan();
             
             // 載入偏好設定
-            const savedLanguage = localStorage.getItem('userLanguage') || 'zh-TW';
+            // Load preferences (add null check to prevent errors)
+            const savedLanguage = localStorage.getItem('userLanguage') || 'en-US';
             const savedTimezone = localStorage.getItem('userTimezone') || 'Asia/Taipei';
-            document.getElementById('language-select').value = savedLanguage;
-            document.getElementById('timezone-select').value = savedTimezone;
+            const languageSelect = document.getElementById('language-select');
+            const timezoneSelect = document.getElementById('timezone-select');
+            if (languageSelect) languageSelect.value = savedLanguage;
+            if (timezoneSelect) timezoneSelect.value = savedTimezone;
             
-            // 載入Purchase History
+            // Load Purchase History
             loadCreditsHistory();
         }
         
@@ -1769,14 +1772,22 @@
         
         // 儲存偏好設定
         function savePreferences() {
-            const language = document.getElementById('language-select').value;
-            const timezone = document.getElementById('timezone-select').value;
+            const languageSelect = document.getElementById('language-select');
+            const timezoneSelect = document.getElementById('timezone-select');
             
-            // 儲存到 localStorage
+            if (!languageSelect || !timezoneSelect) {
+                logger.log('⚠️ Preferences elements not found');
+                return;
+            }
+            
+            const language = languageSelect.value;
+            const timezone = timezoneSelect.value;
+            
+            // Save to localStorage
             localStorage.setItem('userLanguage', language);
             localStorage.setItem('userTimezone', timezone);
             
-            alert('偏好設定已儲存');
+            alert('Preferences saved');
         }
         
         // 儲存通知設定

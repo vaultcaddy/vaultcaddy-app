@@ -1337,11 +1337,13 @@
             // 載入用戶計劃
             loadUserPlan();
             
-            // 載入偏好設定
+            // 載入偏好設定（添加 null 檢查以避免錯誤）
             const savedLanguage = localStorage.getItem('userLanguage') || 'zh-TW';
             const savedTimezone = localStorage.getItem('userTimezone') || 'Asia/Taipei';
-            document.getElementById('language-select').value = savedLanguage;
-            document.getElementById('timezone-select').value = savedTimezone;
+            const languageSelect = document.getElementById('language-select');
+            const timezoneSelect = document.getElementById('timezone-select');
+            if (languageSelect) languageSelect.value = savedLanguage;
+            if (timezoneSelect) timezoneSelect.value = savedTimezone;
             
             // 載入購買記錄
             loadCreditsHistory();
@@ -1767,8 +1769,16 @@
         
         // 儲存偏好設定
         function savePreferences() {
-            const language = document.getElementById('language-select').value;
-            const timezone = document.getElementById('timezone-select').value;
+            const languageSelect = document.getElementById('language-select');
+            const timezoneSelect = document.getElementById('timezone-select');
+            
+            if (!languageSelect || !timezoneSelect) {
+                logger.log('⚠️ 偏好設定元素不存在');
+                return;
+            }
+            
+            const language = languageSelect.value;
+            const timezone = timezoneSelect.value;
             
             // 儲存到 localStorage
             localStorage.setItem('userLanguage', language);
