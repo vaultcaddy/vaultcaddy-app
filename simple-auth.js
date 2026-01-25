@@ -209,8 +209,8 @@ class SimpleAuth {
                         email: normalizedEmail,
                         displayName: result.user.displayName || '',
                         company: '',  // 🏢 Google 登入時公司名稱為空，用戶可後續填寫
-                        credits: 0,
-                        currentCredits: 0,
+                        credits: 20,  // 🎁 註冊即送 20 個 Credits
+                        currentCredits: 20,  // 🎁 註冊即送 20 個 Credits
                         emailVerified: result.user.emailVerified,
                         planType: 'Free Plan',  // 📋 初始為 Free Plan
                         photoURL: result.user.photoURL || '',
@@ -224,12 +224,30 @@ class SimpleAuth {
                     console.log('   Email:', normalizedEmail);
                     console.log('   UID:', result.user.uid);
                     
+                    // 🎁 添加 Credits 歷史記錄
+                    try {
+                        const historyRef = userRef.collection('creditsHistory').doc();
+                        await historyRef.set({
+                            type: 'bonus',
+                            amount: 20,
+                            reason: 'registration_bonus',
+                            description: 'Google 註冊獎勵',
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            balanceAfter: 20
+                        });
+                        console.log('✅ Credits 歷史記錄已添加');
+                    } catch (historyError) {
+                        console.error('⚠️ 添加 Credits 歷史記錄失敗:', historyError);
+                        // 不拋出錯誤，因為用戶文檔已創建成功
+                    }
+                    
                     // 驗證文檔創建成功
                     const verifyDoc = await userRef.get();
                     if (!verifyDoc.exists || !verifyDoc.data().email) {
                         console.error('❌ Google 登入文檔創建驗證失敗');
                     } else {
                         console.log('✅ Google 登入用戶文檔驗證成功');
+                        console.log('🎁 已贈送 20 個 Credits');
                     }
                 } else {
                     console.log('✅ Firestore 用戶文檔已存在');
