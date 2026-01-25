@@ -1448,17 +1448,33 @@
                 }
             }
             
-            // 즉시시도업데이트
-            updateUserMenu();
+            // ✅ simpleAuth 초기화를 기다린 후 사용자 메뉴 업데이트
+            async function waitForAuthAndUpdate() {
+                if (window.simpleAuth && window.simpleAuth.initialized) {
+                    updateUserMenu();
+                    return;
+                }
+                let attempts = 0;
+                const checkInterval = setInterval(() => {
+                    attempts++;
+                    if (window.simpleAuth && window.simpleAuth.initialized) {
+                        clearInterval(checkInterval);
+                        console.log('✅ simpleAuth 초기화 완료, 사용자 메뉴 업데이트');
+                        updateUserMenu();
+                    } else if (attempts > 50) {
+                        clearInterval(checkInterval);
+                        console.warn('⚠️ simpleAuth 초기화 타임아웃, 강제 업데이트');
+                        updateUserMenu();
+                    }
+                }, 100);
+            }
+            waitForAuthAndUpdate();
             
-            // 리스닝 Firebase 및 Auth 이벤트
+            // Firebase 및 Auth 이벤트 리스닝
             window.addEventListener('firebase-ready', updateUserMenu);
             window.addEventListener('user-logged-in', updateUserMenu);
             window.addEventListener('user-logged-out', updateUserMenu);
-            
-            // 지연다시확인（방지이벤트이미트리거）
-            setTimeout(updateUserMenu, 1000);
-            setTimeout(updateUserMenu, 2000);
+            window.addEventListener('auth-state-changed', updateUserMenu);
             
             // 노출 toggleDropdown 까지전역
             window.toggleDropdown = toggleDropdown;

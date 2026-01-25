@@ -2306,16 +2306,33 @@
             }
             
             // immediatelyTryUpdate
-            updateUserMenu();
+            // ✅ Wait for simpleAuth initialization before updating user menu
+            async function waitForAuthAndUpdate() {
+                if (window.simpleAuth && window.simpleAuth.initialized) {
+                    updateUserMenu();
+                    return;
+                }
+                let attempts = 0;
+                const checkInterval = setInterval(() => {
+                    attempts++;
+                    if (window.simpleAuth && window.simpleAuth.initialized) {
+                        clearInterval(checkInterval);
+                        console.log('✅ simpleAuth initialized, updating user menu');
+                        updateUserMenu();
+                    } else if (attempts > 50) {
+                        clearInterval(checkInterval);
+                        console.warn('⚠️ simpleAuth init timeout, forcing update');
+                        updateUserMenu();
+                    }
+                }, 100);
+            }
+            waitForAuthAndUpdate();
             
             // Listen Firebase and Auth Event
             window.addEventListener('firebase-ready', updateUserMenu);
             window.addEventListener('user-logged-in', updateUserMenu);
             window.addEventListener('user-logged-out', updateUserMenu);
-            
-            // DelayagaintimesCheck（in caseEventalreadyTrigger）
-            setTimeout(updateUserMenu, 1000);
-            setTimeout(updateUserMenu, 2000);
+            window.addEventListener('auth-state-changed', updateUserMenu);
             
             // expose toggleDropdown toallbureau
             window.toggleDropdown = toggleDropdown;
