@@ -787,8 +787,6 @@
                     <i class="fas fa-dollar-sign" style="width: 20px; color: #667eea;"></i>
                     <span>價格</span>
                 </a>
-                <a href="blog/" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
-                </a>
                 <a href="dashboard.html" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;" onclick="closeMobileSidebar()">
                     <i class="fas fa-th-large" style="width: 20px; color: #667eea;"></i>
                     <span>儀表板</span>
@@ -981,7 +979,6 @@
                             userCredits = await window.simpleDataManager.getUserCredits();
                             logger.log('✅ 即時獲取 Credits:', userCredits);
                         } catch (error) {
-                                            clearTimeout(timeoutId); // ✅ 清除超时
                 console.error('❌ 無法獲取 Credits:', error);
                         }
                     }
@@ -1014,7 +1011,6 @@
                         window.location.href = 'index.html';
                     }
                 } catch (error) {
-                                    clearTimeout(timeoutId); // ✅ 清除超时
                 console.error('登出失敗:', error);
                     alert('登出失敗，請重試');
                 }
@@ -1055,7 +1051,7 @@
                                         userCredits = await window.simpleDataManager.getUserCredits();
                                         logger.log('✅ 延遲獲取 Credits:', userCredits);
                                     } catch (error) {
-                                                        clearTimeout(timeoutId); // ✅ 清除超时
+                                                        
                 console.error('❌ 延遲獲取失敗:', error);
                                     }
                                 }
@@ -1325,11 +1321,11 @@
             
             if (navbarAvatar) {
                 navbarAvatar.textContent = avatarText;
-                navbarAvatar.style.backgroundImage = 'none';
+                // ✅ 保持渐变背景，不要设置 backgroundImage = 'none'
             }
             if (profileAvatar) {
                 profileAvatar.textContent = avatarText;
-                profileAvatar.style.backgroundImage = 'none';
+                // ✅ 保持渐变背景，不要设置 backgroundImage = 'none'
             }
             if (dropdownAvatar) {
                 dropdownAvatar.textContent = avatarText;
@@ -1382,7 +1378,7 @@
                     }
                 }
             } catch (error) {
-                                clearTimeout(timeoutId); // ✅ 清除超时
+                                
                 console.error('獲取用戶計劃失敗:', error);
             }
             
@@ -1504,7 +1500,7 @@
                 logger.log('✅ 訂閱詳情已加載');
                 
             } catch (error) {
-                                clearTimeout(timeoutId); // ✅ 清除超时
+                                
                 console.error('❌ 加載訂閱詳情失敗:', error);
             }
         }
@@ -1549,7 +1545,7 @@
                 }
                 
             } catch (error) {
-                                clearTimeout(timeoutId); // ✅ 清除超时
+                                
                 console.error('❌ 打開 Customer Portal 失敗:', error);
                 console.error('錯誤詳情:', error.code, error.message, error.details);
                 
@@ -1611,7 +1607,7 @@
                             }
                         }
                     } catch (error) {
-                                        clearTimeout(timeoutId); // ✅ 清除超时
+                                        
                 console.error('❌ 從 Firestore 獲取計劃失敗:', error);
                     }
                 }
@@ -1680,7 +1676,7 @@
                             }
                         }
                     } catch (error) {
-                                        clearTimeout(timeoutId); // ✅ 清除超时
+                                        
                 console.error('獲取 Credits 失敗:', error);
                     }
                 }
@@ -1720,7 +1716,7 @@
                 logger.log(`✅ Credits 載入完成: ${currentCredits} / ${totalCredits} (${percentage.toFixed(1)}%)`);
 
             } catch (error) {
-                                clearTimeout(timeoutId); // ✅ 清除超时
+                                
                 console.error('載入 Credits 使用情況失敗:', error);
             }
         }
@@ -1763,7 +1759,7 @@
                 document.getElementById('new-password').value = '';
                 document.getElementById('confirm-password').value = '';
             } catch (error) {
-                                clearTimeout(timeoutId); // ✅ 清除超时
+                                
                 console.error('❌ 更新密碼失敗:', error);
                 alert('更新密碼失敗: ' + error.message);
             }
@@ -1856,7 +1852,7 @@
                 logger.log(`✅ 載入了 ${sortedMonths.length} 個月份選項:`, sortedMonths);
                 
             } catch (error) {
-                                clearTimeout(timeoutId); // ✅ 清除超时
+                                
                 console.error('載入月份選項失敗:', error);
             }
         }
@@ -1983,7 +1979,6 @@
                 logger.log(`✅ 載入了 ${rows.length} 條 Credits 歷史記錄`);
                 
             } catch (error) {
-                                clearTimeout(timeoutId); // ✅ 清除超时
                 console.error('載入 Credits 歷史記錄失敗:', error);
                 tbody.innerHTML = `
                     <tr>
@@ -2021,7 +2016,7 @@
                 alert('帳戶已刪除');
                 window.location.href = 'index.html';
             } catch (error) {
-                                clearTimeout(timeoutId); // ✅ 清除超时
+                                
                 console.error('❌ 刪除帳戶失敗:', error);
                 alert('刪除帳戶失敗: ' + error.message);
             }
@@ -2219,7 +2214,7 @@
                 // 跳轉到新項目頁面
                 window.location.href = `firstproject.html?project=${projectId}`;
             } catch (error) {
-                                clearTimeout(timeoutId); // ✅ 清除超时
+                                
                 console.error('❌ 保存到 Firebase 失敗:', error);
                 alert('創建項目失敗，請重試');
                 return;

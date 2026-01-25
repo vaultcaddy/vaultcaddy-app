@@ -79,8 +79,8 @@
 <script defer="" src="../config.js"></script>
 <script defer="" src="../translations.js?v=20251102"></script>
 <!-- ✅ UI 組件 -->
-<script defer="" src="../navbar-component.js?v=20251106-final-fix"></script>
-<script defer="" src="../sidebar-component.js?v=20251106-final-fix"></script>
+<script defer="" src="../navbar-component.js?v=20260125-user-menu-v2"></script>
+<script defer="" src="../sidebar-component.js?v=20251107-rebuild"></script>
 <!-- ✅ Flatpickr 날짜 선택기 (CDN) -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/themes/light.css">
@@ -225,7 +225,7 @@
 <script defer="" src="https://www.gstatic.com/firebasejs/10.7.0/firebase-functions-compat.js"></script>
 <!-- ✅ Firebase 초기화및 인증 -->
 <script defer="" src="../firebase-config.js?v=20251106-final-fix"></script>
-<script defer="" src="../simple-auth.js?v=20251106-final-fix"></script>
+<script defer="" src="../simple-auth.js?v=20251105-force-init"></script>
 <script defer="" src="../user-profile-manager.js?v=20251120"></script>
 <script defer="" src="../simple-data-manager.js?v=20251106-final-fix"></script>
 <!-- ✅ Email 검증 확인 -->
@@ -1943,7 +1943,6 @@
 <div class="desktop-nav-links" style="display: flex; align-items: center; gap: 2rem;">
 <a href="index.html#features" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">기능</a>
 <a href="index.html#pricing" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">가격</a>
-<a href="blog/" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">학습 센터</a>
 <a href="dashboard.html" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">대시보드</a>
 </div>
 <div id="language-switcher" style="display: inline-block; margin-right: 1rem;"></div>
@@ -1968,10 +1967,6 @@
 <a href="index.html#pricing" onclick="closeMobileSidebar()" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;">
 <i class="fas fa-dollar-sign" style="width: 20px; color: #667eea;"></i>
 <span>가격</span>
-</a>
-<a href="blog/" onclick="closeMobileSidebar()" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;">
-<i class="fas fa-graduation-cap" style="width: 20px; color: #667eea;"></i>
-<span>학습 센터</span>
 </a>
 <a href="dashboard.html" onclick="closeMobileSidebar()" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;">
 <i class="fas fa-th-large" style="width: 20px; color: #667eea;"></i>
@@ -2715,39 +2710,7 @@
 </div>
 </div>
 </div>
-<div class="ai-upload-modal" id="aiUploadModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 10000; align-items: center; justify-content: center;">
-<div class="ai-upload-overlay" onclick="closeAIUploadModal()" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px);"></div>
-<div class="ai-upload-container" style="position: relative; background: white; border-radius: 16px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2); width: 90%; max-width: 800px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column;">
-<!-- 닫기버튼（오른쪽 상단） -->
-<button class="ai-close-btn" onclick="closeAIUploadModal()" onmouseout="this.style.background='#f3f4f6'; this.style.color='#6b7280'" onmouseover="this.style.background='#e5e7eb'; this.style.color='#1f2937'" style="position: absolute; top: 1rem; right: 1rem; background: #f3f4f6; border: none; color: #6b7280; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-<i class="fas fa-times"></i>
-</button>
-<!-- 업로드 영역 -->
-<div class="ai-upload-content" style="padding: 2rem; overflow-y: auto; flex: 1;">
-<!-- 문서유형선택기 -->
-<div class="document-type-selector" style="margin-bottom: 2rem;">
-<h3 style="font-size: 1.1rem; color: #1f2937; margin: 0 0 1rem 0; font-weight: 600;">선택문서유형</h3>
-<div class="document-types-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
-<!-- Bank statements -->
-<div class="doc-type-card" data-type="bank_statement" onclick="selectDocumentType('bank_statement')" style="background: #ffffff; border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; cursor: pointer; transition: all 0.3s ease; position: relative;">
-<div style="display: flex; flex-direction: column; gap: 0.5rem;">
-<div style="font-size: 1.5rem;">🏦</div>
-<div style="font-weight: 600; color: #1f2937; font-size: 1rem;">은행 명세서</div>
-<div style="font-size: 0.875rem; color: #6b7280; line-height: 1.4;"><span data-translate="bank_statement_desc">은행 명세서를 Excel 및 CSV 형식으로 변환</span></div>
-</div>
-<div class="selected-indicator" style="display: none; position: absolute; top: 0.75rem; right: 0.75rem; width: 24px; height: 24px; background: #3b82f6; border-radius: 50%; color: white; align-items: center; justify-content: center; font-size: 0.875rem;">✓</div>
-</div>
-<!-- Invoices -->
-<div class="doc-type-card" data-type="invoice" onclick="selectDocumentType('invoice')" style="background: #ffffff; border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; cursor: pointer; transition: all 0.3s ease; position: relative;">
-<div style="display: flex; flex-direction: column; gap: 0.5rem;">
-<div style="font-size: 1.5rem;">📄</div>
-<div style="font-weight: 600; color: #1f2937; font-size: 1rem;">송장</div>
-<div style="font-size: 0.875rem; color: #6b7280; line-height: 1.4;"><span data-translate="invoice_desc">번호, 날짜, 프로젝트 명세, 가격 및 공급업체 정보 추출</span></div>
-</div>
-<div class="selected-indicator" style="display: none; position: absolute; top: 0.75rem; right: 0.75rem; width: 24px; height: 24px; background: #3b82f6; border-radius: 50%; color: white; align-items: center; justify-content: center; font-size: 0.875rem;">✓</div>
-</div>
-</div>
-</div></div></div></div></div></main>
+</main>
 </div>
 <script>
         // ==================== 전역 변수 ====================
