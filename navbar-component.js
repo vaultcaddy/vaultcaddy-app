@@ -52,17 +52,29 @@ class VaultCaddyNavbar {
                     avatar: currentUser.photoURL || 'https://static.vecteezy.com/system/resources/previews/019/879/186/non_2x/user-icon-on-transparent-background-free-png.png'
                 };
                 
-                // 從 SimpleDataManager 獲取 credits
+                // 從 SimpleDataManager 獲取 credits 和 planType
                 if (window.simpleDataManager && window.simpleDataManager.initialized) {
                     try {
                         this.credits = await window.simpleDataManager.getUserCredits();
                         console.log('✅ 從 Firestore 獲取 credits:', this.credits);
+                        
+                        // 🎯 獲取套餐類型
+                        const userDoc = await window.simpleDataManager.db.collection('users').doc(currentUser.uid).get();
+                        if (userDoc.exists) {
+                            const userData = userDoc.data();
+                            this.planType = userData.planType || 'Free Plan';
+                            console.log('✅ 從 Firestore 獲取 planType:', this.planType);
+                        } else {
+                            this.planType = 'Free Plan';
+                        }
                     } catch (error) {
-                        console.error('❌ 獲取 credits 失敗:', error);
+                        console.error('❌ 獲取用戶數據失敗:', error);
                         this.credits = '10';
+                        this.planType = 'Free Plan';
                     }
                 } else {
                     this.credits = '10';
+                    this.planType = 'Free Plan';
                 }
                 
                 console.log('✅ 用戶已載入:', this.user.email);
@@ -311,6 +323,7 @@ class VaultCaddyNavbar {
         let userPhotoURL = 'https://static.vecteezy.com/system/resources/previews/019/879/186/non_2x/user-icon-on-transparent-background-free-png.png';
         let userName = 'User';
         let userEmail = '';
+        let userPlanType = 'Free Plan';  // 🎯 新增套餐類型
         let isFirebaseUser = false;
         let isGoogleUser = false;
         
@@ -322,6 +335,7 @@ class VaultCaddyNavbar {
                 userName = firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User';
                 userEmail = firebaseUser.email || '';
                 userCredits = this.credits || 0;
+                userPlanType = this.planType || 'Free Plan';  // 🎯 獲取套餐類型
                 isFirebaseUser = true;
                 console.log('🔥 導航欄顯示 Firebase Auth 用戶:', userEmail);
             }
@@ -357,36 +371,61 @@ class VaultCaddyNavbar {
             
             return `
                 <div class="user-profile" id="user-profile" style="position: relative;">
-                    <img src="${userPhotoURL}" alt="${userName}" class="user-avatar" onclick="window.vaultcaddyNavbar.toggleUserDropdown(event)" style="cursor: pointer; border-radius: 50%; width: 32px; height: 32px;">
-                    <div class="user-dropdown-menu" id="user-dropdown-menu" style="display: none; position: absolute; top: 100%; right: 0; background: white; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15); min-width: 220px; z-index: 1000; padding: 0.5rem 0; margin-top: 8px;">
-                        <div class="user-info" style="padding: 1rem 1.5rem; background: #f9fafb; border-bottom: 1px solid #e5e7eb;">
-                            <div style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem;">Credits: ${userCredits}</div>
-                            <div style="font-size: 0.875rem; color: #6b7280;">${userEmail}</div>
-                            ${isFirebaseUser ? `<div style="font-size: 0.75rem; color: #3b82f6; margin-top: 0.25rem;"><i class="fas fa-shield-alt"></i> ${lang.firebaseAccount}</div>` : ''}
-                            ${isGoogleUser ? `<div style="font-size: 0.75rem; color: #10b981; margin-top: 0.25rem;"><i class="fab fa-google"></i> ${lang.googleAccount}</div>` : ''}
+                    <img src="${userPhotoURL}" alt="${userName}" class="user-avatar" onclick="window.vaultcaddyNavbar.toggleUserDropdown(event)" style="cursor: pointer; border-radius: 50%; width: 32px; height: 32px; object-fit: cover; border: 2px solid #e5e7eb; transition: border-color 0.2s;" onmouseover="this.style.borderColor='#667eea'" onmouseout="this.style.borderColor='#e5e7eb'">
+                    <div class="user-dropdown-menu" id="user-dropdown-menu" style="display: none; position: absolute; top: 100%; right: 0; background: white; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); min-width: 280px; z-index: 1000; padding: 0; margin-top: 8px; overflow: hidden;">
+                        <!-- 用戶信息區 -->
+                        <div class="user-info" style="padding: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                                <img src="${userPhotoURL}" alt="${userName}" style="width: 48px; height: 48px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.3); object-fit: cover;">
+                                <div style="flex: 1; min-width: 0;">
+                                    <div style="font-weight: 600; font-size: 1rem; margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${userName}</div>
+                                    <div style="font-size: 0.75rem; opacity: 0.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${userEmail}</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; background: rgba(255,255,255,0.15); border-radius: 8px; backdrop-filter: blur(10px);">
+                                <div>
+                                    <div style="font-size: 0.75rem; opacity: 0.9; margin-bottom: 0.25rem;">Credits</div>
+                                    <div style="font-size: 1.25rem; font-weight: 700;">${userCredits}</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 0.75rem; opacity: 0.9; margin-bottom: 0.25rem;">套餐</div>
+                                    <div style="font-size: 0.875rem; font-weight: 600; background: rgba(255,255,255,0.25); padding: 0.25rem 0.75rem; border-radius: 12px;">${userPlanType}</div>
+                                </div>
+                            </div>
                         </div>
-                        <a href="account.html" class="user-menu-item" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.5rem; color: #374151; text-decoration: none; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
-                            <div style="display: flex; align-items: center;">
-                                <i class="fas fa-user" style="width: 16px; margin-right: 0.75rem;"></i>
-                                <span>${lang.account}</span>
-                            </div>
-                            <span style="font-size: 0.75rem; color: #9ca3af;">⌘A</span>
-                        </a>
-                        <a href="billing.html" class="user-menu-item" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.5rem; color: #374151; text-decoration: none; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
-                            <div style="display: flex; align-items: center;">
-                                <i class="fas fa-credit-card" style="width: 16px; margin-right: 0.75rem;"></i>
-                                <span>${lang.billing}</span>
-                            </div>
-                            <span style="font-size: 0.75rem; color: #9ca3af;">⌘B</span>
-                        </a>
-                        <div style="margin: 0.5rem 0; border-top: 1px solid #e5e7eb;"></div>
-                        <a href="#" class="user-menu-item logout" onclick="window.vaultcaddyNavbar.logout()" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.5rem; color: #dc2626; text-decoration: none; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#fef2f2'" onmouseout="this.style.backgroundColor='transparent'">
-                            <div style="display: flex; align-items: center;">
-                                <i class="fas fa-sign-out-alt" style="width: 16px; margin-right: 0.75rem;"></i>
-                                <span>${lang.logout}</span>
-                            </div>
-                            <span style="font-size: 0.75rem; color: #9ca3af;">⌘Q</span>
-                        </a>
+                        <!-- 菜單項目 -->
+                        <div style="padding: 0.5rem;">
+                            <a href="account.html" class="user-menu-item" style="display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: all 0.2s ease; font-weight: 500;" onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.transform='translateX(4px)'" onmouseout="this.style.backgroundColor='transparent'; this.style.transform='translateX(0)'">
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <div style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px;">
+                                        <i class="fas fa-user" style="color: white; font-size: 0.875rem;"></i>
+                                    </div>
+                                    <span>${lang.account}</span>
+                                </div>
+                                <span style="font-size: 0.75rem; color: #9ca3af;">⌘A</span>
+                            </a>
+                            <a href="billing.html" class="user-menu-item" style="display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: all 0.2s ease; font-weight: 500;" onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.transform='translateX(4px)'" onmouseout="this.style.backgroundColor='transparent'; this.style.transform='translateX(0)'">
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <div style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 8px;">
+                                        <i class="fas fa-credit-card" style="color: white; font-size: 0.875rem;"></i>
+                                    </div>
+                                    <span>${lang.billing}</span>
+                                </div>
+                                <span style="font-size: 0.75rem; color: #9ca3af;">⌘B</span>
+                            </a>
+                        </div>
+                        <!-- 登出按鈕 -->
+                        <div style="padding: 0.5rem; border-top: 1px solid #e5e7eb;">
+                            <a href="#" class="user-menu-item logout" onclick="window.vaultcaddyNavbar.logout()" style="display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1rem; color: #dc2626; text-decoration: none; border-radius: 8px; transition: all 0.2s ease; font-weight: 500;" onmouseover="this.style.backgroundColor='#fef2f2'; this.style.transform='translateX(4px)'" onmouseout="this.style.backgroundColor='transparent'; this.style.transform='translateX(0)'">
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <div style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: #fef2f2; border-radius: 8px;">
+                                        <i class="fas fa-sign-out-alt" style="color: #dc2626; font-size: 0.875rem;"></i>
+                                    </div>
+                                    <span>${lang.logout}</span>
+                                </div>
+                                <span style="font-size: 0.75rem; color: #9ca3af;">⌘Q</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
             `;
