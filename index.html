@@ -839,25 +839,61 @@
     <!-- 側邊欄遮罩 -->
     <div id="mobile-sidebar-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; display: none; transition: opacity 0.3s ease; opacity: 0;"></div>
     
-    <!-- 用戶下拉菜單 -->
-    <div id="user-dropdown" style="display: none; position: fixed; top: 70px; right: 2rem; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); min-width: 200px; z-index: 2000; border: 1px solid #e5e7eb;">
-        <div style="padding: 1rem; border-bottom: 1px solid #e5e7eb;">
-            <div style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem; font-size: 0.875rem;" id="dropdown-email">user@example.com</div>
-            <div style="font-size: 0.75rem; color: #6b7280;">Credits: <span id="dropdown-credits">0</span></div>
+    <!-- ✅ 新版用戶菜單（2026-01-25 優化）-->
+    <div id="user-dropdown" style="display: none; position: fixed; top: 70px; right: 2rem; background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); min-width: 280px; z-index: 2000; border: 1px solid #e5e7eb; overflow: hidden;">
+        <!-- 用戶信息頭部（漸變背景）-->
+        <div style="padding: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                <div id="dropdown-avatar" style="width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: 600; border: 2px solid rgba(255,255,255,0.3);">U</div>
+                <div style="flex: 1; min-width: 0;">
+                    <div id="dropdown-name" style="font-weight: 600; font-size: 1rem; margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">User</div>
+                    <div id="dropdown-email" style="font-size: 0.75rem; opacity: 0.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">user@example.com</div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 0.75rem;">
+                <div style="flex: 1; background: rgba(255,255,255,0.15); border-radius: 8px; padding: 0.75rem; text-align: center; backdrop-filter: blur(10px);">
+                    <div style="font-size: 0.75rem; opacity: 0.9; margin-bottom: 0.25rem;">Credits</div>
+                    <div id="dropdown-credits" style="font-size: 1.25rem; font-weight: 700;">0</div>
+                </div>
+                <div style="flex: 1; background: rgba(255,255,255,0.15); border-radius: 8px; padding: 0.75rem; text-align: center; backdrop-filter: blur(10px);">
+                    <div style="font-size: 0.75rem; opacity: 0.9; margin-bottom: 0.25rem;">套餐</div>
+                    <div id="dropdown-plan" style="font-size: 0.875rem; font-weight: 600;">Free Plan</div>
+                </div>
+            </div>
         </div>
-        <a href="account.html" style="display: block; padding: 0.75rem 1rem; color: #374151; text-decoration: none; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
-            <i class="fas fa-user" style="margin-right: 0.5rem; color: #667eea;"></i>
-            帳戶
-        </a>
-        <a href="billing.html" style="display: block; padding: 0.75rem 1rem; color: #374151; text-decoration: none; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
-            <i class="fas fa-credit-card" style="margin-right: 0.5rem; color: #667eea;"></i>
-            計費
-        </a>
-        <div style="border-top: 1px solid #e5e7eb; margin: 0.5rem 0;"></div>
-        <a href="#" onclick="event.preventDefault(); handleLogout();" style="display: block; padding: 0.75rem 1rem; color: #ef4444; text-decoration: none; transition: background 0.2s;" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='transparent'">
-            <i class="fas fa-sign-out-alt" style="margin-right: 0.5rem;"></i>
-            登出
-        </a>
+        <!-- 菜單項目 -->
+        <div style="padding: 0.5rem;">
+            <a href="account.html" onmouseout="this.style.backgroundColor='transparent'; this.style.transform='translateX(0)'" onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.transform='translateX(4px)'" style="display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: all 0.2s ease; font-weight: 500;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px;">
+                        <i class="fas fa-user" style="color: white; font-size: 0.875rem;"></i>
+                    </div>
+                    <span>帳戶</span>
+                </div>
+                <span style="font-size: 0.75rem; color: #9ca3af;">⌘A</span>
+            </a>
+            <a href="billing.html" onmouseout="this.style.backgroundColor='transparent'; this.style.transform='translateX(0)'" onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.transform='translateX(4px)'" style="display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: all 0.2s ease; font-weight: 500;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 8px;">
+                        <i class="fas fa-credit-card" style="color: white; font-size: 0.875rem;"></i>
+                    </div>
+                    <span>計費</span>
+                </div>
+                <span style="font-size: 0.75rem; color: #9ca3af;">⌘B</span>
+            </a>
+        </div>
+        <!-- 登出按鈕 -->
+        <div style="padding: 0.5rem; border-top: 1px solid #e5e7eb;">
+            <a href="#" onclick="event.preventDefault(); handleLogout();" onmouseout="this.style.backgroundColor='transparent'; this.style.transform='translateX(0)'" onmouseover="this.style.backgroundColor='#fef2f2'; this.style.transform='translateX(4px)'" style="display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1rem; color: #dc2626; text-decoration: none; border-radius: 8px; transition: all 0.2s ease; font-weight: 500;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: #fef2f2; border-radius: 8px;">
+                        <i class="fas fa-sign-out-alt" style="color: #dc2626; font-size: 0.875rem;"></i>
+                    </div>
+                    <span>登出</span>
+                </div>
+                <span style="font-size: 0.75rem; color: #9ca3af;">⌘Q</span>
+            </a>
+        </div>
     </div>
     
     <!-- ✅ index.html 動態更新用戶狀態 -->
@@ -1000,19 +1036,38 @@
                 if (dropdown.style.display === 'none') {
                     dropdown.style.display = 'block';
                     
-                    // 🔥 即時從 SimpleDataManager 獲取最新 Credits
+                    // 🔥 即時從 SimpleDataManager 獲取最新用戶數據
+                    let planType = 'Free Plan';
                     if (window.simpleDataManager && window.simpleDataManager.initialized) {
                         try {
                             userCredits = await window.simpleDataManager.getUserCredits();
                             console.log('✅ 即時獲取 Credits:', userCredits);
+                            
+                            // 獲取套餐類型
+                            const currentUser = window.simpleAuth?.getCurrentUser();
+                            if (currentUser) {
+                                const userDoc = await window.simpleDataManager.db.collection('users').doc(currentUser.uid).get();
+                                if (userDoc.exists) {
+                                    planType = userDoc.data().planType || 'Free Plan';
+                                }
+                            }
                         } catch (error) {
-                            console.error('❌ 無法獲取 Credits:', error);
+                            console.error('❌ 無法獲取用戶數據:', error);
                         }
                     }
                     
-                    // 更新下拉菜單內容
-                    document.getElementById('dropdown-credits').textContent = userCredits.toLocaleString();
-                    document.getElementById('dropdown-email').textContent = userEmail;
+                    // ✅ 更新下拉菜單內容（新版）
+                    const avatarEl = document.getElementById('dropdown-avatar');
+                    const nameEl = document.getElementById('dropdown-name');
+                    const emailEl = document.getElementById('dropdown-email');
+                    const creditsEl = document.getElementById('dropdown-credits');
+                    const planEl = document.getElementById('dropdown-plan');
+                    
+                    if (avatarEl) avatarEl.textContent = getUserInitial();
+                    if (nameEl) nameEl.textContent = userDisplayName || userEmail.split('@')[0] || 'User';
+                    if (emailEl) emailEl.textContent = userEmail;
+                    if (creditsEl) creditsEl.textContent = userCredits.toLocaleString();
+                    if (planEl) planEl.textContent = planType;
                 } else {
                     dropdown.style.display = 'none';
                 }
