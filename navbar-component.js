@@ -10,6 +10,11 @@ class VaultCaddyNavbar {
         this.isLoggedIn = false;
         this.language = 'zh-tw';
         
+        // ✅ 防抖動機制 - 減少重複渲染
+        this._renderTimeout = null;
+        this._lastRenderTime = 0;
+        this._renderCount = 0;
+        
         this.init();
     }
     
@@ -123,6 +128,16 @@ class VaultCaddyNavbar {
      * 渲染導航欄（統一使用靜態導航欄的樣式）
      */
     render() {
+        // ✅ 防抖動：300ms 內只渲染一次
+        const now = Date.now();
+        if (now - this._lastRenderTime < 300) {
+            this._renderCount++;
+            console.log(`⏳ 導航欄渲染被跳過（300ms 內已渲染，第 ${this._renderCount} 次跳過）`);
+            return;
+        }
+        this._lastRenderTime = now;
+        this._renderCount = 0;
+        
         // 支持兩種 ID：navbar-placeholder（舊版）和 navbar-root（新版）
         const navbarPlaceholder = document.getElementById('navbar-placeholder') || document.getElementById('navbar-root');
         if (!navbarPlaceholder) {

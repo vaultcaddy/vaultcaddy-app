@@ -196,6 +196,12 @@
                 langMenu.style.display = 'none';
             }
             
+            // ✅ 添加空值檢查，防止 navbar-component.js 替換後報錯
+            if (!menu) {
+                console.warn('⚠️ user-menu-dropdown 元素不存在，可能已被 navbar-component 替換');
+                return;
+            }
+            
             // 切換用戶菜單
             if (menu.style.display === 'none' || menu.style.display === '') {
                 menu.style.display = 'block';

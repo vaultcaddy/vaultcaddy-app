@@ -44,6 +44,11 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        /* ✅ 樂觀更新閃爍動畫 */
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
     </style>
 <script>
         document.documentElement.classList.add('auth-checking');
@@ -3234,6 +3239,65 @@
                 }
         }
         
+        // ==================== 樂觀 UI 更新函數 ====================
+        /**
+         * 添加樂觀更新的文檔行（立即顯示，無需等待 Firestore）
+         * 作用：讓用戶在上傳後立即看到文檔條目，改善用戶體驗
+         */
+        function addOptimisticDocumentRow(docData) {
+            const tbody = document.querySelector('#documents-table tbody');
+            if (!tbody) return;
+            
+            const today = new Date().toLocaleDateString('zh-TW');
+            const typeIcon = docData.documentType === 'bank_statement' ? '🏦' : '📄';
+            const typeLabel = docData.documentType === 'bank_statement' ? '銀行對帳單' : '發票';
+            
+            const row = document.createElement('tr');
+            row.id = `optimistic-row-${docData.id}`;
+            row.style.cssText = 'background: linear-gradient(90deg, #f0f9ff 0%, #e0f2fe 50%, #f0f9ff 100%); background-size: 200% 100%; animation: shimmer 1.5s infinite;';
+            row.innerHTML = `
+                <td style="padding: 1rem;"><input type="checkbox" disabled></td>
+                <td style="padding: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <div style="width: 36px; height: 36px; background: #fef2f2; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-file-pdf" style="color: #ef4444; font-size: 1rem;"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight: 500; color: #1f2937;">${docData.fileName}</div>
+                            <div style="font-size: 0.75rem; color: #9ca3af;">${docData.pages || 1} 頁</div>
+                        </div>
+                    </div>
+                </td>
+                <td style="padding: 1rem;"><span style="padding: 0.25rem 0.75rem; background: #f3f4f6; border-radius: 20px; font-size: 0.8125rem;">${typeIcon} ${typeLabel}</span></td>
+                <td style="padding: 1rem;">
+                    <span style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.75rem; background: #fef3c7; color: #92400e; border-radius: 20px; font-size: 0.8125rem; font-weight: 500;">
+                        <span class="loading-spinner" style="width: 12px; height: 12px; border: 2px solid #fbbf24; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></span>
+                        處理中...
+                    </span>
+                </td>
+                <td style="padding: 1rem; color: #6b7280;">-</td>
+                <td style="padding: 1rem; color: #6b7280;">-</td>
+                <td style="padding: 1rem; color: #6b7280;">${today}</td>
+                <td style="padding: 1rem;">-</td>
+            `;
+            
+            // 插入到表格頂部
+            tbody.insertBefore(row, tbody.firstChild);
+            
+            logger.log(`✅ 已添加樂觀更新行: ${docData.fileName}`);
+        }
+        
+        /**
+         * 移除樂觀更新的文檔行
+         */
+        function removeOptimisticDocumentRow(tempId) {
+            const row = document.getElementById(`optimistic-row-${tempId}`);
+            if (row) {
+                row.remove();
+                logger.log(`✅ 已移除樂觀更新行: ${tempId}`);
+            }
+        }
+        
         // ==================== 載入文檔 ====================
         async function loadDocuments() {
             try {
@@ -3292,22 +3356,39 @@
                 return;
             }
             
-            logger.log(`🔄 發現 ${pendingDocs.length} 個待處理文檔，開始恢復處理...`);
+            logger.log(`🔄 發現 ${pendingDocs.length} 個待處理文檔...`);
             
             for (const doc of pendingDocs) {
                 try {
-                    const pages = doc.pages || 1;  // ✅ 修复：使用逻辑或 ||
+                    const pages = doc.pages || 1;
+                    
+                    // ✅ 檢查文檔創建時間，5分鐘內創建的不處理（可能正在 AI 處理中）
+                    let createdTime = 0;
+                    if (doc.createdAt) {
+                        if (typeof doc.createdAt === 'object' && doc.createdAt.seconds) {
+                            createdTime = doc.createdAt.seconds * 1000;
+                        } else {
+                            createdTime = new Date(doc.createdAt).getTime();
+                        }
+                    }
+                    
+                    const now = Date.now();
+                    const fiveMinutes = 5 * 60 * 1000; // 5 分鐘
+                    
+                    if (now - createdTime < fiveMinutes) {
+                        logger.log(`⏳ 文檔 ${doc.fileName} 創建於 ${Math.round((now - createdTime) / 1000)} 秒前，可能正在處理中，跳過`);
+                        continue; // 跳過最近創建的文檔
+                    }
                     
                     logger.log(`🔄 恢復處理: ${doc.fileName} (${pages} 頁)`);
                     
-                    // ✅ 修复：多页文档不支持自动恢复（需要PDF转图片），提示用户重新上传
+                    // ✅ 多页文档超時才標記為失敗
                     if (pages > 1) {
-                        logger.warn(`⚠️  多页文档 ${doc.fileName} 需要重新上传（不支持自动恢复）`);
+                        logger.warn(`⚠️  多页文档 ${doc.fileName} 處理超時，需要重新上传`);
                         
-                        // 更新为失败状态，提示用户重新上传
                         await window.simpleDataManager.updateDocument(currentProjectId, doc.id, {
                             status: 'failed',
-                            error: '页面刷新导致处理中断，请删除后重新上传此文档'
+                            error: '處理超時，請刪除後重新上傳此文檔'
                         });
                         await loadDocuments();
                     } else {
@@ -3591,16 +3672,29 @@
                     isPDFConverted: isPDFConverted // 標記是否是 PDF 轉換
                 };
                 
+                // ✅ 5. 樂觀 UI 更新：立即在表格中顯示佔位符
+                const tempId = 'temp_' + Date.now();
+                addOptimisticDocumentRow({
+                    id: tempId,
+                    fileName: file.name,
+                    documentType: selectedDocumentType,
+                    status: 'processing',
+                    createdAt: new Date().toISOString(),
+                    pages: filesToProcess.length
+                });
+                logger.log('✅ 樂觀 UI 更新：已添加佔位符行');
+                
                 const docId = await window.simpleDataManager.createDocument(currentProjectId, docData);
                 logger.log('✅ 文檔記錄已創建:', docId);
                 
-                // 5. 扣除 Credits（所有頁數）
+                // 6. 扣除 Credits（所有頁數）
                 if (window.creditsManager) {
                     await window.creditsManager.deductCredits(filesToProcess.length);
                     logger.log(`💰 已扣除 ${filesToProcess.length} Credits（${filesToProcess.length} 頁）`);
                 }
                 
-                // 6. 重新載入列表以顯示新文檔
+                // 7. 移除佔位符行，重新載入真實數據
+                removeOptimisticDocumentRow(tempId);
                 await loadDocuments();
                 
                 // 7. 後台處理 AI（處理所有頁面）

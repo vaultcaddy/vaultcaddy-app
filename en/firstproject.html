@@ -44,6 +44,11 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        /* ✅ Optimistic UI shimmer animation */
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
     </style>
 <script>
         document.documentElement.classList.add('auth-checking');
@@ -3312,8 +3317,66 @@
         }
         
         /**
-         * RestoreProcessing斷的Document
-         * WhenUserheavynewaccesspagetime，autoContinue processing pending Status的Document
+         * Add optimistic update document row (immediate display without waiting for Firestore)
+         * Purpose: Show document entry immediately after upload, improving user experience
+         */
+        function addOptimisticDocumentRow(docData) {
+            const tbody = document.querySelector('#documents-table tbody');
+            if (!tbody) return;
+            
+            const today = new Date().toLocaleDateString('en-US');
+            const typeIcon = docData.documentType === 'bank_statement' ? '🏦' : '📄';
+            const typeLabel = docData.documentType === 'bank_statement' ? 'Bank Statement' : 'Invoice';
+            
+            const row = document.createElement('tr');
+            row.id = `optimistic-row-${docData.id}`;
+            row.style.cssText = 'background: linear-gradient(90deg, #f0f9ff 0%, #e0f2fe 50%, #f0f9ff 100%); background-size: 200% 100%; animation: shimmer 1.5s infinite;';
+            row.innerHTML = `
+                <td style="padding: 1rem;"><input type="checkbox" disabled></td>
+                <td style="padding: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <div style="width: 36px; height: 36px; background: #fef2f2; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-file-pdf" style="color: #ef4444; font-size: 1rem;"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight: 500; color: #1f2937;">${docData.fileName}</div>
+                            <div style="font-size: 0.75rem; color: #9ca3af;">${docData.pages || 1} pages</div>
+                        </div>
+                    </div>
+                </td>
+                <td style="padding: 1rem;"><span style="padding: 0.25rem 0.75rem; background: #f3f4f6; border-radius: 20px; font-size: 0.8125rem;">${typeIcon} ${typeLabel}</span></td>
+                <td style="padding: 1rem;">
+                    <span style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.75rem; background: #fef3c7; color: #92400e; border-radius: 20px; font-size: 0.8125rem; font-weight: 500;">
+                        <span class="loading-spinner" style="width: 12px; height: 12px; border: 2px solid #fbbf24; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></span>
+                        Processing...
+                    </span>
+                </td>
+                <td style="padding: 1rem; color: #6b7280;">-</td>
+                <td style="padding: 1rem; color: #6b7280;">-</td>
+                <td style="padding: 1rem; color: #6b7280;">${today}</td>
+                <td style="padding: 1rem;">-</td>
+            `;
+            
+            // Insert at top of table
+            tbody.insertBefore(row, tbody.firstChild);
+            
+            logger.log(`✅ Added optimistic update row: ${docData.fileName}`);
+        }
+        
+        /**
+         * Remove optimistic update document row
+         */
+        function removeOptimisticDocumentRow(tempId) {
+            const row = document.getElementById(`optimistic-row-${tempId}`);
+            if (row) {
+                row.remove();
+                logger.log(`✅ Removed optimistic update row: ${tempId}`);
+            }
+        }
+        
+        /**
+         * Resume processing interrupted documents
+         * When user revisits page, automatically continue processing pending documents
          */
         async function resumePendingDocuments(documents) {
             const pendingDocs = documents.filter(doc => doc.status === 'processing');
@@ -3322,22 +3385,39 @@
                 return;
             }
             
-            logger.log(`🔄 發現 ${pendingDocs.length} 個PendingDocument，StartRestoreProcess...`);
+            logger.log(`🔄 Found ${pendingDocs.length} pending documents...`);
             
             for (const doc of pendingDocs) {
                 try {
-                    const pages = doc.pages || 1;  // ✅ Fix: Use logical OR ||
+                    const pages = doc.pages || 1;
                     
-                    logger.log(`🔄 Restore Process: ${doc.fileName} (${pages} page)`);
+                    // ✅ Check document creation time, skip if created within 5 minutes (might still be processing)
+                    let createdTime = 0;
+                    if (doc.createdAt) {
+                        if (typeof doc.createdAt === 'object' && doc.createdAt.seconds) {
+                            createdTime = doc.createdAt.seconds * 1000;
+                        } else {
+                            createdTime = new Date(doc.createdAt).getTime();
+                        }
+                    }
                     
-                    // ✅ Fix: Multi-page documents don't support auto-resume (need PDF to images), prompt user to re-upload
+                    const now = Date.now();
+                    const fiveMinutes = 5 * 60 * 1000; // 5 minutes
+                    
+                    if (now - createdTime < fiveMinutes) {
+                        logger.log(`⏳ Document ${doc.fileName} created ${Math.round((now - createdTime) / 1000)} seconds ago, might still be processing, skipping`);
+                        continue; // Skip recently created documents
+                    }
+                    
+                    logger.log(`🔄 Resume processing: ${doc.fileName} (${pages} pages)`);
+                    
+                    // ✅ Multi-page documents only marked as failed after timeout
                     if (pages > 1) {
-                        logger.warn(`⚠️  Multi-page document ${doc.fileName} needs to be re-uploaded (auto-resume not supported)`);
+                        logger.warn(`⚠️  Multi-page document ${doc.fileName} timed out, needs re-upload`);
                         
-                        // Update to failed status, prompt user to re-upload
                         await window.simpleDataManager.updateDocument(currentProjectId, doc.id, {
                             status: 'failed',
-                            error: 'Processing interrupted by page refresh. Please delete and re-upload this document'
+                            error: 'Processing timed out. Please delete and re-upload this document'
                         });
                         await loadDocuments();
                     } else {
@@ -3348,12 +3428,12 @@
                         
                         logger.log(`📄 Resume single-page document processing: ${doc.fileName}`);
                         processFileWithAI(file, doc.id, pages).catch(err => {
-                            console.error('❌ Restore Processing Failed:', err);
+                            console.error('❌ Resume processing failed:', err);
                         });
                     }
                     
                 } catch (error) {
-                    console.error(`❌ Restore Document ${doc.fileName} Failed:`, error);
+                    console.error(`❌ Resume document ${doc.fileName} failed:`, error);
                 }
             }
         }
@@ -3614,6 +3694,18 @@
                     originalFileType: file.type, // recordoriginalFileType
                     isPDFConverted: isPDFConverted // markYesNoYes PDF Convert
                 };
+                
+                // ✅ Optimistic UI update: immediately show placeholder in table
+                const tempId = 'temp_' + Date.now();
+                addOptimisticDocumentRow({
+                    id: tempId,
+                    fileName: file.name,
+                    documentType: selectedDocumentType,
+                    status: 'processing',
+                    createdAt: new Date().toISOString(),
+                    pages: filesToProcess.length
+                });
+                logger.log('✅ Optimistic UI update: placeholder row added');
                 
                 const docId = await window.simpleDataManager.createDocument(currentProjectId, docData);
                 logger.log('✅ DocumentrecordalreadyCreate:', docId);

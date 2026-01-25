@@ -44,6 +44,11 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        /* ✅ 낙관적 UI 업데이트 반짝임 효과 */
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
     </style>
 <script>
         document.documentElement.classList.add('auth-checking');
@@ -3301,8 +3306,66 @@
         }
         
         /**
-         * 복원처리 중斷的문서
-         * 때사용자중새로운訪問페이지때，자동繼續처리 pending 상태的문서
+         * 낙관적 UI 업데이트 문서 행 추가 (Firestore 대기 없이 즉시 표시)
+         * 목적: 업로드 후 즉시 문서 항목을 표시하여 사용자 경험 향상
+         */
+        function addOptimisticDocumentRow(docData) {
+            const tbody = document.querySelector('#documents-table tbody');
+            if (!tbody) return;
+            
+            const today = new Date().toLocaleDateString('ko-KR');
+            const typeIcon = docData.documentType === 'bank_statement' ? '🏦' : '📄';
+            const typeLabel = docData.documentType === 'bank_statement' ? '은행 명세서' : '청구서';
+            
+            const row = document.createElement('tr');
+            row.id = `optimistic-row-${docData.id}`;
+            row.style.cssText = 'background: linear-gradient(90deg, #f0f9ff 0%, #e0f2fe 50%, #f0f9ff 100%); background-size: 200% 100%; animation: shimmer 1.5s infinite;';
+            row.innerHTML = `
+                <td style="padding: 1rem;"><input type="checkbox" disabled></td>
+                <td style="padding: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <div style="width: 36px; height: 36px; background: #fef2f2; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-file-pdf" style="color: #ef4444; font-size: 1rem;"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight: 500; color: #1f2937;">${docData.fileName}</div>
+                            <div style="font-size: 0.75rem; color: #9ca3af;">${docData.pages || 1} 페이지</div>
+                        </div>
+                    </div>
+                </td>
+                <td style="padding: 1rem;"><span style="padding: 0.25rem 0.75rem; background: #f3f4f6; border-radius: 20px; font-size: 0.8125rem;">${typeIcon} ${typeLabel}</span></td>
+                <td style="padding: 1rem;">
+                    <span style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.75rem; background: #fef3c7; color: #92400e; border-radius: 20px; font-size: 0.8125rem; font-weight: 500;">
+                        <span class="loading-spinner" style="width: 12px; height: 12px; border: 2px solid #fbbf24; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></span>
+                        처리 중...
+                    </span>
+                </td>
+                <td style="padding: 1rem; color: #6b7280;">-</td>
+                <td style="padding: 1rem; color: #6b7280;">-</td>
+                <td style="padding: 1rem; color: #6b7280;">${today}</td>
+                <td style="padding: 1rem;">-</td>
+            `;
+            
+            // 테이블 상단에 삽입
+            tbody.insertBefore(row, tbody.firstChild);
+            
+            logger.log(`✅ 낙관적 업데이트 행 추가: ${docData.fileName}`);
+        }
+        
+        /**
+         * 낙관적 UI 업데이트 문서 행 제거
+         */
+        function removeOptimisticDocumentRow(tempId) {
+            const row = document.getElementById(`optimistic-row-${tempId}`);
+            if (row) {
+                row.remove();
+                logger.log(`✅ 낙관적 업데이트 행 제거: ${tempId}`);
+            }
+        }
+        
+        /**
+         * 중단된 문서 처리 재개
+         * 사용자가 페이지를 다시 방문할 때 대기 중인 문서를 자동으로 처리 계속
          */
         async function resumePendingDocuments(documents) {
             const pendingDocs = documents.filter(doc => doc.status === 'processing');
@@ -3311,26 +3374,55 @@
                 return;
             }
             
-            logger.log(`🔄 發現 ${pendingDocs.length} 個待처리문서，시작복원처리...`);
+            logger.log(`🔄 ${pendingDocs.length}개의 대기 중인 문서 발견...`);
             
             for (const doc of pendingDocs) {
                 try {
-                    // 부터 Storage 다운로드파일
-                    const response = await fetch(doc.downloadURL);
-                    const blob = await response.blob();
-                    const file = new File([blob], doc.fileName, { type: blob.type });
+                    const pages = doc.pages || 1;
                     
-                    const pages = doc.pages | 1;
+                    // ✅ 문서 생성 시간 확인, 5분 이내에 생성된 문서는 건너뛰기 (처리 중일 수 있음)
+                    let createdTime = 0;
+                    if (doc.createdAt) {
+                        if (typeof doc.createdAt === 'object' && doc.createdAt.seconds) {
+                            createdTime = doc.createdAt.seconds * 1000;
+                        } else {
+                            createdTime = new Date(doc.createdAt).getTime();
+                        }
+                    }
                     
-                    logger.log(`🔄 복원처리: ${doc.fileName} (${pages} 페이지)`);
+                    const now = Date.now();
+                    const fiveMinutes = 5 * 60 * 1000; // 5분
                     
-                    // 繼續 AI 처리
-                    processFileWithAI(file, doc.id, pages).catch(err => {
-                        console.error('❌ 복원처리 실패:', err);
-                    });
+                    if (now - createdTime < fiveMinutes) {
+                        logger.log(`⏳ 문서 ${doc.fileName}은 ${Math.round((now - createdTime) / 1000)}초 전에 생성됨, 처리 중일 수 있음, 건너뛰기`);
+                        continue; // 최근 생성된 문서 건너뛰기
+                    }
+                    
+                    logger.log(`🔄 처리 재개: ${doc.fileName} (${pages} 페이지)`);
+                    
+                    // ✅ 여러 페이지 문서는 타임아웃 후에만 실패로 표시
+                    if (pages > 1) {
+                        logger.warn(`⚠️  여러 페이지 문서 ${doc.fileName} 타임아웃, 재업로드 필요`);
+                        
+                        await window.simpleDataManager.updateDocument(currentProjectId, doc.id, {
+                            status: 'failed',
+                            error: '처리 시간이 초과되었습니다. 삭제 후 다시 업로드해 주세요'
+                        });
+                        await loadDocuments();
+                    } else {
+                        // 단일 페이지 문서는 정상적으로 재개 가능
+                        const response = await fetch(doc.downloadURL);
+                        const blob = await response.blob();
+                        const file = new File([blob], doc.fileName, { type: blob.type });
+                        
+                        logger.log(`📄 단일 페이지 문서 처리 재개: ${doc.fileName}`);
+                        processFileWithAI(file, doc.id, pages).catch(err => {
+                            console.error('❌ 처리 재개 실패:', err);
+                        });
+                    }
                     
                 } catch (error) {
-                    console.error(`❌ 복원문서 ${doc.fileName} 실패:`, error);
+                    console.error(`❌ 문서 ${doc.fileName} 재개 실패:`, error);
                 }
             }
         }
@@ -3591,6 +3683,18 @@
                     originalFileType: file.type, // 기록원본파일유형
                     isPDFConverted: isPDFConverted // 標記여부是 PDF 변환
                 };
+                
+                // ✅ 낙관적 UI 업데이트: 즉시 테이블에 플레이스홀더 표시
+                const tempId = 'temp_' + Date.now();
+                addOptimisticDocumentRow({
+                    id: tempId,
+                    fileName: file.name,
+                    documentType: selectedDocumentType,
+                    status: 'processing',
+                    createdAt: new Date().toISOString(),
+                    pages: filesToProcess.length
+                });
+                logger.log('✅ 낙관적 UI 업데이트: 플레이스홀더 행 추가');
                 
                 const docId = await window.simpleDataManager.createDocument(currentProjectId, docData);
                 logger.log('✅ 문서기록이미생성:', docId);

@@ -44,6 +44,11 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        /* ✅ 楽観的UI更新のシマー効果 */
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
     </style>
 <script>
         document.documentElement.classList.add('auth-checking');
@@ -3301,8 +3306,66 @@
         }
         
         /**
-         * 恢復処理中斷の文書
-         * 當ユーザー重新訪問ページ時，自動繼續処理 pending ステータスの文書
+         * 楽観的UI更新の文書行を追加（Firestoreを待たずに即時表示）
+         * 目的：アップロード後すぐに文書エントリを表示し、ユーザー体験を向上
+         */
+        function addOptimisticDocumentRow(docData) {
+            const tbody = document.querySelector('#documents-table tbody');
+            if (!tbody) return;
+            
+            const today = new Date().toLocaleDateString('ja-JP');
+            const typeIcon = docData.documentType === 'bank_statement' ? '🏦' : '📄';
+            const typeLabel = docData.documentType === 'bank_statement' ? '銀行明細' : '請求書';
+            
+            const row = document.createElement('tr');
+            row.id = `optimistic-row-${docData.id}`;
+            row.style.cssText = 'background: linear-gradient(90deg, #f0f9ff 0%, #e0f2fe 50%, #f0f9ff 100%); background-size: 200% 100%; animation: shimmer 1.5s infinite;';
+            row.innerHTML = `
+                <td style="padding: 1rem;"><input type="checkbox" disabled></td>
+                <td style="padding: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <div style="width: 36px; height: 36px; background: #fef2f2; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-file-pdf" style="color: #ef4444; font-size: 1rem;"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight: 500; color: #1f2937;">${docData.fileName}</div>
+                            <div style="font-size: 0.75rem; color: #9ca3af;">${docData.pages || 1} ページ</div>
+                        </div>
+                    </div>
+                </td>
+                <td style="padding: 1rem;"><span style="padding: 0.25rem 0.75rem; background: #f3f4f6; border-radius: 20px; font-size: 0.8125rem;">${typeIcon} ${typeLabel}</span></td>
+                <td style="padding: 1rem;">
+                    <span style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.75rem; background: #fef3c7; color: #92400e; border-radius: 20px; font-size: 0.8125rem; font-weight: 500;">
+                        <span class="loading-spinner" style="width: 12px; height: 12px; border: 2px solid #fbbf24; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></span>
+                        処理中...
+                    </span>
+                </td>
+                <td style="padding: 1rem; color: #6b7280;">-</td>
+                <td style="padding: 1rem; color: #6b7280;">-</td>
+                <td style="padding: 1rem; color: #6b7280;">${today}</td>
+                <td style="padding: 1rem;">-</td>
+            `;
+            
+            // テーブルの先頭に挿入
+            tbody.insertBefore(row, tbody.firstChild);
+            
+            logger.log(`✅ 楽観的更新行を追加: ${docData.fileName}`);
+        }
+        
+        /**
+         * 楽観的UI更新の文書行を削除
+         */
+        function removeOptimisticDocumentRow(tempId) {
+            const row = document.getElementById(`optimistic-row-${tempId}`);
+            if (row) {
+                row.remove();
+                logger.log(`✅ 楽観的更新行を削除: ${tempId}`);
+            }
+        }
+        
+        /**
+         * 中断した文書の処理を再開
+         * ユーザーがページを再訪問した時、保留中の文書を自動的に処理継続
          */
         async function resumePendingDocuments(documents) {
             const pendingDocs = documents.filter(doc => doc.status === 'processing');
@@ -3311,26 +3374,55 @@
                 return;
             }
             
-            logger.log(`🔄 發現 ${pendingDocs.length} 個待処理文書，開始恢復処理...`);
+            logger.log(`🔄 ${pendingDocs.length} 件の保留中文書を発見...`);
             
             for (const doc of pendingDocs) {
                 try {
-                    // から Storage ダウンロードファイル
-                    const response = await fetch(doc.downloadURL);
-                    const blob = await response.blob();
-                    const file = new File([blob], doc.fileName, { type: blob.type });
+                    const pages = doc.pages || 1;
                     
-                    const pages = doc.pages | 1;
+                    // ✅ 文書作成時間をチェック、5分以内に作成されたものはスキップ（処理中の可能性）
+                    let createdTime = 0;
+                    if (doc.createdAt) {
+                        if (typeof doc.createdAt === 'object' && doc.createdAt.seconds) {
+                            createdTime = doc.createdAt.seconds * 1000;
+                        } else {
+                            createdTime = new Date(doc.createdAt).getTime();
+                        }
+                    }
                     
-                    logger.log(`🔄 恢復処理: ${doc.fileName} (${pages} 頁)`);
+                    const now = Date.now();
+                    const fiveMinutes = 5 * 60 * 1000; // 5分
                     
-                    // 繼續 AI 処理
-                    processFileWithAI(file, doc.id, pages).catch(err => {
-                        console.error('❌ 恢復処理失敗:', err);
-                    });
+                    if (now - createdTime < fiveMinutes) {
+                        logger.log(`⏳ 文書 ${doc.fileName} は ${Math.round((now - createdTime) / 1000)} 秒前に作成、処理中の可能性あり、スキップ`);
+                        continue; // 最近作成された文書をスキップ
+                    }
+                    
+                    logger.log(`🔄 処理再開: ${doc.fileName} (${pages} ページ)`);
+                    
+                    // ✅ 複数ページ文書はタイムアウト後のみ失敗とマーク
+                    if (pages > 1) {
+                        logger.warn(`⚠️  複数ページ文書 ${doc.fileName} がタイムアウト、再アップロードが必要`);
+                        
+                        await window.simpleDataManager.updateDocument(currentProjectId, doc.id, {
+                            status: 'failed',
+                            error: '処理がタイムアウトしました。削除して再アップロードしてください'
+                        });
+                        await loadDocuments();
+                    } else {
+                        // 単一ページ文書は通常通り再開可能
+                        const response = await fetch(doc.downloadURL);
+                        const blob = await response.blob();
+                        const file = new File([blob], doc.fileName, { type: blob.type });
+                        
+                        logger.log(`📄 単一ページ文書の処理を再開: ${doc.fileName}`);
+                        processFileWithAI(file, doc.id, pages).catch(err => {
+                            console.error('❌ 処理再開失敗:', err);
+                        });
+                    }
                     
                 } catch (error) {
-                    console.error(`❌ 恢復文書 ${doc.fileName} 失敗:`, error);
+                    console.error(`❌ 文書 ${doc.fileName} の再開失敗:`, error);
                 }
             }
         }
@@ -3591,6 +3683,18 @@
                     originalFileType: file.type, // 記録元のファイルタイプ
                     isPDFConverted: isPDFConverted // 標記是否是 PDF 変換
                 };
+                
+                // ✅ 楽観的UI更新：即座にテーブルにプレースホルダーを表示
+                const tempId = 'temp_' + Date.now();
+                addOptimisticDocumentRow({
+                    id: tempId,
+                    fileName: file.name,
+                    documentType: selectedDocumentType,
+                    status: 'processing',
+                    createdAt: new Date().toISOString(),
+                    pages: filesToProcess.length
+                });
+                logger.log('✅ 楽観的UI更新：プレースホルダー行を追加');
                 
                 const docId = await window.simpleDataManager.createDocument(currentProjectId, docData);
                 logger.log('✅ 文書記録已作成:', docId);
