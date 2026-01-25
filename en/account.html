@@ -1014,7 +1014,7 @@
                 } catch (error) {
                                     
                 console.error('Logout失敗:', error);
-                    alert('Logout失敗，請重試');
+                    alert('Logout failed, please try again');
                 }
             };
             
@@ -1212,23 +1212,23 @@
                     <h2 class="section-title">Password</h2>
                     
                     <div class="form-group">
-                        <label class="form-label">目前Password</label>
-                        <input type="password" class="form-input" id="current-password" placeholder="輸入目前Password">
+                        <label class="form-label">Current Password</label>
+                        <input type="password" class="form-input" id="current-password" placeholder="Enter current password">
                     </div>
                     
                     <div class="form-group">
                         <label class="form-label">New Password</label>
-                        <input type="password" class="form-input" id="new-password" placeholder="輸入New Password">
+                        <input type="password" class="form-input" id="new-password" placeholder="Enter new password">
                         <p class="form-description">Password must be at least 8 characters</p>
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">確認New Password</label>
-                        <input type="password" class="form-input" id="confirm-password" placeholder="再次輸入New Password">
+                        <label class="form-label">Confirm New Password</label>
+                        <input type="password" class="form-input" id="confirm-password" placeholder="Re-enter new password">
                     </div>
                     
                     <div class="button-group">
-                        <button class="btn btn-primary" onclick="changePassword()">更New Password</button>
+                        <button class="btn btn-primary" onclick="changePassword()">Update Password</button>
                     </div>
                 </div>
 
@@ -1519,7 +1519,7 @@
                 logger.log('🔧 打開 Stripe Customer Portal');
                 
                 if (!window.simpleAuth || !window.simpleAuth.currentUser) {
-                    alert('請先Login');
+                    alert('Please login first');
                     return;
                 }
                 
@@ -1554,13 +1554,13 @@
                 console.error('❌ 打開 Customer Portal 失敗:', error);
                 console.error('錯誤詳情:', error.code, error.message, error.details);
                 
-                // 根據錯誤類型顯示不同的提示
-                let errorMessage = '無法打開訂閱管理頁面';
+                // Show different error messages based on error type
+                let errorMessage = 'Unable to open subscription management page';
                 
                 if (error.code === 'unauthenticated') {
-                    errorMessage = '請先Login';
+                    errorMessage = 'Please login first';
                 } else if (error.code === 'failed-precondition') {
-                    errorMessage = '您還沒有訂閱記錄。請先訂閱 Pro Plan。';
+                    errorMessage = 'You do not have a subscription yet. Please subscribe to Pro Plan first.';
                 } else if (error.message) {
                     errorMessage = `錯誤：${error.message}`;
                 }
@@ -1733,12 +1733,12 @@
             const confirmPassword = document.getElementById('confirm-password').value;
             
             if (!currentPassword || !newPassword || !confirmPassword) {
-                alert('請填寫所有Password欄位');
+                alert('Please fill in all password fields');
                 return;
             }
             
             if (newPassword !== confirmPassword) {
-                alert('New Password與確認Password不符');
+                alert('New password does not match confirmation');
                 return;
             }
             
@@ -1757,7 +1757,7 @@
                 await user.reauthenticateWithCredential(credential);
                 await user.updatePassword(newPassword);
                 
-                alert('Password已更新');
+                alert('Password updated successfully');
                 
                 // 清空Password欄位
                 document.getElementById('current-password').value = '';
@@ -1765,8 +1765,8 @@
                 document.getElementById('confirm-password').value = '';
             } catch (error) {
                                 
-                console.error('❌ 更New Password失敗:', error);
-                alert('更New Password失敗: ' + error.message);
+                console.error('❌ Failed to update password:', error);
+                alert('Failed to update password: ' + error.message);
             }
         }
         
@@ -1799,7 +1799,7 @@
             localStorage.setItem('emailNotifications', emailNotifications);
             localStorage.setItem('marketingEmails', marketingEmails);
             
-            alert('通知設定已儲存');
+            alert('Notification settings saved');
         }
         
         // 載入 Credits 歷史記錄
@@ -1885,7 +1885,7 @@
                     tbody.innerHTML = `
                         <tr>
                             <td colspan="3" style="text-align: center; padding: 2rem; color: #9ca3af;">
-                                請先Login以View History
+                                Please login to view history
                             </td>
                         </tr>
                     `;
@@ -1921,7 +1921,7 @@
                         <tr>
                             <td colspan="3" style="text-align: center; padding: 2rem; color: #9ca3af;">
                                 <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5;"></i>
-                                <div>暫無記錄</div>
+                                <div>No records</div>
                             </td>
                         </tr>
                     `;
@@ -1945,34 +1945,34 @@
                     let type, typeColor, description, sign;
                     
                     if (record.type === 'add') {
-                        type = '增加';
+                        type = 'Add';
                         typeColor = '#10b981';
                         sign = '+';
                         
                         if (record.metadata?.source === 'subscription') {
-                            description = `訂閱計劃 - ${record.metadata.planType?.toUpperCase() || 'N/A'}`;
+                            description = `Subscription - ${record.metadata.planType?.toUpperCase() || 'N/A'}`;
                         } else if (record.metadata?.source === 'purchase') {
                             description = record.metadata.productName || 'Buy Credits';
                         } else {
-                            description = '添加 Credits';
+                            description = 'Add Credits';
                         }
                     } else if (record.type === 'deduct') {
-                        type = '使用';
+                        type = 'Used';
                         typeColor = '#ef4444';
                         sign = '-';
-                        // 🔥 如果是文檔處理，顯示"文件轉換"
-                        description = record.metadata?.projectName || '文件轉換';
+                        // 🔥 If document processing, display "File Conversion"
+                        description = record.metadata?.projectName || 'File Conversion';
                     } else if (record.type === 'reset') {
-                        type = '重置';
+                        type = 'Reset';
                         typeColor = '#6b7280';
                         sign = '';
-                        description = `每月重置 - ${record.metadata?.planType?.toUpperCase() || 'N/A'}`;
+                        description = `Monthly Reset - ${record.metadata?.planType?.toUpperCase() || 'N/A'}`;
                     } else {
-                        type = '其他';
+                        type = 'Other';
                         typeColor = '#9ca3af';
                         sign = '';
-                        // 🔥 將"其他操作"改為"文件轉換"
-                        description = '文件轉換';
+                        // 🔥 Change "Other operations" to "File Conversion"
+                        description = 'File Conversion';
                     }
                     
                     // 🔥 刪除了類型列
@@ -1998,7 +1998,7 @@
                     <tr>
                         <td colspan="3" style="text-align: center; padding: 2rem; color: #ef4444;">
                             <i class="fas fa-exclamation-circle" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
-                            <div>載入記錄失敗</div>
+                            <div>Failed to load records</div>
                             <div style="font-size: 0.875rem; margin-top: 0.5rem; color: #9ca3af;">${error.message}</div>
                         </td>
                     </tr>
@@ -2017,22 +2017,22 @@
         
         // Delete Account
         async function deleteAccount() {
-            const confirmed = confirm('您確定要Delete Account嗎？This action cannot be undone。');
+            const confirmed = confirm('Are you sure you want to delete your account? This action cannot be undone.');
             if (!confirmed) return;
             
-            const doubleConfirm = confirm('這將永久刪除您的所有資料。您確定要繼續嗎？');
+            const doubleConfirm = confirm('This will permanently delete all your data. Are you sure you want to continue?');
             if (!doubleConfirm) return;
             
             try {
                 const user = window.simpleAuth.currentUser;
                 await user.delete();
                 
-                alert('Account已刪除');
+                alert('Account deleted successfully');
                 window.location.href = 'index.html';
             } catch (error) {
                                 
                 console.error('❌ Delete Account失敗:', error);
-                alert('Delete Account失敗: ' + error.message);
+                alert('Failed to delete account: ' + error.message);
             }
         }
         
@@ -2230,7 +2230,7 @@
             } catch (error) {
                                 
                 console.error('❌ 保存到 Firebase 失敗:', error);
-                alert('Create項目失敗，請重試');
+                alert('Failed to create project, please try again');
                 return;
             }
         }
