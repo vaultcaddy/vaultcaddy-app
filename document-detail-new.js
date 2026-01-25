@@ -3,6 +3,8 @@
 // 完全重寫的簡化版本
 // ============================================
 
+console.log('📦 document-detail-new.js 已加載 [v20260125]');
+
 // 調試模式
 const DEBUG_MODE = false;
 
@@ -1645,7 +1647,7 @@ function displayBankStatementContent(data) {
     const currentPageTransactions = transactions.slice(startIndex, endIndex);
     
     let transactionsHTML = '';
-    const currentLang = getCurrentLanguage();
+    // ✅ currentLang 已在函數開頭聲明，這裡直接使用
     const showRefAndCheck = (currentLang === 'zh-TW' || currentLang === 'en'); // 只有中文和英文版显示参考编号和支票号码
     
     currentPageTransactions.forEach((tx, pageIndex) => {
@@ -1832,8 +1834,7 @@ function displayBankStatementContent(data) {
         </div>
     ` : '';
     
-    const currentLang = getCurrentLanguage();
-    const showRefAndCheck = (currentLang === 'zh-TW' || currentLang === 'en'); // 只有中文和英文版显示参考编号和支票号码
+    // ✅ currentLang 已在函數開頭聲明，showRefAndCheck 已在前面聲明，這裡直接使用
     
     dataSection.innerHTML = `
         <div class="transactions-section">
