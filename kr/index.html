@@ -844,18 +844,33 @@
                 }
             }
             
-            // 🔥 최적화: SimpleAuth 초기화 후에만 업데이트 (즉시 호출 삭제)
-            // updateUserMenu();  ← 刪除！SimpleAuth 아직 초기화 안 됨
+            // ✅ simpleAuth 초기화를 기다린 후 사용자 메뉴 업데이트
+            async function waitForAuthAndUpdate() {
+                if (window.simpleAuth && window.simpleAuth.initialized) {
+                    updateUserMenu();
+                    return;
+                }
+                let attempts = 0;
+                const checkInterval = setInterval(() => {
+                    attempts++;
+                    if (window.simpleAuth && window.simpleAuth.initialized) {
+                        clearInterval(checkInterval);
+                        console.log('✅ simpleAuth 초기화 완료, 사용자 메뉴 업데이트');
+                        updateUserMenu();
+                    } else if (attempts > 50) {
+                        clearInterval(checkInterval);
+                        console.warn('⚠️ simpleAuth 초기화 타임아웃, 강제 업데이트');
+                        updateUserMenu();
+                    }
+                }, 100);
+            }
+            waitForAuthAndUpdate();
             
-            // 監聽 Firebase 和 Auth 事件
+            // Firebase 및 Auth 이벤트 리스닝
             window.addEventListener('firebase-ready', updateUserMenu);
             window.addEventListener('user-logged-in', updateUserMenu);
             window.addEventListener('user-logged-out', updateUserMenu);
-            
-            // 延遲檢查（대기 SimpleAuth 初始化완료）
-            setTimeout(updateUserMenu, 500);   // 0.5초後首회檢查
-            setTimeout(updateUserMenu, 1000);  // 1초後再회檢查
-            setTimeout(updateUserMenu, 2000);  // 2초後最終確認
+            window.addEventListener('auth-state-changed', updateUserMenu);
             
             // 暴露 toggleDropdown 到全局
             window.toggleDropdown = toggleDropdown;
