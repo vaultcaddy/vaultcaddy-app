@@ -41,7 +41,7 @@
     /**
      * 切换下拉菜单
      */
-    function toggleDropdown() {
+    async function toggleDropdown() {
         const dropdown = document.getElementById('user-dropdown');
         if (!dropdown) {
             logger.warn('下拉菜单元素未找到');
@@ -49,13 +49,51 @@
         }
         
         const isHidden = dropdown.style.display === 'none' || !dropdown.style.display;
-        dropdown.style.display = isHidden ? 'block' : 'none';
         
         if (isHidden) {
-            // 延迟绑定外部点击事件，避免立即触发
+            dropdown.style.display = 'block';
+            
+            // 🔥 即時從 Firestore 獲取最新用戶數據
+            let planType = 'Free Plan';
+            if (window.simpleDataManager && window.simpleDataManager.initialized) {
+                try {
+                    userCredits = await window.simpleDataManager.getUserCredits();
+                    logger.log('✅ 即時獲取 Credits:', userCredits);
+                    
+                    // 獲取套餐類型
+                    const currentUser = window.simpleAuth?.getCurrentUser();
+                    if (currentUser) {
+                        const userDoc = await window.simpleDataManager.db.collection('users').doc(currentUser.uid).get();
+                        if (userDoc.exists) {
+                            const userData = userDoc.data();
+                            planType = userData.planType || 'Free Plan';
+                            userDisplayName = userData.displayName || userDisplayName;
+                        }
+                    }
+                } catch (error) {
+                    logger.error('無法獲取用戶數據:', error);
+                }
+            }
+            
+            // ✅ 更新下拉菜單內容（支持新版）
+            const avatarEl = document.getElementById('dropdown-avatar');
+            const nameEl = document.getElementById('dropdown-name');
+            const emailEl = document.getElementById('dropdown-email');
+            const creditsEl = document.getElementById('dropdown-credits');
+            const planEl = document.getElementById('dropdown-plan');
+            
+            if (avatarEl) avatarEl.textContent = getUserInitial();
+            if (nameEl) nameEl.textContent = userDisplayName || userEmail.split('@')[0] || 'User';
+            if (emailEl) emailEl.textContent = userEmail;
+            if (creditsEl) creditsEl.textContent = userCredits.toLocaleString();
+            if (planEl) planEl.textContent = planType;
+            
+            // 延迟绑定外部点击事件
             setTimeout(() => {
                 document.addEventListener('click', closeDropdownOutside);
             }, 10);
+        } else {
+            dropdown.style.display = 'none';
         }
     }
     
