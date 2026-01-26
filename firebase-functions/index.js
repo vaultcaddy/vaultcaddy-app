@@ -945,26 +945,11 @@ async function handleInvoicePaid(invoice, isTestMode = false) {
         if (credits > 0) {
             console.log(`💰 準備為續費處理 Credits：用戶 ${userId}`);
             
-            // 🔥 第 1 步：清零旧的 Credits
             const userRef = db.collection('users').doc(userId);
-            const userDoc = await userRef.get();
             
-            if (userDoc.exists) {
-                const oldCredits = userDoc.data().credits || 0;
-                const oldCurrentCredits = userDoc.data().currentCredits || 0;
-                console.log(`🗑️ 清零旧 Credits: credits=${oldCredits}, currentCredits=${oldCurrentCredits}`);
-                
-                await userRef.update({
-                    credits: 0,
-                    currentCredits: 0,
-                    lastCreditsBeforeReset: oldCredits, // 记录清零前的 Credits
-                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                });
-                console.log(`✅ 旧 Credits 已清零`);
-            }
-            
-            // 🔥 第 2 步：添加新的 Credits
-            console.log(`💰 添加新的 ${credits} Credits`);
+            // ✅ 簡化邏輯：Stripe 付款成功 → 直接添加新 Credits（不清零舊的）
+            // 理由：用戶付費後獲得新的 Credits，舊的 Credits 是用戶的資產不應被清零
+            console.log(`💰 添加新的 ${credits} Credits（累加到現有餘額）`);
             await addCredits(userId, credits, {
                 source: 'subscription_renewal',
                 stripeInvoiceId: invoice.id,
@@ -976,26 +961,26 @@ async function handleInvoicePaid(invoice, isTestMode = false) {
                 billingReason: invoice.billing_reason
             });
             
-            console.log(`✅ 續費成功：旧 Credits 已清零，新 Credits ${credits} 已添加`);
+            console.log(`✅ 續費成功：新 Credits ${credits} 已添加`);
             
-            // 🔥 第 3 步：更新重置日期
+            // ✅ 更新重置日期（下次 Stripe 付款的預期日期）
             const now = new Date();
             let resetDate;
             if (planType === 'yearly') {
                 resetDate = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
-                console.log(`📅 年费计划，重置日期为 1 年后: ${resetDate.toISOString()}`);
+                console.log(`📅 年費計劃，下次重置日期為 1 年後: ${resetDate.toISOString()}`);
             } else {
                 resetDate = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());
-                console.log(`📅 月费计划，重置日期为 1 个月后: ${resetDate.toISOString()}`);
+                console.log(`📅 月費計劃，下次重置日期為 1 個月後: ${resetDate.toISOString()}`);
             }
             
-            // 更新用户文档
+            // 更新用戶文檔
             await userRef.update({
                 resetDate: admin.firestore.Timestamp.fromDate(resetDate),
                 lastRenewalDate: admin.firestore.FieldValue.serverTimestamp(),
                 updatedAt: admin.firestore.FieldValue.serverTimestamp()
             });
-            console.log(`✅ 用户重置日期已更新`);
+            console.log(`✅ 用戶重置日期已更新`);
         } else {
             console.log(`⚠️ 產品沒有配置 Credits: ${product.name}`);
         }
@@ -1340,57 +1325,15 @@ async function reportUsageToStripe(userId, quantity) {
 }
 
 // ============================================
-// 3. 定期任務 - 每月重置訂閱 Credits
+// 3. 定期任務 - 檢查過期訂閱
 // ============================================
-
-exports.monthlyCreditsReset = functions.pubsub
-    .schedule('0 0 1 * *') // 每月1號凌晨執行
-    .timeZone('Asia/Taipei')
-    .onRun(async (context) => {
-        console.log('🔄 開始每月 Credits 重置...');
-        
-        const usersSnapshot = await db.collection('users')
-            .where('subscription.status', '==', 'active')
-            .get();
-        
-        let count = 0;
-        
-        for (const userDoc of usersSnapshot.docs) {
-            const userId = userDoc.id;
-            const userData = userDoc.data();
-            const subscription = userData.subscription;
-            
-            // 檢查訂閱是否在當前週期內
-            const now = new Date();
-            const periodStart = subscription.currentPeriodStart.toDate();
-            const periodEnd = subscription.currentPeriodEnd.toDate();
-            
-            if (now >= periodStart && now <= periodEnd) {
-                const monthlyCredits = subscription.monthlyCredits || 0;
-                
-                // 重置 Credits（設置為當月額度）
-                await db.collection('users').doc(userId).update({
-                    credits: monthlyCredits,
-                    lastCreditsReset: admin.firestore.FieldValue.serverTimestamp()
-                });
-                
-                // 記錄重置
-                await userDoc.ref.collection('creditsHistory').add({
-                    type: 'reset',
-                    amount: monthlyCredits,
-                    planType: subscription.planType,
-                    createdAt: admin.firestore.FieldValue.serverTimestamp()
-                });
-                
-                count++;
-            }
-        }
-        
-        console.log(`✅ Credits 重置完成，影響 ${count} 個用戶`);
-    });
-
-// ============================================
-// 4. 定期任務 - 檢查過期訂閱
+// 
+// ℹ️ 已移除 monthlyCreditsReset 定時任務
+// 原因：Credits 重置現在完全由 Stripe Webhook 驅動
+// - 月費用戶：Stripe 每月付款成功後添加新 Credits
+// - 年費用戶：Stripe 每年付款成功後添加新 Credits
+// - Free Plan 用戶：不觸發重置
+// 
 // ============================================
 
 exports.checkExpiredSubscriptions = functions.pubsub
