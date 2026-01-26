@@ -30,24 +30,29 @@ window.StripeManager = {
             }
         },
         
-        // ✅ 訂閱計劃（2025-11-22 更新）
+        // ✅ 訂閱計劃（2026-01-26 更新 - 與 Stripe 產品同步）
+        // 
+        // ⚠️ 重要：執行 create-stripe-payment-links.js 後更新 paymentLink
+        // 
         subscriptions: {
-            // 新的定價方案
+            // 月費方案：HKD $28/月（含 100 Credits + 超出後 $0.3/頁）
             monthly: {
-                productId: 'prod_TSmKnHeaQVxZXC',  // VaultCaddy 月費
-                price: 78,  // HKD
+                productId: 'prod_Tb24SiE4usHRDS',  // VaultCaddy Monthly
+                price: 28,  // HKD $28/月
                 credits: 100,
                 period: 'monthly',
-                overage: 0.5,  // HKD $0.5/頁（超出後）
-                paymentLink: 'https://buy.stripe.com/test_YOUR_MONTHLY_LINK'  // TODO: 創建 Payment Link
+                overage: 0.3,  // HKD $0.3/頁（超出後）
+                // ⚠️ 當前 Payment Link 可能不包含超額計費，需要重新創建
+                paymentLink: 'https://buy.stripe.com/eVql4ocXWeBsftI7gmf7i0b'  // TODO: 更新為包含超額計費的 Payment Link
             },
+            // 年費方案：HKD $264/年（相當於 $22/月，含 1200 Credits + 超出後 $0.3/頁）
             yearly: {
-                productId: 'prod_TSsEWI5bv9pSkz',  // VaultCaddy 年費
-                price: 744,  // HKD (每月 $62)
+                productId: 'prod_Tb2443GvCbe4Pp',  // VaultCaddy Yearly
+                price: 264,  // HKD $264/年
                 credits: 1200,
                 period: 'yearly',
-                overage: 0.5,  // HKD $0.5/頁（超出後）
-                paymentLink: 'https://buy.stripe.com/test_YOUR_YEARLY_LINK'  // TODO: 創建 Payment Link
+                overage: 0.3,  // HKD $0.3/頁（超出後）
+                paymentLink: 'https://buy.stripe.com/YEARLY_LINK_TODO'  // TODO: 創建年費 Payment Link
             },
             
             // 舊方案（保留兼容性）
