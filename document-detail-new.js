@@ -2078,12 +2078,12 @@ async function autoSaveAllChanges() {
         if (bankName || accountNumber || accountHolder || statementDate || closingBalance) {
             currentDocument.processedData = {
                 ...currentDocument.processedData,
-                bankName: bankName,
-                accountNumber: accountNumber,
-                accountHolder: accountHolder,
-                currency: currency,
-                statementPeriod: statementPeriod,
-                statementDate: statementDate,
+                bankName: bankName || '',
+                accountNumber: accountNumber || '',
+                accountHolder: accountHolder || '',
+                currency: currency || 'HKD',
+                statementPeriod: statementPeriod || '',  // ✅ 避免 undefined
+                statementDate: statementDate || '',
                 openingBalance: parseFloat(openingBalance?.replace(/[^0-9.-]+/g, '')) || 0,
                 closingBalance: parseFloat(closingBalance?.replace(/[^0-9.-]+/g, '')) || 0
             };
@@ -2141,8 +2141,13 @@ async function saveDocumentChanges() {
             return;
         }
         
+        // ✅ 清理 processedData，移除所有 undefined 值（Firebase 不接受 undefined）
+        const cleanProcessedData = JSON.parse(JSON.stringify(currentDocument.processedData, (key, value) => {
+            return value === undefined ? null : value;
+        }));
+        
         await window.simpleDataManager.updateDocument(projectId, documentId, {
-            processedData: currentDocument.processedData,
+            processedData: cleanProcessedData,
             lastModified: new Date().toISOString()
         });
         
