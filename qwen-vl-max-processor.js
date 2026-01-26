@@ -312,13 +312,10 @@ class QwenVLMaxProcessor {
                     console.log(`   ✅ 第${pageNum}页 完成！耗时 ${result.processingTime}ms`);
                     successResults.push({ ...result, pageNum, success: true });
                     
-                    // ✅ 調用進度回調
+                    // ✅ 調用進度回調（使用正確的參數格式：currentBatch, totalBatches, progress）
                     if (progressCallback) {
-                        progressCallback({
-                            currentPage: pageNum,
-                            totalPages: totalPages,
-                            progress: Math.round((pageNum / totalPages) * 100)
-                        });
+                        const progress = Math.round((pageNum / totalPages) * 100);
+                        progressCallback(pageNum, totalPages, progress);
                     }
                 } catch (error) {
                     console.error(`   ❌ 第${pageNum}页 失败:`, error.message);

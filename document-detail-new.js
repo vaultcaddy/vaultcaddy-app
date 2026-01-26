@@ -1674,34 +1674,28 @@ function displayBankStatementContent(data) {
             }
         }
         
-        // 🔴 關鍵驗證：檢查 transactionSign 是否與餘額變化一致
+        // 🔴 關鍵驗證：使用余額變化來判斷收入/支出（銀行不會出錯，我們的判斷才會錯）
+        // ✅ 只根據余額數值變化來判斷 +/-，不修改原始數據
         if (actualIndex > 0) {
             const prevTx = transactions[actualIndex - 1];
             if (prevTx && prevTx.balance !== undefined && tx.balance !== undefined) {
-                const prevBalance = parseFloat(prevTx.balance);
-                const currentBalance = parseFloat(tx.balance);
+                // ✅ 直接解析數值，不處理 DR 標記（保持原始數據不變）
+                const prevBalance = parseFloat(String(prevTx.balance).replace(/[^0-9.-]+/g, '')) || 0;
+                const currentBalance = parseFloat(String(tx.balance).replace(/[^0-9.-]+/g, '')) || 0;
                 const balanceDiff = currentBalance - prevBalance;
                 const amountNum = parseFloat(amountStr.replace(/[^0-9.-]+/g, ''));
                 
-                // 判斷正確的交易類型
+                // ✅ 使用余額變化來判斷正確的 +/-
+                // 余額增加 = 收入（+），余額減少 = 支出（-）
                 const correctSign = balanceDiff > 0 ? 'income' : (balanceDiff < 0 ? 'expense' : tx.transactionSign);
                 
-                // 如果 AI 的判斷與餘額變化不一致，修正它
+                // ✅ 只修正顯示符號（+/-），不改變銀行單上的原始數據
                 if (tx.transactionSign !== correctSign && Math.abs(balanceDiff) > 0.01) {
-                    console.warn(`⚠️ 交易 ${actualIndex} 的 transactionSign 與餘額變化不一致！`);
-                    console.warn(`   AI 判斷: ${tx.transactionSign}, 餘額變化: ${balanceDiff > 0 ? 'income' : 'expense'}`);
-                    console.warn(`   前一筆餘額: ${prevBalance}, 當前餘額: ${currentBalance}, 差額: ${balanceDiff}`);
-                    console.warn(`   正在修正為: ${correctSign}`);
+                    console.log(`🔧 交易 ${actualIndex} 符號修正: ${tx.transactionSign} → ${correctSign}`);
+                    console.log(`   余額變化: ${prevBalance} → ${currentBalance} (差額: ${balanceDiff > 0 ? '+' : ''}${balanceDiff.toFixed(2)})`);
                     
-                    // 修正 transactionSign 和 debit/credit
+                    // ✅ 只修改 transactionSign（+/-），保持 amount 和 balance 原始數據不變
                     tx.transactionSign = correctSign;
-                    if (correctSign === 'income') {
-                        tx.credit = amountNum;
-                        tx.debit = 0;
-                    } else {
-                        tx.debit = amountNum;
-                        tx.credit = 0;
-                    }
                 }
             }
         }
