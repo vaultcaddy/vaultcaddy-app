@@ -279,18 +279,13 @@ class QwenVLMaxProcessor {
         const startTime = Date.now();
         const totalPages = files.length;
         
-        // ✅ 完全并行策略：所有页面同时处理（每个请求只处理1页）
-        // 重要：不是将多页打包成1个请求，而是每页1个独立请求，然后并行发送
-        // 限制：TPM=100K，每页~16K tokens，最多6页并行（96K < 100K）
-        const totalBatches = 1;  // 只有1个批次，所有页面并行
-        
-        console.log(`\n🔄 [Qwen-VL Max] 完全并行处理模式`);
+        // ✅ 串行處理策略：一頁接一頁處理，避免 API 限流
+        // 原因：並行處理可能導致 API 返回不完整的響應
+        console.log(`\n🔄 [Qwen-VL Max] 串行處理模式`);
         console.log(`   📊 总页数: ${totalPages}`);
-        console.log(`   ⚡ 并行策略: 所有页面同时处理`);
-        console.log(`   📝 每个请求: 1页（避免AI消化不良）`);
-        console.log(`   🔢 API调用数: ${totalPages} 个（同时发送）`);
-        console.log(`   ⏱️  预计时间: ~25-30秒（最慢页面的时间）`);
-        console.log(`   💰 Token消耗: ~${totalPages * 16}K（限制100K）`);
+        console.log(`   📝 策略: 一頁接一頁處理（避免 API 限流）`);
+        console.log(`   🔢 API调用数: ${totalPages} 个（依次發送）`);
+        console.log(`   ⏱️  预计时间: ~${totalPages * 30}秒（每頁約30秒）`);
         
         try {
             const allResults = [];
@@ -300,36 +295,46 @@ class QwenVLMaxProcessor {
                 total_tokens: 0
             };
             const allResponses = [];
+            const successResults = [];
+            const failedResults = [];
             
-            console.log(`\n⚡ 开始并行处理 ${totalPages} 页...`);
-            console.log(`   每个请求独立处理1页，避免内容过多导致AI无法消化`);
+            console.log(`\n📄 开始串行处理 ${totalPages} 页...`);
             
-            // ✅ 完全并行：同时发送所有请求
-            const allPromises = files.map((file, idx) => 
-                this.processSingleBatch([file], documentType)
-                    .then(result => {
-                        const pageNum = idx + 1;
-                        console.log(`   ✅ 第${pageNum}页 完成！耗时 ${result.processingTime}ms`);
-                        return { ...result, pageNum, success: true };
-                    })
-                    .catch(error => {
-                        const pageNum = idx + 1;
-                        console.error(`   ❌ 第${pageNum}页 失败:`, error.message);
-                        // ✅ 不再抛出错误，返回失败标记，允许其他页面继续处理
-                        return { pageNum, success: false, error: error.message };
-                    })
-            );
+            // ✅ 串行處理：一頁接一頁
+            for (let idx = 0; idx < files.length; idx++) {
+                const file = files[idx];
+                const pageNum = idx + 1;
+                
+                console.log(`\n   📄 處理第 ${pageNum}/${totalPages} 頁...`);
+                
+                try {
+                    const result = await this.processSingleBatch([file], documentType);
+                    console.log(`   ✅ 第${pageNum}页 完成！耗时 ${result.processingTime}ms`);
+                    successResults.push({ ...result, pageNum, success: true });
+                    
+                    // ✅ 調用進度回調
+                    if (progressCallback) {
+                        progressCallback({
+                            currentPage: pageNum,
+                            totalPages: totalPages,
+                            progress: Math.round((pageNum / totalPages) * 100)
+                        });
+                    }
+                } catch (error) {
+                    console.error(`   ❌ 第${pageNum}页 失败:`, error.message);
+                    failedResults.push({ pageNum, success: false, error: error.message });
+                }
+                
+                // ✅ 頁面之間添加短暫延遲，避免 API 過載
+                if (idx < files.length - 1) {
+                    console.log(`   ⏳ 等待 1 秒後處理下一頁...`);
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+            }
             
-            // ✅ 使用 Promise.allSettled 确保所有请求都完成（无论成功或失败）
-            const batchStartTime = Date.now();
-            const settledResults = await Promise.all(allPromises);
-            const batchDuration = Date.now() - batchStartTime;
+            const batchDuration = Date.now() - startTime;
             
-            // ✅ 分离成功和失败的结果
-            const successResults = settledResults.filter(r => r.success);
-            const failedResults = settledResults.filter(r => !r.success);
-            
-            console.log(`\n📊 并行处理完成！总耗时 ${batchDuration}ms (${(batchDuration/1000).toFixed(1)}秒)`);
+            console.log(`\n📊 串行处理完成！总耗时 ${batchDuration}ms (${(batchDuration/1000).toFixed(1)}秒)`);
             console.log(`   ✅ 成功: ${successResults.length}/${totalPages} 页`);
             if (failedResults.length > 0) {
                 console.log(`   ❌ 失败: ${failedResults.length} 页`);
