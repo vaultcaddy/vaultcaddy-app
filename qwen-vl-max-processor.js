@@ -19,6 +19,7 @@
 class QwenVLMaxProcessor {
     constructor() {
         // Qwen-VL Max API (通过 Cloudflare Worker)
+        // ⚠️ 確保 Worker 的 max_tokens 設置為 28000
         this.qwenWorkerUrl = 'https://deepseek-proxy.vaultcaddy.workers.dev';
         this.qwenModel = 'qwen3-vl-plus-2025-12-19'; // ⭐ 推荐模型（2025-12-18 发布）
         
