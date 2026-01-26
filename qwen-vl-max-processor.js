@@ -81,7 +81,7 @@ class QwenVLMaxProcessor {
                     }
                 ],
                 temperature: 0.1,
-                max_tokens: 16000  // ✅ 增加到 16000（避免JSON截断，确保完整输出）
+                max_tokens: 28000  // ✅ 增加到 28000（与其他函数一致，避免JSON截断）
             };
             
             // 4. 调用 Qwen-VL API
@@ -310,21 +310,39 @@ class QwenVLMaxProcessor {
                     .then(result => {
                         const pageNum = idx + 1;
                         console.log(`   ✅ 第${pageNum}页 完成！耗时 ${result.processingTime}ms`);
-                        return { ...result, pageNum };
+                        return { ...result, pageNum, success: true };
                     })
                     .catch(error => {
                         const pageNum = idx + 1;
                         console.error(`   ❌ 第${pageNum}页 失败:`, error.message);
-                        throw new Error(`第${pageNum}页处理失败: ${error.message}`);
+                        // ✅ 不再抛出错误，返回失败标记，允许其他页面继续处理
+                        return { pageNum, success: false, error: error.message };
                     })
             );
             
-            // ✅ 等待所有请求完成
+            // ✅ 使用 Promise.allSettled 确保所有请求都完成（无论成功或失败）
             const batchStartTime = Date.now();
-            const results = await Promise.all(allPromises);
+            const settledResults = await Promise.all(allPromises);
             const batchDuration = Date.now() - batchStartTime;
-                    
-            console.log(`\n✅ 所有页面并行处理完成！总耗时 ${batchDuration}ms (${(batchDuration/1000).toFixed(1)}秒)`);
+            
+            // ✅ 分离成功和失败的结果
+            const successResults = settledResults.filter(r => r.success);
+            const failedResults = settledResults.filter(r => !r.success);
+            
+            console.log(`\n📊 并行处理完成！总耗时 ${batchDuration}ms (${(batchDuration/1000).toFixed(1)}秒)`);
+            console.log(`   ✅ 成功: ${successResults.length}/${totalPages} 页`);
+            if (failedResults.length > 0) {
+                console.log(`   ❌ 失败: ${failedResults.length} 页`);
+                failedResults.forEach(f => console.log(`      - 第${f.pageNum}页: ${f.error}`));
+            }
+            
+            // ✅ 如果所有页面都失败，才抛出错误
+            if (successResults.length === 0) {
+                throw new Error(`所有 ${totalPages} 页处理都失败了`);
+            }
+            
+            // ✅ 使用成功的结果继续处理
+            const results = successResults;
             
             // 收集结果（按页码排序）
             results.sort((a, b) => a.pageNum - b.pageNum);
@@ -357,9 +375,12 @@ class QwenVLMaxProcessor {
             
             console.log(`\n🎉 完全并行处理完成！`);
             console.log(`   📊 总页数: ${totalPages}`);
-            console.log(`   ✅ 成功: ${results.length}/${totalPages} 页`);
+            console.log(`   ✅ 成功: ${successResults.length}/${totalPages} 页`);
+            if (failedResults.length > 0) {
+                console.log(`   ⚠️ 失败: ${failedResults.length} 页（已跳过）`);
+            }
             console.log(`   ⏱️  总耗时: ${totalTime}ms (${(totalTime/1000).toFixed(1)}秒)`);
-            console.log(`   📈 平均: ${(totalTime / totalPages).toFixed(0)}ms/页`);
+            console.log(`   📈 平均: ${(totalTime / successResults.length).toFixed(0)}ms/页`);
             console.log(`   💰 总成本: $${(this.calculateCost(totalUsage.total_tokens)).toFixed(4)}`);
             console.log(`   ⚡ 速度提升: 相比串行快 ~76%`);
             console.log(`   📊 Token使用: ${totalUsage.total_tokens.toLocaleString()} / 100,000 (${(totalUsage.total_tokens/1000).toFixed(0)}%)`);
@@ -370,10 +391,13 @@ class QwenVLMaxProcessor {
                 extractedData: mergedData,
                 rawResponse: allResponses.join('\n---\n'),
                 pages: totalPages,
+                successPages: successResults.length,  // ✅ 添加成功页数
+                failedPages: failedResults.length,    // ✅ 添加失败页数
                 processingTime: totalTime,
                 processor: 'qwen-vl-max-fully-parallel',  // ✅ 标记为完全并行
                 model: this.qwenModel,
-                usage: totalUsage
+                usage: totalUsage,
+                partialSuccess: failedResults.length > 0  // ✅ 标记是否部分成功
             };
             
         } catch (error) {
