@@ -685,15 +685,18 @@ Required fields:
   ]
 }
 
-transactionSign rules:
-- "income": Balance increased (deposit)
-- "expense": Balance decreased (withdrawal)
+transactionSign rules (IMPORTANT - use balance to verify):
+- Bank balance is ALWAYS correct - DO NOT modify balance values
+- If current balance > previous balance → "income" (credit)
+- If current balance < previous balance → "expense" (debit)
+- Use balance difference to verify debit/credit assignment
 
 Important:
 1. Extract ALL transactions - do not miss any
 2. Date format: YYYY-MM-DD
 3. Amounts: pure numbers (no currency symbols)
-4. Set to null if cannot extract
+4. **Balance values are from the bank - NEVER change them**
+5. Set to null if cannot extract
 
 Return ONLY JSON, no additional text.`;
         } else {
@@ -784,18 +787,22 @@ Transaction type rules:
 - FPS: Faster Payment System
 - Other: Other transactions
 
-transactionSign rules:
-- "income": Balance increased (credit > 0)
-- "expense": Balance decreased (debit > 0)
+transactionSign rules (IMPORTANT - use balance to verify):
+- Bank balance is ALWAYS correct, use it to determine transactionSign
+- If current balance > previous balance → "income" (credit)
+- If current balance < previous balance → "expense" (debit)
+- DO NOT modify balance values - they are from the bank and always accurate
+- Use balance difference to verify debit/credit assignment
 
 Important instructions:
 1. **Extract ALL transactions from ALL ${pageCount} pages** - do not miss any transaction
 2. Keep transactions in chronological order
 3. All dates must be in YYYY-MM-DD format
 4. All amounts must be pure numbers (no currency symbols or thousand separators)
-5. Verify: Current balance = Previous balance + credit - debit
-6. Set fields to null if they cannot be extracted from the image
-7. JSON must be valid and parseable
+5. **CRITICAL**: Balance values are from the bank and MUST NOT be changed
+6. Use balance to verify: If balance increased → income, if decreased → expense
+7. Set fields to null if they cannot be extracted from the image
+8. JSON must be valid and parseable
 
 Return ONLY JSON, no additional text or explanations.`;
         } else {
