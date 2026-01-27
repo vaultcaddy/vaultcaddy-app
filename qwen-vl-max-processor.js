@@ -18,9 +18,10 @@
 
 class QwenVLMaxProcessor {
     constructor(options = {}) {
-        // Qwen-VL Max API (通过 Cloudflare Worker)
-        // ⚠️ 確保 Worker 的 max_tokens 設置為 28000
-        this.qwenWorkerUrl = 'https://deepseek-proxy.vaultcaddy.workers.dev';
+        // Qwen-VL Max API (通过 Firebase Function)
+        // ⚠️ 確保 Function 的 max_tokens 設置為 28000
+        // 🔥 使用 Firebase Function（5分鐘超時，無限制）
+        this.qwenWorkerUrl = 'https://us-central1-vaultcaddy-production-cbbe2.cloudfunctions.net/qwenProxy';
         this.qwenModel = 'qwen3-vl-plus-2025-12-19'; // ⭐ 推荐模型（2025-12-18 发布）
         
         // 🔥 流式響應模式（2026-01-27）
@@ -525,7 +526,7 @@ class QwenVLMaxProcessor {
             const prompt = this.generateMultiPagePrompt(documentType, files.length);
             console.log(`📝 提示词长度: ${prompt.length} 字符`);
             
-            // 3. 构建请求（🔥 启用流式响应）
+            // 3. 构建请求（🔥 Firebase Function 模式 - 無超時）
             const requestBody = {
                 model: this.qwenModel,
                 messages: [
@@ -541,16 +542,15 @@ class QwenVLMaxProcessor {
                     }
                 ],
                 temperature: 0.1,
-                max_tokens: 28000,
-                stream: true  // 🔥 启用流式响应，避免 Cloudflare 超时
+                max_tokens: 28000
             };
             
             const requestBodySize = JSON.stringify(requestBody).length;
             const requestBodySizeMB = (requestBodySize / 1024 / 1024).toFixed(2);
             console.log(`📊 请求体大小: ${requestBodySizeMB} MB`);
             
-            // 4. 调用 API（流式模式）
-            console.log(`🚀 开始调用Qwen API（流式模式）...`);
+            // 4. 调用 API（Firebase Function - 5分鐘超時）
+            console.log(`🚀 开始调用Qwen API（via Firebase Function）...`);
             const apiStartTime = Date.now();
             
             const response = await fetch(this.qwenWorkerUrl, {
@@ -561,6 +561,8 @@ class QwenVLMaxProcessor {
                 body: JSON.stringify(requestBody)
             });
             
+            const apiDuration = Date.now() - apiStartTime;
+            console.log(`✅ API响应耗时: ${apiDuration}ms (${(apiDuration/1000).toFixed(1)}秒)`);
             console.log(`📊 HTTP状态码: ${response.status} ${response.statusText}`);
             
             if (!response.ok) {
@@ -575,59 +577,19 @@ class QwenVLMaxProcessor {
                 throw new Error(`Qwen-VL API 错误: ${response.status} - ${errorData.message || response.statusText}`);
             }
             
-            // 5. 🔥 解析流式响应（SSE 格式）
-            console.log(`📡 开始接收流式响应...`);
+            console.log(`🔄 开始解析JSON响应...`);
+            const data = await response.json();
+            console.log(`✅ JSON解析成功`);
+            
+            // 5. 提取响应文本
             let responseText = '';
-            let usage = {};
-            
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let buffer = '';
-            let chunkCount = 0;
-            
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                
-                buffer += decoder.decode(value, { stream: true });
-                const lines = buffer.split('\n');
-                buffer = lines.pop() || '';  // 保留不完整的行
-                
-                for (const line of lines) {
-                    if (line.startsWith('data: ')) {
-                        const data = line.slice(6).trim();
-                        if (data === '[DONE]') continue;
-                        
-                        try {
-                            const parsed = JSON.parse(data);
-                            if (parsed.choices && parsed.choices[0]) {
-                                const delta = parsed.choices[0].delta;
-                                if (delta && delta.content) {
-                                    responseText += delta.content;
-                                    chunkCount++;
-                                }
-                            }
-                            if (parsed.usage) {
-                                usage = parsed.usage;
-                            }
-                        } catch (e) {
-                            // 忽略解析错误（可能是不完整的 JSON）
-                        }
-                    }
-                }
-                
-                // 每 50 个 chunk 输出一次进度
-                if (chunkCount > 0 && chunkCount % 50 === 0) {
-                    console.log(`   📥 已接收 ${chunkCount} 个数据块，${responseText.length} 字符...`);
-                }
+            if (data.choices && data.choices[0] && data.choices[0].message) {
+                responseText = data.choices[0].message.content;
             }
-            
-            const apiDuration = Date.now() - apiStartTime;
-            console.log(`✅ 流式响应完成！耗时: ${apiDuration}ms (${(apiDuration/1000).toFixed(1)}秒)`);
-            console.log(`   📊 共接收 ${chunkCount} 个数据块`);
             
             if (!responseText) {
                 console.error(`❌ Qwen-VL未返回有效响应`);
+                console.error(`📊 API响应数据:`, JSON.stringify(data, null, 2));
                 throw new Error('Qwen-VL 未返回有效响应');
             }
             
@@ -647,8 +609,8 @@ class QwenVLMaxProcessor {
             console.log(`🎉 批次处理完成！总耗时: ${totalTime}ms (${(totalTime/1000).toFixed(1)}秒)`);
             
             // 记录使用统计
-            if (usage && usage.total_tokens) {
-                console.log(`📊 Token使用: prompt=${usage.prompt_tokens}, completion=${usage.completion_tokens}, total=${usage.total_tokens}`);
+            if (data.usage) {
+                console.log(`📊 Token使用: prompt=${data.usage.prompt_tokens}, completion=${data.usage.completion_tokens}, total=${data.usage.total_tokens}`);
             }
             
             return {
@@ -660,7 +622,7 @@ class QwenVLMaxProcessor {
                 processingTime: totalTime,
                 processor: 'qwen-vl-max',
                 model: this.qwenModel,
-                usage: usage
+                usage: data.usage || {}
             };
             
         } catch (error) {
@@ -1026,8 +988,8 @@ JSON格式：
         console.log(`      - max_tokens 限制: ${MAX_OUTPUT_TOKENS}`);
         console.log(`      - Token 允許最大頁數: ${maxPagesByTokens} 頁 (${MAX_OUTPUT_TOKENS}÷${MAX_OUTPUT_TOKENS_PER_PAGE})`);
         console.log(`   ⏱️ 批次策略:`);
-        console.log(`      - 🔥 流式響應模式：5 頁/批`);
-        console.log(`      - 無 Cloudflare 超時問題`);
+        console.log(`      - 🔥 Firebase Function 模式：5 頁/批`);
+        console.log(`      - 5 分鐘超時，無超時問題`);
         console.log(`   🎯 決策結果:`);
         console.log(`      - 批次大小: ${batchSize} 頁/批`);
         console.log(`      - 限制因素: ${limitingFactor}`);
