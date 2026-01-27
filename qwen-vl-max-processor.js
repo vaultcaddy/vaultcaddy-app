@@ -343,19 +343,33 @@ class QwenVLMaxProcessor {
             const successResults = [];
             const failedResults = [];
             
-            console.log(`\n📄 開始處理 ${totalPages} 頁（${totalBatches} 次 API 請求）...`);
+            // 🔥 並行處理（最多 2 個並行，穩定優先）
+            const MAX_PARALLEL = 2;
+            const useParallel = totalBatches >= 2;
             
-            // ✅ 串行發送多圖請求（每次請求包含 batchSize 頁）
+            console.log(`\n📄 開始處理 ${totalPages} 頁（${totalBatches} 次 API 請求）...`);
+            console.log(`   🚀 處理模式: ${useParallel ? `並行（最多 ${MAX_PARALLEL} 個）` : '串行'}`);
+            
+            // 準備所有批次信息
+            const allBatches = [];
             for (let batchIdx = 0; batchIdx < totalBatches; batchIdx++) {
                 const batchStart = batchIdx * batchSize;
                 const batchEnd = Math.min(batchStart + batchSize, totalPages);
-                const batchFiles = files.slice(batchStart, batchEnd);
-                const batchNum = batchIdx + 1;
-                
+                allBatches.push({
+                    batchIdx,
+                    batchNum: batchIdx + 1,
+                    batchStart,
+                    batchEnd,
+                    batchFiles: files.slice(batchStart, batchEnd)
+                });
+            }
+            
+            // 處理單個批次的函數
+            const processBatch = async (batch) => {
+                const { batchNum, batchStart, batchEnd, batchFiles } = batch;
                 console.log(`\n   📦 API 請求 ${batchNum}/${totalBatches}（第 ${batchStart + 1}-${batchEnd} 頁，共 ${batchFiles.length} 頁）...`);
                 
                 try {
-                    // ✅ 關鍵：一次發送多頁圖片給 Qwen
                     const batchStartTime = Date.now();
                     const result = await this.processSingleBatch(batchFiles, documentType);
                     const batchTime = Date.now() - batchStartTime;
@@ -367,51 +381,93 @@ class QwenVLMaxProcessor {
                         console.log(`         - Tokens: ${result.usage.total_tokens || 'N/A'}`);
                     }
                     
-                    successResults.push({
+                    return {
                         ...result,
                         batchNum,
                         pageRange: `${batchStart + 1}-${batchEnd}`,
                         pagesInBatch: batchFiles.length,
                         success: true
-                    });
-                    
-                    // 累加 token 使用量
-                    if (result.usage) {
-                        totalUsage.prompt_tokens += result.usage.prompt_tokens || 0;
-                        totalUsage.completion_tokens += result.usage.completion_tokens || 0;
-                        totalUsage.total_tokens += result.usage.total_tokens || 0;
-                    }
-                    
+                    };
                 } catch (error) {
                     console.error(`      ❌ 請求 ${batchNum} 失敗:`, error.message);
-                    failedResults.push({
+                    return {
                         batchNum,
                         pageRange: `${batchStart + 1}-${batchEnd}`,
                         pagesInBatch: batchFiles.length,
                         success: false,
                         error: error.message
-                    });
+                    };
                 }
-                
-                // ✅ 更新進度
-                if (progressCallback) {
-                    const progress = Math.round(((batchIdx + 1) / totalBatches) * 100);
-                    progressCallback(batchNum, totalBatches, progress);
+            };
+            
+            // 🔥 並行處理批次（最多 2 個並行）
+            if (useParallel && totalBatches >= 2) {
+                // 將批次分成並行組（每組最多 2 個）
+                for (let i = 0; i < allBatches.length; i += MAX_PARALLEL) {
+                    const parallelGroup = allBatches.slice(i, i + MAX_PARALLEL);
+                    console.log(`\n   🚀 並行組 ${Math.floor(i / MAX_PARALLEL) + 1}: 同時處理 ${parallelGroup.length} 個批次`);
+                    
+                    // 並行處理這組批次
+                    const groupResults = await Promise.all(
+                        parallelGroup.map(batch => processBatch(batch))
+                    );
+                    
+                    // 處理結果
+                    for (const result of groupResults) {
+                        if (result.success) {
+                            successResults.push(result);
+                            if (result.usage) {
+                                totalUsage.prompt_tokens += result.usage.prompt_tokens || 0;
+                                totalUsage.completion_tokens += result.usage.completion_tokens || 0;
+                                totalUsage.total_tokens += result.usage.total_tokens || 0;
+                            }
+                        } else {
+                            failedResults.push(result);
+                        }
+                    }
+                    
+                    // 更新進度
+                    if (progressCallback) {
+                        const completedBatches = Math.min(i + MAX_PARALLEL, totalBatches);
+                        const progress = Math.round((completedBatches / totalBatches) * 100);
+                        progressCallback(completedBatches, totalBatches, progress);
+                    }
+                    
+                    // 並行組之間添加短暫延遲
+                    if (i + MAX_PARALLEL < allBatches.length) {
+                        console.log(`      ⏳ 等待 1 秒後處理下一組...`);
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    }
                 }
-                
-                // ✅ 請求之間添加短暫延遲（避免 API 限流）
-                if (batchIdx < totalBatches - 1) {
-                    console.log(`      ⏳ 等待 1 秒後發送下一個請求...`);
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+            } else {
+                // 串行處理（只有 1 個批次時）
+                for (const batch of allBatches) {
+                    const result = await processBatch(batch);
+                    if (result.success) {
+                        successResults.push(result);
+                        if (result.usage) {
+                            totalUsage.prompt_tokens += result.usage.prompt_tokens || 0;
+                            totalUsage.completion_tokens += result.usage.completion_tokens || 0;
+                            totalUsage.total_tokens += result.usage.total_tokens || 0;
+                        }
+                    } else {
+                        failedResults.push(result);
+                    }
+                    
+                    if (progressCallback) {
+                        const progress = Math.round(((batch.batchIdx + 1) / totalBatches) * 100);
+                        progressCallback(batch.batchNum, totalBatches, progress);
+                    }
                 }
             }
             
             const totalTime = Date.now() - startTime;
             
             // ✅ 處理結果統計
-            console.log(`\n📊 串行多圖請求處理完成！`);
+            const processingMode = totalBatches >= 2 ? '並行（最多2個）' : '串行';
+            console.log(`\n📊 ${processingMode}多圖請求處理完成！`);
             console.log(`   📊 總頁數: ${totalPages}`);
-            console.log(`   📦 策略: ${batchSize}頁/請求 × ${totalBatches}次請求`);
+            console.log(`   📦 策略: ${batchSize}頁/請求 × ${totalBatches}次請求（${processingMode}）`);
             console.log(`   ✅ 成功請求: ${successResults.length}/${totalBatches}`);
             if (failedResults.length > 0) {
                 console.log(`   ❌ 失敗請求: ${failedResults.length}`);
@@ -654,9 +710,9 @@ class QwenVLMaxProcessor {
 
 Required fields:
 {
-  "bankName": "Bank name",
+  "bankName": "Bank name (e.g., HSBC, ICBC, Bank of China)",
   "bankCode": "Bank code (if available)",
-  "branchName": "Branch name",
+  "branchName": "Branch physical address (NOT bank name! Extract the address like '3 Garden Road, Central, Hong Kong')",
   "accountNumber": "Account number",
   "accountHolder": "Account holder name",
   "accountAddress": "Account holder address",
@@ -748,9 +804,9 @@ Return ONLY JSON, no additional text.`;
 
 Required fields:
 {
-  "bankName": "Bank name",
+  "bankName": "Bank name (e.g., HSBC, ICBC, Bank of China)",
   "bankCode": "Bank code (if available)",
-  "branchName": "Branch name",
+  "branchName": "Branch physical address (NOT bank name! Extract the address like '3 Garden Road, Central, Hong Kong')",
   "accountNumber": "Account number",
   "accountHolder": "Account holder name",
   "accountAddress": "Account holder address",

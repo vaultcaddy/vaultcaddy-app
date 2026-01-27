@@ -1591,14 +1591,7 @@ function displayBankStatementContent(data) {
                            onchange="autoSaveBankStatementDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; font-weight: 600; color: #10b981; background: white;">
                 </div>
-                <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${currentLang === 'zh-TW' ? '總支出' : currentLang === 'ja' ? '総支出' : currentLang === 'ko' ? '총 지출' : 'Total Expenses'}</label>
-                    <div style="padding: 0.5rem; border: 1px solid #fee2e2; border-radius: 6px; font-size: 0.9rem; font-weight: 600; color: #ef4444; background: #fef2f2;">${formatCurrency(totalExpenses)}</div>
-                </div>
-                <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${currentLang === 'zh-TW' ? '總收入' : currentLang === 'ja' ? '総収入' : currentLang === 'ko' ? '총 수입' : 'Total Income'}</label>
-                    <div style="padding: 0.5rem; border: 1px solid #d1fae5; border-radius: 6px; font-size: 0.9rem; font-weight: 600; color: #10b981; background: #d1fae5;">${formatCurrency(totalIncome)}</div>
-                </div>
+                <!-- 總支出和總收入已移除 -->
             </div>
             <style>
                 /* ✅ 手機版：帳戶信息改為1列顯示 */
