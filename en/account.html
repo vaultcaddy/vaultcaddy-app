@@ -1190,7 +1190,7 @@
                             <div id="overage-info" style="display: none; font-size: 0.8125rem; color: #6366f1; margin-top: 0.375rem; padding: 0.5rem; background: #f0f4ff; border-left: 3px solid #6366f1; border-radius: 4px;">
                                 💡 <strong>Overage Billing</strong>：Automatically billed at <strong>HKD $0.5/page</strong> Billing
                             </div>
-                            <div style="font-size: 0.75rem; color: #9ca3af; margin-top: 0.5rem;">
+                            <div id="reset-date-container" style="font-size: 0.75rem; color: #9ca3af; margin-top: 0.5rem;">
                                 Reset Date：<span id="credits-reset-date">Loading...</span> ⓘ
                             </div>
                         </div>
@@ -1708,14 +1708,17 @@
                 
                 // 更新Reset Date說明
                 if (currentPlan === 'Free') {
-                    // 🔥 Free Plan 不顯示任何說明（刪除了"一次性 Credits，用完即止。"）
-                    const resetDateElement = document.getElementById('credits-reset-date');
-                    if (resetDateElement && resetDateElement.parentElement) {
-                        resetDateElement.parentElement.innerHTML = '';
+                    // 🔥 Free Plan 不顯示 Reset Date
+                    const resetDateContainer = document.getElementById('reset-date-container');
+                    if (resetDateContainer) {
+                        resetDateContainer.style.display = 'none';
                     }
                 } else {
-                    // 付費計劃顯示Reset Date
-                    // Reset Date已經在上面的代碼中設置
+                    // 付費計劃顯示 Reset Date
+                    const resetDateContainer = document.getElementById('reset-date-container');
+                    if (resetDateContainer) {
+                        resetDateContainer.style.display = 'block';
+                    }
                 }
                 
                 logger.log(`✅ Credits 載入完成: ${currentCredits} / ${totalCredits} (${percentage.toFixed(1)}%)`);

@@ -1194,7 +1194,7 @@
                             <div id="overage-info" style="display: none; font-size: 0.8125rem; color: #6366f1; margin-top: 0.375rem; padding: 0.5rem; background: #f0f4ff; border-left: 3px solid #6366f1; border-radius: 4px;">
                                 💡 <strong>超過分請求</strong>：月間上限を超えた場合、自動的に <strong>¥10/ページ</strong> で請求されます
                             </div>
-                            <div style="font-size: 0.75rem; color: #9ca3af; margin-top: 0.5rem;">
+                            <div id="reset-date-container" style="font-size: 0.75rem; color: #9ca3af; margin-top: 0.5rem;">
                                 リセット日：<span id="credits-reset-date">読み込み中...</span> ⓘ
                             </div>
                         </div>
@@ -1696,16 +1696,19 @@
                         'linear-gradient(90deg, #667eea 0%, #764ba2 100%)';
                 }
                 
-                // 更新重置日付說明
+                // 更新リセット日説明
                 if (currentPlan === 'Free') {
-                    // 🔥 Free Plan ない顯示任何說明（削除了"一次性 Credits，用完即止。"）
-                    const resetDateElement = document.getElementById('credits-reset-date');
-                    if (resetDateElement && resetDateElement.parentElement) {
-                        resetDateElement.parentElement.innerHTML = '';
+                    // 🔥 Free Plan はリセット日を表示しない
+                    const resetDateContainer = document.getElementById('reset-date-container');
+                    if (resetDateContainer) {
+                        resetDateContainer.style.display = 'none';
                     }
                 } else {
-                    // 付費計劃顯示重置日付
-                    // 重置日付既にで上面の代碼中設置
+                    // 有料プランはリセット日を表示
+                    const resetDateContainer = document.getElementById('reset-date-container');
+                    if (resetDateContainer) {
+                        resetDateContainer.style.display = 'block';
+                    }
                 }
                 
                 logger.log(`✅ Credits 読み込み完了: ${currentCredits} / ${totalCredits} (${percentage.toFixed(1)}%)`);

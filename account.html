@@ -1188,7 +1188,7 @@
                             <div id="overage-info" style="display: none; font-size: 0.8125rem; color: #6366f1; margin-top: 0.375rem; padding: 0.5rem; background: #f0f4ff; border-left: 3px solid #6366f1; border-radius: 4px;">
                                 💡 <strong>超額計費</strong>：超出月度額度後自動按 <strong>HKD $0.5/頁</strong> 計費
                             </div>
-                            <div style="font-size: 0.75rem; color: #9ca3af; margin-top: 0.5rem;">
+                            <div id="reset-date-container" style="font-size: 0.75rem; color: #9ca3af; margin-top: 0.5rem;">
                                 重置日期：<span id="credits-reset-date">載入中...</span> ⓘ
                             </div>
                         </div>
@@ -1705,14 +1705,17 @@
                 
                 // 更新重置日期說明
                 if (currentPlan === 'Free') {
-                    // 🔥 Free Plan 不顯示任何說明（刪除了"一次性 Credits，用完即止。"）
-                    const resetDateElement = document.getElementById('credits-reset-date');
-                    if (resetDateElement && resetDateElement.parentElement) {
-                        resetDateElement.parentElement.innerHTML = '';
+                    // 🔥 Free Plan 不顯示重置日期
+                    const resetDateContainer = document.getElementById('reset-date-container');
+                    if (resetDateContainer) {
+                        resetDateContainer.style.display = 'none';
                     }
                 } else {
                     // 付費計劃顯示重置日期
-                    // 重置日期已經在上面的代碼中設置
+                    const resetDateContainer = document.getElementById('reset-date-container');
+                    if (resetDateContainer) {
+                        resetDateContainer.style.display = 'block';
+                    }
                 }
                 
                 logger.log(`✅ Credits 載入完成: ${currentCredits} / ${totalCredits} (${percentage.toFixed(1)}%)`);

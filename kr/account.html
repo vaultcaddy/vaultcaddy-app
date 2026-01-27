@@ -1193,7 +1193,7 @@
                             <div id="overage-info" style="display: none; font-size: 0.8125rem; color: #6366f1; margin-top: 0.375rem; padding: 0.5rem; background: #f0f4ff; border-left: 3px solid #6366f1; border-radius: 4px;">
                                 💡 <strong>초과 요금</strong>: 월 한도 초과 시 자동으로 <strong>₩80/페이지</strong>로 청구됩니다
                             </div>
-                            <div style="font-size: 0.75rem; color: #9ca3af; margin-top: 0.5rem;">
+                            <div id="reset-date-container" style="font-size: 0.75rem; color: #9ca3af; margin-top: 0.5rem;">
                                 재설정 날짜: <span id="credits-reset-date">로딩 중...</span> ⓘ
                             </div>
                         </div>
@@ -1695,16 +1695,19 @@
                         'linear-gradient(90deg, #667eea 0%, #764ba2 100%)';
                 }
                 
-                // 업데이트재설정날짜설명
+                // 재설정 날짜 업데이트
                 if (currentPlan === 'Free') {
-                    // 🔥 Free Plan 아니표시任何설명（삭제了"一次性 Credits，用完즉시止。"）
-                    const resetDateElement = document.getElementById('credits-reset-date');
-                    if (resetDateElement && resetDateElement.parentElement) {
-                        resetDateElement.parentElement.innerHTML = '';
+                    // 🔥 Free Plan은 재설정 날짜를 표시하지 않음
+                    const resetDateContainer = document.getElementById('reset-date-container');
+                    if (resetDateContainer) {
+                        resetDateContainer.style.display = 'none';
                     }
                 } else {
-                    // 付費계획표시재설정날짜
-                    // 재설정날짜이미에서위面的代碼중설정
+                    // 유료 플랜은 재설정 날짜 표시
+                    const resetDateContainer = document.getElementById('reset-date-container');
+                    if (resetDateContainer) {
+                        resetDateContainer.style.display = 'block';
+                    }
                 }
                 
                 logger.log(`✅ Credits 로드완료: ${currentCredits} / ${totalCredits} (${percentage.toFixed(1)}%)`);
