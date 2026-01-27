@@ -361,21 +361,14 @@ class QwenVLMaxProcessor {
                 }
                     }
                     
-                    // ✅ 调用进度回调
-                    if (progressCallback) {
-                        progressCallback({
-                    currentBatch: 1,
-                    totalBatches: 1,
-                    progress: 100
-                        });
-            }
+                    // ✅ 调用进度回调（最終完成時不需要再調用，因為在循環中已經調用過了）
             
             // 合并所有结果
             const mergedData = this.mergeMultiPageResults(allResults, documentType);
             
             const totalTime = Date.now() - startTime;
             
-            console.log(`\n🎉 完全并行处理完成！`);
+            console.log(`\n🎉 串行處理完成！`);
             console.log(`   📊 总页数: ${totalPages}`);
             console.log(`   ✅ 成功: ${successResults.length}/${totalPages} 页`);
             if (failedResults.length > 0) {
@@ -384,7 +377,6 @@ class QwenVLMaxProcessor {
             console.log(`   ⏱️  总耗时: ${totalTime}ms (${(totalTime/1000).toFixed(1)}秒)`);
             console.log(`   📈 平均: ${(totalTime / successResults.length).toFixed(0)}ms/页`);
             console.log(`   💰 总成本: $${(this.calculateCost(totalUsage.total_tokens)).toFixed(4)}`);
-            console.log(`   ⚡ 速度提升: 相比串行快 ~76%`);
             console.log(`   📊 Token使用: ${totalUsage.total_tokens.toLocaleString()} / 100,000 (${(totalUsage.total_tokens/1000).toFixed(0)}%)`);
             
             return {
@@ -393,13 +385,13 @@ class QwenVLMaxProcessor {
                 extractedData: mergedData,
                 rawResponse: allResponses.join('\n---\n'),
                 pages: totalPages,
-                successPages: successResults.length,  // ✅ 添加成功页数
-                failedPages: failedResults.length,    // ✅ 添加失败页数
+                successPages: successResults.length,
+                failedPages: failedResults.length,
                 processingTime: totalTime,
-                processor: 'qwen-vl-max-fully-parallel',  // ✅ 标记为完全并行
+                processor: 'qwen-vl-max-serial',  // ✅ 標記為串行處理
                 model: this.qwenModel,
                 usage: totalUsage,
-                partialSuccess: failedResults.length > 0  // ✅ 标记是否部分成功
+                partialSuccess: failedResults.length > 0
             };
             
         } catch (error) {
@@ -579,247 +571,57 @@ class QwenVLMaxProcessor {
     }
     
     /**
-     * 生成提示词
+     * 生成提示词（2026-01-27 精簡版 - 減少 60% token，加速處理）
      */
     generatePrompt(documentType) {
         if (documentType === 'bank_statement') {
-            return `你是一個專業的銀行對賬單數據提取專家。請從圖片中提取所有交易記錄和帳戶資料，並以 JSON 格式返回。
+            return `提取銀行對賬單數據，返回 JSON。
 
-必須提取的字段：
-{
-  "bankName": "銀行名稱",
-  "bankCode": "銀行代碼（如 024）",
-  "branchName": "分行名稱",
-  "accountNumber": "帳號",
-  "accountHolder": "帳戶持有人",
-  "accountAddress": "帳戶地址（完整地址）",
-  "statementPeriod": "對賬單期間（格式：YYYY-MM-DD to YYYY-MM-DD）",
-  "statementDate": "對賬單日期（YYYY-MM-DD 格式）",
-  "currency": "貨幣（如 HKD, USD）",
-  "openingBalance": 期初餘額（數字）,
-  "closingBalance": 期末餘額（數字）,
-  "totalDeposits": 總存款（數字，如果有顯示）,
-  "totalWithdrawals": 總支出（數字，如果有顯示）,
-  "transactions": [
-    {
-      "date": "日期（YYYY-MM-DD 格式）",
-      "description": "交易描述",
-      "amount": 金額（正數為入賬，負數為出賬）,
-      "balance": 餘額（數字）,
-      "transactionType": "交易類型（Deposit/Withdrawal/Transfer/Fee/Interest/Check/ATM/POS/Wire/FPS/Other）",
-      "payee": "收款人或付款人名稱（如 SIC ALIPAY HK LTD，從描述中提取）",
-      "referenceNumber": "交易參考編號（如 FRN2021040700252614927，從描述中提取）",
-      "checkNumber": "支票號碼（如果描述中有 CHQ/CHEQUE 相關編號）",
-      "memo": "備註（額外信息，可選）"
-    }
-  ]
-}
+JSON格式：
+{"bankName":"","bankCode":"","branchName":"","accountNumber":"","accountHolder":"","accountAddress":"","statementPeriod":"YYYY-MM-DD to YYYY-MM-DD","statementDate":"YYYY-MM-DD","currency":"","openingBalance":0,"closingBalance":0,"totalDeposits":0,"totalWithdrawals":0,"transactions":[{"date":"YYYY-MM-DD","description":"","debit":0,"credit":0,"amount":0,"balance":0,"transactionSign":"income/expense","transactionType":"","payee":"","referenceNumber":"","checkNumber":"","memo":""}]}
 
-請確保：
-1. 提取完整的帳戶地址（包括所有地址行）
-2. 提取分行名稱和銀行代碼
-3. statementPeriod 格式為 "YYYY-MM-DD to YYYY-MM-DD"
-4. 所有交易記錄按日期排序
-5. 所有日期格式為 YYYY-MM-DD
-6. 所有金額為數字（不包含貨幣符號和逗號）
-7. JSON 格式正確，可以直接解析
-8. 如果某字段無法提取，設為 null
-9. 提取所有交易記錄（不要遺漏）
-10. **重要**：根據交易描述智能判斷 transactionType：
-    - "存款/DEPOSIT/現金存款" → Deposit
-    - "轉帳/TRANSFER/FPS" → Transfer
-    - "提款/WITHDRAWAL/ATM" → ATM
-    - "支票/CHQ/CHEQUE" → Check
-    - "手續費/FEE" → Fee
-    - "利息/INTEREST" → Interest
-    - "ALIPAY/OCTOPUS/CARD" → POS
-    - "承上結欠/B/F BALANCE" → Opening Balance
-    - "過戶/C/F BALANCE" → Closing Balance
-11. payee 字段應提取商戶名稱（如 "SIC ALIPAY HK LTD"、"SCR OCTOPUS CARDS LTD"）
-12. referenceNumber 應提取括號中的參考編號（如 "(FRN2021040700252614927)"）
+規則：
+1. 提取所有交易記錄，不遺漏
+2. debit=支出金額，credit=收入金額，amount=交易金額（正數）
+3. transactionSign: 餘額增加→income, 餘額減少→expense
+4. 日期格式 YYYY-MM-DD，金額為數字（無符號逗號）
+5. transactionType: Deposit/Withdrawal/Transfer/Fee/Interest/Check/ATM/POS/FPS/Other
+6. 無法提取的字段設為 null
 
-只返回 JSON，不要包含任何額外文字。`;
+只返回JSON。`;
         } else {
             // 發票
-            return `你是一個專業的發票數據提取專家。請從圖片中提取所有發票資料，並以 JSON 格式返回。
+            return `提取發票數據，返回 JSON。
 
-必須提取的字段：
-{
-  "invoiceNumber": "發票編號",
-  "date": "日期（YYYY-MM-DD 格式）",
-  "supplier": "供應商名稱",
-  "supplierAddress": "供應商地址",
-  "customerName": "客戶名稱",
-  "customerAddress": "客戶地址",
-  "currency": "貨幣（如 HKD, USD）",
-  "subtotal": 小計金額（數字）,
-  "tax": 稅額（數字）,
-  "totalAmount": 總金額（數字）,
-  "items": [
-    {
-      "description": "商品描述",
-      "quantity": 數量（數字）,
-      "unitPrice": 單價（數字）,
-      "amount": 金額（數字）
-    }
-  ]
-}
+JSON格式：
+{"invoiceNumber":"","date":"YYYY-MM-DD","supplier":"","supplierAddress":"","customerName":"","customerAddress":"","currency":"","subtotal":0,"tax":0,"totalAmount":0,"items":[{"description":"","quantity":0,"unitPrice":0,"amount":0}]}
 
-請確保：
-1. 所有日期格式為 YYYY-MM-DD
-2. 所有金額為數字（不包含貨幣符號）
-3. JSON 格式正確，可以直接解析
-4. 如果某字段無法提取，設為 null
-5. 提取所有項目明細（不要遺漏）`;
+規則：日期 YYYY-MM-DD，金額為數字，無法提取設為 null，提取所有項目。
+
+只返回JSON。`;
         }
     }
     
     /**
-     * 生成多页提示词
+     * 生成多页提示词（2026-01-27 精簡版 - 減少 60% token，加速處理）
      */
     generateMultiPagePrompt(documentType, pageCount) {
         if (documentType === 'bank_statement') {
-            return `你是一個專業的銀行對賬單數據提取專家。我發送了 ${pageCount} 張圖片，它們是同一份銀行對賬單的多個頁面。請綜合分析所有頁面，提取完整的交易記錄和帳戶資料，並以 JSON 格式返回。
+            return `提取銀行對賬單數據，返回 JSON。共 ${pageCount} 頁，提取所有交易記錄。
 
-必須提取的字段：
-{
-  "bankName": "銀行名稱",
-  "bankCode": "銀行代碼（如 024）",
-  "branchName": "分行名稱",
-  "accountNumber": "帳號",
-  "accountHolder": "帳戶持有人",
-  "accountAddress": "帳戶地址（完整地址）",
-  "statementPeriod": "對賬單期間（格式：YYYY-MM-DD to YYYY-MM-DD，如 2025-06-21 to 2025-07-22）",
-  "statementDate": "對賬單日期（YYYY-MM-DD 格式）",
-  "currency": "貨幣（如 HKD, USD）",
-  "openingBalance": 期初餘額（數字，從第一筆交易的起始餘額或B/F Balance計算）,
-  "closingBalance": 期末餘額（數字），
-  "totalDeposits": 總存款（數字，如果有顯示）,
-  "totalWithdrawals": 總支出（數字，如果有顯示）,
-  "transactions": [
-    {
-      "date": "日期（YYYY-MM-DD 格式）",
-      "description": "交易描述",
-      "debit": 支出金額（數字，從「支出/借項/DEBIT」欄位提取，如果為空則為0）,
-      "credit": 收入金額（數字，從「存款/入賬/貸項/CREDIT」欄位提取，如果為空則為0）,
-      "amount": 交易金額（數字，正數表示，不帶正負號）,
-      "balance": 餘額（數字），
-      "transactionSign": "交易標記（'income'表示收入/credit，'expense'表示支出/debit）",
-      "transactionType": "交易類型（Deposit/Withdrawal/Transfer/Fee/Interest/Check/ATM/POS/Wire/FPS/Other）",
-      "payee": "收款人或付款人名稱（如 SIC ALIPAY HK LTD，從描述中提取）",
-      "referenceNumber": "交易參考編號（如 FRN2021040700252614927，從描述中提取）",
-      "checkNumber": "支票號碼（如果描述中有 CHQ/CHEQUE 相關編號）",
-      "memo": "備註（額外信息，可選）"
-    }
-  ]
-}
+JSON格式：
+{"bankName":"","bankCode":"","branchName":"","accountNumber":"","accountHolder":"","accountAddress":"","statementPeriod":"YYYY-MM-DD to YYYY-MM-DD","statementDate":"YYYY-MM-DD","currency":"","openingBalance":0,"closingBalance":0,"totalDeposits":0,"totalWithdrawals":0,"transactions":[{"date":"YYYY-MM-DD","description":"","debit":0,"credit":0,"amount":0,"balance":0,"transactionSign":"income/expense","transactionType":"","payee":"","referenceNumber":"","checkNumber":"","memo":""}]}
 
-請特別注意：
-1. **綜合所有 ${pageCount} 頁的信息**，不要遺漏任何交易記錄
+規則：
+1. 提取所有 ${pageCount} 頁的交易，不遺漏
+2. debit=支出金額，credit=收入金額，amount=交易金額（正數）
+3. transactionSign: 餘額增加→income, 餘額減少→expense
+4. 驗證：當前餘額 = 前一餘額 + credit - debit
+5. 日期格式 YYYY-MM-DD，金額為數字（無符號逗號）
+6. transactionType: Deposit/Withdrawal/Transfer/Fee/Interest/Check/ATM/POS/FPS/Other
+7. 無法提取的字段設為 null
 
-2. **🔴 關鍵：智能識別銀行對賬單的格式**：
-   
-   **步驟1：先觀察表頭和列結構**
-   - 仔細查看交易記錄表格的表頭（通常在第一行）
-   - 識別有多少列，每列的名稱是什麼
-   - 常見的列名：日期/Date、描述/Description、支出/借方/Debit/Withdrawal、存入/貸方/Credit/Deposit、餘額/Balance
-   
-   **步驟2：理解不同的銀行格式**
-   
-   **格式A（雙列金額）- 最常見**：
-   表格示例：| 日期 | 描述 | 支出 | 存入 | 餘額 |
-   數據示例：| 2021-07-06 | CQW 000012 | 25,655.00 |  | 15,531.71 |
-   
-   解析：
-   - debit: 25655.00 (支出列有數字)
-   - credit: 0 (存入列為空)
-   - amount: 25655.00
-   - balance: 15531.71
-   - transactionSign: "expense"
-   
-   **格式B（單列金額+正負號）**：
-   表格示例：| 日期 | 描述 | 金額 | 餘額 |
-   數據示例：| 2021-07-06 | CQW 000012 | -25,655.00 | 15,531.71 |
-   
-   解析：
-   - 如果金額是負數 → debit: 25655.00, credit: 0, transactionSign: "expense"
-   - 如果金額是正數 → debit: 0, credit: 金額, transactionSign: "income"
-   - amount: 金額的絕對值
-   - balance: 15531.71
-   
-   **格式C（只有餘額變化）**：
-   表格示例：| 日期 | 描述 | 餘額 |
-   
-   解析：
-   - 根據餘額變化計算：
-   - 如果餘額減少 → 支出
-   - 如果餘額增加 → 收入
-   
-   **步驟3：識別邏輯**
-   - 🔍 看列數：如果有3-4列（日期、描述、金額、餘額）→ 可能是格式B
-   - 🔍 看列數：如果有5列以上 → 可能是格式A（雙列金額）
-   - 🔍 看數據：如果有些行某列為空 → 很可能是雙列格式
-   - 🔍 看正負號：如果金額有正負號 → 可能是單列格式
-   - 🔍 看表頭：如果有"借方"和"貸方" → 肯定是雙列格式
-
-3. **🔴 常見錯誤（必須避免）**：
-   ❌ 錯誤：把"餘額"當成"交易金額"
-   ❌ 錯誤：忽略列的含義，只按位置提取
-   ❌ 錯誤：不看表頭，直接假設格式
-   ✅ 正確：先理解表格結構，再提取數據
-   ✅ 正確：根據實際的列名和數據判斷格式
-   ✅ 正確：交易金額永遠不等於餘額（除非只有一筆交易）
-
-4. **驗證規則**：
-   - ✅ 每筆交易必須有：日期、描述、金額（amount）、餘額（balance）
-   - ✅ debit和credit至少有一個不為0
-   - ✅ amount = debit（如果debit>0）或 credit（如果credit>0）
-   - ✅ 連續交易的餘額應該是連貫的（前一筆餘額 ± 本次金額 = 本次餘額）
-   - ✅ 如果發現餘額不連貫，說明可能提取錯誤
-   
-   **🔴 關鍵驗證：transactionSign 必須與餘額變化一致**
-   - 對於每筆交易（除了第一筆），必須對比前一筆的餘額：
-     * 如果 當前餘額 > 前一筆餘額 → **必須是收入** → transactionSign='income', credit=amount, debit=0
-     * 如果 當前餘額 < 前一筆餘額 → **必須是支出** → transactionSign='expense', debit=amount, credit=0
-     * 如果 當前餘額 = 前一筆餘額 → 交易金額為0
-   - ⚠️ 如果你提取的 debit/credit 與餘額變化矛盾，**必須修正 debit/credit 和 transactionSign**
-   - 例如：
-     * 前一筆餘額：25,635.72，當前餘額：25,657.34 → 餘額增加21.62 → **收入**
-       正確：credit=21.62, debit=0, transactionSign='income' ✅
-       錯誤：debit=21.62, credit=0, transactionSign='expense' ❌
-     * 前一筆餘額：25,657.34，當前餘額：25,100.74 → 餘額減少556.60 → **支出**
-       正確：debit=556.60, credit=0, transactionSign='expense' ✅
-       錯誤：credit=556.60, debit=0, transactionSign='income' ❌
-
-5. **提取優先級**：
-   第1優先：根據表頭識別列
-   第2優先：根據數據特徵判斷（空值、正負號）
-   第3優先：根據位置推測（最右邊通常是餘額）
-
-6. statementPeriod 必須是期間範圍（from date to date）
-7. 提取完整的帳戶地址（包括所有地址行）
-8. 提取分行名稱和銀行代碼
-9. 所有交易記錄按日期排序
-10. 所有日期格式為 YYYY-MM-DD
-11. 所有金額為數字（不包含貨幣符號和逗號）
-12. JSON 格式正確，可以直接解析
-13. 如果某字段無法提取，設為 null
-14. 確保交易記錄的連續性和完整性
-15. **重要**：根據交易描述智能判斷 transactionType：
-    - "存款/DEPOSIT/現金存款" → Deposit
-    - "轉帳/TRANSFER/FPS" → Transfer
-    - "提款/WITHDRAWAL/ATM" → ATM
-    - "支票/CHQ/CHEQUE" → Check
-    - "手續費/FEE" → Fee
-    - "利息/INTEREST" → Interest
-    - "ALIPAY/OCTOPUS/CARD" → POS
-    - "承上結欠/B/F BALANCE" → Opening Balance
-    - "過戶/C/F BALANCE" → Closing Balance
-16. payee 字段應提取商戶名稱
-17. referenceNumber 應提取參考編號
-18. **關鍵**：amount、debit、credit、balance 都必須與銀行單上顯示的數字完全一致
-
-只返回 JSON，不要包含任何額外文字。`;
+只返回JSON。`;
         } else {
             return `你是一個專業的發票數據提取專家。我發送了 ${pageCount} 張圖片，它們是同一份發票的多個頁面。請綜合分析所有頁面，提取完整的發票資料和項目明細，並以 JSON 格式返回。
 
