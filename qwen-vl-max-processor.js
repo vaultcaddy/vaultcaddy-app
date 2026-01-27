@@ -650,88 +650,189 @@ class QwenVLMaxProcessor {
      */
     generatePrompt(documentType) {
         if (documentType === 'bank_statement') {
-            return `提取銀行對賬單數據，返回 JSON。
+            return `You are a professional bank statement data extraction expert. Please analyze this bank statement image, extract complete statement information and transaction records, and return in JSON format.
 
-JSON格式：
-{"bankName":"","bankCode":"","branchName":"","accountNumber":"","accountHolder":"","accountAddress":"","statementPeriod":"YYYY-MM-DD to YYYY-MM-DD","statementDate":"YYYY-MM-DD","currency":"","openingBalance":0,"closingBalance":0,"totalDeposits":0,"totalWithdrawals":0,"transactions":[{"date":"YYYY-MM-DD","description":"","debit":0,"credit":0,"amount":0,"balance":0,"transactionSign":"income/expense","transactionType":"","payee":"","referenceNumber":"","checkNumber":"","memo":""}]}
-
-規則：
-1. 提取所有交易記錄，不遺漏
-2. debit=支出金額，credit=收入金額，amount=交易金額（正數）
-3. transactionSign: 餘額增加→income, 餘額減少→expense
-4. 日期格式 YYYY-MM-DD，金額為數字（無符號逗號）
-5. transactionType: Deposit/Withdrawal/Transfer/Fee/Interest/Check/ATM/POS/FPS/Other
-6. 無法提取的字段設為 null
-
-只返回JSON。`;
-        } else {
-            // 發票
-            return `提取發票數據，返回 JSON。
-
-JSON格式：
-{"invoiceNumber":"","date":"YYYY-MM-DD","supplier":"","supplierAddress":"","customerName":"","customerAddress":"","currency":"","subtotal":0,"tax":0,"totalAmount":0,"items":[{"description":"","quantity":0,"unitPrice":0,"amount":0}]}
-
-規則：日期 YYYY-MM-DD，金額為數字，無法提取設為 null，提取所有項目。
-
-只返回JSON。`;
-        }
-    }
-    
-    /**
-     * 生成多页提示词（2026-01-27 精簡版 - 減少 60% token，加速處理）
-     */
-    generateMultiPagePrompt(documentType, pageCount) {
-        if (documentType === 'bank_statement') {
-            return `提取銀行對賬單數據，返回 JSON。共 ${pageCount} 頁，提取所有交易記錄。
-
-JSON格式：
-{"bankName":"","bankCode":"","branchName":"","accountNumber":"","accountHolder":"","accountAddress":"","statementPeriod":"YYYY-MM-DD to YYYY-MM-DD","statementDate":"YYYY-MM-DD","currency":"","openingBalance":0,"closingBalance":0,"totalDeposits":0,"totalWithdrawals":0,"transactions":[{"date":"YYYY-MM-DD","description":"","debit":0,"credit":0,"amount":0,"balance":0,"transactionSign":"income/expense","transactionType":"","payee":"","referenceNumber":"","checkNumber":"","memo":""}]}
-
-規則：
-1. 提取所有 ${pageCount} 頁的交易，不遺漏
-2. debit=支出金額，credit=收入金額，amount=交易金額（正數）
-3. transactionSign: 餘額增加→income, 餘額減少→expense
-4. 驗證：當前餘額 = 前一餘額 + credit - debit
-5. 日期格式 YYYY-MM-DD，金額為數字（無符號逗號）
-6. transactionType: Deposit/Withdrawal/Transfer/Fee/Interest/Check/ATM/POS/FPS/Other
-7. 無法提取的字段設為 null
-
-只返回JSON。`;
-        } else {
-            return `你是一個專業的發票數據提取專家。我發送了 ${pageCount} 張圖片，它們是同一份發票的多個頁面。請綜合分析所有頁面，提取完整的發票資料和項目明細，並以 JSON 格式返回。
-
-必須提取的字段：
+Required fields:
 {
-  "invoiceNumber": "發票號碼",
-  "invoiceDate": "發票日期（YYYY-MM-DD 格式）",
-  "dueDate": "到期日（YYYY-MM-DD 格式）",
-  "vendor": "供應商名稱",
-  "vendorAddress": "供應商地址",
-  "customer": "客戶名稱",
-  "customerAddress": "客戶地址",
-  "currency": "貨幣（如 HKD, USD）",
-  "subtotal": 小計金額（數字）,
-  "tax": 稅額（數字）,
-  "total": 總金額（數字）,
-  "items": [
+  "bankName": "Bank name",
+  "bankCode": "Bank code (if available)",
+  "branchName": "Branch name",
+  "accountNumber": "Account number",
+  "accountHolder": "Account holder name",
+  "accountAddress": "Account holder address",
+  "statementPeriod": "Statement period (YYYY-MM-DD to YYYY-MM-DD)",
+  "statementDate": "Statement date (YYYY-MM-DD)",
+  "currency": "Currency (e.g., HKD, USD, JPY, KRW)",
+  "openingBalance": Opening balance (number),
+  "closingBalance": Closing balance (number),
+  "totalDeposits": Total deposits (number),
+  "totalWithdrawals": Total withdrawals (number),
+  "transactions": [
     {
-      "description": "項目描述",
-      "quantity": 數量（數字）,
-      "unitPrice": 單價（數字）,
-      "amount": 金額（數字）
+      "date": "YYYY-MM-DD",
+      "description": "Transaction description (keep original language)",
+      "debit": Withdrawal amount (number, 0 if none),
+      "credit": Deposit amount (number, 0 if none),
+      "amount": Transaction amount (positive number),
+      "balance": Balance after transaction,
+      "transactionSign": "income or expense",
+      "transactionType": "Deposit/Withdrawal/Transfer/Fee/Interest/Check/ATM/POS/FPS/Other",
+      "payee": "Payee/Payer",
+      "referenceNumber": "Reference number",
+      "checkNumber": "Check number",
+      "memo": "Memo"
     }
   ]
 }
 
-請特別注意：
-1. **綜合所有 ${pageCount} 頁的信息**，不要遺漏任何項目明細
-2. 所有日期格式為 YYYY-MM-DD
-3. 所有金額為數字（不包含貨幣符號）
-4. JSON 格式正確，可以直接解析
-5. 如果某字段無法提取，設為 null
-6. 確保項目明細的完整性
+transactionSign rules:
+- "income": Balance increased (deposit)
+- "expense": Balance decreased (withdrawal)
 
-只返回 JSON，不要包含任何額外文字。`;
+Important:
+1. Extract ALL transactions - do not miss any
+2. Date format: YYYY-MM-DD
+3. Amounts: pure numbers (no currency symbols)
+4. Set to null if cannot extract
+
+Return ONLY JSON, no additional text.`;
+        } else {
+            return `You are a professional invoice data extraction expert. Please analyze this invoice image, extract complete invoice information and line items, and return in JSON format.
+
+Required fields:
+{
+  "invoiceNumber": "Invoice number",
+  "invoiceDate": "Invoice date (YYYY-MM-DD)",
+  "dueDate": "Due date (YYYY-MM-DD)",
+  "vendor": "Vendor name",
+  "vendorAddress": "Vendor address",
+  "customer": "Customer name",
+  "customerAddress": "Customer address",
+  "currency": "Currency (e.g., HKD, USD, JPY, KRW)",
+  "subtotal": Subtotal amount (number),
+  "tax": Tax amount (number),
+  "total": Total amount (number),
+  "items": [
+    {
+      "description": "Item description (keep original language)",
+      "quantity": Quantity (number),
+      "unitPrice": Unit price (number),
+      "amount": Amount (number)
+    }
+  ]
+}
+
+Important:
+1. Extract ALL line items
+2. Date format: YYYY-MM-DD
+3. Amounts: pure numbers (no currency symbols)
+4. Set to null if cannot extract
+
+Return ONLY JSON, no additional text.`;
+        }
+    }
+    
+    /**
+     * 生成多页提示词（2026-01-27 完整版 - 多語言支持）
+     */
+    generateMultiPagePrompt(documentType, pageCount) {
+        if (documentType === 'bank_statement') {
+            return `You are a professional bank statement data extraction expert. I am sending ${pageCount} images that are multiple pages of the same bank statement. Please analyze all pages comprehensively, extract complete statement information and transaction records, and return in JSON format.
+
+Required fields:
+{
+  "bankName": "Bank name",
+  "bankCode": "Bank code (if available)",
+  "branchName": "Branch name",
+  "accountNumber": "Account number",
+  "accountHolder": "Account holder name",
+  "accountAddress": "Account holder address",
+  "statementPeriod": "Statement period (YYYY-MM-DD to YYYY-MM-DD)",
+  "statementDate": "Statement date (YYYY-MM-DD)",
+  "currency": "Currency (e.g., HKD, USD, JPY, KRW, CNY)",
+  "openingBalance": Opening balance (number),
+  "closingBalance": Closing balance (number),
+  "totalDeposits": Total deposits (number),
+  "totalWithdrawals": Total withdrawals (number),
+  "transactions": [
+    {
+      "date": "Transaction date (YYYY-MM-DD)",
+      "description": "Transaction description (keep original language)",
+      "debit": Withdrawal amount (number, 0 if none),
+      "credit": Deposit amount (number, 0 if none),
+      "amount": Transaction amount (positive number),
+      "balance": Balance after transaction (number),
+      "transactionSign": "income or expense",
+      "transactionType": "Transaction type",
+      "payee": "Payee/Payer",
+      "referenceNumber": "Reference number",
+      "checkNumber": "Check number (if applicable)",
+      "memo": "Memo"
+    }
+  ]
+}
+
+Transaction type rules:
+- Deposit: Cash deposit, direct deposit
+- Withdrawal: Cash withdrawal, ATM withdrawal
+- Transfer: Wire transfer, FPS, bank transfer, online transfer
+- Fee: Service fee, maintenance fee, annual fee
+- Interest: Interest income, interest payment
+- Check: Check payment, check deposit
+- ATM: ATM transaction
+- POS: Point of sale, card payment, merchant transaction
+- FPS: Faster Payment System
+- Other: Other transactions
+
+transactionSign rules:
+- "income": Balance increased (credit > 0)
+- "expense": Balance decreased (debit > 0)
+
+Important instructions:
+1. **Extract ALL transactions from ALL ${pageCount} pages** - do not miss any transaction
+2. Keep transactions in chronological order
+3. All dates must be in YYYY-MM-DD format
+4. All amounts must be pure numbers (no currency symbols or thousand separators)
+5. Verify: Current balance = Previous balance + credit - debit
+6. Set fields to null if they cannot be extracted from the image
+7. JSON must be valid and parseable
+
+Return ONLY JSON, no additional text or explanations.`;
+        } else {
+            return `You are a professional invoice data extraction expert. I am sending ${pageCount} images that are multiple pages of the same invoice. Please analyze all pages comprehensively, extract complete invoice information and line items, and return in JSON format.
+
+Required fields:
+{
+  "invoiceNumber": "Invoice number",
+  "invoiceDate": "Invoice date (YYYY-MM-DD)",
+  "dueDate": "Due date (YYYY-MM-DD)",
+  "vendor": "Vendor name",
+  "vendorAddress": "Vendor address",
+  "customer": "Customer name",
+  "customerAddress": "Customer address",
+  "currency": "Currency (e.g., HKD, USD, JPY, KRW)",
+  "subtotal": Subtotal amount (number),
+  "tax": Tax amount (number),
+  "total": Total amount (number),
+  "items": [
+    {
+      "description": "Item description (keep original language)",
+      "quantity": Quantity (number),
+      "unitPrice": Unit price (number),
+      "amount": Amount (number)
+    }
+  ]
+}
+
+Important instructions:
+1. **Extract information from ALL ${pageCount} pages** - do not miss any line items
+2. All dates must be in YYYY-MM-DD format
+3. All amounts must be pure numbers (no currency symbols)
+4. JSON must be valid and parseable
+5. Set fields to null if they cannot be extracted
+6. Ensure completeness of all line items
+
+Return ONLY JSON, no additional text or explanations.`;
         }
     }
     
