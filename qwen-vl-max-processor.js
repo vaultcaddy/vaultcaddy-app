@@ -17,11 +17,15 @@
  */
 
 class QwenVLMaxProcessor {
-    constructor() {
+    constructor(options = {}) {
         // Qwen-VL Max API (通过 Cloudflare Worker)
         // ⚠️ 確保 Worker 的 max_tokens 設置為 28000
         this.qwenWorkerUrl = 'https://deepseek-proxy.vaultcaddy.workers.dev';
         this.qwenModel = 'qwen3-vl-plus-2025-12-19'; // ⭐ 推荐模型（2025-12-18 发布）
+        
+        // 🔥 流式響應模式（2026-01-27）
+        // 啟用後可避免 Cloudflare 超時，支持處理更多頁面
+        this.useStreaming = options.useStreaming || false;
         
         // 处理统计
         this.stats = {
@@ -32,11 +36,12 @@ class QwenVLMaxProcessor {
         };
         
         console.log('🤖 Qwen-VL Max 处理器初始化');
+        console.log(`   🔥 流式響應: ${this.useStreaming ? '啟用' : '關閉'}`);
         console.log('   ✅ 端到端处理（OCR + AI 分析一步完成）');
         console.log('   ✅ 支持图片和 PDF 直接处理');
         console.log('   📊 预期准确度: 92-95%');
         console.log('   💰 预估成本: ~$0.005/页 (HK$0.038/页)');
-        console.log('   ⚡ 处理速度: 3-8 秒/页（比原方案快 100%）');
+        console.log('   ⚡ 处理速度: 3-8 秒/页');
     }
     
     /**
@@ -886,40 +891,53 @@ JSON格式：
         const promptTokens = 300;  // 精簡版 prompt
         
         // 輸出 tokens（基於實測：工銀亞洲對賬單最密集頁面約 35 筆交易）
-        // - 每筆交易 ≈ 120 tokens（date, description, debit, credit, amount, balance, transactionSign, transactionType, payee, referenceNumber...）
-        // - JSON 頭部 ≈ 400 tokens（bankName, bankCode, accountNumber, accountHolder, accountAddress, statementPeriod...）
+        // - 每筆交易 ≈ 120 tokens
+        // - JSON 頭部 ≈ 400 tokens
         // - 最大頁面（35筆）= 35 × 120 + 400 = 4,600 tokens
         // - 加 10% 安全邊際 = 5,060 tokens ≈ 5,000 tokens
-        const MAX_OUTPUT_TOKENS_PER_PAGE = 5000;  // 🔥 基於實測：最大 35 筆交易頁面 + 10% 安全邊際
+        const MAX_OUTPUT_TOKENS_PER_PAGE = 5000;
         const avgOutputTokensPerPage = MAX_OUTPUT_TOKENS_PER_PAGE;
         
         // =====================================================
-        // 3️⃣ 計算 Token 限制的最大批次
+        // 3️⃣ 計算輸出 Token 限制的最大批次
         // =====================================================
-        const MAX_OUTPUT_TOKENS = 28000;  // Cloudflare Worker 設定的 max_tokens
+        // 🔥 關鍵限制：API 輸出上限 32K tokens，我們設定 28K
+        const MAX_OUTPUT_TOKENS = 28000;
         const SAFETY_MARGIN = 0.8;        // 留 20% 安全邊際
         const safeMaxTokens = MAX_OUTPUT_TOKENS * SAFETY_MARGIN;  // 22400 tokens
         
         // 最大頁數 = 可用輸出 tokens ÷ 每頁輸出 tokens
+        // 22400 ÷ 5000 = 4.48 → 4 頁
         const maxPagesByTokens = Math.floor(safeMaxTokens / avgOutputTokensPerPage);
         
         // =====================================================
-        // 4️⃣ 計算時間限制的最大批次
+        // 4️⃣ 計算時間限制（使用流式響應後無超時問題）
         // =====================================================
-        const CLOUDFLARE_TIMEOUT = 90;  // 秒（實際約 100 秒，留 10 秒緩衝）
-        const baseTime = 15;            // 基礎時間（網絡 + 初始化）
-        const timePerPage = 25;         // 每頁處理時間（精簡 prompt 後更快）
+        // 🔥 流式響應模式下，連接保持活躍，無超時限制
+        // 如果使用流式響應，時間不再是瓶頸
+        const useStreaming = this.useStreaming || false;
         
-        // 最大頁數 = (超時限制 - 基礎時間) ÷ 每頁時間
-        const maxPagesByTime = Math.floor((CLOUDFLARE_TIMEOUT - baseTime) / timePerPage);
+        let maxPagesByTime;
+        if (useStreaming) {
+            // 流式響應：無時間限制，只受輸出 token 限制
+            maxPagesByTime = 10;  // 設一個較大的數，讓 token 限制決定
+            console.log(`   🔥 流式響應模式：無超時限制`);
+        } else {
+            // 非流式響應：受 Cloudflare 100 秒限制
+            const CLOUDFLARE_TIMEOUT = 90;
+            const baseTime = 15;
+            const timePerPageInBatch = 30;
+            maxPagesByTime = Math.floor((CLOUDFLARE_TIMEOUT - baseTime) / timePerPageInBatch);
+            // 結果：(90-15) ÷ 30 = 2 頁
+        }
         
         // =====================================================
         // 5️⃣ 取兩個限制的最小值
         // =====================================================
         let batchSize = Math.min(maxPagesByTokens, maxPagesByTime);
         
-        // 確保至少 1 頁，最多 6 頁
-        batchSize = Math.max(1, Math.min(batchSize, 6));
+        // 確保至少 1 頁，最多 5 頁（基於輸出限制 32K ÷ 5K × 0.8 = 5.12）
+        batchSize = Math.max(1, Math.min(batchSize, 5));
         
         // =====================================================
         // 6️⃣ 額外安全檢查
@@ -955,9 +973,13 @@ JSON格式：
         console.log(`      - max_tokens 限制: ${MAX_OUTPUT_TOKENS}`);
         console.log(`      - Token 允許最大頁數: ${maxPagesByTokens} 頁 (${MAX_OUTPUT_TOKENS}÷${MAX_OUTPUT_TOKENS_PER_PAGE})`);
         console.log(`   ⏱️ 時間分析:`);
-        console.log(`      - 預估處理時間: ~${timePerPage} 秒/頁`);
-        console.log(`      - Cloudflare 限制: ${CLOUDFLARE_TIMEOUT} 秒`);
-        console.log(`      - 時間允許最大頁數: ${maxPagesByTime} 頁`);
+        if (useStreaming) {
+            console.log(`      - 🔥 流式響應模式：無超時限制`);
+            console.log(`      - 時間允許最大頁數: 無限制（由輸出 token 決定）`);
+        } else {
+            console.log(`      - 非流式模式：受 Cloudflare 100 秒限制`);
+            console.log(`      - 時間允許最大頁數: ${maxPagesByTime} 頁`);
+        }
         console.log(`   🎯 決策結果:`);
         console.log(`      - 批次大小: ${batchSize} 頁/批`);
         console.log(`      - 限制因素: ${limitingFactor}`);
