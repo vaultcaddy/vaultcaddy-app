@@ -268,116 +268,150 @@ class QwenVLMaxProcessor {
     }
     
     /**
-     * 分批处理多页文档（当页数超过限制时）
+     * 分批处理多页文档（串行多圖請求 - 用戶建議 2026-01-27）
+     * 
+     * 策略：每次 API 請求包含多張圖片（如 3 頁），串行發送請求
+     * 例如 6 頁文檔，batchSize=3：
+     * - 請求 1：[第1頁, 第2頁, 第3頁] → Qwen 一次分析 3 頁 → 等待完成
+     * - 請求 2：[第4頁, 第5頁, 第6頁] → Qwen 一次分析 3 頁 → 等待完成
+     * - 合併結果
+     * 
+     * 優點：減少 API 請求次數，避免併發問題，更穩定
+     * 
      * @param {File[]} files - 图片文件数组
      * @param {string} documentType - 'invoice' 或 'bank_statement'
-     * @param {number} batchSize - 每批处理的页数
+     * @param {number} batchSize - 每次 API 請求包含的頁數
      * @param {Function} progressCallback - 进度回调函数 (currentBatch, totalBatches, progress)
      * @returns {Object} 提取的结构化数据
      */
     async processMultiPageInBatches(files, documentType, batchSize, progressCallback = null) {
         const startTime = Date.now();
         const totalPages = files.length;
+        const totalBatches = Math.ceil(totalPages / batchSize);
         
-        // ✅ 串行處理策略：一頁接一頁處理，避免 API 限流
-        // 原因：並行處理可能導致 API 返回不完整的響應
-        console.log(`\n🔄 [Qwen-VL Max] 串行處理模式`);
-        console.log(`   📊 总页数: ${totalPages}`);
-        console.log(`   📝 策略: 一頁接一頁處理（避免 API 限流）`);
-        console.log(`   🔢 API调用数: ${totalPages} 个（依次發送）`);
-        console.log(`   ⏱️  预计时间: ~${totalPages * 30}秒（每頁約30秒）`);
+        console.log(`\n🔄 [Qwen-VL Max] 串行多圖請求模式（用戶建議策略）`);
+        console.log(`   📊 總頁數: ${totalPages}`);
+        console.log(`   📦 每次請求頁數: ${batchSize} 頁`);
+        console.log(`   🔢 總 API 請求次數: ${totalBatches}`);
+        console.log(`   📝 策略: 每次 API 請求包含 ${batchSize} 頁，串行發送請求`);
         
         try {
-            const allResults = [];
             let totalUsage = {
                 prompt_tokens: 0,
                 completion_tokens: 0,
                 total_tokens: 0
             };
-            const allResponses = [];
             const successResults = [];
             const failedResults = [];
             
-            console.log(`\n📄 开始串行处理 ${totalPages} 页...`);
+            console.log(`\n📄 開始處理 ${totalPages} 頁（${totalBatches} 次 API 請求）...`);
             
-            // ✅ 串行處理：一頁接一頁
-            for (let idx = 0; idx < files.length; idx++) {
-                const file = files[idx];
-                const pageNum = idx + 1;
+            // ✅ 串行發送多圖請求（每次請求包含 batchSize 頁）
+            for (let batchIdx = 0; batchIdx < totalBatches; batchIdx++) {
+                const batchStart = batchIdx * batchSize;
+                const batchEnd = Math.min(batchStart + batchSize, totalPages);
+                const batchFiles = files.slice(batchStart, batchEnd);
+                const batchNum = batchIdx + 1;
                 
-                console.log(`\n   📄 處理第 ${pageNum}/${totalPages} 頁...`);
+                console.log(`\n   📦 API 請求 ${batchNum}/${totalBatches}（第 ${batchStart + 1}-${batchEnd} 頁，共 ${batchFiles.length} 頁）...`);
                 
                 try {
-                    const result = await this.processSingleBatch([file], documentType);
-                    console.log(`   ✅ 第${pageNum}页 完成！耗时 ${result.processingTime}ms`);
-                    successResults.push({ ...result, pageNum, success: true });
+                    // ✅ 關鍵：一次發送多頁圖片給 Qwen
+                    const batchStartTime = Date.now();
+                    const result = await this.processSingleBatch(batchFiles, documentType);
+                    const batchTime = Date.now() - batchStartTime;
                     
-                    // ✅ 調用進度回調（使用正確的參數格式：currentBatch, totalBatches, progress）
-                    if (progressCallback) {
-                        const progress = Math.round((pageNum / totalPages) * 100);
-                        progressCallback(pageNum, totalPages, progress);
+                    console.log(`      ✅ 請求 ${batchNum} 完成！`);
+                    console.log(`         - 處理頁數: ${batchFiles.length} 頁`);
+                    console.log(`         - 耗時: ${batchTime}ms (${(batchTime / batchFiles.length).toFixed(0)}ms/頁)`);
+                    if (result.usage) {
+                        console.log(`         - Tokens: ${result.usage.total_tokens || 'N/A'}`);
                     }
-                } catch (error) {
-                    console.error(`   ❌ 第${pageNum}页 失败:`, error.message);
-                    failedResults.push({ pageNum, success: false, error: error.message });
-                }
-                
-                // ✅ 頁面之間添加短暫延遲，避免 API 過載
-                if (idx < files.length - 1) {
-                    console.log(`   ⏳ 等待 1 秒後處理下一頁...`);
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                }
-            }
-            
-            const batchDuration = Date.now() - startTime;
-            
-            console.log(`\n📊 串行处理完成！总耗时 ${batchDuration}ms (${(batchDuration/1000).toFixed(1)}秒)`);
-            console.log(`   ✅ 成功: ${successResults.length}/${totalPages} 页`);
-            if (failedResults.length > 0) {
-                console.log(`   ❌ 失败: ${failedResults.length} 页`);
-                failedResults.forEach(f => console.log(`      - 第${f.pageNum}页: ${f.error}`));
-            }
-            
-            // ✅ 如果所有页面都失败，才抛出错误
-            if (successResults.length === 0) {
-                throw new Error(`所有 ${totalPages} 页处理都失败了`);
-            }
-            
-            // ✅ 使用成功的结果继续处理
-            const results = successResults;
-            
-            // 收集结果（按页码排序）
-            results.sort((a, b) => a.pageNum - b.pageNum);
-            
-            for (const result of results) {
-                    allResults.push(result.extractedData);
-                    if (result.rawResponse) {
-                        allResponses.push(result.rawResponse);
-                    }
+                    
+                    successResults.push({
+                        ...result,
+                        batchNum,
+                        pageRange: `${batchStart + 1}-${batchEnd}`,
+                        pagesInBatch: batchFiles.length,
+                        success: true
+                    });
+                    
+                    // 累加 token 使用量
                     if (result.usage) {
                         totalUsage.prompt_tokens += result.usage.prompt_tokens || 0;
                         totalUsage.completion_tokens += result.usage.completion_tokens || 0;
                         totalUsage.total_tokens += result.usage.total_tokens || 0;
-                }
                     }
                     
-                    // ✅ 调用进度回调（最終完成時不需要再調用，因為在循環中已經調用過了）
-            
-            // 合并所有结果
-            const mergedData = this.mergeMultiPageResults(allResults, documentType);
+                } catch (error) {
+                    console.error(`      ❌ 請求 ${batchNum} 失敗:`, error.message);
+                    failedResults.push({
+                        batchNum,
+                        pageRange: `${batchStart + 1}-${batchEnd}`,
+                        pagesInBatch: batchFiles.length,
+                        success: false,
+                        error: error.message
+                    });
+                }
+                
+                // ✅ 更新進度
+                if (progressCallback) {
+                    const progress = Math.round(((batchIdx + 1) / totalBatches) * 100);
+                    progressCallback(batchNum, totalBatches, progress);
+                }
+                
+                // ✅ 請求之間添加短暫延遲（避免 API 限流）
+                if (batchIdx < totalBatches - 1) {
+                    console.log(`      ⏳ 等待 1 秒後發送下一個請求...`);
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+            }
             
             const totalTime = Date.now() - startTime;
             
-            console.log(`\n🎉 串行處理完成！`);
-            console.log(`   📊 总页数: ${totalPages}`);
-            console.log(`   ✅ 成功: ${successResults.length}/${totalPages} 页`);
+            // ✅ 處理結果統計
+            console.log(`\n📊 串行多圖請求處理完成！`);
+            console.log(`   📊 總頁數: ${totalPages}`);
+            console.log(`   📦 策略: ${batchSize}頁/請求 × ${totalBatches}次請求`);
+            console.log(`   ✅ 成功請求: ${successResults.length}/${totalBatches}`);
             if (failedResults.length > 0) {
-                console.log(`   ⚠️ 失败: ${failedResults.length} 页（已跳过）`);
+                console.log(`   ❌ 失敗請求: ${failedResults.length}`);
+                failedResults.forEach(f => console.log(`      - 請求${f.batchNum}（第${f.pageRange}頁）: ${f.error}`));
             }
-            console.log(`   ⏱️  总耗时: ${totalTime}ms (${(totalTime/1000).toFixed(1)}秒)`);
-            console.log(`   📈 平均: ${(totalTime / successResults.length).toFixed(0)}ms/页`);
-            console.log(`   💰 总成本: $${(this.calculateCost(totalUsage.total_tokens)).toFixed(4)}`);
-            console.log(`   📊 Token使用: ${totalUsage.total_tokens.toLocaleString()} / 100,000 (${(totalUsage.total_tokens/1000).toFixed(0)}%)`);
+            
+            // ✅ 如果所有請求都失敗，才抛出錯誤
+            if (successResults.length === 0) {
+                throw new Error(`所有 ${totalBatches} 次 API 請求都失敗了`);
+            }
+            
+            // ✅ 收集成功結果的數據
+            const allResults = [];
+            const allResponses = [];
+            
+            // 按批次號排序（確保頁面順序正確）
+            successResults.sort((a, b) => a.batchNum - b.batchNum);
+            
+            for (const result of successResults) {
+                if (result.extractedData) {
+                    allResults.push(result.extractedData);
+                }
+                if (result.rawResponse) {
+                    allResponses.push(result.rawResponse);
+                }
+            }
+            
+            // ✅ 合并所有結果
+            const mergedData = this.mergeMultiPageResults(allResults, documentType);
+            
+            // ✅ 計算成功處理的頁數
+            const successPages = successResults.reduce((sum, r) => sum + r.pagesInBatch, 0);
+            const failedPages = failedResults.reduce((sum, r) => sum + r.pagesInBatch, 0);
+            
+            console.log(`\n🎉 處理完成！`);
+            console.log(`   ⏱️  總耗時: ${totalTime}ms (${(totalTime/1000).toFixed(1)}秒)`);
+            console.log(`   📈 平均: ${(totalTime / successPages).toFixed(0)}ms/頁`);
+            console.log(`   💰 總成本: $${(this.calculateCost(totalUsage.total_tokens)).toFixed(4)}`);
+            console.log(`   📊 Token使用: ${totalUsage.total_tokens.toLocaleString()}`);
             
             return {
                 success: true,
@@ -385,17 +419,19 @@ class QwenVLMaxProcessor {
                 extractedData: mergedData,
                 rawResponse: allResponses.join('\n---\n'),
                 pages: totalPages,
-                successPages: successResults.length,
-                failedPages: failedResults.length,
+                successPages: successPages,
+                failedPages: failedPages,
                 processingTime: totalTime,
-                processor: 'qwen-vl-max-serial',  // ✅ 標記為串行處理
+                processor: `qwen-vl-max-serial-multi-${batchSize}`,  // 標記為串行多圖模式
+                batchSize: batchSize,
+                totalBatches: totalBatches,
                 model: this.qwenModel,
                 usage: totalUsage,
                 partialSuccess: failedResults.length > 0
             };
             
         } catch (error) {
-            console.error('❌ 完全并行处理失败:', error);
+            console.error('❌ 串行多圖請求處理失敗:', error);
             throw error;
         }
     }
@@ -823,43 +859,111 @@ JSON格式：
     }
     
     /**
-     * 动态计算最优批次大小（避免超时）
-     * @param {File[]} files - 图片文件数组
-     * @returns {number} 最优批次大小（1或2）
+     * 🧠 智能計算最優批次大小（2026-01-27 v2：Token 限制 + 時間限制 雙重考慮）
+     * 
+     * 策略：
+     * 1. 計算 max_tokens (28000) 能容納多少頁的輸出
+     * 2. 計算 Cloudflare 超時 (~90秒) 能處理多少頁
+     * 3. 取兩者的最小值作為批次大小
+     * 
+     * @param {File[]} files - 圖片文件數組
+     * @returns {number} 最優批次大小（1-10）
      */
     calculateOptimalBatchSize(files) {
-        // 计算总文件大小
-        let totalSize = 0;
-        for (const file of files) {
-            totalSize += file.size;
+        // =====================================================
+        // 1️⃣ 計算文件大小
+        // =====================================================
+        const pageSizes = files.map(f => f.size);
+        const totalSize = pageSizes.reduce((a, b) => a + b, 0);
+        const avgSizeKB = (totalSize / files.length) / 1024;
+        
+        // =====================================================
+        // 2️⃣ Token 預估（基於實測數據 - 工銀亞洲對賬單）
+        // =====================================================
+        // 輸入 tokens
+        const avgBase64KB = avgSizeKB * 1.37;  // Base64 比原始大 37%
+        const avgImageTokens = Math.round((avgBase64KB * 1024) / 750);  // 圖片 tokens
+        const promptTokens = 300;  // 精簡版 prompt
+        
+        // 輸出 tokens（基於實測：工銀亞洲對賬單最密集頁面約 35 筆交易）
+        // - 每筆交易 ≈ 120 tokens（date, description, debit, credit, amount, balance, transactionSign, transactionType, payee, referenceNumber...）
+        // - JSON 頭部 ≈ 400 tokens（bankName, bankCode, accountNumber, accountHolder, accountAddress, statementPeriod...）
+        // - 最大頁面（35筆）= 35 × 120 + 400 = 4,600 tokens
+        // - 加 10% 安全邊際 = 5,060 tokens ≈ 5,000 tokens
+        const MAX_OUTPUT_TOKENS_PER_PAGE = 5000;  // 🔥 基於實測：最大 35 筆交易頁面 + 10% 安全邊際
+        const avgOutputTokensPerPage = MAX_OUTPUT_TOKENS_PER_PAGE;
+        
+        // =====================================================
+        // 3️⃣ 計算 Token 限制的最大批次
+        // =====================================================
+        const MAX_OUTPUT_TOKENS = 28000;  // Cloudflare Worker 設定的 max_tokens
+        const SAFETY_MARGIN = 0.8;        // 留 20% 安全邊際
+        const safeMaxTokens = MAX_OUTPUT_TOKENS * SAFETY_MARGIN;  // 22400 tokens
+        
+        // 最大頁數 = 可用輸出 tokens ÷ 每頁輸出 tokens
+        const maxPagesByTokens = Math.floor(safeMaxTokens / avgOutputTokensPerPage);
+        
+        // =====================================================
+        // 4️⃣ 計算時間限制的最大批次
+        // =====================================================
+        const CLOUDFLARE_TIMEOUT = 90;  // 秒（實際約 100 秒，留 10 秒緩衝）
+        const baseTime = 15;            // 基礎時間（網絡 + 初始化）
+        const timePerPage = 25;         // 每頁處理時間（精簡 prompt 後更快）
+        
+        // 最大頁數 = (超時限制 - 基礎時間) ÷ 每頁時間
+        const maxPagesByTime = Math.floor((CLOUDFLARE_TIMEOUT - baseTime) / timePerPage);
+        
+        // =====================================================
+        // 5️⃣ 取兩個限制的最小值
+        // =====================================================
+        let batchSize = Math.min(maxPagesByTokens, maxPagesByTime);
+        
+        // 確保至少 1 頁，最多 6 頁
+        batchSize = Math.max(1, Math.min(batchSize, 6));
+        
+        // =====================================================
+        // 6️⃣ 額外安全檢查
+        // =====================================================
+        let reason = '';
+        let limitingFactor = '';
+        
+        if (maxPagesByTokens <= maxPagesByTime) {
+            limitingFactor = 'Token 限制';
+            reason = `${avgOutputTokensPerPage} tokens/頁 × ${batchSize}頁 = ${avgOutputTokensPerPage * batchSize} < ${safeMaxTokens}`;
+        } else {
+            limitingFactor = '時間限制';
+            reason = `${timePerPage}秒/頁 × ${batchSize}頁 = ${timePerPage * batchSize}秒 < ${CLOUDFLARE_TIMEOUT}秒`;
         }
         
-        const totalSizeMB = totalSize / 1024 / 1024;
+        // 如果文件太大，強制降低批次大小
+        if (avgSizeKB > 200) {
+            batchSize = Math.min(batchSize, 2);
+            limitingFactor = '大文件';
+            reason = `平均 ${avgSizeKB.toFixed(0)}KB/頁，降低批次確保穩定`;
+        }
         
-        console.log(`📊 文件大小分析:`);
-        console.log(`   - 文件数量: ${files.length}`);
-        console.log(`   - 总大小: ${totalSizeMB.toFixed(2)} MB`);
-        console.log(`   - 平均大小: ${(totalSizeMB / files.length).toFixed(2)} MB/页`);
-        
-        // 🎯 修改策略：银行对账单通常有复杂页面，统一使用 1页/批
-        // 原因：批次2/3包含大量交易记录，2页一起处理会超时
-        // 解决方案：每页单独处理，确保在 Cloudflare 30秒限制内完成
-        
-        let batchSize;
-        let reason;
-        
-        // ✅ 统一策略：所有银行对账单都使用 1页/批
-        // 理由：
-        // 1. 避免批次2/3（交易记录密集页）超时
-        // 2. 处理时间可控（15-20秒/页 vs 30-40秒/2页）
-        // 3. 失败影响最小化（只影响1页）
-        // 4. Cloudflare 30秒限制内安全完成
-        batchSize = 1;
-        reason = '银行对账单逐页处理（避免复杂页面超时）';
-        
-        console.log(`🎯 批次大小决策: ${batchSize}页/批`);
-        console.log(`   - 原因: ${reason}`);
-        console.log(`   - 预计批次数: ${Math.ceil(files.length / batchSize)}`);
+        // =====================================================
+        // 7️⃣ 輸出決策日誌
+        // =====================================================
+        console.log(`\n🧠 [智能批次分析 v2 - 基於實測數據]`);
+        console.log(`   📊 文件分析:`);
+        console.log(`      - 文件數量: ${files.length} 頁`);
+        console.log(`      - 平均大小: ${avgSizeKB.toFixed(1)} KB/頁`);
+        console.log(`   🔢 Token 分析（基於工銀亞洲對賬單實測）:`);
+        console.log(`      - 輸入 tokens: ~${avgImageTokens + promptTokens}/頁`);
+        console.log(`      - 輸出 tokens: ~${MAX_OUTPUT_TOKENS_PER_PAGE}/頁 (最大35筆交易+10%安全邊際)`);
+        console.log(`      - max_tokens 限制: ${MAX_OUTPUT_TOKENS}`);
+        console.log(`      - Token 允許最大頁數: ${maxPagesByTokens} 頁 (${MAX_OUTPUT_TOKENS}÷${MAX_OUTPUT_TOKENS_PER_PAGE})`);
+        console.log(`   ⏱️ 時間分析:`);
+        console.log(`      - 預估處理時間: ~${timePerPage} 秒/頁`);
+        console.log(`      - Cloudflare 限制: ${CLOUDFLARE_TIMEOUT} 秒`);
+        console.log(`      - 時間允許最大頁數: ${maxPagesByTime} 頁`);
+        console.log(`   🎯 決策結果:`);
+        console.log(`      - 批次大小: ${batchSize} 頁/批`);
+        console.log(`      - 限制因素: ${limitingFactor}`);
+        console.log(`      - 原因: ${reason}`);
+        console.log(`      - 預計批次數: ${Math.ceil(files.length / batchSize)}`);
+        console.log(`      - 預計總輸出: ${batchSize * MAX_OUTPUT_TOKENS_PER_PAGE} tokens/批`);
         
         return batchSize;
     }
