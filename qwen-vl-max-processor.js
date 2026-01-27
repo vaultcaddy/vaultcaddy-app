@@ -961,16 +961,8 @@ JSON格式：
         // =====================================================
         // 6️⃣ 額外安全檢查
         // =====================================================
-        let reason = '';
-        let limitingFactor = '';
-        
-        if (maxPagesByTokens <= maxPagesByTime) {
-            limitingFactor = 'Token 限制';
-            reason = `${avgOutputTokensPerPage} tokens/頁 × ${batchSize}頁 = ${avgOutputTokensPerPage * batchSize} < ${safeMaxTokens}`;
-        } else {
-            limitingFactor = '時間限制';
-            reason = `${timePerPage}秒/頁 × ${batchSize}頁 = ${timePerPage * batchSize}秒 < ${CLOUDFLARE_TIMEOUT}秒`;
-        }
+        let reason = `輸出 token 限制：${avgOutputTokensPerPage} tokens/頁 × ${batchSize}頁 = ${avgOutputTokensPerPage * batchSize} < ${safeMaxTokens}`;
+        let limitingFactor = 'Token 限制（固定 5 頁/批）';
         
         // 如果文件太大，強制降低批次大小
         if (avgSizeKB > 200) {
