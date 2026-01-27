@@ -525,7 +525,7 @@ class QwenVLMaxProcessor {
             const prompt = this.generateMultiPagePrompt(documentType, files.length);
             console.log(`📝 提示词长度: ${prompt.length} 字符`);
             
-            // 3. 构建请求
+            // 3. 构建请求（🔥 启用流式响应）
             const requestBody = {
                 model: this.qwenModel,
                 messages: [
@@ -541,15 +541,16 @@ class QwenVLMaxProcessor {
                     }
                 ],
                 temperature: 0.1,
-                max_tokens: 28000  // ✅ 设置为 28K（低于32K上限10%，避免边界问题）
+                max_tokens: 28000,
+                stream: true  // 🔥 启用流式响应，避免 Cloudflare 超时
             };
             
             const requestBodySize = JSON.stringify(requestBody).length;
             const requestBodySizeMB = (requestBodySize / 1024 / 1024).toFixed(2);
             console.log(`📊 请求体大小: ${requestBodySizeMB} MB`);
             
-            // 4. 调用 API
-            console.log(`🚀 开始调用Qwen API...`);
+            // 4. 调用 API（流式模式）
+            console.log(`🚀 开始调用Qwen API（流式模式）...`);
             const apiStartTime = Date.now();
             
             const response = await fetch(this.qwenWorkerUrl, {
@@ -560,8 +561,6 @@ class QwenVLMaxProcessor {
                 body: JSON.stringify(requestBody)
             });
             
-            const apiDuration = Date.now() - apiStartTime;
-            console.log(`✅ API响应耗时: ${apiDuration}ms (${(apiDuration/1000).toFixed(1)}秒)`);
             console.log(`📊 HTTP状态码: ${response.status} ${response.statusText}`);
             
             if (!response.ok) {
@@ -576,19 +575,59 @@ class QwenVLMaxProcessor {
                 throw new Error(`Qwen-VL API 错误: ${response.status} - ${errorData.message || response.statusText}`);
             }
             
-            console.log(`🔄 开始解析JSON响应...`);
-            const data = await response.json();
-            console.log(`✅ JSON解析成功`);
-            
-            // 5. 提取响应文本
+            // 5. 🔥 解析流式响应（SSE 格式）
+            console.log(`📡 开始接收流式响应...`);
             let responseText = '';
-            if (data.choices && data.choices[0] && data.choices[0].message) {
-                responseText = data.choices[0].message.content;
+            let usage = {};
+            
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+            let chunkCount = 0;
+            
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || '';  // 保留不完整的行
+                
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        const data = line.slice(6).trim();
+                        if (data === '[DONE]') continue;
+                        
+                        try {
+                            const parsed = JSON.parse(data);
+                            if (parsed.choices && parsed.choices[0]) {
+                                const delta = parsed.choices[0].delta;
+                                if (delta && delta.content) {
+                                    responseText += delta.content;
+                                    chunkCount++;
+                                }
+                            }
+                            if (parsed.usage) {
+                                usage = parsed.usage;
+                            }
+                        } catch (e) {
+                            // 忽略解析错误（可能是不完整的 JSON）
+                        }
+                    }
+                }
+                
+                // 每 50 个 chunk 输出一次进度
+                if (chunkCount > 0 && chunkCount % 50 === 0) {
+                    console.log(`   📥 已接收 ${chunkCount} 个数据块，${responseText.length} 字符...`);
+                }
             }
+            
+            const apiDuration = Date.now() - apiStartTime;
+            console.log(`✅ 流式响应完成！耗时: ${apiDuration}ms (${(apiDuration/1000).toFixed(1)}秒)`);
+            console.log(`   📊 共接收 ${chunkCount} 个数据块`);
             
             if (!responseText) {
                 console.error(`❌ Qwen-VL未返回有效响应`);
-                console.error(`📊 API响应数据:`, JSON.stringify(data, null, 2));
                 throw new Error('Qwen-VL 未返回有效响应');
             }
             
@@ -608,8 +647,8 @@ class QwenVLMaxProcessor {
             console.log(`🎉 批次处理完成！总耗时: ${totalTime}ms (${(totalTime/1000).toFixed(1)}秒)`);
             
             // 记录使用统计
-            if (data.usage) {
-                console.log(`📊 Token使用: prompt=${data.usage.prompt_tokens}, completion=${data.usage.completion_tokens}, total=${data.usage.total_tokens}`);
+            if (usage && usage.total_tokens) {
+                console.log(`📊 Token使用: prompt=${usage.prompt_tokens}, completion=${usage.completion_tokens}, total=${usage.total_tokens}`);
             }
             
             return {
@@ -621,7 +660,7 @@ class QwenVLMaxProcessor {
                 processingTime: totalTime,
                 processor: 'qwen-vl-max',
                 model: this.qwenModel,
-                usage: data.usage || {}
+                usage: usage
             };
             
         } catch (error) {
@@ -950,10 +989,13 @@ JSON格式：
         // 用戶已部署流式響應 Worker，無需考慮 Cloudflare 超時
         
         // =====================================================
-        // 5️⃣ 直接設置為 5 頁上限
+        // 5️⃣ 批次大小設置（2026-01-27：已啟用流式響應，可用 5 頁）
         // =====================================================
-        // 計算結果：32K ÷ 5K × 0.8 = 5.12 → 5 頁
-        let batchSize = Math.min(maxPagesByTokens, 5);
+        // 流式響應優勢：
+        // - 無 Cloudflare ~100 秒超時問題
+        // - 可處理更多頁數
+        // - 輸出 token 限制：32K ÷ 5K ≈ 6 頁，保守設為 5 頁
+        let batchSize = Math.min(maxPagesByTokens, 5);  // 🔥 流式模式：5 頁/批
         
         // 確保至少 1 頁，最多 5 頁
         batchSize = Math.max(1, Math.min(batchSize, 5));
@@ -984,8 +1026,8 @@ JSON格式：
         console.log(`      - max_tokens 限制: ${MAX_OUTPUT_TOKENS}`);
         console.log(`      - Token 允許最大頁數: ${maxPagesByTokens} 頁 (${MAX_OUTPUT_TOKENS}÷${MAX_OUTPUT_TOKENS_PER_PAGE})`);
         console.log(`   ⏱️ 批次策略:`);
-        console.log(`      - 🔥 固定 5 頁/批（基於輸出 token 限制）`);
-        console.log(`      - 已部署流式響應 Worker，無超時問題`);
+        console.log(`      - 🔥 流式響應模式：5 頁/批`);
+        console.log(`      - 無 Cloudflare 超時問題`);
         console.log(`   🎯 決策結果:`);
         console.log(`      - 批次大小: ${batchSize} 頁/批`);
         console.log(`      - 限制因素: ${limitingFactor}`);
