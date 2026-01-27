@@ -665,8 +665,6 @@ Required fields:
   "currency": "Currency (e.g., HKD, USD, JPY, KRW)",
   "openingBalance": Opening balance (number),
   "closingBalance": Closing balance (number),
-  "totalDeposits": Total deposits (number),
-  "totalWithdrawals": Total withdrawals (number),
   "transactions": [
     {
       "date": "YYYY-MM-DD",
@@ -684,6 +682,12 @@ Required fields:
     }
   ]
 }
+
+CRITICAL - Account Summary vs Transaction Details:
+- **DO NOT extract from Account Summary (戶口摘要)** - only totals
+- **ONLY extract from Transaction Details (戶口進支)** - actual transactions
+- Opening Balance (承上結餘) is the FIRST transaction row - INCLUDE it in transactions array
+- Use the balance from Transaction Details, NOT from Account Summary
 
 transactionSign rules (IMPORTANT - use balance to verify):
 - Bank balance is ALWAYS correct - DO NOT modify balance values
@@ -755,8 +759,6 @@ Required fields:
   "currency": "Currency (e.g., HKD, USD, JPY, KRW, CNY)",
   "openingBalance": Opening balance (number),
   "closingBalance": Closing balance (number),
-  "totalDeposits": Total deposits (number),
-  "totalWithdrawals": Total withdrawals (number),
   "transactions": [
     {
       "date": "Transaction date (YYYY-MM-DD)",
@@ -774,6 +776,17 @@ Required fields:
     }
   ]
 }
+
+CRITICAL - Distinguish Account Summary vs Transaction Details:
+- Bank statements have TWO sections: Account Summary (戶口摘要) and Transaction Details (戶口進支/交易明細)
+- **DO NOT extract from Account Summary** - it only shows totals
+- **ONLY extract from Transaction Details section** - this has the actual transactions
+
+Opening Balance / Brought Forward (承上結餘/上期結餘):
+- This is the FIRST row in the Transaction Details section
+- It SHOULD be included in the transactions array
+- Extract the balance value from the "餘額/Balance" column (e.g., 59,417.89)
+- DO NOT use the Account Summary total (e.g., 60,736.27) - that's the closing balance
 
 Transaction type rules:
 - Deposit: Cash deposit, direct deposit
