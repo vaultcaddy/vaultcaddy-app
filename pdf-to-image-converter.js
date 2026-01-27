@@ -125,6 +125,12 @@ class PDFToImageConverter {
                     viewport: viewport
                 }).promise;
                 
+                // 🔥 空白頁檢測（2026-01-27）
+                const isBlank = this.detectBlankPage(context, canvas.width, canvas.height);
+                if (isBlank) {
+                    console.log(`⚪ [頁${pageNum}] 檢測到空白頁！跳過 API 處理（仍收取 1 Credit）`);
+                }
+                
                 // 將 canvas 轉換為 Blob
                 const blob = await new Promise((resolve) => {
                     canvas.toBlob(resolve, format, quality);
@@ -134,8 +140,12 @@ class PDFToImageConverter {
                 const imageFileName = file.name.replace('.pdf', `_page${pageNum}.jpg`);
                 const imageFile = new File([blob], imageFileName, { type: format });
                 
+                // 🔥 添加空白頁標記
+                imageFile.isBlank = isBlank;
+                imageFile.pageNum = pageNum;
+                
                 const duration = Date.now() - startTime;
-                console.log(`✅ [頁${pageNum}] 轉換完成: ${(blob.size / 1024).toFixed(2)} KB (耗時 ${duration}ms)`);
+                console.log(`✅ [頁${pageNum}] 轉換完成: ${(blob.size / 1024).toFixed(2)} KB (耗時 ${duration}ms)${isBlank ? ' [空白頁]' : ''}`);
                 
                 return imageFile;
             };
@@ -187,6 +197,66 @@ class PDFToImageConverter {
      */
     isPDF(file) {
         return file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+    }
+    
+    /**
+     * 🔥 空白頁檢測（2026-01-27）
+     * 
+     * 原理：分析 Canvas 像素數據，計算白色/淺色像素的比例
+     * 如果超過 98% 的像素是白色或接近白色，則認為是空白頁
+     * 
+     * @param {CanvasRenderingContext2D} context - Canvas 上下文
+     * @param {number} width - Canvas 寬度
+     * @param {number} height - Canvas 高度
+     * @returns {boolean} 是否為空白頁
+     */
+    detectBlankPage(context, width, height) {
+        try {
+            // 採樣檢測（不需要分析所有像素，採樣可提高速度）
+            const sampleSize = 100; // 採樣點數量
+            const stepX = Math.floor(width / 10);
+            const stepY = Math.floor(height / 10);
+            
+            let whitePixelCount = 0;
+            let totalSampled = 0;
+            
+            // 在整個頁面上均勻採樣
+            for (let x = stepX; x < width - stepX; x += stepX) {
+                for (let y = stepY; y < height - stepY; y += stepY) {
+                    const pixel = context.getImageData(x, y, 1, 1).data;
+                    const r = pixel[0];
+                    const g = pixel[1];
+                    const b = pixel[2];
+                    
+                    // 計算亮度（灰度值）
+                    const brightness = (r + g + b) / 3;
+                    
+                    // 如果亮度 > 250（接近純白），認為是白色像素
+                    if (brightness > 250) {
+                        whitePixelCount++;
+                    }
+                    totalSampled++;
+                }
+            }
+            
+            // 計算白色像素比例
+            const whiteRatio = whitePixelCount / totalSampled;
+            
+            // 如果 98% 以上是白色，認為是空白頁
+            const isBlank = whiteRatio > 0.98;
+            
+            if (isBlank) {
+                console.log(`   ⚪ 空白頁檢測: 白色像素比例 ${(whiteRatio * 100).toFixed(1)}% > 98%`);
+            } else {
+                console.log(`   📄 內容頁檢測: 白色像素比例 ${(whiteRatio * 100).toFixed(1)}%`);
+            }
+            
+            return isBlank;
+            
+        } catch (error) {
+            console.warn('⚠️ 空白頁檢測失敗，假設非空白頁:', error.message);
+            return false; // 檢測失敗時，假設不是空白頁
+        }
     }
 }
 

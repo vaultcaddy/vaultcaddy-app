@@ -159,10 +159,43 @@ class QwenVLMaxProcessor {
     async processMultiPageDocument(files, documentType = 'invoice', progressCallback = null) {
         const startTime = Date.now();
         
+        // 🔥 空白頁過濾（2026-01-27）
+        // 空白頁仍計入 Credits，但不發送到 API
+        const originalCount = files.length;
+        const blankPages = files.filter(f => f.isBlank === true);
+        const contentPages = files.filter(f => f.isBlank !== true);
+        
+        if (blankPages.length > 0) {
+            console.log(`\n⚪ [空白頁檢測] 發現 ${blankPages.length} 個空白頁`);
+            console.log(`   - 原始頁數: ${originalCount}`);
+            console.log(`   - 空白頁: ${blankPages.map(f => f.pageNum || '?').join(', ')}`);
+            console.log(`   - 內容頁: ${contentPages.length} 頁（將發送到 API）`);
+            console.log(`   - Credits 扣除: ${originalCount} 個（包括空白頁）`);
+        }
+        
+        // 如果全部是空白頁，返回空結果
+        if (contentPages.length === 0) {
+            console.log(`⚠️ 所有頁面都是空白，返回空結果`);
+            return {
+                success: true,
+                documentType: documentType,
+                extractedData: { transactions: [] },
+                rawResponse: '',
+                pages: originalCount,
+                blankPages: blankPages.length,
+                processingTime: Date.now() - startTime,
+                processor: 'qwen-vl-max-blank-skip',
+                message: '所有頁面都是空白'
+            };
+        }
+        
+        // 使用內容頁繼續處理
+        files = contentPages;
+        
         // ✅ 动态计算最优批次大小（基于文件大小）
         const MAX_IMAGES_PER_REQUEST = this.calculateOptimalBatchSize(files);
         
-        console.log(`\n🚀 [Qwen-VL Max] 批量处理多页文档 (${files.length} 页)`);
+        console.log(`\n🚀 [Qwen-VL Max] 批量处理多页文档 (${files.length} 頁內容，跳過 ${blankPages.length} 頁空白)`);
         
         // ✅ 如果超过限制，分批处理
         if (files.length > MAX_IMAGES_PER_REQUEST) {
@@ -911,32 +944,18 @@ JSON格式：
         const maxPagesByTokens = Math.floor(safeMaxTokens / avgOutputTokensPerPage);
         
         // =====================================================
-        // 4️⃣ 計算時間限制（使用流式響應後無超時問題）
+        // 4️⃣ 批次大小決策（2026-01-27 用戶確認：5 頁/批）
         // =====================================================
-        // 🔥 流式響應模式下，連接保持活躍，無超時限制
-        // 如果使用流式響應，時間不再是瓶頸
-        const useStreaming = this.useStreaming || false;
-        
-        let maxPagesByTime;
-        if (useStreaming) {
-            // 流式響應：無時間限制，只受輸出 token 限制
-            maxPagesByTime = 10;  // 設一個較大的數，讓 token 限制決定
-            console.log(`   🔥 流式響應模式：無超時限制`);
-        } else {
-            // 非流式響應：受 Cloudflare 100 秒限制
-            const CLOUDFLARE_TIMEOUT = 90;
-            const baseTime = 15;
-            const timePerPageInBatch = 30;
-            maxPagesByTime = Math.floor((CLOUDFLARE_TIMEOUT - baseTime) / timePerPageInBatch);
-            // 結果：(90-15) ÷ 30 = 2 頁
-        }
+        // 🔥 基於輸出 token 限制（32K），每批最多 5 頁
+        // 用戶已部署流式響應 Worker，無需考慮 Cloudflare 超時
         
         // =====================================================
-        // 5️⃣ 取兩個限制的最小值
+        // 5️⃣ 直接設置為 5 頁上限
         // =====================================================
-        let batchSize = Math.min(maxPagesByTokens, maxPagesByTime);
+        // 計算結果：32K ÷ 5K × 0.8 = 5.12 → 5 頁
+        let batchSize = Math.min(maxPagesByTokens, 5);
         
-        // 確保至少 1 頁，最多 5 頁（基於輸出限制 32K ÷ 5K × 0.8 = 5.12）
+        // 確保至少 1 頁，最多 5 頁
         batchSize = Math.max(1, Math.min(batchSize, 5));
         
         // =====================================================
@@ -972,14 +991,9 @@ JSON格式：
         console.log(`      - 輸出 tokens: ~${MAX_OUTPUT_TOKENS_PER_PAGE}/頁 (最大35筆交易+10%安全邊際)`);
         console.log(`      - max_tokens 限制: ${MAX_OUTPUT_TOKENS}`);
         console.log(`      - Token 允許最大頁數: ${maxPagesByTokens} 頁 (${MAX_OUTPUT_TOKENS}÷${MAX_OUTPUT_TOKENS_PER_PAGE})`);
-        console.log(`   ⏱️ 時間分析:`);
-        if (useStreaming) {
-            console.log(`      - 🔥 流式響應模式：無超時限制`);
-            console.log(`      - 時間允許最大頁數: 無限制（由輸出 token 決定）`);
-        } else {
-            console.log(`      - 非流式模式：受 Cloudflare 100 秒限制`);
-            console.log(`      - 時間允許最大頁數: ${maxPagesByTime} 頁`);
-        }
+        console.log(`   ⏱️ 批次策略:`);
+        console.log(`      - 🔥 固定 5 頁/批（基於輸出 token 限制）`);
+        console.log(`      - 已部署流式響應 Worker，無超時問題`);
         console.log(`   🎯 決策結果:`);
         console.log(`      - 批次大小: ${batchSize} 頁/批`);
         console.log(`      - 限制因素: ${limitingFactor}`);
