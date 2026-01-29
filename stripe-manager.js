@@ -30,29 +30,87 @@ window.StripeManager = {
             }
         },
         
-        // ✅ 訂閱計劃（2026-01-26 更新 - 與 Stripe 產品同步）
+        // ✅ 訂閱計劃（2026-01-29 更新 - 新定價結構 + 多幣種支持）
         // 
-        // ⚠️ 重要：執行 create-stripe-payment-links.js 後更新 paymentLink
+        // 🔥 所有價格已通過 Stripe API 自動創建（create-stripe-prices-2026.js）
         // 
         subscriptions: {
-            // 月費方案：HKD $28/月（含 100 Credits + 超出後 $0.3/頁）
+            // 月費方案：100 Credits（根據幣種不同價格不同）
             monthly: {
                 productId: 'prod_Tb24SiE4usHRDS',  // VaultCaddy Monthly
-                price: 28,  // HKD $28/月
                 credits: 100,
+                monthly_credits: 100,
                 period: 'monthly',
-                overage: 0.3,  // HKD $0.3/頁（超出後）
-                // ⚠️ 當前 Payment Link 可能不包含超額計費，需要重新創建
-                paymentLink: 'https://buy.stripe.com/eVql4ocXWeBsftI7gmf7i0b'  // TODO: 更新為包含超額計費的 Payment Link
+                overage: 0.3,  // 超額收費（根據幣種調整）
+                
+                // 多幣種價格配置
+                prices: {
+                    hkd: {
+                        priceId: 'price_1SuruFJmiQ31C0GTdJxUaknj',
+                        amount: 38,  // HKD $38/月
+                        currency: 'HKD',
+                        symbol: 'HK$'
+                    },
+                    usd: {
+                        priceId: 'price_1SuruGJmiQ31C0GThdoiTbTM',
+                        amount: 4.88,  // USD $4.88/月
+                        currency: 'USD',
+                        symbol: '$'
+                    },
+                    jpy: {
+                        priceId: 'price_1SuruGJmiQ31C0GTGQVpiEuP',
+                        amount: 788,  // JPY ¥788/月
+                        currency: 'JPY',
+                        symbol: '¥'
+                    },
+                    krw: {
+                        priceId: 'price_1SuruGJmiQ31C0GTpBz3jbMo',
+                        amount: 6988,  // KRW ₩6988/月
+                        currency: 'KRW',
+                        symbol: '₩'
+                    }
+                }
             },
-            // 年費方案：HKD $264/年（相當於 $22/月，含 1200 Credits + 超出後 $0.3/頁）
+            
+            // 年費方案：1200 Credits（相當於 100 Credits/月）
             yearly: {
                 productId: 'prod_Tb2443GvCbe4Pp',  // VaultCaddy Yearly
-                price: 264,  // HKD $264/年
                 credits: 1200,
+                monthly_credits: 100,
                 period: 'yearly',
-                overage: 0.3,  // HKD $0.3/頁（超出後）
-                paymentLink: 'https://buy.stripe.com/YEARLY_LINK_TODO'  // TODO: 創建年費 Payment Link
+                overage: 0.3,  // 超額收費（根據幣種調整）
+                
+                // 多幣種價格配置
+                prices: {
+                    hkd: {
+                        priceId: 'price_1SuruEJmiQ31C0GTWqMAZeuM',
+                        amount: 336,  // HKD $336/年 (相當於 $28/月)
+                        monthlyEquivalent: 28,
+                        currency: 'HKD',
+                        symbol: 'HK$'
+                    },
+                    usd: {
+                        priceId: 'price_1SuruEJmiQ31C0GTBVhLSAtA',
+                        amount: 42.96,  // USD $42.96/年 (相當於 $3.58/月)
+                        monthlyEquivalent: 3.58,
+                        currency: 'USD',
+                        symbol: '$'
+                    },
+                    jpy: {
+                        priceId: 'price_1SuruEJmiQ31C0GTde3o97rx',
+                        amount: 7056,  // JPY ¥7056/年 (相當於 ¥588/月)
+                        monthlyEquivalent: 588,
+                        currency: 'JPY',
+                        symbol: '¥'
+                    },
+                    krw: {
+                        priceId: 'price_1SuruFJmiQ31C0GTUL0Yxltm',
+                        amount: 62256,  // KRW ₩62256/年 (相當於 ₩5188/月)
+                        monthlyEquivalent: 5188,
+                        currency: 'KRW',
+                        symbol: '₩'
+                    }
+                }
             },
             
             // 舊方案（保留兼容性）
@@ -93,6 +151,62 @@ window.StripeManager = {
                 paymentLink: 'https://buy.stripe.com/YOUR_LINK_BUSINESS_YEARLY'
             }
         }
+    },
+    
+    /**
+     * 根據當前頁面語言獲取幣種
+     * @returns {string} 幣種代碼 (hkd, usd, jpy, krw)
+     */
+    getCurrencyFromLanguage() {
+        const pathname = window.location.pathname;
+        
+        // 檢測語言版本目錄
+        if (pathname.includes('/en/')) {
+            return 'usd';
+        } else if (pathname.includes('/jp/')) {
+            return 'jpy';
+        } else if (pathname.includes('/kr/')) {
+            return 'krw';
+        } else {
+            // 默認中文版使用 HKD
+            return 'hkd';
+        }
+    },
+    
+    /**
+     * 獲取指定計劃的價格信息
+     * @param {string} planKey - 計劃鍵值 ('monthly' 或 'yearly')
+     * @param {string} currency - 幣種 (可選，不提供則自動檢測)
+     * @returns {object} 價格信息
+     */
+    getPriceInfo(planKey, currency = null) {
+        const plan = this.products.subscriptions[planKey];
+        
+        if (!plan) {
+            console.error('無效的計劃鍵值:', planKey);
+            return null;
+        }
+        
+        // 如果沒有提供幣種，自動檢測
+        if (!currency) {
+            currency = this.getCurrencyFromLanguage();
+        }
+        
+        const priceInfo = plan.prices[currency];
+        
+        if (!priceInfo) {
+            console.error(`計劃 ${planKey} 沒有幣種 ${currency} 的價格`);
+            return null;
+        }
+        
+        return {
+            ...priceInfo,
+            planKey: planKey,
+            credits: plan.credits,
+            monthly_credits: plan.monthly_credits,
+            period: plan.period,
+            overage: plan.overage
+        };
     },
     
     /**
