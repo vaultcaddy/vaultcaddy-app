@@ -136,6 +136,11 @@ const PRICE_IDS = {
         usd: 'price_1SuruEJmiQ31C0GTBVhLSAtA',  // USD $42.96/年 ($3.58/月)
         jpy: 'price_1SuruEJmiQ31C0GTde3o97rx',  // JPY ¥7056/年 (¥588/月)
         krw: 'price_1SuruFJmiQ31C0GTUL0Yxltm'   // KRW ₩62,256/年 (₩5,188/月)
+    },
+    // 🔥 超額收費 Price ID (Usage-based Billing)
+    overage: {
+        monthly: 'price_1SfZQQJmiQ31C0GTeUu6TSXE',  // 月付超額收費: $0.3/頁
+        yearly: 'price_1SfZQVJmiQ31C0GTOYgabmaJ'    // 年付超額收費: $0.3/頁
     }
 };
 
