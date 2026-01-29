@@ -43,7 +43,7 @@
 
 **API 配置**:
 - **端点**: `https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions`
-- **API Key**: `sk-b4016d4560e44c6b925217578004aa9c`
+- **API Key**: `YOUR_QWEN_API_KEY`
 - **模型**: `qwen3-vl-plus-2025-12-19`
 - **地域**: 新加坡（国际版）
 

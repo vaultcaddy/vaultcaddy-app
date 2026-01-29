@@ -11,15 +11,22 @@
  */
 
 const functions = require('firebase-functions');
+const admin = require('firebase-admin');
 const cors = require('cors')({ origin: true });
 const fetch = require('node-fetch');
 const stripe = require('stripe')(functions.config().stripe?.secret || process.env.STRIPE_SECRET_KEY);
+
+// 初始化 Firebase Admin
+if (!admin.apps.length) {
+    admin.initializeApp();
+}
 
 // =====================================================
 // 配置区域
 // =====================================================
 
-const QWEN_API_KEY = 'sk-b4016d4560e44c6b925217578004aa9c';
+// 🔐 從環境變數讀取 API Keys（安全）
+const QWEN_API_KEY = functions.config().qwen?.api_key || process.env.QWEN_API_KEY;
 const QWEN_API_URL = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions';
 
 const SUPPORTED_MODELS = [
@@ -240,3 +247,487 @@ exports.createStripeCheckoutSession = functions
             );
         }
     });
+
+// =====================================================
+// 超額計費功能 - Credits 扣除與使用量報告
+// =====================================================
+
+/**
+ * 扣除 Credits 並檢查是否超額
+ * 
+ * 功能：
+ * 1. 扣除用戶 Credits
+ * 2. 如果是 Pro Plan 且 Credits 變為負數，報告超額使用量給 Stripe
+ * 3. 記錄使用量歷史
+ */
+exports.deductCreditsClient = functions
+    .runWith({
+        timeoutSeconds: 60,
+        memory: '256MB'
+    })
+    .https.onCall(async (data, context) => {
+        try {
+            // 1️⃣ 驗證用戶身份
+            if (!context.auth) {
+                throw new functions.https.HttpsError(
+                    'unauthenticated',
+                    'User must be logged in'
+                );
+            }
+
+            const { userId, amount, metadata } = data;
+            
+            // 驗證 userId 與當前用戶匹配
+            if (userId !== context.auth.uid) {
+                throw new functions.https.HttpsError(
+                    'permission-denied',
+                    'User ID mismatch'
+                );
+            }
+
+            console.log(`💰 扣除 Credits: userId=${userId}, amount=${amount}`);
+
+            const db = admin.firestore();
+            const userRef = db.collection('users').doc(userId);
+
+            // 2️⃣ 使用事務扣除 Credits
+            const result = await db.runTransaction(async (transaction) => {
+                const userDoc = await transaction.get(userRef);
+
+                if (!userDoc.exists) {
+                    throw new functions.https.HttpsError(
+                        'not-found',
+                        'User document not found'
+                    );
+                }
+
+                const userData = userDoc.data();
+                const currentCredits = userData.credits || 0;
+                const planType = userData.planType || 'Free Plan';
+                const subscription = userData.subscription || null;
+
+                console.log(`   當前 Credits: ${currentCredits}, 計劃: ${planType}`);
+
+                // 計算新的 Credits
+                const newCredits = currentCredits - amount;
+
+                // 3️⃣ 檢查是否超額（Pro Plan 允許負數）
+                let overagePages = 0;
+                if (newCredits < 0 && planType === 'Pro Plan') {
+                    overagePages = Math.abs(newCredits);
+                    console.log(`   ⚠️ 超額使用: ${overagePages} 頁`);
+                }
+
+                // 4️⃣ 更新用戶數據
+                const updateData = {
+                    credits: newCredits,
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                };
+
+                // 如果有訂閱，更新使用量統計
+                if (subscription && subscription.stripeSubscriptionId) {
+                    updateData['usageThisPeriod.totalPages'] = admin.firestore.FieldValue.increment(amount);
+                    if (overagePages > 0) {
+                        updateData['usageThisPeriod.overagePages'] = admin.firestore.FieldValue.increment(overagePages);
+                    }
+                }
+
+                transaction.update(userRef, updateData);
+
+                // 5️⃣ 記錄歷史
+                const historyRef = db.collection('users').doc(userId).collection('creditsHistory').doc();
+                transaction.set(historyRef, {
+                    type: 'deduct',
+                    amount: amount,
+                    balanceBefore: currentCredits,
+                    balanceAfter: newCredits,
+                    overagePages: overagePages,
+                    metadata: metadata || {},
+                    createdAt: admin.firestore.FieldValue.serverTimestamp()
+                });
+
+                return {
+                    newCredits,
+                    overagePages,
+                    subscription
+                };
+            });
+
+            console.log(`✅ Credits 已扣除: 新餘額 ${result.newCredits}`);
+
+            // 6️⃣ 如果有超額且有訂閱，報告使用量給 Stripe
+            if (result.overagePages > 0 && result.subscription && result.subscription.stripeSubscriptionId) {
+                try {
+                    console.log(`📊 報告超額使用量到 Stripe: ${result.overagePages} 頁`);
+                    
+                    // 調用 Stripe API 報告使用量
+                    await reportUsageToStripe(
+                        result.subscription.stripeSubscriptionId,
+                        result.overagePages,
+                        result.subscription.planType
+                    );
+                    
+                    console.log(`✅ 使用量已報告到 Stripe`);
+                } catch (error) {
+                    console.error(`❌ 報告使用量失敗（不影響 Credits 扣除）:`, error.message);
+                    // 不拋出錯誤，因為 Credits 已經扣除成功
+                }
+            }
+
+            return {
+                success: true,
+                newCredits: result.newCredits,
+                overagePages: result.overagePages
+            };
+
+        } catch (error) {
+            console.error('❌ 扣除 Credits 失敗:', error);
+            throw new functions.https.HttpsError(
+                'internal',
+                `Failed to deduct credits: ${error.message}`
+            );
+        }
+    });
+
+/**
+ * 報告使用量到 Stripe Billing Meter
+ * 
+ * @param {string} subscriptionId - Stripe 訂閱 ID
+ * @param {number} quantity - 使用量（頁數）
+ * @param {string} planType - 計劃類型 (monthly/yearly)
+ */
+async function reportUsageToStripe(subscriptionId, quantity, planType) {
+    try {
+        // 1️⃣ 獲取訂閱詳情
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+        
+        console.log(`   訂閱 ID: ${subscriptionId}`);
+        console.log(`   訂閱項數量: ${subscription.items.data.length}`);
+
+        // 2️⃣ 查找超額計費的訂閱項
+        // 需要根據 planType 找到對應的超額計費 Price ID
+        const overagePriceId = planType === 'yearly' 
+            ? PRICE_IDS.overage.yearly 
+            : PRICE_IDS.overage.monthly;
+
+        console.log(`   尋找超額計費項: ${overagePriceId}`);
+
+        // 查找對應的訂閱項
+        let subscriptionItem = subscription.items.data.find(
+            item => item.price.id === overagePriceId
+        );
+
+        // 3️⃣ 如果不存在超額計費項，創建一個
+        if (!subscriptionItem) {
+            console.log(`   ⚠️ 超額計費項不存在，創建新的訂閱項...`);
+            
+            const newItem = await stripe.subscriptionItems.create({
+                subscription: subscriptionId,
+                price: overagePriceId,
+                metadata: {
+                    type: 'overage',
+                    planType: planType
+                }
+            });
+            
+            subscriptionItem = newItem;
+            console.log(`   ✅ 訂閱項已創建: ${subscriptionItem.id}`);
+        }
+
+        // 4️⃣ 報告使用量
+        const usageRecord = await stripe.subscriptionItems.createUsageRecord(
+            subscriptionItem.id,
+            {
+                quantity: quantity,
+                timestamp: Math.floor(Date.now() / 1000),
+                action: 'increment'
+            }
+        );
+
+        console.log(`   ✅ 使用量記錄已創建: ${usageRecord.id}, 數量: ${quantity}`);
+        
+        return { success: true, usageRecord };
+
+    } catch (error) {
+        console.error('❌ 報告使用量到 Stripe 失敗:', error);
+        throw error;
+    }
+}
+
+/**
+ * 手動報告使用量（備用函數，可由前端調用）
+ */
+exports.reportStripeUsage = functions.https.onCall(async (data, context) => {
+    try {
+        if (!context.auth) {
+            throw new functions.https.HttpsError('unauthenticated', 'User must be logged in');
+        }
+
+        const { subscriptionId, quantity, planType } = data;
+
+        console.log(`📊 手動報告使用量: subscription=${subscriptionId}, quantity=${quantity}`);
+
+        const result = await reportUsageToStripe(subscriptionId, quantity, planType);
+
+        return {
+            success: true,
+            usageRecord: result.usageRecord
+        };
+
+    } catch (error) {
+        console.error('❌ 報告使用量失敗:', error);
+        throw new functions.https.HttpsError(
+            'internal',
+            `Failed to report usage: ${error.message}`
+        );
+    }
+});
+
+// =====================================================
+// Stripe Webhook 處理
+// =====================================================
+
+/**
+ * Stripe Webhook 端點
+ * 
+ * 處理事件：
+ * - checkout.session.completed - 訂閱創建成功
+ * - customer.subscription.created/updated - 訂閱更新
+ * - invoice.payment_succeeded - 續費成功，重置 Credits
+ * - customer.subscription.deleted - 訂閱取消
+ */
+exports.stripeWebhook = functions
+    .runWith({
+        timeoutSeconds: 60,
+        memory: '256MB'
+    })
+    .https.onRequest(async (req, res) => {
+        const sig = req.headers['stripe-signature'];
+        const webhookSecret = functions.config().stripe?.webhook_secret || process.env.STRIPE_WEBHOOK_SECRET;
+
+        if (!webhookSecret) {
+            console.error('❌ Webhook Secret 未配置');
+            return res.status(500).send('Webhook secret not configured');
+        }
+
+        let event;
+
+        try {
+            // 驗證 Webhook 簽名
+            event = stripe.webhooks.constructEvent(req.rawBody, sig, webhookSecret);
+        } catch (err) {
+            console.error('⚠️  Webhook 簽名驗證失敗:', err.message);
+            return res.status(400).send(`Webhook Error: ${err.message}`);
+        }
+
+        console.log(`📨 收到 Webhook 事件: ${event.type}`);
+
+        try {
+            // 處理不同類型的事件
+            switch (event.type) {
+                case 'checkout.session.completed':
+                    await handleCheckoutCompleted(event.data.object);
+                    break;
+
+                case 'customer.subscription.created':
+                case 'customer.subscription.updated':
+                    await handleSubscriptionUpdate(event.data.object);
+                    break;
+
+                case 'customer.subscription.deleted':
+                    await handleSubscriptionDeleted(event.data.object);
+                    break;
+
+                case 'invoice.payment_succeeded':
+                    await handleInvoicePaymentSucceeded(event.data.object);
+                    break;
+
+                case 'invoice.payment_failed':
+                    await handleInvoicePaymentFailed(event.data.object);
+                    break;
+
+                default:
+                    console.log(`   ℹ️ 未處理的事件類型: ${event.type}`);
+            }
+
+            res.json({ received: true });
+
+        } catch (error) {
+            console.error(`❌ 處理 Webhook 失敗:`, error);
+            res.status(500).send(`Webhook processing failed: ${error.message}`);
+        }
+    });
+
+/**
+ * 處理 Checkout 完成事件
+ */
+async function handleCheckoutCompleted(session) {
+    const userId = session.metadata?.userId || session.client_reference_id;
+    const planType = session.metadata?.planType;
+    const currency = session.metadata?.currency;
+
+    if (!userId) {
+        console.error('⚠️ Checkout session 沒有 userId');
+        return;
+    }
+
+    console.log(`💳 訂閱成功: userId=${userId}, planType=${planType}`);
+
+    const subscriptionId = session.subscription;
+    
+    // 獲取訂閱詳情
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+
+    // 計算 Credits
+    const credits = planType === 'yearly' ? 1200 : 100;
+    const monthlyCredits = 100;
+
+    // 更新 Firestore
+    const db = admin.firestore();
+    await db.collection('users').doc(userId).set({
+        subscription: {
+            stripeSubscriptionId: subscriptionId,
+            stripeCustomerId: session.customer,
+            stripePriceId: subscription.items.data[0].price.id,
+            planType: planType,
+            currency: currency,
+            monthlyCredits: monthlyCredits,
+            currentPeriodStart: new Date(subscription.current_period_start * 1000),
+            currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+            status: 'active'
+        },
+        credits: admin.firestore.FieldValue.increment(credits),
+        planType: 'Pro Plan',
+        usageThisPeriod: {
+            totalPages: 0,
+            overagePages: 0
+        },
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    console.log(`✅ 用戶訂閱數據已更新: +${credits} Credits`);
+}
+
+/**
+ * 處理訂閱更新事件
+ */
+async function handleSubscriptionUpdate(subscription) {
+    const userId = subscription.metadata?.userId;
+
+    if (!userId) {
+        console.warn('⚠️ 訂閱沒有關聯的 userId');
+        return;
+    }
+
+    console.log(`🔄 訂閱更新: userId=${userId}, status=${subscription.status}`);
+
+    const db = admin.firestore();
+    await db.collection('users').doc(userId).update({
+        'subscription.status': subscription.status,
+        'subscription.currentPeriodStart': new Date(subscription.current_period_start * 1000),
+        'subscription.currentPeriodEnd': new Date(subscription.current_period_end * 1000),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    console.log(`✅ 訂閱狀態已更新`);
+}
+
+/**
+ * 處理訂閱取消事件
+ */
+async function handleSubscriptionDeleted(subscription) {
+    const userId = subscription.metadata?.userId;
+
+    if (!userId) {
+        console.warn('⚠️ 訂閱沒有關聯的 userId');
+        return;
+    }
+
+    console.log(`❌ 訂閱已取消: userId=${userId}`);
+
+    const db = admin.firestore();
+    await db.collection('users').doc(userId).update({
+        'subscription.status': 'cancelled',
+        planType: 'Free Plan',
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    console.log(`✅ 用戶已降級為 Free Plan`);
+}
+
+/**
+ * 處理續費成功事件 - 重置 Credits
+ */
+async function handleInvoicePaymentSucceeded(invoice) {
+    const subscriptionId = invoice.subscription;
+
+    if (!subscriptionId) {
+        console.log('   ℹ️ 非訂閱發票，跳過');
+        return;
+    }
+
+    // 獲取訂閱詳情
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    const userId = subscription.metadata?.userId;
+
+    if (!userId) {
+        console.warn('⚠️ 訂閱沒有關聯的 userId');
+        return;
+    }
+
+    console.log(`💰 續費成功: userId=${userId}`);
+
+    // 獲取用戶當前計劃
+    const db = admin.firestore();
+    const userDoc = await db.collection('users').doc(userId).get();
+    const userData = userDoc.data();
+    const planType = userData.subscription?.planType || 'monthly';
+
+    // 重置 Credits（年付 1200，月付 100）
+    const creditsToAdd = planType === 'yearly' ? 1200 : 100;
+
+    await db.collection('users').doc(userId).update({
+        credits: creditsToAdd,
+        'usageThisPeriod.totalPages': 0,
+        'usageThisPeriod.overagePages': 0,
+        'subscription.currentPeriodStart': new Date(subscription.current_period_start * 1000),
+        'subscription.currentPeriodEnd': new Date(subscription.current_period_end * 1000),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    // 記錄歷史
+    await db.collection('users').doc(userId).collection('creditsHistory').add({
+        type: 'renewal',
+        amount: creditsToAdd,
+        reason: 'subscription_renewal',
+        description: `訂閱續費，重置 Credits 為 ${creditsToAdd}`,
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    console.log(`✅ Credits 已重置: ${creditsToAdd}`);
+}
+
+/**
+ * 處理支付失敗事件
+ */
+async function handleInvoicePaymentFailed(invoice) {
+    const subscriptionId = invoice.subscription;
+
+    if (!subscriptionId) {
+        return;
+    }
+
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    const userId = subscription.metadata?.userId;
+
+    if (!userId) {
+        console.warn('⚠️ 訂閱沒有關聯的 userId');
+        return;
+    }
+
+    console.log(`⚠️ 支付失敗: userId=${userId}`);
+
+    // 可以在這裡添加通知用戶的邏輯
+    // 例如發送郵件提醒用戶更新支付方式
+}
+

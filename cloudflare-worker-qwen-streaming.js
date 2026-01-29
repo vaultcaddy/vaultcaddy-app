@@ -15,7 +15,7 @@
 // 配置区域
 // =====================================================
 
-const QWEN_API_KEY = 'sk-b4016d4560e44c6b925217578004aa9c';
+const QWEN_API_KEY = 'YOUR_QWEN_API_KEY'; // 🔐 Replace with your actual API key
 const QWEN_API_URL = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions';
 
 const SUPPORTED_MODELS = [

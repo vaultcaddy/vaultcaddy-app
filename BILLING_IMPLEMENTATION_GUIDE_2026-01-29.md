@@ -31,7 +31,7 @@
 
 ```bash
 cd firebase-functions
-firebase functions:config:set stripe.secret="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"
+firebase functions:config:set stripe.secret="YOUR_STRIPE_SECRET_KEY"
 ```
 
 **方式 B: 使用環境變數文件**
@@ -39,8 +39,10 @@ firebase functions:config:set stripe.secret="sk_live_51S6Qv3JmiQ31C0GTGrK2RAc1In
 創建 `firebase-functions/.env`:
 
 ```
-STRIPE_SECRET_KEY=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
+STRIPE_SECRET_KEY=YOUR_STRIPE_SECRET_KEY
 ```
+
+> ⚠️ **重要**: 將 `YOUR_STRIPE_SECRET_KEY` 替換為您的實際 Stripe Secret Key（從 Stripe Dashboard 獲取）
 
 ### 步驟 2: 安裝依賴並部署
 

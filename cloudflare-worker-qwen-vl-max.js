@@ -19,7 +19,7 @@
 
 // Qwen-VL Max API Key
 // 获取方式：https://www.alibabacloud.com/ → Model Studio → API Keys
-const QWEN_API_KEY = 'sk-b4016d4560e44c6b925217578004aa9c'; // ⚠️ 部署时应从环境变量读取
+const QWEN_API_KEY = 'YOUR_QWEN_API_KEY'; // 🔐 Replace with your actual API key // ⚠️ 部署时应从环境变量读取
 
 // Qwen-VL API 端点 (新加坡地域 - 国际版)
 const QWEN_API_URL = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions';

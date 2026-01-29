@@ -35,14 +35,14 @@
 1. 进入 Worker 设置: Settings → Variables
 2. 添加环境变量:
    - **Name**: `QWEN_API_KEY`
-   - **Value**: `sk-b4016d4560e44c6b925217578004aa9c`
+   - **Value**: `YOUR_QWEN_API_KEY` (從阿里雲百煉控制台獲取)
    - **Type**: Environment Variable (Encrypted)
 3. 点击 "Save"
 
 然后修改 Worker 代码第16行：
 ```javascript
 // 从环境变量读取 API Key
-const QWEN_API_KEY = env.QWEN_API_KEY || 'sk-b4016d4560e44c6b925217578004aa9c';
+const QWEN_API_KEY = env.QWEN_API_KEY || 'YOUR_QWEN_API_KEY';
 ```
 
 并修改 Worker 主函数：
@@ -336,7 +336,7 @@ console.log('✅ 当前使用处理器: Hybrid (Vision + DeepSeek)');
 **症状**: Worker 返回 401 错误
 
 **解决**:
-1. 确认 API Key 正确: `sk-b4016d4560e44c6b925217578004aa9c`
+1. 确认 API Key 正确（從阿里雲百煉控制台獲取）
 2. 检查 API Key 是否在阿里云百炼控制台激活
 3. 确认使用的是新加坡地域的 API Key
 
