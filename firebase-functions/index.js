@@ -13,6 +13,7 @@
 const functions = require('firebase-functions');
 const cors = require('cors')({ origin: true });
 const fetch = require('node-fetch');
+const stripe = require('stripe')(functions.config().stripe?.secret || process.env.STRIPE_SECRET_KEY);
 
 // =====================================================
 // 配置区域
@@ -113,4 +114,124 @@ exports.qwenProxy = functions
                 });
             }
         });
+    });
+
+// =====================================================
+// Stripe Checkout Session 創建函數
+// =====================================================
+
+/**
+ * 2026-01-29 新定價結構的 Price ID 映射
+ * 根據語言自動選擇對應幣種的 Price ID
+ */
+const PRICE_IDS = {
+    monthly: {
+        hkd: 'price_1SuruFJmiQ31C0GTdJxUaknj',  // HKD $38/月
+        usd: 'price_1SuruGJmiQ31C0GThdoiTbTM',  // USD $4.88/月
+        jpy: 'price_1SuruGJmiQ31C0GTGQVpiEuP',  // JPY ¥788/月
+        krw: 'price_1SuruGJmiQ31C0GTpBz3jbMo'   // KRW ₩6,988/月
+    },
+    yearly: {
+        hkd: 'price_1SuruEJmiQ31C0GTWqMAZeuM',  // HKD $336/年 ($28/月)
+        usd: 'price_1SuruEJmiQ31C0GTBVhLSAtA',  // USD $42.96/年 ($3.58/月)
+        jpy: 'price_1SuruEJmiQ31C0GTde3o97rx',  // JPY ¥7056/年 (¥588/月)
+        krw: 'price_1SuruFJmiQ31C0GTUL0Yxltm'   // KRW ₩62,256/年 (₩5,188/月)
+    }
+};
+
+/**
+ * 根據請求來源判斷幣種
+ * @param {string} referer - 請求來源 URL
+ * @returns {string} 幣種代碼 (hkd, usd, jpy, krw)
+ */
+function getCurrencyFromReferer(referer) {
+    if (!referer) return 'hkd';  // 默認中文版 = HKD
+    
+    if (referer.includes('/en/')) return 'usd';
+    if (referer.includes('/jp/')) return 'jpy';
+    if (referer.includes('/kr/')) return 'krw';
+    
+    return 'hkd';  // 默認中文版
+}
+
+exports.createStripeCheckoutSession = functions
+    .runWith({
+        timeoutSeconds: 60,
+        memory: '256MB'
+    })
+    .https.onCall(async (data, context) => {
+        try {
+            // 驗證用戶已登錄
+            if (!context.auth) {
+                throw new functions.https.HttpsError(
+                    'unauthenticated',
+                    'User must be logged in to create checkout session'
+                );
+            }
+
+            const { planType, successUrl, cancelUrl, currency } = data;
+            
+            console.log(`🛒 創建 Checkout Session: planType=${planType}, currency=${currency}`);
+
+            // 驗證計劃類型
+            if (!['monthly', 'yearly'].includes(planType)) {
+                throw new functions.https.HttpsError(
+                    'invalid-argument',
+                    'Invalid plan type. Must be "monthly" or "yearly"'
+                );
+            }
+
+            // 獲取對應的 Price ID（優先使用傳入的幣種，否則默認 HKD）
+            const currencyCode = currency || 'hkd';
+            const priceId = PRICE_IDS[planType][currencyCode];
+
+            if (!priceId) {
+                throw new functions.https.HttpsError(
+                    'not-found',
+                    `No price ID found for ${planType} plan in ${currencyCode}`
+                );
+            }
+
+            console.log(`💳 使用 Price ID: ${priceId} (${currencyCode.toUpperCase()})`);
+
+            // 創建 Stripe Checkout Session
+            const session = await stripe.checkout.sessions.create({
+                payment_method_types: ['card'],
+                line_items: [{
+                    price: priceId,
+                    quantity: 1,
+                }],
+                mode: 'subscription',
+                success_url: successUrl || `${process.env.SITE_URL || 'https://vaultcaddy.com'}/account.html?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+                cancel_url: cancelUrl || `${process.env.SITE_URL || 'https://vaultcaddy.com'}/billing.html?payment=cancelled`,
+                client_reference_id: context.auth.uid,
+                customer_email: context.auth.token.email || undefined,
+                metadata: {
+                    userId: context.auth.uid,
+                    planType: planType,
+                    currency: currencyCode
+                },
+                subscription_data: {
+                    metadata: {
+                        userId: context.auth.uid,
+                        planType: planType,
+                        currency: currencyCode
+                    }
+                }
+            });
+
+            console.log(`✅ Checkout Session 創建成功: ${session.id}`);
+
+            return {
+                sessionId: session.id,
+                url: session.url
+            };
+
+        } catch (error) {
+            console.error('❌ 創建 Checkout Session 失敗:', error.message);
+            throw new functions.https.HttpsError(
+                'internal',
+                `Failed to create checkout session: ${error.message}`
+            );
+        }
     });
