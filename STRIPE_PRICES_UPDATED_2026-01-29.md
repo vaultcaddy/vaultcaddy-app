@@ -1,6 +1,6 @@
 # ✅ Stripe 價格更新完成報告
 **更新日期**: 2026-01-29  
-**執行者**: AI Assistant (使用 API Key: sk_live_51S6Qv3...)
+**執行者**: AI Assistant (使用 Stripe API)
 
 ---
 

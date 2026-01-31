@@ -110,7 +110,7 @@ firebase deploy --only functions
 ```bash
 # 步驟 1: 設置 Stripe API Key
 cd firebase-functions
-firebase functions:config:set stripe.secret="sk_live_51S6Qv3JmiQ31C0GT..."
+firebase functions:config:set stripe.secret="YOUR_STRIPE_SECRET_KEY"
 
 # 步驟 2: 安裝依賴
 npm install
