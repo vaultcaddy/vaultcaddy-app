@@ -656,7 +656,13 @@ async function handleSubscriptionDeleted(subscription) {
 }
 
 /**
- * 處理續費成功事件 - 重置 Credits
+ * 處理續費成功事件 - 重置 Credits（區分月付/年付）
+ * 
+ * 計費邏輯：
+ * - 月付：每月計費日重置 Credits 為 100 + 收取超額費用
+ * - 年付：
+ *   - 年度續費：重置 Credits 為 1200
+ *   - 月度超額：僅收取超額費用，不重置 Credits
  */
 async function handleInvoicePaymentSucceeded(invoice) {
     const subscriptionId = invoice.subscription;
@@ -675,36 +681,94 @@ async function handleInvoicePaymentSucceeded(invoice) {
         return;
     }
 
-    console.log(`💰 續費成功: userId=${userId}`);
-
     // 獲取用戶當前計劃
     const db = admin.firestore();
     const userDoc = await db.collection('users').doc(userId).get();
     const userData = userDoc.data();
     const planType = userData.subscription?.planType || 'monthly';
 
-    // 重置 Credits（年付 1200，月付 100）
-    const creditsToAdd = planType === 'yearly' ? 1200 : 100;
+    // 檢查發票類型
+    const billingReason = invoice.billing_reason;
+    const isYearlyRenewal = planType === 'yearly' && billingReason === 'subscription_cycle';
+    const isMonthlyOverage = planType === 'yearly' && billingReason !== 'subscription_cycle';
 
-    await db.collection('users').doc(userId).update({
-        credits: creditsToAdd,
-        'usageThisPeriod.totalPages': 0,
-        'usageThisPeriod.overagePages': 0,
-        'subscription.currentPeriodStart': new Date(subscription.current_period_start * 1000),
-        'subscription.currentPeriodEnd': new Date(subscription.current_period_end * 1000),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
-    });
+    console.log(`💰 續費成功: userId=${userId}, planType=${planType}, billingReason=${billingReason}`);
 
-    // 記錄歷史
-    await db.collection('users').doc(userId).collection('creditsHistory').add({
-        type: 'renewal',
-        amount: creditsToAdd,
-        reason: 'subscription_renewal',
-        description: `訂閱續費，重置 Credits 為 ${creditsToAdd}`,
-        createdAt: admin.firestore.FieldValue.serverTimestamp()
-    });
+    // 根據計劃類型處理
+    if (planType === 'monthly') {
+        // 🔄 月付：每月重置 Credits 為 100
+        const creditsToAdd = 100;
 
-    console.log(`✅ Credits 已重置: ${creditsToAdd}`);
+        await db.collection('users').doc(userId).update({
+            credits: creditsToAdd,
+            'usageThisPeriod.totalPages': 0,
+            'usageThisPeriod.overagePages': 0,
+            'subscription.currentPeriodStart': new Date(subscription.current_period_start * 1000),
+            'subscription.currentPeriodEnd': new Date(subscription.current_period_end * 1000),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        // 記錄歷史
+        await db.collection('users').doc(userId).collection('creditsHistory').add({
+            type: 'renewal',
+            amount: creditsToAdd,
+            reason: 'monthly_renewal',
+            description: `月付續費，重置 Credits 為 ${creditsToAdd}`,
+            createdAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        console.log(`✅ 月付續費: Credits 已重置為 ${creditsToAdd}`);
+
+    } else if (isYearlyRenewal) {
+        // 🔄 年付 - 年度續費：重置 Credits 為 1200
+        const creditsToAdd = 1200;
+
+        await db.collection('users').doc(userId).update({
+            credits: creditsToAdd,
+            'usageThisPeriod.totalPages': 0,
+            'usageThisPeriod.overagePages': 0,
+            'subscription.currentPeriodStart': new Date(subscription.current_period_start * 1000),
+            'subscription.currentPeriodEnd': new Date(subscription.current_period_end * 1000),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        // 記錄歷史
+        await db.collection('users').doc(userId).collection('creditsHistory').add({
+            type: 'renewal',
+            amount: creditsToAdd,
+            reason: 'yearly_renewal',
+            description: `年付續費，重置 Credits 為 ${creditsToAdd}`,
+            createdAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        console.log(`✅ 年付續費: Credits 已重置為 ${creditsToAdd}`);
+
+    } else if (isMonthlyOverage) {
+        // 💰 年付 - 月度超額：僅清除超額統計，不重置 Credits
+        const currentCredits = userData.credits || 0;
+
+        await db.collection('users').doc(userId).update({
+            // ⚠️ 不重置 Credits！保持當前值（可能是負數）
+            'usageThisPeriod.totalPages': 0,
+            'usageThisPeriod.overagePages': 0,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        // 記錄歷史
+        await db.collection('users').doc(userId).collection('creditsHistory').add({
+            type: 'overage_billing',
+            amount: 0,  // 不改變 Credits
+            reason: 'monthly_overage_billing',
+            description: `年付月度超額計費，Credits 保持為 ${currentCredits}`,
+            metadata: {
+                invoiceId: invoice.id,
+                overageAmount: invoice.amount_due / 100  // Stripe 金額單位為分
+            },
+            createdAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        console.log(`✅ 年付月度超額計費: Credits 保持為 ${currentCredits}`);
+    }
 }
 
 /**
