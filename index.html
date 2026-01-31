@@ -1495,11 +1495,41 @@
                         </div>
                     </div>
                     
-                    <!-- 價格顯示 -->
-                    <div style="font-size: 2rem; font-weight: 700; margin-bottom: 1.5rem;">
-                        <span style="font-size: 1.2rem; font-weight: 400; opacity: 0.9;">低至</span>
-                        <span style="background: linear-gradient(120deg, #ffd700, #ffed4e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 3.5rem; font-weight: 900; margin: 0 0.5rem;">HK$0.3</span>
-                        <span style="font-size: 1.5rem; font-weight: 600; opacity: 0.9;">/頁</span>
+                    <!-- 🚀 快速上傳區域（吸引試用） -->
+                    <div id="hero-upload-zone" style="background: rgba(255, 255, 255, 0.95); border-radius: 20px; padding: 2.5rem; max-width: 650px; margin: 0 auto 2rem; box-shadow: 0 10px 40px rgba(0,0,0,0.15);">
+                        <!-- 拖放區域 -->
+                        <div id="dropzone" style="border: 3px dashed #667eea; border-radius: 12px; padding: 2.5rem 1.5rem; text-align: center; background: rgba(102, 126, 234, 0.05); cursor: pointer; transition: all 0.3s ease;">
+                            <i class="fas fa-cloud-upload-alt" style="font-size: 2.5rem; color: #667eea; margin-bottom: 0.75rem;"></i>
+                            <h3 style="font-size: 1.25rem; color: #1f2937; margin-bottom: 0.5rem; font-weight: 600;">拖放文件到此處或點擊上傳</h3>
+                            <p style="color: #6b7280; font-size: 0.95rem; margin-bottom: 0.5rem;">支援 PDF、JPG、PNG 格式 (最大 10MB)</p>
+                            <p style="color: #667eea; font-size: 0.875rem; font-weight: 600;">✨ 立即體驗 AI 智能處理</p>
+                        </div>
+                        
+                        <!-- 隱藏的文件輸入 -->
+                        <input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png" multiple style="display: none;">
+                        
+                        <!-- 信任標誌 -->
+                        <div style="display: flex; justify-content: center; gap: 1.5rem; margin-top: 1.5rem; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: #667eea;">
+                                <i class="fas fa-lock"></i>
+                                <span>銀行級加密</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: #667eea;">
+                                <i class="fas fa-shield-alt"></i>
+                                <span>安全可靠</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: #667eea;">
+                                <i class="fas fa-check-circle"></i>
+                                <span>98% 準確率</span>
+                            </div>
+                        </div>
+                        
+                        <!-- 優惠提示 -->
+                        <div style="text-align: center; margin-top: 1rem; padding: 0.75rem; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 8px; border-left: 4px solid #f59e0b;">
+                            <p style="color: #92400e; font-size: 0.875rem; font-weight: 600; margin: 0;">
+                                <span style="font-size: 1rem;">🎁</span> 註冊即送 20 Credits • 低至 HK$0.3/頁
+                            </p>
+                        </div>
                     </div>
                     
                     <!-- 信任標籤（移到標題下方） -->
@@ -3384,6 +3414,126 @@
             </style>
         </div>
     </div>
+
+    <!-- 🔥 首頁上傳功能腳本 -->
+    <script>
+        // 初始化上傳區域
+        (function() {
+            const dropzone = document.getElementById('dropzone');
+            const fileInput = document.getElementById('file-input');
+            
+            if (!dropzone || !fileInput) {
+                console.log('⏭️ 上傳區域未找到，跳過初始化');
+                return;
+            }
+            
+            console.log('✅ 初始化首頁上傳功能');
+            
+            // 點擊上傳
+            dropzone.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            // 文件選擇
+            fileInput.addEventListener('change', (e) => {
+                handleFiles(e.target.files);
+            });
+            
+            // 拖放事件
+            dropzone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropzone.style.borderColor = '#764ba2';
+                dropzone.style.background = 'rgba(102, 126, 234, 0.15)';
+                dropzone.style.transform = 'scale(1.02)';
+            });
+            
+            dropzone.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                dropzone.style.borderColor = '#667eea';
+                dropzone.style.background = 'rgba(102, 126, 234, 0.05)';
+                dropzone.style.transform = 'scale(1)';
+            });
+            
+            dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropzone.style.borderColor = '#667eea';
+                dropzone.style.background = 'rgba(102, 126, 234, 0.05)';
+                dropzone.style.transform = 'scale(1)';
+                handleFiles(e.dataTransfer.files);
+            });
+            
+            // 處理文件
+            function handleFiles(files) {
+                if (!files || files.length === 0) return;
+                
+                console.log(`📁 用戶拖入 ${files.length} 個文件`);
+                
+                // 檢查用戶是否已登入
+                const isLoggedIn = window.simpleAuth && window.simpleAuth.isLoggedIn();
+                
+                if (!isLoggedIn) {
+                    // 未登入：保存文件信息並彈出登入框
+                    const fileNames = Array.from(files).map(f => f.name);
+                    localStorage.setItem('pendingFileNames', JSON.stringify(fileNames));
+                    localStorage.setItem('pendingFileCount', files.length);
+                    
+                    console.log('ℹ️ 用戶未登入，保存文件信息並彈出登入框');
+                    
+                    // 顯示提示
+                    showToast(`已選擇 ${files.length} 個文件，請先登入以開始處理`);
+                    
+                    // 彈出登入框
+                    setTimeout(() => {
+                        if (typeof openAuthModal === 'function') {
+                            openAuthModal();
+                        } else {
+                            console.error('❌ openAuthModal 函數未定義');
+                            window.location.href = 'auth.html';
+                        }
+                    }, 300);
+                } else {
+                    // 已登入：直接跳轉到 firstproject.html
+                    console.log('✅ 用戶已登入，跳轉到 firstproject.html');
+                    
+                    // 保存文件數量信息
+                    sessionStorage.setItem('uploadHint', `您剛才選擇了 ${files.length} 個文件，請在此頁面上傳`);
+                    
+                    // 跳轉
+                    window.location.href = 'firstproject.html';
+                }
+            }
+            
+            // Toast 提示
+            function showToast(message) {
+                const toast = document.createElement('div');
+                toast.textContent = message;
+                toast.style.cssText = 'position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%); background: #1f2937; color: white; padding: 1rem 2rem; border-radius: 8px; z-index: 10000; box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-size: 0.95rem; max-width: 90%; text-align: center;';
+                document.body.appendChild(toast);
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transition = 'opacity 0.3s ease';
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            }
+            
+            // 監聽登入成功事件
+            window.addEventListener('user-logged-in', () => {
+                const pendingCount = localStorage.getItem('pendingFileCount');
+                if (pendingCount) {
+                    console.log(`✅ 登入成功，用戶之前選擇了 ${pendingCount} 個文件`);
+                    localStorage.removeItem('pendingFileNames');
+                    localStorage.removeItem('pendingFileCount');
+                    
+                    // 顯示提示並跳轉
+                    showToast('登入成功！正在跳轉到上傳頁面...');
+                    setTimeout(() => {
+                        sessionStorage.setItem('uploadHint', `請上傳您剛才選擇的文件`);
+                        window.location.href = 'firstproject.html';
+                    }, 1000);
+                }
+            });
+        })();
+    </script>
 
     <!-- 🔥 登入彈窗控制腳本 -->
     <script>
