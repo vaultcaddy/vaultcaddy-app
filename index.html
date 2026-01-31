@@ -1497,6 +1497,18 @@
                     
                     <!-- 🚀 快速上傳區域（吸引試用） -->
                     <div id="hero-upload-zone" style="background: rgba(255, 255, 255, 0.95); border-radius: 20px; padding: 2.5rem; max-width: 650px; margin: 0 auto 2rem; box-shadow: 0 10px 40px rgba(0,0,0,0.15);">
+                        <!-- 文檔類型選擇 -->
+                        <div style="display: flex; gap: 0.75rem; margin-bottom: 1.5rem; justify-content: center;">
+                            <button id="doc-type-statement" class="doc-type-btn active" onclick="selectDocType('statement')" style="flex: 1; max-width: 200px; padding: 0.875rem 1rem; background: #667eea; color: white; border: 2px solid #667eea; border-radius: 10px; cursor: pointer; transition: all 0.3s ease; font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                                <i class="fas fa-university" style="font-size: 1.1rem;"></i>
+                                <span>銀行對帳單</span>
+                            </button>
+                            <button id="doc-type-invoice" class="doc-type-btn" onclick="selectDocType('invoice')" style="flex: 1; max-width: 200px; padding: 0.875rem 1rem; background: white; color: #667eea; border: 2px solid #667eea; border-radius: 10px; cursor: pointer; transition: all 0.3s ease; font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                                <i class="fas fa-file-invoice" style="font-size: 1.1rem;"></i>
+                                <span>發票</span>
+                            </button>
+                        </div>
+                        
                         <!-- 拖放區域 -->
                         <div id="dropzone" style="border: 3px dashed #667eea; border-radius: 12px; padding: 2.5rem 1.5rem; text-align: center; background: rgba(102, 126, 234, 0.05); cursor: pointer; transition: all 0.3s ease;">
                             <i class="fas fa-cloud-upload-alt" style="font-size: 2.5rem; color: #667eea; margin-bottom: 0.75rem;"></i>
@@ -3417,6 +3429,33 @@
 
     <!-- 🔥 首頁上傳功能腳本 -->
     <script>
+        // 全局變量：當前選擇的文檔類型
+        let selectedDocType = 'statement'; // 默認為銀行對帳單
+        
+        // 選擇文檔類型
+        window.selectDocType = function(type) {
+            selectedDocType = type;
+            console.log('✅ 選擇文檔類型:', type);
+            
+            // 更新按鈕樣式
+            const statementBtn = document.getElementById('doc-type-statement');
+            const invoiceBtn = document.getElementById('doc-type-invoice');
+            
+            if (type === 'statement') {
+                // 銀行對帳單按鈕變為激活狀態
+                statementBtn.style.background = '#667eea';
+                statementBtn.style.color = 'white';
+                invoiceBtn.style.background = 'white';
+                invoiceBtn.style.color = '#667eea';
+            } else {
+                // 發票按鈕變為激活狀態
+                invoiceBtn.style.background = '#667eea';
+                invoiceBtn.style.color = 'white';
+                statementBtn.style.background = 'white';
+                statementBtn.style.color = '#667eea';
+            }
+        };
+        
         // 初始化上傳區域
         (function() {
             const dropzone = document.getElementById('dropzone');
@@ -3467,20 +3506,23 @@
                 if (!files || files.length === 0) return;
                 
                 console.log(`📁 用戶拖入 ${files.length} 個文件`);
+                console.log(`📋 文檔類型: ${selectedDocType === 'statement' ? '銀行對帳單' : '發票'}`);
                 
                 // 檢查用戶是否已登入
                 const isLoggedIn = window.simpleAuth && window.simpleAuth.isLoggedIn();
                 
                 if (!isLoggedIn) {
-                    // 未登入：保存文件信息並彈出登入框
+                    // 未登入：保存文件信息和文檔類型
                     const fileNames = Array.from(files).map(f => f.name);
                     localStorage.setItem('pendingFileNames', JSON.stringify(fileNames));
                     localStorage.setItem('pendingFileCount', files.length);
+                    localStorage.setItem('pendingDocType', selectedDocType); // 保存文檔類型
                     
-                    console.log('ℹ️ 用戶未登入，保存文件信息並彈出登入框');
+                    console.log('ℹ️ 用戶未登入，保存文件信息和文檔類型');
                     
                     // 顯示提示
-                    showToast(`已選擇 ${files.length} 個文件，請先登入以開始處理`);
+                    const docTypeName = selectedDocType === 'statement' ? '銀行對帳單' : '發票';
+                    showToast(`已選擇 ${files.length} 個${docTypeName}文件，請先登入以開始處理`);
                     
                     // 彈出登入框
                     setTimeout(() => {
@@ -3492,11 +3534,13 @@
                         }
                     }, 300);
                 } else {
-                    // 已登入：直接跳轉到 firstproject.html
-                    console.log('✅ 用戶已登入，跳轉到 firstproject.html');
+                    // 已登入：保存文檔類型並跳轉
+                    console.log('✅ 用戶已登入，保存文檔類型並跳轉到 firstproject.html');
                     
-                    // 保存文件數量信息
-                    sessionStorage.setItem('uploadHint', `您剛才選擇了 ${files.length} 個文件，請在此頁面上傳`);
+                    // 保存文件數量信息和文檔類型
+                    const docTypeName = selectedDocType === 'statement' ? '銀行對帳單' : '發票';
+                    sessionStorage.setItem('uploadHint', `您剛才選擇了 ${files.length} 個${docTypeName}文件，請在此頁面上傳`);
+                    sessionStorage.setItem('selectedDocType', selectedDocType); // 保存文檔類型
                     
                     // 跳轉
                     window.location.href = 'firstproject.html';
@@ -3519,15 +3563,24 @@
             // 監聽登入成功事件
             window.addEventListener('user-logged-in', () => {
                 const pendingCount = localStorage.getItem('pendingFileCount');
-                if (pendingCount) {
-                    console.log(`✅ 登入成功，用戶之前選擇了 ${pendingCount} 個文件`);
+                const pendingDocType = localStorage.getItem('pendingDocType');
+                
+                if (pendingCount && pendingDocType) {
+                    const docTypeName = pendingDocType === 'statement' ? '銀行對帳單' : '發票';
+                    console.log(`✅ 登入成功，用戶之前選擇了 ${pendingCount} 個${docTypeName}文件`);
+                    
+                    // 保存文檔類型到 sessionStorage
+                    sessionStorage.setItem('selectedDocType', pendingDocType);
+                    
+                    // 清除 localStorage
                     localStorage.removeItem('pendingFileNames');
                     localStorage.removeItem('pendingFileCount');
+                    localStorage.removeItem('pendingDocType');
                     
                     // 顯示提示並跳轉
                     showToast('登入成功！正在跳轉到上傳頁面...');
                     setTimeout(() => {
-                        sessionStorage.setItem('uploadHint', `請上傳您剛才選擇的文件`);
+                        sessionStorage.setItem('uploadHint', `請上傳您剛才選擇的${docTypeName}文件`);
                         window.location.href = 'firstproject.html';
                     }, 1000);
                 }
