@@ -1305,25 +1305,59 @@
             
             // 切換下拉菜單
             async function toggleDropdown() {
+                console.log('🔵 toggleDropdown 被調用');
                 const dropdown = document.getElementById('user-dropdown');
-                if (dropdown.style.display === 'none') {
+                if (!dropdown) {
+                    console.error('❌ 找不到 dropdown 元素');
+                    return;
+                }
+                
+                if (dropdown.style.display === 'none' || dropdown.style.display === '') {
                     dropdown.style.display = 'block';
+                    console.log('✅ 顯示下拉菜單');
                     
-                    // 🔥 即時從 SimpleDataManager 獲取最新 Credits
+                    // 🔥 獲取最新用戶數據
+                    let planType = 'Free Plan';
+                    
                     if (window.simpleDataManager && window.simpleDataManager.initialized) {
                         try {
+                            // 獲取 Credits
                             userCredits = await window.simpleDataManager.getUserCredits();
-                            logger.log('✅ 即時獲取 Credits:', userCredits);
+                            console.log('✅ 即時獲取 Credits:', userCredits);
+                            
+                            // 獲取套餐類型
+                            const currentUser = window.simpleAuth?.getCurrentUser();
+                            if (currentUser) {
+                                const userDoc = await window.simpleDataManager.db.collection('users').doc(currentUser.uid).get();
+                                if (userDoc.exists) {
+                                    const userData = userDoc.data();
+                                    planType = userData.planType || 'Free Plan';
+                                    userDisplayName = userData.displayName || userDisplayName;
+                                    console.log('✅ 套餐類型:', planType);
+                                }
+                            }
                         } catch (error) {
-                            console.error('❌ 無法獲取 Credits:', error);
+                            console.error('❌ 無法獲取用戶數據:', error);
                         }
                     }
                     
                     // 更新下拉菜單內容
-                    document.getElementById('dropdown-credits').textContent = userCredits.toLocaleString();
-                    document.getElementById('dropdown-email').textContent = userEmail;
+                    const creditsEl = document.getElementById('dropdown-credits');
+                    const emailEl = document.getElementById('dropdown-email');
+                    const nameEl = document.getElementById('dropdown-name');
+                    const avatarEl = document.getElementById('dropdown-avatar');
+                    const planEl = document.getElementById('dropdown-plan');
+                    
+                    if (creditsEl) creditsEl.textContent = userCredits.toLocaleString();
+                    if (emailEl) emailEl.textContent = userEmail;
+                    if (nameEl) nameEl.textContent = userDisplayName || userEmail.split('@')[0] || 'User';
+                    if (avatarEl) avatarEl.textContent = getUserInitial();
+                    if (planEl) planEl.textContent = planType;
+                    
+                    console.log('✅ 下拉菜單內容已更新');
                 } else {
                     dropdown.style.display = 'none';
+                    console.log('✅ 隱藏下拉菜單');
                 }
             }
             
@@ -1341,14 +1375,30 @@
             
             // 登出功能
             window.handleLogout = async function() {
+                console.log('🔴 handleLogout 被調用');
                 try {
-                    if (window.simpleAuth) {
-                        await window.simpleAuth.logout();
-                        window.location.href = 'index.html';
+                    // 檢查 simpleAuth 是否存在
+                    if (!window.simpleAuth) {
+                        console.error('❌ simpleAuth 未定義，嘗試等待加載...');
+                        // 等待最多 3 秒
+                        let waitTime = 0;
+                        while (!window.simpleAuth && waitTime < 3000) {
+                            await new Promise(resolve => setTimeout(resolve, 100));
+                            waitTime += 100;
+                        }
+                        
+                        if (!window.simpleAuth) {
+                            throw new Error('simpleAuth 加載失敗');
+                        }
                     }
+                    
+                    console.log('✅ 開始登出...');
+                    await window.simpleAuth.logout();
+                    console.log('✅ 登出成功，跳轉到首頁');
+                    window.location.href = 'index.html';
                 } catch (error) {
-                    console.error('登出失敗:', error);
-                    alert('登出失敗，請重試');
+                    console.error('❌ 登出失敗:', error);
+                    alert('登出失敗：' + error.message + '\n\n請刷新頁面後重試');
                 }
             };
             
