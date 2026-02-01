@@ -3475,12 +3475,24 @@
                 console.log(`📁 用戶拖入 ${files.length} 個文件`);
                 console.log(`📋 文檔類型: ${selectedDocType === 'statement' ? '銀行對帳單' : '發票'}`);
                 
+                // ✅ 檢查文件大小（10MB限制）
+                const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+                const filesArray = Array.from(files);
+                const oversizedFiles = filesArray.filter(f => f.size > MAX_FILE_SIZE);
+                
+                if (oversizedFiles.length > 0) {
+                    const fileNames = oversizedFiles.map(f => `${f.name} (${(f.size / 1024 / 1024).toFixed(2)}MB)`).join('\n');
+                    showToast(`以下文件超過 10MB 限制：\n${fileNames}`);
+                    console.error('❌ 文件大小超過限制:', oversizedFiles);
+                    return;
+                }
+                
                 // 檢查用戶是否已登入
                 const isLoggedIn = window.simpleAuth && window.simpleAuth.isLoggedIn();
                 
                 if (!isLoggedIn) {
                     // 未登入：保存文件信息和文檔類型
-                    const fileNames = Array.from(files).map(f => f.name);
+                    const fileNames = filesArray.map(f => f.name);
                     localStorage.setItem('pendingFileNames', JSON.stringify(fileNames));
                     localStorage.setItem('pendingFileCount', files.length);
                     localStorage.setItem('pendingDocType', selectedDocType); // 保存文檔類型
@@ -3501,16 +3513,49 @@
                         }
                     }, 300);
                 } else {
-                    // 已登入：保存文檔類型並跳轉
-                    console.log('✅ 用戶已登入，保存文檔類型並跳轉到 firstproject.html');
+                    // 已登入：查找或創建 First_Project 並跳轉
+                    console.log('✅ 用戶已登入，準備查找或創建 First_Project');
                     
-                    // 保存文件數量信息和文檔類型
+                    findOrCreateFirstProject();
+                }
+            }
+            
+            // ✅ 查找或創建 First_Project 文件夾
+            async function findOrCreateFirstProject() {
+                try {
+                    showToast('正在準備項目...');
+                    
+                    // 獲取所有項目
+                    const projects = await window.simpleDataManager.getProjects();
+                    console.log('📂 獲取到項目列表:', projects);
+                    
+                    // 查找 First_Project
+                    let firstProject = projects.find(p => p.name === 'First_Project');
+                    
+                    if (firstProject) {
+                        console.log('✅ 找到現有的 First_Project:', firstProject.id);
+                    } else {
+                        // 創建新的 First_Project
+                        console.log('📁 創建新的 First_Project');
+                        firstProject = await window.simpleDataManager.createProject('First_Project');
+                        console.log('✅ First_Project 創建成功:', firstProject.id);
+                    }
+                    
+                    // 保存文檔類型和提示信息
                     const docTypeName = selectedDocType === 'statement' ? '銀行對帳單' : '發票';
-                    sessionStorage.setItem('uploadHint', `您剛才選擇了 ${files.length} 個${docTypeName}文件，請在此頁面上傳`);
-                    sessionStorage.setItem('selectedDocType', selectedDocType); // 保存文檔類型
+                    sessionStorage.setItem('uploadHint', `請在此頁面上傳您的${docTypeName}文件`);
+                    sessionStorage.setItem('selectedDocType', selectedDocType);
+                    sessionStorage.setItem('autoUpload', 'true'); // 標記需要自動觸發上傳
                     
-                    // 跳轉
-                    window.location.href = 'firstproject.html';
+                    // 跳轉到 First_Project
+                    showToast('項目準備完成！正在跳轉...');
+                    setTimeout(() => {
+                        window.location.href = `firstproject.html?project=${firstProject.id}`;
+                    }, 500);
+                    
+                } catch (error) {
+                    console.error('❌ 查找或創建 First_Project 失敗:', error);
+                    showToast(`錯誤：${error.message || '無法創建項目'}`);
                 }
             }
             
@@ -3528,7 +3573,7 @@
             }
             
             // 監聽登入成功事件
-            window.addEventListener('user-logged-in', () => {
+            window.addEventListener('user-logged-in', async () => {
                 const pendingCount = localStorage.getItem('pendingFileCount');
                 const pendingDocType = localStorage.getItem('pendingDocType');
                 
@@ -3538,18 +3583,18 @@
                     
                     // 保存文檔類型到 sessionStorage
                     sessionStorage.setItem('selectedDocType', pendingDocType);
+                    selectedDocType = pendingDocType; // 更新當前文檔類型
                     
                     // 清除 localStorage
                     localStorage.removeItem('pendingFileNames');
                     localStorage.removeItem('pendingFileCount');
                     localStorage.removeItem('pendingDocType');
                     
-                    // 顯示提示並跳轉
-                    showToast('登入成功！正在跳轉到上傳頁面...');
+                    // 顯示提示並調用查找或創建 First_Project
+                    showToast('登入成功！正在準備項目...');
                     setTimeout(() => {
-                        sessionStorage.setItem('uploadHint', `請上傳您剛才選擇的${docTypeName}文件`);
-                        window.location.href = 'firstproject.html';
-                    }, 1000);
+                        findOrCreateFirstProject();
+                    }, 500);
                 }
             });
         })();
