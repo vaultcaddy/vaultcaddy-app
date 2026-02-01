@@ -706,7 +706,14 @@ class QwenVLMaxProcessor {
      */
     generatePrompt(documentType) {
         if (documentType === 'bank_statement') {
-            return `You are a professional bank statement data extraction expert. Please analyze this bank statement image, extract complete statement information and transaction records, and return in JSON format.
+            return `🚨 CRITICAL - READ THIS FIRST:
+YOU ARE A DATA RECORDER, NOT A CALCULATOR.
+YOUR ONLY JOB: COPY numbers from the PDF to JSON. DO NOT calculate, verify, or modify ANY numbers.
+
+IF YOU SEE a balance of "30,718.39" in the PDF → EXTRACT "30718.39"
+IF YOU CALCULATE "59,417.89" using a formula → YOU FAILED ❌
+
+You are a professional bank statement data extraction expert. Please analyze this bank statement image, extract complete statement information and transaction records, and return in JSON format.
 
 Required fields:
 {
@@ -760,12 +767,14 @@ Required fields:
    - **ONLY extract from Transaction Details (戶口進支)** - actual transactions
    - Opening Balance (承上結餘) is the FIRST transaction row - INCLUDE it
 
-5. **⚠️ BALANCE - NEVER CALCULATE, EXTRACT ONLY:**
-   - **ABSOLUTELY NEVER CALCULATE BALANCE** (NO formulas: balance = prev + credit - debit)
-   - **EXTRACT balance DIRECTLY from the "餘額/Balance" column** in the image
-   - If balance is unclear, set to null (DO NOT calculate)
-   - Bank's printed balance is the ONLY source of truth
-   - Example: ✅ Extract 30,718.39 from column | ❌ Calculate: 100 + 50 - 20 = 130
+5. **🚨 BALANCE - NEVER CALCULATE, EXTRACT ONLY (MOST IMPORTANT):**
+   - **YOU ARE A DATA RECORDER**: Copy the balance from PDF, NOT calculate it
+   - **IF NOT VISIBLE, SET TO null** - DO NOT calculate using prev + credit - debit
+   - **THE BANK PRINTED IT**: You just copy it. Period.
+   - If you use ANY formula, you are NOT doing your job
+   - Example: ✅ PDF shows 30,718.39 → extract 30718.39 | ❌ Calculate 59,417.89 (not in PDF!)
+   
+   🚨 IF YOU RETURN A BALANCE NUMBER THAT DOES NOT EXIST IN THE PDF, YOU FAILED.
 
 6. **⚠️ WE ARE DATA MOVERS, NOT ACCOUNTANTS:**
    - OUR JOB: Move data from PDF to JSON, extract exactly what we see
@@ -829,7 +838,14 @@ Return ONLY JSON, no additional text.`;
      */
     generateMultiPagePrompt(documentType, pageCount) {
         if (documentType === 'bank_statement') {
-            return `You are a professional bank statement data extraction expert. I am sending ${pageCount} images that are multiple pages of the same bank statement. Please analyze all pages comprehensively, extract complete statement information and transaction records, and return in JSON format.
+            return `🚨 CRITICAL - READ THIS FIRST:
+YOU ARE A DATA RECORDER, NOT A CALCULATOR.
+YOUR ONLY JOB: COPY numbers from the PDF to JSON. DO NOT calculate, verify, or modify ANY numbers.
+
+IF YOU SEE a balance of "30,718.39" in the PDF → EXTRACT "30718.39"
+IF YOU CALCULATE "59,417.89" using a formula → YOU FAILED ❌
+
+You are a professional bank statement data extraction expert. I am sending ${pageCount} images that are multiple pages of the same bank statement. Please analyze all pages comprehensively, extract complete statement information and transaction records, and return in JSON format.
 
 Required fields:
 {
@@ -905,17 +921,22 @@ Required fields:
    - FPS: Faster Payment System
    - Other: Other transactions
 
-7. **⚠️ BALANCE EXTRACTION - ABSOLUTELY NEVER CALCULATE:**
+7. **🚨 BALANCE EXTRACTION - ABSOLUTELY NEVER CALCULATE (MOST IMPORTANT RULE):**
+   - **YOU ARE A DATA RECORDER**: Your job is to COPY the balance number from the PDF, NOT to calculate it
+   - **IF THE BALANCE IS NOT VISIBLE IN THE PDF, SET IT TO null** - DO NOT calculate it using prev_balance + credit - debit
    - **CRITICAL**: Balance values MUST be extracted DIRECTLY from the "餘額/Balance" column in the image
-   - **ABSOLUTELY NEVER CALCULATE BALANCE** using formulas like: balance = previous_balance + credit - debit
-   - **NEVER "FIX" BALANCES**: Even if you think a balance looks "wrong", extract it exactly as shown
-   - If balance is unclear/unreadable in the image, set to null (DO NOT guess or calculate)
-   - **The bank's printed balance is the ONLY source of truth**
-   - **Example**:
-     * ✅ CORRECT: See "30,718.39" in balance column → extract 30718.39
-     * ❌ WRONG: Previous balance is 59,417.89 + debit 26,054.00 = calculate to 85,471.89
-     * ❌ WRONG: "This balance seems wrong, let me recalculate it"
-     * ❌ WRONG: Balance column is blurry, let me calculate: 100 + 50 = 150
+   - **THE BANK PRINTED THE BALANCE**: You just copy it. The bank did NOT ask you to calculate it for them.
+   - If you use ANY formula (balance = prev + credit - debit), you are NOT doing your job correctly
+   - **Example of CORRECT behavior**:
+     * PDF shows balance "30,718.39" → You extract 30718.39 ✅
+     * PDF shows balance "51,295.09" → You extract 51295.09 ✅
+     * PDF balance is blurry → You set null ✅ (DO NOT calculate!)
+   - **Example of WRONG behavior (THIS IS WHAT YOU MUST NEVER DO)**:
+     * PDF shows "30,718.39" but you return "59,417.89" ❌ (Where did 59,417.89 come from? You calculated it!)
+     * You think: "Let me verify: 100 + 50 = 150, so balance should be..." ❌ (You are NOT a calculator!)
+     * Balance is blurry, so you calculate: prev_balance + credit - debit ❌ (Just set to null!)
+   
+   🚨 IF YOU RETURN A BALANCE NUMBER THAT DOES NOT EXIST IN THE PDF, YOU FAILED THIS TASK.
 
 8. **⚠️ WE ARE DATA MOVERS, NOT ACCOUNTANTS:**
    - **OUR JOB**: Move data from PDF to JSON. Extract exactly what we see, don't verify or calculate.
@@ -948,12 +969,13 @@ Required fields:
      * CORRECT: "income" (because balance increased, ignore the text)
      * WRONG: "expense" (blindly following text)
 
-FINAL CHECKLIST - Am I a good DATA MOVER?
+FINAL CHECKLIST - Did I act as a DATA RECORDER (not a calculator)?
 ✅ Did I extract EVERY SINGLE ROW from the transaction table?
 ✅ Does each transaction have its OWN unique date (extracted, not guessed)?
 ✅ Does each transaction have its OWN unique amount (extracted, not modified)?
-✅ Did I EXTRACT all balance values directly from the image (NEVER calculated)?
-✅ Did I NEVER use formulas to calculate anything?
+✅ **Did I COPY all balance values from the PDF (NEVER calculated)?**
+✅ **Can I find every balance number I returned in the original PDF?** (If not, I calculated it - WRONG!)
+✅ Did I NEVER use ANY formulas (balance = prev + credit - debit)?
 ✅ Did I NOT combine, merge, or summarize any rows?
 ✅ Did I NOT use Account Summary data (only Transaction Details)?
 ✅ Is "extracted data" = "uploaded data" (exactly the same)?
@@ -962,7 +984,9 @@ FINAL CHECKLIST - Am I a good DATA MOVER?
 ✅ Are all dates in YYYY-MM-DD format?
 ✅ Is the JSON valid and complete?
 
-Remember: I am a DATA MOVER. My job is to move data from PDF to JSON accurately, not to calculate, verify, or audit.
+🚨 FINAL CHECK: Open the PDF and verify EVERY balance number exists in the PDF. If you calculated any balance, you FAILED.
+
+Remember: I am a DATA RECORDER. I COPY numbers from PDF to JSON. I do NOT calculate, verify, or modify numbers.
 
 Return ONLY JSON, no additional text or explanations.`;
         } else {
