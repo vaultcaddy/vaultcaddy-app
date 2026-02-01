@@ -710,12 +710,11 @@ class QwenVLMaxProcessor {
 YOU ARE A DATA RECORDER, NOT A CALCULATOR.
 YOUR ONLY JOB: COPY numbers from the PDF to JSON. DO NOT calculate, verify, or modify ANY numbers.
 
-⚠️ OPENING BALANCE (承上結餘) IS CRITICAL:
+⚠️ OPENING BALANCE (承上結餘) - CRITICAL:
 Find "承上結餘" row in Transaction Details → Look at Balance column → Copy that number.
 If empty → Use next row's balance. NEVER use "戶口摘要" numbers!
 
-IF YOU SEE "30,718.39" in PDF → EXTRACT "30718.39"
-IF YOU CALCULATE "59,417.89" → YOU FAILED ❌
+IF YOU CALCULATE any balance → YOU FAILED ❌
 
 You are a professional bank statement data extraction expert. Please analyze this bank statement image, extract complete statement information and transaction records, and return in JSON format.
 
@@ -773,7 +772,7 @@ Required fields:
 
 5. **🚨 BALANCE - NEVER CALCULATE:**
    Balance must be from "餘額/Balance" column. If not visible → set to null.
-   ✅ PDF shows 30,718.39 → extract 30718.39 | ❌ Return a number not in PDF (calculated!)
+   ✅ Extract the number you see | ❌ Return a number not in PDF (calculated!)
    🚨 Every balance must exist in PDF.
 
 6. **TransactionSign - Use priority:**
@@ -827,15 +826,14 @@ Return ONLY JSON, no additional text.`;
 YOU ARE A DATA RECORDER, NOT A CALCULATOR.
 YOUR ONLY JOB: COPY numbers from the PDF to JSON. DO NOT calculate, verify, or modify ANY numbers.
 
-⚠️ OPENING BALANCE (承上結餘) IS CRITICAL - PAY ATTENTION:
-Find the row labeled "承上結餘" or "Brought Forward" in Transaction Details table.
-Look at the "餘額/Balance" column on that EXACT row → Copy that number.
-If that cell is empty → Look at the NEXT row's balance → Use that number.
-NEVER use numbers from "戶口摘要/Account Summary" section - WRONG!
+⚠️ OPENING BALANCE (承上結餘) - CRITICAL:
+Find "承上結餘" or "Brought Forward" row in Transaction Details table.
+Look at Balance column on that row → Copy that number.
+If empty → Use next row's balance.
+NEVER use "戶口摘要/Account Summary" numbers!
 
-IF YOU SEE a balance of "30,718.39" in the PDF → EXTRACT "30718.39"
-IF YOU CALCULATE "59,417.89" using a formula → YOU FAILED ❌
-IF YOU USE a number from "戶口摘要" → YOU FAILED ❌
+IF YOU CALCULATE any balance → YOU FAILED ❌
+IF YOU USE "戶口摘要" numbers → YOU FAILED ❌
 
 You are a professional bank statement data extraction expert. I am sending ${pageCount} images that are multiple pages of the same bank statement. Please analyze all pages comprehensively, extract complete statement information and transaction records, and return in JSON format.
 
@@ -888,7 +886,6 @@ Required fields:
    - Extract the EXACT amount from each transaction row
    - DO NOT add, subtract, or modify amounts
    - DO NOT confuse amounts from different rows
-   - Example: If row shows 8,122.80, extract 8122.80 (not 29193.00 from a different row)
 
 4. **DISTINGUISH Account Summary vs Transaction Details:**
    - Bank statements have TWO sections: Account Summary (戶口摘要) and Transaction Details (戶口進支/交易明細)
@@ -904,11 +901,6 @@ Required fields:
      * The opening balance = that next row's balance (it's the same starting point)
    - **NEVER calculate**: opening balance = summary total or prev month closing
    - **NEVER use** any number from Account Summary section
-   
-   Example:
-   Row 1: "承上結餘" | balance column shows: 30,718.39 → extract 30718.39
-   Row 1: "承上結餘" | balance column empty → look at Row 2 balance → use that
-   ❌ WRONG: Calculate from summary numbers or other sources
 
 6. **Transaction type rules:**
    - Deposit: Cash deposit, direct deposit
@@ -925,8 +917,8 @@ Required fields:
 7. **🚨 BALANCE - NEVER CALCULATE (MOST IMPORTANT):**
    Balance MUST be extracted from "餘額/Balance" column. If not visible → set to null.
    
-   ✅ CORRECT: PDF shows "30,718.39" → extract 30718.39
-   ❌ WRONG: PDF shows "30,718.39" but you return a different number (you calculated it!)
+   ✅ CORRECT: Extract the number you see in Balance column
+   ❌ WRONG: Return a number that doesn't exist in PDF (you calculated it!)
    ❌ WRONG: Balance is blurry → you calculate: prev + credit - debit (NO! Set to null!)
    
    🚨 Every balance number must exist in the PDF. If it doesn't exist in PDF, you FAILED.
