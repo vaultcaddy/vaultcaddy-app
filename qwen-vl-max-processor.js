@@ -760,9 +760,16 @@ Required fields:
    - **ONLY extract from Transaction Details (戶口進支)** - actual transactions
    - Opening Balance (承上結餘) is the FIRST transaction row - INCLUDE it
 
-5. **transactionSign rules (CRITICAL - use balance, IGNORE text):**
+5. **⚠️ BALANCE - NEVER CALCULATE, EXTRACT ONLY:**
+   - **ABSOLUTELY NEVER CALCULATE BALANCE** (NO formulas: balance = prev + credit - debit)
+   - **EXTRACT balance DIRECTLY from the "餘額/Balance" column** in the image
+   - If balance is unclear, set to null (DO NOT calculate)
+   - Bank's printed balance is the ONLY source of truth
+   - Example: ✅ Extract 30,718.39 from column | ❌ Calculate: 100 + 50 - 20 = 130
+
+6. **transactionSign rules (CRITICAL - use balance, IGNORE text):**
    - **BANK IS ALWAYS RIGHT**: Never change balance numbers
-   - **Compare balances**: Current vs Previous
+   - **Compare balances** (extracted, NOT calculated): Current vs Previous
    - Balance increased → "income" (even if statement says "支出")
    - Balance decreased → "expense" (even if statement says "存入")
    - **IGNORE text labels** - ONLY use balance to determine
@@ -885,11 +892,23 @@ Required fields:
    - FPS: Faster Payment System
    - Other: Other transactions
 
-7. **transactionSign rules (CRITICAL - ONLY use balance to determine, IGNORE text labels):**
+7. **⚠️ BALANCE EXTRACTION - ABSOLUTELY NEVER CALCULATE:**
+   - **CRITICAL**: Balance values MUST be extracted DIRECTLY from the "餘額/Balance" column in the image
+   - **ABSOLUTELY NEVER CALCULATE BALANCE** using formulas like: balance = previous_balance + credit - debit
+   - **NEVER "FIX" BALANCES**: Even if you think a balance looks "wrong", extract it exactly as shown
+   - If balance is unclear/unreadable in the image, set to null (DO NOT guess or calculate)
+   - **The bank's printed balance is the ONLY source of truth**
+   - **Example**:
+     * ✅ CORRECT: See "30,718.39" in balance column → extract 30718.39
+     * ❌ WRONG: Previous balance is 59,417.89 + debit 26,054.00 = calculate to 85,471.89
+     * ❌ WRONG: "This balance seems wrong, let me recalculate it"
+     * ❌ WRONG: Balance column is blurry, let me calculate: 100 + 50 = 150
+
+8. **transactionSign rules (CRITICAL - ONLY use balance to determine, IGNORE text labels):**
    - **OUR JOB**: Extract data and put it in the RIGHT place. The bank's numbers are 100% correct.
    - **BANK IS ALWAYS RIGHT**: NEVER change amount or balance numbers from the statement
    - **HOW TO DETERMINE transactionSign**:
-     * Compare CURRENT balance with PREVIOUS balance
+     * Compare CURRENT balance with PREVIOUS balance (use the EXTRACTED balance, not calculated)
      * If current balance > previous balance → "income" (credit, 存入)
      * If current balance < previous balance → "expense" (debit, 支出)
    - **IGNORE text labels**: Even if the statement says "支出" but balance increased, it's "income"
@@ -906,6 +925,8 @@ FINAL CHECKLIST BEFORE RETURNING JSON:
 ✅ Does each transaction have its OWN unique amount from the statement?
 ✅ Did I NOT combine or merge any rows?
 ✅ Did I NOT use Account Summary data?
+✅ **Did I EXTRACT all balance values directly from the image (NOT calculated)?**
+✅ **Did I NEVER use formulas to calculate balance?**
 ✅ Are all amounts pure numbers without symbols?
 ✅ Are all dates in YYYY-MM-DD format?
 ✅ **Did I verify transactionSign by comparing balances (not by text labels)?**
