@@ -5790,6 +5790,88 @@
     });
 </script>
 
+    <!-- ============================================ -->
+    <!-- 🚀 自動處理 IndexedDB 中的待上傳文件 -->
+    <!-- ============================================ -->
+    <script>
+        (async function() {
+            // 檢查是否有待處理的文件
+            const hasPendingFiles = localStorage.getItem('hasPendingFiles');
+            
+            if (!hasPendingFiles) {
+                console.log('⏭️ 沒有待處理的文件');
+                return;
+            }
+            
+            console.log('✅ 檢測到待處理的文件，準備自動上傳');
+            
+            try {
+                // IndexedDB 讀取邏輯（與 index.html 相同）
+                const db = await new Promise((resolve, reject) => {
+                    const request = indexedDB.open('VaultCaddyFiles', 1);
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+                
+                // 讀取文件
+                const files = await new Promise((resolve, reject) => {
+                    const transaction = db.transaction(['pendingFiles'], 'readonly');
+                    const store = transaction.objectStore('pendingFiles');
+                    const request = store.get('pendingFiles');
+                    
+                    request.onsuccess = () => resolve(request.result || []);
+                    request.onerror = () => reject(request.error);
+                });
+                
+                if (files && files.length > 0) {
+                    console.log(`📁 找到 ${files.length} 個待上傳文件`, files);
+                    
+                    // 清除標記（避免重複處理）
+                    localStorage.removeItem('hasPendingFiles');
+                    localStorage.removeItem('pendingFileCount');
+                    localStorage.removeItem('pendingDocType');
+                    
+                    // 清除 IndexedDB 文件
+                    const clearTransaction = db.transaction(['pendingFiles'], 'readwrite');
+                    const clearStore = clearTransaction.objectStore('pendingFiles');
+                    clearStore.delete('pendingFiles');
+                    
+                    // 等待頁面完全加載和初始化
+                    setTimeout(() => {
+                        // 觸發文件上傳
+                        if (window.handleFilesDrop && typeof window.handleFilesDrop === 'function') {
+                            console.log('✅ 調用 handleFilesDrop 函數');
+                            window.handleFilesDrop(files);
+                        } else {
+                            console.warn('⚠️ handleFilesDrop 函數未找到，嘗試手動觸發上傳');
+                            
+                            // 手動創建 FileList 並觸發上傳
+                            const dataTransfer = new DataTransfer();
+                            files.forEach(file => dataTransfer.items.add(file));
+                            
+                            const fileInput = document.querySelector('input[type="file"]');
+                            if (fileInput) {
+                                fileInput.files = dataTransfer.files;
+                                fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+                                console.log('✅ 已觸發文件輸入變化事件');
+                            } else {
+                                console.error('❌ 找不到文件輸入元素');
+                            }
+                        }
+                    }, 2000); // 等待2秒讓頁面完全初始化
+                    
+                } else {
+                    console.log('⏭️ IndexedDB 中沒有文件');
+                    localStorage.removeItem('hasPendingFiles');
+                }
+                
+            } catch (error) {
+                console.error('❌ 讀取 IndexedDB 文件失敗:', error);
+                localStorage.removeItem('hasPendingFiles');
+            }
+        })();
+    </script>
+
     <!-- Google Analytics 事件跟踪 -->
     <script src="/ga-event-tracking.js"></script>
 </body>

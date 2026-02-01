@@ -3423,6 +3423,87 @@
             }
         };
         
+        // ============================================
+        // 📦 IndexedDB 文件存儲（用於跨頁面傳遞文件）
+        // ============================================
+        const FileStorage = {
+            dbName: 'VaultCaddyFiles',
+            storeName: 'pendingFiles',
+            db: null,
+            
+            // 初始化數據庫
+            async init() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(this.dbName, 1);
+                    
+                    request.onerror = () => reject(request.error);
+                    request.onsuccess = () => {
+                        this.db = request.result;
+                        resolve(this.db);
+                    };
+                    
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+                        if (!db.objectStoreNames.contains(this.storeName)) {
+                            db.createObjectStore(this.storeName);
+                        }
+                    };
+                });
+            },
+            
+            // 保存文件
+            async saveFiles(files) {
+                if (!this.db) await this.init();
+                
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction([this.storeName], 'readwrite');
+                    const store = transaction.objectStore(this.storeName);
+                    
+                    // 保存文件數組
+                    const request = store.put(Array.from(files), 'pendingFiles');
+                    
+                    request.onsuccess = () => {
+                        console.log('✅ 文件已保存到 IndexedDB');
+                        resolve();
+                    };
+                    request.onerror = () => reject(request.error);
+                });
+            },
+            
+            // 獲取文件
+            async getFiles() {
+                if (!this.db) await this.init();
+                
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction([this.storeName], 'readonly');
+                    const store = transaction.objectStore(this.storeName);
+                    const request = store.get('pendingFiles');
+                    
+                    request.onsuccess = () => {
+                        resolve(request.result || []);
+                    };
+                    request.onerror = () => reject(request.error);
+                });
+            },
+            
+            // 清除文件
+            async clearFiles() {
+                if (!this.db) await this.init();
+                
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction([this.storeName], 'readwrite');
+                    const store = transaction.objectStore(this.storeName);
+                    const request = store.delete('pendingFiles');
+                    
+                    request.onsuccess = () => {
+                        console.log('✅ 文件已從 IndexedDB 清除');
+                        resolve();
+                    };
+                    request.onerror = () => reject(request.error);
+                });
+            }
+        };
+        
         // 初始化上傳區域
         (function() {
             const dropzone = document.getElementById('dropzone');
@@ -3475,14 +3556,14 @@
                 console.log(`📁 用戶拖入 ${files.length} 個文件`);
                 console.log(`📋 文檔類型: ${selectedDocType === 'statement' ? '銀行對帳單' : '發票'}`);
                 
-                // ✅ 檢查文件大小（10MB限制）
-                const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+                // ✅ 檢查文件大小（20MB限制）
+                const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
                 const filesArray = Array.from(files);
                 const oversizedFiles = filesArray.filter(f => f.size > MAX_FILE_SIZE);
                 
                 if (oversizedFiles.length > 0) {
                     const fileNames = oversizedFiles.map(f => `${f.name} (${(f.size / 1024 / 1024).toFixed(2)}MB)`).join('\n');
-                    showToast(`以下文件超過 10MB 限制：\n${fileNames}`);
+                    showToast(`以下文件超過 20MB 限制：\n${fileNames}`);
                     console.error('❌ 文件大小超過限制:', oversizedFiles);
                     return;
                 }
@@ -3491,32 +3572,42 @@
                 const isLoggedIn = window.simpleAuth && window.simpleAuth.isLoggedIn();
                 
                 if (!isLoggedIn) {
-                    // 未登入：保存文件信息和文檔類型
-                    const fileNames = filesArray.map(f => f.name);
-                    localStorage.setItem('pendingFileNames', JSON.stringify(fileNames));
-                    localStorage.setItem('pendingFileCount', files.length);
-                    localStorage.setItem('pendingDocType', selectedDocType); // 保存文檔類型
-                    
-                    console.log('ℹ️ 用戶未登入，保存文件信息和文檔類型');
-                    
-                    // 顯示提示
-                    const docTypeName = selectedDocType === 'statement' ? '銀行對帳單' : '發票';
-                    showToast(`已選擇 ${files.length} 個${docTypeName}文件，請先登入以開始處理`);
-                    
-                    // 彈出登入框
-                    setTimeout(() => {
-                        if (typeof openAuthModal === 'function') {
-                            openAuthModal();
-                        } else {
-                            console.error('❌ openAuthModal 函數未定義');
-                            window.location.href = 'auth.html';
-                        }
-                    }, 300);
+                    // 未登入：保存文件到 IndexedDB 和文檔類型
+                    FileStorage.saveFiles(filesArray).then(() => {
+                        localStorage.setItem('pendingFileCount', files.length);
+                        localStorage.setItem('pendingDocType', selectedDocType); // 保存文檔類型
+                        localStorage.setItem('hasPendingFiles', 'true'); // 標記有待處理文件
+                        
+                        console.log('ℹ️ 用戶未登入，保存文件到 IndexedDB');
+                        
+                        // 顯示提示
+                        const docTypeName = selectedDocType === 'statement' ? '銀行對帳單' : '發票';
+                        showToast(`已選擇 ${files.length} 個${docTypeName}文件，請先登入以開始處理`);
+                        
+                        // 彈出登入框
+                        setTimeout(() => {
+                            if (typeof openAuthModal === 'function') {
+                                openAuthModal();
+                            } else {
+                                console.error('❌ openAuthModal 函數未定義');
+                                window.location.href = 'auth.html';
+                            }
+                        }, 300);
+                    }).catch(error => {
+                        console.error('❌ 保存文件失敗:', error);
+                        showToast('保存文件失敗，請重試');
+                    });
                 } else {
-                    // 已登入：查找或創建 First_Project 並跳轉
+                    // 已登入：保存文件到 IndexedDB 並跳轉
                     console.log('✅ 用戶已登入，準備查找或創建 First_Project');
                     
-                    findOrCreateFirstProject();
+                    FileStorage.saveFiles(filesArray).then(() => {
+                        localStorage.setItem('hasPendingFiles', 'true'); // 標記有待處理文件
+                        findOrCreateFirstProject();
+                    }).catch(error => {
+                        console.error('❌ 保存文件失敗:', error);
+                        showToast('保存文件失敗，請重試');
+                    });
                 }
             }
             
