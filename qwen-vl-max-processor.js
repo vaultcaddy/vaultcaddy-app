@@ -710,8 +710,12 @@ class QwenVLMaxProcessor {
 YOU ARE A DATA RECORDER, NOT A CALCULATOR.
 YOUR ONLY JOB: COPY numbers from the PDF to JSON. DO NOT calculate, verify, or modify ANY numbers.
 
-IF YOU SEE a balance of "30,718.39" in the PDF → EXTRACT "30718.39"
-IF YOU CALCULATE "59,417.89" using a formula → YOU FAILED ❌
+⚠️ OPENING BALANCE (承上結餘) IS CRITICAL:
+Find "承上結餘" row in Transaction Details → Look at Balance column → Copy that number.
+If empty → Use next row's balance. NEVER use "戶口摘要" numbers!
+
+IF YOU SEE "30,718.39" in PDF → EXTRACT "30718.39"
+IF YOU CALCULATE "59,417.89" → YOU FAILED ❌
 
 You are a professional bank statement data extraction expert. Please analyze this bank statement image, extract complete statement information and transaction records, and return in JSON format.
 
@@ -823,8 +827,15 @@ Return ONLY JSON, no additional text.`;
 YOU ARE A DATA RECORDER, NOT A CALCULATOR.
 YOUR ONLY JOB: COPY numbers from the PDF to JSON. DO NOT calculate, verify, or modify ANY numbers.
 
+⚠️ OPENING BALANCE (承上結餘) IS CRITICAL - PAY ATTENTION:
+Find the row labeled "承上結餘" or "Brought Forward" in Transaction Details table.
+Look at the "餘額/Balance" column on that EXACT row → Copy that number.
+If that cell is empty → Look at the NEXT row's balance → Use that number.
+NEVER use numbers from "戶口摘要/Account Summary" section - WRONG!
+
 IF YOU SEE a balance of "30,718.39" in the PDF → EXTRACT "30718.39"
 IF YOU CALCULATE "59,417.89" using a formula → YOU FAILED ❌
+IF YOU USE a number from "戶口摘要" → YOU FAILED ❌
 
 You are a professional bank statement data extraction expert. I am sending ${pageCount} images that are multiple pages of the same bank statement. Please analyze all pages comprehensively, extract complete statement information and transaction records, and return in JSON format.
 
@@ -884,11 +895,20 @@ Required fields:
    - **DO NOT extract from Account Summary** - it only shows totals
    - **ONLY extract from Transaction Details section** - this has the actual transactions
 
-5. **Opening Balance / Brought Forward (承上結餘/上期結餘):**
-   - This is the FIRST row in the Transaction Details section
-   - It SHOULD be included in the transactions array
-   - Extract the balance value DIRECTLY from the "餘額/Balance" column
-   - DO NOT use Account Summary numbers - only use Transaction Details
+5. **Opening Balance / Brought Forward (承上結餘/上期結餘) - CRITICAL:**
+   - This is usually the FIRST row in Transaction Details section
+   - It MUST be included as the first transaction in your JSON output
+   - **LOOK AT THE "餘額/Balance" COLUMN** on this row - that's the opening balance number
+   - If you cannot see a balance number on this row:
+     * Look at the NEXT transaction row's balance
+     * The opening balance = that next row's balance (it's the same starting point)
+   - **NEVER calculate**: opening balance = summary total or prev month closing
+   - **NEVER use** any number from Account Summary section
+   
+   Example:
+   Row 1: "承上結餘" | balance column shows: 30,718.39 → extract 30718.39
+   Row 1: "承上結餘" | balance column empty → look at Row 2 balance → use that
+   ❌ WRONG: Calculate from summary numbers or other sources
 
 6. **Transaction type rules:**
    - Deposit: Cash deposit, direct deposit
