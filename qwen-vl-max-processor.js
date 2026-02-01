@@ -767,34 +767,15 @@ Required fields:
    - **ONLY extract from Transaction Details (戶口進支)** - actual transactions
    - Opening Balance (承上結餘) is the FIRST transaction row - INCLUDE it
 
-5. **🚨 BALANCE - NEVER CALCULATE, EXTRACT ONLY (MOST IMPORTANT):**
-   - **YOU ARE A DATA RECORDER**: Copy the balance from PDF, NOT calculate it
-   - **IF NOT VISIBLE, SET TO null** - DO NOT calculate using prev + credit - debit
-   - **THE BANK PRINTED IT**: You just copy it. Period.
-   - If you use ANY formula, you are NOT doing your job
-   - Example: ✅ PDF shows 30,718.39 → extract 30718.39 | ❌ Calculate 59,417.89 (not in PDF!)
-   
-   🚨 IF YOU RETURN A BALANCE NUMBER THAT DOES NOT EXIST IN THE PDF, YOU FAILED.
+5. **🚨 BALANCE - NEVER CALCULATE:**
+   Balance must be from "餘額/Balance" column. If not visible → set to null.
+   ✅ PDF shows 30,718.39 → extract 30718.39 | ❌ Return a number not in PDF (calculated!)
+   🚨 Every balance must exist in PDF.
 
-6. **⚠️ WE ARE DATA MOVERS, NOT ACCOUNTANTS:**
-   - OUR JOB: Move data from PDF to JSON, extract exactly what we see
-   - BANK IS ALWAYS RIGHT: Never change, verify, or "fix" numbers
-   - GOAL: "extracted data" = "uploaded data" (exactly the same)
-
-7. **How to determine transactionSign?**
-   
-   PRIORITY 1 - Direct extraction (if clear debit/credit columns):
-   - Separate columns → extract directly
-   - +/- signs → extract directly
-   
-   PRIORITY 2 - Balance comparison (if no clear columns):
-   - Current balance > Previous balance → "income"
-   - Current balance < Previous balance → "expense"
-   - This is INFERENCE from facts, not calculation
-   
-   PRIORITY 3 - Ignore unreliable text labels:
-   - Prioritize: debit/credit columns > balance comparison > text
-   - If text conflicts with balance change, trust the balance
+6. **TransactionSign - Use priority:**
+   Priority 1: Debit/Credit columns or +/- signs
+   Priority 2: Balance comparison (increased = income, decreased = expense)
+   Ignore text labels if conflicting.
 
 Return ONLY JSON, no additional text.`;
         } else {
@@ -906,8 +887,8 @@ Required fields:
 5. **Opening Balance / Brought Forward (承上結餘/上期結餘):**
    - This is the FIRST row in the Transaction Details section
    - It SHOULD be included in the transactions array
-   - Extract the balance value from the "餘額/Balance" column (e.g., 59,417.89)
-   - DO NOT use the Account Summary total (e.g., 60,736.27) - that's the closing balance
+   - Extract the balance value DIRECTLY from the "餘額/Balance" column
+   - DO NOT use Account Summary numbers - only use Transaction Details
 
 6. **Transaction type rules:**
    - Deposit: Cash deposit, direct deposit
@@ -921,72 +902,36 @@ Required fields:
    - FPS: Faster Payment System
    - Other: Other transactions
 
-7. **🚨 BALANCE EXTRACTION - ABSOLUTELY NEVER CALCULATE (MOST IMPORTANT RULE):**
-   - **YOU ARE A DATA RECORDER**: Your job is to COPY the balance number from the PDF, NOT to calculate it
-   - **IF THE BALANCE IS NOT VISIBLE IN THE PDF, SET IT TO null** - DO NOT calculate it using prev_balance + credit - debit
-   - **CRITICAL**: Balance values MUST be extracted DIRECTLY from the "餘額/Balance" column in the image
-   - **THE BANK PRINTED THE BALANCE**: You just copy it. The bank did NOT ask you to calculate it for them.
-   - If you use ANY formula (balance = prev + credit - debit), you are NOT doing your job correctly
-   - **Example of CORRECT behavior**:
-     * PDF shows balance "30,718.39" → You extract 30718.39 ✅
-     * PDF shows balance "51,295.09" → You extract 51295.09 ✅
-     * PDF balance is blurry → You set null ✅ (DO NOT calculate!)
-   - **Example of WRONG behavior (THIS IS WHAT YOU MUST NEVER DO)**:
-     * PDF shows "30,718.39" but you return "59,417.89" ❌ (Where did 59,417.89 come from? You calculated it!)
-     * You think: "Let me verify: 100 + 50 = 150, so balance should be..." ❌ (You are NOT a calculator!)
-     * Balance is blurry, so you calculate: prev_balance + credit - debit ❌ (Just set to null!)
+7. **🚨 BALANCE - NEVER CALCULATE (MOST IMPORTANT):**
+   Balance MUST be extracted from "餘額/Balance" column. If not visible → set to null.
    
-   🚨 IF YOU RETURN A BALANCE NUMBER THAT DOES NOT EXIST IN THE PDF, YOU FAILED THIS TASK.
-
-8. **⚠️ WE ARE DATA MOVERS, NOT ACCOUNTANTS:**
-   - **OUR JOB**: Move data from PDF to JSON. Extract exactly what we see, don't verify or calculate.
-   - **BANK IS ALWAYS RIGHT**: We trust the bank's numbers 100%. Never change, verify, or "fix" them.
-   - **GOAL**: Make sure "extracted data" = "uploaded data" (exactly the same)
-
-9. **How to determine transactionSign (debit/credit, expense/income)?**
+   ✅ CORRECT: PDF shows "30,718.39" → extract 30718.39
+   ❌ WRONG: PDF shows "30,718.39" but you return a different number (you calculated it!)
+   ❌ WRONG: Balance is blurry → you calculate: prev + credit - debit (NO! Set to null!)
    
-   **PRIORITY 1 - Direct Extraction (if statement has clear columns):**
-   - If statement has separate "支出/Debit" and "存入/Credit" columns:
-     * Amount in debit column → debit: amount, transactionSign: "expense"
-     * Amount in credit column → credit: amount, transactionSign: "income"
-   - If statement has +/- signs on amounts:
-     * Negative amount (-8,122.80) → debit: 8122.80, transactionSign: "expense"
-     * Positive amount (+25,000.00) → credit: 25000.00, transactionSign: "income"
+   🚨 Every balance number must exist in the PDF. If it doesn't exist in PDF, you FAILED.
+
+8. **How to determine transactionSign?**
    
-   **PRIORITY 2 - Balance Comparison (if no clear debit/credit columns):**
-   - Compare CURRENT balance with PREVIOUS balance (use EXTRACTED balance, not calculated)
-   - If current balance > previous balance → transactionSign: "income"
-   - If current balance < previous balance → transactionSign: "expense"
-   - This is NOT calculation, this is INFERENCE from facts (balance went up = deposit, went down = withdrawal)
+   PRIORITY 1 - If statement has debit/credit columns or +/- signs:
+   - Debit column or negative amount → "expense"
+   - Credit column or positive amount → "income"
    
-   **IMPORTANT - Ignore unreliable text labels:**
-   - Some statements have text like "支出" that conflicts with actual balance changes
-   - ALWAYS prioritize: debit/credit columns > balance comparison > text labels
-   - Example conflict:
-     * Previous balance: 100.00
-     * Current balance: 200.00 (increased!)
-     * Text says: "支出" (expense)
-     * CORRECT: "income" (because balance increased, ignore the text)
-     * WRONG: "expense" (blindly following text)
+   PRIORITY 2 - If only amount + balance columns:
+   - Balance increased (current > previous) → "income"
+   - Balance decreased (current < previous) → "expense"
+   
+   Ignore text labels if they conflict with columns/balance. Prioritize: columns > balance change > text.
 
-FINAL CHECKLIST - Did I act as a DATA RECORDER (not a calculator)?
-✅ Did I extract EVERY SINGLE ROW from the transaction table?
-✅ Does each transaction have its OWN unique date (extracted, not guessed)?
-✅ Does each transaction have its OWN unique amount (extracted, not modified)?
-✅ **Did I COPY all balance values from the PDF (NEVER calculated)?**
-✅ **Can I find every balance number I returned in the original PDF?** (If not, I calculated it - WRONG!)
-✅ Did I NEVER use ANY formulas (balance = prev + credit - debit)?
-✅ Did I NOT combine, merge, or summarize any rows?
-✅ Did I NOT use Account Summary data (only Transaction Details)?
-✅ Is "extracted data" = "uploaded data" (exactly the same)?
-✅ Did I determine transactionSign correctly (Priority 1: columns, Priority 2: balance comparison)?
-✅ Are all amounts pure numbers without symbols?
-✅ Are all dates in YYYY-MM-DD format?
-✅ Is the JSON valid and complete?
+FINAL CHECKLIST:
+✅ Extracted EVERY row from transaction table (not combined/merged)?
+✅ Each transaction has unique date & amount from PDF (not guessed)?
+✅ ALL balance values exist in PDF (not calculated)?
+✅ Used Transaction Details only (not Account Summary)?
+✅ TransactionSign based on columns/balance (not unreliable text)?
+✅ JSON valid and complete?
 
-🚨 FINAL CHECK: Open the PDF and verify EVERY balance number exists in the PDF. If you calculated any balance, you FAILED.
-
-Remember: I am a DATA RECORDER. I COPY numbers from PDF to JSON. I do NOT calculate, verify, or modify numbers.
+🚨 Can I find every number I returned in the PDF? If not, I FAILED.
 
 Return ONLY JSON, no additional text or explanations.`;
         } else {
