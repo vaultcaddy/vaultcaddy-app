@@ -760,10 +760,12 @@ Required fields:
    - **ONLY extract from Transaction Details (戶口進支)** - actual transactions
    - Opening Balance (承上結餘) is the FIRST transaction row - INCLUDE it
 
-5. **transactionSign rules:**
-   - Bank balance is ALWAYS correct
-   - Balance increased → "income"
-   - Balance decreased → "expense"
+5. **transactionSign rules (CRITICAL - use balance, IGNORE text):**
+   - **BANK IS ALWAYS RIGHT**: Never change balance numbers
+   - **Compare balances**: Current vs Previous
+   - Balance increased → "income" (even if statement says "支出")
+   - Balance decreased → "expense" (even if statement says "存入")
+   - **IGNORE text labels** - ONLY use balance to determine
 
 Return ONLY JSON, no additional text.`;
         } else {
@@ -883,12 +885,20 @@ Required fields:
    - FPS: Faster Payment System
    - Other: Other transactions
 
-7. **transactionSign rules (IMPORTANT - use balance to verify):**
-   - Bank balance is ALWAYS correct, use it to determine transactionSign
-   - If current balance > previous balance → "income" (credit)
-   - If current balance < previous balance → "expense" (debit)
-   - DO NOT modify balance values - they are from the bank and always accurate
-   - Use balance difference to verify debit/credit assignment
+7. **transactionSign rules (CRITICAL - ONLY use balance to determine, IGNORE text labels):**
+   - **OUR JOB**: Extract data and put it in the RIGHT place. The bank's numbers are 100% correct.
+   - **BANK IS ALWAYS RIGHT**: NEVER change amount or balance numbers from the statement
+   - **HOW TO DETERMINE transactionSign**:
+     * Compare CURRENT balance with PREVIOUS balance
+     * If current balance > previous balance → "income" (credit, 存入)
+     * If current balance < previous balance → "expense" (debit, 支出)
+   - **IGNORE text labels**: Even if the statement says "支出" but balance increased, it's "income"
+   - **Example correction**:
+     * Previous balance: 100.00
+     * Current balance: 200.00
+     * Amount shown: 100 (marked as "支出" in statement)
+     * CORRECT output: "income" with credit=100, debit=0
+     * WRONG output: "expense" with debit=100 (don't blindly follow the label!)
 
 FINAL CHECKLIST BEFORE RETURNING JSON:
 ✅ Did I extract EVERY SINGLE ROW from the transaction table?
@@ -898,6 +908,7 @@ FINAL CHECKLIST BEFORE RETURNING JSON:
 ✅ Did I NOT use Account Summary data?
 ✅ Are all amounts pure numbers without symbols?
 ✅ Are all dates in YYYY-MM-DD format?
+✅ **Did I verify transactionSign by comparing balances (not by text labels)?**
 ✅ Is the JSON valid and complete?
 
 Return ONLY JSON, no additional text or explanations.`;
