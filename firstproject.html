@@ -2391,7 +2391,7 @@
 <div class="ai-upload-area" id="aiUploadArea" style="border: 3px dashed #d1d5db; border-radius: 12px; padding: 3rem 2rem; text-align: center; cursor: pointer; transition: all 0.3s ease; background: #fafafa;">
 <div class="ai-upload-icon" style="font-size: 4rem; margin-bottom: 1rem;">📄</div>
 <div class="ai-upload-text" style="font-size: 1.2rem; color: #374151; margin-bottom: 0.5rem; font-weight: 600;">拖放文件到此處或點擊上傳</div>
-<div class="ai-upload-hint" style="color: #6b7280; font-size: 0.9rem;">支援 PDF、JPG、PNG 格式 (最大 10MB)｜✨ 支持批量上傳</div>
+<div class="ai-upload-hint" style="color: #6b7280; font-size: 0.9rem;">支援 PDF、JPG、PNG 格式 (最大 20MB)｜✨ 支持批量上傳</div>
 <input accept=".pdf,.jpg,.jpeg,.png,.gif,.webp" class="ai-file-input" id="aiFileInput" multiple="" style="display: none;" type="file"/>
 </div>
 <!-- 處理進度 -->
@@ -3529,7 +3529,8 @@
             }
         };
         
-        async function handleUpload(files) {
+        // ✅ 暴露到全局作用域，供自動上傳腳本調用
+        window.handleUpload = async function handleUpload(files) {
             logger.log('📤 準備上傳', files.length, '個文件');
             
             // 1. 計算所有文件的總頁數
@@ -5838,27 +5839,46 @@
                     
                     // 等待頁面完全加載和初始化
                     setTimeout(() => {
-                        // 觸發文件上傳
-                        if (window.handleFilesDrop && typeof window.handleFilesDrop === 'function') {
-                            console.log('✅ 調用 handleFilesDrop 函數');
-                            window.handleFilesDrop(files);
-                        } else {
-                            console.warn('⚠️ handleFilesDrop 函數未找到，嘗試手動觸發上傳');
+                        console.log('🔍 嘗試觸發文件上傳...');
+                        console.log(`📁 準備上傳 ${files.length} 個文件:`, files.map(f => f.name));
+                        
+                        // 方法1：直接調用全局 window.handleUpload 函數
+                        if (window.handleUpload && typeof window.handleUpload === 'function') {
+                            console.log('✅ 找到 window.handleUpload 函數，直接調用');
+                            window.handleUpload(files);
+                        } 
+                        // 方法2：通過文件輸入元素觸發
+                        else {
+                            console.log('⚠️ window.handleUpload 函數未找到，嘗試通過 aiFileInput 觸發');
                             
-                            // 手動創建 FileList 並觸發上傳
-                            const dataTransfer = new DataTransfer();
-                            files.forEach(file => dataTransfer.items.add(file));
-                            
-                            const fileInput = document.querySelector('input[type="file"]');
+                            const fileInput = document.getElementById('aiFileInput');
                             if (fileInput) {
+                                // 創建 DataTransfer 並設置文件
+                                const dataTransfer = new DataTransfer();
+                                files.forEach(file => {
+                                    console.log(`📎 添加文件: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
+                                    dataTransfer.items.add(file);
+                                });
+                                
                                 fileInput.files = dataTransfer.files;
-                                fileInput.dispatchEvent(new Event('change', { bubbles: true }));
-                                console.log('✅ 已觸發文件輸入變化事件');
+                                
+                                // 觸發 change 事件
+                                const changeEvent = new Event('change', { bubbles: true });
+                                fileInput.dispatchEvent(changeEvent);
+                                
+                                console.log('✅ 已觸發 aiFileInput 的 change 事件');
+                                
+                                // 如果 onchange 處理器存在，直接調用
+                                if (fileInput.onchange) {
+                                    console.log('✅ 直接調用 aiFileInput.onchange');
+                                    fileInput.onchange({ target: fileInput });
+                                }
                             } else {
-                                console.error('❌ 找不到文件輸入元素');
+                                console.error('❌ 找不到 aiFileInput 元素');
+                                console.log('🔍 嘗試查找所有 file input:', document.querySelectorAll('input[type="file"]'));
                             }
                         }
-                    }, 2000); // 等待2秒讓頁面完全初始化
+                    }, 3000); // 等待3秒讓頁面完全初始化
                     
                 } else {
                     console.log('⏭️ IndexedDB 中沒有文件');
