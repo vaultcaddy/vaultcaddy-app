@@ -739,24 +739,31 @@ Required fields:
   ]
 }
 
-CRITICAL - Account Summary vs Transaction Details:
-- **DO NOT extract from Account Summary (戶口摘要)** - only totals
-- **ONLY extract from Transaction Details (戶口進支)** - actual transactions
-- Opening Balance (承上結餘) is the FIRST transaction row - INCLUDE it in transactions array
-- Use the balance from Transaction Details, NOT from Account Summary
+⚠️ CRITICAL RULES - MUST FOLLOW:
 
-transactionSign rules (IMPORTANT - use balance to verify):
-- Bank balance is ALWAYS correct - DO NOT modify balance values
-- If current balance > previous balance → "income" (credit)
-- If current balance < previous balance → "expense" (debit)
-- Use balance difference to verify debit/credit assignment
+1. **EXTRACT EVERY SINGLE LINE AS A SEPARATE TRANSACTION**
+   - Each row = ONE transaction
+   - DO NOT combine or merge rows
+   - DO NOT skip any rows
 
-Important:
-1. Extract ALL transactions - do not miss any
-2. Date format: YYYY-MM-DD
-3. Amounts: pure numbers (no currency symbols)
-4. **Balance values are from the bank - NEVER change them**
-5. Set to null if cannot extract
+2. **EXACT DATE FROM EACH ROW**
+   - Extract the date shown in each row
+   - DO NOT use the same date for all transactions
+   - Format: YYYY-MM-DD
+
+3. **EXACT AMOUNT FROM EACH ROW**
+   - Extract the exact amount shown
+   - DO NOT modify or combine amounts
+
+4. **Account Summary vs Transaction Details:**
+   - **DO NOT extract from Account Summary (戶口摘要)** - only totals
+   - **ONLY extract from Transaction Details (戶口進支)** - actual transactions
+   - Opening Balance (承上結餘) is the FIRST transaction row - INCLUDE it
+
+5. **transactionSign rules:**
+   - Bank balance is ALWAYS correct
+   - Balance increased → "income"
+   - Balance decreased → "expense"
 
 Return ONLY JSON, no additional text.`;
         } else {
@@ -833,49 +840,69 @@ Required fields:
   ]
 }
 
-CRITICAL - Distinguish Account Summary vs Transaction Details:
-- Bank statements have TWO sections: Account Summary (戶口摘要) and Transaction Details (戶口進支/交易明細)
-- **DO NOT extract from Account Summary** - it only shows totals
-- **ONLY extract from Transaction Details section** - this has the actual transactions
+⚠️ CRITICAL RULES - READ CAREFULLY:
 
-Opening Balance / Brought Forward (承上結餘/上期結餘):
-- This is the FIRST row in the Transaction Details section
-- It SHOULD be included in the transactions array
-- Extract the balance value from the "餘額/Balance" column (e.g., 59,417.89)
-- DO NOT use the Account Summary total (e.g., 60,736.27) - that's the closing balance
+1. **EXTRACT EVERY SINGLE LINE AS A SEPARATE TRANSACTION**
+   - Each row in the transaction table is ONE separate transaction
+   - DO NOT combine, merge, or summarize multiple rows
+   - DO NOT skip any rows
+   - Example: If you see 3 rows for "SCR OCTOPUS CARDS LTD" on different dates, create 3 separate transaction objects
 
-Transaction type rules:
-- Deposit: Cash deposit, direct deposit
-- Withdrawal: Cash withdrawal, ATM withdrawal
-- Transfer: Wire transfer, FPS, bank transfer, online transfer
-- Fee: Service fee, maintenance fee, annual fee
-- Interest: Interest income, interest payment
-- Check: Check payment, check deposit
-- ATM: ATM transaction
-- POS: Point of sale, card payment, merchant transaction
-- FPS: Faster Payment System
-- Other: Other transactions
+2. **DATE ACCURACY IS CRITICAL**
+   - Extract the EXACT date from each transaction row
+   - DO NOT use the same date for different transactions
+   - DO NOT guess or assume dates
+   - Format: YYYY-MM-DD (e.g., 2022-02-04 if the statement shows 2022/02/04)
 
-transactionSign rules (IMPORTANT - use balance to verify):
-- Bank balance is ALWAYS correct, use it to determine transactionSign
-- If current balance > previous balance → "income" (credit)
-- If current balance < previous balance → "expense" (debit)
-- DO NOT modify balance values - they are from the bank and always accurate
-- Use balance difference to verify debit/credit assignment
+3. **AMOUNT ACCURACY IS CRITICAL**
+   - Extract the EXACT amount from each transaction row
+   - DO NOT add, subtract, or modify amounts
+   - DO NOT confuse amounts from different rows
+   - Example: If row shows 8,122.80, extract 8122.80 (not 29193.00 from a different row)
 
-Important instructions:
-1. **Extract ALL transactions from ALL ${pageCount} pages** - do not miss any transaction
-2. Keep transactions in chronological order
-3. All dates must be in YYYY-MM-DD format
-4. All amounts must be pure numbers (no currency symbols or thousand separators)
-5. **CRITICAL**: Balance values are from the bank and MUST NOT be changed
-6. Use balance to verify: If balance increased → income, if decreased → expense
-7. Set fields to null if they cannot be extracted from the image
-8. JSON must be valid and parseable
+4. **DISTINGUISH Account Summary vs Transaction Details:**
+   - Bank statements have TWO sections: Account Summary (戶口摘要) and Transaction Details (戶口進支/交易明細)
+   - **DO NOT extract from Account Summary** - it only shows totals
+   - **ONLY extract from Transaction Details section** - this has the actual transactions
+
+5. **Opening Balance / Brought Forward (承上結餘/上期結餘):**
+   - This is the FIRST row in the Transaction Details section
+   - It SHOULD be included in the transactions array
+   - Extract the balance value from the "餘額/Balance" column (e.g., 59,417.89)
+   - DO NOT use the Account Summary total (e.g., 60,736.27) - that's the closing balance
+
+6. **Transaction type rules:**
+   - Deposit: Cash deposit, direct deposit
+   - Withdrawal: Cash withdrawal, ATM withdrawal
+   - Transfer: Wire transfer, FPS, bank transfer, online transfer
+   - Fee: Service fee, maintenance fee, annual fee
+   - Interest: Interest income, interest payment
+   - Check: Check payment, check deposit
+   - ATM: ATM transaction
+   - POS: Point of sale, card payment, merchant transaction
+   - FPS: Faster Payment System
+   - Other: Other transactions
+
+7. **transactionSign rules (IMPORTANT - use balance to verify):**
+   - Bank balance is ALWAYS correct, use it to determine transactionSign
+   - If current balance > previous balance → "income" (credit)
+   - If current balance < previous balance → "expense" (debit)
+   - DO NOT modify balance values - they are from the bank and always accurate
+   - Use balance difference to verify debit/credit assignment
+
+FINAL CHECKLIST BEFORE RETURNING JSON:
+✅ Did I extract EVERY SINGLE ROW from the transaction table?
+✅ Does each transaction have its OWN unique date from the statement?
+✅ Does each transaction have its OWN unique amount from the statement?
+✅ Did I NOT combine or merge any rows?
+✅ Did I NOT use Account Summary data?
+✅ Are all amounts pure numbers without symbols?
+✅ Are all dates in YYYY-MM-DD format?
+✅ Is the JSON valid and complete?
 
 Return ONLY JSON, no additional text or explanations.`;
         } else {
-            return `You are a professional invoice data extraction expert. I am sending ${pageCount} images that are multiple pages of the same invoice. Please analyze all pages comprehensively, extract complete invoice information and line items, and return in JSON format.
+             return `You are a professional invoice data extraction expert. I am sending ${pageCount} images that are multiple pages of the same invoice. Please analyze all pages comprehensively, extract complete invoice information and line items, and return in JSON format.
 
 Required fields:
 {
