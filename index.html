@@ -3663,31 +3663,68 @@
                 }, 3000);
             }
             
-            // 監聽登入成功事件
-            window.addEventListener('user-logged-in', async () => {
+            // 處理待上傳文件的函數（統一邏輯）
+            async function processPendingFiles() {
+                const hasPendingFiles = localStorage.getItem('hasPendingFiles');
                 const pendingCount = localStorage.getItem('pendingFileCount');
                 const pendingDocType = localStorage.getItem('pendingDocType');
                 
-                if (pendingCount && pendingDocType) {
-                    const docTypeName = pendingDocType === 'statement' ? '銀行對帳單' : '發票';
-                    console.log(`✅ 登入成功，用戶之前選擇了 ${pendingCount} 個${docTypeName}文件`);
-                    
-                    // 保存文檔類型到 sessionStorage
-                    sessionStorage.setItem('selectedDocType', pendingDocType);
-                    selectedDocType = pendingDocType; // 更新當前文檔類型
-                    
-                    // 清除 localStorage
-                    localStorage.removeItem('pendingFileNames');
-                    localStorage.removeItem('pendingFileCount');
-                    localStorage.removeItem('pendingDocType');
-                    
-                    // 顯示提示並調用查找或創建 First_Project
-                    showToast('登入成功！正在準備項目...');
-                    setTimeout(() => {
-                        findOrCreateFirstProject();
-                    }, 500);
+                if (!hasPendingFiles || !pendingCount || !pendingDocType) {
+                    console.log('⏭️ 沒有待處理的文件');
+                    return false;
                 }
+                
+                // 檢查用戶是否已登入
+                const isLoggedIn = window.simpleAuth && window.simpleAuth.isLoggedIn();
+                if (!isLoggedIn) {
+                    console.log('⏳ 有待處理文件，但用戶尚未登入');
+                    return false;
+                }
+                
+                const docTypeName = pendingDocType === 'statement' ? '銀行對帳單' : '發票';
+                console.log(`✅ 檢測到 ${pendingCount} 個待處理的${docTypeName}文件`);
+                
+                // 保存文檔類型到 sessionStorage
+                sessionStorage.setItem('selectedDocType', pendingDocType);
+                selectedDocType = pendingDocType;
+                
+                // 顯示提示
+                showToast('正在準備項目...');
+                
+                // 調用查找或創建 First_Project
+                setTimeout(() => {
+                    findOrCreateFirstProject();
+                }, 500);
+                
+                return true;
+            }
+            
+            // 監聽登入成功事件
+            window.addEventListener('user-logged-in', async () => {
+                console.log('🔔 收到 user-logged-in 事件');
+                await processPendingFiles();
             });
+            
+            // ✅ 頁面加載時檢查是否有待處理文件（用戶可能刷新了頁面）
+            window.addEventListener('DOMContentLoaded', async () => {
+                // 等待 simpleAuth 初始化
+                setTimeout(async () => {
+                    const processed = await processPendingFiles();
+                    if (processed) {
+                        console.log('✅ 頁面加載時處理了待上傳文件');
+                    }
+                }, 1000);
+            });
+            
+            // ✅ 如果頁面已經加載完成，立即檢查
+            if (document.readyState === 'complete' || document.readyState === 'interactive') {
+                setTimeout(async () => {
+                    const processed = await processPendingFiles();
+                    if (processed) {
+                        console.log('✅ 立即處理了待上傳文件');
+                    }
+                }, 1000);
+            }
         })();
     </script>
 
@@ -3756,10 +3793,9 @@
                 // 登入成功，關閉彈窗
                 closeAuthModal();
                 
-                // 刷新頁面以更新用戶狀態
-                setTimeout(() => {
-                    window.location.reload();
-                }, 500);
+                // ✅ 不刷新頁面，讓 user-logged-in 事件自然觸發
+                // 如果有待處理的文件，會自動跳轉
+                console.log('✅ 登入成功，等待 user-logged-in 事件處理待上傳文件...');
                 
             } catch (error) {
                 console.error('❌ Google 登入失敗:', error);
