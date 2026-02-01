@@ -3115,17 +3115,11 @@
                     // ✅ 修復：支持 bank_statement 和 bank_statements
                     const docType = doc.documentType || doc.type || '';
                     if (docType === 'bank_statement' || docType === 'bank_statements') {
-                        // 銀行對帳單：顯示銀行名稱 + 持有人 + 帳號、結餘、對帳單期間
+                        // 銀行對帳單：只顯示銀行名稱
                         const bankName = data.bankName || data.bank_name || data.bank || '';
-                        const accountHolder = data.accountHolder || data.account_holder || '';
-                        const accountNumber = data.accountNumber || data.account_number || '';
                         
-                        // ✅ 組合顯示格式（3行顯示）
-                        const vendorLines = [];
-                        if (bankName) vendorLines.push(bankName);
-                        if (accountHolder) vendorLines.push(accountHolder);
-                        if (accountNumber) vendorLines.push(accountNumber);
-                        vendor = vendorLines.length > 0 ? vendorLines.join('<br>') : '-';
+                        // ✅ 只顯示銀行名稱（單行）
+                        vendor = bankName || '-';
                         
                         // ✅ 提取期初和期末餘額
                         const openingBalance = data.openingBalance || data.opening_balance || 0;
@@ -3533,34 +3527,63 @@
         window.handleUpload = async function handleUpload(files) {
             logger.log('📤 準備上傳', files.length, '個文件');
             
-            // 1. 計算所有文件的總頁數
+            // 1. 先為每個文件創建"處理中"的文檔記錄（立即顯示在列表中）
+            const docIds = [];
+            for (let file of files) {
+                const placeholderDoc = {
+                    name: file.name,
+                    fileName: file.name,
+                    fileSize: file.size,
+                    fileType: file.type,
+                    documentType: selectedDocumentType,
+                    status: 'processing',
+                    createdAt: new Date().toISOString(),
+                    pages: 0, // 暫時設為0，稍後更新
+                    originalFileType: file.type
+                };
+                
+                const docId = await window.simpleDataManager.createDocument(currentProjectId, placeholderDoc);
+                docIds.push({ docId, file });
+                logger.log(`✅ 文檔記錄已創建: ${file.name} (ID: ${docId})`);
+            }
+            
+            // 立即刷新文檔列表，讓用戶看到"處理中"的文件
+            await loadDocuments();
+            
+            // 2. 計算所有文件的總頁數
             let totalPages = 0;
             const filePages = [];
             
-            for (let file of files) {
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
                 const pages = await getFilePageCount(file);
-                filePages.push({ file, pages });
+                filePages.push({ file, pages, docId: docIds[i].docId });
                 totalPages += pages;
             }
             
             logger.log(`📊 總頁數: ${totalPages}`);
             
-            // 2. 檢查 Credits 是否足夠
+            // 3. 檢查 Credits 是否足夠
             if (window.creditsManager) {
                 const hasEnoughCredits = await window.creditsManager.checkCredits(totalPages);
                 if (!hasEnoughCredits) {
-                    logger.log('❌ Credits 不足，取消批量上傳');
+                    logger.log('❌ Credits 不足，刪除已創建的文檔記錄');
+                    // 刪除已創建的占位文檔
+                    for (let { docId } of docIds) {
+                        await window.simpleDataManager.deleteDocument(currentProjectId, docId);
+                    }
+                    await loadDocuments();
                     return;
                 }
             }
             
-            // 3. 關閉上傳模態框
+            // 4. 關閉上傳模態框
             closeAIUploadModal();
             
-            // 4. ✅ 並行上傳所有文件（減少總時間）
+            // 5. ✅ 並行上傳所有文件（使用已創建的文檔ID）
             logger.log(`🚀 開始並行上傳 ${filePages.length} 個文件...`);
-            const uploadPromises = filePages.map(({ file, pages }) => 
-                uploadFileDirect(file, pages).catch(err => {
+            const uploadPromises = filePages.map(({ file, pages, docId }) => 
+                uploadFileWithExistingDoc(file, pages, docId).catch(err => {
                     console.error(`❌ 上傳 ${file.name} 失敗:`, err);
                     // 不中斷其他文件的上傳
                 })
@@ -3574,7 +3597,80 @@
         }
         
         /**
-         * 直接上傳文件（不再檢查 Credits，因為已經在批量上傳時檢查過了）
+         * 使用已創建的文檔ID上傳文件（更新現有文檔記錄）
+         */
+        async function uploadFileWithExistingDoc(file, pages, docId) {
+            try {
+                logger.log('📤 上傳文件:', file.name, `(${pages} 頁, 文檔ID: ${docId})`);
+                
+                // ✅ 如果是 PDF，先轉換為圖片
+                let filesToProcess = [file];
+                let isPDFConverted = false;
+                
+                if (window.pdfToImageConverter && window.pdfToImageConverter.isPDF(file)) {
+                    try {
+                        logger.log('📄 檢測到 PDF 文件，開始轉換為圖片...');
+                        const imageFiles = await window.pdfToImageConverter.convertPDFToImages(file);
+                        logger.log(`✅ PDF 轉換完成，生成 ${imageFiles.length} 張圖片`);
+                        filesToProcess = imageFiles;
+                        isPDFConverted = true;
+                        logger.log(`📄 將處理所有 ${imageFiles.length} 頁`);
+                    } catch (pdfError) {
+                        console.error('❌ PDF 轉換失敗:', pdfError);
+                        // 更新文檔狀態為失敗
+                        await window.simpleDataManager.updateDocument(currentProjectId, docId, {
+                            status: 'failed',
+                            error: `PDF 轉換失敗: ${pdfError.message}`
+                        });
+                        await loadDocuments();
+                        return;
+                    }
+                }
+                
+                // 上傳所有文件到 Storage
+                logger.log(`📤 開始上傳 ${filesToProcess.length} 個文件...`);
+                const uploadPromises = filesToProcess.map(f => 
+                    window.simpleDataManager.uploadFile(currentProjectId, f)
+                );
+                const imageUrls = await Promise.all(uploadPromises);
+                logger.log(`✅ ${imageUrls.length} 個文件已上傳到 Storage`);
+                
+                // 更新文檔記錄（添加圖片URL等信息）
+                await window.simpleDataManager.updateDocument(currentProjectId, docId, {
+                    pages: filesToProcess.length,
+                    imageUrl: imageUrls[0],
+                    imageUrls: imageUrls,
+                    downloadURL: imageUrls[0],
+                    url: imageUrls[0],
+                    fileType: filesToProcess[0].type,
+                    isPDFConverted: isPDFConverted
+                });
+                logger.log('✅ 文檔記錄已更新:', docId);
+                
+                // 扣除 Credits（按實際頁數）
+                if (window.creditsManager) {
+                    await window.creditsManager.deductCredits(filesToProcess.length);
+                    logger.log(`💰 已扣除 ${filesToProcess.length} Credits`);
+                }
+                
+                // ✅ 立即開始 AI 處理（並行處理，不阻塞其他文件上傳）
+                processMultiPageFileWithAI(filesToProcess, docId, selectedDocumentType).catch(err => {
+                    console.error('❌ AI 處理失敗:', err);
+                });
+                
+            } catch (error) {
+                console.error('❌ 上傳失敗:', error);
+                // 更新文檔狀態為失敗
+                await window.simpleDataManager.updateDocument(currentProjectId, docId, {
+                    status: 'failed',
+                    error: error.message
+                });
+                await loadDocuments();
+            }
+        }
+        
+        /**
+         * 直接上傳文件（舊版，保留以兼容其他調用）
          */
         async function uploadFileDirect(file, pages) {
             try {
