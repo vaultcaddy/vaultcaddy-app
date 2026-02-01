@@ -767,12 +767,25 @@ Required fields:
    - Bank's printed balance is the ONLY source of truth
    - Example: ✅ Extract 30,718.39 from column | ❌ Calculate: 100 + 50 - 20 = 130
 
-6. **transactionSign rules (CRITICAL - use balance, IGNORE text):**
-   - **BANK IS ALWAYS RIGHT**: Never change balance numbers
-   - **Compare balances** (extracted, NOT calculated): Current vs Previous
-   - Balance increased → "income" (even if statement says "支出")
-   - Balance decreased → "expense" (even if statement says "存入")
-   - **IGNORE text labels** - ONLY use balance to determine
+6. **⚠️ WE ARE DATA MOVERS, NOT ACCOUNTANTS:**
+   - OUR JOB: Move data from PDF to JSON, extract exactly what we see
+   - BANK IS ALWAYS RIGHT: Never change, verify, or "fix" numbers
+   - GOAL: "extracted data" = "uploaded data" (exactly the same)
+
+7. **How to determine transactionSign?**
+   
+   PRIORITY 1 - Direct extraction (if clear debit/credit columns):
+   - Separate columns → extract directly
+   - +/- signs → extract directly
+   
+   PRIORITY 2 - Balance comparison (if no clear columns):
+   - Current balance > Previous balance → "income"
+   - Current balance < Previous balance → "expense"
+   - This is INFERENCE from facts, not calculation
+   
+   PRIORITY 3 - Ignore unreliable text labels:
+   - Prioritize: debit/credit columns > balance comparison > text
+   - If text conflicts with balance change, trust the balance
 
 Return ONLY JSON, no additional text.`;
         } else {
@@ -904,33 +917,52 @@ Required fields:
      * ❌ WRONG: "This balance seems wrong, let me recalculate it"
      * ❌ WRONG: Balance column is blurry, let me calculate: 100 + 50 = 150
 
-8. **transactionSign rules (CRITICAL - ONLY use balance to determine, IGNORE text labels):**
-   - **OUR JOB**: Extract data and put it in the RIGHT place. The bank's numbers are 100% correct.
-   - **BANK IS ALWAYS RIGHT**: NEVER change amount or balance numbers from the statement
-   - **HOW TO DETERMINE transactionSign**:
-     * Compare CURRENT balance with PREVIOUS balance (use the EXTRACTED balance, not calculated)
-     * If current balance > previous balance → "income" (credit, 存入)
-     * If current balance < previous balance → "expense" (debit, 支出)
-   - **IGNORE text labels**: Even if the statement says "支出" but balance increased, it's "income"
-   - **Example correction**:
-     * Previous balance: 100.00
-     * Current balance: 200.00
-     * Amount shown: 100 (marked as "支出" in statement)
-     * CORRECT output: "income" with credit=100, debit=0
-     * WRONG output: "expense" with debit=100 (don't blindly follow the label!)
+8. **⚠️ WE ARE DATA MOVERS, NOT ACCOUNTANTS:**
+   - **OUR JOB**: Move data from PDF to JSON. Extract exactly what we see, don't verify or calculate.
+   - **BANK IS ALWAYS RIGHT**: We trust the bank's numbers 100%. Never change, verify, or "fix" them.
+   - **GOAL**: Make sure "extracted data" = "uploaded data" (exactly the same)
 
-FINAL CHECKLIST BEFORE RETURNING JSON:
+9. **How to determine transactionSign (debit/credit, expense/income)?**
+   
+   **PRIORITY 1 - Direct Extraction (if statement has clear columns):**
+   - If statement has separate "支出/Debit" and "存入/Credit" columns:
+     * Amount in debit column → debit: amount, transactionSign: "expense"
+     * Amount in credit column → credit: amount, transactionSign: "income"
+   - If statement has +/- signs on amounts:
+     * Negative amount (-8,122.80) → debit: 8122.80, transactionSign: "expense"
+     * Positive amount (+25,000.00) → credit: 25000.00, transactionSign: "income"
+   
+   **PRIORITY 2 - Balance Comparison (if no clear debit/credit columns):**
+   - Compare CURRENT balance with PREVIOUS balance (use EXTRACTED balance, not calculated)
+   - If current balance > previous balance → transactionSign: "income"
+   - If current balance < previous balance → transactionSign: "expense"
+   - This is NOT calculation, this is INFERENCE from facts (balance went up = deposit, went down = withdrawal)
+   
+   **IMPORTANT - Ignore unreliable text labels:**
+   - Some statements have text like "支出" that conflicts with actual balance changes
+   - ALWAYS prioritize: debit/credit columns > balance comparison > text labels
+   - Example conflict:
+     * Previous balance: 100.00
+     * Current balance: 200.00 (increased!)
+     * Text says: "支出" (expense)
+     * CORRECT: "income" (because balance increased, ignore the text)
+     * WRONG: "expense" (blindly following text)
+
+FINAL CHECKLIST - Am I a good DATA MOVER?
 ✅ Did I extract EVERY SINGLE ROW from the transaction table?
-✅ Does each transaction have its OWN unique date from the statement?
-✅ Does each transaction have its OWN unique amount from the statement?
-✅ Did I NOT combine or merge any rows?
-✅ Did I NOT use Account Summary data?
-✅ **Did I EXTRACT all balance values directly from the image (NOT calculated)?**
-✅ **Did I NEVER use formulas to calculate balance?**
+✅ Does each transaction have its OWN unique date (extracted, not guessed)?
+✅ Does each transaction have its OWN unique amount (extracted, not modified)?
+✅ Did I EXTRACT all balance values directly from the image (NEVER calculated)?
+✅ Did I NEVER use formulas to calculate anything?
+✅ Did I NOT combine, merge, or summarize any rows?
+✅ Did I NOT use Account Summary data (only Transaction Details)?
+✅ Is "extracted data" = "uploaded data" (exactly the same)?
+✅ Did I determine transactionSign correctly (Priority 1: columns, Priority 2: balance comparison)?
 ✅ Are all amounts pure numbers without symbols?
 ✅ Are all dates in YYYY-MM-DD format?
-✅ **Did I verify transactionSign by comparing balances (not by text labels)?**
 ✅ Is the JSON valid and complete?
+
+Remember: I am a DATA MOVER. My job is to move data from PDF to JSON accurately, not to calculate, verify, or audit.
 
 Return ONLY JSON, no additional text or explanations.`;
         } else {
