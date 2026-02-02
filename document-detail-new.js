@@ -1344,15 +1344,15 @@ function displayBankStatementContent(data) {
         return;
     }
     
-    // 🔍 DEBUG - 详细诊断交易记录提取
-    console.log('🔍 DEBUG - 完整数据结构:', data);
-    console.log('🔍 DEBUG - processedData:', currentDocument?.processedData);
-    console.log('🔍 DEBUG - 所有可能的transactions字段:');
-    console.log('   data.transactions:', data.transactions);
-    console.log('   data.transaction:', data.transaction);
-    console.log('   data.items:', data.items);
-    console.log('   currentDocument.transactions:', currentDocument?.transactions);
-    console.log('🔍 DEBUG - currentDocument完整内容:', currentDocument);
+    // 🔍 DEBUG - 详细诊断交易记录提取（已禁用）
+    // console.log('🔍 DEBUG - 完整数据结构:', data);
+    // console.log('🔍 DEBUG - processedData:', currentDocument?.processedData);
+    // console.log('🔍 DEBUG - 所有可能的transactions字段:');
+    // console.log('   data.transactions:', data.transactions);
+    // console.log('   data.transaction:', data.transaction);
+    // console.log('   data.items:', data.items);
+    // console.log('   currentDocument.transactions:', currentDocument?.transactions);
+    // console.log('🔍 DEBUG - currentDocument完整内容:', currentDocument);
     
     // ✅ 提取帳戶信息（支持多種字段名稱 + 增強 Fallback）
     const bankName = data.bankName || 
