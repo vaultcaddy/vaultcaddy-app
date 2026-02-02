@@ -46,11 +46,9 @@ class QwenVLMaxProcessor {
      */
     async processDocument(file, documentType = 'invoice') {
         const startTime = Date.now();
-        console.log(`\n🚀 [Qwen-VL Max] 开始处理: ${file.name} (${documentType})`);
         
         try {
             // ========== 一步完成：Qwen-VL Max 端到端处理 ==========
-            console.log('🧠 Qwen-VL Max 端到端处理（OCR + 分析）...');
             
             // 1. 将文件转换为 Base64
             const base64Data = await this.fileToBase64(file);
@@ -122,10 +120,6 @@ class QwenVLMaxProcessor {
                 this.stats.totalCost += this.calculateCost(data.usage.total_tokens);
             }
             
-            console.log(`✅ 处理完成 (${processingTime}ms)`);
-            console.log(`📊 累计处理: ${this.stats.documentsProcessed} 个文档`);
-            console.log(`💰 累计成本: $${this.stats.totalCost.toFixed(4)}`);
-            
             return {
                 success: true,
                 documentType: documentType,
@@ -151,11 +145,9 @@ class QwenVLMaxProcessor {
      */
     async processMultiPageDocument(files, documentType = 'invoice') {
         const startTime = Date.now();
-        console.log(`\n🚀 [Qwen-VL Max] 批量处理多页文档 (${files.length} 页，单次API调用)`);
         
         try {
             // 1. 将所有文件转换为 Base64
-            console.log('📸 转换所有页面为 Base64...');
             const imageContents = [];
             for (let i = 0; i < files.length; i++) {
                 const base64Data = await this.fileToBase64(files[i]);
@@ -166,7 +158,6 @@ class QwenVLMaxProcessor {
                         url: `data:${mimeType};base64,${base64Data}`
                     }
                 });
-                console.log(`   ✅ 页面 ${i + 1}/${files.length} 已转换`);
             }
             
             // 2. 生成提示词
@@ -190,8 +181,6 @@ class QwenVLMaxProcessor {
                 temperature: 0.1,
                 max_tokens: 8000  // 多页需要更多 tokens
             };
-            
-            console.log(`🧠 调用 Qwen-VL Max API（${files.length} 页，单次调用）...`);
             
             // 4. 调用 Qwen-VL API
             const response = await fetch(this.qwenWorkerUrl, {
@@ -232,11 +221,6 @@ class QwenVLMaxProcessor {
                 this.stats.totalCost += this.calculateCost(data.usage.total_tokens);
             }
             
-            console.log(`✅ 批量处理完成 (${totalTime}ms, ${files.length} 页)`);
-            console.log(`📊 平均: ${(totalTime / files.length).toFixed(0)}ms/页`);
-            console.log(`💰 成本: $${(this.calculateCost(data.usage?.total_tokens || 0)).toFixed(4)}`);
-            console.log(`🎉 节省: 相比逐页处理节省 ${((1 - 1/files.length) * 100).toFixed(0)}% 的API调用`);
-            
             return {
                 success: true,
                 documentType: documentType,
@@ -263,25 +247,49 @@ class QwenVLMaxProcessor {
             return `STRICT MODE: You are a OCR COPY MACHINE. ONLY copy visible text. ZERO calculation. ZERO inference.
 
 📍 TARGET TABLE IDENTIFICATION (CRITICAL):
-- FIND table with header containing BOTH: "戶口進支" AND "餘額"
-- IGNORE any section with "戶口摘要" / "Account Summary" / "總計" / "TOTAL"
-- FIRST row of target table MUST be "承上結餘" (Brought Forward) → this row's "餘額" = openingBalance
-- LAST row's "餘額" = closingBalance
+🎯 STEP 1: FIND THE CORRECT TABLE
+- Look for table with header: "戶口進支" / "TRANSACTION HISTORY" / "Transaction Details"
+- Table MUST have columns: Date + Description + Deposit/Credit + Withdrawal/Debit + Balance
+- ⚠️ ABSOLUTELY IGNORE:
+  • "戶口摘要" / "ACCOUNT SUMMARY" (summary tables at top of page)
+  • "總計" / "TOTAL" / "Sub-total" rows
+  • Any table WITHOUT a "Date" column
+
+🎯 STEP 2: VERIFY TABLE BY DATE COLUMN
+- First transaction date should be near statement start date
+- Dates should be in chronological order
+- If dates are missing or out of order → WRONG TABLE, find another
+
+🎯 STEP 3: IDENTIFY FIRST & LAST ROW
+- FIRST row = "承上結餘" / "BF BALANCE" / "B/F" / "Brought Forward" → openingBalance
+- LAST row = "結轉結餘" / "C/F BALANCE" / "C/F" / "Carried Forward" → closingBalance
 
 ✂️ FIELD EXTRACTION RULES (NON-NEGOTIABLE):
-| JSON Field      | Source Column | Action                                  | Forbidden               |
-|-----------------|---------------|-----------------------------------------|-------------------------|
-| balance         | 餘額          | COPY EXACT NUMBER (remove commas)       | CALCULATION, COMPARISON |
-| debit           | 借項          | COPY number or 0                        | —                       |
-| credit          | 貸項          | COPY number or 0                        | —                       |
-| amount          | (REMOVE)      | ⚠️ FIELD DELETED - DO NOT OUTPUT        | —                       |
-| transactionSign | (REMOVE)      | ⚠️ FIELD DELETED - DO NOT OUTPUT        | —                       |
+⚠️ ROW ALIGNMENT IS CRITICAL: All fields MUST come from the SAME ROW!
+
+| JSON Field      | Source Column                          | Action                                  |
+|-----------------|----------------------------------------|-----------------------------------------|
+| date            | Date / 日期                            | SAME ROW - use as anchor                |
+| description     | Transaction Details / Description      | SAME ROW as date                        |
+| debit           | Withdrawal / Debit / 借項              | SAME ROW, if blank → 0                  |
+| credit          | Deposit / Credit / 貸項                | SAME ROW, if blank → 0                  |
+| balance         | Balance / 餘額                         | SAME ROW, COPY EXACT NUMBER             |
+
+📏 ROW EXTRACTION PROCESS:
+1. Find a date (e.g., "22 Feb")
+2. Move horizontally RIGHT on the SAME LINE to find:
+   - Description (next column)
+   - Deposit amount (if any)
+   - Withdrawal amount (if any)
+   - Balance (rightmost column)
+3. Record ALL values from this SINGLE ROW as ONE transaction
+4. Move DOWN to next date row, repeat
 
 ❗ ABSOLUTE COMMANDS:
-- IF "餘額" column value = "30,718.39" → output balance: 30718.39 (NO EXCEPTIONS)
+- NEVER mix data from different rows
 - IF number unclear → output null (NEVER guess/calculate)
 - REMOVE all commas from numbers before outputting
-- Date format: Convert to YYYY-MM-DD ONLY if unambiguous; else output original string
+- Date format: Convert to YYYY-MM-DD ONLY if unambiguous; else output original
 - Output ONLY valid JSON. NO explanations. NO markdown. NO comments.
 
 📤 OUTPUT STRUCTURE (REDUCED):
@@ -349,25 +357,52 @@ class QwenVLMaxProcessor {
             return `STRICT MODE: You are a OCR COPY MACHINE processing ${pageCount} images (multiple pages of same statement). ONLY copy visible text. ZERO calculation. ZERO inference.
 
 📍 TARGET TABLE IDENTIFICATION (CRITICAL):
-- FIND table with header containing BOTH: "戶口進支" AND "餘額" across ALL ${pageCount} pages
-- IGNORE any section with "戶口摘要" / "Account Summary" / "總計" / "TOTAL"
-- FIRST row of target table MUST be "承上結餘" (Brought Forward) → this row's "餘額" = openingBalance
-- LAST row's "餘額" (on last page) = closingBalance
+🎯 STEP 1: FIND THE CORRECT TABLE
+- Look for table with header: "戶口進支" / "TRANSACTION HISTORY" / "Transaction Details" / "Integrated Account Statement"
+- Table MUST have columns: Date + Description + Deposit/Credit + Withdrawal/Debit + Balance
+- ⚠️ ABSOLUTELY IGNORE:
+  • "戶口摘要" / "ACCOUNT SUMMARY" (summary tables at top of page)
+  • "總計" / "TOTAL" / "Sub-total" rows
+  • Any table WITHOUT a "Date" column
+
+🎯 STEP 2: VERIFY TABLE BY DATE COLUMN
+- First transaction date should be near statement start date
+- Dates should be in chronological order (e.g., 22 Feb, 28 Feb, 7 Mar...)
+- If dates are missing or out of order → WRONG TABLE, find another
+
+🎯 STEP 3: IDENTIFY FIRST & LAST ROW
+- FIRST row = "承上結餘" / "BF BALANCE" / "B/F" / "Brought Forward" → openingBalance
+- LAST row = "結轉結餘" / "C/F BALANCE" / "C/F" / "Carried Forward" → closingBalance
 
 ✂️ FIELD EXTRACTION RULES (NON-NEGOTIABLE):
-| JSON Field      | Source Column | Action                                  | Forbidden               |
-|-----------------|---------------|-----------------------------------------|-------------------------|
-| balance         | 餘額          | COPY EXACT NUMBER (remove commas)       | CALCULATION, COMPARISON |
-| debit           | 借項          | COPY number or 0                        | —                       |
-| credit          | 貸項          | COPY number or 0                        | —                       |
-| amount          | (REMOVE)      | ⚠️ FIELD DELETED - DO NOT OUTPUT        | —                       |
-| transactionSign | (REMOVE)      | ⚠️ FIELD DELETED - DO NOT OUTPUT        | —                       |
+⚠️ ROW ALIGNMENT IS CRITICAL: All fields MUST come from the SAME ROW!
+
+| JSON Field      | Source Column                          | Action                                  |
+|-----------------|----------------------------------------|-----------------------------------------|
+| date            | Date / 日期                            | SAME ROW - use as anchor                |
+| description     | Transaction Details / Description      | SAME ROW as date                        |
+| debit           | Withdrawal / Debit / 借項              | SAME ROW, if blank → 0                  |
+| credit          | Deposit / Credit / 貸項                | SAME ROW, if blank → 0                  |
+| balance         | Balance / 餘額                         | SAME ROW, COPY EXACT NUMBER             |
+
+📏 ROW EXTRACTION PROCESS (Follow strictly):
+1. Find a date (e.g., "22 Feb")
+2. Move horizontally RIGHT on the SAME LINE to find:
+   - Description (next column)
+   - Deposit amount (if any)
+   - Withdrawal amount (if any)
+   - Balance (rightmost column)
+3. Record ALL values from this SINGLE ROW as ONE transaction
+4. Move DOWN to next date row, repeat
+
+❌ WRONG: Reading date from Row 1, but balance from Row 5
+✅ CORRECT: Reading ALL fields from Row 1 only
 
 ❗ ABSOLUTE COMMANDS:
-- IF "餘額" column value = "30,718.39" → output balance: 30718.39 (NO EXCEPTIONS)
+- NEVER mix data from different rows
 - IF number unclear → output null (NEVER guess/calculate)
 - REMOVE all commas from numbers before outputting
-- Date format: Convert to YYYY-MM-DD ONLY if unambiguous; else output original string
+- Date format: Convert to YYYY-MM-DD ONLY if unambiguous; else output original
 - Combine ALL transactions from ALL ${pageCount} pages in chronological order
 - Output ONLY valid JSON. NO explanations. NO markdown. NO comments.
 
