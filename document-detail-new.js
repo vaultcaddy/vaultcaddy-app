@@ -1661,18 +1661,15 @@ function displayBankStatementContent(data) {
             amountStr = String(creditValue);
             isIncome = true;
             tx.transactionSign = 'income';
-            console.log(`🔢 从 credit 判断为收入: credit=${creditValue}`);
         } else if (debitValue > 0) {
             // 有 debit = 支出
             amountStr = String(debitValue);
             isIncome = false;
             tx.transactionSign = 'expense';
-            console.log(`🔢 从 debit 判断为支出: debit=${debitValue}`);
         } else {
             // 都为 0（例如承上结余）
             amountStr = '0';
             tx.transactionSign = tx.transactionSign || 'income';
-            console.log(`⚠️ debit 和 credit 都为 0`);
         }
         
         // ✅ isIncome 已在上面定义，这里只需要根据 transactionSign 更新
@@ -1689,8 +1686,6 @@ function displayBankStatementContent(data) {
         
         const displayAmount = formatAmount(amountStr);
         const displayBalance = formatAmount(balanceStr);
-        
-        console.log(`💰 渲染交易 ${actualIndex}: sign=${amountSign}, amount=${displayAmount}, balance=${displayBalance}, debit=${tx.debit || 0}, credit=${tx.credit || 0}`);
         
         // ✅ 優化描述顯示（保留完整名稱）
         const description = tx.description || tx.details || tx.memo || '—';
