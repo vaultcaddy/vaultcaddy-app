@@ -3538,6 +3538,32 @@
             }
         });
         
+        // ✅ 拦截所有导航链接点击（防止用户在处理文件时点击链接离开）
+        document.addEventListener('DOMContentLoaded', () => {
+            // 拦截所有 <a> 标签的点击事件
+            document.addEventListener('click', (e) => {
+                // 检查是否点击了链接
+                const link = e.target.closest('a[href]');
+                if (!link) return;
+                
+                // 如果有文件正在处理，阻止导航
+                if (isProcessingFiles && processingCount > 0) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // 显示警告
+                    const userConfirmed = confirm('文件轉換進行中，請勿離開本頁。\n\n如果強制離開，當前正在處理的文件可能會失敗。\n\n確定要離開嗎？');
+                    
+                    // 如果用户确认要离开，则允许导航
+                    if (userConfirmed) {
+                        isProcessingFiles = false;
+                        processingCount = 0;
+                        window.location.href = link.href;
+                    }
+                }
+            });
+        });
+        
         window.handleUpload = async function handleUpload(files) {
             logger.log('📤 準備上傳', files.length, '個文件');
             
