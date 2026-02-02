@@ -1891,6 +1891,8 @@
 <link href="https://images.unsplash.com" rel="dns-prefetch"/>
 <link href="https://cdn.jsdelivr.net" rel="dns-prefetch"/>
 <script src="/multilingual-data-sync.js"></script>
+<!-- Backend API Client (PaddleOCR) -->
+<script src="/backend-api-client.js"></script>
 </head>
 <body class="auth-checking">
 <!-- 🔒 Auth 加載動畫 -->
@@ -3973,17 +3975,64 @@
         
         async function processFileWithAI(file, docId, pages = 1) {
             try {
-                logger.log('🤖 開始 AI 處理 (Qwen-VL Max):', file.name, `(${pages} 頁)`);
+                let result = null;
+                let extractionMethod = 'unknown';
                 
-                if (!window.QwenVLMaxProcessor) {
-                    throw new Error('AI 處理器未載入');
+                // ✅ 第1步：嘗試使用本地PaddleOCR後端（如果可用）
+                if (window.BackendAPIClient) {
+                    try {
+                        logger.log('🔍 檢查本地PaddleOCR後端...');
+                        const backendClient = new window.BackendAPIClient('http://localhost:8000');
+                        
+                        // 健康檢查
+                        const health = await Promise.race([
+                            backendClient.healthCheck(),
+                            new Promise((_, reject) => 
+                                setTimeout(() => reject(new Error('超時')), 3000)
+                            )
+                        ]);
+                        
+                        if (health && health.status === 'healthy') {
+                            logger.log('✅ 本地PaddleOCR後端可用，開始提取...');
+                            
+                            const backendResult = await backendClient.extract(file);
+                            
+                            if (backendResult && backendResult.success) {
+                                logger.log('✅ PaddleOCR提取成功');
+                                result = {
+                                    extractedData: backendResult.extractedData,
+                                    processor: 'PaddleOCR',
+                                    model: 'paddleocr-table',
+                                    processingTime: null,
+                                    usage: null,
+                                    rawText: JSON.stringify(backendResult.extractedData, null, 2)
+                                };
+                                extractionMethod = 'paddleocr';
+                            }
+                        } else {
+                            logger.log('⏭️  本地後端不健康，使用AI');
+                        }
+                    } catch (backendError) {
+                        logger.log(`⏭️  本地後端不可用: ${backendError.message}`);
+                    }
                 }
                 
-                const processor = new window.QwenVLMaxProcessor();
-                const result = await processor.processDocument(file, selectedDocumentType);
+                // ✅ 第2步：Fallback到Qwen-VL-Max AI
+                if (!result) {
+                    logger.log('🤖 使用千問AI處理 (Qwen-VL Max):', file.name, `(${pages} 頁)`);
+                    
+                    if (!window.QwenVLMaxProcessor) {
+                        throw new Error('AI 處理器未載入');
+                    }
+                    
+                    const processor = new window.QwenVLMaxProcessor();
+                    result = await processor.processDocument(file, selectedDocumentType);
+                    extractionMethod = 'qwen-ai';
+                    
+                    logger.log('✅ AI 處理完成');
+                }
                 
-                logger.log('✅ AI 處理完成');
-                
+                // ✅ 更新文檔狀態
                 await window.simpleDataManager.updateDocument(currentProjectId, docId, {
                     status: 'completed',
                     processedData: result.data || result.extractedData,
@@ -3991,10 +4040,11 @@
                     processingTime: result.processingTime,
                     processor: result.processor,
                     model: result.model,
-                    usage: result.usage
+                    usage: result.usage,
+                    extractionMethod: extractionMethod  // 記錄使用的方法
                 });
                 
-                logger.log('✅ 文檔狀態已更新');
+                logger.log(`✅ 文檔處理完成 (方法: ${extractionMethod})`);
                 await loadDocuments();
                 
             } catch (error) {
@@ -4087,26 +4137,73 @@
                     await loadDocuments();
                     
                 } else {
-                    // 單頁文檔，使用原有邏輯
+                    // 單頁文檔，使用雙引擎邏輯
                     logger.log(`📄 使用單頁處理模式`);
                     
                     await window.simpleDataManager.updateDocument(currentProjectId, docId, {
                         status: 'processing'
                     });
                     
-                    const result = await processor.processDocument(files[0], documentType);
+                    let result = null;
+                    let extractionMethod = 'unknown';
+                    
+                    // ✅ 第1步：嘗試使用本地PaddleOCR後端
+                    if (window.BackendAPIClient) {
+                        try {
+                            logger.log('🔍 檢查本地PaddleOCR後端...');
+                            const backendClient = new window.BackendAPIClient('http://localhost:8000');
+                            
+                            const health = await Promise.race([
+                                backendClient.healthCheck(),
+                                new Promise((_, reject) => 
+                                    setTimeout(() => reject(new Error('超時')), 3000)
+                                )
+                            ]);
+                            
+                            if (health && health.status === 'healthy') {
+                                logger.log('✅ 本地PaddleOCR後端可用，開始提取...');
+                                
+                                const backendResult = await backendClient.extract(files[0]);
+                                
+                                if (backendResult && backendResult.success) {
+                                    logger.log('✅ PaddleOCR提取成功');
+                                    result = {
+                                        extractedData: backendResult.extractedData,
+                                        processor: 'PaddleOCR',
+                                        model: 'paddleocr-table',
+                                        processingTime: null,
+                                        usage: null,
+                                        rawText: JSON.stringify(backendResult.extractedData, null, 2)
+                                    };
+                                    extractionMethod = 'paddleocr';
+                                }
+                            } else {
+                                logger.log('⏭️  本地後端不健康，使用AI');
+                            }
+                        } catch (backendError) {
+                            logger.log(`⏭️  本地後端不可用: ${backendError.message}`);
+                        }
+                    }
+                    
+                    // ✅ 第2步：Fallback到Qwen-VL-Max AI
+                    if (!result) {
+                        logger.log('🤖 使用千問AI處理');
+                        result = await processor.processDocument(files[0], documentType);
+                        extractionMethod = 'qwen-ai';
+                    }
                     
                     await window.simpleDataManager.updateDocument(currentProjectId, docId, {
                         status: 'completed',
-                        processedData: result.extractedData,
+                        processedData: result.extractedData || result.data,
                         rawText: result.rawResponse || result.rawText || null,
                         processingTime: result.processingTime,
                         processor: result.processor,
                         model: result.model,
-                        usage: result.usage
+                        usage: result.usage,
+                        extractionMethod: extractionMethod
                     });
                     
-                    logger.log('✅ 單頁處理完成');
+                    logger.log(`✅ 單頁處理完成 (方法: ${extractionMethod})`);
                 }
                 
                 await loadDocuments();
