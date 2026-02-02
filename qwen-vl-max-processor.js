@@ -252,39 +252,50 @@ class QwenVLMaxProcessor {
 - LAST row's "餘額" = closingBalance
 
 ✂️ FIELD EXTRACTION RULES (NON-NEGOTIABLE):
-| JSON Field      | Source Column | Action                                  | Forbidden               |
-|-----------------|---------------|-----------------------------------------|-------------------------|
-| balance         | 餘額          | COPY EXACT NUMBER (remove commas)       | CALCULATION, COMPARISON |
-| debit           | 借項          | COPY number or 0                        | —                       |
-| credit          | 貸項          | COPY number or 0                        | —                       |
-| amount          | (REMOVE)      | ⚠️ FIELD DELETED - DO NOT OUTPUT        | —                       |
-| transactionSign | (REMOVE)      | ⚠️ FIELD DELETED - DO NOT OUTPUT        | —                       |
+For EACH ROW in the identified table:
+• "date": copy RAW text from Date column. If empty / blank / whitespace-only → output "" (empty string). NEVER fill or infer.
+• "description": copy ALL visible text from description column
+• "credit": copy number from Credit/貸項 column. If empty → 0. Remove commas. Keep decimals.
+• "debit": copy number from Debit/借項 column. If empty → 0. Remove commas. Keep decimals.
+• "balance": copy number from Balance/餘額 column. Remove commas. If value is "—", "N/A", blank, or " " → output null.
 
 ❗ ABSOLUTE COMMANDS:
-- IF "餘額" column value = "30,718.39" → output balance: 30718.39 (NO EXCEPTIONS)
-- IF number unclear → output null (NEVER guess/calulate)
+- IF number unclear → output null (NEVER guess/calculate)
 - REMOVE all commas from numbers before outputting
-- Date format: Convert to YYYY-MM-DD ONLY if unambiguous; else output original string
+- Date format: keep original string (e.g., "10 Mar", "2025-02-22")
 - statementPeriod: MUST be "first transaction date to last transaction date" (e.g., "22 Feb to 22 Mar")
 - Output ONLY valid JSON. NO explanations. NO markdown. NO comments.
 
-📤 OUTPUT STRUCTURE (REDUCED):
+📤 OUTPUT STRUCTURE (exact keys, no variation):
 {
   "bankName": "...",
   "accountNumber": "...",
   "accountHolder": "...",
   "currency": "...",
   "statementPeriod": "...",
-  "openingBalance": 30718.39,  // FROM FIRST ROW'S "餘額"
-  "closingBalance": ...,        // FROM LAST ROW'S "餘額"
+  "openingBalance": 30718.39,
+  "closingBalance": 30018.39,
   "transactions": [
     {
-      "date": "YYYY-MM-DD",
-      "description": "...",
-      "debit": 0,
-      "credit": 1500.00,
-      "balance": 32218.39  // COPIED DIRECTLY FROM "餘額" COLUMN OF THIS ROW
-      // ⚠️ "amount" and "transactionSign" REMOVED TO PREVENT CALCULATION TRIGGERS
+      "date": "10 Mar",
+      "description": "ATM WITHDRAWAL",
+      "credit": 0,
+      "debit": 500.00,
+      "balance": null
+    },
+    {
+      "date": "",  // ← INTENTIONALLY EMPTY (same-day transaction) — backend will fill
+      "description": "ONLINE TRANSFER",
+      "credit": 0,
+      "debit": 200.00,
+      "balance": null
+    },
+    {
+      "date": "",
+      "description": "POS PURCHASE",
+      "credit": 0,
+      "debit": 150.00,
+      "balance": 30018.39
     }
   ]
 }`;
@@ -337,40 +348,51 @@ class QwenVLMaxProcessor {
 - LAST row's "餘額" = closingBalance
 
 ✂️ FIELD EXTRACTION RULES (NON-NEGOTIABLE):
-| JSON Field      | Source Column | Action                                  | Forbidden               |
-|-----------------|---------------|-----------------------------------------|-------------------------|
-| balance         | 餘額          | COPY EXACT NUMBER (remove commas)       | CALCULATION, COMPARISON |
-| debit           | 借項          | COPY number or 0                        | —                       |
-| credit          | 貸項          | COPY number or 0                        | —                       |
-| amount          | (REMOVE)      | ⚠️ FIELD DELETED - DO NOT OUTPUT        | —                       |
-| transactionSign | (REMOVE)      | ⚠️ FIELD DELETED - DO NOT OUTPUT        | —                       |
+For EACH ROW across ALL ${pageCount} pages:
+• "date": copy RAW text from Date column. If empty / blank / whitespace-only → output "" (empty string). NEVER fill or infer.
+• "description": copy ALL visible text from description column
+• "credit": copy number from Credit/貸項 column. If empty → 0. Remove commas. Keep decimals.
+• "debit": copy number from Debit/借項 column. If empty → 0. Remove commas. Keep decimals.
+• "balance": copy number from Balance/餘額 column. Remove commas. If value is "—", "N/A", blank, or " " → output null.
 
 ❗ ABSOLUTE COMMANDS:
-- IF "餘額" column value = "30,718.39" → output balance: 30718.39 (NO EXCEPTIONS)
-- IF number unclear → output null (NEVER guess/calulate)
+- IF number unclear → output null (NEVER guess/calculate)
 - REMOVE all commas from numbers before outputting
-- Date format: Convert to YYYY-MM-DD ONLY if unambiguous; else output original string
+- Date format: keep original string (e.g., "10 Mar", "2025-02-22")
 - statementPeriod: MUST be "first transaction date to last transaction date" (e.g., "22 Feb to 22 Mar")
 - Combine ALL transactions from ALL ${pageCount} pages in chronological order
 - Output ONLY valid JSON. NO explanations. NO markdown. NO comments.
 
-📤 OUTPUT STRUCTURE (REDUCED):
+📤 OUTPUT STRUCTURE (exact keys, no variation):
 {
   "bankName": "...",
   "accountNumber": "...",
   "accountHolder": "...",
   "currency": "...",
   "statementPeriod": "...",
-  "openingBalance": 30718.39,  // FROM FIRST ROW'S "餘額"
-  "closingBalance": ...,        // FROM LAST ROW'S "餘額"
+  "openingBalance": 30718.39,
+  "closingBalance": 30018.39,
   "transactions": [
     {
-      "date": "YYYY-MM-DD",
-      "description": "...",
-      "debit": 0,
-      "credit": 1500.00,
-      "balance": 32218.39  // COPIED DIRECTLY FROM "餘額" COLUMN OF THIS ROW
-      // ⚠️ "amount" and "transactionSign" REMOVED TO PREVENT CALCULATION TRIGGERS
+      "date": "10 Mar",
+      "description": "ATM WITHDRAWAL",
+      "credit": 0,
+      "debit": 500.00,
+      "balance": null
+    },
+    {
+      "date": "",  // ← INTENTIONALLY EMPTY (same-day transaction) — backend will fill
+      "description": "ONLINE TRANSFER",
+      "credit": 0,
+      "debit": 200.00,
+      "balance": null
+    },
+    {
+      "date": "",
+      "description": "POS PURCHASE",
+      "credit": 0,
+      "debit": 150.00,
+      "balance": 30018.39
     }
   ]
 }`;
