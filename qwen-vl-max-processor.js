@@ -112,6 +112,14 @@ class QwenVLMaxProcessor {
             // 6. 解析 JSON
             const extractedData = this.parseJSON(responseText);
             
+            // 🐛 调试：输出提取的交易数据（检查 debit/credit）
+            if (extractedData.transactions && extractedData.transactions.length > 0) {
+                console.log('🔍 [DEBUG] 提取的交易样本 (前3条):');
+                extractedData.transactions.slice(0, 3).forEach((tx, i) => {
+                    console.log(`  ${i+1}. ${tx.date} | ${tx.description} | debit:${tx.debit} | credit:${tx.credit} | balance:${tx.balance}`);
+                });
+            }
+            
             const processingTime = Date.now() - startTime;
             
             // 7. 更新统计
