@@ -260,60 +260,52 @@ class QwenVLMaxProcessor {
      */
     generatePrompt(documentType) {
         if (documentType === 'bank_statement') {
-            return `You are extracting data from a bank statement. Your job: COPY numbers from the table to JSON. DO NOT calculate anything.
+            return `STRICT MODE: You are a OCR COPY MACHINE. ONLY copy visible text. ZERO calculation. ZERO inference.
 
-Bank statements have 2 sections:
-1. Account Summary (戶口摘要) - Shows totals only, SKIP THIS
-2. Transaction Details (戶口進支/交易明細) - This is the TABLE you need
+📍 TARGET TABLE IDENTIFICATION (CRITICAL):
+- FIND table with header containing BOTH: "戶口進支" AND "餘額"
+- IGNORE any section with "戶口摘要" / "Account Summary" / "總計" / "TOTAL"
+- FIRST row of target table MUST be "承上結餘" (Brought Forward) → this row's "餘額" = openingBalance
+- LAST row's "餘額" = closingBalance
 
-📋 What to extract:
+✂️ FIELD EXTRACTION RULES (NON-NEGOTIABLE):
+┌─────────────────┬───────────────┬─────────────────────────────────────────┬─────────────────────────┐
+│ JSON Field      │ Source Column │ Action                                  │ Forbidden               │
+├─────────────────┼───────────────┼─────────────────────────────────────────┼─────────────────────────┤
+│ balance         │ 餘額          │ COPY EXACT NUMBER (remove commas)       │ CALCULATION, COMPARISON │
+│ debit           │ 借項          │ COPY number or 0                        │ —                       │
+│ credit          │ 貸項          │ COPY number or 0                        │ —                       │
+│ date            │ 日期          │ Convert to YYYY-MM-DD if clear          │ —                       │
+│ description     │ 摘要          │ COPY original text                      │ —                       │
+└─────────────────┴───────────────┴─────────────────────────────────────────┴─────────────────────────┘
 
+❗ ABSOLUTE COMMANDS:
+- IF "餘額" column value = "30,718.39" → output balance: 30718.39 (NO EXCEPTIONS)
+- IF number unclear → output null (NEVER guess/calculate)
+- REMOVE all commas from numbers before outputting
+- Output ONLY valid JSON. NO explanations. NO markdown. NO comments.
+
+📤 OUTPUT STRUCTURE:
 {
-  "bankName": "Bank name",
-  "accountNumber": "Account number", 
-  "accountHolder": "Account holder name",
-  "currency": "HKD/USD/JPY/KRW",
-  "statementPeriod": "YYYY-MM-DD to YYYY-MM-DD",
+  "bankName": "...",
+  "accountNumber": "...",
+  "accountHolder": "...",
+  "currency": "...",
+  "statementPeriod": "...",
   "openingBalance": number,
   "closingBalance": number,
   "transactions": [
     {
       "date": "YYYY-MM-DD",
-      "description": "Keep original text",
+      "description": "...",
       "debit": number or 0,
       "credit": number or 0,
-      "amount": number,
-      "balance": number,
-      "transactionSign": "income or expense"
+      "balance": number
     }
   ]
 }
 
-🎯 HOW to extract transactions:
-
-Step 1: Find the Transaction Details TABLE (戶口進支/交易明細)
-Step 2: Each ROW in the table = ONE transaction
-Step 3: For each row, COPY these columns:
-   - Date column → "date" (format: YYYY-MM-DD)
-   - Description column → "description" 
-   - Debit/Withdrawal column → "debit" (0 if empty)
-   - Credit/Deposit column → "credit" (0 if empty)
-   - Amount column → "amount"
-   - Balance column → "balance" (COPY this number, DO NOT calculate!)
-
-Step 4: Determine "transactionSign":
-   - Compare current row balance with previous row balance
-   - If balance INCREASED → "income"
-   - If balance DECREASED → "expense"
-
-⚠️ CRITICAL:
-- Extract EVERY row from the transaction table (including "承上結餘/Brought Forward")
-- DO NOT skip any rows
-- DO NOT combine rows
-- Balance: COPY the number from Balance column, DO NOT calculate
-- If you cannot see a number, set to null
-
-Return ONLY JSON, no explanations.`;
+⚠️ CRITICAL: Extract EVERY row from "戶口進支" table (including "承上結餘"). DO NOT skip. DO NOT combine.`;
         } else {
             // 發票
             return `你是一個專業的發票數據提取專家。請從圖片中提取所有發票資料，並以 JSON 格式返回。
@@ -354,61 +346,53 @@ Return ONLY JSON, no explanations.`;
      */
     generateMultiPagePrompt(documentType, pageCount) {
         if (documentType === 'bank_statement') {
-            return `You are extracting data from ${pageCount} images (multiple pages of the same bank statement). Your job: COPY numbers from the table to JSON. DO NOT calculate anything.
+            return `STRICT MODE: You are a OCR COPY MACHINE processing ${pageCount} images (multiple pages of same statement). ONLY copy visible text. ZERO calculation. ZERO inference.
 
-Bank statements have 2 sections:
-1. Account Summary (戶口摘要) - Shows totals only, SKIP THIS
-2. Transaction Details (戶口進支/交易明細) - This is the TABLE you need
+📍 TARGET TABLE IDENTIFICATION (CRITICAL):
+- FIND table with header containing BOTH: "戶口進支" AND "餘額" across ALL ${pageCount} pages
+- IGNORE any section with "戶口摘要" / "Account Summary" / "總計" / "TOTAL"
+- FIRST row of target table MUST be "承上結餘" (Brought Forward) → this row's "餘額" = openingBalance
+- LAST row's "餘額" (on last page) = closingBalance
 
-📋 What to extract:
+✂️ FIELD EXTRACTION RULES (NON-NEGOTIABLE):
+┌─────────────────┬───────────────┬─────────────────────────────────────────┬─────────────────────────┐
+│ JSON Field      │ Source Column │ Action                                  │ Forbidden               │
+├─────────────────┼───────────────┼─────────────────────────────────────────┼─────────────────────────┤
+│ balance         │ 餘額          │ COPY EXACT NUMBER (remove commas)       │ CALCULATION, COMPARISON │
+│ debit           │ 借項          │ COPY number or 0                        │ —                       │
+│ credit          │ 貸項          │ COPY number or 0                        │ —                       │
+│ date            │ 日期          │ Convert to YYYY-MM-DD if clear          │ —                       │
+│ description     │ 摘要          │ COPY original text                      │ —                       │
+└─────────────────┴───────────────┴─────────────────────────────────────────┴─────────────────────────┘
 
+❗ ABSOLUTE COMMANDS:
+- IF "餘額" column value = "30,718.39" → output balance: 30718.39 (NO EXCEPTIONS)
+- IF number unclear → output null (NEVER guess/calculate)
+- REMOVE all commas from numbers before outputting
+- Combine ALL transactions from ALL ${pageCount} pages in chronological order
+- Output ONLY valid JSON. NO explanations. NO markdown. NO comments.
+
+📤 OUTPUT STRUCTURE:
 {
-  "bankName": "Bank name",
-  "accountNumber": "Account number", 
-  "accountHolder": "Account holder name",
-  "currency": "HKD/USD/JPY/KRW",
-  "statementPeriod": "YYYY-MM-DD to YYYY-MM-DD",
+  "bankName": "...",
+  "accountNumber": "...",
+  "accountHolder": "...",
+  "currency": "...",
+  "statementPeriod": "...",
   "openingBalance": number,
   "closingBalance": number,
   "transactions": [
     {
       "date": "YYYY-MM-DD",
-      "description": "Keep original text",
+      "description": "...",
       "debit": number or 0,
       "credit": number or 0,
-      "amount": number,
-      "balance": number,
-      "transactionSign": "income or expense"
+      "balance": number
     }
   ]
 }
 
-🎯 HOW to extract transactions:
-
-Step 1: Find the Transaction Details TABLE (戶口進支/交易明細) across ALL ${pageCount} pages
-Step 2: Each ROW in the table = ONE transaction
-Step 3: For each row, COPY these columns:
-   - Date column → "date" (format: YYYY-MM-DD)
-   - Description column → "description" 
-   - Debit/Withdrawal column → "debit" (0 if empty)
-   - Credit/Deposit column → "credit" (0 if empty)
-   - Amount column → "amount"
-   - Balance column → "balance" (COPY this number, DO NOT calculate!)
-
-Step 4: Determine "transactionSign":
-   - Compare current row balance with previous row balance
-   - If balance INCREASED → "income"
-   - If balance DECREASED → "expense"
-
-⚠️ CRITICAL:
-- Combine ALL transactions from ALL ${pageCount} pages
-- Extract EVERY row from the transaction table (including "承上結餘/Brought Forward")
-- DO NOT skip any rows
-- DO NOT combine rows
-- Balance: COPY the number from Balance column, DO NOT calculate
-- If you cannot see a number, set to null
-
-Return ONLY JSON, no explanations.`;
+⚠️ CRITICAL: Extract EVERY row from "戶口進支" table across ALL ${pageCount} pages (including "承上結餘"). DO NOT skip. DO NOT combine.`;
         } else {
             return `你是一個專業的發票數據提取專家。我發送了 ${pageCount} 張圖片，它們是同一份發票的多個頁面。請綜合分析所有頁面，提取完整的發票資料和項目明細，並以 JSON 格式返回。
 
