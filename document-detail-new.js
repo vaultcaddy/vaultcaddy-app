@@ -1647,53 +1647,36 @@ function displayBankStatementContent(data) {
         const actualIndex = startIndex + pageIndex; // 實際在完整數組中的索引
         
         // ✅ 直接使用原始數據，不進行任何計算
-        const amountStr = String(tx.amount || '0');
+        // ⚠️ 关键修复：使用 debit/credit，而不是已删除的 amount 字段
+        const debitValue = parseFloat(tx.debit) || 0;
+        const creditValue = parseFloat(tx.credit) || 0;
         const balanceStr = String(tx.balance || '0');
         
-        // ✅ 使用AI提取的transactionSign字段（或從debit/credit判斷）
-        if (tx.transactionSign === undefined || tx.transactionSign === null) {
-            // 如果AI沒有提供transactionSign，從debit/credit欄位判斷
-            if (tx.debit && parseFloat(tx.debit) > 0) {
-                tx.transactionSign = 'expense';  // 有debit = 支出
-                console.log(`🔢 從debit欄位判斷為支出: debit=${tx.debit}`);
-            } else if (tx.credit && parseFloat(tx.credit) > 0) {
-                tx.transactionSign = 'income';  // 有credit = 收入
-                console.log(`🔢 從credit欄位判斷為收入: credit=${tx.credit}`);
-            } else {
-                // 如果都沒有，根據balance變化判斷（fallback）
-                const amountNum = parseFloat(amountStr.replace(/[^0-9.-]+/g, ''));
-                tx.transactionSign = amountNum >= 0 ? 'income' : 'expense';
-                console.log(`⚠️ Fallback：根據amount正負號判斷: amount=${amountNum}, sign=${tx.transactionSign}`);
-            }
+        // ✅ 根据 debit/credit 判断收入/支出
+        let amountStr = '0';
+        let isIncome = false;
+        
+        if (creditValue > 0) {
+            // 有 credit = 收入
+            amountStr = String(creditValue);
+            isIncome = true;
+            tx.transactionSign = 'income';
+            console.log(`🔢 从 credit 判断为收入: credit=${creditValue}`);
+        } else if (debitValue > 0) {
+            // 有 debit = 支出
+            amountStr = String(debitValue);
+            isIncome = false;
+            tx.transactionSign = 'expense';
+            console.log(`🔢 从 debit 判断为支出: debit=${debitValue}`);
+        } else {
+            // 都为 0（例如承上结余）
+            amountStr = '0';
+            tx.transactionSign = tx.transactionSign || 'income';
+            console.log(`⚠️ debit 和 credit 都为 0`);
         }
         
-        // 🔴 關鍵驗證：使用余額變化來判斷收入/支出（銀行不會出錯，我們的判斷才會錯）
-        // ✅ 只根據余額數值變化來判斷 +/-，不修改原始數據
-        if (actualIndex > 0) {
-            const prevTx = transactions[actualIndex - 1];
-            if (prevTx && prevTx.balance !== undefined && tx.balance !== undefined) {
-                // ✅ 直接解析數值，不處理 DR 標記（保持原始數據不變）
-                const prevBalance = parseFloat(String(prevTx.balance).replace(/[^0-9.-]+/g, '')) || 0;
-                const currentBalance = parseFloat(String(tx.balance).replace(/[^0-9.-]+/g, '')) || 0;
-                const balanceDiff = currentBalance - prevBalance;
-                const amountNum = parseFloat(amountStr.replace(/[^0-9.-]+/g, ''));
-                
-                // ✅ 使用余額變化來判斷正確的 +/-
-                // 余額增加 = 收入（+），余額減少 = 支出（-）
-                const correctSign = balanceDiff > 0 ? 'income' : (balanceDiff < 0 ? 'expense' : tx.transactionSign);
-                
-                // ✅ 只修正顯示符號（+/-），不改變銀行單上的原始數據
-                if (tx.transactionSign !== correctSign && Math.abs(balanceDiff) > 0.01) {
-                    console.log(`🔧 交易 ${actualIndex} 符號修正: ${tx.transactionSign} → ${correctSign}`);
-                    console.log(`   余額變化: ${prevBalance} → ${currentBalance} (差額: ${balanceDiff > 0 ? '+' : ''}${balanceDiff.toFixed(2)})`);
-                    
-                    // ✅ 只修改 transactionSign（+/-），保持 amount 和 balance 原始數據不變
-                    tx.transactionSign = correctSign;
-                }
-            }
-        }
-        
-        const isIncome = tx.transactionSign === 'income';
+        // ✅ isIncome 已在上面定义，这里只需要根据 transactionSign 更新
+        isIncome = tx.transactionSign === 'income';
         const amountSign = isIncome ? '+' : '-';
         const amountColor = isIncome ? '#10b981' : '#ef4444';
         const amountBgColor = isIncome ? '#d1fae5' : '#fee2e2';
