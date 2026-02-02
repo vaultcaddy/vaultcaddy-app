@@ -1,0 +1,49 @@
+问题：使用 Qwen-VL-Max 提取银行对账单时，AI 读取了错误的表格
+
+【PDF 实际结构】
+第2页包含两个表格：
+1. ACCOUNT SUMMARY（账户摘要）- 顶部
+   - Balance: 30,188.66
+2. TRANSACTION HISTORY（交易历史）- 底部
+   - BF BALANCE (22 Feb): 1,493.98 ✅ 应该提取这个
+   - 存入現金 (7 Mar): 78,649.00 ✅ 应该提取这个
+
+【AI 错误提取】
+openingBalance: 30718.39 ❌ （来自 ACCOUNT SUMMARY）
+应该是: 1493.98 ✅ （来自 TRANSACTION HISTORY 首行）
+
+存入現金: 76849.00 ❌ （数字错误）
+应该是: 78649.00 ✅
+
+【当前 Prompt（部分）】
+```
+📍 TARGET TABLE IDENTIFICATION (CRITICAL):
+- FIND table with header containing BOTH: "戶口進支" AND "餘額"
+- IGNORE any section with "戶口摘要" / "Account Summary" / "總計" / "TOTAL"
+- FIRST row of target table MUST be "承上結餘" (Brought Forward) → openingBalance
+
+✂️ FIELD EXTRACTION RULES:
+| balance  | 餘額 | COPY EXACT NUMBER |
+| debit    | 借項 | COPY number or 0  |
+| credit   | 貸項 | COPY number or 0  |
+```
+
+【问题】
+1. AI 读取了 ACCOUNT SUMMARY 而非 TRANSACTION HISTORY
+2. 数字出现行对齐错误（7 Mar 的 78,649 变成 76,849）
+
+【需要的优化】
+1. 如何让 AI 准确识别 TRANSACTION HISTORY 表格？
+   - 提示：TRANSACTION HISTORY 有 Date 列（22 Feb, 28 Feb, 7 Mar...）
+   - ACCOUNT SUMMARY 没有 Date 列
+
+2. 如何确保从同一行读取所有字段？
+   - 7 Mar 这行：日期、描述、存款、余额必须都来自同一行
+
+3. 如何添加验证机制？
+   - 例如：检查 Date 列是否连续，余额是否合理等
+
+请帮我优化 Prompt，解决"看错表格"和"行对齐"问题。谢谢！
+
+完整版见：QWEN_QUESTION.md
+
