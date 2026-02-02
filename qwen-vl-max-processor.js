@@ -260,34 +260,33 @@ class QwenVLMaxProcessor {
      */
     generatePrompt(documentType) {
         if (documentType === 'bank_statement') {
-            return `你是一個專業的銀行對賬單數據提取專家。請從圖片中提取所有交易記錄和帳戶資料，並以 JSON 格式返回。
+            return `Extract bank statement data from this image and return as JSON.
 
-必須提取的字段：
+Required fields:
 {
-  "bankName": "銀行名稱",
-  "accountNumber": "帳號",
-  "accountHolder": "帳戶持有人",
-  "statementPeriod": "對賬單期間",
-  "currency": "貨幣（如 HKD, USD）",
-  "openingBalance": 期初餘額（數字）,
-  "closingBalance": 期末餘額（數字）,
+  "bankName": "Bank name",
+  "accountNumber": "Account number",
+  "accountHolder": "Account holder name",
+  "currency": "Currency code (HKD, USD, JPY, etc.)",
+  "statementPeriod": "Statement period",
+  "openingBalance": Opening balance (number),
+  "closingBalance": Closing balance (number),
   "transactions": [
     {
-      "date": "日期（YYYY-MM-DD 格式）",
-      "description": "交易描述",
-      "amount": 金額（正數為入賬，負數為出賬）,
-      "balance": 餘額（數字）
+      "date": "YYYY-MM-DD",
+      "description": "Transaction description",
+      "amount": Transaction amount (number),
+      "balance": Balance after transaction (number)
     }
   ]
 }
 
-請確保：
-1. 所有交易記錄按日期排序
-2. 所有日期格式為 YYYY-MM-DD
-3. 所有金額為數字（不包含貨幣符號）
-4. JSON 格式正確，可以直接解析
-5. 如果某字段無法提取，設為 null
-6. 提取所有交易記錄（不要遺漏）`;
+Rules:
+1. Extract ALL transactions from the transaction table
+2. Date format: YYYY-MM-DD
+3. Amounts: numbers only (no currency symbols)
+4. If a field cannot be extracted, set to null
+5. Return ONLY JSON, no explanations`;
         } else {
             // 發票
             return `你是一個專業的發票數據提取專家。請從圖片中提取所有發票資料，並以 JSON 格式返回。
@@ -328,37 +327,34 @@ class QwenVLMaxProcessor {
      */
     generateMultiPagePrompt(documentType, pageCount) {
         if (documentType === 'bank_statement') {
-            return `你是一個專業的銀行對賬單數據提取專家。我發送了 ${pageCount} 張圖片，它們是同一份銀行對賬單的多個頁面。請綜合分析所有頁面，提取完整的交易記錄和帳戶資料，並以 JSON 格式返回。
+            return `Extract bank statement data from these ${pageCount} images (multiple pages of the same statement) and return as JSON.
 
-必須提取的字段：
+Required fields:
 {
-  "bankName": "銀行名稱",
-  "accountNumber": "帳號",
-  "accountHolder": "帳戶持有人",
-  "statementPeriod": "對賬單期間",
-  "currency": "貨幣（如 HKD, USD）",
-  "openingBalance": 期初餘額（數字）,
-  "closingBalance": 期末餘額（數字）,
+  "bankName": "Bank name",
+  "accountNumber": "Account number",
+  "accountHolder": "Account holder name",
+  "currency": "Currency code (HKD, USD, JPY, etc.)",
+  "statementPeriod": "Statement period",
+  "openingBalance": Opening balance (number),
+  "closingBalance": Closing balance (number),
   "transactions": [
     {
-      "date": "日期（YYYY-MM-DD 格式）",
-      "description": "交易描述",
-      "amount": 金額（正數為入賬，負數為出賬）,
-      "balance": 餘額（數字）
+      "date": "YYYY-MM-DD",
+      "description": "Transaction description",
+      "amount": Transaction amount (number),
+      "balance": Balance after transaction (number)
     }
   ]
 }
 
-請特別注意：
-1. **綜合所有 ${pageCount} 頁的信息**，不要遺漏任何交易記錄
-2. 所有交易記錄按日期排序
-3. 所有日期格式為 YYYY-MM-DD
-4. 所有金額為數字（不包含貨幣符號）
-5. JSON 格式正確，可以直接解析
-6. 如果某字段無法提取，設為 null
-7. 確保交易記錄的連續性和完整性
-
-只返回 JSON，不要包含任何額外文字。`;
+Rules:
+1. Combine information from ALL ${pageCount} pages
+2. Extract ALL transactions from the transaction table
+3. Date format: YYYY-MM-DD
+4. Amounts: numbers only (no currency symbols)
+5. If a field cannot be extracted, set to null
+6. Return ONLY JSON, no explanations`;
         } else {
             return `你是一個專業的發票數據提取專家。我發送了 ${pageCount} 張圖片，它們是同一份發票的多個頁面。請綜合分析所有頁面，提取完整的發票資料和項目明細，並以 JSON 格式返回。
 
