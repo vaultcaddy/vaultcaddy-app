@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>检查提取数据</title>
+</head>
+<body>
+    <h1>上传银行对账单查看原始提取数据</h1>
+    <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png">
+    <pre id="output" style="background:#f0f0f0;padding:20px;margin-top:20px;"></pre>
+    
+    <script type="module">
+        import { QwenVLMaxProcessor } from './qwen-vl-max-processor.js';
+        
+        document.getElementById('fileInput').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const output = document.getElementById('output');
+            output.textContent = '处理中...';
+            
+            try {
+                const processor = new QwenVLMaxProcessor();
+                const result = await processor.processSingleFile(file, 'bank_statement');
+                
+                if (result.success) {
+                    const data = result.extractedData;
+                    output.textContent = JSON.stringify(data, null, 2);
+                    
+                    // 检查前3笔交易的debit/credit
+                    console.log('=== 前3笔交易 ===');
+                    if (data.transactions && data.transactions.length > 0) {
+                        data.transactions.slice(0, 3).forEach((txn, i) => {
+                            console.log(`交易${i+1}:`, {
+                                date: txn.date,
+                                description: txn.description,
+                                debit: txn.debit,
+                                credit: txn.credit,
+                                balance: txn.balance
+                            });
+                        });
+                    }
+                } else {
+                    output.textContent = 'Error: ' + result.error;
+                }
+            } catch (error) {
+                output.textContent = 'Error: ' + error.message;
+                console.error(error);
+            }
+        });
+    </script>
+</body>
+</html>
