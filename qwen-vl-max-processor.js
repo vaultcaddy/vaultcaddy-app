@@ -706,81 +706,85 @@ class QwenVLMaxProcessor {
      */
     generatePrompt(documentType) {
         if (documentType === 'bank_statement') {
-            return `🚨 CRITICAL - READ THIS FIRST:
-YOU ARE A DATA RECORDER, NOT A CALCULATOR.
-YOUR ONLY JOB: COPY numbers from the PDF to JSON. DO NOT calculate, verify, or modify ANY numbers.
+            return `🚨 YOU ARE A DATA MOVER - NOT A DATA PROCESSOR
 
-⚠️ OPENING BALANCE (承上結餘) - CRITICAL:
-Find "承上結餘" row in Transaction Details → Look at Balance column → Copy that number.
-If empty → Use next row's balance. NEVER use "戶口摘要" numbers!
+YOUR JOB:
+1. COPY data from PDF table to JSON
+2. DO NOT change any numbers
+3. ONLY decide: income or expense (by comparing balance)
 
-IF YOU CALCULATE any balance → YOU FAILED ❌
+═══════════════════════════════════════════════════════════
 
-You are a professional bank statement data extraction expert. Please analyze this bank statement image, extract complete statement information and transaction records, and return in JSON format.
+📋 EXTRACT TO JSON:
 
-Required fields:
 {
-  "bankName": "Bank name (e.g., HSBC, ICBC, Bank of China)",
-  "bankCode": "Bank code (if available)",
-  "branchName": "Branch physical address (NOT bank name! Extract the address like '3 Garden Road, Central, Hong Kong')",
+  "bankName": "Bank name",
+  "bankCode": "Bank code",
+  "branchName": "Branch address",
   "accountNumber": "Account number",
   "accountHolder": "Account holder name",
   "accountAddress": "Account holder address",
-  "statementPeriod": "Statement period (YYYY-MM-DD to YYYY-MM-DD)",
-  "statementDate": "Statement date (YYYY-MM-DD)",
-  "currency": "Currency (e.g., HKD, USD, JPY, KRW)",
-  "openingBalance": Opening balance (number),
-  "closingBalance": Closing balance (number),
+  "statementPeriod": "YYYY-MM-DD to YYYY-MM-DD",
+  "statementDate": "YYYY-MM-DD",
+  "currency": "HKD/USD/JPY/KRW/CNY",
+  "openingBalance": number,
+  "closingBalance": number,
   "transactions": [
     {
       "date": "YYYY-MM-DD",
-      "description": "Transaction description (keep original language)",
-      "debit": Withdrawal amount (number, 0 if none),
-      "credit": Deposit amount (number, 0 if none),
-      "amount": Transaction amount (positive number),
-      "balance": Balance after transaction,
+      "description": "Original text",
+      "debit": number or 0,
+      "credit": number or 0,
+      "amount": number,
+      "balance": number,
       "transactionSign": "income or expense",
       "transactionType": "Deposit/Withdrawal/Transfer/Fee/Interest/Check/ATM/POS/FPS/Other",
       "payee": "Payee/Payer",
-      "referenceNumber": "Reference number",
+      "referenceNumber": "Reference",
       "checkNumber": "Check number",
       "memo": "Memo"
     }
   ]
 }
 
-⚠️ CRITICAL RULES - MUST FOLLOW:
+═══════════════════════════════════════════════════════════
 
-1. **EXTRACT EVERY SINGLE LINE AS A SEPARATE TRANSACTION**
-   - Each row = ONE transaction
-   - DO NOT combine or merge rows
-   - DO NOT skip any rows
+📍 WHERE TO EXTRACT:
 
-2. **EXACT DATE FROM EACH ROW**
-   - Extract the date shown in each row
-   - DO NOT use the same date for all transactions
-   - Format: YYYY-MM-DD
+✅ Transaction Details (戶口進支/交易明細) - This is the transaction table
+❌ Account Summary (戶口摘要) - Skip this, it's just totals
 
-3. **EXACT AMOUNT FROM EACH ROW**
-   - Extract the exact amount shown
-   - DO NOT modify or combine amounts
+═══════════════════════════════════════════════════════════
 
-4. **Account Summary vs Transaction Details:**
-   - **DO NOT extract from Account Summary (戶口摘要)** - only totals
-   - **ONLY extract from Transaction Details (戶口進支)** - actual transactions
-   - Opening Balance (承上結餘) is the FIRST transaction row - INCLUDE it
+🔑 3 CRITICAL RULES:
 
-5. **🚨 BALANCE - NEVER CALCULATE:**
-   Balance must be from "餘額/Balance" column. If not visible → set to null.
-   ✅ Extract the number you see | ❌ Return a number not in PDF (calculated!)
-   🚨 Every balance must exist in PDF.
+1️⃣ EACH ROW = ONE TRANSACTION
+   - See 10 rows → Create 10 transactions
+   - Include "承上結餘/Brought Forward" as first transaction
+   
+2️⃣ COPY NUMBERS EXACTLY
+   - See "30,718.39" in Balance column → Write 30718.39
+   - See "8,122.80" in Amount column → Write 8122.80
+   - If you cannot see a number → Write null
+   - 🚨 DO NOT calculate, guess, or modify ANY number
+   
+3️⃣ INCOME OR EXPENSE? (Only thing you decide)
+   - Look at Balance column:
+     * Previous row balance: 30,718.39
+     * Current row balance: 38,841.19
+     * 38,841.19 > 30,718.39 → Balance INCREASED → "income"
+   
+   - Look at Balance column:
+     * Previous row balance: 38,841.19
+     * Current row balance: 30,718.39
+     * 30,718.39 < 38,841.19 → Balance DECREASED → "expense"
+   
+   - Ignore text labels like "支出", "存入", "Debit", "Credit"
+   - Only trust the numbers
 
-6. **TransactionSign - Use priority:**
-   Priority 1: Debit/Credit columns or +/- signs
-   Priority 2: Balance comparison (increased = income, decreased = expense)
-   Ignore text labels if conflicting.
+═══════════════════════════════════════════════════════════
 
-Return ONLY JSON, no additional text.`;
+Return ONLY JSON, no explanations.`;
         } else {
             return `You are a professional invoice data extraction expert. Please analyze this invoice image, extract complete invoice information and line items, and return in JSON format.
 
@@ -822,130 +826,90 @@ Return ONLY JSON, no additional text.`;
      */
     generateMultiPagePrompt(documentType, pageCount) {
         if (documentType === 'bank_statement') {
-            return `🚨 CRITICAL - READ THIS FIRST:
-YOU ARE A DATA RECORDER, NOT A CALCULATOR.
-YOUR ONLY JOB: COPY numbers from the PDF to JSON. DO NOT calculate, verify, or modify ANY numbers.
+            return `🚨 YOU ARE A DATA MOVER - NOT A DATA PROCESSOR
 
-⚠️ OPENING BALANCE (承上結餘) - CRITICAL:
-Find "承上結餘" or "Brought Forward" row in Transaction Details table.
-Look at Balance column on that row → Copy that number.
-If empty → Use next row's balance.
-NEVER use "戶口摘要/Account Summary" numbers!
+YOUR JOB:
+1. COPY data from PDF table to JSON
+2. DO NOT change any numbers
+3. ONLY decide: income or expense (by comparing balance)
 
-IF YOU CALCULATE any balance → YOU FAILED ❌
-IF YOU USE "戶口摘要" numbers → YOU FAILED ❌
+I am sending ${pageCount} images (multiple pages of the same bank statement). Analyze all pages and extract ALL transactions.
 
-You are a professional bank statement data extraction expert. I am sending ${pageCount} images that are multiple pages of the same bank statement. Please analyze all pages comprehensively, extract complete statement information and transaction records, and return in JSON format.
+═══════════════════════════════════════════════════════════
 
-Required fields:
+📋 EXTRACT TO JSON:
+
 {
-  "bankName": "Bank name (e.g., HSBC, ICBC, Bank of China)",
-  "bankCode": "Bank code (if available)",
-  "branchName": "Branch physical address (NOT bank name! Extract the address like '3 Garden Road, Central, Hong Kong')",
+  "bankName": "Bank name",
+  "bankCode": "Bank code",
+  "branchName": "Branch address",
   "accountNumber": "Account number",
   "accountHolder": "Account holder name",
   "accountAddress": "Account holder address",
-  "statementPeriod": "Statement period (YYYY-MM-DD to YYYY-MM-DD)",
-  "statementDate": "Statement date (YYYY-MM-DD)",
-  "currency": "Currency (e.g., HKD, USD, JPY, KRW, CNY)",
-  "openingBalance": Opening balance (number),
-  "closingBalance": Closing balance (number),
+  "statementPeriod": "YYYY-MM-DD to YYYY-MM-DD",
+  "statementDate": "YYYY-MM-DD",
+  "currency": "HKD/USD/JPY/KRW/CNY",
+  "openingBalance": number,
+  "closingBalance": number,
   "transactions": [
     {
-      "date": "Transaction date (YYYY-MM-DD)",
-      "description": "Transaction description (keep original language)",
-      "debit": Withdrawal amount (number, 0 if none),
-      "credit": Deposit amount (number, 0 if none),
-      "amount": Transaction amount (positive number),
-      "balance": Balance after transaction (number),
+      "date": "YYYY-MM-DD",
+      "description": "Original text",
+      "debit": number or 0,
+      "credit": number or 0,
+      "amount": number,
+      "balance": number,
       "transactionSign": "income or expense",
-      "transactionType": "Transaction type",
+      "transactionType": "Deposit/Withdrawal/Transfer/Fee/Interest/Check/ATM/POS/FPS/Other",
       "payee": "Payee/Payer",
-      "referenceNumber": "Reference number",
-      "checkNumber": "Check number (if applicable)",
+      "referenceNumber": "Reference",
+      "checkNumber": "Check number",
       "memo": "Memo"
     }
   ]
 }
 
-⚠️ CRITICAL RULES - READ CAREFULLY:
+═══════════════════════════════════════════════════════════
 
-1. **EXTRACT EVERY SINGLE LINE AS A SEPARATE TRANSACTION**
-   - Each row in the transaction table is ONE separate transaction
-   - DO NOT combine, merge, or summarize multiple rows
-   - DO NOT skip any rows
-   - Example: If you see 3 rows for "SCR OCTOPUS CARDS LTD" on different dates, create 3 separate transaction objects
+📍 WHERE TO EXTRACT:
 
-2. **DATE ACCURACY IS CRITICAL**
-   - Extract the EXACT date from each transaction row
-   - DO NOT use the same date for different transactions
-   - DO NOT guess or assume dates
-   - Format: YYYY-MM-DD (e.g., 2022-02-04 if the statement shows 2022/02/04)
+✅ Transaction Details (戶口進支/交易明細) - This is the transaction table
+❌ Account Summary (戶口摘要) - Skip this, it's just totals
 
-3. **AMOUNT ACCURACY IS CRITICAL**
-   - Extract the EXACT amount from each transaction row
-   - DO NOT add, subtract, or modify amounts
-   - DO NOT confuse amounts from different rows
+═══════════════════════════════════════════════════════════
 
-4. **DISTINGUISH Account Summary vs Transaction Details:**
-   - Bank statements have TWO sections: Account Summary (戶口摘要) and Transaction Details (戶口進支/交易明細)
-   - **DO NOT extract from Account Summary** - it only shows totals
-   - **ONLY extract from Transaction Details section** - this has the actual transactions
+🔑 3 CRITICAL RULES:
 
-5. **Opening Balance / Brought Forward (承上結餘/上期結餘) - CRITICAL:**
-   - This is usually the FIRST row in Transaction Details section
-   - It MUST be included as the first transaction in your JSON output
-   - **LOOK AT THE "餘額/Balance" COLUMN** on this row - that's the opening balance number
-   - If you cannot see a balance number on this row:
-     * Look at the NEXT transaction row's balance
-     * The opening balance = that next row's balance (it's the same starting point)
-   - **NEVER calculate**: opening balance = summary total or prev month closing
-   - **NEVER use** any number from Account Summary section
-
-6. **Transaction type rules:**
-   - Deposit: Cash deposit, direct deposit
-   - Withdrawal: Cash withdrawal, ATM withdrawal
-   - Transfer: Wire transfer, FPS, bank transfer, online transfer
-   - Fee: Service fee, maintenance fee, annual fee
-   - Interest: Interest income, interest payment
-   - Check: Check payment, check deposit
-   - ATM: ATM transaction
-   - POS: Point of sale, card payment, merchant transaction
-   - FPS: Faster Payment System
-   - Other: Other transactions
-
-7. **🚨 BALANCE - NEVER CALCULATE (MOST IMPORTANT):**
-   Balance MUST be extracted from "餘額/Balance" column. If not visible → set to null.
+1️⃣ EACH ROW = ONE TRANSACTION
+   - See 10 rows → Create 10 transactions
+   - See 50 rows across 3 pages → Create 50 transactions
+   - Include "承上結餘/Brought Forward" as first transaction
+   - Example: 3 rows for "SCR OCTOPUS CARDS LTD" on different dates = 3 separate transactions
    
-   ✅ CORRECT: Extract the number you see in Balance column
-   ❌ WRONG: Return a number that doesn't exist in PDF (you calculated it!)
-   ❌ WRONG: Balance is blurry → you calculate: prev + credit - debit (NO! Set to null!)
+2️⃣ COPY NUMBERS EXACTLY
+   - See "30,718.39" in Balance column → Write 30718.39
+   - See "8,122.80" in Amount column → Write 8122.80
+   - See "2022/02/04" in Date column → Write "2022-02-04"
+   - If you cannot see a number → Write null
+   - 🚨 DO NOT calculate, guess, or modify ANY number
    
-   🚨 Every balance number must exist in the PDF. If it doesn't exist in PDF, you FAILED.
-
-8. **How to determine transactionSign?**
+3️⃣ INCOME OR EXPENSE? (Only thing you decide)
+   - Look at Balance column:
+     * Previous row balance: 30,718.39
+     * Current row balance: 38,841.19
+     * 38,841.19 > 30,718.39 → Balance INCREASED → "income"
    
-   PRIORITY 1 - If statement has debit/credit columns or +/- signs:
-   - Debit column or negative amount → "expense"
-   - Credit column or positive amount → "income"
+   - Look at Balance column:
+     * Previous row balance: 38,841.19
+     * Current row balance: 30,718.39
+     * 30,718.39 < 38,841.19 → Balance DECREASED → "expense"
    
-   PRIORITY 2 - If only amount + balance columns:
-   - Balance increased (current > previous) → "income"
-   - Balance decreased (current < previous) → "expense"
-   
-   Ignore text labels if they conflict with columns/balance. Prioritize: columns > balance change > text.
+   - Ignore text labels like "支出", "存入", "Debit", "Credit"
+   - Only trust the numbers
 
-FINAL CHECKLIST:
-✅ Extracted EVERY row from transaction table (not combined/merged)?
-✅ Each transaction has unique date & amount from PDF (not guessed)?
-✅ ALL balance values exist in PDF (not calculated)?
-✅ Used Transaction Details only (not Account Summary)?
-✅ TransactionSign based on columns/balance (not unreliable text)?
-✅ JSON valid and complete?
+═══════════════════════════════════════════════════════════
 
-🚨 Can I find every number I returned in the PDF? If not, I FAILED.
-
-Return ONLY JSON, no additional text or explanations.`;
+Return ONLY JSON, no explanations.`;
         } else {
              return `You are a professional invoice data extraction expert. I am sending ${pageCount} images that are multiple pages of the same invoice. Please analyze all pages comprehensively, extract complete invoice information and line items, and return in JSON format.
 
