@@ -260,33 +260,60 @@ class QwenVLMaxProcessor {
      */
     generatePrompt(documentType) {
         if (documentType === 'bank_statement') {
-            return `Extract bank statement data from this image and return as JSON.
+            return `You are extracting data from a bank statement. Your job: COPY numbers from the table to JSON. DO NOT calculate anything.
 
-Required fields:
+Bank statements have 2 sections:
+1. Account Summary (戶口摘要) - Shows totals only, SKIP THIS
+2. Transaction Details (戶口進支/交易明細) - This is the TABLE you need
+
+📋 What to extract:
+
 {
   "bankName": "Bank name",
-  "accountNumber": "Account number",
+  "accountNumber": "Account number", 
   "accountHolder": "Account holder name",
-  "currency": "Currency code (HKD, USD, JPY, etc.)",
-  "statementPeriod": "Statement period",
-  "openingBalance": Opening balance (number),
-  "closingBalance": Closing balance (number),
+  "currency": "HKD/USD/JPY/KRW",
+  "statementPeriod": "YYYY-MM-DD to YYYY-MM-DD",
+  "openingBalance": number,
+  "closingBalance": number,
   "transactions": [
     {
       "date": "YYYY-MM-DD",
-      "description": "Transaction description",
-      "amount": Transaction amount (number),
-      "balance": Balance after transaction (number)
+      "description": "Keep original text",
+      "debit": number or 0,
+      "credit": number or 0,
+      "amount": number,
+      "balance": number,
+      "transactionSign": "income or expense"
     }
   ]
 }
 
-Rules:
-1. Extract ALL transactions from the transaction table
-2. Date format: YYYY-MM-DD
-3. Amounts: numbers only (no currency symbols)
-4. If a field cannot be extracted, set to null
-5. Return ONLY JSON, no explanations`;
+🎯 HOW to extract transactions:
+
+Step 1: Find the Transaction Details TABLE (戶口進支/交易明細)
+Step 2: Each ROW in the table = ONE transaction
+Step 3: For each row, COPY these columns:
+   - Date column → "date" (format: YYYY-MM-DD)
+   - Description column → "description" 
+   - Debit/Withdrawal column → "debit" (0 if empty)
+   - Credit/Deposit column → "credit" (0 if empty)
+   - Amount column → "amount"
+   - Balance column → "balance" (COPY this number, DO NOT calculate!)
+
+Step 4: Determine "transactionSign":
+   - Compare current row balance with previous row balance
+   - If balance INCREASED → "income"
+   - If balance DECREASED → "expense"
+
+⚠️ CRITICAL:
+- Extract EVERY row from the transaction table (including "承上結餘/Brought Forward")
+- DO NOT skip any rows
+- DO NOT combine rows
+- Balance: COPY the number from Balance column, DO NOT calculate
+- If you cannot see a number, set to null
+
+Return ONLY JSON, no explanations.`;
         } else {
             // 發票
             return `你是一個專業的發票數據提取專家。請從圖片中提取所有發票資料，並以 JSON 格式返回。
@@ -327,34 +354,61 @@ Rules:
      */
     generateMultiPagePrompt(documentType, pageCount) {
         if (documentType === 'bank_statement') {
-            return `Extract bank statement data from these ${pageCount} images (multiple pages of the same statement) and return as JSON.
+            return `You are extracting data from ${pageCount} images (multiple pages of the same bank statement). Your job: COPY numbers from the table to JSON. DO NOT calculate anything.
 
-Required fields:
+Bank statements have 2 sections:
+1. Account Summary (戶口摘要) - Shows totals only, SKIP THIS
+2. Transaction Details (戶口進支/交易明細) - This is the TABLE you need
+
+📋 What to extract:
+
 {
   "bankName": "Bank name",
-  "accountNumber": "Account number",
+  "accountNumber": "Account number", 
   "accountHolder": "Account holder name",
-  "currency": "Currency code (HKD, USD, JPY, etc.)",
-  "statementPeriod": "Statement period",
-  "openingBalance": Opening balance (number),
-  "closingBalance": Closing balance (number),
+  "currency": "HKD/USD/JPY/KRW",
+  "statementPeriod": "YYYY-MM-DD to YYYY-MM-DD",
+  "openingBalance": number,
+  "closingBalance": number,
   "transactions": [
     {
       "date": "YYYY-MM-DD",
-      "description": "Transaction description",
-      "amount": Transaction amount (number),
-      "balance": Balance after transaction (number)
+      "description": "Keep original text",
+      "debit": number or 0,
+      "credit": number or 0,
+      "amount": number,
+      "balance": number,
+      "transactionSign": "income or expense"
     }
   ]
 }
 
-Rules:
-1. Combine information from ALL ${pageCount} pages
-2. Extract ALL transactions from the transaction table
-3. Date format: YYYY-MM-DD
-4. Amounts: numbers only (no currency symbols)
-5. If a field cannot be extracted, set to null
-6. Return ONLY JSON, no explanations`;
+🎯 HOW to extract transactions:
+
+Step 1: Find the Transaction Details TABLE (戶口進支/交易明細) across ALL ${pageCount} pages
+Step 2: Each ROW in the table = ONE transaction
+Step 3: For each row, COPY these columns:
+   - Date column → "date" (format: YYYY-MM-DD)
+   - Description column → "description" 
+   - Debit/Withdrawal column → "debit" (0 if empty)
+   - Credit/Deposit column → "credit" (0 if empty)
+   - Amount column → "amount"
+   - Balance column → "balance" (COPY this number, DO NOT calculate!)
+
+Step 4: Determine "transactionSign":
+   - Compare current row balance with previous row balance
+   - If balance INCREASED → "income"
+   - If balance DECREASED → "expense"
+
+⚠️ CRITICAL:
+- Combine ALL transactions from ALL ${pageCount} pages
+- Extract EVERY row from the transaction table (including "承上結餘/Brought Forward")
+- DO NOT skip any rows
+- DO NOT combine rows
+- Balance: COPY the number from Balance column, DO NOT calculate
+- If you cannot see a number, set to null
+
+Return ONLY JSON, no explanations.`;
         } else {
             return `你是一個專業的發票數據提取專家。我發送了 ${pageCount} 張圖片，它們是同一份發票的多個頁面。請綜合分析所有頁面，提取完整的發票資料和項目明細，並以 JSON 格式返回。
 
