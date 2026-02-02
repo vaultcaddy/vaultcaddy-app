@@ -46,11 +46,9 @@ class QwenVLMaxProcessor {
      */
     async processDocument(file, documentType = 'invoice') {
         const startTime = Date.now();
-        console.log(`\n🚀 [Qwen-VL Max] 开始处理: ${file.name} (${documentType})`);
         
         try {
             // ========== 一步完成：Qwen-VL Max 端到端处理 ==========
-            console.log('🧠 Qwen-VL Max 端到端处理（OCR + 分析）...');
             
             // 1. 将文件转换为 Base64
             const base64Data = await this.fileToBase64(file);
@@ -112,14 +110,6 @@ class QwenVLMaxProcessor {
             // 6. 解析 JSON
             const extractedData = this.parseJSON(responseText);
             
-            // 🐛 调试：输出提取的交易数据（检查 debit/credit）
-            if (extractedData.transactions && extractedData.transactions.length > 0) {
-                console.log('🔍 [DEBUG] 提取的交易样本 (前3条):');
-                extractedData.transactions.slice(0, 3).forEach((tx, i) => {
-                    console.log(`  ${i+1}. ${tx.date} | ${tx.description} | debit:${tx.debit} | credit:${tx.credit} | balance:${tx.balance}`);
-                });
-            }
-            
             const processingTime = Date.now() - startTime;
             
             // 7. 更新统计
@@ -129,10 +119,6 @@ class QwenVLMaxProcessor {
                 this.stats.totalTokens += data.usage.total_tokens;
                 this.stats.totalCost += this.calculateCost(data.usage.total_tokens);
             }
-            
-            console.log(`✅ 处理完成 (${processingTime}ms)`);
-            console.log(`📊 累计处理: ${this.stats.documentsProcessed} 个文档`);
-            console.log(`💰 累计成本: $${this.stats.totalCost.toFixed(4)}`);
             
             return {
                 success: true,
@@ -159,11 +145,9 @@ class QwenVLMaxProcessor {
      */
     async processMultiPageDocument(files, documentType = 'invoice') {
         const startTime = Date.now();
-        console.log(`\n🚀 [Qwen-VL Max] 批量处理多页文档 (${files.length} 页，单次API调用)`);
         
         try {
             // 1. 将所有文件转换为 Base64
-            console.log('📸 转换所有页面为 Base64...');
             const imageContents = [];
             for (let i = 0; i < files.length; i++) {
                 const base64Data = await this.fileToBase64(files[i]);
@@ -174,7 +158,6 @@ class QwenVLMaxProcessor {
                         url: `data:${mimeType};base64,${base64Data}`
                     }
                 });
-                console.log(`   ✅ 页面 ${i + 1}/${files.length} 已转换`);
             }
             
             // 2. 生成提示词
@@ -198,8 +181,6 @@ class QwenVLMaxProcessor {
                 temperature: 0.1,
                 max_tokens: 8000  // 多页需要更多 tokens
             };
-            
-            console.log(`🧠 调用 Qwen-VL Max API（${files.length} 页，单次调用）...`);
             
             // 4. 调用 Qwen-VL API
             const response = await fetch(this.qwenWorkerUrl, {
@@ -239,11 +220,6 @@ class QwenVLMaxProcessor {
                 this.stats.totalTokens += data.usage.total_tokens;
                 this.stats.totalCost += this.calculateCost(data.usage.total_tokens);
             }
-            
-            console.log(`✅ 批量处理完成 (${totalTime}ms, ${files.length} 页)`);
-            console.log(`📊 平均: ${(totalTime / files.length).toFixed(0)}ms/页`);
-            console.log(`💰 成本: $${(this.calculateCost(data.usage?.total_tokens || 0)).toFixed(4)}`);
-            console.log(`🎉 节省: 相比逐页处理节省 ${((1 - 1/files.length) * 100).toFixed(0)}% 的API调用`);
             
             return {
                 success: true,
