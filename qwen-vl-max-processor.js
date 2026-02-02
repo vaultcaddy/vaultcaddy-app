@@ -244,76 +244,64 @@ class QwenVLMaxProcessor {
      */
     generatePrompt(documentType) {
         if (documentType === 'bank_statement') {
-            return `STRICT MODE: You are a OCR COPY MACHINE. ONLY copy visible text. ZERO calculation. ZERO inference.
+            return `STRICT MODE: You are a VISUAL TABLE COPY MACHINE. ONLY copy visible text from the TRANSACTION TABLE. ZERO calculation. ZERO inference. ZERO guessing.
 
-📍 TARGET TABLE IDENTIFICATION (CRITICAL):
-🎯 STEP 1: FIND THE CORRECT TABLE
-- Look for table with header: "戶口進支" / "TRANSACTION HISTORY" / "Transaction Details"
-- Table MUST have columns: Date + Description + Deposit/Credit + Withdrawal/Debit + Balance
-- ⚠️ ABSOLUTELY IGNORE:
-  • "戶口摘要" / "ACCOUNT SUMMARY" (summary tables at top of page)
-  • "總計" / "TOTAL" / "Sub-total" rows
-  • Any table WITHOUT a "Date" column
+📍 STEP 1: LOCATE THE TRANSACTION TABLE (NON-NEGOTIABLE)
+Find the table that satisfies ALL of these visual conditions:
+• Contains a column with header containing ANY of: "Date", "DATE", "日期", "交易日期", "發生日期"
+• Contains a column with header containing ANY of: "Balance", "BALANCE", "餘額", "結餘", "账户余额", "可用余额"
+• Contains AT LEAST ONE of: "Deposit", "DEPOSIT", "存入", "貸項", "收入", "Credit", "CREDIT"
+• Contains AT LEAST ONE of: "Withdrawal", "WITHDRAWAL", "支出", "借項", "費用", "Debit", "DEBIT"
+• Has ≥ 3 rows with visible dates in chronological order (e.g., "2025-02-22", "22 Feb", "2025/02/22", "二月廿二日")
+• Is NOT inside any box/section titled: "Account Summary", "戶口摘要", "總計", "TOTAL", "Sub-total", "Loan", "Card", "Credit Limit"
 
-🎯 STEP 2: VERIFY TABLE BY DATE COLUMN
-- First transaction date should be near statement start date
-- Dates should be in chronological order
-- If dates are missing or out of order → WRONG TABLE, find another
+❗ If multiple tables match, choose the one with MOST date rows AND located LOWEST on the page.
 
-🎯 STEP 3: IDENTIFY FIRST & LAST ROW
-- FIRST row = "承上結餘" / "BF BALANCE" / "B/F" / "Brought Forward" → openingBalance
-- LAST row = "結轉結餘" / "C/F BALANCE" / "C/F" / "Carried Forward" → closingBalance
+📍 STEP 2: EXTRACT FIELDS — STRICTLY FROM SAME ROW
+For EACH ROW in the identified table (including first and last):
+• "date": copy RAW text from Date column (e.g., "22 Feb", "2025-02-22", "2025/02/22") → keep as-is. Never convert.
+• "description": copy ALL visible text from description column (e.g., "BF BALANCE", "ATM WITHDRAWAL", "存入現金", "繳費項目")
+• "credit": copy number from Deposit/Credit/Income column. If empty → 0. If contains "DR" → treat as positive value. Remove commas. Keep decimals.
+• "debit": copy number from Withdrawal/Debit/Expense column. If empty → 0. If contains "DR" → treat as positive value. Remove commas. Keep decimals.
+• "balance": copy number from Balance column. Remove commas. Remove "DR". Keep negative sign if present (e.g., "-1,234.56" → -1234.56). If value is "—", "N/A", blank → null.
 
-✂️ FIELD EXTRACTION RULES (NON-NEGOTIABLE):
-⚠️ ROW ALIGNMENT IS CRITICAL: All fields MUST come from the SAME ROW!
+📍 STEP 3: DETERMINE OPENING & CLOSING
+• "openingBalance" = "balance" value from FIRST row of this table  
+• "closingBalance" = "balance" value from LAST row of this table  
+• DO NOT use any other section (e.g., Account Summary) for these values.
 
-| JSON Field      | Source Column                          | Action                                  |
-|-----------------|----------------------------------------|-----------------------------------------|
-| date            | Date / 日期                            | SAME ROW - use as anchor                |
-| description     | Transaction Details / Description      | SAME ROW as date                        |
-| debit           | Withdrawal / Debit / 借項              | SAME ROW, if blank → 0                  |
-| credit          | Deposit / Credit / 貸項                | SAME ROW, if blank → 0                  |
-| balance         | Balance / 餘額                         | SAME ROW, COPY EXACT NUMBER             |
+❗ ABSOLUTE RULES:
+• NEVER calculate balance. NEVER compare rows. NEVER infer meaning of "DR"/"CR".
+• If a number has comma → remove it before output (e.g., "30,718.39" → 30718.39).
+• If field is occluded, blurred, or ambiguous → output null (NOT 0, NOT guess).
+• Output ONLY valid JSON. NO explanations. NO markdown. NO comments. NO extra keys.
 
-📏 ROW EXTRACTION PROCESS:
-1. Find a date (e.g., "22 Feb")
-2. Move horizontally RIGHT on the SAME LINE to find:
-   - Description (next column)
-   - Deposit amount (if any)
-   - Withdrawal amount (if any)
-   - Balance (rightmost column)
-3. Record ALL values from this SINGLE ROW as ONE transaction
-4. Move DOWN to next date row, repeat
-
-❗ ABSOLUTE COMMANDS:
-- NEVER mix data from different rows
-- IF number unclear → output null (NEVER guess/calculate)
-- REMOVE all commas from numbers before outputting
-- Date format: Convert to YYYY-MM-DD ONLY if unambiguous; else output original
-- Output ONLY valid JSON. NO explanations. NO markdown. NO comments.
-
-📤 OUTPUT STRUCTURE (REDUCED):
+📤 OUTPUT STRUCTURE (exact keys, no variation):
 {
-  "bankName": "...",
-  "accountNumber": "...",
-  "accountHolder": "...",
-  "currency": "...",
-  "statementPeriod": "...",
-  "openingBalance": 30718.39,  // FROM FIRST ROW'S "餘額"
-  "closingBalance": ...,        // FROM LAST ROW'S "餘額"
+  "bankName": "string (copy visible bank name, e.g., 'HANG SENG BANK' or '中國銀行')",
+  "accountNumber": "string (copy visible account number, e.g., '766-450064-882')",
+  "accountHolder": "string (copy visible name, e.g., 'POON H** K***')",
+  "currency": "string (e.g., 'HKD', 'CNY', 'USD' — copy from 'Balance (HKD)' or similar)",
+  "statementPeriod": "string (e.g., '2025-02-22 to 2025-03-22' — copy from header/footer, not calculated)",
+  "openingBalance": 1493.98,
+  "closingBalance": 30188.66,
   "transactions": [
     {
-      "date": "YYYY-MM-DD",
-      "description": "...",
+      "date": "22 Feb",
+      "description": "BF BALANCE",
+      "credit": 0,
       "debit": 0,
-      "credit": 1500.00,
-      "balance": 32218.39  // COPIED DIRECTLY FROM "餘額" COLUMN OF THIS ROW
-      // ⚠️ "amount" and "transactionSign" REMOVED TO PREVENT CALCULATION TRIGGERS
+      "balance": 1493.98
+    },
+    {
+      "date": "28 Feb",
+      "description": "CREDIT INTEREST QUICK CHEQUE DEPOSIT (DTMAND)",
+      "credit": 2.61,
+      "debit": 0,
+      "balance": 1496.59
     }
   ]
-}
-
-⚠️ CRITICAL: Extract EVERY row from "戶口進支" table (including "承上結餘"). DO NOT skip. DO NOT combine.`;
+}`;
         } else {
             // 發票
             return `你是一個專業的發票數據提取專家。請從圖片中提取所有發票資料，並以 JSON 格式返回。
@@ -354,80 +342,65 @@ class QwenVLMaxProcessor {
      */
     generateMultiPagePrompt(documentType, pageCount) {
         if (documentType === 'bank_statement') {
-            return `STRICT MODE: You are a OCR COPY MACHINE processing ${pageCount} images (multiple pages of same statement). ONLY copy visible text. ZERO calculation. ZERO inference.
+            return `STRICT MODE: You are a VISUAL TABLE COPY MACHINE processing ${pageCount} images (multiple pages of same statement). ONLY copy visible text from the TRANSACTION TABLE. ZERO calculation. ZERO inference. ZERO guessing.
 
-📍 TARGET TABLE IDENTIFICATION (CRITICAL):
-🎯 STEP 1: FIND THE CORRECT TABLE
-- Look for table with header: "戶口進支" / "TRANSACTION HISTORY" / "Transaction Details" / "Integrated Account Statement"
-- Table MUST have columns: Date + Description + Deposit/Credit + Withdrawal/Debit + Balance
-- ⚠️ ABSOLUTELY IGNORE:
-  • "戶口摘要" / "ACCOUNT SUMMARY" (summary tables at top of page)
-  • "總計" / "TOTAL" / "Sub-total" rows
-  • Any table WITHOUT a "Date" column
+📍 STEP 1: LOCATE THE TRANSACTION TABLE (NON-NEGOTIABLE) across ALL ${pageCount} pages
+Find the table that satisfies ALL of these visual conditions:
+• Contains a column with header containing ANY of: "Date", "DATE", "日期", "交易日期", "發生日期"
+• Contains a column with header containing ANY of: "Balance", "BALANCE", "餘額", "結餘", "账户余额", "可用余额"
+• Contains AT LEAST ONE of: "Deposit", "DEPOSIT", "存入", "貸項", "收入", "Credit", "CREDIT"
+• Contains AT LEAST ONE of: "Withdrawal", "WITHDRAWAL", "支出", "借項", "費用", "Debit", "DEBIT"
+• Has ≥ 3 rows with visible dates in chronological order (e.g., "2025-02-22", "22 Feb", "2025/02/22", "二月廿二日")
+• Is NOT inside any box/section titled: "Account Summary", "戶口摘要", "總計", "TOTAL", "Sub-total", "Loan", "Card", "Credit Limit"
 
-🎯 STEP 2: VERIFY TABLE BY DATE COLUMN
-- First transaction date should be near statement start date
-- Dates should be in chronological order (e.g., 22 Feb, 28 Feb, 7 Mar...)
-- If dates are missing or out of order → WRONG TABLE, find another
+❗ If multiple tables match, choose the one with MOST date rows AND located LOWEST on the page.
 
-🎯 STEP 3: IDENTIFY FIRST & LAST ROW
-- FIRST row = "承上結餘" / "BF BALANCE" / "B/F" / "Brought Forward" → openingBalance
-- LAST row = "結轉結餘" / "C/F BALANCE" / "C/F" / "Carried Forward" → closingBalance
+📍 STEP 2: EXTRACT FIELDS — STRICTLY FROM SAME ROW
+For EACH ROW in the identified table across ALL ${pageCount} pages (including first and last):
+• "date": copy RAW text from Date column (e.g., "22 Feb", "2025-02-22", "2025/02/22") → keep as-is. Never convert.
+• "description": copy ALL visible text from description column (e.g., "BF BALANCE", "ATM WITHDRAWAL", "存入現金", "繳費項目")
+• "credit": copy number from Deposit/Credit/Income column. If empty → 0. If contains "DR" → treat as positive value. Remove commas. Keep decimals.
+• "debit": copy number from Withdrawal/Debit/Expense column. If empty → 0. If contains "DR" → treat as positive value. Remove commas. Keep decimals.
+• "balance": copy number from Balance column. Remove commas. Remove "DR". Keep negative sign if present (e.g., "-1,234.56" → -1234.56). If value is "—", "N/A", blank → null.
 
-✂️ FIELD EXTRACTION RULES (NON-NEGOTIABLE):
-⚠️ ROW ALIGNMENT IS CRITICAL: All fields MUST come from the SAME ROW!
+📍 STEP 3: DETERMINE OPENING & CLOSING
+• "openingBalance" = "balance" value from FIRST row of this table (on first page)
+• "closingBalance" = "balance" value from LAST row of this table (on last page)
+• DO NOT use any other section (e.g., Account Summary) for these values.
 
-| JSON Field      | Source Column                          | Action                                  |
-|-----------------|----------------------------------------|-----------------------------------------|
-| date            | Date / 日期                            | SAME ROW - use as anchor                |
-| description     | Transaction Details / Description      | SAME ROW as date                        |
-| debit           | Withdrawal / Debit / 借項              | SAME ROW, if blank → 0                  |
-| credit          | Deposit / Credit / 貸項                | SAME ROW, if blank → 0                  |
-| balance         | Balance / 餘額                         | SAME ROW, COPY EXACT NUMBER             |
+❗ ABSOLUTE RULES:
+• NEVER calculate balance. NEVER compare rows. NEVER infer meaning of "DR"/"CR".
+• If a number has comma → remove it before output (e.g., "30,718.39" → 30718.39).
+• If field is occluded, blurred, or ambiguous → output null (NOT 0, NOT guess).
+• Combine ALL transactions from ALL ${pageCount} pages in chronological order.
+• Output ONLY valid JSON. NO explanations. NO markdown. NO comments. NO extra keys.
 
-📏 ROW EXTRACTION PROCESS (Follow strictly):
-1. Find a date (e.g., "22 Feb")
-2. Move horizontally RIGHT on the SAME LINE to find:
-   - Description (next column)
-   - Deposit amount (if any)
-   - Withdrawal amount (if any)
-   - Balance (rightmost column)
-3. Record ALL values from this SINGLE ROW as ONE transaction
-4. Move DOWN to next date row, repeat
-
-❌ WRONG: Reading date from Row 1, but balance from Row 5
-✅ CORRECT: Reading ALL fields from Row 1 only
-
-❗ ABSOLUTE COMMANDS:
-- NEVER mix data from different rows
-- IF number unclear → output null (NEVER guess/calculate)
-- REMOVE all commas from numbers before outputting
-- Date format: Convert to YYYY-MM-DD ONLY if unambiguous; else output original
-- Combine ALL transactions from ALL ${pageCount} pages in chronological order
-- Output ONLY valid JSON. NO explanations. NO markdown. NO comments.
-
-📤 OUTPUT STRUCTURE (REDUCED):
+📤 OUTPUT STRUCTURE (exact keys, no variation):
 {
-  "bankName": "...",
-  "accountNumber": "...",
-  "accountHolder": "...",
-  "currency": "...",
-  "statementPeriod": "...",
-  "openingBalance": 30718.39,  // FROM FIRST ROW'S "餘額"
-  "closingBalance": ...,        // FROM LAST ROW'S "餘額"
+  "bankName": "string (copy visible bank name, e.g., 'HANG SENG BANK' or '中國銀行')",
+  "accountNumber": "string (copy visible account number, e.g., '766-450064-882')",
+  "accountHolder": "string (copy visible name, e.g., 'POON H** K***')",
+  "currency": "string (e.g., 'HKD', 'CNY', 'USD' — copy from 'Balance (HKD)' or similar)",
+  "statementPeriod": "string (e.g., '2025-02-22 to 2025-03-22' — copy from header/footer, not calculated)",
+  "openingBalance": 1493.98,
+  "closingBalance": 30188.66,
   "transactions": [
     {
-      "date": "YYYY-MM-DD",
-      "description": "...",
+      "date": "22 Feb",
+      "description": "BF BALANCE",
+      "credit": 0,
       "debit": 0,
-      "credit": 1500.00,
-      "balance": 32218.39  // COPIED DIRECTLY FROM "餘額" COLUMN OF THIS ROW
-      // ⚠️ "amount" and "transactionSign" REMOVED TO PREVENT CALCULATION TRIGGERS
+      "balance": 1493.98
+    },
+    {
+      "date": "28 Feb",
+      "description": "CREDIT INTEREST QUICK CHEQUE DEPOSIT (DTMAND)",
+      "credit": 2.61,
+      "debit": 0,
+      "balance": 1496.59
     }
   ]
-}
-
-⚠️ CRITICAL: Extract EVERY row from "戶口進支" table across ALL ${pageCount} pages (including "承上結餘"). DO NOT skip. DO NOT combine.`;
+}`;
         } else {
             return `你是一個專業的發票數據提取專家。我發送了 ${pageCount} 張圖片，它們是同一份發票的多個頁面。請綜合分析所有頁面，提取完整的發票資料和項目明細，並以 JSON 格式返回。
 
