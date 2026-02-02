@@ -3560,8 +3560,6 @@
         }, true); // ✅ 使用捕获阶段，优先级最高
         
         window.handleUpload = async function handleUpload(files) {
-            logger.log('📤 準備上傳', files.length, '個文件');
-            
             // 1. 先為每個文件創建"處理中"的文檔記錄（立即顯示在列表中）
             const docIds = [];
             for (let file of files) {
@@ -3602,7 +3600,6 @@
             if (window.creditsManager) {
                 const hasEnoughCredits = await window.creditsManager.checkCredits(totalPages);
                 if (!hasEnoughCredits) {
-                    logger.log('❌ Credits 不足，刪除已創建的文檔記錄');
                     // 刪除已創建的占位文檔
                     for (let { docId } of docIds) {
                         await window.simpleDataManager.deleteDocument(currentProjectId, docId);
@@ -3642,8 +3639,6 @@
             isProcessingFiles = true;
             const { file, pages, docId } = uploadQueue.shift();
             processingCount++;
-            
-            logger.log(`🚀 開始處理隊列中的文件 (${processingCount}): ${file.name}`);
             
             try {
                 await uploadFileWithExistingDoc(file, pages, docId);
@@ -3803,8 +3798,6 @@
         
         async function uploadFile(file) {
             try {
-                logger.log('📤 準備上傳文件:', file.name);
-                
                 // 1. 計算文件頁數
                 const pages = await getFilePageCount(file);
                 logger.log(`📄 文件頁數: ${pages}`);
@@ -3813,7 +3806,6 @@
                 if (window.creditsManager) {
                     const hasEnoughCredits = await window.creditsManager.checkCredits(pages);
                     if (!hasEnoughCredits) {
-                        logger.log('❌ Credits 不足，取消上傳');
                         return;
                     }
                 }
@@ -3880,7 +3872,6 @@
                 // 6. 扣除 Credits（所有頁數）
                 if (window.creditsManager) {
                     await window.creditsManager.deductCredits(filesToProcess.length);
-                    logger.log(`💰 已扣除 ${filesToProcess.length} Credits（${filesToProcess.length} 頁）`);
                 }
                 
                 // 7. 移除佔位符行，重新載入真實數據
