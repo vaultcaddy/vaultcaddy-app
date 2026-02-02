@@ -21,31 +21,34 @@
     const urlParams = new URLSearchParams(window.location.search);
     const debugMode = urlParams.has('debug');
     
-    if (false) {  // ✅ 临时禁用日志隐藏，方便调试
-        // 🔇 生产环境：隐藏console.log
+    // ✅ 始终隐藏所有日志（除了 error），不让用户看到工作细节
+    if (!debugMode) {
+        // 🔇 隐藏 console.log
         console.log = function() {
             // 不输出任何内容
         };
         
+        // 🔇 隐藏 console.info
         console.info = function() {
             // 不输出任何内容
         };
         
+        // 🔇 隐藏 console.debug
         console.debug = function() {
             // 不输出任何内容
         };
         
-        // ⚠️ 保留 console.warn（警告信息）
-        // console.warn = originalConsole.warn;
+        // 🔇 隐藏 console.warn（不让用户看到处理细节）
+        console.warn = function() {
+            // 不输出任何内容
+        };
         
         // ❌ 保留 console.error（错误信息，用于追踪问题）
         // console.error = originalConsole.error;
         
-        console.log('✅ 控制台日志已隐藏（生产环境）');
-        
     } else {
-        // 🔊 开发环境或debug模式：保留所有日志
-        console.log('🔧 控制台日志已启用（开发环境或debug模式）');
+        // 🔊 debug模式：保留所有日志（访问 ?debug=1）
+        originalConsole.log('🔧 控制台日志已启用（debug模式）');
     }
     
     // 暴露原始console方法（用于调试）

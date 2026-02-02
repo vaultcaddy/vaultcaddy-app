@@ -19,14 +19,14 @@ class SimpleDataManager {
         this.currentUser = null; // ✅ 緩存當前用戶
         this.initialized = false;
         
-        console.log('📦 SimpleDataManager 構造函數執行');
+        // console.log('📦 SimpleDataManager 構造函數執行'); // 已隐藏
         // 不在構造函數中初始化，等待 firebase-ready 事件
     }
     
     // 初始化
     async init() {
         try {
-            console.log('📦 開始初始化 SimpleDataManager... [VERSION: 20251105-ultimate]');
+            // console.log('📦 開始初始化 SimpleDataManager... [VERSION: 20251105-ultimate]'); // 已隐藏
             
             // 直接使用 Firebase（已由 firebase-config.js 初始化）
             if (!firebase || !firebase.firestore || !firebase.storage) {
@@ -38,11 +38,11 @@ class SimpleDataManager {
             this.auth = firebase.auth();
             
             // ✅ 等待 Auth 狀態確定（異步）
-            console.log('⏳ 等待 Firebase Auth 狀態確定...');
+            // console.log('⏳ 等待 Firebase Auth 狀態確定...'); // 已隐藏
             await new Promise((resolve) => {
                 const unsubscribe = this.auth.onAuthStateChanged((user) => {
                     this.currentUser = user;
-                    console.log('🔥 SimpleDataManager: Auth 狀態確定:', user ? user.email : '未登入');
+                    // console.log('🔥 SimpleDataManager: Auth 狀態確定:', user ? user.email : '未登入'); // 已隐藏
                     unsubscribe(); // 只監聽第一次
                     resolve();
                 });
@@ -50,7 +50,7 @@ class SimpleDataManager {
                 // 超時保護（5秒）
                 setTimeout(() => {
                     if (!this.currentUser) {
-                        console.warn('⚠️ Auth 狀態確定超時，使用當前狀態');
+                        // console.warn('⚠️ Auth 狀態確定超時，使用當前狀態'); // 已隐藏
                         this.currentUser = this.auth.currentUser;
                     }
                     resolve();
@@ -59,12 +59,12 @@ class SimpleDataManager {
             
             // ✅ 繼續監聽後續變化
             this.auth.onAuthStateChanged((user) => {
-                console.log('🔄 SimpleDataManager: Auth 狀態變化:', user ? user.email : '未登入');
+                // console.log('🔄 SimpleDataManager: Auth 狀態變化:', user ? user.email : '未登入'); // 已隐藏
                 this.currentUser = user;
             });
             
             this.initialized = true;
-            console.log('✅ SimpleDataManager 已初始化，currentUser:', this.currentUser ? this.currentUser.email : 'null');
+            // console.log('✅ SimpleDataManager 已初始化，currentUser:', this.currentUser ? this.currentUser.email : 'null'); // 已隐藏
             
         } catch (error) {
             console.error('❌ SimpleDataManager 初始化失敗:', error);

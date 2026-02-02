@@ -29,13 +29,6 @@ class QwenVLMaxProcessor {
             totalTokens: 0,
             totalCost: 0
         };
-        
-        console.log('🤖 Qwen-VL Max 处理器初始化');
-        console.log('   ✅ 端到端处理（OCR + AI 分析一步完成）');
-        console.log('   ✅ 支持图片和 PDF 直接处理');
-        console.log('   📊 预期准确度: 92-95%');
-        console.log('   💰 预估成本: ~$0.005/页 (HK$0.038/页)');
-        console.log('   ⚡ 处理速度: 3-8 秒/页（比原方案快 100%）');
     }
     
     /**
@@ -434,7 +427,7 @@ class QwenVLMaxProcessor {
             }
             
             // 解析失败，返回原始文本
-            console.warn('⚠️ JSON 解析失败，返回原始文本');
+            // console.warn('⚠️ JSON 解析失败，返回原始文本'); // 已隐藏
             return { rawText: responseText };
         }
     }
