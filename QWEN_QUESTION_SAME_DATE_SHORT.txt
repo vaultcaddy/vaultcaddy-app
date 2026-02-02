@@ -1,0 +1,50 @@
+【Qwen-VL-Max Prompt 优化咨询】同一天多笔交易的日期填充问题
+
+## 问题场景
+银行对账单中，同一天有多笔交易时：
+- 第1笔：显示日期 "10 Mar"
+- 第2/3笔：日期列为**空白**
+- 前N-1笔：余额列为**空白**
+- 最后1笔：显示当天最终余额
+
+示例：
+```
+日期       描述              借项    餘額
+10 Mar    ATM WITHDRAWAL    500     (空白)
+          POS PURCHASE      200     30,018.39
+```
+
+## 当前问题
+AI 输出：
+```json
+{ "date": "10 Mar", "debit": 500, "balance": null },
+{ "date": "", "debit": 200, "balance": 30018.39 }  ← 日期为空！
+```
+
+期望输出：
+```json
+{ "date": "10 Mar", "debit": 500, "balance": null },
+{ "date": "10 Mar", "debit": 200, "balance": 30018.39 }  ← 自动填充日期
+```
+
+## 当前 Prompt 片段
+```
+• "date": copy RAW text from Date column → keep as-is. Never convert.
+• "balance": copy number from Balance column. If blank → null.
+```
+
+## 请问
+1. 如何在 Prompt 中告诉 AI："如果日期列为空，使用上一行的日期"？
+2. AI 是否支持这种"向上填充"逻辑？
+3. 建议的 Prompt 写法？
+
+例如：
+```
+• "date": IF current row's Date column is EMPTY → use PREVIOUS row's date
+         ELSE → copy current date
+```
+
+这种写法 AI 能理解吗？还是有更好的表达方式？
+
+谢谢！
+

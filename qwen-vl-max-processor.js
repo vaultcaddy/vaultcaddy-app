@@ -103,6 +103,9 @@ class QwenVLMaxProcessor {
             // 6. 解析 JSON
             const extractedData = this.parseJSON(responseText);
             
+            // 6.5 后处理：填充空白日期（同一天多笔交易）
+            const processedData = this.postProcessTransactions(extractedData);
+            
             const processingTime = Date.now() - startTime;
             
             // 7. 更新统计
@@ -116,7 +119,7 @@ class QwenVLMaxProcessor {
             return {
                 success: true,
                 documentType: documentType,
-                extractedData: extractedData,
+                extractedData: processedData,  // ← 使用处理后的数据
                 rawResponse: responseText,
                 processingTime: processingTime,
                 processor: 'qwen-vl-max',
@@ -204,6 +207,9 @@ class QwenVLMaxProcessor {
             // 6. 解析 JSON
             const extractedData = this.parseJSON(responseText);
             
+            // 6.5 后处理：填充空白日期（同一天多笔交易）
+            const processedData = this.postProcessTransactions(extractedData);
+            
             const totalTime = Date.now() - startTime;
             
             // 7. 更新统计
@@ -217,7 +223,7 @@ class QwenVLMaxProcessor {
             return {
                 success: true,
                 documentType: documentType,
-                extractedData: extractedData,
+                extractedData: processedData,  // ← 使用处理后的数据
                 rawResponse: responseText,
                 pages: files.length,
                 processingTime: totalTime,
@@ -430,6 +436,53 @@ class QwenVLMaxProcessor {
             // console.warn('⚠️ JSON 解析失败，返回原始文本'); // 已隐藏
             return { rawText: responseText };
         }
+    }
+    
+    /**
+     * 后处理：填充空白日期（同一天多笔交易）
+     * 问题：银行对账单中，同一天有多笔交易时，日期只显示一次，后续交易的日期列为空
+     * 解决：自动填充空白日期，使用上一笔交易的日期
+     * @param {Object} extractedData - AI 提取的原始数据
+     * @returns {Object} 处理后的数据
+     */
+    postProcessTransactions(extractedData) {
+        // 如果没有 transactions 数组，直接返回
+        if (!extractedData || !extractedData.transactions || !Array.isArray(extractedData.transactions)) {
+            return extractedData;
+        }
+        
+        let lastValidDate = null;
+        
+        // 遍历所有交易，填充空白日期
+        extractedData.transactions = extractedData.transactions.map((tx, index) => {
+            // 如果当前交易的日期为空/null/undefined/纯空格，使用上一笔的日期
+            if (!tx.date || (typeof tx.date === 'string' && tx.date.trim() === '')) {
+                if (lastValidDate) {
+                    // 使用上一笔交易的日期
+                    tx.date = lastValidDate;
+                } else {
+                    // 如果是第一笔就为空（罕见），尝试使用 statement 的开始日期
+                    if (extractedData.statementPeriod) {
+                        // 尝试从 "22 Feb to 22 Mar" 中提取开始日期
+                        const periodMatch = extractedData.statementPeriod.match(/^([^to]+)/);
+                        if (periodMatch) {
+                            tx.date = periodMatch[1].trim();
+                        } else {
+                            tx.date = 'Unknown';
+                        }
+                    } else {
+                        tx.date = 'Unknown';
+                    }
+                }
+            } else {
+                // 更新最后有效日期
+                lastValidDate = tx.date;
+            }
+            
+            return tx;
+        });
+        
+        return extractedData;
     }
     
     /**
