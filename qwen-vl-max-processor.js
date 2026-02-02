@@ -269,53 +269,38 @@ class QwenVLMaxProcessor {
 - LAST row's "餘額" = closingBalance
 
 ✂️ FIELD EXTRACTION RULES (NON-NEGOTIABLE):
-| JSON Field  | Source Column                     | Action                                                                 | Forbidden                                  |
-|-------------|-----------------------------------|------------------------------------------------------------------------|--------------------------------------------|
-| balance     | 餘額                              | COPY EXACT NUMBER (remove commas)                                      | CALCULATION, COMPARISON                    |
-| debit       | 借項 / 支出 / Withdrawal / Debit  | IF visible number exists (e.g., "150.00", "$1,500", "(500.00)") → extract numeric value (remove $, HKD, commas, parentheses)<br>IF cell is EMPTY/BLANK → output 0 | NEVER use numbers from "摘要/Description" |
-| credit      | 貸項 / 存入 / Deposit / Credit    | Same rule as debit                                                     | NEVER use numbers from "摘要/Description" |
-| date        | 日期 / Date                       | Convert to YYYY-MM-DD if clear                                         | —                                          |
-| description | 摘要 / 說明 / Description         | COPY original text                                                     | —                                          |
+| JSON Field      | Source Column | Action                                  | Forbidden               |
+|-----------------|---------------|-----------------------------------------|-------------------------|
+| balance         | 餘額          | COPY EXACT NUMBER (remove commas)       | CALCULATION, COMPARISON |
+| debit           | 借項          | COPY number or 0                        | —                       |
+| credit          | 貸項          | COPY number or 0                        | —                       |
+| amount          | (REMOVE)      | ⚠️ FIELD DELETED - DO NOT OUTPUT        | —                       |
+| transactionSign | (REMOVE)      | ⚠️ FIELD DELETED - DO NOT OUTPUT        | —                       |
 
 ❗ ABSOLUTE COMMANDS:
-- debit/credit MUST reflect the NUMBER IN ITS COLUMN:
-  • "借項"列显示"150.00" → debit: 150.00 (NOT 0)
-  • "借項"列空白 → debit: 0
-  • "借項"列显示"($500.00)" → debit: 500.00 (remove symbols, keep value)
-- IF number unclear → output null (NEVER guess)
-- REMOVE all commas/symbols from numbers before outputting (e.g., "HK$1,500.00" → 1500.00)
+- IF "餘額" column value = "30,718.39" → output balance: 30718.39 (NO EXCEPTIONS)
+- IF number unclear → output null (NEVER guess/calculate)
+- REMOVE all commas from numbers before outputting
 - Date format: Convert to YYYY-MM-DD ONLY if unambiguous; else output original string
 - Output ONLY valid JSON. NO explanations. NO markdown. NO comments.
 
-✅ CRITICAL EXAMPLES (show correct extraction):
-[Example 1] Row: [2024-01-15, "7-ELEVEN", "150.00", "", "30,568.39"]
-→ {"date":"2024-01-15", "description":"7-ELEVEN", "debit":150.00, "credit":0, "balance":30568.39}
-
-[Example 2] Row: [2024-01-16, "薪金", "", "15,000.00", "45,568.39"]
-→ {"date":"2024-01-16", "description":"薪金", "debit":0, "credit":15000.00, "balance":45568.39}
-
-[Example 3] Row: [2024-01-17, "ATM", "($200.00)", "", "45,368.39"]
-→ {"date":"2024-01-17", "description":"ATM", "debit":200.00, "credit":0, "balance":45368.39}
-
-[WRONG] Row: [2024-01-15, "轉賬至滙豐 $500", "500.00", "", "..."]
-→ debit:0 ❌ MUST be 500.00! Number is in 借項 column, NOT in description!
-
-📤 OUTPUT STRUCTURE:
+📤 OUTPUT STRUCTURE (REDUCED):
 {
   "bankName": "...",
   "accountNumber": "...",
   "accountHolder": "...",
   "currency": "...",
   "statementPeriod": "...",
-  "openingBalance": 30718.39,
-  "closingBalance": ...,
+  "openingBalance": 30718.39,  // FROM FIRST ROW'S "餘額"
+  "closingBalance": ...,        // FROM LAST ROW'S "餘額"
   "transactions": [
     {
       "date": "YYYY-MM-DD",
       "description": "...",
-      "debit": 150.00,
-      "credit": 0,
-      "balance": 30568.39
+      "debit": 0,
+      "credit": 1500.00,
+      "balance": 32218.39  // COPIED DIRECTLY FROM "餘額" COLUMN OF THIS ROW
+      // ⚠️ "amount" and "transactionSign" REMOVED TO PREVENT CALCULATION TRIGGERS
     }
   ]
 }
@@ -370,54 +355,39 @@ class QwenVLMaxProcessor {
 - LAST row's "餘額" (on last page) = closingBalance
 
 ✂️ FIELD EXTRACTION RULES (NON-NEGOTIABLE):
-| JSON Field  | Source Column                     | Action                                                                 | Forbidden                                  |
-|-------------|-----------------------------------|------------------------------------------------------------------------|--------------------------------------------|
-| balance     | 餘額                              | COPY EXACT NUMBER (remove commas)                                      | CALCULATION, COMPARISON                    |
-| debit       | 借項 / 支出 / Withdrawal / Debit  | IF visible number exists (e.g., "150.00", "$1,500", "(500.00)") → extract numeric value (remove $, HKD, commas, parentheses)<br>IF cell is EMPTY/BLANK → output 0 | NEVER use numbers from "摘要/Description" |
-| credit      | 貸項 / 存入 / Deposit / Credit    | Same rule as debit                                                     | NEVER use numbers from "摘要/Description" |
-| date        | 日期 / Date                       | Convert to YYYY-MM-DD if clear                                         | —                                          |
-| description | 摘要 / 說明 / Description         | COPY original text                                                     | —                                          |
+| JSON Field      | Source Column | Action                                  | Forbidden               |
+|-----------------|---------------|-----------------------------------------|-------------------------|
+| balance         | 餘額          | COPY EXACT NUMBER (remove commas)       | CALCULATION, COMPARISON |
+| debit           | 借項          | COPY number or 0                        | —                       |
+| credit          | 貸項          | COPY number or 0                        | —                       |
+| amount          | (REMOVE)      | ⚠️ FIELD DELETED - DO NOT OUTPUT        | —                       |
+| transactionSign | (REMOVE)      | ⚠️ FIELD DELETED - DO NOT OUTPUT        | —                       |
 
 ❗ ABSOLUTE COMMANDS:
-- debit/credit MUST reflect the NUMBER IN ITS COLUMN:
-  • "借項"列显示"150.00" → debit: 150.00 (NOT 0)
-  • "借項"列空白 → debit: 0
-  • "借項"列显示"($500.00)" → debit: 500.00 (remove symbols, keep value)
-- IF number unclear → output null (NEVER guess)
-- REMOVE all commas/symbols from numbers before outputting (e.g., "HK$1,500.00" → 1500.00)
+- IF "餘額" column value = "30,718.39" → output balance: 30718.39 (NO EXCEPTIONS)
+- IF number unclear → output null (NEVER guess/calculate)
+- REMOVE all commas from numbers before outputting
 - Date format: Convert to YYYY-MM-DD ONLY if unambiguous; else output original string
 - Combine ALL transactions from ALL ${pageCount} pages in chronological order
 - Output ONLY valid JSON. NO explanations. NO markdown. NO comments.
 
-✅ CRITICAL EXAMPLES (show correct extraction):
-[Example 1] Row: [2024-01-15, "7-ELEVEN", "150.00", "", "30,568.39"]
-→ {"date":"2024-01-15", "description":"7-ELEVEN", "debit":150.00, "credit":0, "balance":30568.39}
-
-[Example 2] Row: [2024-01-16, "薪金", "", "15,000.00", "45,568.39"]
-→ {"date":"2024-01-16", "description":"薪金", "debit":0, "credit":15000.00, "balance":45568.39}
-
-[Example 3] Row: [2024-01-17, "ATM", "($200.00)", "", "45,368.39"]
-→ {"date":"2024-01-17", "description":"ATM", "debit":200.00, "credit":0, "balance":45368.39}
-
-[WRONG] Row: [2024-01-15, "轉賬至滙豐 $500", "500.00", "", "..."]
-→ debit:0 ❌ MUST be 500.00! Number is in 借項 column, NOT in description!
-
-📤 OUTPUT STRUCTURE:
+📤 OUTPUT STRUCTURE (REDUCED):
 {
   "bankName": "...",
   "accountNumber": "...",
   "accountHolder": "...",
   "currency": "...",
   "statementPeriod": "...",
-  "openingBalance": 30718.39,
-  "closingBalance": ...,
+  "openingBalance": 30718.39,  // FROM FIRST ROW'S "餘額"
+  "closingBalance": ...,        // FROM LAST ROW'S "餘額"
   "transactions": [
     {
       "date": "YYYY-MM-DD",
       "description": "...",
-      "debit": 150.00,
-      "credit": 0,
-      "balance": 30568.39
+      "debit": 0,
+      "credit": 1500.00,
+      "balance": 32218.39  // COPIED DIRECTLY FROM "餘額" COLUMN OF THIS ROW
+      // ⚠️ "amount" and "transactionSign" REMOVED TO PREVENT CALCULATION TRIGGERS
     }
   ]
 }
