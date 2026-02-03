@@ -1,23 +1,60 @@
 # 🔄 当前银行对账单转换工作流程详解
 
-> **最后更新：** 2026-02-03  
-> **当前状态：** 使用千问AI（Qwen-VL-Max） + 前端后处理  
-> **核心文件：** `qwen-vl-max-processor.js`, `firstproject.html`
+> **最后更新：** 2026-02-03（🆕 千问AI优化版）  
+> **当前状态：** 使用千问AI（Qwen-VL-Max）"VISUAL TEXT EXTRACTOR"模式 + 规则引擎后处理  
+> **核心文件：** `qwen-vl-max-processor.js`, `firstproject.html`  
+> **文档版本：** 2.0
 
 ---
 
-## 📊 完整工作流程图
+## 🆕 本次更新要点（2026-02-03）
+
+根据千问AI（Qianwen AI）的专业建议，我们优化了整个工作流程：
+
+1. **✅ Prompt优化** - 从"OCR COPY MACHINE"升级为"VISUAL TEXT EXTRACTOR"
+   - 明确禁止行合并（ZERO row merging）
+   - 每个视觉行 = 一个transaction对象
+   - 多语言关键词支持
+
+2. **✅ 规则引擎增强** - 从单一"空日期填充"扩展为完整规则系统
+   - 规则1：空日期填充（解决同日多笔交易）
+   - 规则2：余额校验（预警异常跳变）
+   - 可扩展：轻松添加更多规则
+
+3. **✅ 职责分离** - AI vs. 规则引擎明确分工
+   - AI负责：视觉提取、表格识别、文本复制
+   - 规则引擎负责：确定性逻辑、数据填充、异常检测
+
+4. **✅ 多语言支持** - 关键词映射库（轻量JSON）
+   - 支持中文、英文、日文、韩文等
+   - 适用于全球所有银行
+
+---
+
+## 📊 完整工作流程图（2026-02-03 更新）
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    1. 用户上传文件                               │
-│                 (firstproject.html)                              │
+│              1. 用户上传文件 + 创建文档记录                       │
+│                      (firstproject.html)                         │
+│  • 立即在Firestore创建"processing"状态的文档                    │
+│  • 用户马上看到"处理中"的文件                                    │
 └────────────────────────┬────────────────────────────────────────┘
                          │
                          │ PDF 或 图片文件
                          │
 ┌────────────────────────▼────────────────────────────────────────┐
-│                 2. 文件类型判断                                  │
+│                 2. 检查Credits余额                               │
+│              (credits-manager.js)                                │
+│  • 计算所有文件的总页数                                          │
+│  • creditsManager.checkCredits(totalPages)                      │
+│  • 不足 → 删除占位文档 + 停止处理                                │
+└────────────────────────┬────────────────────────────────────────┘
+                         │
+                         │ Credits 余额充足
+                         │
+┌────────────────────────▼────────────────────────────────────────┐
+│                 3. 文件类型判断                                  │
 │                                                                  │
 │  if (PDF) {                                                      │
 │      转换为图片 (pdf-to-image-converter.js)                     │
@@ -28,41 +65,46 @@
                          │ 图片文件数组 (1张或多张)
                          │
 ┌────────────────────────▼────────────────────────────────────────┐
-│              3. 上传到 Firebase Storage                          │
+│              4. 上传到 Firebase Storage                          │
 │                                                                  │
 │  • 存储路径: projects/{projectId}/documents/{docId}/            │
-│  • 获取公开URL (用于AI访问)                                      │
+│  • 并行上传所有图片 (Promise.all)                                │
+│  • 获取公开URL数组 (用于AI访问)                                  │
 └────────────────────────┬────────────────────────────────────────┘
                          │
                          │ 图片URL数组
                          │
 ┌────────────────────────▼────────────────────────────────────────┐
-│           4. 扣除 Credits (credits-manager.js)                   │
-│                                                                  │
+│           5. 扣除 Credits（真正扣除）                            │
+│              (credits-manager.js)                                │
+│  • creditsManager.deductCredits(pages)                          │
 │  • 每页扣除 1 Credit                                             │
-│  • 如果余额不足 → 停止处理，提示充值                              │
+│  • 从用户余额中真正扣除                                          │
 └────────────────────────┬────────────────────────────────────────┘
                          │
                          │ Credits 已扣除
                          │
 ┌────────────────────────▼────────────────────────────────────────┐
-│    5. 调用 Qwen-VL Max AI (qwen-vl-max-processor.js)            │
+│    6. 调用 Qwen-VL Max AI (qwen-vl-max-processor.js)            │
 │                                                                  │
 │  ┌──────────────────────────────────────────────────────────┐  │
-│  │  5.1 文件转Base64                                         │  │
+│  │  6.1 文件转Base64                                         │  │
 │  │      • 读取文件内容                                       │  │
 │  │      • 转换为Base64编码                                   │  │
 │  └──────────────────────────────────────────────────────────┘  │
 │                         │                                        │
 │  ┌──────────────────────▼──────────────────────────────────┐  │
-│  │  5.2 生成 Prompt (generatePrompt)                        │  │
-│  │      • 根据文档类型生成提示词                             │  │
-│  │      • 银行对账单: 详细的字段提取规则                     │  │
-│  │      • 发票: 发票字段提取规则                            │  │
+│  │  6.2 生成 Prompt (generatePrompt) ⭐ 千问优化版          │  │
+│  │      "VISUAL TEXT EXTRACTOR" 模式                        │  │
+│  │      • ZERO calculation（不计算）                        │  │
+│  │      • ZERO inference（不推理）                          │  │
+│  │      • ZERO row merging（不合并行）                      │  │
+│  │      • 空日期 → 输出 "" (空字符串)                       │  │
+│  │      • EACH VISUAL ROW = ONE transaction                 │  │
 │  └──────────────────────────────────────────────────────────┘  │
 │                         │                                        │
 │  ┌──────────────────────▼──────────────────────────────────┐  │
-│  │  5.3 构建 API 请求                                        │  │
+│  │  6.3 构建 API 请求                                        │  │
 │  │      {                                                    │  │
 │  │        model: "qwen3-vl-plus-2025-12-19",               │  │
 │  │        messages: [                                       │  │
@@ -80,7 +122,7 @@
 │  └──────────────────────────────────────────────────────────┘  │
 │                         │                                        │
 │  ┌──────────────────────▼──────────────────────────────────┐  │
-│  │  5.4 通过 Cloudflare Worker 转发                         │  │
+│  │  6.4 通过 Cloudflare Worker 转发                         │  │
 │  │      • URL: deepseek-proxy.vaultcaddy.workers.dev       │  │
 │  │      • 隐藏真实 API Key                                  │  │
 │  │      • POST 请求到千问API                                │  │
@@ -89,7 +131,7 @@
 │                         │ 等待 8-15 秒                           │
 │                         │                                        │
 │  ┌──────────────────────▼──────────────────────────────────┐  │
-│  │  5.5 接收 AI 响应                                         │  │
+│  │  6.5 接收 AI 响应                                         │  │
 │  │      • 返回 JSON 格式的提取数据                          │  │
 │  │      • 包含使用量统计 (tokens, cost)                     │  │
 │  └──────────────────────────────────────────────────────────┘  │
@@ -98,7 +140,7 @@
                          │ AI 原始响应 (JSON字符串)
                          │
 ┌────────────────────────▼────────────────────────────────────────┐
-│              6. 解析响应 (parseJSON)                             │
+│              7. 解析响应 (parseJSON)                             │
 │                                                                  │
 │  • 清理 markdown 代码块标记 (```json)                            │
 │  • 尝试 JSON.parse()                                             │
@@ -109,23 +151,33 @@
                          │ 提取的结构化数据 (JavaScript 对象)
                          │
 ┌────────────────────────▼────────────────────────────────────────┐
-│      7. 前端后处理 (postProcessTransactions) ⭐ 关键步骤       │
+│   8. 规则引擎后处理 (postProcessTransactions) ⭐ 核心创新      │
 │                                                                  │
 │  ┌──────────────────────────────────────────────────────────┐  │
-│  │  处理恒生银行同日多笔交易问题                             │  │
-│  │                                                            │  │
-│  │  伪代码：                                                  │  │
+│  │  规则1：空日期填充（解决同日多笔交易问题）               │  │
+│  │  ─────────────────────────────────────────────────────  │  │
 │  │  lastValidDate = null                                     │  │
 │  │                                                            │  │
-│  │  for each transaction in transactions:                   │  │
-│  │      if (transaction.date 为空或空白):                    │  │
-│  │          if (lastValidDate 存在):                         │  │
-│  │              transaction.date = lastValidDate  // 填充    │  │
-│  │          else:                                            │  │
-│  │              尝试从 statementPeriod 提取日期             │  │
+│  │  for each transaction:                                   │  │
+│  │      if (transaction.date.trim() === ""):                │  │
+│  │          transaction.date = lastValidDate  // 继承上一行  │  │
 │  │      else:                                                │  │
-│  │          lastValidDate = transaction.date  // 更新       │  │
+│  │          lastValidDate = transaction.date  // 更新基准   │  │
 │  │                                                            │  │
+│  │  特点：                                                    │  │
+│  │  ✅ 确定性算法（100%可靠）                                │  │
+│  │  ✅ 不依赖AI视觉理解                                      │  │
+│  │  ✅ 处理边界情况（第一笔为空）                            │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                                                                  │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │  规则2：余额校验（可选，预警异常跳变）                    │  │
+│  │  ─────────────────────────────────────────────────────  │  │
+│  │  if (上一笔余额存在 && 当前余额存在):                     │  │
+│  │      delta = abs(当前余额 - 上一笔余额)                  │  │
+│  │      expected = max(debit, credit)                       │  │
+│  │      if (delta > expected * 1.5):                        │  │
+│  │          transaction.warning = "balance_jump"            │  │
 │  └──────────────────────────────────────────────────────────┘  │
 │                                                                  │
 │  示例：                                                          │
@@ -136,7 +188,7 @@
 │      {date: "",       description: "POS", debit: 150}       ←空 │
 │    ]                                                             │
 │                                                                  │
-│  输出（后处理后）：                                              │
+│  输出（规则引擎处理后）：                                        │
 │    [                                                             │
 │      {date: "10 Mar", description: "ATM", debit: 500},          │
 │      {date: "10 Mar", description: "TRANSFER", debit: 200}, ←填充│
@@ -144,17 +196,17 @@
 │    ]                                                             │
 └────────────────────────┬────────────────────────────────────────┘
                          │
-                         │ 处理后的完整数据
+                         │ 规则处理后的完整数据
                          │
 ┌────────────────────────▼────────────────────────────────────────┐
-│         8. 保存到 Firestore (simple-data-manager.js)             │
+│         9. 保存到 Firestore (simple-data-manager.js)             │
 │                                                                  │
 │  保存路径: projects/{projectId}/documents/{docId}                │
 │  保存内容:                                                       │
 │    {                                                             │
 │      name: "文档名称",                                           │
-│      status: "completed",                                        │
-│      processedData: {处理后的数据},                              │
+│      status: "completed",  // 从 "processing" 改为 "completed"  │
+│      processedData: {规则处理后的数据},                          │
 │      rawText: {AI原始响应},                                      │
 │      processingTime: 12345,  // 毫秒                             │
 │      processor: "qwen-vl-max",                                   │
@@ -167,7 +219,7 @@
                          │ 数据已保存
                          │
 ┌────────────────────────▼────────────────────────────────────────┐
-│              9. 刷新 UI (loadDocuments)                          │
+│              10. 刷新 UI (loadDocuments)                         │
 │                                                                  │
 │  • 从 Firestore 读取最新文档列表                                 │
 │  • 渲染表格，显示所有交易记录                                    │
@@ -176,38 +228,49 @@
 └──────────────────────────────────────────────────────────────────┘
 ```
 
+**🎯 工作流程总结（10步）：**
+
+1. ✅ **用户上传文件 + 建立文档** → 立即创建"processing"状态
+2. ✅ **检查Credits余额** → 验证是否足够
+3. ✅ **文件类型判断** → PDF需要转换
+4. ✅ **上传Storage** → 获取图片URL
+5. ✅ **扣除Credits** → 真正从余额中扣除
+6. ✅ **调用千问AI** → 🆕 **"VISUAL TEXT EXTRACTOR"模式**（千问优化）
+7. ✅ **解析响应** → 清理和验证JSON
+8. ✅ **规则引擎后处理** → 🔥 **空日期填充 + 余额校验**（核心创新）
+9. ✅ **保存数据** → 更新文档状态为completed
+10. ✅ **刷新UI** → 显示结果
+
 ---
 
 ## 🔍 核心步骤详解
 
-### 步骤 5.2：Prompt 生成（generatePrompt）
+### 步骤 6.2：Prompt 生成（generatePrompt）⭐ 千问优化版
 
-**银行对账单的 Prompt 结构：**
+**银行对账单的 Prompt 结构（2026-02-03 更新）：**
 
 ```
-STRICT MODE: You are a OCR COPY MACHINE. ONLY copy visible text. ZERO calculation. ZERO inference.
+STRICT MODE: You are a VISUAL TEXT EXTRACTOR. ONLY copy visible text. ZERO calculation. ZERO inference. ZERO row merging.
 
-📍 TARGET TABLE IDENTIFICATION (CRITICAL):
-- FIND table with header containing BOTH: "戶口進支" AND "餘額"
-- IGNORE any section with "戶口摘要" / "Account Summary" / "總計" / "TOTAL"
-- FIRST row of target table MUST be "承上結餘" (Brought Forward)
-- LAST row's "餘額" = closingBalance
+📍 TARGET TABLE IDENTIFICATION:
+- FIND table with headers containing: "Date" AND "Balance" (or "餘額"/"잔액"/"残高")
+- IGNORE tables with: "Summary"/"Total"/"總計"/"Account Summary"/"戶口摘要"
+- CONFIRM: Dates appear in sequence (e.g., "22 Feb", "28 Feb", "7 Mar")
 
-✂️ FIELD EXTRACTION RULES (NON-NEGOTIABLE):
-For EACH ROW in the identified table:
-• "date": copy RAW text from Date column. 
-          If empty / blank / whitespace-only → output "" (empty string). 
-          NEVER fill or infer.
-• "description": copy ALL visible text from description column
-• "credit": copy number from Credit/貸項 column. If empty → 0
-• "debit": copy number from Debit/借項 column. If empty → 0
-• "balance": copy number from Balance/餘額 column. If blank → null
+✂️ EXTRACTION RULES (NON-NEGOTIABLE):
+| Field       | Action                                                                 |
+|-------------|------------------------------------------------------------------------|
+| date        | COPY EXACT visible text. If blank → output "" (empty string)          |
+| description | COPY ALL text in row (including multi-line)                           |
+| debit       | COPY number (remove commas) or 0 if blank                             |
+| credit      | COPY number (remove commas) or 0 if blank                             |
+| balance     | COPY number (remove commas). If blank/"—"/"N/A" → output null         |
 
 ❗ ABSOLUTE COMMANDS:
-- IF number unclear → output null (NEVER guess/calculate)
-- REMOVE all commas from numbers before outputting
-- Date format: keep original string (e.g., "10 Mar", "2025-02-22")
+- EACH VISUAL ROW = ONE transaction object. NEVER merge rows.
+- If row has Description/Debit/Credit but blank Date → STILL output with date: ""
 - Output ONLY valid JSON. NO explanations. NO markdown.
+- Preserve original date format (e.g., "22 Feb", "2025-03-22")
 
 📤 OUTPUT STRUCTURE (exact keys, no variation):
 {
@@ -224,31 +287,69 @@ For EACH ROW in the identified table:
       "description": "ATM WITHDRAWAL",
       "credit": 0,
       "debit": 500.00,
-      "balance": null
+      "balance": 30218.39
     },
     {
-      "date": "",  // ← 空白日期（同日多笔交易）— 前端会填充
+      "date": "",  // ← 空白日期（视觉上看不到）— 规则引擎会填充
       "description": "ONLINE TRANSFER",
       "credit": 0,
       "debit": 200.00,
-      "balance": null
+      "balance": 30018.39
+    },
+    {
+      "date": "",  // ← 空白日期（视觉上看不到）— 规则引擎会填充
+      "description": "POS PURCHASE",
+      "credit": 0,
+      "debit": 150.00,
+      "balance": 29868.39
     }
   ]
 }
 ```
 
-**关键设计理念：**
+**🆕 关键设计理念（千问AI优化）：**
 
-1. ✅ **"OCR COPY MACHINE"** - AI只负责复制可见文本
-2. ✅ **"ZERO calculation"** - 不计算任何数值
-3. ✅ **"If empty → output ''"** - 空白日期输出空字符串（不是null）
-4. ✅ **示例包含空白日期** - 教AI如何处理同日多笔
+1. ✅ **"VISUAL TEXT EXTRACTOR"** - 只提取视觉可见的文本（不推理）
+2. ✅ **"ZERO row merging"** - 每个视觉行 = 一个transaction对象
+3. ✅ **"EACH VISUAL ROW = ONE transaction"** - 严格一对一映射
+4. ✅ **明确空白日期规则** - "If blank Date → STILL output with date: ''"
+5. ✅ **多语言支持** - "Balance"/"餘額"/"잔액"/"残高"
+
+**vs. 旧版Prompt的改进：**
+
+| 旧版 | 新版（千问优化） |
+|------|------------------|
+| "OCR COPY MACHINE" | **"VISUAL TEXT EXTRACTOR"** - 更精准的定位 |
+| 只强调"不计算" | **"ZERO row merging"** - 明确禁止合并行 |
+| 示例较简单 | **包含连续3笔空白日期** - 教AI正确处理 |
+| 只支持中文 | **多语言关键词** - Balance/餘額/잔액/残高 |
 
 ---
 
-### 步骤 7：前端后处理（postProcessTransactions）
+### 步骤 8：规则引擎后处理（postProcessTransactions）⭐ 核心创新
 
-**完整代码实现：**
+**🆕 设计理念（千问AI建议）：**
+
+AI负责"精准提取原始文本"，规则引擎负责"确定性逻辑处理"。
+
+```
+┌──────────────────────────────────────────────────────────┐
+│  AI的职责                     规则引擎的职责              │
+│  ─────────────────────────   ────────────────────────── │
+│  ✅ 识别表格结构              ✅ 填充空白日期            │
+│  ✅ 提取可见文本              ✅ 余额校验                │
+│  ✅ 复制数字（去逗号）        ✅ 异常检测                │
+│  ✅ 保持原始格式              ✅ 数据验证                │
+│                                                          │
+│  ❌ 不推理                    （确定性算法，100%可靠）    │
+│  ❌ 不计算                                               │
+│  ❌ 不合并行                                             │
+└──────────────────────────────────────────────────────────┘
+```
+
+---
+
+**完整代码实现（JavaScript版）：**
 
 ```javascript
 postProcessTransactions(extractedData) {
@@ -259,59 +360,110 @@ postProcessTransactions(extractedData) {
     }
     
     let lastValidDate = null;
+    const processed = [];
     
-    // 遍历所有交易，填充空白日期
-    extractedData.transactions = extractedData.transactions.map((tx, index) => {
-        // 如果当前交易的日期为空/null/undefined/纯空格
+    // 遍历所有交易，应用规则引擎
+    for (let i = 0; i < extractedData.transactions.length; i++) {
+        const tx = extractedData.transactions[i];
+        
+        // ✅ 规则1：空日期填充（解决同日多笔交易）
         if (!tx.date || (typeof tx.date === 'string' && tx.date.trim() === '')) {
             if (lastValidDate) {
-                // ✅ 使用上一笔交易的日期
-                tx.date = lastValidDate;
+                tx.date = lastValidDate;  // 继承上一行日期
             } else {
-                // 如果是第一笔就为空（罕见），尝试使用 statement 的开始日期
+                // 边界情况：第一笔就为空，尝试从statementPeriod提取
                 if (extractedData.statementPeriod) {
-                    // 尝试从 "22 Feb to 22 Mar" 中提取开始日期
                     const periodMatch = extractedData.statementPeriod.match(/^([^to]+)/);
-                    if (periodMatch) {
-                        tx.date = periodMatch[1].trim();
-                    } else {
-                        tx.date = 'Unknown';
-                    }
+                    tx.date = periodMatch ? periodMatch[1].trim() : 'Unknown';
                 } else {
                     tx.date = 'Unknown';
                 }
             }
         } else {
-            // ✅ 更新最后有效日期
-            lastValidDate = tx.date;
+            lastValidDate = tx.date;  // 更新基准日期
         }
         
-        return tx;
-    });
+        // ✅ 规则2：余额校验（可选，预警异常跳变）
+        if (processed.length > 0 && tx.balance && processed[processed.length - 1].balance) {
+            const prevBalance = processed[processed.length - 1].balance;
+            const delta = Math.abs(tx.balance - prevBalance);
+            const expected = Math.max(tx.debit || 0, tx.credit || 0);
+            
+            if (delta > expected * 1.5) {
+                tx.warning = "balance_jump";  // 标记异常跳变
+            }
+        }
+        
+        processed.push(tx);
+    }
     
+    extractedData.transactions = processed;
     return extractedData;
 }
 ```
 
-**工作原理：**
+---
+
+**🆕 Python版（千问AI建议，可用于后端服务器）：**
+
+```python
+def post_process(transactions):
+    """轻量规则引擎：解决AI无法处理的跨行逻辑"""
+    filled = []
+    last_date = ""
+    
+    for tx in transactions:
+        # ✅ 规则1：空日期填充（核心！）
+        if not tx["date"].strip():
+            tx["date"] = last_date  # 继承上一行日期
+        else:
+            last_date = tx["date"]  # 更新基准日期
+        
+        # ✅ 规则2：余额校验（预警异常跳变）
+        if filled and tx["balance"] and filled[-1]["balance"]:
+            delta = abs(tx["balance"] - filled[-1]["balance"])
+            expected = max(tx["debit"], tx["credit"])
+            if delta > expected * 1.5:  # 异常波动
+                tx["warning"] = "balance_jump"
+        
+        filled.append(tx)
+    
+    return {
+        "transactions": filled,
+        "confidence": calculate_confidence(filled),  # 基于空字段率/警告数
+        "needs_review": any(tx.get("warning") for tx in filled)
+    }
+```
+
+---
+
+**工作原理示例：**
 
 1. **第一笔交易（10 Mar）**
    - 日期：`"10 Mar"`（不为空）
    - 动作：`lastValidDate = "10 Mar"`
+   - 结果：`{date: "10 Mar", ...}`
 
 2. **第二笔交易（空）**
    - 日期：`""`（为空）
    - 动作：`tx.date = lastValidDate` → `"10 Mar"`
+   - 结果：`{date: "10 Mar", ...}`（已填充）
 
 3. **第三笔交易（空）**
    - 日期：`""`（为空）
    - 动作：`tx.date = lastValidDate` → `"10 Mar"`
+   - 结果：`{date: "10 Mar", ...}`（已填充）
 
-**优势：**
+---
+
+**🎯 规则引擎优势：**
 
 - ✅ **确定性算法** - 100%可靠，无随机性
-- ✅ **不依赖AI** - 完全在前端JavaScript处理
-- ✅ **处理边界情况** - 第一笔为空时使用statementPeriod
+- ✅ **不依赖AI** - 完全独立于视觉理解
+- ✅ **处理边界情况** - 第一笔为空时的fallback逻辑
+- ✅ **可扩展** - 轻松添加更多规则（余额校验、日期验证等）
+- ✅ **可追溯** - 可以记录每条规则的应用日志
+- ✅ **多语言支持** - 配合关键词映射库，支持全球银行
 
 ---
 
@@ -459,33 +611,93 @@ Output (what you should return):
 
 ---
 
-## 📝 总结
+## 🌍 多语言支持（2026-02-03 新增）
 
-当前工作流程：
+### 关键词映射库（轻量JSON）
 
-1. ✅ **用户上传** → PDF/图片
-2. ✅ **文件处理** → PDF转图片（如需要）
-3. ✅ **上传Storage** → 获取URL
-4. ✅ **扣除Credits** → 每页1 Credit
-5. ✅ **AI提取** → 千问VL-Max（8-15秒）
-6. ✅ **解析响应** → JSON parsing
-7. ✅ **前端后处理** → **填充空白日期**（核心创新）
-8. ✅ **保存数据** → Firestore
-9. ✅ **刷新UI** → 显示结果
+根据千问AI建议，使用关键词映射而非庞大的YAML配置：
 
-**核心优势：**
+```json
+{
+  "balance_keywords": ["Balance", "餘額", "잔액", "残高", "Solde", "Saldo"],
+  "date_keywords": ["Date", "日期", "取引日", "거래일", "Data", "Fecha"],
+  "debit_keywords": ["Debit", "Withdrawal", "借項", "支出", "출금", "引出し"],
+  "credit_keywords": ["Credit", "Deposit", "貸項", "收入", "입금", "預入"],
+  "ignore_sections": [
+    "Summary", "Account Summary", "戶口摘要", "계좌 요약",
+    "Total", "總計", "합계", "合計",
+    "Sub-total", "小計", "소계", "小計"
+  ]
+}
+```
 
-- ✅ 不依赖Prompt的完美性
-- ✅ 确定性算法，100%可靠
-- ✅ 处理边界情况（第一笔为空）
-
-**下一步：**
-
-请提供具体的测试案例，让我诊断问题出在哪一步！
+**优势：**
+- ✅ **轻量** - 只需1个JSON文件（vs. 每家银行1个YAML）
+- ✅ **易维护** - 添加新语言只需加几个关键词
+- ✅ **通用** - 适用于全球所有银行
+- ✅ **AI友好** - 直接在Prompt中使用这些关键词
 
 ---
 
-**文档版本：** 1.0  
-**创建日期：** 2026-02-03  
+## 📝 总结
+
+**当前工作流程（10步，2026-02-03 更新）：**
+
+1. ✅ **用户上传文件 + 建立文档** → 立即创建"processing"状态
+2. ✅ **检查Credits余额** → 验证是否足够
+3. ✅ **文件类型判断** → PDF需要转换
+4. ✅ **上传Storage** → 获取图片URL
+5. ✅ **扣除Credits** → 真正从余额中扣除
+6. ✅ **🆕 调用千问AI（优化版）** → "VISUAL TEXT EXTRACTOR"模式
+7. ✅ **解析响应** → JSON parsing
+8. ✅ **🔥 规则引擎后处理** → 空日期填充 + 余额校验（核心创新）
+9. ✅ **保存数据** → 更新文档状态为completed
+10. ✅ **刷新UI** → 显示结果
+
+---
+
+**🆕 核心优势（千问AI优化后）：**
+
+| 方面 | 优势 |
+|------|------|
+| **职责分离** | AI负责视觉提取，规则引擎负责逻辑处理 |
+| **确定性** | 规则引擎100%可靠，不依赖AI随机性 |
+| **可扩展** | 轻松添加新规则（余额校验、异常检测） |
+| **多语言** | 关键词映射支持全球银行 |
+| **可追溯** | 可记录每条规则的应用日志 |
+| **成本低** | Prompt简化，减少tokens消耗 |
+
+---
+
+**🎯 vs. 旧版的改进：**
+
+| 旧版 | 新版（千问优化） |
+|------|------------------|
+| "OCR COPY MACHINE" | **"VISUAL TEXT EXTRACTOR"** |
+| 依赖Prompt完美性 | **职责分离：AI提取+规则处理** |
+| 只处理空日期 | **规则引擎：日期+余额+异常检测** |
+| 单一语言（中文） | **多语言关键词映射** |
+| 无数据校验 | **余额跳变预警** |
+
+---
+
+**📌 重要说明：**
+
+根据您之前的要求，我们已经：
+1. ✅ **隐藏UI中的"类型"列**
+2. ✅ **工商银行提取完全正确**
+3. 🔄 **恒生银行同日多笔问题** - 已实施规则引擎方案
+
+如果恒生银行问题仍未解决，请提供：
+- 具体测试文件
+- AI原始响应
+- 期望vs实际结果对比
+
+我将针对性诊断！
+
+---
+
+**文档版本：** 2.0（千问AI优化版）  
+**最后更新：** 2026-02-03  
 **维护者：** AI助手
 
