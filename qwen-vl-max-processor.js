@@ -243,89 +243,47 @@ class QwenVLMaxProcessor {
      */
     generatePrompt(documentType) {
         if (documentType === 'bank_statement') {
-            return `STRICT MODE: You are a VISUAL TEXT EXTRACTOR. ONLY copy visible text. ZERO calculation. ZERO inference. ZERO row merging.
+            return `STRICT MODE: You are a OCR COPY MACHINE. ONLY copy visible text. ZERO calculation. ZERO inference.
 
-📍 TARGET TABLE IDENTIFICATION:
-- FIND table with headers containing keywords:
-  * Date: "Date"/"日期"/"交易日期"/"Date"
-  * Balance: "Balance"/"餘額"/"结余"/"잔액"/"残高"
-  * Transaction: "Transaction"/"交易"/"明細"/"Details"/"戶口進支"
-- IGNORE tables with: "Summary"/"Total"/"總計"/"Account Summary"/"戶口摘要"/"小計"
+📍 TARGET TABLE IDENTIFICATION (CRITICAL):
+- FIND table with header containing BOTH: "戶口進支" AND "餘額"
+- IGNORE any section with "戶口摘要" / "Account Summary" / "總計" / "TOTAL"
+- FIRST row of target table MUST be "承上結餘" (Brought Forward) → this row's "餘額" = openingBalance
+- LAST row's "餘額" = closingBalance
 
-✂️ ROW VALIDATION RULE (CRITICAL - AMOUNT-BASED):
-⚠️ A row is a VALID TRANSACTION if ANY of the following is TRUE:
-1. "Withdrawal"/"借項"/"支取"/"Debit" column contains a number (e.g., 840.00, 15,000.00)
-2. "Deposit"/"貸項"/"存入"/"Credit" column contains a number (e.g., 76,649.00)
-3. "Balance"/"餘額"/"结余" column contains a number (e.g., 30,718.39)
-4. "Transaction Details"/"交易明細"/"描述" column contains non-empty text
-
-→ IF ANY of these is true, extract as ONE transaction object — EVEN IF "Date" is blank.
-
-❗ CRITICAL: DO NOT use "Date" to decide if a row is a transaction. Use AMOUNT columns instead.
-
-✂️ EXTRACTION RULES (NON-NEGOTIABLE):
-| Field       | Action                                                                 |
-|-------------|------------------------------------------------------------------------|
-| date        | COPY EXACT visible text in Date column. If blank/empty → output ""    |
-| description | COPY ALL visible text from Transaction Details column of THIS ROW ONLY. NEVER merge with other rows. |
-| debit       | COPY number from Withdrawal/借項/支取 (remove commas). If blank → 0    |
-| credit      | COPY number from Deposit/貸項/存入 (remove commas). If blank → 0       |
-| balance     | COPY number from Balance/餘額 (remove commas). If blank/"—"/"N/A" → null |
+✂️ FIELD EXTRACTION RULES (NON-NEGOTIABLE):
+| JSON Field      | Source Column | Action                                  | Forbidden               |
+|-----------------|---------------|-----------------------------------------|-------------------------|
+| balance         | 餘額          | COPY EXACT NUMBER (remove commas). If blank/"—"/"N/A" → null | CALCULATION, COMPARISON |
+| debit           | 借項          | COPY number or 0                        | —                       |
+| credit          | 貸項          | COPY number or 0                        | —                       |
+| amount          | (REMOVE)      | ⚠️ FIELD DELETED - DO NOT OUTPUT        | —                       |
+| transactionSign | (REMOVE)      | ⚠️ FIELD DELETED - DO NOT OUTPUT        | —                       |
 
 ❗ ABSOLUTE COMMANDS:
-- EACH VISUAL ROW = ONE transaction object. NEVER combine multiple rows into one.
-- NEVER skip a row if it has content in debit/credit/balance columns.
-- A blank date does NOT mean "not a transaction" — check amount columns instead.
-- Copy description exactly as seen — including multi-line text within the same row.
-- Remove all commas from numbers before outputting.
-- Date format: Keep original format (e.g., "10 Mar", "2025-03-10").
+- IF "餘額" column value = "30,718.39" → output balance: 30718.39 (NO EXCEPTIONS)
+- IF number unclear → output null (NEVER guess/calculate)
+- REMOVE all commas from numbers before outputting
+- Date format: Convert to YYYY-MM-DD ONLY if unambiguous; else output original string
 - Output ONLY valid JSON. NO explanations. NO markdown. NO comments.
 
-📤 EXAMPLE: Hang Seng Bank (same-day multiple transactions)
-
-Visual table in PDF:
-Date       Transaction Details              Credit    Debit      Balance
-10 Mar     FAST PAYMENT                               81,206.59
-           HD1320962734031 08MAR (银联)               15,000.00  43,079.00
-11 Mar     FAST PAYMENT                                3,995.30
-           TUG COMPANY LIMITED                                   39,112.60
-14 Mar     MUSHROOM TRANSPORTAT                        6,500.00
-           HD1412311198465 14MAR
-           N31411203220(14MARR20)                      3,900.00  36,512.60
-
-Expected output (7 separate transaction objects):
-[
-  {"date": "10 Mar", "description": "FAST PAYMENT", "credit": 0, "debit": 81206.59, "balance": null},
-  {"date": "",       "description": "HD1320962734031 08MAR (银联)", "credit": 0, "debit": 15000.00, "balance": 43079.00},
-  {"date": "11 Mar", "description": "FAST PAYMENT", "credit": 0, "debit": 3995.30, "balance": null},
-  {"date": "",       "description": "TUG COMPANY LIMITED", "credit": 0, "debit": 0, "balance": 39112.60},
-  {"date": "14 Mar", "description": "MUSHROOM TRANSPORTAT", "credit": 0, "debit": 6500.00, "balance": null},
-  {"date": "",       "description": "HD1412311198465 14MAR", "credit": 0, "debit": 0, "balance": null},
-  {"date": "",       "description": "N31411203220(14MARR20)", "credit": 0, "debit": 3900.00, "balance": 36512.60}
-]
-
-⚠️ CRITICAL OBSERVATION:
-- Row 2, 4, 6, 7 have BLANK dates
-- BUT all have numbers in debit/balance columns → ALL extracted as valid transactions
-- Descriptions are complete even when date is blank
-- Each row = one object (NOT merged)
-
-📤 OUTPUT STRUCTURE:
+📤 OUTPUT STRUCTURE (REDUCED):
 {
   "bankName": "...",
   "accountNumber": "...",
   "accountHolder": "...",
   "currency": "...",
   "statementPeriod": "...",
-  "openingBalance": 30718.39,
-  "closingBalance": 30188.66,
+  "openingBalance": 30718.39,  // FROM FIRST ROW'S "餘額"
+  "closingBalance": ...,        // FROM LAST ROW'S "餘額"
   "transactions": [
     {
-      "date": "10 Mar",
+      "date": "YYYY-MM-DD",
       "description": "...",
       "debit": 0,
       "credit": 1500.00,
-      "balance": 32218.39
+      "balance": 32218.39  // COPIED DIRECTLY FROM "餘額" COLUMN OF THIS ROW
+      // ⚠️ "amount" and "transactionSign" REMOVED TO PREVENT CALCULATION TRIGGERS
     }
   ]
 }`;
@@ -369,62 +327,50 @@ Expected output (7 separate transaction objects):
      */
     generateMultiPagePrompt(documentType, pageCount) {
         if (documentType === 'bank_statement') {
-            return `STRICT MODE: You are a VISUAL TEXT EXTRACTOR processing ${pageCount} images (multiple pages of same statement). ONLY copy visible text. ZERO calculation. ZERO inference. ZERO row merging.
+            return `STRICT MODE: You are a OCR COPY MACHINE processing ${pageCount} images (multiple pages of same statement). ONLY copy visible text. ZERO calculation. ZERO inference.
 
-📍 TARGET TABLE IDENTIFICATION across ALL ${pageCount} pages:
-- FIND table with headers containing keywords:
-  * Date: "Date"/"日期"/"交易日期"
-  * Balance: "Balance"/"餘額"/"结余"/"잔액"/"残高"
-  * Transaction: "Transaction"/"交易"/"明細"/"Details"/"戶口進支"
-- IGNORE tables with: "Summary"/"Total"/"總計"/"Account Summary"/"戶口摘要"/"小計"
+📍 TARGET TABLE IDENTIFICATION (CRITICAL) across ALL ${pageCount} pages:
+- FIND table with header containing BOTH: "戶口進支" AND "餘額"
+- IGNORE any section with "戶口摘要" / "Account Summary" / "總計" / "TOTAL"
+- FIRST row of target table MUST be "承上結餘" (Brought Forward) → this row's "餘額" = openingBalance
+- LAST row's "餘額" = closingBalance
 
-✂️ ROW VALIDATION RULE (CRITICAL - AMOUNT-BASED):
-⚠️ A row is a VALID TRANSACTION if ANY of the following is TRUE:
-1. "Withdrawal"/"借項"/"支取"/"Debit" column contains a number
-2. "Deposit"/"貸項"/"存入"/"Credit" column contains a number
-3. "Balance"/"餘額"/"结余" column contains a number
-4. "Transaction Details"/"交易明細"/"描述" column contains non-empty text
-
-→ IF ANY of these is true, extract as ONE transaction object — EVEN IF "Date" is blank.
-
-❗ CRITICAL: DO NOT use "Date" to decide if a row is a transaction. Use AMOUNT columns instead.
-
-✂️ EXTRACTION RULES (NON-NEGOTIABLE):
+✂️ FIELD EXTRACTION RULES (NON-NEGOTIABLE):
 For EACH ROW across ALL ${pageCount} pages:
-| Field       | Action                                                                 |
-|-------------|------------------------------------------------------------------------|
-| date        | COPY EXACT visible text in Date column. If blank/empty → output ""    |
-| description | COPY ALL visible text from Transaction Details column of THIS ROW ONLY. NEVER merge with other rows. |
-| debit       | COPY number from Withdrawal/借項/支取 (remove commas). If blank → 0    |
-| credit      | COPY number from Deposit/貸項/存入 (remove commas). If blank → 0       |
-| balance     | COPY number from Balance/餘額 (remove commas). If blank/"—"/"N/A" → null |
+| JSON Field      | Source Column | Action                                  | Forbidden               |
+|-----------------|---------------|-----------------------------------------|-------------------------|
+| balance         | 餘額          | COPY EXACT NUMBER (remove commas). If blank/"—"/"N/A" → null | CALCULATION, COMPARISON |
+| debit           | 借項          | COPY number or 0                        | —                       |
+| credit          | 貸項          | COPY number or 0                        | —                       |
+| amount          | (REMOVE)      | ⚠️ FIELD DELETED - DO NOT OUTPUT        | —                       |
+| transactionSign | (REMOVE)      | ⚠️ FIELD DELETED - DO NOT OUTPUT        | —                       |
 
 ❗ ABSOLUTE COMMANDS:
-- EACH VISUAL ROW = ONE transaction object. NEVER combine multiple rows into one.
-- NEVER skip a row if it has content in debit/credit/balance columns.
-- A blank date does NOT mean "not a transaction" — check amount columns instead.
-- Copy description exactly as seen — including multi-line text within the same row.
-- Remove all commas from numbers before outputting.
-- Date format: Keep original format (e.g., "10 Mar", "2025-03-10").
-- Combine ALL transactions from ALL ${pageCount} pages in chronological order.
+- IF "餘額" column value = "30,718.39" → output balance: 30718.39 (NO EXCEPTIONS)
+- IF number unclear → output null (NEVER guess/calculate)
+- REMOVE all commas from numbers before outputting
+- Date format: Convert to YYYY-MM-DD ONLY if unambiguous; else output original string
+- statementPeriod: MUST be "first transaction date to last transaction date" (e.g., "22 Feb to 22 Mar")
+- Combine ALL transactions from ALL ${pageCount} pages in chronological order
 - Output ONLY valid JSON. NO explanations. NO markdown. NO comments.
 
-📤 OUTPUT STRUCTURE:
+📤 OUTPUT STRUCTURE (REDUCED):
 {
   "bankName": "...",
   "accountNumber": "...",
   "accountHolder": "...",
   "currency": "...",
   "statementPeriod": "...",
-  "openingBalance": 30718.39,
-  "closingBalance": 30188.66,
+  "openingBalance": 30718.39,  // FROM FIRST ROW'S "餘額"
+  "closingBalance": ...,        // FROM LAST ROW'S "餘額"
   "transactions": [
     {
-      "date": "10 Mar",
+      "date": "YYYY-MM-DD",
       "description": "...",
       "debit": 0,
       "credit": 1500.00,
-      "balance": 32218.39
+      "balance": 32218.39  // COPIED DIRECTLY FROM "餘額" COLUMN OF THIS ROW
+      // ⚠️ "amount" and "transactionSign" REMOVED TO PREVENT CALCULATION TRIGGERS
     }
   ]
 }`;
