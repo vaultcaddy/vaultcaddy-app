@@ -251,6 +251,22 @@ class QwenVLMaxProcessor {
 - FIRST row of target table MUST be "承上結餘" (Brought Forward) → this row's "餘額" = openingBalance
 - LAST row's "餘額" = closingBalance
 
+🔍 COLUMN IDENTIFICATION (Multi-language Keywords):
+Carefully identify each column by its header keywords:
+
+| Column Type | Keywords (ANY of these) | Maps to JSON Field |
+|-------------|------------------------|-------------------|
+| Date        | "Date", "DATE", "日期", "交易日期", "發生日期", "날짜" | date |
+| Description | "Transaction Details", "Particulars", "戶口進支", "摘要", "交易明細", "说明", "적요" | description |
+| **CREDIT (存入)** | "Deposit", "DEPOSIT", "Credit", "CREDIT", "貸項", "存入", "收入", "입금" | credit |
+| **DEBIT (支出)** | "Withdrawal", "WITHDRAWAL", "Debit", "DEBIT", "借項", "支出", "費用", "지출" | debit |
+| Balance     | "Balance", "BALANCE", "餘額", "結餘", "余额", "잔액" | balance |
+
+❗ CRITICAL: 
+- "貸項"/"Deposit"/"Credit" → ALWAYS map to "credit" (money IN)
+- "借項"/"Withdrawal"/"Debit" → ALWAYS map to "debit" (money OUT)
+- DO NOT confuse them. Check column header carefully before extracting.
+
 ⚠️ CRITICAL ROW INTEGRITY RULE:
 ALL fields (date, description, credit, debit, balance) for ONE transaction MUST come from the SAME VISUAL ROW in the table.
 
@@ -274,11 +290,21 @@ For EACH ROW:
 | debit           | 借項/支出      | COPY number or 0. Remove commas         | —                       |
 | balance         | 餘額          | COPY number (remove commas). If blank/"—"/"N/A" → null | CALCULATION, COMPARISON |
 
+⚠️ TRANSACTION EXTRACTION RULE (MOST CRITICAL):
+A row is a VALID TRANSACTION if:
+- "credit" > 0 OR "debit" > 0 (at least one has a number)
+
+EVEN IF "date" is empty ("") AND "balance" is null, you MUST extract it as a transaction.
+
+Example:
+- Row: "" | "ONLINE TRANSFER" | 200.00 | 0 | null
+  → VALID transaction (credit > 0)
+- Row: "10 Mar" | "ATM WITHDRAWAL" | 0 | 0 | 79305.59
+  → INVALID transaction (no credit or debit) → SKIP
+
 ✅ VALIDATION CHECK before outputting each transaction:
-- IF "date" is NOT empty AND "balance" is NOT null
-  → "description" MUST NOT be empty/blank
-  → "credit" OR "debit" MUST have a value (at least one must be > 0)
-- IF above check fails → RE-READ that visual row from left to right completely
+- IF "credit" > 0 OR "debit" > 0 → EXTRACT as transaction
+- IF both "credit" = 0 AND "debit" = 0 → SKIP (not a transaction)
 
 ❗ ABSOLUTE COMMANDS:
 - IF "餘額" column value = "30,718.39" → output balance: 30718.39 (NO EXCEPTIONS)
@@ -303,6 +329,13 @@ For EACH ROW:
       "credit": 78649.00,
       "debit": 0,
       "balance": 80145.59
+    },
+    {
+      "date": "",
+      "description": "ONLINE TRANSFER",
+      "credit": 0,
+      "debit": 200.00,
+      "balance": null
     }
   ]
 }`;
@@ -354,6 +387,22 @@ For EACH ROW:
 - FIRST row of target table MUST be "承上結餘" (Brought Forward) → this row's "餘額" = openingBalance
 - LAST row's "餘額" = closingBalance
 
+🔍 COLUMN IDENTIFICATION (Multi-language Keywords):
+Carefully identify each column by its header keywords:
+
+| Column Type | Keywords (ANY of these) | Maps to JSON Field |
+|-------------|------------------------|-------------------|
+| Date        | "Date", "DATE", "日期", "交易日期", "發生日期", "날짜" | date |
+| Description | "Transaction Details", "Particulars", "戶口進支", "摘要", "交易明細", "说明", "적요" | description |
+| **CREDIT (存入)** | "Deposit", "DEPOSIT", "Credit", "CREDIT", "貸項", "存入", "收入", "입금" | credit |
+| **DEBIT (支出)** | "Withdrawal", "WITHDRAWAL", "Debit", "DEBIT", "借項", "支出", "費用", "지출" | debit |
+| Balance     | "Balance", "BALANCE", "餘額", "結餘", "余额", "잔액" | balance |
+
+❗ CRITICAL: 
+- "貸項"/"Deposit"/"Credit" → ALWAYS map to "credit" (money IN)
+- "借項"/"Withdrawal"/"Debit" → ALWAYS map to "debit" (money OUT)
+- DO NOT confuse them. Check column header carefully before extracting.
+
 ⚠️ CRITICAL ROW INTEGRITY RULE:
 ALL fields (date, description, credit, debit, balance) for ONE transaction MUST come from the SAME VISUAL ROW in the table.
 
@@ -377,11 +426,21 @@ For EACH ROW across ALL ${pageCount} pages:
 | debit           | 借項/支出      | COPY number or 0. Remove commas         | —                       |
 | balance         | 餘額          | COPY number (remove commas). If blank/"—"/"N/A" → null | CALCULATION, COMPARISON |
 
+⚠️ TRANSACTION EXTRACTION RULE (MOST CRITICAL):
+A row is a VALID TRANSACTION if:
+- "credit" > 0 OR "debit" > 0 (at least one has a number)
+
+EVEN IF "date" is empty ("") AND "balance" is null, you MUST extract it as a transaction.
+
+Example:
+- Row: "" | "ONLINE TRANSFER" | 200.00 | 0 | null
+  → VALID transaction (credit > 0)
+- Row: "10 Mar" | "ATM WITHDRAWAL" | 0 | 0 | 79305.59
+  → INVALID transaction (no credit or debit) → SKIP
+
 ✅ VALIDATION CHECK before outputting each transaction:
-- IF "date" is NOT empty AND "balance" is NOT null
-  → "description" MUST NOT be empty/blank
-  → "credit" OR "debit" MUST have a value (at least one must be > 0)
-- IF above check fails → RE-READ that visual row from left to right completely
+- IF "credit" > 0 OR "debit" > 0 → EXTRACT as transaction
+- IF both "credit" = 0 AND "debit" = 0 → SKIP (not a transaction)
 
 ❗ ABSOLUTE COMMANDS:
 - IF "餘額" column value = "30,718.39" → output balance: 30718.39 (NO EXCEPTIONS)
@@ -408,6 +467,13 @@ For EACH ROW across ALL ${pageCount} pages:
       "credit": 78649.00,
       "debit": 0,
       "balance": 80145.59
+    },
+    {
+      "date": "",
+      "description": "ONLINE TRANSFER",
+      "credit": 0,
+      "debit": 200.00,
+      "balance": null
     }
   ]
 }`;
