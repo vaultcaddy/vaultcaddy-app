@@ -243,74 +243,72 @@ class QwenVLMaxProcessor {
      */
     generatePrompt(documentType) {
         if (documentType === 'bank_statement') {
-            return `STRICT MODE: You are a OCR COPY MACHINE. ONLY copy visible text. ZERO calculation. ZERO inference.
+            return `STRICT MODE: You are an EXCEL DATA PROCESSOR. Treat the PDF as an Excel spreadsheet. ONLY copy visible cell values. ZERO calculation. ZERO inference.
 
-📍 TARGET TABLE IDENTIFICATION (CRITICAL):
-- FIND table with header containing BOTH: "戶口進支" AND "餘額"
-- IGNORE any section with "戶口摘要" / "Account Summary" / "總計" / "TOTAL"
-- FIRST row of target table MUST be "承上結餘" (Brought Forward) → this row's "餘額" = openingBalance
-- LAST row's "餘額" = closingBalance
+📍 STEP 1: LOCATE THE TARGET TABLE
+- FIND table with header row containing BOTH: "戶口進支" AND "餘額"
+- IGNORE any section with: "戶口摘要" / "Account Summary" / "總計" / "TOTAL"
+- The FIRST data row MUST be "承上結餘" (Brought Forward) → this row's "餘額" = openingBalance
+- The LAST data row's "餘額" = closingBalance
 
-🔍 COLUMN IDENTIFICATION (Multi-language Keywords):
-Carefully identify each column by its header keywords:
+📍 STEP 2: READ HEADER ROW (like Excel Row 1)
+Find the header row and identify each column's position and meaning:
 
-| Column Type | Keywords (ANY of these) | Maps to JSON Field |
-|-------------|------------------------|-------------------|
-| Date        | "Date", "DATE", "日期", "交易日期", "發生日期", "날짜" | date |
-| Description | "Transaction Details", "Particulars", "戶口進支", "摘要", "交易明細", "说明", "적요" | description |
-| **CREDIT (存入)** | "Deposit", "DEPOSIT", "Credit", "CREDIT", "貸項", "存入", "收入", "입금" | credit |
-| **DEBIT (支出)** | "Withdrawal", "WITHDRAWAL", "Debit", "DEBIT", "借項", "支出", "費用", "지출" | debit |
-| Balance     | "Balance", "BALANCE", "餘額", "結餘", "余额", "잔액" | balance |
+READ each column header from left to right and determine:
+- Which column contains: "Date" / "日期" / "DATE" → Column A (date)
+- Which column contains: "Transaction Details" / "戶口進支" / "Particulars" / "摘要" → Column B (description)
+- Which column contains: "Deposit" / "貸項" / "存入" / "Credit" / "CREDIT" → Column C or D (THIS IS CREDIT - money IN)
+- Which column contains: "Withdrawal" / "借項" / "支出" / "Debit" / "DEBIT" → Column C or D (THIS IS DEBIT - money OUT)
+- Which column contains: "Balance" / "餘額" / "結餘" → Column E (balance)
 
-❗ CRITICAL: 
-- "貸項"/"Deposit"/"Credit" → ALWAYS map to "credit" (money IN)
-- "借項"/"Withdrawal"/"Debit" → ALWAYS map to "debit" (money OUT)
-- DO NOT confuse them. Check column header carefully before extracting.
+⚠️ CRITICAL COLUMN MAPPING:
+You MUST determine the EXACT position of Credit and Debit columns:
+- If header row shows: "日期 | 戶口進支 | 貸項 | 借項 | 餘額"
+  → Column mapping: A=date, B=description, C=credit, D=debit, E=balance
+- If header row shows: "Date | Particulars | Withdrawal | Deposit | Balance"
+  → Column mapping: A=date, B=description, C=debit, D=credit, E=balance
+
+❗ BEFORE extracting ANY data, you MUST know:
+- "貸項" is in column ___ → THIS IS CREDIT (money IN)
+- "借項" is in column ___ → THIS IS DEBIT (money OUT)
+
+📍 STEP 3: PROCESS LIKE EXCEL (Column-by-Column for Each Row)
+📍 STEP 3: PROCESS LIKE EXCEL (Column-by-Column for Each Row)
+
+Starting from the FIRST data row (after header), process EACH row like reading an Excel spreadsheet:
+
+FOR EACH ROW (Row 2, Row 3, Row 4, ...):
+  1. Read cell in Column A (Date column) → extract "date"
+  2. Read cell in Column B (Description column) → extract "description"
+  3. Read cell in Column C:
+     - IF Column C header = "貸項"/"Deposit"/"Credit" → extract to "credit"
+     - IF Column C header = "借項"/"Withdrawal"/"Debit" → extract to "debit"
+  4. Read cell in Column D:
+     - IF Column D header = "貸項"/"Deposit"/"Credit" → extract to "credit"
+     - IF Column D header = "借項"/"Withdrawal"/"Debit" → extract to "debit"
+  5. Read cell in Column E (Balance column) → extract "balance"
+  
+  6. TRANSACTION VALIDATION:
+     - IF "credit" > 0 OR "debit" > 0 → OUTPUT this row as a transaction
+     - IF both "credit" = 0 AND "debit" = 0 → SKIP (not a transaction)
 
 ⚠️ CRITICAL ROW INTEGRITY RULE:
-ALL fields (date, description, credit, debit, balance) for ONE transaction MUST come from the SAME VISUAL ROW in the table.
+ALL fields for ONE transaction MUST come from the SAME ROW (like reading Excel row by row).
 
-📍 EXTRACTION ORDER (left-to-right, DO NOT skip columns):
-For EACH ROW:
-1. Read Date column (leftmost) → extract "date"
-2. Read Description column (middle) → extract "description" (ALL visible text in this column)
-3. Read Credit/Deposit column → extract "credit"
-4. Read Debit/Withdrawal column → extract "debit"
-5. Read Balance column (rightmost) → extract "balance"
-6. Move to NEXT ROW and repeat
-
-❗ NEVER read Date → skip middle columns → jump to Balance. This causes data loss.
-
-✂️ FIELD EXTRACTION RULES (NON-NEGOTIABLE):
-| JSON Field      | Source Column | Action                                  | Forbidden               |
-|-----------------|---------------|-----------------------------------------|-------------------------|
-| date            | 日期          | COPY RAW text. If empty → ""            | —                       |
-| description     | 戶口進支/摘要  | COPY ALL visible text from THIS row     | Skipping, merging       |
-| credit          | 貸項/存入      | COPY number or 0. Remove commas         | —                       |
-| debit           | 借項/支出      | COPY number or 0. Remove commas         | —                       |
-| balance         | 餘額          | COPY number (remove commas). If blank/"—"/"N/A" → null | CALCULATION, COMPARISON |
-
-⚠️ TRANSACTION EXTRACTION RULE (MOST CRITICAL):
-A row is a VALID TRANSACTION if:
-- "credit" > 0 OR "debit" > 0 (at least one has a number)
-
-EVEN IF "date" is empty ("") AND "balance" is null, you MUST extract it as a transaction.
-
-Example:
-- Row: "" | "ONLINE TRANSFER" | 200.00 | 0 | null
-  → VALID transaction (credit > 0)
-- Row: "10 Mar" | "ATM WITHDRAWAL" | 0 | 0 | 79305.59
-  → INVALID transaction (no credit or debit) → SKIP
-
-✅ VALIDATION CHECK before outputting each transaction:
-- IF "credit" > 0 OR "debit" > 0 → EXTRACT as transaction
-- IF both "credit" = 0 AND "debit" = 0 → SKIP (not a transaction)
+✂️ FIELD EXTRACTION RULES:
+| JSON Field  | Excel Cell Value | Action                                  |
+|-------------|------------------|-----------------------------------------|
+| date        | Column A         | COPY text. If empty → ""                |
+| description | Column B         | COPY ALL text from this cell            |
+| credit      | Column C or D    | COPY number. If empty → 0. Remove commas|
+| debit       | Column C or D    | COPY number. If empty → 0. Remove commas|
+| balance     | Column E         | COPY number. Remove commas. If "—"/"N/A"/blank → null |
 
 ❗ ABSOLUTE COMMANDS:
-- IF "餘額" column value = "30,718.39" → output balance: 30718.39 (NO EXCEPTIONS)
-- IF number unclear → output null (NEVER guess/calculate)
-- REMOVE all commas from numbers before outputting
-- Date format: keep original string (e.g., "7 Mar", "10 Mar", "2025-02-22")
+- NEVER swap credit and debit columns
+- NEVER skip rows with empty date or balance IF they have credit/debit value
+- REMOVE all commas from numbers (e.g., "30,718.39" → 30718.39)
+- Date format: keep original string (e.g., "7 Mar", "2025-02-22")
 - Output ONLY valid JSON. NO explanations. NO markdown. NO comments.
 
 📤 OUTPUT STRUCTURE:
@@ -379,74 +377,71 @@ Example:
      */
     generateMultiPagePrompt(documentType, pageCount) {
         if (documentType === 'bank_statement') {
-            return `STRICT MODE: You are a OCR COPY MACHINE processing ${pageCount} images (multiple pages of same statement). ONLY copy visible text. ZERO calculation. ZERO inference.
+            return `STRICT MODE: You are an EXCEL DATA PROCESSOR processing ${pageCount} images (multiple pages of same statement). Treat the PDF as an Excel spreadsheet. ONLY copy visible cell values. ZERO calculation. ZERO inference.
 
-📍 TARGET TABLE IDENTIFICATION (CRITICAL) across ALL ${pageCount} pages:
-- FIND table with header containing BOTH: "戶口進支" AND "餘額"
-- IGNORE any section with "戶口摘要" / "Account Summary" / "總計" / "TOTAL"
-- FIRST row of target table MUST be "承上結餘" (Brought Forward) → this row's "餘額" = openingBalance
-- LAST row's "餘額" = closingBalance
+📍 STEP 1: LOCATE THE TARGET TABLE (across ALL ${pageCount} pages)
+- FIND table with header row containing BOTH: "戶口進支" AND "餘額"
+- IGNORE any section with: "戶口摘要" / "Account Summary" / "總計" / "TOTAL"
+- The FIRST data row MUST be "承上結餘" (Brought Forward) → this row's "餘額" = openingBalance
+- The LAST data row's "餘額" = closingBalance
 
-🔍 COLUMN IDENTIFICATION (Multi-language Keywords):
-Carefully identify each column by its header keywords:
+📍 STEP 2: READ HEADER ROW (like Excel Row 1)
+Find the header row and identify each column's position and meaning:
 
-| Column Type | Keywords (ANY of these) | Maps to JSON Field |
-|-------------|------------------------|-------------------|
-| Date        | "Date", "DATE", "日期", "交易日期", "發生日期", "날짜" | date |
-| Description | "Transaction Details", "Particulars", "戶口進支", "摘要", "交易明細", "说明", "적요" | description |
-| **CREDIT (存入)** | "Deposit", "DEPOSIT", "Credit", "CREDIT", "貸項", "存入", "收入", "입금" | credit |
-| **DEBIT (支出)** | "Withdrawal", "WITHDRAWAL", "Debit", "DEBIT", "借項", "支出", "費用", "지출" | debit |
-| Balance     | "Balance", "BALANCE", "餘額", "結餘", "余额", "잔액" | balance |
+READ each column header from left to right and determine:
+- Which column contains: "Date" / "日期" / "DATE" → Column A (date)
+- Which column contains: "Transaction Details" / "戶口進支" / "Particulars" / "摘要" → Column B (description)
+- Which column contains: "Deposit" / "貸項" / "存入" / "Credit" / "CREDIT" → Column C or D (THIS IS CREDIT - money IN)
+- Which column contains: "Withdrawal" / "借項" / "支出" / "Debit" / "DEBIT" → Column C or D (THIS IS DEBIT - money OUT)
+- Which column contains: "Balance" / "餘額" / "結餘" → Column E (balance)
 
-❗ CRITICAL: 
-- "貸項"/"Deposit"/"Credit" → ALWAYS map to "credit" (money IN)
-- "借項"/"Withdrawal"/"Debit" → ALWAYS map to "debit" (money OUT)
-- DO NOT confuse them. Check column header carefully before extracting.
+⚠️ CRITICAL COLUMN MAPPING:
+You MUST determine the EXACT position of Credit and Debit columns:
+- If header row shows: "日期 | 戶口進支 | 貸項 | 借項 | 餘額"
+  → Column mapping: A=date, B=description, C=credit, D=debit, E=balance
+- If header row shows: "Date | Particulars | Withdrawal | Deposit | Balance"
+  → Column mapping: A=date, B=description, C=debit, D=credit, E=balance
+
+❗ BEFORE extracting ANY data, you MUST know:
+- "貸項" is in column ___ → THIS IS CREDIT (money IN)
+- "借項" is in column ___ → THIS IS DEBIT (money OUT)
+
+📍 STEP 3: PROCESS LIKE EXCEL (Column-by-Column for Each Row)
+
+Starting from the FIRST data row (after header), process EACH row across ALL ${pageCount} pages like reading an Excel spreadsheet:
+
+FOR EACH ROW (Row 2, Row 3, Row 4, ...):
+  1. Read cell in Column A (Date column) → extract "date"
+  2. Read cell in Column B (Description column) → extract "description"
+  3. Read cell in Column C:
+     - IF Column C header = "貸項"/"Deposit"/"Credit" → extract to "credit"
+     - IF Column C header = "借項"/"Withdrawal"/"Debit" → extract to "debit"
+  4. Read cell in Column D:
+     - IF Column D header = "貸項"/"Deposit"/"Credit" → extract to "credit"
+     - IF Column D header = "借項"/"Withdrawal"/"Debit" → extract to "debit"
+  5. Read cell in Column E (Balance column) → extract "balance"
+  
+  6. TRANSACTION VALIDATION:
+     - IF "credit" > 0 OR "debit" > 0 → OUTPUT this row as a transaction
+     - IF both "credit" = 0 AND "debit" = 0 → SKIP (not a transaction)
 
 ⚠️ CRITICAL ROW INTEGRITY RULE:
-ALL fields (date, description, credit, debit, balance) for ONE transaction MUST come from the SAME VISUAL ROW in the table.
+ALL fields for ONE transaction MUST come from the SAME ROW (like reading Excel row by row).
 
-📍 EXTRACTION ORDER (left-to-right, DO NOT skip columns):
-For EACH ROW across ALL ${pageCount} pages:
-1. Read Date column (leftmost) → extract "date"
-2. Read Description column (middle) → extract "description" (ALL visible text in this column)
-3. Read Credit/Deposit column → extract "credit"
-4. Read Debit/Withdrawal column → extract "debit"
-5. Read Balance column (rightmost) → extract "balance"
-6. Move to NEXT ROW and repeat
-
-❗ NEVER read Date → skip middle columns → jump to Balance. This causes data loss.
-
-✂️ FIELD EXTRACTION RULES (NON-NEGOTIABLE):
-| JSON Field      | Source Column | Action                                  | Forbidden               |
-|-----------------|---------------|-----------------------------------------|-------------------------|
-| date            | 日期          | COPY RAW text. If empty → ""            | —                       |
-| description     | 戶口進支/摘要  | COPY ALL visible text from THIS row     | Skipping, merging       |
-| credit          | 貸項/存入      | COPY number or 0. Remove commas         | —                       |
-| debit           | 借項/支出      | COPY number or 0. Remove commas         | —                       |
-| balance         | 餘額          | COPY number (remove commas). If blank/"—"/"N/A" → null | CALCULATION, COMPARISON |
-
-⚠️ TRANSACTION EXTRACTION RULE (MOST CRITICAL):
-A row is a VALID TRANSACTION if:
-- "credit" > 0 OR "debit" > 0 (at least one has a number)
-
-EVEN IF "date" is empty ("") AND "balance" is null, you MUST extract it as a transaction.
-
-Example:
-- Row: "" | "ONLINE TRANSFER" | 200.00 | 0 | null
-  → VALID transaction (credit > 0)
-- Row: "10 Mar" | "ATM WITHDRAWAL" | 0 | 0 | 79305.59
-  → INVALID transaction (no credit or debit) → SKIP
-
-✅ VALIDATION CHECK before outputting each transaction:
-- IF "credit" > 0 OR "debit" > 0 → EXTRACT as transaction
-- IF both "credit" = 0 AND "debit" = 0 → SKIP (not a transaction)
+✂️ FIELD EXTRACTION RULES:
+| JSON Field  | Excel Cell Value | Action                                  |
+|-------------|------------------|-----------------------------------------|
+| date        | Column A         | COPY text. If empty → ""                |
+| description | Column B         | COPY ALL text from this cell            |
+| credit      | Column C or D    | COPY number. If empty → 0. Remove commas|
+| debit       | Column C or D    | COPY number. If empty → 0. Remove commas|
+| balance     | Column E         | COPY number. Remove commas. If "—"/"N/A"/blank → null |
 
 ❗ ABSOLUTE COMMANDS:
-- IF "餘額" column value = "30,718.39" → output balance: 30718.39 (NO EXCEPTIONS)
-- IF number unclear → output null (NEVER guess/calculate)
-- REMOVE all commas from numbers before outputting
-- Date format: keep original string (e.g., "7 Mar", "10 Mar", "2025-02-22")
+- NEVER swap credit and debit columns
+- NEVER skip rows with empty date or balance IF they have credit/debit value
+- REMOVE all commas from numbers (e.g., "30,718.39" → 30718.39)
+- Date format: keep original string (e.g., "7 Mar", "2025-02-22")
 - statementPeriod: MUST be "first transaction date to last transaction date" (e.g., "22 Feb to 22 Mar")
 - Combine ALL transactions from ALL ${pageCount} pages in chronological order
 - Output ONLY valid JSON. NO explanations. NO markdown. NO comments.
