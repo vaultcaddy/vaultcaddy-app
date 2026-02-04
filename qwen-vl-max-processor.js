@@ -243,97 +243,47 @@ class QwenVLMaxProcessor {
      */
     generatePrompt(documentType) {
         if (documentType === 'bank_statement') {
-            return `STRICT MODE: You are an EXCEL DATA PROCESSOR. Treat the PDF as an Excel spreadsheet. ONLY copy visible cell values. ZERO calculation. ZERO inference.
+            return `STRICT MODE: You are a OCR COPY MACHINE. ONLY copy visible text. ZERO calculation. ZERO inference.
 
-📍 STEP 1: LOCATE THE TARGET TABLE
-- FIND table with header row containing BOTH: "戶口進支" AND "餘額"
-- IGNORE any section with: "戶口摘要" / "Account Summary" / "總計" / "TOTAL"
-- The FIRST data row MUST be "承上結餘" (Brought Forward) → this row's "餘額" = openingBalance
-- The LAST data row's "餘額" = closingBalance
+📍 TARGET TABLE IDENTIFICATION (CRITICAL):
+- FIND table with header containing BOTH: "戶口進支" AND "餘額"
+- IGNORE any section with "戶口摘要" / "Account Summary" / "總計" / "TOTAL"
+- FIRST row of target table MUST be "承上結餘" (Brought Forward) → this row's "餘額" = openingBalance
+- LAST row's "餘額" = closingBalance
 
-📍 STEP 2: READ HEADER ROW (like Excel Row 1)
-Find the header row and identify each column's position and meaning:
-
-READ each column header from left to right and determine:
-- Which column contains: "Date" / "日期" / "DATE" → Column A (date)
-- Which column contains: "Transaction Details" / "戶口進支" / "Particulars" / "摘要" → Column B (description)
-- Which column contains: "Deposit" / "貸項" / "存入" / "Credit" / "CREDIT" → Column C or D (THIS IS CREDIT - money IN)
-- Which column contains: "Withdrawal" / "借項" / "支出" / "Debit" / "DEBIT" → Column C or D (THIS IS DEBIT - money OUT)
-- Which column contains: "Balance" / "餘額" / "結餘" → Column E (balance)
-
-⚠️ CRITICAL COLUMN MAPPING:
-You MUST determine the EXACT position of Credit and Debit columns:
-- If header row shows: "日期 | 戶口進支 | 貸項 | 借項 | 餘額"
-  → Column mapping: A=date, B=description, C=credit, D=debit, E=balance
-- If header row shows: "Date | Particulars | Withdrawal | Deposit | Balance"
-  → Column mapping: A=date, B=description, C=debit, D=credit, E=balance
-
-❗ BEFORE extracting ANY data, you MUST know:
-- "貸項" is in column ___ → THIS IS CREDIT (money IN)
-- "借項" is in column ___ → THIS IS DEBIT (money OUT)
-
-📍 STEP 3: PROCESS LIKE EXCEL (Column-by-Column for Each Row)
-📍 STEP 3: PROCESS LIKE EXCEL (Column-by-Column for Each Row)
-
-Starting from the FIRST data row (after header), process EACH row like reading an Excel spreadsheet:
-
-FOR EACH ROW (Row 2, Row 3, Row 4, ...):
-  1. Read cell in Column A (Date column) → extract "date"
-  2. Read cell in Column B (Description column) → extract "description"
-  3. Read cell in Column C:
-     - IF Column C header = "貸項"/"Deposit"/"Credit" → extract to "credit"
-     - IF Column C header = "借項"/"Withdrawal"/"Debit" → extract to "debit"
-  4. Read cell in Column D:
-     - IF Column D header = "貸項"/"Deposit"/"Credit" → extract to "credit"
-     - IF Column D header = "借項"/"Withdrawal"/"Debit" → extract to "debit"
-  5. Read cell in Column E (Balance column) → extract "balance"
-  
-  6. TRANSACTION VALIDATION:
-     - IF "credit" > 0 OR "debit" > 0 → OUTPUT this row as a transaction
-     - IF both "credit" = 0 AND "debit" = 0 → SKIP (not a transaction)
-
-⚠️ CRITICAL ROW INTEGRITY RULE:
-ALL fields for ONE transaction MUST come from the SAME ROW (like reading Excel row by row).
-
-✂️ FIELD EXTRACTION RULES:
-| JSON Field  | Excel Cell Value | Action                                  |
-|-------------|------------------|-----------------------------------------|
-| date        | Column A         | COPY text. If empty → ""                |
-| description | Column B         | COPY ALL text from this cell            |
-| credit      | Column C or D    | COPY number. If empty → 0. Remove commas|
-| debit       | Column C or D    | COPY number. If empty → 0. Remove commas|
-| balance     | Column E         | COPY number. Remove commas. If "—"/"N/A"/blank → null |
+✂️ FIELD EXTRACTION RULES (NON-NEGOTIABLE):
+| JSON Field      | Source Column | Action                                  | Forbidden               |
+|-----------------|---------------|-----------------------------------------|-------------------------|
+| balance         | 餘額          | COPY EXACT NUMBER (remove commas)       | CALCULATION, COMPARISON |
+| debit           | 借項          | COPY number or 0                        | —                       |
+| credit          | 貸項          | COPY number or 0                        | —                       |
+| amount          | (REMOVE)      | ⚠️ FIELD DELETED - DO NOT OUTPUT        | —                       |
+| transactionSign | (REMOVE)      | ⚠️ FIELD DELETED - DO NOT OUTPUT        | —                       |
 
 ❗ ABSOLUTE COMMANDS:
-- NEVER swap credit and debit columns
-- NEVER skip rows with empty date or balance IF they have credit/debit value
-- REMOVE all commas from numbers (e.g., "30,718.39" → 30718.39)
-- Date format: keep original string (e.g., "7 Mar", "2025-02-22")
+- IF "餘額" column value = "30,718.39" → output balance: 30718.39 (NO EXCEPTIONS)
+- IF number unclear → output null (NEVER guess/calculate)
+- REMOVE all commas from numbers before outputting
+- Date format: Convert to YYYY-MM-DD ONLY if unambiguous; else output original string
 - Output ONLY valid JSON. NO explanations. NO markdown. NO comments.
 
-📤 OUTPUT STRUCTURE:
+📤 OUTPUT STRUCTURE (REDUCED):
 {
   "bankName": "...",
   "accountNumber": "...",
   "accountHolder": "...",
   "currency": "...",
   "statementPeriod": "...",
-  "openingBalance": 30718.39,
-  "closingBalance": ...,
+  "openingBalance": 30718.39,  // FROM FIRST ROW'S "餘額"
+  "closingBalance": ...,        // FROM LAST ROW'S "餘額"
   "transactions": [
     {
-      "date": "7 Mar",
-      "description": "QUICK CHEQUE DEPOSIT (07MAR25)",
-      "credit": 78649.00,
+      "date": "YYYY-MM-DD",
+      "description": "...",
       "debit": 0,
-      "balance": 80145.59
-    },
-    {
-      "date": "",
-      "description": "ONLINE TRANSFER",
-      "credit": 0,
-      "debit": 200.00,
-      "balance": null
+      "credit": 1500.00,
+      "balance": 32218.39  // COPIED DIRECTLY FROM "餘額" COLUMN OF THIS ROW
+      // ⚠️ "amount" and "transactionSign" REMOVED TO PREVENT CALCULATION TRIGGERS
     }
   ]
 }`;
@@ -377,98 +327,50 @@ ALL fields for ONE transaction MUST come from the SAME ROW (like reading Excel r
      */
     generateMultiPagePrompt(documentType, pageCount) {
         if (documentType === 'bank_statement') {
-            return `STRICT MODE: You are an EXCEL DATA PROCESSOR processing ${pageCount} images (multiple pages of same statement). Treat the PDF as an Excel spreadsheet. ONLY copy visible cell values. ZERO calculation. ZERO inference.
+            return `STRICT MODE: You are a OCR COPY MACHINE processing ${pageCount} images (multiple pages of same statement). ONLY copy visible text. ZERO calculation. ZERO inference.
 
-📍 STEP 1: LOCATE THE TARGET TABLE (across ALL ${pageCount} pages)
-- FIND table with header row containing BOTH: "戶口進支" AND "餘額"
-- IGNORE any section with: "戶口摘要" / "Account Summary" / "總計" / "TOTAL"
-- The FIRST data row MUST be "承上結餘" (Brought Forward) → this row's "餘額" = openingBalance
-- The LAST data row's "餘額" = closingBalance
+📍 TARGET TABLE IDENTIFICATION (CRITICAL) across ALL ${pageCount} pages:
+- FIND table with header containing BOTH: "戶口進支" AND "餘額"
+- IGNORE any section with "戶口摘要" / "Account Summary" / "總計" / "TOTAL"
+- FIRST row of target table MUST be "承上結餘" (Brought Forward) → this row's "餘額" = openingBalance
+- LAST row's "餘額" = closingBalance
 
-📍 STEP 2: READ HEADER ROW (like Excel Row 1)
-Find the header row and identify each column's position and meaning:
-
-READ each column header from left to right and determine:
-- Which column contains: "Date" / "日期" / "DATE" → Column A (date)
-- Which column contains: "Transaction Details" / "戶口進支" / "Particulars" / "摘要" → Column B (description)
-- Which column contains: "Deposit" / "貸項" / "存入" / "Credit" / "CREDIT" → Column C or D (THIS IS CREDIT - money IN)
-- Which column contains: "Withdrawal" / "借項" / "支出" / "Debit" / "DEBIT" → Column C or D (THIS IS DEBIT - money OUT)
-- Which column contains: "Balance" / "餘額" / "結餘" → Column E (balance)
-
-⚠️ CRITICAL COLUMN MAPPING:
-You MUST determine the EXACT position of Credit and Debit columns:
-- If header row shows: "日期 | 戶口進支 | 貸項 | 借項 | 餘額"
-  → Column mapping: A=date, B=description, C=credit, D=debit, E=balance
-- If header row shows: "Date | Particulars | Withdrawal | Deposit | Balance"
-  → Column mapping: A=date, B=description, C=debit, D=credit, E=balance
-
-❗ BEFORE extracting ANY data, you MUST know:
-- "貸項" is in column ___ → THIS IS CREDIT (money IN)
-- "借項" is in column ___ → THIS IS DEBIT (money OUT)
-
-📍 STEP 3: PROCESS LIKE EXCEL (Column-by-Column for Each Row)
-
-Starting from the FIRST data row (after header), process EACH row across ALL ${pageCount} pages like reading an Excel spreadsheet:
-
-FOR EACH ROW (Row 2, Row 3, Row 4, ...):
-  1. Read cell in Column A (Date column) → extract "date"
-  2. Read cell in Column B (Description column) → extract "description"
-  3. Read cell in Column C:
-     - IF Column C header = "貸項"/"Deposit"/"Credit" → extract to "credit"
-     - IF Column C header = "借項"/"Withdrawal"/"Debit" → extract to "debit"
-  4. Read cell in Column D:
-     - IF Column D header = "貸項"/"Deposit"/"Credit" → extract to "credit"
-     - IF Column D header = "借項"/"Withdrawal"/"Debit" → extract to "debit"
-  5. Read cell in Column E (Balance column) → extract "balance"
-  
-  6. TRANSACTION VALIDATION:
-     - IF "credit" > 0 OR "debit" > 0 → OUTPUT this row as a transaction
-     - IF both "credit" = 0 AND "debit" = 0 → SKIP (not a transaction)
-
-⚠️ CRITICAL ROW INTEGRITY RULE:
-ALL fields for ONE transaction MUST come from the SAME ROW (like reading Excel row by row).
-
-✂️ FIELD EXTRACTION RULES:
-| JSON Field  | Excel Cell Value | Action                                  |
-|-------------|------------------|-----------------------------------------|
-| date        | Column A         | COPY text. If empty → ""                |
-| description | Column B         | COPY ALL text from this cell            |
-| credit      | Column C or D    | COPY number. If empty → 0. Remove commas|
-| debit       | Column C or D    | COPY number. If empty → 0. Remove commas|
-| balance     | Column E         | COPY number. Remove commas. If "—"/"N/A"/blank → null |
+✂️ FIELD EXTRACTION RULES (NON-NEGOTIABLE):
+For EACH ROW across ALL ${pageCount} pages:
+| JSON Field      | Source Column | Action                                  | Forbidden               |
+|-----------------|---------------|-----------------------------------------|-------------------------|
+| balance         | 餘額          | COPY EXACT NUMBER (remove commas)       | CALCULATION, COMPARISON |
+| debit           | 借項          | COPY number or 0                        | —                       |
+| credit          | 貸項          | COPY number or 0                        | —                       |
+| amount          | (REMOVE)      | ⚠️ FIELD DELETED - DO NOT OUTPUT        | —                       |
+| transactionSign | (REMOVE)      | ⚠️ FIELD DELETED - DO NOT OUTPUT        | —                       |
 
 ❗ ABSOLUTE COMMANDS:
-- NEVER swap credit and debit columns
-- NEVER skip rows with empty date or balance IF they have credit/debit value
-- REMOVE all commas from numbers (e.g., "30,718.39" → 30718.39)
-- Date format: keep original string (e.g., "7 Mar", "2025-02-22")
+- IF "餘額" column value = "30,718.39" → output balance: 30718.39 (NO EXCEPTIONS)
+- IF number unclear → output null (NEVER guess/calculate)
+- REMOVE all commas from numbers before outputting
+- Date format: Convert to YYYY-MM-DD ONLY if unambiguous; else output original string
 - statementPeriod: MUST be "first transaction date to last transaction date" (e.g., "22 Feb to 22 Mar")
 - Combine ALL transactions from ALL ${pageCount} pages in chronological order
 - Output ONLY valid JSON. NO explanations. NO markdown. NO comments.
 
-📤 OUTPUT STRUCTURE:
+📤 OUTPUT STRUCTURE (REDUCED):
 {
   "bankName": "...",
   "accountNumber": "...",
   "accountHolder": "...",
   "currency": "...",
   "statementPeriod": "...",
-  "openingBalance": 30718.39,
-  "closingBalance": ...,
+  "openingBalance": 30718.39,  // FROM FIRST ROW'S "餘額"
+  "closingBalance": ...,        // FROM LAST ROW'S "餘額"
   "transactions": [
     {
-      "date": "7 Mar",
-      "description": "QUICK CHEQUE DEPOSIT (07MAR25)",
-      "credit": 78649.00,
+      "date": "YYYY-MM-DD",
+      "description": "...",
       "debit": 0,
-      "balance": 80145.59
-    },
-    {
-      "date": "",
-      "description": "ONLINE TRANSFER",
-      "credit": 0,
-      "debit": 200.00,
-      "balance": null
+      "credit": 1500.00,
+      "balance": 32218.39  // COPIED DIRECTLY FROM "餘額" COLUMN OF THIS ROW
+      // ⚠️ "amount" and "transactionSign" REMOVED TO PREVENT CALCULATION TRIGGERS
     }
   ]
 }`;
