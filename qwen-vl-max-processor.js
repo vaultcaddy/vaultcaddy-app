@@ -20,7 +20,14 @@ class QwenVLMaxProcessor {
     constructor() {
         // Qwen-VL Max API (通过 Cloudflare Worker)
         this.qwenWorkerUrl = 'https://deepseek-proxy.vaultcaddy.workers.dev';
-        this.qwenModel = 'qwen3-vl-plus-2025-12-19'; // ⭐ 推荐模型（2025-12-18 发布）
+        
+        // 模型配置：根据文档类型使用不同模型
+        this.models = {
+            receipt: 'qwen3-vl-plus-2025-12-19',  // 收据：标准模式（更快，成本低）
+            bankStatement: 'qwen3-vl-plus'         // 银行单：深度思考模式（更准确）
+        };
+        
+        this.qwenModel = this.models.receipt; // 默认使用收据模型（向后兼容）
         
         // 处理统计
         this.stats = {
@@ -50,9 +57,16 @@ class QwenVLMaxProcessor {
             // 2. 生成提示词
             const prompt = this.generatePrompt(documentType);
             
-            // 3. 构建请求
+            // 3. 根据文档类型选择模型
+            const selectedModel = documentType === 'bank_statement' 
+                ? this.models.bankStatement  // 银行单：深度思考模式
+                : this.models.receipt;        // 收据：标准模式
+            
+            console.log(`📊 文档类型: ${documentType} → 使用模型: ${selectedModel}`);
+            
+            // 4. 构建请求
             const requestBody = {
-                model: this.qwenModel,
+                model: selectedModel,
                 messages: [
                     {
                         role: 'user',
@@ -123,7 +137,7 @@ class QwenVLMaxProcessor {
                 rawResponse: responseText,
                 processingTime: processingTime,
                 processor: 'qwen-vl-max',
-                model: this.qwenModel,
+                model: selectedModel,  // ✅ 显示实际使用的模型
                 usage: data.usage || {}
             };
             
@@ -159,9 +173,16 @@ class QwenVLMaxProcessor {
             // 2. 生成提示词
             const prompt = this.generateMultiPagePrompt(documentType, files.length);
             
-            // 3. 构建请求（所有图片 + 提示词）
+            // 3. 根据文档类型选择模型
+            const selectedModel = documentType === 'bank_statement' 
+                ? this.models.bankStatement  // 银行单：深度思考模式
+                : this.models.receipt;        // 收据：标准模式
+            
+            console.log(`📊 多页文档类型: ${documentType} → 使用模型: ${selectedModel} (${files.length}页)`);
+            
+            // 4. 构建请求（所有图片 + 提示词）
             const requestBody = {
-                model: this.qwenModel,
+                model: selectedModel,
                 messages: [
                     {
                         role: 'user',
@@ -228,7 +249,7 @@ class QwenVLMaxProcessor {
                 pages: files.length,
                 processingTime: totalTime,
                 processor: 'qwen-vl-max-batch',  // 标记为批量处理
-                model: this.qwenModel,
+                model: selectedModel,  // ✅ 显示实际使用的模型
                 usage: data.usage || {}
             };
             
@@ -260,13 +281,13 @@ class QwenVLMaxProcessor {
 | credit      | ["存入", "Deposit", "貸項", "貸方", "입금", "대변", "Credit", "입금액", "預け入れ"]   |
 | balance     | ["餘額", "結餘", "Balance", "残高", "잔액", "잔고", "Current Balance", "현재 잔액"]   |
 
-✂️ ROW VALIDATION RULE (CRITICAL - GLOBAL STANDARD):
-A row is a VALID TRANSACTION if ANY of the following is TRUE in that PHYSICAL ROW:
-- "description" column contains non-whitespace text
-- "debit" column contains a visible number (e.g., 1,500.00)
-- "credit" column contains a visible number (e.g., 76,649.00)
-- "balance" column contains a visible number (e.g., 30,718.39)
-→ EXTRACT AS ONE transaction object — EVEN IF "date" is blank, missing, or spans multiple lines.
+🎯 TRANSACTION RULE (CRITICAL - AB Types Compatible):
+You are a DATA COPY CLERK. Two bank statement types exist:
+• TYPE A (ICBC 工商银行): All transactions have date, description, debit/credit, balance
+• TYPE B (Hang Seng 恒生银行): Transactions have description+debit/credit, but date/balance may be blank
+
+CORE: Extract a row as transaction IF debit OR credit has a number (even if date="" or balance=null)
+Skip ONLY IF: Both debit=0 AND credit=0 (no money movement)
 
 ✂️ EXTRACTION RULES (NON-NEGOTIABLE):
 | Field       | Action                                                                 |
@@ -304,7 +325,15 @@ A row is a VALID TRANSACTION if ANY of the following is TRUE in that PHYSICAL RO
       "balance": number (null if blank)
     }
   ]
-}`;
+}
+
+💡 EXAMPLES - TYPE A vs TYPE B:
+TYPE A (ICBC - 所有字段都有):
+{"date":"2023/07/07","description":"SIC ALIPAY HK LTD","debit":21.62,"credit":0,"balance":35667.34}
+
+TYPE B (Hang Seng - 日期和余额可能空白):
+{"date":"","description":"QUICK CHEQUE DEPOSIT","debit":0,"credit":78649.00,"balance":null}
+{"date":"10 Mar","description":"ATM WITHDRAWAL","debit":500.00,"credit":0,"balance":79405.09}`;
         } else {
             // 發票
             return `你是一個專業的發票數據提取專家。請從圖片中提取所有發票資料，並以 JSON 格式返回。
@@ -362,13 +391,13 @@ A row is a VALID TRANSACTION if ANY of the following is TRUE in that PHYSICAL RO
 | credit      | ["存入", "Deposit", "貸項", "貸方", "입금", "대변", "Credit", "입금액", "預け入れ"]   |
 | balance     | ["餘額", "結餘", "Balance", "残高", "잔액", "잔고", "Current Balance", "현재 잔액"]   |
 
-✂️ ROW VALIDATION RULE (CRITICAL - GLOBAL STANDARD):
-A row is a VALID TRANSACTION if ANY of the following is TRUE in that PHYSICAL ROW:
-- "description" column contains non-whitespace text
-- "debit" column contains a visible number (e.g., 1,500.00)
-- "credit" column contains a visible number (e.g., 76,649.00)
-- "balance" column contains a visible number (e.g., 30,718.39)
-→ EXTRACT AS ONE transaction object — EVEN IF "date" is blank, missing, or spans multiple lines.
+🎯 TRANSACTION RULE (CRITICAL - AB Types Compatible):
+You are a DATA COPY CLERK. Two bank statement types exist:
+• TYPE A (ICBC 工商银行): All transactions have date, description, debit/credit, balance
+• TYPE B (Hang Seng 恒生银行): Transactions have description+debit/credit, but date/balance may be blank
+
+CORE: Extract a row as transaction IF debit OR credit has a number (even if date="" or balance=null)
+Skip ONLY IF: Both debit=0 AND credit=0 (no money movement)
 
 ✂️ EXTRACTION RULES (NON-NEGOTIABLE):
 For EACH ROW across ALL ${pageCount} pages:
@@ -409,7 +438,15 @@ For EACH ROW across ALL ${pageCount} pages:
       "balance": number (null if blank)
     }
   ]
-}`;
+}
+
+💡 EXAMPLES - TYPE A vs TYPE B:
+TYPE A (ICBC - 所有字段都有):
+{"date":"2023/07/07","description":"SIC ALIPAY HK LTD","debit":21.62,"credit":0,"balance":35667.34}
+
+TYPE B (Hang Seng - 日期和余额可能空白):
+{"date":"","description":"QUICK CHEQUE DEPOSIT","debit":0,"credit":78649.00,"balance":null}
+{"date":"10 Mar","description":"ATM WITHDRAWAL","debit":500.00,"credit":0,"balance":79405.09}`;
         } else {
             return `你是一個專業的發票數據提取專家。我發送了 ${pageCount} 張圖片，它們是同一份發票的多個頁面。請綜合分析所有頁面，提取完整的發票資料和項目明細，並以 JSON 格式返回。
 
