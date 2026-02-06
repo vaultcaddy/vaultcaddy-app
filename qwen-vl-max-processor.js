@@ -18,16 +18,14 @@
 
 class QwenVLMaxProcessor {
     constructor() {
-        // Qwen-VL Max API (通过 Cloudflare Worker)
-        this.qwenWorkerUrl = 'https://deepseek-proxy.vaultcaddy.workers.dev';
+        // Qwen-VL Max API (通过 Firebase Cloud Function)
+        this.qwenWorkerUrl = 'https://us-central1-vaultcaddy-production-cbbe2.cloudfunctions.net/qwenProxy';
         
         // 模型配置：根据文档类型使用不同模型
         this.models = {
             receipt: 'qwen3-vl-plus-2025-12-19',  // 收据：标准模式（更快，成本低）
-            bankStatement: 'qwen3-vl-plus'         // 银行单：深度思考模式（更准确）
+            bankStatement: 'qwen-vl-plus'          // 银行单：深度思考模式（更准确）
         };
-        
-        this.qwenModel = this.models.receipt; // 默认使用收据模型（向后兼容）
         
         // 处理统计
         this.stats = {
@@ -59,14 +57,14 @@ class QwenVLMaxProcessor {
             
             // 3. 根据文档类型选择模型
             const selectedModel = documentType === 'bank_statement' 
-                ? this.models.bankStatement  // 银行单：深度思考模式
-                : this.models.receipt;        // 收据：标准模式
+                ? this.models.bankStatement  // 银行单：qwen-vl-plus（深度思考）
+                : this.models.receipt;        // 收据：qwen3-vl-plus-2025-12-19（标准模式）
             
             console.log(`📊 文档类型: ${documentType} → 使用模型: ${selectedModel}`);
             
             // 4. 构建请求
             const requestBody = {
-                model: selectedModel,
+                model: selectedModel,  // ✅ 使用不同的模型名称
                 messages: [
                     {
                         role: 'user',
@@ -175,14 +173,14 @@ class QwenVLMaxProcessor {
             
             // 3. 根据文档类型选择模型
             const selectedModel = documentType === 'bank_statement' 
-                ? this.models.bankStatement  // 银行单：深度思考模式
-                : this.models.receipt;        // 收据：标准模式
+                ? this.models.bankStatement  // 银行单：qwen-vl-plus（深度思考）
+                : this.models.receipt;        // 收据：qwen3-vl-plus-2025-12-19（标准模式）
             
-            console.log(`📊 多页文档类型: ${documentType} → 使用模型: ${selectedModel} (${files.length}页)`);
+            console.log(`📊 多页文档: ${documentType} → 使用模型: ${selectedModel} (${files.length}页)`);
             
             // 4. 构建请求（所有图片 + 提示词）
             const requestBody = {
-                model: selectedModel,
+                model: selectedModel,  // ✅ 使用不同的模型名称
                 messages: [
                     {
                         role: 'user',
