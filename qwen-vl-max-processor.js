@@ -24,7 +24,7 @@ class QwenVLMaxProcessor {
         // 模型配置：根据文档类型使用不同模型
         this.models = {
             receipt: 'qwen3-vl-plus-2025-12-19',  // 收据：标准模式（更快，成本低）
-            bankStatement: 'qwen-vl-plus'          // 银行单：深度思考模式（更准确）
+            bankStatement: 'qwen3-vl-plus'         // 银行单：使用最新模型 + enable_thinking
         };
         
         // 处理统计
@@ -55,16 +55,19 @@ class QwenVLMaxProcessor {
             // 2. 生成提示词
             const prompt = this.generatePrompt(documentType);
             
-            // 3. 根据文档类型选择模型
+            // 3. 根据文档类型选择模型和参数
             const selectedModel = documentType === 'bank_statement' 
-                ? this.models.bankStatement  // 银行单：qwen-vl-plus（深度思考）
+                ? this.models.bankStatement  // 银行单：qwen3-vl-plus（深度思考）
                 : this.models.receipt;        // 收据：qwen3-vl-plus-2025-12-19（标准模式）
             
-            console.log(`📊 文档类型: ${documentType} → 使用模型: ${selectedModel}`);
+            const enableThinking = documentType === 'bank_statement'; // 银行单启用深度思考
+            
+            console.log(`📊 文档类型: ${documentType} → 模型: ${selectedModel}, 深度思考: ${enableThinking ? '✅ 开启' : '⭕ 关闭'}`);
             
             // 4. 构建请求
             const requestBody = {
-                model: selectedModel,  // ✅ 使用不同的模型名称
+                model: selectedModel,
+                enable_thinking: enableThinking,  // 🔥 关键参数！
                 messages: [
                     {
                         role: 'user',
@@ -136,6 +139,7 @@ class QwenVLMaxProcessor {
                 processingTime: processingTime,
                 processor: 'qwen-vl-max',
                 model: selectedModel,  // ✅ 显示实际使用的模型
+                enableThinking: enableThinking,  // ✅ 显示是否启用深度思考
                 usage: data.usage || {}
             };
             
@@ -171,16 +175,19 @@ class QwenVLMaxProcessor {
             // 2. 生成提示词
             const prompt = this.generateMultiPagePrompt(documentType, files.length);
             
-            // 3. 根据文档类型选择模型
+            // 3. 根据文档类型选择模型和参数
             const selectedModel = documentType === 'bank_statement' 
-                ? this.models.bankStatement  // 银行单：qwen-vl-plus（深度思考）
+                ? this.models.bankStatement  // 银行单：qwen3-vl-plus（深度思考）
                 : this.models.receipt;        // 收据：qwen3-vl-plus-2025-12-19（标准模式）
             
-            console.log(`📊 多页文档: ${documentType} → 使用模型: ${selectedModel} (${files.length}页)`);
+            const enableThinking = documentType === 'bank_statement'; // 银行单启用深度思考
+            
+            console.log(`📊 多页文档: ${documentType} → 模型: ${selectedModel}, 深度思考: ${enableThinking ? '✅ 开启' : '⭕ 关闭'} (${files.length}页)`);
             
             // 4. 构建请求（所有图片 + 提示词）
             const requestBody = {
-                model: selectedModel,  // ✅ 使用不同的模型名称
+                model: selectedModel,
+                enable_thinking: enableThinking,  // 🔥 关键参数！
                 messages: [
                     {
                         role: 'user',
@@ -248,6 +255,7 @@ class QwenVLMaxProcessor {
                 processingTime: totalTime,
                 processor: 'qwen-vl-max-batch',  // 标记为批量处理
                 model: selectedModel,  // ✅ 显示实际使用的模型
+                enableThinking: enableThinking,  // ✅ 显示是否启用深度思考
                 usage: data.usage || {}
             };
             

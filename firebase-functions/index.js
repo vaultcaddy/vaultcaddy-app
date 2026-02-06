@@ -31,6 +31,7 @@ const QWEN_API_URL = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1/cha
 
 const SUPPORTED_MODELS = [
     'qwen3-vl-plus-2025-12-19',
+    'qwen3-vl-plus',  // 🔥 添加深度思考模型
     'qwen-vl-plus',
     'qwen-vl-max',
     'qwen-vl-ocr-2025-11-20'
@@ -82,6 +83,12 @@ exports.qwenProxy = functions
                     max_tokens: Math.min(requestBody.max_tokens || 28000, 28000),
                     stream: false  // Firebase Function 使用非流式模式
                 };
+                
+                // 🔥 如果前端傳入 enable_thinking 參數，添加到請求中
+                if (requestBody.enable_thinking !== undefined) {
+                    qwenRequestBody.enable_thinking = requestBody.enable_thinking;
+                    console.log(`   深度思考模式: ${requestBody.enable_thinking ? '✅ 開啟' : '⭕ 關閉'}`);
+                }
 
                 console.log(`🚀 調用 Qwen API...`);
                 const startTime = Date.now();
