@@ -76,18 +76,30 @@ exports.qwenProxy = functions
                 }
 
                 // 構建 Qwen API 請求
+                // 检查前端是否传入 extra_body（包含 enable_thinking）
+                const extraBody = requestBody.extra_body || {};
+                const enableThinking = extraBody.enable_thinking === true;
+                
+                // 深度思考模式最大4000 tokens（阿里云限制），标准模式最大28000
+                const maxTokensLimit = enableThinking ? 4000 : 28000;
+                
                 const qwenRequestBody = {
                     model: model,
                     messages: requestBody.messages,
                     temperature: requestBody.temperature || 0.1,
-                    max_tokens: Math.min(requestBody.max_tokens || 28000, 28000),
+                    max_tokens: Math.min(requestBody.max_tokens || maxTokensLimit, maxTokensLimit),
                     stream: false  // Firebase Function 使用非流式模式
                 };
                 
-                // 🔥 如果前端傳入 enable_thinking 參數，添加到請求中
-                if (requestBody.enable_thinking !== undefined) {
-                    qwenRequestBody.enable_thinking = requestBody.enable_thinking;
-                    console.log(`   深度思考模式: ${requestBody.enable_thinking ? '✅ 開啟' : '⭕ 關閉'}`);
+                // 🔥 如果啟用深度思考，添加 extra_body 參數（阿里云官方格式）
+                if (enableThinking) {
+                    qwenRequestBody.extra_body = {
+                        enable_thinking: true,
+                        thinking_budget: extraBody.thinking_budget || 4000
+                    };
+                    console.log(`   深度思考模式: ✅ 開啟 (max_tokens: ${qwenRequestBody.max_tokens}, thinking_budget: ${qwenRequestBody.extra_body.thinking_budget})`);
+                } else {
+                    console.log(`   標準模式 (max_tokens: ${qwenRequestBody.max_tokens})`);
                 }
 
                 console.log(`🚀 調用 Qwen API...`);

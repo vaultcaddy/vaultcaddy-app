@@ -67,7 +67,6 @@ class QwenVLMaxProcessor {
             // 4. 构建请求
             const requestBody = {
                 model: selectedModel,
-                enable_thinking: enableThinking,  // 🔥 关键参数！
                 messages: [
                     {
                         role: 'user',
@@ -89,7 +88,15 @@ class QwenVLMaxProcessor {
                 max_tokens: 4000
             };
             
-            // 4. 调用 Qwen-VL API
+            // 🔥 添加深度思考参数到 extra_body（阿里云官方格式）
+            if (enableThinking) {
+                requestBody.extra_body = {
+                    enable_thinking: true,
+                    thinking_budget: 4000  // 思考预算：4000 tokens
+                };
+            }
+            
+            // 5. 调用 Qwen-VL API
             const response = await fetch(this.qwenWorkerUrl, {
                 method: 'POST',
                 headers: {
@@ -187,7 +194,6 @@ class QwenVLMaxProcessor {
             // 4. 构建请求（所有图片 + 提示词）
             const requestBody = {
                 model: selectedModel,
-                enable_thinking: enableThinking,  // 🔥 关键参数！
                 messages: [
                     {
                         role: 'user',
@@ -201,10 +207,18 @@ class QwenVLMaxProcessor {
                     }
                 ],
                 temperature: 0.1,
-                max_tokens: 8000  // 多页需要更多 tokens
+                max_tokens: enableThinking ? 4000 : 8000  // 深度思考模式限制4000，标准模式8000
             };
             
-            // 4. 调用 Qwen-VL API
+            // 🔥 添加深度思考参数到 extra_body（阿里云官方格式）
+            if (enableThinking) {
+                requestBody.extra_body = {
+                    enable_thinking: true,
+                    thinking_budget: 4000  // 思考预算：4000 tokens
+                };
+            }
+            
+            // 5. 调用 Qwen-VL API
             const response = await fetch(this.qwenWorkerUrl, {
                 method: 'POST',
                 headers: {
