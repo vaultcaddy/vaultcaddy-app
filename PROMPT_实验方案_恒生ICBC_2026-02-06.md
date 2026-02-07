@@ -77,13 +77,18 @@ Skip row ONLY IF:
 • Both creditColumn = blank/0 AND debitColumn = blank/0
 • Row contains "TOTAL", "SUMMARY", "承上結餘", "結轉下頁"
 
+🔄 DATE INHERITANCE RULE:
+• Track the last valid date as you process rows
+• If current row's dateColumn is blank → use the last valid date
+• Update lastValidDate whenever you see a non-blank date in dateColumn
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✂️ EXTRACTION RULES (NON-NEGOTIABLE)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 | Field       | Action                                                                 |
 |-------------|------------------------------------------------------------------------|
-| date        | Copy text from dateColumn. If blank → output ""                        |
+| date        | Copy text from dateColumn. If blank → use PREVIOUS transaction's date |
 | description | Copy ALL text from descriptionColumn of THIS ROW ONLY                  |
 | credit      | Copy number from creditColumn (remove commas). If blank → 0            |
 | debit       | Copy number from debitColumn (remove commas). If blank → 0             |
@@ -93,7 +98,8 @@ Skip row ONLY IF:
 - EACH PHYSICAL ROW = ONE transaction object (if credit OR debit has value)
 - NEVER merge rows (even if date is blank)
 - NEVER skip a row because date column is empty
-- NEVER calculate or infer values
+- NEVER calculate balance (ONLY copy visible numbers)
+- If date is blank, inherit date from PREVIOUS transaction in your output
 - Remove ALL commas from numbers before outputting (e.g., "1,500.00" → 1500.00)
 - Date format: Output original string UNCHANGED
 
@@ -159,7 +165,20 @@ Data Row 2:
 Data Row 3:
 |            | QUICK CHEQUE DEPOSIT (DTMAND) | 78,649.00 |            | 80,145.59 |
 
-Extraction (3 transactions):
+Extraction Process:
+
+Row 1: | 7 Mar | BF BALANCE | 2.61 | | 1,493.98 |
+→ Has credit (2.61) → Extract
+→ Date = "7 Mar" → Store as lastDate = "7 Mar"
+
+Row 2: | | CREDIT INTEREST | | | |
+→ No credit AND no debit → SKIP (no money movement)
+
+Row 3: | | QUICK CHEQUE DEPOSIT (DTMAND) | 78,649.00 | | 80,145.59 |
+→ Has credit (78,649.00) → Extract
+→ Date is blank → Use lastDate = "7 Mar"
+
+Final Output (2 transactions):
 {
   "date": "7 Mar",
   "description": "BF BALANCE",
@@ -168,32 +187,7 @@ Extraction (3 transactions):
   "balance": 1493.98
 },
 {
-  "date": "",  // Empty but still extract because next row has amount
-  "description": "CREDIT INTEREST",
-  "debit": 0,
-  "credit": 0,  // No amount in this row, so 0
-  "balance": null
-},
-{
-  "date": "",
-  "description": "QUICK CHEQUE DEPOSIT (DTMAND)",
-  "debit": 0,
-  "credit": 78649.00,
-  "balance": 80145.59
-}
-
-⚠️ WAIT! Row 2 has NO credit OR debit value → SKIP this row!
-
-Corrected extraction (2 transactions):
-{
-  "date": "7 Mar",
-  "description": "BF BALANCE",
-  "debit": 0,
-  "credit": 2.61,
-  "balance": 1493.98
-},
-{
-  "date": "",
+  "date": "7 Mar",  // ← Inherited from previous transaction
   "description": "QUICK CHEQUE DEPOSIT (DTMAND)",
   "debit": 0,
   "credit": 78649.00,
@@ -204,6 +198,8 @@ Corrected extraction (2 transactions):
 ⚠️ FINAL COMMANDS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+- Track the last valid date as you process rows (for date inheritance)
+- NEVER calculate balance (ONLY copy visible numbers)
 - Output ONLY valid JSON
 - NO explanations, NO markdown code blocks, NO comments
 - If unclear/ambiguous → output null for that field ONLY
@@ -244,6 +240,11 @@ A transaction exists WHERE MONEY MOVES.
 • Both Debit = blank/0 AND Credit = blank/0 (no money movement)
 • Row contains: "TOTAL", "SUMMARY", "承上結餘", "Account Summary"
 
+🔄 DATE INHERITANCE RULE:
+• Track the last valid date as you process rows
+• If current row's date is blank → use the last valid date
+• Update lastValidDate whenever you see a non-blank date
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📍 STEP 1: LOCATE TRANSACTION TABLE (MULTILINGUAL)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -278,16 +279,18 @@ For EACH visual row in the table:
 
 | Field       | How to Extract                                                         |
 |-------------|------------------------------------------------------------------------|
-| date        | Copy exact text from Date column. If blank → output ""                 |
+| date        | Copy exact text from Date column. If blank → use PREVIOUS transaction's date |
 | description | Copy ALL visible text from Description column of THIS ROW ONLY         |
 | debit       | Copy number from Withdrawal/Debit/支出 column (remove commas). Blank → 0 |
 | credit      | Copy number from Deposit/Credit/存入 column (remove commas). Blank → 0   |
-| balance     | Copy number from Balance/餘額 column (remove commas). Blank/"—" → null  |
+| balance     | Copy number from Balance/餘額 column (remove commas). If blank/"—" → null |
 
 🎯 KEY POINTS:
 • Remove ALL commas from numbers (e.g., "1,500.00" → 1500.00)
 • Date format: Output original string AS IS (no conversion)
+• Date inheritance: If current row's date is blank, use the date from PREVIOUS extracted transaction
 • Description: Copy exact text, do NOT merge with other rows
+• Balance: NEVER calculate, ONLY copy visible numbers (if blank → null)
 • If field is unclear → output null (for numbers) or "" (for text)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -365,7 +368,7 @@ Visual Row 2:
 | | QUICK CHEQUE DEPOSIT (DTMAND) | 78,649.00 | | 80,145.59 |
 
 Scan Result:
-- Date: blank → ""
+- Date: blank → inherit from previous transaction = "7 Mar"
 - Description: "QUICK CHEQUE DEPOSIT (DTMAND)" ✅
 - Credit: 78,649.00 ✅ (has number → valid transaction!)
 - Debit: blank → 0
@@ -373,22 +376,23 @@ Scan Result:
 
 Output:
 {
-  "date": "",
+  "date": "7 Mar",  // ← Inherited from previous transaction
   "description": "QUICK CHEQUE DEPOSIT (DTMAND)",
   "debit": 0,
   "credit": 78649.00,
   "balance": 80145.59
 }
 
-⚠️ Note: Even though date is blank, we still extract because credit has a value (78,649.00)
+⚠️ Note: Even though date is blank in the PDF, we inherit "7 Mar" from the previous transaction
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🔥 WHY THIS METHOD WORKS BETTER
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-1. ✅ No dependence on date existence
+1. ✅ Date inheritance handled by AI
    - Some banks (HSBC, Hang Seng) leave date blank for same-day transactions
-   - We extract based on AMOUNT, not DATE
+   - AI automatically inherits date from previous transaction
+   - No need for backend post-processing!
 
 2. ✅ No row merging confusion
    - Each visual row = one potential transaction
@@ -399,15 +403,17 @@ Output:
    - Hang Seng: Date/balance may be blank
    - Both work with same rule!
 
-4. ✅ Backend fills missing dates
-   - Frontend extracts raw data (date may be "")
-   - Backend JavaScript fills blank dates using last valid date
-   - Separation of concerns!
+4. ✅ No balance calculation
+   - NEVER calculate or infer balance
+   - ONLY copy visible numbers
+   - If blank → output null
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ⚠️ FINAL OUTPUT REQUIREMENTS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+- Track the last valid date as you process rows (for date inheritance)
+- NEVER calculate balance (ONLY copy visible numbers from Balance column)
 - Output ONLY valid JSON
 - NO explanations before/after JSON
 - NO markdown code blocks (```)
@@ -459,27 +465,24 @@ Output:
 
 ---
 
-## 📝 后端配合（两个方案都需要）
+## 📝 后端配合（已简化）
 
-无论使用哪个 Prompt，后端都需要填充空白日期：
+✅ **日期继承已由 AI 处理，无需后端填充！**
 
+两个 Prompt 都已内置日期继承逻辑：
+- 如果日期为空，AI 自动使用上一个交易的日期
+- 直接输出完整数据，无需后端再处理
+
+~~之前需要的后端代码（已废弃）：~~
 ```javascript
-// 填充空白日期（JavaScript）
-function fillMissingDates(transactions) {
-    let lastValidDate = null;
-    
-    return transactions.map(tx => {
-        if (!tx.date || tx.date.trim() === '') {
-            // 使用上一个有效日期
-            tx.date = lastValidDate || 'Unknown';
-        } else {
-            // 更新最后有效日期
-            lastValidDate = tx.date;
-        }
-        return tx;
-    });
-}
+// ❌ 不再需要！AI 已在 Prompt 中处理
+// function fillMissingDates(transactions) { ... }
 ```
+
+**现在只需要：**
+1. 接收 AI 输出的 JSON
+2. 直接显示在 UI 上
+3. 验证数据完整性（可选）
 
 ---
 
@@ -491,8 +494,9 @@ function fillMissingDates(transactions) {
 1. ✅ 更符合 Vision-Language Model 的工作原理（视觉扫描）
 2. ✅ 规则简单明确："有金额 = 提取，无金额 = 跳过"
 3. ✅ 不依赖列顺序或格式（适配全球银行）
-4. ✅ 已在千问 AI 测试中验证有效
-5. ✅ 配合 `extra_body` 深度思考模式效果更好
+4. ✅ AI 自动处理日期继承（无需后端代码）
+5. ✅ 不计算 balance（只复制可见数字，避免错误）
+6. ✅ 配合 `extra_body` 深度思考模式效果更好
 
 ---
 
