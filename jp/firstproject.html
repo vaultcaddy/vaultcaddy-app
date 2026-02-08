@@ -3110,24 +3110,15 @@
                             amountDisplay = `Start: $${parseFloat(openingBalance).toLocaleString('zh-TW', {minimumFractionDigits: 2, maximumFractionDigits: 2})}<br>End: $${parseFloat(closingBalance).toLocaleString('zh-TW', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
                         }
                         
-                        // ✅ 抽出對帳單期間並変換フォーマット（22 Feb 2025 to 22 Mar 2025）
-                        let statementPeriod = data.statementPeriod || data.statement_period || data.period || '';
-                        if (statementPeriod && statementPeriod.includes('to')) {
-                            // もし "2025-02-22 to 2025-03-22" フォーマット，変換 "22 Feb 2025 to 22 Mar 2025"
-                            const parts = statementPeriod.split(' to ');
-                            if (parts.length === 2) {
-                                const startDate = new Date(parts[0]);
-                                const endDate = new Date(parts[1]);
-                                if (!isNaN(startDate) && !isNaN(endDate)) {
-                                    const formatDate = (d) => {
-                                        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                                        return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
-                                    };
-                                    statementPeriod = `${formatDate(startDate)} to ${formatDate(endDate)}`;
-                                }
-                            }
+                        // ✅ 銀行明細書：明細書期間（日付範囲）を表示
+                        let statementPeriod = data.statementPeriod || data.statement_period || '';
+                        
+                        // 🔄 日付フォーマット：YYYY-MM-DD → YYYY/MM/DD
+                        if (statementPeriod && statementPeriod.includes('-')) {
+                            statementPeriod = statementPeriod.replace(/-/g, '/');
                         }
-                        date = statementPeriod || data.statementDate || data.statement_date || data.date || '-';
+                        
+                        date = statementPeriod || '-';
                     } else {
                         // 請求書/レシート/一般文書：顯示供給商、總金額、日付
                         vendor = data.vendor || data.supplier || data.merchantName || data.source || '-';

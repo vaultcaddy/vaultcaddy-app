@@ -1593,10 +1593,10 @@
     
     /* ==================== First Project 專用（僅手機版） ==================== */
     
-    /* 🔥 隐藏 firstproject 表格的類型列（第3列）*/
+    /* 🔥 強制顯示 firstproject 表格的類型列（第3列） */
     .table-container table th:nth-child(3),
     .table-container table td:nth-child(3) {
-        display: none !important;
+        display: table-cell !important;
     }
     
     /* 🔧 確保 Export 按鈕可點擊 */
@@ -2647,8 +2647,8 @@
 <span>文檔名稱</span>
 <i class="fas fa-sort sort-icon" data-column="name" style="margin-left: 0.5rem; color: #9ca3af;"></i>
 </th>
-                <!-- 類型列（已隐藏）-->
-                <th onclick="sortTable('type')" onmouseout="this.style.background='transparent'" onmouseover="this.style.background='#f3f4f6'" style="display: none; text-align: left; padding: 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; width: 100px; cursor: pointer; user-select: none;">
+                <!-- 類型列 -->
+                <th onclick="sortTable('type')" onmouseout="this.style.background='transparent'" onmouseover="this.style.background='#f3f4f6'" style="text-align: left; padding: 0.5rem 1rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; cursor: pointer; user-select: none;">
                     <span>類型</span>
                     <i class="fas fa-sort sort-icon" data-column="type" style="margin-left: 0.5rem; color: #9ca3af;"></i>
                 </th>
@@ -3135,28 +3135,15 @@
                             amountDisplay = `Start: $${parseFloat(openingBalance).toLocaleString('zh-TW', {minimumFractionDigits: 2, maximumFractionDigits: 2})}<br>End: $${parseFloat(closingBalance).toLocaleString('zh-TW', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
                         }
                         
-                        // ✅ 提取對帳單日期（優先顯示對帳單日期，而不是期間）
-                        let statementDate = data.statementDate || data.statement_date || data.date || '';
+                        // ✅ 銀行對帳單：顯示對帳單期間（日期範圍）
+                        let statementPeriod = data.statementPeriod || data.statement_period || '';
                         
                         // 🔄 格式化日期：YYYY-MM-DD → YYYY/MM/DD
-                        if (statementDate && statementDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                            statementDate = statementDate.replace(/-/g, '/');
+                        if (statementPeriod && statementPeriod.includes('-')) {
+                            statementPeriod = statementPeriod.replace(/-/g, '/');
                         }
                         
-                        // 如果沒有對帳單日期，則回退到對帳單期間
-                        if (!statementDate) {
-                            let statementPeriod = data.statementPeriod || data.statement_period || data.period || '';
-                            if (statementPeriod && statementPeriod.includes('to')) {
-                                // 提取结束日期作为对账单日期
-                                const parts = statementPeriod.split(' to ');
-                                if (parts.length === 2) {
-                                    const endDate = parts[1].trim();
-                                    statementDate = endDate.replace(/-/g, '/');
-                                }
-                            }
-                        }
-                        
-                        date = statementDate || '-';
+                        date = statementPeriod || '-';
                     } else {
                         // 發票/收據/一般文檔：顯示供應商、總金額、日期
                         vendor = data.vendor || data.supplier || data.merchantName || data.source || '-';
@@ -3177,8 +3164,8 @@
                                 </div>
                             </td>
                             
-                            <!-- 類型（已隐藏）-->
-                            <td class="document-type-cell" style="display: none; padding: 1rem;">
+                            <!-- 類型 -->
+                            <td class="document-type-cell" style="padding: 1rem;">
                                 <div style="display: flex; align-items: center; gap: 0.5rem;">
                                     <i class="fas ${typeInfo.icon}" style="color: ${typeInfo.color}; font-size: 1rem;"></i>
                                     <span style="font-size: 0.875rem; color: #6b7280;">${typeInfo.label}</span>
