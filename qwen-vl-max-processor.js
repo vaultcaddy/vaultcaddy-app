@@ -262,14 +262,18 @@ class QwenVLMaxProcessor {
      */
     generatePrompt(documentType) {
         if (documentType === 'bank_statement') {
-            // 银行单 - 简化版 Prompt（专注 ICBC 类型，支持中/英/日/韩）
+            // 银行单 - 精简版 Prompt（专注 ICBC 类型，支持中/英/日/韩）
             return `STRICT MODE: You are a OCR COPY MACHINE. ONLY copy visible text. ZERO calculation. ZERO inference.
 
-📍 TARGET TABLE IDENTIFICATION (MULTILINGUAL):
-- FIND table with headers containing BOTH sets:
-  • Date indicator: ["日期", "Date", "取引日", "거래일", "일자"]
-  • Balance indicator: ["餘額", "結餘", "Balance", "残高", "잔액", "잔고"]
-- IGNORE sections containing: ["摘要", "Summary", "總計", "TOTAL", "Account Summary", "계정 요약", "계정 개요", "取引概要", "取引サマリー", "Financial Position", "財務狀況"]
+📍 TARGET TABLE IDENTIFICATION (CRITICAL):
+
+FIND the transaction table with these characteristics:
+• Header row contains: Date + Description + Debit/Credit + Balance
+  (中: "日期"/"摘要"/"借項"/"貸項"/"餘額", 英: "Date"/"Description"/"Debit"/"Credit"/"Balance", 日: "取引日"/"取引内容"/"引き出し"/"預け入れ"/"残高", 韓: "거래일"/"거래내역"/"출금"/"입금"/"잔액")
+
+IGNORE sections titled:
+• "戶口摘要" / "Account Summary" / "取引概要" / "계정 요약"
+• "總計" / "TOTAL" / "合計" / "합계"
 
 ✂️ COLUMN IDENTIFICATION (MULTILINGUAL KEYWORDS):
 | Field       | Keywords (ANY language)                                                                 |
