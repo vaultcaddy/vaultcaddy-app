@@ -311,7 +311,6 @@ The FIRST transaction row MUST contain one of these keywords in description:
   "accountNumber": "...",
   "accountHolder": "...",
   "currency": "HKD/USD/CNY/JPY/KRW",
-  "statementPeriod": "...",
   "openingBalance": 30718.39,     // FROM FIRST ROW (承上結餘/BF BALANCE)
   "closingBalance": ...,           // FROM LAST ROW
   "transactions": [
@@ -420,7 +419,6 @@ For EACH ROW across ALL ${pageCount} pages:
   "accountNumber": "...",
   "accountHolder": "...",
   "currency": "HKD/USD/CNY/JPY/KRW",
-  "statementPeriod": "...",
   "openingBalance": 30718.39,     // FROM FIRST ROW on page 1 (承上結餘/BF BALANCE)
   "closingBalance": ...,           // FROM LAST ROW on page ${pageCount}
   "transactions": [
