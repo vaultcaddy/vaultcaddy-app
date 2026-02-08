@@ -275,68 +275,59 @@ IGNORE sections titled:
 • "戶口摘要" / "Account Summary" / "取引概要" / "계정 요약"
 • "總計" / "TOTAL" / "合計" / "합계"
 
-✂️ COLUMN IDENTIFICATION (MULTILINGUAL KEYWORDS):
-| Field       | Keywords (ANY language)                                                                 |
-|-------------|---------------------------------------------------------------------------------------|
-| date        | ["日期", "Date", "取引日", "거래일", "일자", "取引日付"]                               |
-| description | ["摘要", "Description", "取引内容", "거래내역", "내역", "Details", "明細", "内容"]     |
-| debit       | ["支出", "Withdrawal", "借項", "借方", "출금", "차변", "Debit", "출금액", "引き出し"] |
-| credit      | ["存入", "Deposit", "貸項", "貸方", "입금", "대변", "Credit", "입금액", "預け入れ"]   |
-| balance     | ["餘額", "結餘", "Balance", "残高", "잔액", "잔고", "Current Balance", "현재 잔액"]   |
+🔍 OPENING BALANCE IDENTIFICATION (CRITICAL):
+The FIRST transaction row MUST contain one of these keywords in description:
+• Chinese: "承上結餘" / "期初餘額" / "上期結餘"
+• English: "Brought Forward" / "BF BALANCE" / "Opening Balance"
+• Japanese: "前期繰越" / "期首残高"
+• Korean: "이월잔액" / "기초잔액"
 
-🎯 TRANSACTION RULE (CRITICAL - AB Types Compatible):
-You are a DATA COPY CLERK. Two bank statement types exist:
-• TYPE A (ICBC 工商银行): All transactions have date, description, debit/credit, balance
-• TYPE B (Hang Seng 恒生银行): Transactions have description+debit/credit, but date/balance may be blank
+→ This row's balance = openingBalance
+→ LAST row's balance = closingBalance
 
-CORE: Extract a row as transaction IF debit OR credit has a number (even if date="" or balance=null)
-Skip ONLY IF: Both debit=0 AND credit=0 (no money movement)
+✂️ FIELD EXTRACTION RULES (NON-NEGOTIABLE):
 
-✂️ EXTRACTION RULES (NON-NEGOTIABLE):
-| Field       | Action                                                                 |
-|-------------|------------------------------------------------------------------------|
-| date        | COPY EXACT visible text. If blank → output ""                          |
-| description | COPY ALL visible text from description column of THIS PHYSICAL ROW ONLY. NEVER merge with adjacent rows. |
-| debit       | COPY number (remove commas). If blank/"—"/"N/A" → 0                    |
-| credit      | COPY number (remove commas). If blank/"—"/"N/A" → 0                    |
-| balance     | COPY number (remove commas). If blank/"—"/"N/A" → null                 |
+| JSON Field  | Source Column | Action |
+|-------------|---------------|--------|
+| date        | 日期/Date/取引日/거래일 | COPY exact text |
+| description | 摘要/Description/取引内容/거래내역 | COPY ALL visible text of THIS row |
+| debit       | 借項/Debit/Withdrawal/출금/引き出し | COPY number (remove commas), blank → 0 |
+| credit      | 貸項/Credit/Deposit/입금/預け入れ | COPY number (remove commas), blank → 0 |
+| balance     | 餘額/Balance/残高/잔액 | COPY number (remove commas) |
 
 ❗ ABSOLUTE COMMANDS:
-- EACH PHYSICAL TABLE ROW = ONE transaction object. NEVER combine rows.
-- NEVER skip a row because date is blank. Blank date ≠ invalid row.
-- NEVER calculate, infer, or "fill in" missing dates/balances. Output exactly what is visible.
-- Remove ALL commas from numbers BEFORE outputting (e.g., "1,500.00" → 1500.00).
-- Date format: Output original string UNCHANGED (e.g., "10 Mar", "2025年3月10日", "2025-03-10"). DO NOT convert.
-- If ANY field is unclear/ambiguous → output null for that field ONLY.
-- Output ONLY valid JSON. NO explanations. NO markdown. NO comments. NO extra fields.
 
-📤 OUTPUT STRUCTURE (STRICT):
+• IF "餘額" = "30,718.39" → output balance: 30718.39 (NO EXCEPTIONS)
+• IF number unclear → output null (NEVER guess/calculate)
+• REMOVE all commas from numbers: "1,500.00" → 1500.00
+• Date format: Output original UNCHANGED (e.g., "2023/07/15", "10 Mar", "2025년 3월", "2025年3月")
+• NEVER calculate or infer missing values
+• Output ONLY valid JSON. NO explanations. NO markdown. NO comments.
+
+📤 OUTPUT STRUCTURE (REDUCED):
+
 {
-  "bankName": "string (copy visible bank name)",
-  "accountNumber": "string (copy visible account number)",
-  "accountHolder": "string (copy visible holder name, else \"\")",
-  "currency": "string (HKD/USD/CNY/JPY/KRW/etc.)",
-  "statementPeriod": "string (copy visible period text)",
-  "openingBalance": number (from FIRST row's balance column),
-  "closingBalance": number (from LAST row's balance column),
+  "bankName": "...",
+  "accountNumber": "...",
+  "accountHolder": "...",
+  "currency": "HKD/USD/CNY/JPY/KRW",
+  "statementPeriod": "...",
+  "openingBalance": 30718.39,     // FROM FIRST ROW (承上結餘/BF BALANCE)
+  "closingBalance": ...,           // FROM LAST ROW
   "transactions": [
     {
-      "date": "string (original format or \"\")",
-      "description": "string (full text of THIS row)",
-      "debit": number (0 if blank),
-      "credit": number (0 if blank),
-      "balance": number (null if blank)
+      "date": "2023/07/15",        // ORIGINAL FORMAT
+      "description": "SCR OCTOPUS CARDS LTD",
+      "debit": 184.30,
+      "credit": 0,
+      "balance": 8349.45           // COPIED FROM "餘額" COLUMN
     }
   ]
 }
 
-💡 EXAMPLES - TYPE A vs TYPE B:
-TYPE A (ICBC - 所有字段都有):
+💡 EXAMPLE (ICBC - 标准格式):
 {"date":"2023/07/07","description":"SIC ALIPAY HK LTD","debit":21.62,"credit":0,"balance":35667.34}
-
-TYPE B (Hang Seng - 日期和余额可能空白):
-{"date":"","description":"QUICK CHEQUE DEPOSIT","debit":0,"credit":78649.00,"balance":null}
-{"date":"10 Mar","description":"ATM WITHDRAWAL","debit":500.00,"credit":0,"balance":79405.09}`;
+`;
         } else {
             // 發票
             return `你是一個專業的發票數據提取專家。請從圖片中提取所有發票資料，並以 JSON 格式返回。
@@ -377,79 +368,75 @@ TYPE B (Hang Seng - 日期和余额可能空白):
      */
     generateMultiPagePrompt(documentType, pageCount) {
         if (documentType === 'bank_statement') {
-            return `STRICT MODE: You are a VISUAL TEXT EXTRACTOR processing ${pageCount} images (multiple pages of same statement). ONLY copy visible text. ZERO calculation. ZERO inference. ZERO row merging. ZERO date inheritance.
+            return `📍 MULTI-PAGE BANK STATEMENT EXTRACTION
+You are processing ${pageCount} pages from the SAME bank statement. Extract ALL transactions across all pages.
 
-📍 TARGET TABLE IDENTIFICATION (MULTILINGUAL - across ALL ${pageCount} pages):
-- FIND table with headers containing BOTH sets:
-  • Date indicator: ["日期", "Date", "取引日", "거래일", "일자"]
-  • Balance indicator: ["餘額", "結餘", "Balance", "残高", "잔액", "잔고"]
-- IGNORE sections containing: ["摘要", "Summary", "總計", "TOTAL", "Account Summary", "계정 요약", "계정 개요", "取引概要", "取引サマリー", "Financial Position", "財務狀況"]
+📍 TARGET TABLE IDENTIFICATION (CRITICAL):
 
-✂️ COLUMN IDENTIFICATION (MULTILINGUAL KEYWORDS):
-| Field       | Keywords (ANY language)                                                                 |
-|-------------|---------------------------------------------------------------------------------------|
-| date        | ["日期", "Date", "取引日", "거래일", "일자", "取引日付"]                               |
-| description | ["摘要", "Description", "取引内容", "거래내역", "내역", "Details", "明細", "内容"]     |
-| debit       | ["支出", "Withdrawal", "借項", "借方", "출금", "차변", "Debit", "출금액", "引き出し"] |
-| credit      | ["存入", "Deposit", "貸項", "貸方", "입금", "대변", "Credit", "입금액", "預け入れ"]   |
-| balance     | ["餘額", "結餘", "Balance", "残高", "잔액", "잔고", "Current Balance", "현재 잔액"]   |
+FIND the transaction table with these characteristics:
+• Header row contains: Date + Description + Debit/Credit + Balance
+  (中: "日期"/"摘要"/"借項"/"貸項"/"餘額", 英: "Date"/"Description"/"Debit"/"Credit"/"Balance", 日: "取引日"/"取引内容"/"引き出し"/"預け入れ"/"残高", 韓: "거래일"/"거래내역"/"출금"/"입금"/"잔액")
 
-🎯 TRANSACTION RULE (CRITICAL - AB Types Compatible):
-You are a DATA COPY CLERK. Two bank statement types exist:
-• TYPE A (ICBC 工商银行): All transactions have date, description, debit/credit, balance
-• TYPE B (Hang Seng 恒生银行): Transactions have description+debit/credit, but date/balance may be blank
+IGNORE sections titled:
+• "戶口摘要" / "Account Summary" / "取引概要" / "계정 요약"
+• "總計" / "TOTAL" / "合計" / "합계"
 
-CORE: Extract a row as transaction IF debit OR credit has a number (even if date="" or balance=null)
-Skip ONLY IF: Both debit=0 AND credit=0 (no money movement)
+🔍 OPENING BALANCE IDENTIFICATION (CRITICAL):
+The FIRST transaction row (on page 1) MUST contain one of these keywords in description:
+• Chinese: "承上結餘" / "期初餘額" / "上期結餘"
+• English: "Brought Forward" / "BF BALANCE" / "Opening Balance"
+• Japanese: "前期繰越" / "期首残高"
+• Korean: "이월잔액" / "기초잔액"
 
-✂️ EXTRACTION RULES (NON-NEGOTIABLE):
+→ This row's balance = openingBalance
+→ LAST row (on page ${pageCount}) balance = closingBalance
+
+✂️ FIELD EXTRACTION RULES (NON-NEGOTIABLE):
+
 For EACH ROW across ALL ${pageCount} pages:
-| Field       | Action                                                                 |
-|-------------|------------------------------------------------------------------------|
-| date        | COPY EXACT visible text. If blank → output ""                          |
-| description | COPY ALL visible text from description column of THIS PHYSICAL ROW ONLY. NEVER merge with adjacent rows. |
-| debit       | COPY number (remove commas). If blank/"—"/"N/A" → 0                    |
-| credit      | COPY number (remove commas). If blank/"—"/"N/A" → 0                    |
-| balance     | COPY number (remove commas). If blank/"—"/"N/A" → null                 |
+
+| JSON Field  | Source Column | Action |
+|-------------|---------------|--------|
+| date        | 日期/Date/取引日/거래일 | COPY exact text |
+| description | 摘要/Description/取引内容/거래내역 | COPY ALL visible text of THIS row |
+| debit       | 借項/Debit/Withdrawal/출금/引き出し | COPY number (remove commas), blank → 0 |
+| credit      | 貸項/Credit/Deposit/입금/預け入れ | COPY number (remove commas), blank → 0 |
+| balance     | 餘額/Balance/残高/잔액 | COPY number (remove commas) |
 
 ❗ ABSOLUTE COMMANDS:
-- EACH PHYSICAL TABLE ROW = ONE transaction object. NEVER combine rows.
-- NEVER skip a row because date is blank. Blank date ≠ invalid row.
-- NEVER calculate, infer, or "fill in" missing dates/balances. Output exactly what is visible.
-- Remove ALL commas from numbers BEFORE outputting (e.g., "1,500.00" → 1500.00).
-- Date format: Output original string UNCHANGED (e.g., "10 Mar", "2025年3月10日", "2025-03-10"). DO NOT convert.
-- If ANY field is unclear/ambiguous → output null for that field ONLY.
-- statementPeriod: MUST be "first transaction date to last transaction date" (e.g., "22 Feb to 22 Mar")
-- Combine ALL transactions from ALL ${pageCount} pages in chronological order
-- Output ONLY valid JSON. NO explanations. NO markdown. NO comments. NO extra fields.
 
-📤 OUTPUT STRUCTURE (STRICT):
+• IF "餘額" = "30,718.39" → output balance: 30718.39 (NO EXCEPTIONS)
+• IF number unclear → output null (NEVER guess/calculate)
+• REMOVE all commas from numbers: "1,500.00" → 1500.00
+• Date format: Output original UNCHANGED (e.g., "2023/07/15", "10 Mar", "2025년 3월", "2025年3月")
+• NEVER calculate or infer missing values
+• Combine ALL transactions from ALL ${pageCount} pages in chronological order
+• Output ONLY valid JSON. NO explanations. NO markdown. NO comments.
+
+📤 OUTPUT STRUCTURE (REDUCED):
+
 {
-  "bankName": "string (copy visible bank name)",
-  "accountNumber": "string (copy visible account number)",
-  "accountHolder": "string (copy visible holder name, else \"\")",
-  "currency": "string (HKD/USD/CNY/JPY/KRW/etc.)",
-  "statementPeriod": "string (copy visible period text)",
-  "openingBalance": number (from FIRST row's balance column),
-  "closingBalance": number (from LAST row's balance column),
+  "bankName": "...",
+  "accountNumber": "...",
+  "accountHolder": "...",
+  "currency": "HKD/USD/CNY/JPY/KRW",
+  "statementPeriod": "...",
+  "openingBalance": 30718.39,     // FROM FIRST ROW on page 1 (承上結餘/BF BALANCE)
+  "closingBalance": ...,           // FROM LAST ROW on page ${pageCount}
   "transactions": [
     {
-      "date": "string (original format or \"\")",
-      "description": "string (full text of THIS row)",
-      "debit": number (0 if blank),
-      "credit": number (0 if blank),
-      "balance": number (null if blank)
+      "date": "2023/07/15",        // ORIGINAL FORMAT
+      "description": "SCR OCTOPUS CARDS LTD",
+      "debit": 184.30,
+      "credit": 0,
+      "balance": 8349.45           // COPIED FROM "餘額" COLUMN
     }
   ]
 }
 
-💡 EXAMPLES - TYPE A vs TYPE B:
-TYPE A (ICBC - 所有字段都有):
+💡 EXAMPLE (ICBC - 标准格式):
 {"date":"2023/07/07","description":"SIC ALIPAY HK LTD","debit":21.62,"credit":0,"balance":35667.34}
-
-TYPE B (Hang Seng - 日期和余额可能空白):
-{"date":"","description":"QUICK CHEQUE DEPOSIT","debit":0,"credit":78649.00,"balance":null}
-{"date":"10 Mar","description":"ATM WITHDRAWAL","debit":500.00,"credit":0,"balance":79405.09}`;
+`;
         } else {
             return `你是一個專業的發票數據提取專家。我發送了 ${pageCount} 張圖片，它們是同一份發票的多個頁面。請綜合分析所有頁面，提取完整的發票資料和項目明細，並以 JSON 格式返回。
 
