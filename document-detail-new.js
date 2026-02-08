@@ -1563,13 +1563,11 @@ function displayBankStatementContent(data) {
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('statement_date')}</label>
-                    <input type="date" id="statementDate" value="${statementDate === '—' ? '' : statementDate}" 
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('statement_period')}</label>
+                    <input type="text" id="statementPeriod" value="${statementPeriod}" 
                            onchange="autoSaveBankStatementDetails()"
-                           lang="${currentLang}"
-                           placeholder="${t('statement_date_placeholder')}"
-                           data-placeholder="${t('statement_date_placeholder')}"
-                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white; max-width: 100%; overflow: hidden; text-overflow: ellipsis; color-scheme: ${currentLang === 'en' ? 'light' : 'auto'};">
+                           placeholder="2021/01/14 - 2021/01/31"
+                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
                     <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('opening_balance')}</label>
@@ -2014,7 +2012,6 @@ async function autoSaveAllChanges() {
         const accountHolder = document.getElementById('accountHolder')?.value;
         const currency = document.getElementById('currency')?.value;
         const statementPeriod = document.getElementById('statementPeriod')?.value;
-        const statementDate = document.getElementById('statementDate')?.value;
         const openingBalance = document.getElementById('openingBalance')?.value;
         const closingBalance = document.getElementById('closingBalance')?.value;
         
@@ -2026,7 +2023,6 @@ async function autoSaveAllChanges() {
                 accountHolder: accountHolder || '',
                 currency: currency || 'HKD',
                 statementPeriod: statementPeriod || '',  // ✅ 避免 undefined
-                statementDate: statementDate || '',
                 openingBalance: parseFloat(openingBalance?.replace(/[^0-9.-]+/g, '')) || 0,
                 closingBalance: parseFloat(closingBalance?.replace(/[^0-9.-]+/g, '')) || 0
             };
