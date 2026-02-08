@@ -2467,9 +2467,9 @@ window.changeTransactionPage = function(newPage) {
 // 交易記錄編輯函數
 // ============================================
 
-// ✅ 切換交易類型標記（+/-）- 只改變顯示標記，不修改金額數值
+// ✅ 切換交易類型標記（+/-）- 改變顯示標記並交換 debit/credit
 function toggleTransactionType(index) {
-    console.log(`🔄 切換交易 ${index} 的類型標記`);
+    console.log(`🔄 切換交易 ${index} 的類型標記並交換 debit/credit`);
     
     if (!currentDocument || !currentDocument.processedData || !currentDocument.processedData.transactions) {
         console.error('❌ 無法找到交易數據');
@@ -2482,12 +2482,19 @@ function toggleTransactionType(index) {
         return;
     }
     
-    // ✅ 只切換顯示標記，不修改 amount 或 balance 的實際數值
-    // 這只是修正AI識別錯誤的標記，不影響銀行單中已計算好的數據
+    // ✅ 1. 切換顯示標記
     transaction.transactionSign = transaction.transactionSign === 'income' ? 'expense' : 'income';
     
-    console.log(`✅ 交易 ${index} 標記已切換為: ${transaction.transactionSign}`);
-    console.log(`📊 金額和余額保持不變: amount=${transaction.amount}, balance=${transaction.balance}`);
+    // ✅ 2. 交換 debit 和 credit 的值
+    const tempDebit = transaction.debit;
+    transaction.debit = transaction.credit;
+    transaction.credit = tempDebit;
+    
+    console.log(`✅ 交易 ${index} 已切換:`);
+    console.log(`   - 標記: ${transaction.transactionSign}`);
+    console.log(`   - Debit: ${transaction.debit}`);
+    console.log(`   - Credit: ${transaction.credit}`);
+    console.log(`   - Balance: ${transaction.balance} (余額保持不變)`);
     
     // 更新 UI
     displayDocumentContent();

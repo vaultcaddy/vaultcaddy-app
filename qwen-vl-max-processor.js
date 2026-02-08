@@ -516,7 +516,7 @@ For EACH ROW across ALL ${pageCount} pages:
         
         let lastValidDate = null;
         
-        // 遍历所有交易，填充空白日期
+        // 步骤 1：填充空白日期
         extractedData.transactions = extractedData.transactions.map((tx, index) => {
             // 如果当前交易的日期为空/null/undefined/纯空格，使用上一笔的日期
             if (!tx.date || (typeof tx.date === 'string' && tx.date.trim() === '')) {
@@ -544,6 +544,48 @@ For EACH ROW across ALL ${pageCount} pages:
             
             return tx;
         });
+        
+        // 步骤 2：验证并修正 debit/credit（基于余额变化）
+        console.log('🔍 开始验证 debit/credit 分类...');
+        let correctionCount = 0;
+        
+        for (let i = 1; i < extractedData.transactions.length; i++) {
+            const prevTx = extractedData.transactions[i - 1];
+            const currTx = extractedData.transactions[i];
+            
+            // 解析余额值
+            const prevBalance = parseFloat(prevTx.balance);
+            const currBalance = parseFloat(currTx.balance);
+            const debit = parseFloat(currTx.debit) || 0;
+            const credit = parseFloat(currTx.credit) || 0;
+            
+            // 跳过无法比较的行（余额缺失或无效）
+            if (isNaN(prevBalance) || isNaN(currBalance)) {
+                continue;
+            }
+            
+            // 规则 1：余额减少 = 支出（应该是 debit，不是 credit）
+            if (prevBalance > currBalance && credit > 0 && debit === 0) {
+                console.log(`⚠️ 交易 ${i} 修正：余额从 ${prevBalance} 减少到 ${currBalance}，应为支出（debit）`);
+                currTx.debit = currTx.credit;  // 将 credit 的值移到 debit
+                currTx.credit = 0;              // credit 归零
+                correctionCount++;
+            }
+            
+            // 规则 2：余额增加 = 存入（应该是 credit，不是 debit）
+            if (prevBalance < currBalance && debit > 0 && credit === 0) {
+                console.log(`⚠️ 交易 ${i} 修正：余额从 ${prevBalance} 增加到 ${currBalance}，应为存入（credit）`);
+                currTx.credit = currTx.debit;   // 将 debit 的值移到 credit
+                currTx.debit = 0;               // debit 归零
+                correctionCount++;
+            }
+        }
+        
+        if (correctionCount > 0) {
+            console.log(`✅ 共修正 ${correctionCount} 笔交易的 debit/credit 分类`);
+        } else {
+            console.log('✅ 所有交易的 debit/credit 分类正确，无需修正');
+        }
         
         return extractedData;
     }
