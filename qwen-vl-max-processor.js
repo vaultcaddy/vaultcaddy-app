@@ -587,6 +587,20 @@ For EACH ROW across ALL ${pageCount} pages:
             console.log('✅ 所有交易的 debit/credit 分类正确，无需修正');
         }
         
+        // 步骤 3：根据交易记录自动生成对账单日期
+        if (extractedData.transactions.length > 0) {
+            const firstDate = extractedData.transactions[0].date;
+            const lastDate = extractedData.transactions[extractedData.transactions.length - 1].date;
+            
+            if (firstDate && lastDate) {
+                // 生成格式：2021/01/14 - 2021/01/31
+                extractedData.statementPeriod = `${firstDate} - ${lastDate}`;
+                console.log(`✅ 对账单日期已自动生成: ${extractedData.statementPeriod}`);
+            } else {
+                console.log('⚠️ 无法生成对账单日期：交易日期缺失');
+            }
+        }
+        
         return extractedData;
     }
     
