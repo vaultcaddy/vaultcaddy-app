@@ -317,7 +317,7 @@ For EACH visual row in the table:
 }
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✅ EXAMPLE: ICBC ASIA STATEMENT
+✅ EXAMPLE: a STATEMENT
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Visual Row:

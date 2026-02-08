@@ -21,10 +21,10 @@ class QwenVLMaxProcessor {
         // Qwen-VL Max API (通过 Firebase Cloud Function)
         this.qwenWorkerUrl = 'https://us-central1-vaultcaddy-production-cbbe2.cloudfunctions.net/qwenProxy';
         
-        // 模型配置：根据文档类型使用不同模型
+        // 模型配置：统一使用 qwen3-vl-plus 标准模式（不启用深度思考）
         this.models = {
-            receipt: 'qwen3-vl-plus-2025-12-19',  // 收据：标准模式（更快，成本低）
-            bankStatement: 'qwen3-vl-plus'         // 银行单：使用最新模型 + enable_thinking
+            receipt: 'qwen3-vl-plus',       // 收据：标准模式
+            bankStatement: 'qwen3-vl-plus'  // 银行单：标准模式（不启用深度思考）
         };
         
         // 处理统计
@@ -55,14 +55,11 @@ class QwenVLMaxProcessor {
             // 2. 生成提示词
             const prompt = this.generatePrompt(documentType);
             
-            // 3. 根据文档类型选择模型和参数
-            const selectedModel = documentType === 'bank_statement' 
-                ? this.models.bankStatement  // 银行单：qwen3-vl-plus（深度思考）
-                : this.models.receipt;        // 收据：qwen3-vl-plus-2025-12-19（标准模式）
+            // 3. 根据文档类型选择模型和参数（统一使用标准模式）
+            const selectedModel = this.models[documentType === 'bank_statement' ? 'bankStatement' : 'receipt'];
+            const enableThinking = false; // 统一使用标准模式，不启用深度思考
             
-            const enableThinking = documentType === 'bank_statement'; // 银行单启用深度思考
-            
-            console.log(`📊 文档类型: ${documentType} → 模型: ${selectedModel}, 深度思考: ${enableThinking ? '✅ 开启' : '⭕ 关闭'}`);
+            console.log(`📊 文档类型: ${documentType} → 模型: ${selectedModel}, 模式: 标准模式（快速）`);
             
             // 4. 构建请求
             const requestBody = {
@@ -85,18 +82,10 @@ class QwenVLMaxProcessor {
                     }
                 ],
                 temperature: 0.1,
-                max_tokens: 4000
+                max_tokens: 8000  // 标准模式：8000 tokens
             };
             
-            // 🔥 添加深度思考参数到 extra_body（阿里云官方格式）
-            if (enableThinking) {
-                requestBody.extra_body = {
-                    enable_thinking: true,
-                    thinking_budget: 4000  // 思考预算：4000 tokens
-                };
-            }
-            
-            // 5. 调用 Qwen-VL API
+            // 4. 调用 Qwen-VL API
             const response = await fetch(this.qwenWorkerUrl, {
                 method: 'POST',
                 headers: {
@@ -182,14 +171,11 @@ class QwenVLMaxProcessor {
             // 2. 生成提示词
             const prompt = this.generateMultiPagePrompt(documentType, files.length);
             
-            // 3. 根据文档类型选择模型和参数
-            const selectedModel = documentType === 'bank_statement' 
-                ? this.models.bankStatement  // 银行单：qwen3-vl-plus（深度思考）
-                : this.models.receipt;        // 收据：qwen3-vl-plus-2025-12-19（标准模式）
+            // 3. 根据文档类型选择模型和参数（统一使用标准模式）
+            const selectedModel = this.models[documentType === 'bank_statement' ? 'bankStatement' : 'receipt'];
+            const enableThinking = false; // 统一使用标准模式，不启用深度思考
             
-            const enableThinking = documentType === 'bank_statement'; // 银行单启用深度思考
-            
-            console.log(`📊 多页文档: ${documentType} → 模型: ${selectedModel}, 深度思考: ${enableThinking ? '✅ 开启' : '⭕ 关闭'} (${files.length}页)`);
+            console.log(`📊 多页文档: ${documentType} → 模型: ${selectedModel}, 模式: 标准模式 (${files.length}页)`);
             
             // 4. 构建请求（所有图片 + 提示词）
             const requestBody = {
@@ -207,16 +193,8 @@ class QwenVLMaxProcessor {
                     }
                 ],
                 temperature: 0.1,
-                max_tokens: enableThinking ? 4000 : 8000  // 深度思考模式限制4000，标准模式8000
+                max_tokens: 8000  // 标准模式：8000 tokens
             };
-            
-            // 🔥 添加深度思考参数到 extra_body（阿里云官方格式）
-            if (enableThinking) {
-                requestBody.extra_body = {
-                    enable_thinking: true,
-                    thinking_budget: 4000  // 思考预算：4000 tokens
-                };
-            }
             
             // 5. 调用 Qwen-VL API
             const response = await fetch(this.qwenWorkerUrl, {
@@ -284,7 +262,8 @@ class QwenVLMaxProcessor {
      */
     generatePrompt(documentType) {
         if (documentType === 'bank_statement') {
-            return `STRICT MODE: You are a VISUAL TEXT EXTRACTOR. ONLY copy visible text. ZERO calculation. ZERO inference. ZERO row merging. ZERO date inheritance.
+            // 银行单 - 简化版 Prompt（专注 ICBC 类型，支持中/英/日/韩）
+            return `STRICT MODE: You are a OCR COPY MACHINE. ONLY copy visible text. ZERO calculation. ZERO inference.
 
 📍 TARGET TABLE IDENTIFICATION (MULTILINGUAL):
 - FIND table with headers containing BOTH sets:
