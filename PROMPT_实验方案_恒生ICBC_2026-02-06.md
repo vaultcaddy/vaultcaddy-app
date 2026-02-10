@@ -317,7 +317,7 @@ For EACH visual row in the table:
 }
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✅ EXAMPLE: a STATEMENT
+✅ EXAMPLE: a bank STATEMENT
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Visual Row:
@@ -340,7 +340,7 @@ Output:
 }
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✅ EXAMPLE: HANG SENG BANK STATEMENT (COMPLEX CASE)
+✅ EXAMPLE: b BANK STATEMENT (COMPLEX CASE)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Visual Row 1:
