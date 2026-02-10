@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="ko-KR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SEO Optimization -->
+    <title>Travel Agency Accounting | Commission 추적ing & Client Payment Management</title>
+    <meta name="description" content="AI-powered travel agency accounting. 자동화 commission reconciliation, client payment tracking, and vendor payouts. Save 6+ hours/week.">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #ec4899;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --dark: #0f172a;
+            --light: #f8fafc;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #ffffff;
+            color: #1e293b;
+            overflow-x: hidden;
+        }
+        
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 100px 20px 50px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .hero h1 {
+            font-size: 64px;
+            font-weight: 900;
+            margin-bottom: 24px;
+            line-height: 1.1;
+            color: white;
+        }
+        
+        .hero p {
+            font-size: 22px;
+            margin-bottom: 40px;
+            color: rgba(255,255,255,0.95);
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+            margin: 50px 0;
+        }
+        
+        .stat {
+            text-align: center;
+            color: white;
+        }
+        
+        .stat-number {
+            font-size: 56px;
+            font-weight: 900;
+            display: block;
+            margin-bottom: 8px;
+        }
+        
+        .stat-label {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 18px 48px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 18px;
+            text-decoration: none;
+            transition: all 0.3초;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .btn-primary {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+        }
+        
+        /* Pain Points Section */
+        .section {
+            padding: 80px 24px;
+            background: white;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        
+        .section-title h2 {
+            font-size: 42px;
+            font-weight: 800;
+            color: #1a202c;
+            margin-bottom: 16px;
+        }
+        
+        .section-title p {
+            font-size: 20px;
+            color: #64748b;
+        }
+        
+        .pain-points {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto 60px;
+        }
+        
+        .pain-point {
+            background: #fef2f2;
+            padding: 40px;
+            border-radius: 16px;
+            border-left: 4px solid #ef4444;
+        }
+        
+        .pain-point h3 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #991b1b;
+            margin-bottom: 16px;
+        }
+        
+        .pain-point h3:before {
+            content: "❌";
+            margin-right: 12px;
+        }
+        
+        .pain-point p {
+            color: #7f1d1d;
+            line-height: 1.8;
+        }
+        
+        /* Solutions Section */
+        .solutions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .solution {
+            background: #f0fdf4;
+            padding: 40px;
+            border-radius: 16px;
+            border-left: 4px solid #10b981;
+        }
+        
+        .solution h3 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #065f46;
+            margin-bottom: 16px;
+        }
+        
+        .solution h3:before {
+            content: "✅";
+            margin-right: 12px;
+        }
+        
+        .solution p {
+            color: #064e3b;
+            line-height: 1.8;
+        }
+        
+        /* 기능s */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .feature {
+            padding: 40px;
+            background: #f8fafc;
+            border-radius: 16px;
+            transition: all 0.3초;
+        }
+        
+        .feature:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .feature h3 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 16px;
+        }
+        
+        .feature p {
+            color: #64748b;
+            line-height: 1.8;
+        }
+        
+        /* Pricing */
+        .pricing {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 40px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .pricing-card {
+            background: white;
+            padding: 48px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            transition: all 0.3초;
+            position: relative;
+        }
+        
+        .pricing-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        }
+        
+        .pricing-card.popular {
+            border: 3px solid #667eea;
+            transform: scale(1.05);
+        }
+        
+        .pricing-badge {
+            position: absolute;
+            top: -16px;
+            right: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+        }
+        
+        .pricing-price {
+            font-size: 56px;
+            font-weight: 900;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+        
+        .pricing-period {
+            color: #64748b;
+            font-size: 18px;
+            margin-bottom: 32px;
+        }
+        
+        .pricing-features {
+            list-style: none;
+            margin-bottom: 40px;
+        }
+        
+        .pricing-features li {
+            padding: 12px 0;
+            color: #475569;
+            font-size: 16px;
+        }
+        
+        .pricing-features li:before {
+            content: "✓";
+            color: #10b981;
+            font-weight: 700;
+            margin-right: 12px;
+        }
+        
+        /* GIF Demo Animation */
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 42px;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+            
+            .pain-points,
+            .solutions,
+            .features {
+                grid-template-columns: 1fr;
+            }
+            
+            .pricing {
+                grid-template-columns: 1fr;
+            }
+            
+            .pricing-card.popular {
+                transform: scale(1);
+            }
+        }
+    </style>
+
+    <!-- Hreflang Tags for Multilingual SEO -->
+    <!-- Hreflang Tags for Multilingual SEO -->
+    <link rel="alternate" hreflang="en" href="https://vaultcaddy.com/travel-agency-accounting-v3.html" />
+    <link rel="alternate" hreflang="zh-TW" href="https://vaultcaddy.com/zh-TW/travel-agency-accounting-v3.html" />
+    <link rel="alternate" hreflang="zh-HK" href="https://vaultcaddy.com/zh-HK/travel-agency-accounting-v3.html" />
+    <link rel="alternate" hreflang="ja" href="https://vaultcaddy.com/ja-JP/travel-agency-accounting-v3.html" />
+    <link rel="alternate" hreflang="ko" href="https://vaultcaddy.com/ko-KR/travel-agency-accounting-v3.html" />
+    <link rel="alternate" hreflang="x-default" href="https://vaultcaddy.com/travel-agency-accounting-v3.html" />
+</head>
+<body>
+    <!-- Hero Section -->
+    
+    <!-- Localized Customer Testimonials -->
+    <section style="padding: 80px 24px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);">
+        <div style="max-width: 1200px; margin: 0 auto;">
+            <h2 style="text-align: center; font-size: 42px; font-weight: 800; margin-bottom: 60px; color: #1a202c;">
+                💬 真實客戶評價
+            </h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 30px;">
+                <div style="background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                    <div style="font-size: 48px; margin-bottom: 15px;">⭐⭐⭐⭐⭐</div>
+                    <p style="font-size: 16px; line-height: 1.8; color: #4a5568; margin-bottom: 20px;">
+                        "VaultCaddy를 도입한 후 은행 명세서 처리 시간이 주당 12시간에서 2시간으로 단축되었습니다. 특히 신한은행과 우리은행 명세서 처리가 완벽합니다."
+                    </p>
+                    <div style="border-top: 2px solid #e2e8f0; padding-top: 15px;">
+                        <div style="font-weight: bold; color: #2d3748; margin-bottom: 5px;">
+                            김민수 - 회계 담당자
+                        </div>
+                        <div style="color: #718096; font-size: 14px; margin-bottom: 10px;">
+                            서울무역회사
+                        </div>
+                        <div style="color: #10b981; font-weight: bold;">
+                            💰 每月節省: ₩1,500,000
+                        </div>
+                    </div>
+                </div>
+                <div style="background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                    <div style="font-size: 48px; margin-bottom: 15px;">⭐⭐⭐⭐⭐</div>
+                    <p style="font-size: 16px; line-height: 1.8; color: #4a5568; margin-bottom: 20px;">
+                        "한국 원화로 가격이 표시되고 한국 회계 기준을 완전히 준수하는 점이 가장 마음에 듭니다. QuickBooks 출력도 완벽하게 작동합니다."
+                    </p>
+                    <div style="border-top: 2px solid #e2e8f0; padding-top: 15px;">
+                        <div style="font-weight: bold; color: #2d3748; margin-bottom: 5px;">
+                            이지은 - 재무 관리자
+                        </div>
+                        <div style="color: #718096; font-size: 14px; margin-bottom: 10px;">
+                            부산제조업
+                        </div>
+                        <div style="color: #10b981; font-weight: bold;">
+                            💰 每月節省: ₩1,200,000
+                        </div>
+                    </div>
+                </div>
+                <div style="background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                    <div style="font-size: 48px; margin-bottom: 15px;">⭐⭐⭐⭐⭐</div>
+                    <p style="font-size: 16px; line-height: 1.8; color: #4a5568; margin-bottom: 20px;">
+                        "AI 정확도가 98%로 매우 높아 수동 확인 시간이 크게 줄었습니다. 중소기업도 부담 없이 사용할 수 있는 가격이 장점입니다."
+                    </p>
+                    <div style="border-top: 2px solid #e2e8f0; padding-top: 15px;">
+                        <div style="font-weight: bold; color: #2d3748; margin-bottom: 5px;">
+                            박서준 - 재무이사
+                        </div>
+                        <div style="color: #718096; font-size: 14px; margin-bottom: 10px;">
+                            인천IT기업
+                        </div>
+                        <div style="color: #10b981; font-weight: bold;">
+                            💰 每月節省: ₩1,800,000
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Regional FAQ Section -->
+    <section style="padding: 80px 24px; background: white;">
+        <div style="max-width: 900px; margin: 0 auto;">
+            <h2 style="text-align: center; font-size: 42px; font-weight: 800; margin-bottom: 20px; color: #1a202c;">
+                ❓ 韓國用戶常見問題
+            </h2>
+            <p style="text-align: center; font-size: 18px; color: #718096; margin-bottom: 60px;">
+                針對韓國市場的專業解答
+            </p>
+            <div class="faq-container">
+                <div class="faq-item" style="border-bottom: 1px solid #e2e8f0; padding: 25px 0;; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
+                    <div class="faq-question" style="display: flex; justify-content: center; align-items: center; cursor: pointer; font-weight: 600; font-size: 18px; color: #ffffff; padding: 20px;">
+                        <span>한국 은행을 지원합니까？</span>
+                        <span class="faq-icon" style="font-size: 28px; margin-left: 15px; color: #ffffff; font-weight: bold; transition: transform 0.3s;">+</span>
+                    </div>
+                    <div class="faq-answer" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; margin-top: 0; padding: 0 20px; color: #ffffff; line-height: 1.8; background: rgba(255, 255, 255, 0.1); border-radius: 0 0 12px 12px;">
+                        네, 신한은행, 우리은행, KB국민은행, 하나은행, NH농협은행, IBK기업은행, 카카오뱅크 등 한국의 모든 주요 은행을 지원합니다. 한글 형식의 명세서도 정확하게 처리합니다.
+                    </div>
+                </div>
+                <div class="faq-item" style="border-bottom: 1px solid #e2e8f0; padding: 25px 0;; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
+                    <div class="faq-question" style="display: flex; justify-content: center; align-items: center; cursor: pointer; font-weight: 600; font-size: 18px; color: #ffffff; padding: 20px;">
+                        <span>가격은 원화로 계산됩니까？</span>
+                        <span class="faq-icon" style="font-size: 28px; margin-left: 15px; color: #ffffff; font-weight: bold; transition: transform 0.3s;">+</span>
+                    </div>
+                    <div class="faq-answer" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; margin-top: 0; padding: 0 20px; color: #ffffff; line-height: 1.8; background: rgba(255, 255, 255, 0.1); border-radius: 0 0 12px 12px;">
+                        네, 모든 가격은 한국 원화（₩）로 표시됩니다. 스타터 플랜은 월 ₩7,998, 연간 ₩6,398/월（20% 할인）. 프로페셔널 플랜은 월 ₩15,996, 연간 ₩12,797/월. 추가 페이지는 ₩80/페이지입니다.
+                    </div>
+                </div>
+                <div class="faq-item" style="border-bottom: 1px solid #e2e8f0; padding: 25px 0;; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
+                    <div class="faq-question" style="display: flex; justify-content: center; align-items: center; cursor: pointer; font-weight: 600; font-size: 18px; color: #ffffff; padding: 20px;">
+                        <span>한국 회계 기준을 준수합니까？</span>
+                        <span class="faq-icon" style="font-size: 28px; margin-left: 15px; color: #ffffff; font-weight: bold; transition: transform 0.3s;">+</span>
+                    </div>
+                    <div class="faq-answer" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; margin-top: 0; padding: 0 20px; color: #ffffff; line-height: 1.8; background: rgba(255, 255, 255, 0.1); border-radius: 0 0 12px 12px;">
+                        네, 한국 회계 기준（K-IFRS）을 완전히 준수합니다. 출력 형식은 법인세 신고 및 부가가치세 신고에 필요한 서류로 직접 사용할 수 있습니다.
+                    </div>
+                </div>
+                <div class="faq-item" style="border-bottom: 1px solid #e2e8f0; padding: 25px 0;; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
+                    <div class="faq-question" style="display: flex; justify-content: center; align-items: center; cursor: pointer; font-weight: 600; font-size: 18px; color: #ffffff; padding: 20px;">
+                        <span>한글 명세서도 처리할 수 있나요？</span>
+                        <span class="faq-icon" style="font-size: 28px; margin-left: 15px; color: #ffffff; font-weight: bold; transition: transform 0.3s;">+</span>
+                    </div>
+                    <div class="faq-answer" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; margin-top: 0; padding: 0 20px; color: #ffffff; line-height: 1.8; background: rgba(255, 255, 255, 0.1); border-radius: 0 0 12px 12px;">
+                        VaultCaddy의 AI 엔진은 한글 은행 명세서를 정확하게 처리하도록 훈련되었습니다. 거래 내용, 금액, 날짜 형식 등을 98% 이상의 정확도로 인식합니다.
+                    </div>
+                </div>
+                <div class="faq-item" style="border-bottom: 1px solid #e2e8f0; padding: 25px 0;; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
+                    <div class="faq-question" style="display: flex; justify-content: center; align-items: center; cursor: pointer; font-weight: 600; font-size: 18px; color: #ffffff; padding: 20px;">
+                        <span>어떤 회계 소프트웨어를 지원합니까？</span>
+                        <span class="faq-icon" style="font-size: 28px; margin-left: 15px; color: #ffffff; font-weight: bold; transition: transform 0.3s;">+</span>
+                    </div>
+                    <div class="faq-answer" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; margin-top: 0; padding: 0 20px; color: #ffffff; line-height: 1.8; background: rgba(255, 255, 255, 0.1); border-radius: 0 0 12px 12px;">
+                        QuickBooks, Xero, Excel, CSV 형식을 지원합니다. 출력 데이터는 한국에서 일반적으로 사용되는 회계 소프트웨어에 직접 가져올 수 있습니다.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // FAQ Toggle Functionality - 正确版本
+        document.addEventListener('DOMContentLoaded', function() {
+            // 处理所有 .faq-question 元素（button和div都支持）
+            document.querySelectorAll('.faq-question').forEach(question => {
+                question.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const faqItem = this.closest('.faq-item');
+                    if (!faqItem) return;
+                    
+                    // 查找答案元素
+                    let answer = this.nextElementSibling;
+                    if (!answer | !answer.classList.contains('faq-answer')) {
+                        answer = faqItem.querySelector('.faq-answer');
+                    }
+                    
+                    // 查找图标元素
+                    let icon = this.querySelector('.faq-icon');
+                    
+                    if (answer) {
+                        const isOpen = answer.style.maxHeight && answer.style.maxHeight !== '0px';
+                        
+                        if (isOpen) {
+                            // 关闭
+                            answer.style.maxHeight = '0';
+                            answer.style.paddingTop = '0';
+                            answer.style.paddingBottom = '0';
+                            if (icon) {
+                                icon.textContent = '+';
+                                icon.style.transform = 'rotate(0deg)';
+                            }
+                        } else {
+                            // 打开
+                            answer.style.maxHeight = answer.scrollHeight + 100 + 'px';
+                            answer.style.paddingTop = '15px';
+                            answer.style.paddingBottom = '0';
+                            if (icon) {
+                                icon.textContent = '−';
+                                icon.style.transform = 'rotate(180deg)';
+                            }
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+<section class="hero">
+        <div class="hero-content">
+            <h1>🍽️ Travel Agency Accounting<br>간단하게</h1>
+            <p>자동화 supplier invoices, food delivery receipts, and daily sales reconciliation.<br>주당 10시간 이상 절약 수동 데이터 입력.</p>
+            
+            <div class="stats">
+                <div class="stat">
+                    <span class="stat-number">10+</span>
+                    <span class="stat-label">주당 절약 시간</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">98%</span>
+                    <span class="stat-label">정확도</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">3초</span>
+                    <span class="stat-label">처리 시간</span>
+                </div>
+            </div>
+            
+            <a href="/kr/auth.html" class="btn btn-primary">🎁 무료 평가판 시작 - 20페이지 무료</a>
+        </div>
+    </section>
+    
+    <!-- GIF Demo Section -->
+    <section style="background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%); padding: 80px 24px; text-align: center; overflow: hidden; position: relative;">
+        <div style="max-width: 1200px; margin: 0 auto;">
+            <div style="color: white; margin-bottom: 60px;">
+                <h2 style="font-size: 42px; font-weight: 800; margin-bottom: 15px;">
+                    🎥 VaultCaddy 실제 작동 보기
+                </h2>
+                <p style="font-size: 20px; color: rgba(255,255,255,0.8);">
+                    방법 보기 travel agency invoices 몇 초 만에 처리 98% 정확도
+                </p>
+            </div>
+            <div style="max-width: 900px; margin: 0 auto; position: relative; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
+                <img src="video/chase-bank-demo.gif" alt="Travel Agency Invoice 처리 Demo" style="width: 100%; height: auto; display: block;">
+                <div style="position: absolute; top: 20px; right: 20px; background: rgba(0,255,0,0.7); color: white; padding: 8px 15px; border-radius: 20px; font-size: 14px; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+                    <span style="width: 10px; height: 10px; background: white; border-radius: 50%;"></span> 자동 재생 중
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 800px; margin: 60px auto 40px auto; color: white;">
+                <div><div style="font-size: 36px; font-weight: 800;">⚡ 3초</div><div style="font-size: 16px; color: rgba(255,255,255,0.7);">평균 처리 시간</div></div>
+                <div><div style="font-size: 36px; font-weight: 800;">🎯 98%</div><div style="font-size: 16px; color: rgba(255,255,255,0.7);">정확도</div></div>
+                <div><div style="font-size: 36px; font-weight: 800;">💰 ₩7,998</div><div style="font-size: 16px; color: rgba(255,255,255,0.7);">월 요금</div></div>
+            </div>
+            <a href="/kr/auth.html" style="background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%); color: white; padding: 18px 48px; border-radius: 50px; text-decoration: none; font-weight: bold; font-size: 18px; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); transition: all 0.3초;">
+                🎁 무료 평가판 시작 - 20페이지 무료
+            </a>
+            <p style="margin-top: 16px; color: rgba(255,255,255,0.6); font-size: 14px;">신용카드 불필요 • 언제든지 취소 가능</p>
+        </div>
+    </section>
+    
+    <!-- Pain Points Section -->
+    <section style="padding: 80px 24px; background: white;">
+        <div style="max-width: 1200px; margin: 0 auto;">
+            <h2 style="text-align: center; font-size: 42px; font-weight: 800; margin-bottom: 60px; color: #1a202c;">
+                일반적인 Travel Agency Accounting 과제
+            </h2>
+            <div class="pain-points">
+                <div class="pain-card">
+                    <div class="pain-icon">✈️</div>
+                    <h3>Commission Reconciliation</h3>
+                    <p>추적ing commissions from airlines, hotels, cruise lines (2-3 hours 매주)</p>
+                </div>
+                <div class="pain-card">
+                    <div class="pain-icon">💼</div>
+                    <h3>Client Payment 추적ing</h3>
+                    <p>Managing deposits, final payments, and refunds</p>
+                </div>
+                <div class="pain-card">
+                    <div class="pain-icon">🏨</div>
+                    <h3>Vendor Payment Management</h3>
+                    <p>Paying suppliers on behalf of clients</p>
+                </div>
+                <div class="pain-card">
+                    <div class="pain-icon">💰</div>
+                    <h3>Multi-currency Transactions</h3>
+                    <p>Handling foreign currency bookings and payments</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Solutions Section -->
+    <section style="padding: 80px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <div style="max-width: 1200px; margin: 0 auto;">
+            <h2 style="text-align: center; font-size: 42px; font-weight: 800; margin-bottom: 20px; color: white;">
+                VaultCaddy가 이러한 문제를 해결하는 방법
+            </h2>
+            <p style="text-align: center; font-size: 20px; color: rgba(255,255,255,0.9); margin-bottom: 60px; max-width: 800px; margin-left: auto; margin-right: auto;">
+                AI 기반 자동화 전용 설계 travel agency businesses
+            </p>
+            <div class="solutions">
+                <div class="solution-card">
+                    <div class="solution-badge">✓</div>
+                    <h3>Commission Auto-matching</h3>
+                    <p>AI matches supplier payments to bookings</p>
+                </div>
+                <div class="solution-card">
+                    <div class="solution-badge">✓</div>
+                    <h3>Client Payment Automation</h3>
+                    <p>자동화d payment reminders and tracking</p>
+                </div>
+                <div class="solution-card">
+                    <div class="solution-badge">✓</div>
+                    <h3>Vendor Payment Dashboard</h3>
+                    <p>실시간 supplier payment status</p>
+                </div>
+                <div class="solution-card">
+                    <div class="solution-badge">✓</div>
+                    <h3>Multi-currency 추적ing</h3>
+                    <p>자동 foreign exchange conversion</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 기능s Section -->
+    <section class="section">
+        <div class="section-title">
+            <h2>Travel Agency-전용 기능</h2>
+            <p>고유한 요구 사항에 맞게 설계 of 식품 서비스 비즈니스</p>
+        </div>
+        
+        <div class="features">
+            <div class="feature">
+                <h3>🧾 Supplier Invoice 처리</h3>
+                <p>Sysco, US Foods, Gordon Food Service, and local vendor invoices. 자동 item-level extraction with prices and quantities.</p>
+            </div>
+            
+            <div class="feature">
+                <h3>🚗 배달 플랫폼 보고서</h3>
+                <p>DoorDash, UberEats, Grubhub, Postmates daily/매주 reports. 추출 orders, fees, and net deposits automatically.</p>
+            </div>
+            
+            <div class="feature">
+                <h3>💳 POS 시스템 내보내기</h3>
+                <p>Square, Toast, Clover, Lightspeed end-of-day reports. 조정 sales, tips, and payment methods automatically.</p>
+            </div>
+            
+            <div class="feature">
+                <h3>🍺 Beverage Distributor Invoices</h3>
+                <p>Wine, beer, and liquor invoices from multiple distributors. 추적 alcohol costs separately for liquor license compliance.</p>
+            </div>
+            
+            <div class="feature">
+                <h3>💰 현금 흐름 추적</h3>
+                <p>Daily cash register reconciliation. 추적 cash deposits, petty cash, and employee meal deductions automatically.</p>
+            </div>
+            
+            <div class="feature">
+                <h3>📊 비용 분석</h3>
+                <p>Food cost percentage calculations. 비교 actual costs vs. theoretical costs. 식별 inventory shrinkage and waste.</p>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Pricing Section -->
+    <section class="section" style="background: #f8fafc;">
+        <div class="section-title">
+            <h2>간단하고 투명한 가격</h2>
+            <p>20% 절약 with annual billing</p>
+        </div>
+        
+        <div class="pricing">
+            <div class="pricing-card">
+                <h3>월간 플랜</h3>
+                <div class="pricing-price">₩15,996</div>
+                <div class="pricing-period">월</div>
+                <ul class="pricing-features">
+                    <li>100 페이지 포함</li>
+                    <li>₩80 추가 페이지당</li>
+                    <li>모든 내보내기 형식</li>
+                    <li>이메일 지원</li>
+                    <li>24시간 자동 삭제</li>
+                </ul>
+                <a href="/kr/auth.html" class="btn btn-primary" style="width: 100%;">시작하기</a>
+            </div>
+            
+            <div class="pricing-card popular">
+                <div class="pricing-badge">💎 가장 인기 있는</div>
+                <h3>연간 플랜</h3>
+                <div class="pricing-price">₩7,998</div>
+                <div class="pricing-period">월 (Billed $46 annually)</div>
+                <ul class="pricing-features">
+                    <li>100 페이지 포함/월</li>
+                    <li>₩80 추가 페이지당</li>
+                    <li>모든 내보내기 형식</li>
+                    <li>우선 이메일 지원</li>
+                    <li>24시간 자동 삭제</li>
+                </ul>
+                <a href="/kr/auth.html" class="btn btn-primary" style="width: 100%;">무료 체험 시작</a>
+            </div>
+        </div>
+    </section>
+    
+    <!-- CTA Section -->
+    <section class="section">
+        <div style="text-align: center; max-width: 800px; margin: 0 auto;">
+            <h2 style="font-size: 42px; font-weight: 800; margin-bottom: 24px;">절약 준비 10+ Hours Per Week?</h2>
+            <p style="font-size: 20px; color: #64748b; margin-bottom: 40px;">500+ 가입 travel agencys VaultCaddy 사용 for automated accounting</p>
+            <a href="/kr/auth.html" class="btn btn-primary" style="font-size: 20px; padding: 20px 60px;">🎁 무료 평가판 시작 - 20페이지 무료</a>
+            <p style="margin-top: 20px; color: #94a3b8; font-size: 14px;">신용카드 불필요 • 언제든지 취소 가능</p>
+        </div>
+    </section>
+</body>
+</html>
