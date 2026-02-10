@@ -1980,7 +1980,7 @@
                 grid-template-columns: 1fr !important;
             }
             
-            /* 🔥 手機版隱藏上傳演示區域的文字（圖1和圖2） */
+            /* 🔥 手機版隱藏上傳演示區域的文字（圖1および圖2） */
             /* 隱藏功能亮點區域的整個卡片容器（圖2） */
             section[style*="padding: 4rem 0"][style*="background: linear-gradient(to bottom, #f9fafb, white)"] 
             div[style*="display: grid; grid-template-columns: repeat(3, 1fr)"][style*="margin-top: 3rem"] {
@@ -3062,7 +3062,7 @@
                 const isLoggedIn = window.simpleAuth && window.simpleAuth.isLoggedIn();
                 
                 if (!isLoggedIn) {
-                    // 未登入：保存文件到 IndexedDB 和文檔類型
+                    // 未登入：保存文件到 IndexedDB および文檔類型
                     FileStorage.saveFiles(filesArray).then(() => {
                         localStorage.setItem('pendingFileCount', files.length);
                         localStorage.setItem('pendingDocType', selectedDocType); // 保存文檔類型
@@ -3128,7 +3128,7 @@
                         console.log('✅ First_Project 創建成功:', firstProject.id);
                     }
                     
-                    // 保存文檔類型和提示信息
+                    // 保存文檔類型および提示信息
                     const docTypeName = selectedDocType === 'statement' ? '銀行對帳單' : '發票';
                     sessionStorage.setItem('uploadHint', `請在此頁面上傳您的${docTypeName}文件`);
                     sessionStorage.setItem('selectedDocType', selectedDocType);
@@ -3222,6 +3222,139 @@
                 }, 1000);
             }
         })();
+    </script>
+
+
+    <!-- 🔥 登入彈窗模態框 -->
+    <div id="auth-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9999; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 20px; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3); width: 90%; max-width: 1000px; max-height: 90vh; overflow: auto; position: relative;">
+            <!-- 關閉按鈕 -->
+            <button onclick="closeAuthModal()" style="position: absolute; top: 1rem; right: 1rem; background: transparent; border: none; font-size: 1.5rem; color: #667eea; cursor: pointer; z-index: 10; width: 40px; height: 40px; border-radius: 50%; transition: all 0.3s ease;">
+                ✕
+            </button>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; min-height: 600px;">
+                <!-- 左側：品牌介紹 -->
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 3rem; display: flex; flex-direction: column; justify-content: center; border-radius: 20px 0 0 20px;">
+                    <div style="margin-bottom: 2rem;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                            <div style="width: 50px; height: 50px; background: white; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                                <span style="font-size: 1.75rem;">V</span>
+                            </div>
+                            <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">VaultCaddy</h2>
+                        </div>
+                        <p style="font-size: 1.25rem; opacity: 0.95; line-height: 1.6;">AI駆動のスマート文書処理プラットフォーム</p>
+                    </div>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 1.25rem; margin-bottom: 2rem;">
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div style="width: 24px; height: 24px; background: rgba(255, 255, 255, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">✓</div>
+                            <span style="font-size: 0.95rem;">銀行取引明細書の自動変換</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div style="width: 24px; height: 24px; background: rgba(255, 255, 255, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">✓</div>
+                            <span style="font-size: 0.95rem;">スマート請求書・領収書認識</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div style="width: 24px; height: 24px; background: rgba(255, 255, 255, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">✓</div>
+                            <span style="font-size: 0.95rem;">マルチフォーマット出力対応</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div style="width: 24px; height: 24px; background: rgba(255, 255, 255, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">✓</div>
+                            <span style="font-size: 0.95rem;">銀行レベルのセキュリティ</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div style="width: 24px; height: 24px; background: rgba(255, 255, 255, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">✓</div>
+                            <span style="font-size: 0.95rem;">会計ソフトウェアとの統合</span>
+                        </div>
+                    </div>
+
+    <!-- 🔥 登入彈窗控制腳本 -->
+    <script>
+        // 打開登入彈窗
+        function openAuthModal() {
+            const modal = document.getElementById('auth-modal');
+            if (modal) {
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'hidden'; // 防止背景滾動
+                
+                // Google Analytics 追蹤
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'open_auth_modal', {
+                        event_category: 'engagement',
+                        event_label: 'Auth Modal Opened'
+                    });
+                }
+            }
+        }
+        
+        // 關閉登入彈窗
+        function closeAuthModal() {
+            const modal = document.getElementById('auth-modal');
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = ''; // 恢復背景滾動
+            }
+        }
+        
+        // 點擊背景關閉彈窗
+        document.getElementById('auth-modal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAuthModal();
+            }
+        });
+        
+        // ESC 鍵關閉彈窗
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeAuthModal();
+            }
+        });
+        
+        // Google 登入（彈窗版本）
+        async function signInWithGoogleModal() {
+            const btn = document.getElementById('modal-google-signin-btn');
+            if (!btn) return;
+            
+            // 顯示載入狀態
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+            btn.innerHTML = '<span style="display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite;"></span> ログイン中...';
+            
+            try {
+                // 檢查 Firebase および simpleAuth 是否已載入
+                if (typeof firebase === 'undefined' || !window.simpleAuth) {
+                    throw new Error('Firebase 尚未載入，請稍後再試');
+                }
+                
+                // 調用 simpleAuth 的 Google 登入（正確的方法名是 loginWithGoogle）
+                await window.simpleAuth.loginWithGoogle();
+                
+                // 登入成功，關閉彈窗
+                closeAuthModal();
+                
+                // ✅ 不刷新頁面，讓 user-logged-in 事件自然觸發
+                // 如果有待處理的文件，會自動跳轉
+                console.log('✅ 登入成功，等待 user-logged-in 事件處理待上傳文件...');
+                
+            } catch (error) {
+                console.error('❌ Google 登入失敗:', error);
+                
+                // 顯示錯誤提示
+                alert('登入失敗：' + (error.message || '未知錯誤'));
+                
+                // 恢復按鈕狀態
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.innerHTML = originalText;
+            }
+        }
+        
+        // 添加旋轉動畫
+        const style = document.createElement('style');
+        style.textContent = '@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }';
+        document.head.appendChild(style);
     </script>
 
 </body>
