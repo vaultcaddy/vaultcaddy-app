@@ -2879,6 +2879,348 @@
 
     <!-- Google Analytics 事件跟踪 -->
     <script src="/ga-event-tracking.js"></script>
+
+    <script>
+        // ============================================
+        // 🚀 首頁上傳功能（完整版本）
+        // ============================================
+        let selectedDocType = 'statement'; // 默認為銀行對帳單
+        
+        // 選擇文檔類型
+        window.selectDocType = function(type) {
+            selectedDocType = type;
+            console.log('✅ 選擇文檔類型:', type);
+            
+            // 更新按鈕樣式
+            const statementBtn = document.getElementById('doc-type-statement');
+            const invoiceBtn = document.getElementById('doc-type-invoice');
+            
+            if (type === 'statement') {
+                // 銀行對帳單按鈕變為激活狀態
+                statementBtn.style.background = '#667eea';
+                statementBtn.style.color = 'white';
+                invoiceBtn.style.background = 'white';
+                invoiceBtn.style.color = '#667eea';
+            } else {
+                // 發票按鈕變為激活狀態
+                invoiceBtn.style.background = '#667eea';
+                invoiceBtn.style.color = 'white';
+                statementBtn.style.background = 'white';
+                statementBtn.style.color = '#667eea';
+            }
+        };
+        
+        // ============================================
+        // 📦 IndexedDB 文件存儲（用於跨頁面傳遞文件）
+        // ============================================
+        const FileStorage = {
+            dbName: 'VaultCaddyFiles',
+            storeName: 'pendingFiles',
+            db: null,
+            
+            // 初始化數據庫
+            async init() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(this.dbName, 1);
+                    
+                    request.onerror = () => reject(request.error);
+                    request.onsuccess = () => {
+                        this.db = request.result;
+                        resolve(this.db);
+                    };
+                    
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+                        if (!db.objectStoreNames.contains(this.storeName)) {
+                            db.createObjectStore(this.storeName);
+                        }
+                    };
+                });
+            },
+            
+            // 保存文件
+            async saveFiles(files) {
+                if (!this.db) await this.init();
+                
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction([this.storeName], 'readwrite');
+                    const store = transaction.objectStore(this.storeName);
+                    
+                    // 保存文件數組
+                    const request = store.put(Array.from(files), 'pendingFiles');
+                    
+                    request.onsuccess = () => {
+                        console.log('✅ 文件已保存到 IndexedDB');
+                        resolve();
+                    };
+                    request.onerror = () => reject(request.error);
+                });
+            },
+            
+            // 獲取文件
+            async getFiles() {
+                if (!this.db) await this.init();
+                
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction([this.storeName], 'readonly');
+                    const store = transaction.objectStore(this.storeName);
+                    const request = store.get('pendingFiles');
+                    
+                    request.onsuccess = () => {
+                        resolve(request.result || []);
+                    };
+                    request.onerror = () => reject(request.error);
+                });
+            },
+            
+            // 清除文件
+            async clearFiles() {
+                if (!this.db) await this.init();
+                
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction([this.storeName], 'readwrite');
+                    const store = transaction.objectStore(this.storeName);
+                    const request = store.delete('pendingFiles');
+                    
+                    request.onsuccess = () => {
+                        console.log('✅ 文件已從 IndexedDB 清除');
+                        resolve();
+                    };
+                    request.onerror = () => reject(request.error);
+                });
+            }
+        };
+        
+        // 初始化上傳區域
+        (function() {
+            const dropzone = document.getElementById('dropzone');
+            const fileInput = document.getElementById('file-input');
+            
+            if (!dropzone || !fileInput) {
+                console.log('⏭️ 上傳區域未找到，跳過初始化');
+                return;
+            }
+            
+            console.log('✅ 初始化首頁上傳功能');
+            
+            // 點擊上傳
+            dropzone.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            // 文件選擇
+            fileInput.addEventListener('change', (e) => {
+                handleFiles(e.target.files);
+            });
+            
+            // 拖放事件
+            dropzone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropzone.style.borderColor = '#764ba2';
+                dropzone.style.background = 'rgba(102, 126, 234, 0.15)';
+                dropzone.style.transform = 'scale(1.02)';
+            });
+            
+            dropzone.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                dropzone.style.borderColor = '#667eea';
+                dropzone.style.background = 'rgba(102, 126, 234, 0.05)';
+                dropzone.style.transform = 'scale(1)';
+            });
+            
+            dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropzone.style.borderColor = '#667eea';
+                dropzone.style.background = 'rgba(102, 126, 234, 0.05)';
+                dropzone.style.transform = 'scale(1)';
+                handleFiles(e.dataTransfer.files);
+            });
+            
+            // 處理文件
+            function handleFiles(files) {
+                if (!files || files.length === 0) return;
+                
+                console.log(`📁 用戶拖入 ${files.length} 個文件`);
+                console.log(`📋 文檔類型: ${selectedDocType === 'statement' ? '銀行對帳單' : '發票'}`);
+                
+                // ✅ 檢查文件大小（20MB限制）
+                const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+                const filesArray = Array.from(files);
+                const oversizedFiles = filesArray.filter(f => f.size > MAX_FILE_SIZE);
+                
+                if (oversizedFiles.length > 0) {
+                    const fileNames = oversizedFiles.map(f => `${f.name} (${(f.size / 1024 / 1024).toFixed(2)}MB)`).join('\n');
+                    showToast(`以下文件超過 20MB 限制：\n${fileNames}`);
+                    console.error('❌ 文件大小超過限制:', oversizedFiles);
+                    return;
+                }
+                
+                // 檢查用戶是否已登入
+                const isLoggedIn = window.simpleAuth && window.simpleAuth.isLoggedIn();
+                
+                if (!isLoggedIn) {
+                    // 未登入：保存文件到 IndexedDB 和文檔類型
+                    FileStorage.saveFiles(filesArray).then(() => {
+                        localStorage.setItem('pendingFileCount', files.length);
+                        localStorage.setItem('pendingDocType', selectedDocType); // 保存文檔類型
+                        localStorage.setItem('hasPendingFiles', 'true'); // 標記有待處理文件
+                        
+                        console.log('ℹ️ 用戶未登入，保存文件到 IndexedDB');
+                        
+                        // 顯示提示
+                        const docTypeName = selectedDocType === 'statement' ? '銀行對帳單' : '發票';
+                        showToast(`已選擇 ${files.length} 個${docTypeName}文件，請先登入以開始處理`);
+                        
+                        // 彈出登入框或跳轉
+                        setTimeout(() => {
+                            if (typeof openAuthModal === 'function') {
+                                openAuthModal();
+                            } else {
+                                // 根據頁面語言跳轉到對應的 auth.html
+                                const lang = document.documentElement.lang || 'zh-TW';
+                                let authUrl = 'auth.html';
+                                if (lang.startsWith('en')) authUrl = 'https://vaultcaddy.com/en/auth.html';
+                                else if (lang.startsWith('ja')) authUrl = 'https://vaultcaddy.com/jp/auth.html';
+                                else if (lang.startsWith('ko')) authUrl = 'https://vaultcaddy.com/kr/auth.html';
+                                else authUrl = 'https://vaultcaddy.com/auth.html';
+                                window.location.href = authUrl;
+                            }
+                        }, 300);
+                    }).catch(error => {
+                        console.error('❌ 保存文件失敗:', error);
+                        showToast('保存文件失敗，請重試');
+                    });
+                } else {
+                    // 已登入：保存文件到 IndexedDB 並跳轉
+                    console.log('✅ 用戶已登入，準備查找或創建 First_Project');
+                    
+                    FileStorage.saveFiles(filesArray).then(() => {
+                        localStorage.setItem('hasPendingFiles', 'true'); // 標記有待處理文件
+                        findOrCreateFirstProject();
+                    }).catch(error => {
+                        console.error('❌ 保存文件失敗:', error);
+                        showToast('保存文件失敗，請重試');
+                    });
+                }
+            }
+            
+            // ✅ 查找或創建 First_Project 文件夾
+            async function findOrCreateFirstProject() {
+                try {
+                    showToast('正在準備項目...');
+                    
+                    // 獲取所有項目
+                    const projects = await window.simpleDataManager.getProjects();
+                    console.log('📂 獲取到項目列表:', projects);
+                    
+                    // 查找 First_Project
+                    let firstProject = projects.find(p => p.name === 'First_Project');
+                    
+                    if (firstProject) {
+                        console.log('✅ 找到現有的 First_Project:', firstProject.id);
+                    } else {
+                        // 創建新的 First_Project
+                        console.log('📁 創建新的 First_Project');
+                        firstProject = await window.simpleDataManager.createProject('First_Project');
+                        console.log('✅ First_Project 創建成功:', firstProject.id);
+                    }
+                    
+                    // 保存文檔類型和提示信息
+                    const docTypeName = selectedDocType === 'statement' ? '銀行對帳單' : '發票';
+                    sessionStorage.setItem('uploadHint', `請在此頁面上傳您的${docTypeName}文件`);
+                    sessionStorage.setItem('selectedDocType', selectedDocType);
+                    sessionStorage.setItem('autoUpload', 'true'); // 標記需要自動觸發上傳
+                    
+                    // 跳轉到 First_Project
+                    showToast('項目準備完成！正在跳轉...');
+                    setTimeout(() => {
+                        window.location.href = `firstproject.html?project=${firstProject.id}`;
+                    }, 500);
+                    
+                } catch (error) {
+                    console.error('❌ 查找或創建 First_Project 失敗:', error);
+                    showToast(`錯誤：${error.message || '無法創建項目'}`);
+                }
+            }
+            
+            // Toast 提示
+            function showToast(message) {
+                const toast = document.createElement('div');
+                toast.textContent = message;
+                toast.style.cssText = 'position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%); background: #1f2937; color: white; padding: 1rem 2rem; border-radius: 8px; z-index: 10000; box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-size: 0.95rem; max-width: 90%; text-align: center;';
+                document.body.appendChild(toast);
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transition = 'opacity 0.3s ease';
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            }
+            
+            // 處理待上傳文件的函數（統一邏輯）
+            async function processPendingFiles() {
+                const hasPendingFiles = localStorage.getItem('hasPendingFiles');
+                const pendingCount = localStorage.getItem('pendingFileCount');
+                const pendingDocType = localStorage.getItem('pendingDocType');
+                
+                if (!hasPendingFiles || !pendingCount || !pendingDocType) {
+                    console.log('⏭️ 沒有待處理的文件');
+                    return false;
+                }
+                
+                // 檢查用戶是否已登入
+                const isLoggedIn = window.simpleAuth && window.simpleAuth.isLoggedIn();
+                if (!isLoggedIn) {
+                    console.log('⏳ 有待處理文件，但用戶尚未登入');
+                    return false;
+                }
+                
+                const docTypeName = pendingDocType === 'statement' ? '銀行對帳單' : '發票';
+                console.log(`✅ 檢測到 ${pendingCount} 個待處理的${docTypeName}文件`);
+                
+                // 保存文檔類型到 sessionStorage
+                sessionStorage.setItem('selectedDocType', pendingDocType);
+                selectedDocType = pendingDocType;
+                
+                // 顯示提示
+                showToast('正在準備項目...');
+                
+                // 調用查找或創建 First_Project
+                setTimeout(() => {
+                    findOrCreateFirstProject();
+                }, 500);
+                
+                return true;
+            }
+            
+            // 監聽登入成功事件
+            window.addEventListener('user-logged-in', async () => {
+                console.log('🔔 收到 user-logged-in 事件');
+                await processPendingFiles();
+            });
+            
+            // ✅ 頁面加載時檢查是否有待處理文件（用戶可能刷新了頁面）
+            window.addEventListener('DOMContentLoaded', async () => {
+                // 等待 simpleAuth 初始化
+                setTimeout(async () => {
+                    const processed = await processPendingFiles();
+                    if (processed) {
+                        console.log('✅ 頁面加載時處理了待上傳文件');
+                    }
+                }, 1000);
+            });
+            
+            // ✅ 如果頁面已經加載完成，立即檢查
+            if (document.readyState === 'complete' || document.readyState === 'interactive') {
+                setTimeout(async () => {
+                    const processed = await processPendingFiles();
+                    if (processed) {
+                        console.log('✅ 立即處理了待上傳文件');
+                    }
+                }, 1000);
+            }
+        })();
+    </script>
+
 </body>
 </html>
 
