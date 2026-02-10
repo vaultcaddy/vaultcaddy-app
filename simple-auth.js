@@ -136,24 +136,30 @@ class SimpleAuth {
         const currentPage = this.getCurrentPage();
         const currentPath = window.location.pathname;
         
-        const publicPages = [
-            'index.html',
-            'auth.html',
-            'login.html',
-            'register.html',
-            'privacy.html',
-            'terms.html',
-            ''
+        // ✅ 改為白名單制度：只有這些頁面需要登入
+        const protectedPages = [
+            'dashboard.html',
+            'firstproject.html',
+            'document-detail.html',
+            'account.html',
+            'billing.html',
+            'settings.html',
+            'profile.html'
         ];
         
-        // Blog目錄下的所有頁面都是公開的
+        // Blog目錄和所有landing page（v2/v3）都是公開的
         const isBlogPage = currentPath.includes('/blog/');
+        const isLandingPage = currentPage.includes('-v2.html') || currentPage.includes('-v3.html');
         
-        if (!publicPages.includes(currentPage) && !isBlogPage) {
+        if (protectedPages.includes(currentPage)) {
             console.log('🔒 受保護頁面，重定向到 auth.html...');
             window.location.href = 'auth.html';
         } else if (isBlogPage) {
             console.log('📝 Blog 頁面，允許未登入訪問');
+        } else if (isLandingPage) {
+            console.log('🌐 Landing Page，允許未登入訪問');
+        } else {
+            console.log('🌐 公開頁面，允許未登入訪問');
         }
     }
     
