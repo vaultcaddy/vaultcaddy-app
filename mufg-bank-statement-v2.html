@@ -2972,4 +2972,88 @@
 
 
 
+
+    <script>
+    // 🌍 语言切换器
+    function initLanguageSwitcher() {
+        const languages = [
+            { code: 'zh-TW', name: '中文', url: 'https://vaultcaddy.com/index.html' },
+            { code: 'en', name: 'English', url: 'https://vaultcaddy.com/en/index.html' },
+            { code: 'ja-JP', name: '日本語', url: 'https://vaultcaddy.com/jp/index.html' },
+            { code: 'ko-KR', name: '한국어', url: 'https://vaultcaddy.com/kr/index.html' }
+        ];
+        
+        // 获取当前语言
+        const htmlLang = document.documentElement.lang || 'en-US';
+        let currentLang = 'en';
+        if (htmlLang.includes('zh')) currentLang = 'zh-TW';
+        else if (htmlLang.includes('ja')) currentLang = 'ja-JP';
+        else if (htmlLang.includes('ko')) currentLang = 'ko-KR';
+        
+        // 桌面版语言切换器
+        const switcher = document.getElementById('language-switcher');
+        if (switcher) {
+            const currentLanguage = languages.find(l => l.code === currentLang) || languages[1];
+            
+            switcher.innerHTML = `
+                <div style="position: relative; display: inline-block;">
+                    <button onclick="toggleLanguageDropdown()" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: white; border: 1px solid #d1d5db; border-radius: 8px; cursor: pointer; font-size: 0.875rem; font-weight: 500; color: #374151; transition: all 0.2s;">
+                        <span>${currentLanguage.name}</span>
+                        <svg width="12" height="12" fill="currentColor" style="transition: transform 0.2s;">
+                            <path d="M2 4l4 4 4-4"></path>
+                        </svg>
+                    </button>
+                    <div id="language-dropdown" style="display: none; position: absolute; top: calc(100% + 0.5rem); right: 0; background: white; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); min-width: 160px; z-index: 1000; overflow: hidden;">
+                        ${languages.map(lang => `
+                            <a href="${lang.url}" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; color: #374151; text-decoration: none; transition: background 0.2s; ${lang.code === currentLang ? 'background: #f3f4f6;' : ''}" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='${lang.code === currentLang ? '#f3f4f6' : 'transparent'}'">
+                                <span style="font-weight: ${lang.code === currentLang ? '600' : '400'};">${lang.name}</span>
+                                ${lang.code === currentLang ? '<svg width="16" height="16" fill="#667eea" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>' : ''}
+                            </a>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        // 手机版语言切换器
+        const mobileSwitcher = document.getElementById('language-selector-mobile');
+        if (mobileSwitcher) {
+            const currentLanguage = languages.find(l => l.code === currentLang) || languages[1];
+            
+            mobileSwitcher.innerHTML = `
+                <div style="margin-bottom: 0.5rem; font-size: 0.75rem; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em;">Language</div>
+                ${languages.map(lang => `
+                    <a href="${lang.url}" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; margin-bottom: 0.25rem; ${lang.code === currentLang ? 'background: #f3f4f6;' : ''}" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='${lang.code === currentLang ? '#f3f4f6' : 'transparent'}'">
+                        <span style="font-weight: ${lang.code === currentLang ? '600' : '400'};">${lang.name}</span>
+                        ${lang.code === currentLang ? '<svg width="16" height="16" fill="#667eea" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>' : ''}
+                    </a>
+                `).join('')}
+            `;
+        }
+    }
+    
+    function toggleLanguageDropdown() {
+        const dropdown = document.getElementById('language-dropdown');
+        if (dropdown) {
+            dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+        }
+    }
+    
+    // 点击外部关闭下拉菜单
+    document.addEventListener('click', function(event) {
+        const switcher = document.getElementById('language-switcher');
+        const dropdown = document.getElementById('language-dropdown');
+        if (switcher && dropdown && !switcher.contains(event.target)) {
+            dropdown.style.display = 'none';
+        }
+    });
+    
+    // 页面加载时初始化
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initLanguageSwitcher);
+    } else {
+        initLanguageSwitcher();
+    }
+    </script>
+
 </body></html>
