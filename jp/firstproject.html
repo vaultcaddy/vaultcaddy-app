@@ -3113,9 +3113,17 @@
                         // ✅ 銀行明細書：明細書期間（日付範囲）を表示
                         let statementPeriod = data.statementPeriod || data.statement_period || '';
                         
-                        // 🔄 日付フォーマット：YYYY-MM-DD → YYYY/MM/DD
-                        if (statementPeriod && statementPeriod.includes('-')) {
-                            statementPeriod = statementPeriod.replace(/-/g, '/');
+                        // 🔄 日付フォーマット：日付部分のハイフンのみ置換、範囲区切りは保持
+                        // 例：2021-01-14 - 2021-01-31 → 2021/01/14 - 2021/01/31
+                        if (statementPeriod) {
+                            // 範囲区切り ' - ' で分割
+                            const parts = statementPeriod.split(' - ');
+                            if (parts.length === 2) {
+                                // 各日付部分のハイフンを個別に置換
+                                const startDate = parts[0].trim().replace(/-/g, '/');
+                                const endDate = parts[1].trim().replace(/-/g, '/');
+                                statementPeriod = `${startDate} - ${endDate}`;
+                            }
                         }
                         
                         date = statementPeriod || '-';

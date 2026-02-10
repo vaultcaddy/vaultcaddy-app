@@ -318,37 +318,42 @@ console.log('✅ 交易記錄分頁變量已初始化:', { currentTransactionPag
 async function init() {
     console.log('🚀 初始化文檔詳情頁面...');
     
-    // 步驟 1: 等待 SimpleAuth 初始化
-    console.log('⏳ 步驟 1/5: 等待 SimpleAuth 初始化...');
-    let attempts = 0;
-    while (!window.simpleAuth || !window.simpleAuth.initialized) {
-        if (attempts++ > 100) { // Max 10 seconds wait
-            console.error('❌ SimpleAuth 初始化超時');
-            if (!DEBUG_MODE) {
-                alert('系統初始化失敗，請刷新頁面');
-                window.location.href = 'index.html';
+    try {
+        // 步驟 1: 等待 SimpleAuth 初始化
+        console.log('⏳ 步驟 1/5: 等待 SimpleAuth 初始化...');
+        let attempts = 0;
+        while (!window.simpleAuth || !window.simpleAuth.initialized) {
+            if (attempts++ > 50) { // Max 5 seconds wait (reduced from 10s)
+                console.error('❌ SimpleAuth 初始化超時');
+                console.log('🔄 嘗試重新載入頁面...');
+                setTimeout(() => window.location.reload(), 1000);
+                return;
             }
-            return;
-        }
-        await new Promise(resolve => setTimeout(resolve, 100));
-    }
-    console.log('✅ SimpleAuth 已就緒');
-    
-    // 步驟 2: 等待用戶狀態確定
-    console.log('⏳ 步驟 2/5: 等待用戶狀態確定...');
-    attempts = 0;
-    while (!window.simpleAuth.currentUser) {
-        if (attempts++ > 100) { // Max 10 seconds wait
-            console.error('❌ 用戶未登入');
-            if (!DEBUG_MODE) {
-                alert('請先登入');
-                window.location.href = 'index.html';
+            if (attempts % 10 === 0) {
+                console.log(`⏳ 等待中... (${attempts}/50)`);
             }
-            return;
+            await new Promise(resolve => setTimeout(resolve, 100));
         }
-        await new Promise(resolve => setTimeout(resolve, 100));
-    }
-    console.log('✅ 用戶已登入:', window.simpleAuth.currentUser.email);
+        console.log('✅ SimpleAuth 已就緒');
+        
+        // 步驟 2: 等待用戶狀態確定
+        console.log('⏳ 步驟 2/5: 等待用戶狀態確定...');
+        attempts = 0;
+        while (!window.simpleAuth.currentUser) {
+            if (attempts++ > 30) { // Max 3 seconds wait (reduced from 10s)
+                console.error('❌ 用戶未登入');
+                if (!DEBUG_MODE) {
+                    alert('請先登入');
+                    window.location.href = 'index.html';
+                }
+                return;
+            }
+            if (attempts % 10 === 0) {
+                console.log(`⏳ 檢查登入狀態... (${attempts}/30)`);
+            }
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        console.log('✅ 用戶已登入:', window.simpleAuth.currentUser.email);
     
     // 步驟 3: 移除頁面保護並初始化 Navbar/Sidebar
     console.log('⏳ 步驟 3/5: 移除頁面保護並初始化 UI...');
@@ -365,23 +370,32 @@ async function init() {
     
     console.log('✅ 頁面已顯示');
     
-    // 步驟 4: 等待 SimpleDataManager 初始化
-    console.log('⏳ 步驟 4/5: 等待 SimpleDataManager 初始化...');
-    attempts = 0;
-    while (!window.simpleDataManager || !window.simpleDataManager.initialized) {
-        if (attempts++ > 100) {
-            console.error('❌ SimpleDataManager 初始化超時');
-            alert('數據管理器初始化失敗');
-            return;
+        // 步驟 4: 等待 SimpleDataManager 初始化
+        console.log('⏳ 步驟 4/5: 等待 SimpleDataManager 初始化...');
+        attempts = 0;
+        while (!window.simpleDataManager || !window.simpleDataManager.initialized) {
+            if (attempts++ > 50) { // Max 5 seconds wait (reduced from 10s)
+                console.error('❌ SimpleDataManager 初始化超時');
+                alert('數據管理器初始化失敗，即將重新載入頁面...');
+                setTimeout(() => window.location.reload(), 1000);
+                return;
+            }
+            if (attempts % 10 === 0) {
+                console.log(`⏳ 等待數據管理器... (${attempts}/50)`);
+            }
+            await new Promise(resolve => setTimeout(resolve, 100));
         }
-        await new Promise(resolve => setTimeout(resolve, 100));
+        console.log('✅ SimpleDataManager 已就緒');
+        
+        // 步驟 5: 載入文檔
+        console.log('⏳ 步驟 5/5: 載入文檔...');
+        await loadDocument();
+        console.log('✅ 初始化完成！');
+    } catch (error) {
+        console.error('❌ 初始化過程發生錯誤:', error);
+        alert('頁面初始化失敗，即將重新載入...');
+        setTimeout(() => window.location.reload(), 1000);
     }
-    console.log('✅ SimpleDataManager 已就緒');
-    
-    // 步驟 5: 載入文檔
-    console.log('⏳ 步驟 5/5: 載入文檔...');
-    await loadDocument();
-    console.log('✅ 初始化完成！');
 }
 
 // ============================================
@@ -409,9 +423,17 @@ async function loadDocument() {
     }
     
     try {
+        // 🔥 添加超時保護：如果 5 秒內無法載入，顯示提示並允許重試
+        const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('文檔載入超時')), 5000);
+        });
+        
         // 從 Firebase 獲取文檔
         console.log('🔍 從 Firebase 獲取文檔...');
-        const doc = await window.simpleDataManager.getDocument(projectId, documentId);
+        const doc = await Promise.race([
+            window.simpleDataManager.getDocument(projectId, documentId),
+            timeoutPromise
+        ]);
         
         if (!doc) {
             console.error('❌ 找不到文檔');

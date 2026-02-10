@@ -3138,9 +3138,17 @@
                         // ✅ 銀行對帳單：顯示對帳單期間（日期範圍）
                         let statementPeriod = data.statementPeriod || data.statement_period || '';
                         
-                        // 🔄 格式化日期：YYYY-MM-DD → YYYY/MM/DD
-                        if (statementPeriod && statementPeriod.includes('-')) {
-                            statementPeriod = statementPeriod.replace(/-/g, '/');
+                        // 🔄 格式化日期：只替換日期部分的連字符，保留日期範圍分隔符
+                        // 例如：2021-01-14 - 2021-01-31 → 2021/01/14 - 2021/01/31
+                        if (statementPeriod) {
+                            // 先分割日期範圍（以 ' - ' 為分隔符）
+                            const parts = statementPeriod.split(' - ');
+                            if (parts.length === 2) {
+                                // 分別替換每個日期部分的連字符
+                                const startDate = parts[0].trim().replace(/-/g, '/');
+                                const endDate = parts[1].trim().replace(/-/g, '/');
+                                statementPeriod = `${startDate} - ${endDate}`;
+                            }
                         }
                         
                         date = statementPeriod || '-';

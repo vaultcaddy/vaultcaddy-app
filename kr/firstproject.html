@@ -3112,9 +3112,17 @@
                         // ✅ 은행 명세서：명세서 기간（날짜 범위）표시
                         let statementPeriod = data.statementPeriod || data.statement_period || '';
                         
-                        // 🔄 날짜 형식：YYYY-MM-DD → YYYY/MM/DD
-                        if (statementPeriod && statementPeriod.includes('-')) {
-                            statementPeriod = statementPeriod.replace(/-/g, '/');
+                        // 🔄 날짜 형식：날짜 부분의 하이픈만 교체, 범위 구분자는 유지
+                        // 예시：2021-01-14 - 2021-01-31 → 2021/01/14 - 2021/01/31
+                        if (statementPeriod) {
+                            // 범위 구분자 ' - '로 분할
+                            const parts = statementPeriod.split(' - ');
+                            if (parts.length === 2) {
+                                // 각 날짜 부분의 하이픈을 개별적으로 교체
+                                const startDate = parts[0].trim().replace(/-/g, '/');
+                                const endDate = parts[1].trim().replace(/-/g, '/');
+                                statementPeriod = `${startDate} - ${endDate}`;
+                            }
                         }
                         
                         date = statementPeriod || '-';
