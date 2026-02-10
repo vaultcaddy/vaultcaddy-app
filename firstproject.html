@@ -3500,6 +3500,37 @@
             });
         }
         
+        // ✅ 页面加载时检查sessionStorage中保存的文档类型
+        (function() {
+            const savedDocType = sessionStorage.getItem('selectedDocType');
+            if (savedDocType) {
+                console.log('📋 从sessionStorage恢复文档类型:', savedDocType);
+                
+                // 映射文档类型
+                const docTypeMap = {
+                    'statement': 'bank_statement',
+                    'invoice': 'invoice'
+                };
+                
+                const mappedType = docTypeMap[savedDocType] || 'bank_statement';
+                
+                // 等待DOM加载完成后设置
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', () => {
+                        if (typeof selectDocumentType === 'function') {
+                            selectDocumentType(mappedType);
+                            console.log('✅ 已自动设置文档类型为:', mappedType);
+                        }
+                    });
+                } else {
+                    if (typeof selectDocumentType === 'function') {
+                        selectDocumentType(mappedType);
+                        console.log('✅ 已自动设置文档类型为:', mappedType);
+                    }
+                }
+            }
+        })();
+        
         window.selectDocumentType = function(type) {
             logger.log('📋 選擇文檔類型:', type);
             selectedDocumentType = type;
@@ -6066,6 +6097,34 @@
                 
                 if (files && files.length > 0) {
                     console.log(`📁 找到 ${files.length} 個待上傳文件`, files);
+                    
+                    // ✅ 从localStorage读取文档类型并设置
+                    const savedDocType = localStorage.getItem('pendingDocType');
+                    if (savedDocType) {
+                        console.log(`📋 检测到文档类型: ${savedDocType}`);
+                        
+                        // 映射文档类型 (index/landing用'statement'，firstproject用'bank_statement')
+                        const docTypeMap = {
+                            'statement': 'bank_statement',
+                            'invoice': 'invoice'
+                        };
+                        
+                        const mappedType = docTypeMap[savedDocType] || 'bank_statement';
+                        console.log(`📋 映射后的类型: ${mappedType}`);
+                        
+                        // 设置文档类型（确保在上传前设置）
+                        if (typeof selectDocumentType === 'function') {
+                            selectDocumentType(mappedType);
+                            console.log(`✅ 已设置文档类型为: ${mappedType}`);
+                        } else if (typeof window.selectDocumentType === 'function') {
+                            window.selectDocumentType(mappedType);
+                            console.log(`✅ 已设置文档类型为: ${mappedType}`);
+                        } else {
+                            console.warn('⚠️ selectDocumentType 函数未找到');
+                        }
+                    } else {
+                        console.log('⏭️ 未检测到保存的文档类型，使用默认值');
+                    }
                     
                     // 清除標記（避免重複處理）
                     localStorage.removeItem('hasPendingFiles');
