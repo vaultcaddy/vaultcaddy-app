@@ -5350,6 +5350,136 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 </main>
+
+    <!-- ============================================ -->
+    <!-- 🚀 自動處理 IndexedDB 中的待上傳文件 -->
+    <!-- ============================================ -->
+    <script>
+        (async function() {
+            // 檢查是否有待處理的文件
+            const hasPendingFiles = localStorage.getItem('hasPendingFiles');
+            
+            if (!hasPendingFiles) {
+                console.log('⏭️ 沒有待處理的文件');
+                return;
+            }
+            
+            console.log('✅ 檢測到待處理的文件，準備自動上傳');
+            
+            try {
+                // IndexedDB 讀取邏輯（與 index.html 相同）
+                const db = await new Promise((resolve, reject) => {
+                    const request = indexedDB.open('VaultCaddyFiles', 1);
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+                
+                // 讀取文件
+                const files = await new Promise((resolve, reject) => {
+                    const transaction = db.transaction(['pendingFiles'], 'readonly');
+                    const store = transaction.objectStore('pendingFiles');
+                    const request = store.get('pendingFiles');
+                    
+                    request.onsuccess = () => resolve(request.result || []);
+                    request.onerror = () => reject(request.error);
+                });
+                
+                if (files && files.length > 0) {
+                    console.log(`📁 找到 ${files.length} 個待上傳文件`, files);
+                    
+                    // ✅ 从localStorage读取文档类型并设置
+                    const savedDocType = localStorage.getItem('pendingDocType');
+                    if (savedDocType) {
+                        console.log(`📋 检测到文档类型: ${savedDocType}`);
+                        
+                        // 映射文档类型 (index/landing用'statement'，firstproject用'bank_statement')
+                        const docTypeMap = {
+                            'statement': 'bank_statement',
+                            'invoice': 'invoice'
+                        };
+                        
+                        const mappedType = docTypeMap[savedDocType] || 'bank_statement';
+                        console.log(`📋 映射后的类型: ${mappedType}`);
+                        
+                        // 设置文档类型（确保在上传前设置）
+                        if (typeof selectDocumentType === 'function') {
+                            selectDocumentType(mappedType);
+                            console.log(`✅ 已设置文档类型为: ${mappedType}`);
+                        } else if (typeof window.selectDocumentType === 'function') {
+                            window.selectDocumentType(mappedType);
+                            console.log(`✅ 已设置文档类型为: ${mappedType}`);
+                        } else {
+                            console.warn('⚠️ selectDocumentType 函数未找到');
+                        }
+                    } else {
+                        console.log('⏭️ 未检测到保存的文档类型，使用默认值');
+                    }
+                    
+                    // 清除標記（避免重複處理）
+                    localStorage.removeItem('hasPendingFiles');
+                    localStorage.removeItem('pendingFileCount');
+                    localStorage.removeItem('pendingDocType');
+                    
+                    // 清除 IndexedDB 文件
+                    const clearTransaction = db.transaction(['pendingFiles'], 'readwrite');
+                    const clearStore = clearTransaction.objectStore('pendingFiles');
+                    clearStore.delete('pendingFiles');
+                    
+                    // 等待頁面完全加載和初始化
+                    setTimeout(() => {
+                        console.log('🔍 嘗試觸發文件上傳...');
+                        console.log(`📁 準備上傳 ${files.length} 個文件:`, files.map(f => f.name));
+                        
+                        // 方法1：直接調用全局 window.handleUpload 函數
+                        if (window.handleUpload && typeof window.handleUpload === 'function') {
+                            console.log('✅ 找到 window.handleUpload 函數，直接調用');
+                            window.handleUpload(files);
+                        } 
+                        // 方法2：通過文件輸入元素觸發
+                        else {
+                            console.log('⚠️ window.handleUpload 函數未找到，嘗試通過 aiFileInput 觸發');
+                            
+                            const fileInput = document.getElementById('aiFileInput');
+                            if (fileInput) {
+                                // 創建 DataTransfer 並設置文件
+                                const dataTransfer = new DataTransfer();
+                                files.forEach(file => {
+                                    console.log(`📎 添加文件: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
+                                    dataTransfer.items.add(file);
+                                });
+                                
+                                fileInput.files = dataTransfer.files;
+                                
+                                // 觸發 change 事件
+                                const changeEvent = new Event('change', { bubbles: true });
+                                fileInput.dispatchEvent(changeEvent);
+                                
+                                console.log('✅ 已觸發 aiFileInput 的 change 事件');
+                                
+                                // 如果 onchange 處理器存在，直接調用
+                                if (fileInput.onchange) {
+                                    console.log('✅ 直接調用 aiFileInput.onchange');
+                                    fileInput.onchange({ target: fileInput });
+                                }
+                            } else {
+                                console.error('❌ 找不到 aiFileInput 元素');
+                                console.log('🔍 嘗試查找所有 file input:', document.querySelectorAll('input[type="file"]'));
+                            }
+                        }
+                    }, 3000); // 等待3秒讓頁面完全初始化
+                    
+                } else {
+                    console.log('⏭️ IndexedDB 中沒有文件');
+                    localStorage.removeItem('hasPendingFiles');
+                }
+                
+            } catch (error) {
+                console.error('❌ 讀取 IndexedDB 文件失敗:', error);
+                localStorage.removeItem('hasPendingFiles');
+            }
+        })();
+    </script>
+
     <!-- Google Analytics 事件跟踪 -->
     <script src="/ga-event-tracking.js"></script>
 </body>
