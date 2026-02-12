@@ -257,6 +257,32 @@ class SimpleAuth {
                     }
                     // 🎯 Google Ads 轉化跟蹤：新用戶註冊
                     try {
+                        console.log('📊 開始發送轉化事件...');
+                        console.log('   gtag可用:', typeof gtag !== 'undefined');
+                        console.log('   dataLayer可用:', typeof window.dataLayer !== 'undefined');
+                        
+                        // 方法1：使用dataLayer（最可靠，即使gtag未加载也能工作）
+                        if (window.dataLayer) {
+                            window.dataLayer.push({
+                                'event': 'manual_event_PURCHASE',
+                                'event_category': 'conversion',
+                                'event_label': 'google_signup',
+                                'value': 50,
+                                'currency': 'HKD'
+                            });
+                            console.log('✅ 轉化事件已發送到dataLayer: manual_event_PURCHASE');
+                            
+                            // 同時發送標準sign_up事件
+                            window.dataLayer.push({
+                                'event': 'sign_up',
+                                'method': 'google',
+                                'value': 50,
+                                'currency': 'HKD'
+                            });
+                            console.log('✅ 標準事件已發送到dataLayer: sign_up');
+                        }
+                        
+                        // 方法2：使用gtag（如果已加载，作為備用）
                         if (typeof gtag !== 'undefined') {
                             // 發送 manual_event_PURCHASE 事件（與 Google Ads 轉化目標對應）
                             gtag('event', 'manual_event_PURCHASE', {
@@ -265,7 +291,7 @@ class SimpleAuth {
                                 'value': 50,
                                 'currency': 'HKD'
                             });
-                            console.log('📊 Google Ads 轉化事件已發送: manual_event_PURCHASE (新用戶註冊)');
+                            console.log('✅ 轉化事件已發送到gtag: manual_event_PURCHASE');
                             
                             // 同時發送標準 sign_up 事件（GA4 標準事件）
                             gtag('event', 'sign_up', {
@@ -273,12 +299,12 @@ class SimpleAuth {
                                 'value': 50,
                                 'currency': 'HKD'
                             });
-                            console.log('📊 GA4 標準事件已發送: sign_up');
+                            console.log('✅ 標準事件已發送到gtag: sign_up');
                         } else {
-                            console.warn('⚠️ gtag 未定義，無法發送轉化事件');
+                            console.warn('⚠️ gtag 未定義，但已使用dataLayer發送事件');
                         }
                     } catch (trackingError) {
-                        console.error('⚠️ 轉化跟蹤發送失敗:', trackingError);
+                        console.error('❌ 轉化跟蹤發送失敗:', trackingError);
                         // 不影響用戶註冊流程
                     }
                     
