@@ -255,6 +255,33 @@ class SimpleAuth {
                         console.log('✅ Google 登入用戶文檔驗證成功');
                         console.log('🎁 已贈送 20 個 Credits');
                     }
+                    // 🎯 Google Ads 轉化跟蹤：新用戶註冊
+                    try {
+                        if (typeof gtag !== 'undefined') {
+                            // 發送 manual_event_PURCHASE 事件（與 Google Ads 轉化目標對應）
+                            gtag('event', 'manual_event_PURCHASE', {
+                                'event_category': 'conversion',
+                                'event_label': 'google_signup',
+                                'value': 50,
+                                'currency': 'HKD'
+                            });
+                            console.log('📊 Google Ads 轉化事件已發送: manual_event_PURCHASE (新用戶註冊)');
+                            
+                            // 同時發送標準 sign_up 事件（GA4 標準事件）
+                            gtag('event', 'sign_up', {
+                                'method': 'google',
+                                'value': 50,
+                                'currency': 'HKD'
+                            });
+                            console.log('📊 GA4 標準事件已發送: sign_up');
+                        } else {
+                            console.warn('⚠️ gtag 未定義，無法發送轉化事件');
+                        }
+                    } catch (trackingError) {
+                        console.error('⚠️ 轉化跟蹤發送失敗:', trackingError);
+                        // 不影響用戶註冊流程
+                    }
+                    
                 } else {
                     console.log('✅ Firestore 用戶文檔已存在');
                 }
