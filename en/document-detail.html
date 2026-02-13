@@ -44,6 +44,9 @@
     <link rel="stylesheet" href="../pages.css">
     <link rel="stylesheet" href="../editable-table.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../user-menu-styles.css">
+    <script defer src="../logger.js"></script>
+    <script defer src="../user-menu-manager.js"></script>
     <script defer src="../config.js"></script>
     <script defer src="../translations.js"></script>
     
@@ -953,6 +956,12 @@
             max-width: none !important;
         }
         
+        /* 🔧 Fix: Ensure all invoice items table columns are visible (override bank statement hidden column rules) */
+        .invoice-items-table th:nth-child(n),
+        .invoice-items-table td:nth-child(n) {
+            display: table-cell !important;
+        }
+        
         /* Invoice table column widths */
         .invoice-items-table th:nth-child(1),  /* Code */
         .invoice-items-table td:nth-child(1) {
@@ -1634,6 +1643,82 @@
     <!-- 🔥 SidebarMask -->
     <div id="mobile-sidebar-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; display: none;" onclick="closeMobileSidebar()"></div>
     
+    <!-- ✅ New user menu (synced with dashboard.html) -->
+    <div id="user-dropdown" style="display: none; position: fixed; top: 70px; right: 2rem; background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); min-width: 280px; z-index: 2000; border: 1px solid #e5e7eb; overflow: hidden;">
+        <div style="padding: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                <div id="dropdown-avatar" style="width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: 600; border: 2px solid rgba(255,255,255,0.3);">U</div>
+                <div style="flex: 1; min-width: 0;">
+                    <div id="dropdown-name" style="font-weight: 600; font-size: 1rem; margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">User</div>
+                    <div id="dropdown-email" style="font-size: 0.75rem; opacity: 0.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">user@example.com</div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 0.75rem;">
+                <div style="flex: 1; background: rgba(255,255,255,0.15); border-radius: 8px; padding: 0.75rem; text-align: center; backdrop-filter: blur(10px);">
+                    <div style="font-size: 0.75rem; opacity: 0.9; margin-bottom: 0.25rem;">Credits</div>
+                    <div id="dropdown-credits" style="font-size: 1.25rem; font-weight: 700;">0</div>
+                </div>
+                <div style="flex: 1; background: rgba(255,255,255,0.15); border-radius: 8px; padding: 0.75rem; text-align: center; backdrop-filter: blur(10px);">
+                    <div style="font-size: 0.75rem; opacity: 0.9; margin-bottom: 0.25rem;">Plan</div>
+                    <div id="dropdown-plan" style="font-size: 0.875rem; font-weight: 600;">Free Plan</div>
+                </div>
+            </div>
+        </div>
+        <div style="padding: 0.5rem;">
+            <a href="account.html" onmouseout="this.style.backgroundColor='transparent'; this.style.transform='translateX(0)'" onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.transform='translateX(4px)'" style="display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: all 0.2s ease; font-weight: 500;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px;">
+                        <i class="fas fa-user" style="color: white; font-size: 0.875rem;"></i>
+                    </div>
+                    <span>Account</span>
+                </div>
+                <span style="font-size: 0.75rem; color: #9ca3af;">⌘A</span>
+            </a>
+            <a href="billing.html" onmouseout="this.style.backgroundColor='transparent'; this.style.transform='translateX(0)'" onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.transform='translateX(4px)'" style="display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: all 0.2s ease; font-weight: 500;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 8px;">
+                        <i class="fas fa-credit-card" style="color: white; font-size: 0.875rem;"></i>
+                    </div>
+                    <span>Billing</span>
+                </div>
+                <span style="font-size: 0.75rem; color: #9ca3af;">⌘B</span>
+            </a>
+        </div>
+        <div style="padding: 0.5rem; border-top: 1px solid #e5e7eb;">
+            <button onclick="handleLogout()" onmouseout="this.style.backgroundColor='transparent'; this.style.transform='translateX(0)'" onmouseover="this.style.backgroundColor='#fef2f2'; this.style.transform='translateX(4px)'" style="width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1rem; color: #dc2626; background: transparent; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; font-weight: 500; text-align: left;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: #fef2f2; border-radius: 8px;">
+                        <i class="fas fa-sign-out-alt" style="color: #dc2626; font-size: 0.875rem;"></i>
+                    </div>
+                    <span>Logout</span>
+                </div>
+                <span style="font-size: 0.75rem; color: #9ca3af;">⌘Q</span>
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        window.handleLogout = async function() {
+            try {
+                if (!window.simpleAuth) {
+                    let waitTime = 0;
+                    while (!window.simpleAuth && waitTime < 3000) {
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        waitTime += 100;
+                    }
+                    if (!window.simpleAuth) {
+                        throw new Error('simpleAuth failed to load');
+                    }
+                }
+                await window.simpleAuth.logout();
+                window.location.href = 'index.html';
+            } catch (error) {
+                console.error('❌ Logout failed:', error);
+                alert('Logout failed: ' + error.message + '\n\nPlease refresh and try again');
+            }
+        };
+    </script>
+
     <!-- mainContainer -->
     <div class="dashboard-container">
         <!-- leftSidebar（by sidebar-component.js Dynamically generated） -->
