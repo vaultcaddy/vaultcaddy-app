@@ -2,16 +2,16 @@
 
 <html lang="en">
 <head>
-<!-- 资源预连接 - 性能优化 -->
+<!-- Resource preconnect - Performance optimization -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://cdnjs.cloudflare.com" rel="preconnect"/>
 <link href="https://www.gstatic.com" rel="dns-prefetch"/>
 <link href="https://www.googletagmanager.com" rel="dns-prefetch"/>
 <meta charset="utf-8"/><link crossorigin="" href="https://www.gstatic.com" rel="preconnect"/>
-<!-- 性能优化：关键CSS内联 -->
+<!-- Performance optimization: critical CSS inline -->
 <style>
-        /* 关键CSS - 首屏渲染必需 */
+        /* Critical CSS - Required for first screen render */
         *{margin:0;padding:0;box-sizing:border-box}
         body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;line-height:1.6;color:#1f2937}
         .vaultcaddy-navbar{position:fixed;top:0;width:100%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.1);z-index:1000}
@@ -19,7 +19,7 @@
         .container{max-width:1200px;margin:0 auto;padding:0 1rem}
         .loading{opacity:0.5}
     </style>
-<!-- 🔒 pages面保護：立即隱藏內容，等待 Auth 檢查 -->
+<!-- 🔒 Page protection: hide content immediately, wait for Auth check -->
 <style>
         body.auth-checking {
             visibility: hidden !important;
@@ -44,7 +44,7 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        /* ✅ 樂觀更新閃爍動畫 */
+        /* ✅ Optimistic update shimmer animation */
         @keyframes shimmer {
             0% { background-position: 200% 0; }
             100% { background-position: -200% 0; }
@@ -60,80 +60,80 @@
             });
         }
         
-        // ✅ 超時保護：10秒後強制顯示pages面（防止卡住）
+        // ✅ Timeout protection: force show page after 10s (prevent stuck)
         setTimeout(function() {
             if (document.body.classList.contains('auth-checking')) {
-                logger.warn('⚠️ Auth 初始化超時（10秒），強制顯示pages面');
+                logger.warn('⚠️ Auth initialization timeout (10s), forcing page display');
                 document.body.classList.remove('auth-checking');
                 document.body.classList.add('auth-ready');
                 
-                // 如果沒有Login，重定向到Home
+                // If not logged in, redirect to home
                 if (!window.simpleAuth | !window.simpleAuth.currentUser) {
-                    logger.log('❌ 超時且未Login，重定向到Home');
+                    logger.log('❌ Timeout and not logged in, redirecting to home');
                     setTimeout(function() {
-                        window.location.href = 'index.html';  // 保持在当前语言版本
+                        window.location.href = 'index.html';  // Stay in current language version
                     }, 1000);
                 }
             }
         }, 10000);
     </script>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<!-- 🔇 安全隐藏控制台日志（不删除代码） -->
+<!-- 🔇 Safely hide console logs (without deleting code) -->
 <script defer="" src="../disable-console-safe.js"></script>
 <title>Dashboard - VaultCaddy</title>
 <link href="styles.css" rel="stylesheet"/>
-<link href="dashboard.css" rel="stylesheet"/>
-<link href="pages.css" rel="stylesheet"/>
+<link href="../dashboard.css" rel="stylesheet"/>
+<link href="../pages.css" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
     
-    <!-- 优化后的公共组件 (2026-01-23) -->
-    <link rel="stylesheet" href="user-menu-styles.css">
+    <!-- Optimized shared components (2026-01-23) -->
+    <link rel="stylesheet" href="../user-menu-styles.css">
     <script defer src="../logger.js"></script>
     <script defer src="../init-manager.js"></script>
     <script defer src="../user-menu-manager.js"></script>
     <script defer src="../mobile-menu-manager.js"></script>
-<!-- ✅ 核心配置 -->
+<!-- ✅ Core configuration -->
 <script defer="" src="../config.js"></script>
 <script defer="" src="../translations.js?v=20251102"></script>
-<!-- ✅ UI 組件 -->
+<!-- ✅ UI Components -->
 <script defer="" src="../navbar-component.js?v=20260125-user-menu-v2"></script>
 <script defer="" src="../sidebar-component.js?v=20251107-rebuild"></script>
-<!-- ✅ Bank Statement導出模塊 -->
+<!-- ✅ Bank Statement export module -->
 <script defer="" src="../bank-statement-export.js?v=20260107-v3-sage-fix"></script>
 <script defer="" src="../invoice-export.js?v=20260107"></script>
-<!-- ✅ Firebase SDK（CDN 版本）-->
+<!-- ✅ Firebase SDK (CDN version) -->
 <script defer="" src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script defer="" src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script defer="" src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 <script defer="" src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
 <script defer="" src="https://www.gstatic.com/firebasejs/10.7.0/firebase-functions-compat.js"></script>
-<!-- SheetJS 库 (用于 Excel 导出) -->
+<!-- SheetJS library (for Excel export) -->
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-<!-- ✅ Firebase 初始化和身份驗證 -->
+<!-- ✅ Firebase initialization and authentication -->
 <script defer="" src="../firebase-config.js?v=20251106-final-fix"></script>
 <script defer="" src="../simple-auth.js?v=20251105-force-init"></script>
 <script defer="" src="../user-profile-manager.js?v=20251120"></script>
 <script defer="" src="../simple-data-manager.js?v=20251106-final-fix"></script>
-<!-- ✅ Email 驗證檢查 -->
+<!-- ✅ Email verification check -->
 <script defer="" src="../email-verification-check.js"></script>
-<!-- 導航欄交互Features -->
+<!-- Navbar interaction features -->
 <script defer="" src="../navbar-interactions.js?v=20251108"></script>
-<!-- ✅ AI Process器（Qwen-VL Max）-->
+<!-- ✅ AI Processor (Qwen-VL Max) -->
 <script defer="" src="../qwen-vl-max-processor.js?v=20260127-parallel-v2"></script>
 <script defer="" src="../pdf-to-image-converter.js?v=20260127-blank-detect"></script>
-<!-- ✅ DocumentsProcess和導出 -->
+<!-- ✅ Document processing and export -->
 <script defer="" src="../export-manager.js?v=20251106-final-fix"></script>
 <script defer="" src="../batch-upload-processor.js?v=20251106-final-fix"></script>
-<!-- ✅ firstproject 增強Features -->
+<!-- ✅ firstproject enhanced features -->
 <script defer="" src="../firstproject-enhancements.js?v=20251110"></script>
-<!-- ✅ Credits 管理器（修复 Firebase 初始化时序问题）-->
+<!-- ✅ Credits manager (fix Firebase init timing issue) -->
 <script defer="" src="../credits-manager.js?v=20251217-v3-firebase-ready"></script>
-<!-- ✅ Flatpickr Date選擇器（繁體中文版）-->
+<!-- ✅ Flatpickr date picker -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/themes/light.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/zh-tw.js"></script>
-<!-- ✅ Flatpickr 移動端優化樣式 -->
+<!-- ✅ Flatpickr mobile optimized styles -->
 <style>
     /* 移動端Date選擇器優化 */
     @media (max-width: 768px) {
@@ -210,7 +210,7 @@
             appearance: none !important;
         }
         
-        /* Date範圍Filter區域優化 */
+        /* Date RangeFilter區域優化 */
         .date-filter-content {
             flex-direction: column !important;
             gap: 1rem !important;
@@ -275,7 +275,7 @@
             display: flex;
             min-height: 100vh;
             background: #ffffff;
-            padding-top: 25px; /* 🔥 電腦版：上移 15pt (60px - 15pt ≈ 45px) */
+            padding-top: 25px; /* 🔥 Desktop: shift up 15pt (60px - 15pt ≈ 45px) */
         }
         
         .sidebar {
@@ -414,7 +414,7 @@
         
         /* 🔥 桌面版：header 距離和容器 padding */
         #project-header {
-            margin-top: 15pt; /* 🔥 從 30pt 減少到 15pt */
+            margin-top: 15pt; /* 🔥 Reduced from 30pt to 15pt */
         }
         
         #team-project-view {
@@ -424,17 +424,17 @@
         /* 🔥 手機版：減少內容距離（最高優先級）*/
         @media (max-width: 768px) {
             .dashboard-container {
-                padding-top: 60px !important; /* 只需要導航欄高度 */
+                padding-top: 60px !important; /* Only need navbar height */
             }
             .main-content {
                 margin-left: 0 !important;
                 padding-top: 0 !important;
             }
             #team-project-view {
-                padding: 0 0.75rem !important; /* 最小 padding */
+                padding: 0 0.75rem !important; /* Minimum padding */
             }
             #project-header {
-                margin-top: 0.5rem !important; /* 只有 0.5rem 的距離 */
+                margin-top: 0.5rem !important; /* Only 0.5rem spacing */
                 margin-bottom: 0.5rem !important;
                 padding-top: 0 !important;
             }
@@ -698,7 +698,7 @@
         
         .documents-table {
             width: 100%;
-            min-width: 1200px; /* 確保表格最小寬度，觸發水平滾動 */
+            min-width: 1200px; /* Ensure minimum table width, trigger horizontal scroll */
             border-collapse: collapse;
             background: #ffffff;
             border: 1px solid #e2e8f0;
@@ -714,7 +714,7 @@
             text-align: left;
             font-weight: 600;
             border-bottom: 1px solid #e2e8f0;
-            white-space: nowrap; /* 防止標題文字換行 */
+            white-space: nowrap; /* Prevent header text wrapping */
             font-size: 14px;
         }
         
@@ -736,7 +736,7 @@
             padding: 1rem;
             color: #374151;
             vertical-align: middle;
-            white-space: nowrap; /* 防止單元格內容換行 */
+            white-space: nowrap; /* Prevent cell content wrapping */
             font-size: 14px;
         }
         
@@ -1432,9 +1432,9 @@
         width: 90% !important;
         max-width: 400px !important;
         background-color: #ffffff !important;
-        box-shadow: none !important; /* 🔥 移除陰影 */
+        box-shadow: none !important; /* 🔥 Remove shadow */
         border-radius: 12px !important;
-        border: none !important; /* 🔥 移除邊框 */
+        border: none !important; /* 🔥 Remove border */
         padding: 1.5rem !important;
         overflow: hidden !important;
     }
@@ -1496,11 +1496,11 @@
             
             /* 手機版顯示 logo，隱藏文字 */
             .desktop-logo {
-                display: flex !important; /* ✅ 顯示 V 圖標 */
+                display: flex !important; /* ✅ Show V icon */
             }
             
             .desktop-logo-text {
-                display: none !important; /* ✅ 隱藏 "VaultCaddy" 文字 */
+                display: none !important; /* ✅ Hide "VaultCaddy" text */
             }
         
         /* 手機版 UI 優化樣式 */
@@ -1588,7 +1588,7 @@
     /* 隱藏部分列（手機版）- 只針對 dashboard 的 CREATED 列，不影響 firstproject */
     .dashboard-table th:nth-child(3),
     .dashboard-table td:nth-child(3) {
-        display: none !important; /* 隱藏 CREATED 列 */
+        display: none !important; /* Hide CREATED column */
     }
     
     /* ==================== First Project 專用（僅手機版） ==================== */
@@ -1603,7 +1603,7 @@
     #export-btn-desktop,
     #export-dropdown-desktop {
         pointer-events: auto !important;
-        touch-action: manipulation !important; /* 防止雙擊縮放 */
+        touch-action: manipulation !important; /* Prevent double-tap zoom */
     }
 
     /* DocumentsType選擇器 */
@@ -1691,7 +1691,7 @@
     }
     
     .table-container table {
-        min-width: 800px !important; /* 確保表格寬度觸發滾動 */
+        min-width: 800px !important; /* Ensure table width triggers scroll */
     }
     
     /* 隱藏部分列 */
@@ -1699,7 +1699,7 @@
     .document-table td:nth-child(4),
     .document-table th:nth-child(5),
     .document-table td:nth-child(5) {
-        display: none !important; /* 隱藏Amount和Date列 */
+        display: none !important; /* Hide Amount and Date columns */
     }
     
     /* ==================== Account 專用 ==================== */
@@ -1748,7 +1748,7 @@
     
     .transaction-table th:nth-child(2),
     .transaction-table td:nth-child(2) {
-        display: none !important; /* 隱藏描述列 */
+        display: none !important; /* Hide description column */
     }
     
     /* ==================== 模態框 ==================== */
@@ -1854,11 +1854,11 @@
 <link href="../favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="favicon.png" rel="alternate icon" type="image/png"/>
 <link href="mobile-responsive.css" rel="stylesheet"/>
-<!-- 🔥 手機版強制樣式（最高優先級）-->
+<!-- 🔥 Mobile forced styles (highest priority) -->
 <style id="mobile-force-styles">
         @media screen and (max-width: 768px) {
             html body .dashboard-container {
-                padding-top: 20px !important; /* 🔥 手機導航欄高度 56px - 15pt 上移 */
+                padding-top: 20px !important; /* 🔥 Mobile navbar height 56px - shift up 15pt */
             }
             html body .main-content {
                 margin-left: 0 !important;
@@ -1870,7 +1870,7 @@
                 padding-top: 0 !important;
             }
             html body #project-header {
-                margin-top: 0 !important; /* 🔥 完全無間距 */
+                margin-top: 0 !important; /* 🔥 No spacing at all */
                 margin-bottom: 0.5rem !important;
                 padding: 0 !important;
             }
@@ -1884,7 +1884,7 @@
       gtag('js', new Date());
       gtag('config', 'G-LWPEKNC7RQ');
     </script>
-<!-- 资源提示 - 优化加载速度 -->
+<!-- Resource hints - optimize loading speed -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://www.googletagmanager.com" rel="dns-prefetch"/>
@@ -1895,19 +1895,19 @@
 <script src="/backend-api-client.js"></script>
 </head>
 <body class="auth-checking">
-<!-- 🔒 Auth 加載動畫 -->
+<!-- 🔒 Auth loading animation -->
 <div class="auth-loading">
 <div style="text-align: center;">
 <div style="width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
 <p style="color: #6b7280; font-size: 0.875rem;">Verifying identity...</p>
 </div>
 </div>
-<!-- ✅ 統一導航欄容器 -->
-<!-- 統一靜態導航欄 -->
-<!-- ✅ 統一靜態導航欄（與 firstproject.html 完全一致）-->
+<!-- ✅ Unified navbar container -->
+<!-- Unified static navbar -->
+<!-- ✅ Unified static navbar (identical to firstproject.html) -->
 <nav class="vaultcaddy-navbar" id="main-navbar" style="position: fixed; top: 0; left: 0; right: 0; height: 60px; background: #ffffff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; z-index: 1000; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);">
 <div style="display: flex; align-items: center; gap: 0.5rem;">
-<!-- 漢堡菜單按鈕（僅手機顯示）-->
+<!-- Hamburger menu button (mobile only) -->
 <button id="mobile-menu-btn" onclick="openMobileSidebar()" style="display: none; background: none; border: none; cursor: pointer; padding: 0.5rem; color: #1f2937; font-size: 1.5rem;">
 <i class="fas fa-bars"></i>
 </button>
@@ -1933,7 +1933,7 @@
 </div>
 </div>
 </nav>
-<!-- 手機側邊欄菜單 -->
+<!-- Mobile sidebar menu -->
 <div id="mobile-sidebar" style="position: fixed; top: 0; left: -100%; width: 280px; height: 100vh; background: white; z-index: 2000; transition: left 0.3s ease; box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto;">
 <div style="padding: 1.5rem;">
 <!-- Menu Items -->
@@ -1967,11 +1967,11 @@
 </div>
 </div>
 </div>
-<!-- 側邊欄遮罩 -->
+<!-- Sidebar overlay -->
 <div id="mobile-sidebar-overlay" onclick="closeMobileSidebar()" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; display: none;"></div>
-<!-- ✅ 新版用戶菜單（2026-01-25 優化）-->
+<!-- ✅ New user menu (2026-01-25 optimized) -->
 <div id="user-dropdown" style="display: none; position: fixed; top: 70px; right: 2rem; background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); min-width: 280px; z-index: 2000; border: 1px solid #e5e7eb; overflow: hidden;">
-    <!-- 用戶信息頭部（漸變背景）-->
+    <!-- User info header (gradient background) -->
     <div style="padding: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
         <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
             <div id="dropdown-avatar" style="width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: 600; border: 2px solid rgba(255,255,255,0.3);">U</div>
@@ -1991,7 +1991,7 @@
             </div>
         </div>
     </div>
-    <!-- 菜單Projects -->
+    <!-- Menu items -->
     <div style="padding: 0.5rem;">
         <a href="account.html" onmouseout="this.style.backgroundColor='transparent'; this.style.transform='translateX(0)'" onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.transform='translateX(4px)'" style="display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: all 0.2s ease; font-weight: 500;">
             <div style="display: flex; align-items: center; gap: 0.75rem;">
@@ -2012,7 +2012,7 @@
             <span style="font-size: 0.75rem; color: #9ca3af;">⌘B</span>
         </a>
     </div>
-    <!-- Logout按鈕 -->
+    <!-- Logout button -->
     <div style="padding: 0.5rem; border-top: 1px solid #e5e7eb;">
         <button onclick="handleLogout()" onmouseout="this.style.backgroundColor='transparent'; this.style.transform='translateX(0)'" onmouseover="this.style.backgroundColor='#fef2f2'; this.style.transform='translateX(4px)'" style="width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1rem; color: #dc2626; background: transparent; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; font-weight: 500; text-align: left;">
             <div style="display: flex; align-items: center; gap: 0.75rem;">
@@ -2025,7 +2025,7 @@
         </button>
     </div>
 </div>
-<!-- ✅ index.html 動態更新用戶Status -->
+<!-- ✅ index.html dynamically update user status -->
 <script>
         document.addEventListener('DOMContentLoaded', function() {
             logger.log('✅ index.html 初始化');
@@ -2139,7 +2139,7 @@
                                 left: scrollAmount,
                                 behavior: 'smooth'
                             });
-                        }, 4000); // 每4秒切換
+                        }, 4000); // Switch every 4 seconds
                     }
                     
                     // 學習中心輪播
@@ -2155,7 +2155,7 @@
                                 left: scrollAmount,
                                 behavior: 'smooth'
                             });
-                        }, 5000); // 每5秒切換
+                        }, 5000); // Switch every 5 seconds
                     }
                 }
             
@@ -2244,17 +2244,17 @@
                         }
                         
                         if (!window.simpleAuth) {
-                            throw new Error('simpleAuth 加載Failed');
+                            throw new Error('simpleAuth failed to load');
                         }
                     }
                     
                     console.log('✅ 開始Logout...');
                     await window.simpleAuth.logout();
                     console.log('✅ Logout成功，跳轉到Home');
-                    window.location.href = 'index.html';  // 保持在当前语言版本
+                    window.location.href = 'index.html';  // Stay in current language version
                 } catch (error) {
                     console.error('❌ LogoutFailed:', error);
-                    alert('LogoutFailed：' + error.message + '\n\n請刷新pages面後重試');
+                    alert('Logout failed: ' + error.message + '\n\nPlease refresh the page and try again.');
                 }
             };
             
@@ -2352,19 +2352,19 @@
             window.toggleDropdown = toggleDropdown;
         });
     </script>
-<!-- 主要內容區域 -->
+<!-- Main content area -->
 <main style="padding-top: 10px;">
-<!-- AI Upload模態框 - 放在 body 最前面確保立即Load -->
+<!-- AI Upload modal - placed at top of body for immediate loading -->
 <div class="ai-upload-modal" id="aiUploadModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 10000; align-items: center; justify-content: center;">
 <div class="ai-upload-overlay" onclick="closeAIUploadModal()" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px);"></div>
 <div class="ai-upload-container" style="position: relative; background: white; border-radius: 16px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2); width: 90%; max-width: 800px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column;">
-<!-- 關閉按鈕（右上角） -->
+<!-- Close button (top right) -->
 <button class="ai-close-btn" onclick="closeAIUploadModal()" onmouseout="this.style.background='#f3f4f6'; this.style.color='#6b7280'" onmouseover="this.style.background='#e5e7eb'; this.style.color='#1f2937'" style="position: absolute; top: 1rem; right: 1rem; background: #f3f4f6; border: none; color: #6b7280; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
 <i class="fas fa-times"></i>
 </button>
-<!-- Upload區域 -->
+<!-- Upload area -->
 <div class="ai-upload-content" style="padding: 2rem; overflow-y: auto; flex: 1;">
-<!-- DocumentsType選擇器 -->
+<!-- Document type selector -->
 <div class="document-type-selector" style="margin-bottom: 2rem;">
 <h3 style="font-size: 1.1rem; color: #1f2937; margin: 0 0 1rem 0; font-weight: 600;">Select Document Type</h3>
 <div class="document-types-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
@@ -2388,7 +2388,7 @@
 </div>
 </div>
 </div>
-<!-- Upload區域 -->
+<!-- Upload area -->
 <div class="ai-upload-area" id="aiUploadArea" style="border: 3px dashed #d1d5db; border-radius: 12px; padding: 3rem 2rem; text-align: center; cursor: pointer; transition: all 0.3s ease; background: #fafafa;">
 <div class="ai-upload-icon" style="font-size: 4rem; margin-bottom: 1rem;">📄</div>
 <div class="ai-upload-text" style="font-size: 1.2rem; color: #374151; margin-bottom: 0.5rem; font-weight: 600;">Drag files here or click to upload</div>
@@ -2419,7 +2419,7 @@
 <div class="ai-progress-fill" id="aiProgressFill" style="height: 100%; background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%); transition: width 0.5s ease; width: 0%;"></div>
 </div>
 </div>
-<!-- 批量Processing Progress列表 -->
+<!-- Batch processing progress list -->
 <div class="batch-progress-container" id="batchProgressContainer" style="display: none; margin-top: 2rem;">
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
 <h4 style="font-size: 1rem; color: #1f2937; margin: 0; font-weight: 600;">Processing Progress</h4>
@@ -2430,7 +2430,7 @@
 </div>
 </div>
 </div>
-<!-- Dashboard 容器 -->
+<!-- Dashboard container -->
 <div class="dashboard-container" style="display: flex !important; min-height: 100vh; background: #ffffff; visibility: visible !important;">
 <!-- 左側邊欄 (由 sidebar-component.js 動態生成) -->
 <aside class="sidebar"></aside>
@@ -2499,8 +2499,8 @@
         width: 90% !important;
         max-width: 400px !important;
         background-color: #ffffff !important;
-        box-shadow: none !important; /* 🔥 無陰影 */
-        border: none !important; /* 🔥 無邊框 */
+        box-shadow: none !important; /* 🔥 No shadow */
+        border: none !important; /* 🔥 No border */
         border-radius: 12px !important;
         padding: 1.5rem !important;
         overflow: hidden !important;
@@ -2565,7 +2565,7 @@
                         }
                         
                         .date-filter-inputs span {
-                            display: none !important; /* 隱藏「to」字 */
+                            display: none !important; /* Hide "to" text */
                         }
                         
                         .date-filter-clear-btn {
@@ -2603,7 +2603,7 @@
 <div class="date-filter-group" style="flex: 1; min-width: 200px;">
 <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
 <i class="fas fa-calendar-alt" style="margin-right: 0.5rem; color: #8b5cf6;"></i>
-                                Date範圍
+                                Date Range
                             </label>
 <div class="date-filter-inputs" style="display: flex; gap: 0.5rem; align-items: center;">
 <input id="date-from" placeholder="Start Date" style="flex: 1; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem;" type="date"/>
@@ -2630,7 +2630,7 @@
                                 Clear Filters
                             </button>
 </div>
-</div> <!-- 關閉 date-filter-content -->
+</div> <!-- Close date-filter-content -->
 </div>
 <!-- Documents表格 -->
 <div class="table-container" style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; overflow-x: auto;">
@@ -2700,7 +2700,7 @@
 <div style="display: flex; justify-content: space-between; align-items: center; color: white;">
 <div style="font-size: 1.125rem; font-weight: 700;">
 <i class="fas fa-receipt" style="margin-right: 0.5rem;"></i>
-                            共 <span id="total-invoice-count">0</span> 張Invoice
+                            Total <span id="total-invoice-count">0</span> Invoice(s)
                         </div>
 <div style="font-size: 1.5rem; font-weight: 900;">
                             $<span id="total-invoice-amount">0</span>
@@ -2759,7 +2759,7 @@
             
             if (!e.detail.user) {
                 logger.log('❌ 用戶未Login，重定向到Home');
-                window.location.href = 'index.html';  // 保持在当前语言版本
+                window.location.href = 'index.html';  // Stay in current language version
                 return;
             }
             
@@ -2788,7 +2788,7 @@
                 if (!currentProjectId) {
                     console.error('❌ No projects ID');
                     // 跳轉回Home（英文版）
-                    window.location.href = 'index.html';  // 保持在当前语言版本
+                    window.location.href = 'index.html';  // Stay in current language version
                     return;
                 }
                 
@@ -2806,13 +2806,13 @@
                     console.error('❌ [DEBUG] 无法找到项目:', currentProjectId);
                     console.error('❌ [DEBUG] 所有可用项目:', projects);
                     alert('This project does not exist or has been deleted. Returning to homepage.');
-                    window.location.href = 'index.html';  // 保持在当前语言版本
+                    window.location.href = 'index.html';  // Stay in current language version
                 }
                 
             } catch (error) {
                 console.error('❌ LoadProjectsFailed:', error);
-                alert('LoadProjectsFailed，將BackHome');
-                window.location.href = 'index.html';  // 保持在当前语言版本
+                alert('Failed to load projects, returning to home page.');
+                window.location.href = 'index.html';  // Stay in current language version
             }
         }
         
@@ -3105,7 +3105,7 @@
                             'bank_statement': { icon: 'fa-university', color: '#10b981', label: 'Bank Statement' },
                             'invoice': { icon: 'fa-file-invoice', color: '#3b82f6', label: 'Invoice' },
                             'receipt': { icon: 'fa-receipt', color: '#8b5cf6', label: 'Receipt' },
-                            'general': { icon: 'fa-file-alt', color: '#6b7280', label: '一般' }
+                            'general': { icon: 'fa-file-alt', color: '#6b7280', label: 'General' }
                         };
                         return types[type] || types['general'];
                     };
@@ -3136,13 +3136,13 @@
                             amountDisplay = `Start: $${parseFloat(openingBalance).toLocaleString('zh-TW', {minimumFractionDigits: 2, maximumFractionDigits: 2})}<br>End: $${parseFloat(closingBalance).toLocaleString('zh-TW', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
                         }
                         
-                        // ✅ Bank Statement：顯示對帳單期間（Date範圍）
+                        // ✅ Bank Statement：顯示對帳單期間（Date Range）
                         let statementPeriod = data.statementPeriod || data.statement_period || '';
                         
-                        // 🔄 格式化Date：只替換Date部分的連字符，保留Date範圍分隔符
+                        // 🔄 格式化Date：只替換Date部分的連字符，保留Date Range分隔符
                         // 例如：2021-01-14 - 2021-01-31 → 2021/01/14 - 2021/01/31
                         if (statementPeriod) {
-                            // 先分割Date範圍（以 ' - ' 為分隔符）
+                            // 先分割Date Range（以 ' - ' 為分隔符）
                             const parts = statementPeriod.split(' - ');
                             if (parts.length === 2) {
                                 // 分別替換每個Date部分的連字符
@@ -3335,7 +3335,7 @@
                 // 保存到全局變量
                 allDocuments = documents;
                 window.allDocuments = documents;
-                window.filteredDocuments = [...documents]; // 初始化過濾列表
+                window.filteredDocuments = [...documents]; // Initialize filtered list
                 
                 const tbody = document.getElementById('team-project-tbody');
                 
@@ -3397,11 +3397,11 @@
                     }
                     
                     const now = Date.now();
-                    const fiveMinutes = 5 * 60 * 1000; // 5 分鐘
+                    const fiveMinutes = 5 * 60 * 1000; // 5 minutes
                     
                     if (now - createdTime < fiveMinutes) {
                         logger.log(`⏳ Documents ${doc.fileName} 創建於 ${Math.round((now - createdTime) / 1000)} 秒前，可能Processing中，跳過`);
-                        continue; // 跳過最近創建的Documents
+                        continue; // Skip recently created documents
                     }
                     
                     logger.log(`🔄 恢復Process: ${doc.fileName} (${pages} pages)`);
@@ -3412,7 +3412,7 @@
                         
                         await window.simpleDataManager.updateDocument(currentProjectId, doc.id, {
                             status: 'failed',
-                            error: 'Process超時，請Delete後重新Upload此Documents'
+                            error: 'Processing timeout. Please delete and re-upload this document.'
                         });
                         await loadDocuments();
                     } else {
@@ -3563,7 +3563,7 @@
         window.addEventListener('beforeunload', (e) => {
             if (isProcessingFiles && processingCount > 0) {
                 e.preventDefault();
-                e.returnValue = ''; // 必须设置，但浏览器会显示自己的消息
+                e.returnValue = ''; // Must be set, but browser shows its own message
                 return '';
             }
         });
@@ -3579,14 +3579,14 @@
             if (isProcessingFiles && processingCount > 0) {
                 e.preventDefault();
                 e.stopPropagation();
-                e.stopImmediatePropagation(); // 阻止其他事件监听器
+                e.stopImmediatePropagation(); // Block other event listeners
                 
                 // 显示自定义警告（这个会显示我们的文本）
-                alert('文件轉換進行中，請勿離開本pages。');
+                alert('File conversion in progress, please do not leave this page.');
                 
                 return false;
             }
-        }, true); // ✅ 使用捕获阶段，优先级最高
+        }, true); // ✅ Use capture phase, highest priority
         
         window.handleUpload = async function handleUpload(files) {
             // 1. 先為每個文件創建"Processing"的Documents記錄（立即顯示在列表中）
@@ -3600,7 +3600,7 @@
                     documentType: selectedDocumentType,
                     status: 'processing',
                     createdAt: new Date().toISOString(),
-                    pages: 0, // 暫時設為0，稍後更新
+                    pages: 0, // Temporarily set to 0, update later
                     originalFileType: file.type
                 };
                 
@@ -3705,7 +3705,7 @@
                         // 更新DocumentsStatus為Failed
                         await window.simpleDataManager.updateDocument(currentProjectId, docId, {
                             status: 'failed',
-                            error: `PDF 轉換Failed: ${pdfError.message}`
+                            error: `PDF conversion failed: ${pdfError.message}`
                         });
                         await loadDocuments();
                         return;
@@ -3775,7 +3775,7 @@
                         logger.log(`📄 將Process所有 ${imageFiles.length} pages`);
                     } catch (pdfError) {
                         console.error('❌ PDF 轉換Failed:', pdfError);
-                        alert(`PDF 轉換Failed: ${pdfError.message}\n\n請Confirm文件是否有效。`);
+                        alert(`PDF conversion failed: ${pdfError.message}\n\nPlease verify the file is valid.`);
                         return;
                     }
                 }
@@ -3798,7 +3798,7 @@
                     createdAt: new Date().toISOString(),
                     pages: filesToProcess.length,
                     imageUrl: imageUrls[0],
-                    imageUrls: imageUrls, // ✅ 所有pages面
+                    imageUrls: imageUrls, // ✅ All pages
                     downloadURL: imageUrls[0],
                     url: imageUrls[0],
                     originalFileType: file.type,
@@ -3840,7 +3840,7 @@
                 }
                 
                 // ✅ 3. 如果是 PDF，先轉換為圖片（Vision API 不支持 PDF base64 Upload）
-                let filesToProcess = [file]; // 改為數組以支持多pages
+                let filesToProcess = [file]; // Changed to array to support multiple pages
                 let isPDFConverted = false;
                 
                 if (window.pdfToImageConverter && window.pdfToImageConverter.isPDF(file)) {
@@ -3848,13 +3848,13 @@
                         logger.log('📄 檢測到 PDF 文件，開始轉換為圖片...');
                         const imageFiles = await window.pdfToImageConverter.convertPDFToImages(file);
                         logger.log(`✅ PDF 轉換完成，生成 ${imageFiles.length} 張圖片`);
-                        filesToProcess = imageFiles; // ✅ 使用所有pages面
+                        filesToProcess = imageFiles; // ✅ Use all pages
                         isPDFConverted = true;
                         logger.log(`📄 將Process所有 ${imageFiles.length} pages`);
                     } catch (pdfError) {
                         console.error('❌ PDF 轉換Failed:', pdfError);
-                        alert(`PDF 轉換Failed: ${pdfError.message}\n\n請Confirm文件是否有效，or嘗試直接Upload JPG/PNG 圖片。`);
-                        return; // ⚠️ 這裡Back，Credits 還沒有被扣除
+                        alert(`PDF conversion failed: ${pdfError.message}\n\nPlease verify the file is valid, or try uploading JPG/PNG images directly.`);
+                        return; // ⚠️ Return here, credits not yet deducted
                     }
                 }
                 
@@ -3867,20 +3867,20 @@
                 logger.log(`✅ ${imageUrls.length} 個文件已Upload到 Storage`);
                 
                 const docData = {
-                    name: file.name, // 保留原始文件名
+                    name: file.name, // Keep original filename
                     fileName: file.name,
                     fileSize: file.size,
-                    fileType: filesToProcess[0].type, // 使用第一個文件的Type
+                    fileType: filesToProcess[0].type, // Use type of first file
                     documentType: selectedDocumentType,
                     status: 'processing',
                     createdAt: new Date().toISOString(),
-                    pages: filesToProcess.length, // 實際pages數
-                    imageUrl: imageUrls[0], // 第一pages的 URL（向後兼容）
-                    imageUrls: imageUrls, // ✅ 所有pages面的 URL 數組
+                    pages: filesToProcess.length, // Actual page count
+                    imageUrl: imageUrls[0], // First page URL (backward compatible)
+                    imageUrls: imageUrls, // ✅ URL array of all pages
                     downloadURL: imageUrls[0],
                     url: imageUrls[0],
-                    originalFileType: file.type, // 記錄原始文件Type
-                    isPDFConverted: isPDFConverted // 標記是否是 PDF 轉換
+                    originalFileType: file.type, // Record original file type
+                    isPDFConverted: isPDFConverted // Flag whether PDF converted
                 };
                 
                 // ✅ 5. 樂觀 UI 更新：立即在表格中顯示佔位符
@@ -4015,7 +4015,7 @@
                         const health = await Promise.race([
                             backendClient.healthCheck(),
                             new Promise((_, reject) => 
-                                setTimeout(() => reject(new Error('超時')), 3000)
+                                setTimeout(() => reject(new Error('Timeout')), 3000)
                             )
                         ]);
                         
@@ -4049,7 +4049,7 @@
                     logger.log('🤖 使用千問AIProcess (Qwen-VL Max):', file.name, `(${pages} pages)`);
                     
                     if (!window.QwenVLMaxProcessor) {
-                        throw new Error('AI Process器未Load');
+                        throw new Error('AI processor not loaded');
                     }
                     
                     const processor = new window.QwenVLMaxProcessor();
@@ -4068,7 +4068,7 @@
                     processor: result.processor,
                     model: result.model,
                     usage: result.usage,
-                    extractionMethod: extractionMethod  // 記錄使用的方法
+                    extractionMethod: extractionMethod  // Record extraction method used
                 });
                 
                 logger.log(`✅ DocumentsCompleted (方法: ${extractionMethod})`);
@@ -4082,7 +4082,7 @@
                     try {
                         logger.log(`💰 準備退回 ${pages} Credits（Documents ID: ${docId}）`);
                         await window.creditsManager.refundCredits(pages);
-                        refundedDocuments.add(docId); // 標記已退回
+                        refundedDocuments.add(docId); // Mark as refunded
                         logger.log(`✅ 已退回 ${pages} Credits（Documents ID: ${docId}）`);
                         logger.log(`📋 已退回的Documents列表:`, Array.from(refundedDocuments));
                     } catch (refundError) {
@@ -4125,7 +4125,7 @@
                     logger.log(`   - documentType 是否為 undefined: ${documentType === undefined}`);
                 
                 if (!window.QwenVLMaxProcessor) {
-                    throw new Error('AI Process器未Load');
+                    throw new Error('AI processor not loaded');
                 }
                 
                 const processor = new window.QwenVLMaxProcessor();
@@ -4183,7 +4183,7 @@
                             const health = await Promise.race([
                                 backendClient.healthCheck(),
                                 new Promise((_, reject) => 
-                                    setTimeout(() => reject(new Error('超時')), 3000)
+                                    setTimeout(() => reject(new Error('Timeout')), 3000)
                                 )
                             ]);
                             
@@ -4243,7 +4243,7 @@
                     try {
                         logger.log(`💰 準備退回 ${files.length} Credits（Documents ID: ${docId}）`);
                         await window.creditsManager.refundCredits(files.length);
-                        refundedDocuments.add(docId); // 標記已退回
+                        refundedDocuments.add(docId); // Mark as refunded
                         logger.log(`✅ 已退回 ${files.length} Credits（Documents ID: ${docId}）`);
                     } catch (refundError) {
                         console.error('❌ 退回 Credits Failed:', refundError);
@@ -4262,7 +4262,7 @@
                     processingDocuments.delete(docId);
                     logger.log(`🔓 解鎖Documents ${docId}，Completed`);
                 }
-            }, fileName); // ✅ 傳遞文件名用於日誌
+            }, fileName); // ✅ Pass filename for logging
         }
         
         // ✅ 合併多pages結果的函數
@@ -4364,7 +4364,7 @@
         
         // ==================== DeleteDocuments ====================
         async function deleteDocument(docId) {
-            if (!confirm('確定要Delete這個Documents嗎？')) return;
+            if (!confirm('Are you sure you want to delete this document?')) return;
             
             try {
                 await window.simpleDataManager.deleteDocument(currentProjectId, docId);
@@ -4436,12 +4436,12 @@
         window.deleteSelectedDocuments = async function() {
             const selectedCheckboxes = document.querySelectorAll('.document-checkbox:checked');
             if (selectedCheckboxes.length === 0) {
-                alert('請先選擇要Delete的Documents');
+                alert('Please select documents to delete first.');
                 return;
             }
             
             const count = selectedCheckboxes.length;
-            if (!confirm(`確定要Delete ${count} 個Documents嗎？此Actions無法復原。`)) {
+            if (!confirm(`Are you sure you want to delete ${count} document(s)? This action cannot be undone.`)) {
                 return;
             }
             
@@ -4454,7 +4454,7 @@
                 
                 await Promise.all(deletePromises);
                 logger.log(`✅ 已Delete ${count} 個Documents`);
-                alert(`成功Delete ${count} 個Documents`);
+                alert(`Successfully deleted ${count} document(s).`);
                 await loadDocuments();
             } catch (error) {
                 console.error('❌ DeleteFailed:', error);
@@ -4463,7 +4463,7 @@
         };
         
         window.confirmDeleteProject = function() {
-            if (!confirm('確定要Delete整個Projects嗎？')) return;
+            if (!confirm('Are you sure you want to delete this entire project?')) return;
             
             window.simpleDataManager.deleteProject(currentProjectId).then(() => {
                 window.location.href = 'dashboard.html';
@@ -4495,7 +4495,7 @@
             const projectName = input.value.trim();
             
             if (!projectName) {
-                alert('請輸入Project Name');
+                alert('Please enter a project name.');
                 return;
             }
             
@@ -4535,13 +4535,13 @@
                 const row = checkbox.closest('tr');
                 if (!row) return;
                 
-                const typeCell = row.querySelector('td:nth-child(3)'); // Type列
+                const typeCell = row.querySelector('td:nth-child(3)'); // Type column
                 if (!typeCell) return;
                 
                 const typeText = typeCell.textContent.trim();
                 if (typeText === 'Invoice' | typeText.includes('Invoice')) {
                     hasInvoice = true;
-                } else if (typeText === 'Bank Statement' | typeText.includes('銀行')) {
+                } else if (typeText === 'Bank Statement' | typeText.includes('Bank')) {
                     hasBankStatement = true;
                 }
             });
@@ -4654,7 +4654,7 @@
             menuHTML += `
                 <div style="padding: 1rem; margin-top: 0.5rem; background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border-radius: 8px; border-left: 3px solid #10b981;">
                     <div style="font-size: 0.75rem; color: #065f46; font-weight: 500; margin-bottom: 0.25rem;">
-                        💡 不確定選哪個？
+                        💡 Not sure which to choose?
                     </div>
                     <div style="font-size: 0.7rem; color: #059669; line-height: 1.4;">
                         Most users choose <strong>Universal CSV</strong> or <strong>QBO File</strong>
@@ -4705,7 +4705,7 @@
             logger.log('✅ 已選中Documents數量:', checkboxes.length);
             
             if (checkboxes.length === 0) {
-                alert('請先選擇要導出的Documents');
+                alert('Please select documents to export first.');
                 return;
             }
             
@@ -4723,9 +4723,9 @@
                 menu.style.right = 'auto';
                 menu.style.width = '90%';
                 menu.style.maxWidth = '400px';
-                menu.style.backgroundColor = '#ffffff'; // 🔥 白色背景
-                menu.style.border = 'none'; // 🔥 無邊框
-                menu.style.boxShadow = 'none'; // 🔥 無陰影
+                menu.style.backgroundColor = '#ffffff'; // 🔥 White background
+                menu.style.border = 'none'; // 🔥 No border
+                menu.style.boxShadow = 'none'; // 🔥 No shadow
                 menu.style.borderRadius = '12px';
                 logger.log('📱 手機版：菜單居中顯示（全白色）');
                 
@@ -4862,12 +4862,12 @@
                     logger.log(`📋 導出 ${docsToExport.length} 個已勾選的Documents（共選中 ${selectedDocIds.length} 個）`);
                 } else {
                     // 如果沒有勾選，提示用戶
-                    alert('請先選擇要導出的Documents');
+                    alert('Please select documents to export first.');
                     return;
                 }
                 
                 if (docsToExport.length === 0) {
-                    alert('所選Documents中沒有CompletedProcess的Documents。\n請確保所選DocumentsCompletedProcess。');
+                    alert('No processed documents found in your selection.\nPlease make sure the selected documents have been processed.');
                     return;
                 }
                 
@@ -4920,7 +4920,7 @@
                     }
                     
                     toggleExportMenu();
-                    alert(`✅ 導出成功！\n共導出 ${exportedCount} 個 CSV 文件`);
+                    alert(`✅ Export successful!\n${exportedCount} CSV file(s) exported.`);
                     return;
                 }
                 
@@ -4973,20 +4973,20 @@
                                 
                                 // ✅ 发票Excel标题（包含所有重要字段）
                                 const excelData = [[
-                                    'Invoice Number',      // 发票编号
+                                    'Invoice Number',      // Invoice number
                                     'Date',               // Date
-                                    'Supplier Name',      // 供应商名称
-                                    'Supplier Phone',     // 供应商电话
-                                    'Supplier Email',     // 供应商邮箱
-                                    'Item Code',          // 项目编码
-                                    'Item Description',   // 项目描述
-                                    'Quantity',           // 数量
-                                    'Unit',               // 单位
-                                    'Unit Price',         // 单价
-                                    'Amount',             // 小计
-                                    'Total Amount',       // 总金额
-                                    'Tax',                // 税额
-                                    'Status'              // 状态
+                                    'Supplier Name',      // Supplier name
+                                    'Supplier Phone',     // Supplier phone
+                                    'Supplier Email',     // Supplier email
+                                    'Item Code',          // Item code
+                                    'Item Description',   // Item description
+                                    'Quantity',           // Quantity
+                                    'Unit',               // Unit
+                                    'Unit Price',         // Unit price
+                                    'Amount',             // Subtotal
+                                    'Total Amount',       // Total amount
+                                    'Tax',                // Tax
+                                    'Status'              // Status
                                 ]];
                                 
                                 groupedDocs.invoices.forEach(doc => {
@@ -5000,7 +5000,7 @@
                                     const supplierEmail = data.vendorEmail || data.email || data.supplier_email || '';
                                     const totalAmount = parseFloat(data.totalAmount || data.total || data.amount || 0);
                                     const tax = parseFloat(data.taxAmount || data.tax || 0);
-                                    const status = data.status || data.paymentStatus || '未付款';
+                                    const status = data.status || data.paymentStatus || 'Unpaid';
                                     
                                     // 提取项目明细
                                     const items = data.items || data.lineItems || [];
@@ -5014,7 +5014,7 @@
                                             supplierPhone,
                                             supplierEmail,
                                             '',
-                                            '總計',
+                                            'Total',
                                             1,
                                             '',
                                             totalAmount,
@@ -5029,7 +5029,7 @@
                                             const itemCode = item.code || item.itemCode || '';
                                             const itemDescription = item.description || item.itemName || item.name || '';
                                             const quantity = parseFloat(item.quantity || item.qty || 1);
-                                            const unit = item.unit || '件';
+                                            const unit = item.unit || 'pcs';
                                             const unitPrice = parseFloat(item.unitPrice || item.unit_price || item.price || 0);
                                             const amount = parseFloat(item.amount || item.subtotal || (quantity * unitPrice) || 0);
                                             
@@ -5083,14 +5083,14 @@
                             
                             // ✅ 显示导出成功消息
                             if (exportedCount > 0) {
-                                alert(`✅ 導出成功！\n已Download ${exportedCount} 個 Excel 文件`);
+                                alert(`✅ Export successful!\n${exportedCount} Excel file(s) downloaded.`);
                             } else {
-                                alert('沒有可導出的Documents');
+                                alert('No documents available for export.');
                             }
                             return;
                         } catch (error) {
                             console.error('❌ Excel 导出失败:', error);
-                            alert('Excel 导出失败，请重试or使用 CSV Format');
+                            alert('Excel export failed. Please try again or use CSV format.');
                             return;
                         }
                     
@@ -5115,7 +5115,7 @@
                             mimeType = 'text/csv;charset=utf-8;';
                             logger.log('✅ 標準Bank Statement CSV 導出');
                         } else {
-                            alert('Bank Statement導出模塊未Load，請刷新pages面後重試');
+                            alert('Bank statement export module not loaded. Please refresh and try again.');
                             return;
                         }
                         break;
@@ -5128,7 +5128,7 @@
                             mimeType = 'text/csv;charset=utf-8;';
                             logger.log('✅ Universal CSV 導出');
                         } else {
-                            alert('導出模塊未Load，請刷新pages面後重試');
+                            alert('Export module not loaded. Please refresh and try again.');
                             return;
                         }
                         break;
@@ -5141,7 +5141,7 @@
                             mimeType = 'text/csv;charset=utf-8;';
                             logger.log('✅ Sage CSV 導出');
                         } else {
-                            alert('導出模塊未Load，請刷新pages面後重試');
+                            alert('Export module not loaded. Please refresh and try again.');
                             return;
                         }
                         break;
@@ -5154,7 +5154,7 @@
                             mimeType = 'text/csv;charset=utf-8;';
                             logger.log('✅ Zoho Books CSV 導出');
                         } else {
-                            alert('導出模塊未Load，請刷新pages面後重試');
+                            alert('Export module not loaded. Please refresh and try again.');
                             return;
                         }
                         break;
@@ -5181,7 +5181,7 @@
                             fileName = `Invoice_${new Date().toISOString().split('T')[0]}_Xero.csv`;
                             logger.log('✅ Xero CSV 導出（Invoice）');
                         } else {
-                            alert('沒有可導出的Documentsor導出模塊未Load');
+                            alert('No exportable documents or export module not loaded.');
                             return;
                         }
                         mimeType = 'text/csv;charset=utf-8;';
@@ -5208,7 +5208,7 @@
                             fileName = `Invoice_${new Date().toISOString().split('T')[0]}_QuickBooks.csv`;
                             logger.log('✅ QuickBooks CSV 導出（Invoice）');
                         } else {
-                            alert('沒有可導出的Documentsor導出模塊未Load');
+                            alert('No exportable documents or export module not loaded.');
                             return;
                         }
                         mimeType = 'text/csv;charset=utf-8;';
@@ -5222,7 +5222,7 @@
                             mimeType = 'text/csv;charset=utf-8;';
                             logger.log('✅ Invoice總數 CSV 導出');
                         } else {
-                            alert('Invoice導出模塊未Load，請刷新pages面後重試');
+                            alert('Invoice export module not loaded. Please refresh and try again.');
                             return;
                         }
                         break;
@@ -5235,7 +5235,7 @@
                             mimeType = 'text/csv;charset=utf-8;';
                             logger.log('✅ 通用Invoice CSV 導出');
                         } else {
-                            alert('通用Invoice導出模塊未Load，請刷新pages面後重試');
+                            alert('General invoice export module not loaded. Please refresh and try again.');
                             return;
                         }
                         break;
@@ -5248,7 +5248,7 @@
                             mimeType = 'text/csv;charset=utf-8;';
                             logger.log('✅ Sage Invoice CSV 導出');
                         } else {
-                            alert('Sage Invoice導出模塊未Load，請刷新pages面後重試');
+                            alert('Sage invoice export module not loaded. Please refresh and try again.');
                             return;
                         }
                         break;
@@ -5261,7 +5261,7 @@
                             mimeType = 'text/csv;charset=utf-8;';
                             logger.log('✅ Zoho Books Invoice CSV 導出');
                         } else {
-                            alert('Zoho Books Invoice導出模塊未Load，請刷新pages面後重試');
+                            alert('Zoho Books invoice export module not loaded. Please refresh and try again.');
                             return;
                         }
                         break;
@@ -5280,7 +5280,7 @@
                                     data.vendorName || data.vendor || data.supplier || '',
                                     parseFloat(data.totalAmount || data.total || 0).toFixed(2),
                                     parseFloat(data.taxAmount || data.tax || 0).toFixed(2),
-                                    data.status || data.paymentStatus || '未付款'
+                                    data.status || data.paymentStatus || 'Unpaid'
                                 ]);
                             });
                             
@@ -5294,7 +5294,7 @@
                             return;
                         } catch (error) {
                             console.error('❌ Invoice Excel 導出Failed:', error);
-                            alert('Excel 導出Failed，請重試');
+                            alert('Excel export failed. Please try again.');
                             return;
                         }
                     
@@ -5317,14 +5317,14 @@
                                 const supplierEmail = data.vendorEmail || data.email || '';
                                 const totalAmount = parseFloat(data.totalAmount || data.total || 0);
                                 const tax = parseFloat(data.taxAmount || data.tax || 0);
-                                const status = data.status || '未付款';
+                                const status = data.status || 'Unpaid';
                                 
                                 const items = data.items || data.lineItems || [];
                                 
                                 if (items.length === 0) {
                                     excelData.push([
                                         invoiceNumber, invoiceDate, supplierName, supplierPhone, supplierEmail,
-                                        '', '總計', 1, '', totalAmount,
+                                        '', 'Total', 1, '', totalAmount,
                                         totalAmount, totalAmount, tax, status
                                     ]);
                                 } else {
@@ -5332,7 +5332,7 @@
                                         const itemCode = item.code || item.itemCode || '';
                                         const itemDescription = item.description || item.itemName || '';
                                         const quantity = parseFloat(item.quantity || 1);
-                                        const unit = item.unit || '件';
+                                        const unit = item.unit || 'pcs';
                                         const unitPrice = parseFloat(item.unitPrice || item.price || 0);
                                         const amount = parseFloat(item.amount || (quantity * unitPrice));
                                         
@@ -5359,7 +5359,7 @@
                             return;
                         } catch (error) {
                             console.error('❌ Invoice Excel 導出Failed:', error);
-                            alert('Excel 導出Failed，請重試');
+                            alert('Excel export failed. Please try again.');
                             return;
                         }
                     
@@ -5422,18 +5422,18 @@
                             
                             // ✅ 显示导出成功消息
                             if (exportedCount > 0) {
-                                alert(`✅ 導出成功！\n已Download ${exportedCount} 個 QBO File`);
+                                alert(`✅ Export successful!\n${exportedCount} QBO file(s) downloaded.`);
                             } else {
-                                alert('沒有可導出的Documents');
+                                alert('No documents available for export.');
                             }
-                            return; // 直接Back，不执行后面的通用下载代码
+                            return; // Return directly, skip generic download code below
                         } catch (error) {
                             console.error('❌ QBO 导出失败:', error);
-                            alert('QBO 导出失败，请重试');
+                            alert('QBO export failed. Please try again.');
                             return;
                         }
                     default:
-                        alert('不支持的導出格式');
+                        alert('Unsupported export format.');
                         return;
                 }
                 
@@ -5451,7 +5451,7 @@
                 
             } catch (error) {
                 console.error('❌ 導出Failed:', error);
-                alert('導出Failed: ' + error.message);
+                alert('Export failed: ' + error.message);
             }
         };
         
@@ -5461,24 +5461,24 @@
             const headers = [
                 'File Name',
                 'DocumentsType',
-                'Invoice號碼',
+                'Invoice Number',
                 'Date',
                 'Supplier / Source / Bank',
-                '供應商地址',
-                '供應商電話',
-                '供應商電郵',
-                '客戶名稱',
-                '客戶地址',
-                'Projects明細',
-                '小計',
-                '稅額',
-                '稅率',
-                '總Amount',
-                '幣別',
-                '付款條款',
-                '付款方式',
-                '銀行賬號',
-                '備註',
+                'Supplier Address',
+                'Supplier Phone',
+                'Supplier Email',
+                'Customer Name',
+                'Customer Address',
+                'Project Details',
+                'Subtotal',
+                'Tax Amount',
+                'Tax Rate',
+                'Total Amount',
+                'Currency',
+                'Payment Terms',
+                'Payment Method',
+                'Bank Account',
+                'Notes',
                 'Status',
                 'UploadDate'
             ];
@@ -5556,7 +5556,7 @@
                 let memo = data.notes || data.memo | doc.fileName || '';
                 if (data.items && Array.isArray(data.items) && data.items.length > 0) {
                     const itemsSummary = data.items.map(item => item.description | item.name).join(', ');
-                    memo = itemsSummary.substring(0, 100); // 限制長度
+                    memo = itemsSummary.substring(0, 100); // Limit length
                 }
                 
                 const transactionType = data.documentType === 'invoice' ? 'BILL' : 'GENERAL JOURNAL';
@@ -5645,7 +5645,7 @@
                     dtposted = new Date(dateStr).toISOString().replace(/[-:]/g, '').split('.')[0];
                 }
                 
-                const trnamt = -(parseFloat(data.totalAmount || data.total || data.amount | '0.00')); // 負數表示支出
+                const trnamt = -(parseFloat(data.totalAmount || data.total || data.amount | '0.00')); // Negative number indicates expense
                 const name = data.vendor || data.supplier || data.merchantName || data.source | 'Unknown Vendor';
                 const invoiceNumber = data.invoiceNumber || data.receiptNumber || data.documentNumber || '';
                 
@@ -5665,9 +5665,9 @@
                 // 確定交易Type
                 let trntype = 'OTHER';
                 if (data.documentType === 'invoice') {
-                    trntype = 'DEBIT'; // Invoice通常是支出
+                    trntype = 'DEBIT'; // Invoices are typically expenses
                 } else if (data.documentType === 'receipt') {
-                    trntype = 'POS'; // Receipt可能是 POS 交易
+                    trntype = 'POS'; // Receipts may be POS transactions
                 }
                 
                 qbo += '<STMTTRN>\n';
@@ -5713,8 +5713,8 @@
             // 檢查 email 驗證Status（顯示提示但不阻止pages面）
             if (window.checkEmailVerification) {
                 await checkEmailVerification({
-                    showNotice: true,  // 顯示提示橫幅
-                    blockPage: false   // 不阻止pages面使用
+                    showNotice: true,  // Show notice banner
+                    blockPage: false   // Don't block page usage
                 });
             }
         })();
@@ -5738,7 +5738,7 @@
                     row.style.display = '';
                 }
                 logger.log(`✅ 顯示所有 ${rows.length} 個Documents`);
-                updateDocumentTotal(); // 更新總計
+                updateDocumentTotal(); // Update total
                 return;
             }
             
@@ -5774,7 +5774,7 @@
             }
             
             logger.log(`✅ 顯示 ${visibleCount} 個Documents（Search: "${term}"）`);
-            updateDocumentTotal(); // 更新總計
+            updateDocumentTotal(); // Update total
         }
         
         // 暴露到全局供Search框使用
@@ -5851,7 +5851,7 @@
                     Cancel
                 </button>
 <button onclick="createNewProject()" style="background: #3b82f6; border: none; color: white; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500;">
-                    創建
+                    Create
                 </button>
 </div>
 </div>
@@ -5886,7 +5886,7 @@
                 overlay.style.opacity = '0';
                 setTimeout(() => {
                     overlay.style.display = 'none';
-                }, 300); // 等待動畫完成（與 CSS transition 一致）
+                }, 300); // Wait for animation to complete (match CSS transition)
                 document.body.style.overflow = 'auto';
                 logger.log('✅ 側邊欄已關閉');
             }
@@ -5959,7 +5959,7 @@
         
         // Flatpickr 配置（繁體中文）
         const flatpickrConfig = {
-            locale: 'zh_tw',  // 繁體中文
+            locale: 'en',  // English
             dateFormat: 'Y-m-d',
             allowInput: true,
             disableMobile: false,
@@ -5981,7 +5981,7 @@
         // ==================== 分pagesFeatures初始化 ====================
         // 初始化分pages參數
         window.currentPage = 1;
-        window.rowsPerPage = 10;  // 默認每pages10行
+        window.rowsPerPage = 10;  // Default 10 rows per page
         
         // 監聽 Rows per page 下拉選單
         const rowsPerPageSelect = document.querySelector('select[style*="padding: 0.25rem 0.5rem"]');
@@ -5992,7 +5992,7 @@
             // 監聽變化
             rowsPerPageSelect.addEventListener('change', function(e) {
                 window.rowsPerPage = parseInt(e.target.value);
-                window.currentPage = 1;  // 重置到第一pages
+                window.currentPage = 1;  // Reset to first page
                 logger.log('📄 每pages行數改變:', window.rowsPerPage);
                 
                 // 重新渲染Documents列表
@@ -6178,7 +6178,7 @@
                                 console.log('🔍 嘗試查找所有 file input:', document.querySelectorAll('input[type="file"]'));
                             }
                         }
-                    }, 3000); // 等待3秒讓pages面完全初始化
+                    }, 3000); // Wait 3 seconds for full page initialization
                     
                 } else {
                     console.log('⏭️ IndexedDB 中沒有文件');

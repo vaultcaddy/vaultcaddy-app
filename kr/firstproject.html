@@ -2,16 +2,16 @@
 
 <html lang="ko">
 <head>
-<!-- 资源预连接 - 性能优化 -->
+<!-- 리소스 프리커넥트 - 성능 최적화 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://cdnjs.cloudflare.com" rel="preconnect"/>
 <link href="https://www.gstatic.com" rel="dns-prefetch"/>
 <link href="https://www.googletagmanager.com" rel="dns-prefetch"/>
 <meta charset="utf-8"/><link crossorigin="" href="https://www.gstatic.com" rel="preconnect"/>
-<!-- 性能优化：关键CSS内联 -->
+<!-- 성능 최적화: 핵심 CSS 인라인 -->
 <style>
-        /* 关键CSS - 首屏渲染必需 */
+        /* 핵심 CSS - 초기 렌더링 필수 */
         *{margin:0;padding:0;box-sizing:border-box}
         body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;line-height:1.6;color:#1f2937}
         .vaultcaddy-navbar{position:fixed;top:0;width:100%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.1);z-index:1000}
@@ -19,7 +19,7 @@
         .container{max-width:1200px;margin:0 auto;padding:0 1rem}
         .loading{opacity:0.5}
     </style>
-<!-- 🔒 페이지面保護：立即隱藏內容，等待 Auth 檢查 -->
+<!-- 🔒 페이지 보호: 콘텐츠 즉시 숨김, Auth 확인 대기 -->
 <style>
         body.auth-checking {
             visibility: hidden !important;
@@ -44,7 +44,7 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        /* ✅ 樂觀更新閃爍動畫 */
+        /* ✅ 낙관적 업데이트 시머 애니메이션 */
         @keyframes shimmer {
             0% { background-position: 200% 0; }
             100% { background-position: -200% 0; }
@@ -60,80 +60,80 @@
             });
         }
         
-        // ✅ 超時保護：10秒後強制顯示페이지面（防止卡住）
+        // ✅ 타임아웃 보호: 10초 후 페이지 강제 표시 (멈춤 방지)
         setTimeout(function() {
             if (document.body.classList.contains('auth-checking')) {
-                logger.warn('⚠️ Auth 初始化超時（10秒），強制顯示페이지面');
+                logger.warn('⚠️ Auth 초기화 타임아웃(10초), 페이지 강제 표시');
                 document.body.classList.remove('auth-checking');
                 document.body.classList.add('auth-ready');
                 
-                // 如果沒有로그인，重定向到홈
+                // 로그인하지 않은 경우 홈으로 리다이렉트
                 if (!window.simpleAuth | !window.simpleAuth.currentUser) {
-                    logger.log('❌ 超時且未로그인，重定向到홈');
+                    logger.log('❌ 타임아웃 및 미로그인, 홈으로 리다이렉트');
                     setTimeout(function() {
-                        window.location.href = 'index.html';  // 保持在当前语言版本
+                        window.location.href = 'index.html';  // 현재 언어 버전 유지
                     }, 1000);
                 }
             }
         }, 10000);
     </script>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<!-- 🔇 安全隐藏控制台日志（不删除代码） -->
+<!-- 🔇 콘솔 로그 안전하게 숨김 (코드 삭제 없음) -->
 <script defer="" src="../disable-console-safe.js"></script>
 <title>대시보드 - VaultCaddy</title>
 <link href="styles.css" rel="stylesheet"/>
-<link href="dashboard.css" rel="stylesheet"/>
-<link href="pages.css" rel="stylesheet"/>
+<link href="../dashboard.css" rel="stylesheet"/>
+<link href="../pages.css" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
     
-    <!-- 优化后的公共组件 (2026-01-23) -->
-    <link rel="stylesheet" href="user-menu-styles.css">
+    <!-- 최적화된 공유 컴포넌트 (2026-01-23) -->
+    <link rel="stylesheet" href="../user-menu-styles.css">
     <script defer src="../logger.js"></script>
     <script defer src="../init-manager.js"></script>
     <script defer src="../user-menu-manager.js"></script>
     <script defer src="../mobile-menu-manager.js"></script>
-<!-- ✅ 核心配置 -->
+<!-- ✅ 핵심 설정 -->
 <script defer="" src="../config.js"></script>
 <script defer="" src="../translations.js?v=20251102"></script>
-<!-- ✅ UI 組件 -->
+<!-- ✅ UI 컴포넌트 -->
 <script defer="" src="../navbar-component.js?v=20260125-user-menu-v2"></script>
 <script defer="" src="../sidebar-component.js?v=20251107-rebuild"></script>
-<!-- ✅ 은행 명세서導出模塊 -->
+<!-- ✅ 은행 명세서 내보내기 모듈 -->
 <script defer="" src="../bank-statement-export.js?v=20260107-v3-sage-fix"></script>
 <script defer="" src="../invoice-export.js?v=20260107"></script>
-<!-- ✅ Firebase SDK（CDN 版本）-->
+<!-- ✅ Firebase SDK (CDN 버전) -->
 <script defer="" src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script defer="" src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script defer="" src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 <script defer="" src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
 <script defer="" src="https://www.gstatic.com/firebasejs/10.7.0/firebase-functions-compat.js"></script>
-<!-- SheetJS 库 (用于 Excel 导出) -->
+<!-- SheetJS 라이브러리 (Excel 내보내기용) -->
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-<!-- ✅ Firebase 初始化和身份驗證 -->
+<!-- ✅ Firebase 초기화 및 인증 -->
 <script defer="" src="../firebase-config.js?v=20251106-final-fix"></script>
 <script defer="" src="../simple-auth.js?v=20251105-force-init"></script>
 <script defer="" src="../user-profile-manager.js?v=20251120"></script>
 <script defer="" src="../simple-data-manager.js?v=20251106-final-fix"></script>
-<!-- ✅ Email 驗證檢查 -->
+<!-- ✅ 이메일 인증 확인 -->
 <script defer="" src="../email-verification-check.js"></script>
-<!-- 導航欄交互기능 -->
+<!-- 네비바 상호작용 기능 -->
 <script defer="" src="../navbar-interactions.js?v=20251108"></script>
 <!-- ✅ AI 처리器（Qwen-VL Max）-->
 <script defer="" src="../qwen-vl-max-processor.js?v=20260127-parallel-v2"></script>
 <script defer="" src="../pdf-to-image-converter.js?v=20260127-blank-detect"></script>
-<!-- ✅ 문서처리和導出 -->
+<!-- ✅ 문서 처리 및 내보내기 -->
 <script defer="" src="../export-manager.js?v=20251106-final-fix"></script>
 <script defer="" src="../batch-upload-processor.js?v=20251106-final-fix"></script>
-<!-- ✅ firstproject 增強기능 -->
+<!-- ✅ firstproject 향상 기능 -->
 <script defer="" src="../firstproject-enhancements.js?v=20251110"></script>
-<!-- ✅ Credits 管理器（修复 Firebase 初始化时序问题）-->
+<!-- ✅ Credits 관리 (Firebase 초기화 타이밍 수정) -->
 <script defer="" src="../credits-manager.js?v=20251217-v3-firebase-ready"></script>
-<!-- ✅ Flatpickr 날짜選擇器（繁體中文版）-->
+<!-- ✅ Flatpickr 날짜 선택기 -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/themes/light.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/zh-tw.js"></script>
-<!-- ✅ Flatpickr 移動端優化樣式 -->
+<!-- ✅ Flatpickr 모바일 최적화 스타일 -->
 <style>
     /* 移動端날짜選擇器優化 */
     @media (max-width: 768px) {
@@ -210,7 +210,7 @@
             appearance: none !important;
         }
         
-        /* 날짜範圍필터區域優化 */
+        /* 날짜 범위필터區域優化 */
         .date-filter-content {
             flex-direction: column !important;
             gap: 1rem !important;
@@ -275,7 +275,7 @@
             display: flex;
             min-height: 100vh;
             background: #ffffff;
-            padding-top: 25px; /* 🔥 電腦版：上移 15pt (60px - 15pt ≈ 45px) */
+            padding-top: 25px; /* 🔥 PC: 15pt 위로 이동 (60px - 15pt ≈ 45px) */
         }
         
         .sidebar {
@@ -414,7 +414,7 @@
         
         /* 🔥 桌面版：header 距離和容器 padding */
         #project-header {
-            margin-top: 15pt; /* 🔥 從 30pt 減少到 15pt */
+            margin-top: 15pt; /* 🔥 30pt에서 15pt로 축소 */
         }
         
         #team-project-view {
@@ -424,17 +424,17 @@
         /* 🔥 手機版：減少內容距離（最高優先級）*/
         @media (max-width: 768px) {
             .dashboard-container {
-                padding-top: 60px !important; /* 只需要導航欄高度 */
+                padding-top: 60px !important; /* 네비바 높이만 필요 */
             }
             .main-content {
                 margin-left: 0 !important;
                 padding-top: 0 !important;
             }
             #team-project-view {
-                padding: 0 0.75rem !important; /* 最小 padding */
+                padding: 0 0.75rem !important; /* 최소 패딩 */
             }
             #project-header {
-                margin-top: 0.5rem !important; /* 只有 0.5rem 的距離 */
+                margin-top: 0.5rem !important; /* 0.5rem 간격만 */
                 margin-bottom: 0.5rem !important;
                 padding-top: 0 !important;
             }
@@ -698,7 +698,7 @@
         
         .documents-table {
             width: 100%;
-            min-width: 1200px; /* 確保表格最小寬度，觸發水平滾動 */
+            min-width: 1200px; /* 테이블 최소 너비 확보, 가로 스크롤 활성화 */
             border-collapse: collapse;
             background: #ffffff;
             border: 1px solid #e2e8f0;
@@ -714,7 +714,7 @@
             text-align: left;
             font-weight: 600;
             border-bottom: 1px solid #e2e8f0;
-            white-space: nowrap; /* 防止標題文字換行 */
+            white-space: nowrap; /* 헤더 텍스트 줄바꿈 방지 */
             font-size: 14px;
         }
         
@@ -736,7 +736,7 @@
             padding: 1rem;
             color: #374151;
             vertical-align: middle;
-            white-space: nowrap; /* 防止單元格內容換行 */
+            white-space: nowrap; /* 셀 내용 줄바꿈 방지 */
             font-size: 14px;
         }
         
@@ -1432,9 +1432,9 @@
         width: 90% !important;
         max-width: 400px !important;
         background-color: #ffffff !important;
-        box-shadow: none !important; /* 🔥 移除陰影 */
+        box-shadow: none !important; /* 🔥 그림자 제거 */
         border-radius: 12px !important;
-        border: none !important; /* 🔥 移除邊框 */
+        border: none !important; /* 🔥 테두리 제거 */
         padding: 1.5rem !important;
         overflow: hidden !important;
     }
@@ -1496,11 +1496,11 @@
             
             /* 手機版顯示 logo，隱藏文字 */
             .desktop-logo {
-                display: flex !important; /* ✅ 顯示 V 圖標 */
+                display: flex !important; /* ✅ V 아이콘 표시 */
             }
             
             .desktop-logo-text {
-                display: none !important; /* ✅ 隱藏 "VaultCaddy" 文字 */
+                display: none !important; /* ✅ "VaultCaddy" 텍스트 숨김 */
             }
         
         /* 手機版 UI 優化樣式 */
@@ -1588,7 +1588,7 @@
     /* 隱藏部分列（手機版）- 只針對 dashboard 的 CREATED 列，不影響 firstproject */
     .dashboard-table th:nth-child(3),
     .dashboard-table td:nth-child(3) {
-        display: none !important; /* 隱藏 CREATED 列 */
+        display: none !important; /* CREATED 열 숨김 */
     }
     
     /* ==================== First Project 專用（僅手機版） ==================== */
@@ -1603,7 +1603,7 @@
     #export-btn-desktop,
     #export-dropdown-desktop {
         pointer-events: auto !important;
-        touch-action: manipulation !important; /* 防止雙擊縮放 */
+        touch-action: manipulation !important; /* 더블탭 줌 방지 */
     }
 
     /* 문서유형選擇器 */
@@ -1691,7 +1691,7 @@
     }
     
     .table-container table {
-        min-width: 800px !important; /* 確保表格寬度觸發滾動 */
+        min-width: 800px !important; /* 테이블 너비로 스크롤 활성화 */
     }
     
     /* 隱藏部分列 */
@@ -1699,7 +1699,7 @@
     .document-table td:nth-child(4),
     .document-table th:nth-child(5),
     .document-table td:nth-child(5) {
-        display: none !important; /* 隱藏금액和날짜列 */
+        display: none !important; /* 금액과 날짜 열 숨김 */
     }
     
     /* ==================== Account 專用 ==================== */
@@ -1748,7 +1748,7 @@
     
     .transaction-table th:nth-child(2),
     .transaction-table td:nth-child(2) {
-        display: none !important; /* 隱藏描述列 */
+        display: none !important; /* 설명 열 숨김 */
     }
     
     /* ==================== 模態框 ==================== */
@@ -1854,11 +1854,11 @@
 <link href="../favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="favicon.png" rel="alternate icon" type="image/png"/>
 <link href="mobile-responsive.css" rel="stylesheet"/>
-<!-- 🔥 手機版強制樣式（最高優先級）-->
+<!-- 🔥 모바일 강제 스타일 (최고 우선순위) -->
 <style id="mobile-force-styles">
         @media screen and (max-width: 768px) {
             html body .dashboard-container {
-                padding-top: 20px !important; /* 🔥 手機導航欄高度 56px - 15pt 上移 */
+                padding-top: 20px !important; /* 🔥 모바일 네비바 높이 56px - 15pt 위로 이동 */
             }
             html body .main-content {
                 margin-left: 0 !important;
@@ -1870,7 +1870,7 @@
                 padding-top: 0 !important;
             }
             html body #project-header {
-                margin-top: 0 !important; /* 🔥 完全無間距 */
+                margin-top: 0 !important; /* 🔥 간격 없음 */
                 margin-bottom: 0.5rem !important;
                 padding: 0 !important;
             }
@@ -1884,7 +1884,7 @@
       gtag('js', new Date());
       gtag('config', 'G-LWPEKNC7RQ');
     </script>
-<!-- 资源提示 - 优化加载速度 -->
+<!-- 리소스 힌트 - 로딩 속도 최적화 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://www.googletagmanager.com" rel="dns-prefetch"/>
@@ -1895,19 +1895,19 @@
 <script src="/backend-api-client.js"></script>
 </head>
 <body class="auth-checking">
-<!-- 🔒 Auth 加載動畫 -->
+<!-- 🔒 Auth 로딩 애니메이션 -->
 <div class="auth-loading">
 <div style="text-align: center;">
 <div style="width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
 <p style="color: #6b7280; font-size: 0.875rem;">인증 중...</p>
 </div>
 </div>
-<!-- ✅ 統一導航欄容器 -->
-<!-- 統一靜態導航欄 -->
-<!-- ✅ 統一靜態導航欄（與 firstproject.html 完全一致）-->
+<!-- ✅ 통합 네비바 컨테이너 -->
+<!-- 통합 정적 네비바 -->
+<!-- ✅ 통합 정적 네비바 (firstproject.html과 완전 동일) -->
 <nav class="vaultcaddy-navbar" id="main-navbar" style="position: fixed; top: 0; left: 0; right: 0; height: 60px; background: #ffffff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; z-index: 1000; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);">
 <div style="display: flex; align-items: center; gap: 0.5rem;">
-<!-- 漢堡菜單按鈕（僅手機顯示）-->
+<!-- 햄버거 메뉴 버튼 (모바일 전용) -->
 <button id="mobile-menu-btn" onclick="openMobileSidebar()" style="display: none; background: none; border: none; cursor: pointer; padding: 0.5rem; color: #1f2937; font-size: 1.5rem;">
 <i class="fas fa-bars"></i>
 </button>
@@ -1933,7 +1933,7 @@
 </div>
 </div>
 </nav>
-<!-- 手機側邊欄菜單 -->
+<!-- 모바일 사이드바 메뉴 -->
 <div id="mobile-sidebar" style="position: fixed; top: 0; left: -100%; width: 280px; height: 100vh; background: white; z-index: 2000; transition: left 0.3s ease; box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto;">
 <div style="padding: 1.5rem;">
 <!-- 메뉴 항목 -->
@@ -1967,11 +1967,11 @@
 </div>
 </div>
 </div>
-<!-- 側邊欄遮罩 -->
+<!-- 사이드바 오버레이 -->
 <div id="mobile-sidebar-overlay" onclick="closeMobileSidebar()" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; display: none;"></div>
-<!-- ✅ 新版用戶菜單（2026-01-25 優化）-->
+<!-- ✅ 새 사용자 메뉴 (2026-01-25 최적화) -->
 <div id="user-dropdown" style="display: none; position: fixed; top: 70px; right: 2rem; background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); min-width: 280px; z-index: 2000; border: 1px solid #e5e7eb; overflow: hidden;">
-    <!-- 用戶信息頭部（漸變背景）-->
+    <!-- 사용자 정보 헤더 (그라데이션 배경) -->
     <div style="padding: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
         <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
             <div id="dropdown-avatar" style="width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: 600; border: 2px solid rgba(255,255,255,0.3);">U</div>
@@ -1991,7 +1991,7 @@
             </div>
         </div>
     </div>
-    <!-- 菜單프로젝트 -->
+    <!-- 메뉴 항목 -->
     <div style="padding: 0.5rem;">
         <a href="account.html" onmouseout="this.style.backgroundColor='transparent'; this.style.transform='translateX(0)'" onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.transform='translateX(4px)'" style="display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: all 0.2s ease; font-weight: 500;">
             <div style="display: flex; align-items: center; gap: 0.75rem;">
@@ -2012,7 +2012,7 @@
             <span style="font-size: 0.75rem; color: #9ca3af;">⌘B</span>
         </a>
     </div>
-    <!-- 로그아웃按鈕 -->
+    <!-- 로그아웃 버튼 -->
     <div style="padding: 0.5rem; border-top: 1px solid #e5e7eb;">
         <button onclick="handleLogout()" onmouseout="this.style.backgroundColor='transparent'; this.style.transform='translateX(0)'" onmouseover="this.style.backgroundColor='#fef2f2'; this.style.transform='translateX(4px)'" style="width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1rem; color: #dc2626; background: transparent; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; font-weight: 500; text-align: left;">
             <div style="display: flex; align-items: center; gap: 0.75rem;">
@@ -2025,7 +2025,7 @@
         </button>
     </div>
 </div>
-<!-- ✅ index.html 動態更新用戶상태 -->
+<!-- ✅ index.html 사용자 상태 동적 업데이트 -->
 <script>
         document.addEventListener('DOMContentLoaded', function() {
             logger.log('✅ index.html 初始化');
@@ -2139,7 +2139,7 @@
                                 left: scrollAmount,
                                 behavior: 'smooth'
                             });
-                        }, 4000); // 每4秒切換
+                        }, 4000); // 4초마다 전환
                     }
                     
                     // 學習中心輪播
@@ -2155,7 +2155,7 @@
                                 left: scrollAmount,
                                 behavior: 'smooth'
                             });
-                        }, 5000); // 每5秒切換
+                        }, 5000); // 5초마다 전환
                     }
                 }
             
@@ -2244,17 +2244,17 @@
                         }
                         
                         if (!window.simpleAuth) {
-                            throw new Error('simpleAuth 加載실패');
+                            throw new Error('simpleAuth 로드 실패');
                         }
                     }
                     
                     console.log('✅ 開始로그아웃...');
                     await window.simpleAuth.logout();
                     console.log('✅ 로그아웃成功，跳轉到홈');
-                    window.location.href = 'index.html';  // 保持在当前语言版本
+                    window.location.href = 'index.html';  // 현재 언어 버전 유지
                 } catch (error) {
                     console.error('❌ 로그아웃실패:', error);
-                    alert('로그아웃실패：' + error.message + '\n\n請刷新페이지面後重試');
+                    alert('로그아웃 실패: ' + error.message + '\n\n페이지를 새로고침한 후 다시 시도해 주세요.');
                 }
             };
             
@@ -2352,17 +2352,17 @@
             window.toggleDropdown = toggleDropdown;
         });
     </script>
-<!-- 主要內容區域 -->
+<!-- 메인 콘텐츠 영역 -->
 <main style="padding-top: 10px;">
 <!-- AI 업로드模態框 - 放在 body 最前面確保立即로드 -->
 <div class="ai-upload-modal" id="aiUploadModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 10000; align-items: center; justify-content: center;">
 <div class="ai-upload-overlay" onclick="closeAIUploadModal()" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px);"></div>
 <div class="ai-upload-container" style="position: relative; background: white; border-radius: 16px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2); width: 90%; max-width: 800px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column;">
-<!-- 關閉按鈕（右上角） -->
+<!-- 닫기 버튼 (우측 상단) -->
 <button class="ai-close-btn" onclick="closeAIUploadModal()" onmouseout="this.style.background='#f3f4f6'; this.style.color='#6b7280'" onmouseover="this.style.background='#e5e7eb'; this.style.color='#1f2937'" style="position: absolute; top: 1rem; right: 1rem; background: #f3f4f6; border: none; color: #6b7280; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
 <i class="fas fa-times"></i>
 </button>
-<!-- 업로드區域 -->
+<!-- 업로드 영역 -->
 <div class="ai-upload-content" style="padding: 2rem; overflow-y: auto; flex: 1;">
 <!-- 문서유형選擇器 -->
 <div class="document-type-selector" style="margin-bottom: 2rem;">
@@ -2388,7 +2388,7 @@
 </div>
 </div>
 </div>
-<!-- 업로드區域 -->
+<!-- 업로드 영역 -->
 <div class="ai-upload-area" id="aiUploadArea" style="border: 3px dashed #d1d5db; border-radius: 12px; padding: 3rem 2rem; text-align: center; cursor: pointer; transition: all 0.3s ease; background: #fafafa;">
 <div class="ai-upload-icon" style="font-size: 4rem; margin-bottom: 1rem;">📄</div>
 <div class="ai-upload-text" style="font-size: 1.2rem; color: #374151; margin-bottom: 0.5rem; font-weight: 600;">파일을 여기로 드래그하거나 클릭하여 업로드</div>
@@ -2499,8 +2499,8 @@
         width: 90% !important;
         max-width: 400px !important;
         background-color: #ffffff !important;
-        box-shadow: none !important; /* 🔥 無陰影 */
-        border: none !important; /* 🔥 無邊框 */
+        box-shadow: none !important; /* 🔥 그림자 없음 */
+        border: none !important; /* 🔥 테두리 없음 */
         border-radius: 12px !important;
         padding: 1.5rem !important;
         overflow: hidden !important;
@@ -2565,7 +2565,7 @@
                         }
                         
                         .date-filter-inputs span {
-                            display: none !important; /* 隱藏「에서」字 */
+                            display: none !important; /* "에서" 숨김 */
                         }
                         
                         .date-filter-clear-btn {
@@ -2603,7 +2603,7 @@
 <div class="date-filter-group" style="flex: 1; min-width: 200px;">
 <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
 <i class="fas fa-calendar-alt" style="margin-right: 0.5rem; color: #8b5cf6;"></i>
-                                날짜範圍
+                                날짜 범위
                             </label>
 <div class="date-filter-inputs" style="display: flex; gap: 0.5rem; align-items: center;">
 <input id="date-from" placeholder="시작 날짜" style="flex: 1; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem;" type="date"/>
@@ -2630,7 +2630,7 @@
                                 필터 지우기
                             </button>
 </div>
-</div> <!-- 關閉 date-filter-content -->
+</div> <!-- date-filter-content 닫기 -->
 </div>
 <!-- 문서表格 -->
 <div class="table-container" style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; overflow-x: auto;">
@@ -2700,7 +2700,7 @@
 <div style="display: flex; justify-content: space-between; align-items: center; color: white;">
 <div style="font-size: 1.125rem; font-weight: 700;">
 <i class="fas fa-receipt" style="margin-right: 0.5rem;"></i>
-                            共 <span id="total-invoice-count">0</span> 張송장
+                            총 <span id="total-invoice-count">0</span> 개 송장
                         </div>
 <div style="font-size: 1.5rem; font-weight: 900;">
                             $<span id="total-invoice-amount">0</span>
@@ -2759,7 +2759,7 @@
             
             if (!e.detail.user) {
                 logger.log('❌ 用戶未로그인，重定向到홈');
-                window.location.href = 'index.html';  // 保持在当前语言版本
+                window.location.href = 'index.html';  // 현재 언어 버전 유지
                 return;
             }
             
@@ -2788,7 +2788,7 @@
                 if (!currentProjectId) {
                     console.error('❌ 프로젝트가 없습니다 ID');
                     // 跳轉回홈
-                    window.location.href = 'index.html';  // 保持在当前语言版本
+                    window.location.href = 'index.html';  // 현재 언어 버전 유지
                     return;
                 }
                 
@@ -2806,13 +2806,13 @@
                     console.error('❌ [DEBUG] 无法找到项目:', currentProjectId);
                     console.error('❌ [DEBUG] 所有可用项目:', projects);
                     alert('이 프로젝트가 존재하지 않거나 삭제되었습니다. 홈페이지로 돌아갑니다.');
-                    window.location.href = 'index.html';  // 保持在当前语言版本
+                    window.location.href = 'index.html';  // 현재 언어 버전 유지
                 }
                 
             } catch (error) {
                 console.error('❌ 로드프로젝트실패:', error);
-                alert('로드프로젝트실패，將돌아가기홈');
-                window.location.href = 'index.html';  // 保持在当前语言版本
+                alert('프로젝트 로드 실패. 홈으로 돌아갑니다.');
+                window.location.href = 'index.html';  // 현재 언어 버전 유지
             }
         }
         
@@ -3105,7 +3105,7 @@
                             'bank_statement': { icon: 'fa-university', color: '#10b981', label: '은행 명세서' },
                             'invoice': { icon: 'fa-file-invoice', color: '#3b82f6', label: '송장' },
                             'receipt': { icon: 'fa-receipt', color: '#8b5cf6', label: '영수증' },
-                            'general': { icon: 'fa-file-alt', color: '#6b7280', label: '一般' }
+                            'general': { icon: 'fa-file-alt', color: '#6b7280', label: '일반' }
                         };
                         return types[type] || types['general'];
                     };
@@ -3129,20 +3129,20 @@
                         const closingBalance = data.closingBalance || data.closing_balance || data.balance || data.endBalance || data.finalBalance || 0;
                         
                         // ✅ 顯示格式：Start: $X,XXX.XX | End: $Y,YYY.YY
-                        // 🔧 如果餘額為0，顯示"처리中..."而不是$0.00
+                        // 🔧 如果餘額為0，顯示"처리 중..."而不是$0.00
                         if (openingBalance === 0 && closingBalance === 0) {
                             amountDisplay = `<span style="color: #f59e0b; font-weight: 600;">⏳ 처리 중...</span>`;
                         } else {
                             amountDisplay = `Start: $${parseFloat(openingBalance).toLocaleString('zh-TW', {minimumFractionDigits: 2, maximumFractionDigits: 2})}<br>End: $${parseFloat(closingBalance).toLocaleString('zh-TW', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
                         }
                         
-                        // ✅ 은행 명세서：顯示對帳單期間（날짜範圍）
+                        // ✅ 은행 명세서：顯示對帳單期間（날짜 범위）
                         let statementPeriod = data.statementPeriod || data.statement_period || '';
                         
-                        // 🔄 格式化날짜：只替換날짜部分的連字符，保留날짜範圍分隔符
+                        // 🔄 格式化날짜：只替換날짜部分的連字符，保留날짜 범위分隔符
                         // 例如：2021-01-14 - 2021-01-31 → 2021/01/14 - 2021/01/31
                         if (statementPeriod) {
-                            // 先分割날짜範圍（以 ' - ' 為分隔符）
+                            // 先分割날짜 범위（以 ' - ' 為分隔符）
                             const parts = statementPeriod.split(' - ');
                             if (parts.length === 2) {
                                 // 分別替換每個날짜部分的連字符
@@ -3184,7 +3184,7 @@
                             <!-- 상태（移到유형和供應商中間）-->
                             <td style="padding: 1rem;">
                                 <span style="padding: 0.375rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; white-space: nowrap; background: ${isProcessing ? '#fef3c7' : isFailed ? '#fee2e2' : '#d1fae5'}; color: ${isProcessing ? '#92400e' : isFailed ? '#991b1b' : '#065f46'};">
-                                    ${isProcessing ? '처리中' : isFailed ? '실패' : '완료'}
+                                    ${isProcessing ? '처리 중' : isFailed ? '실패' : '완료'}
                                 </span>
                             </td>
                             
@@ -3296,7 +3296,7 @@
                 <td style="padding: 1rem;">
                     <span style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.75rem; background: #fef3c7; color: #92400e; border-radius: 20px; font-size: 0.8125rem; font-weight: 500;">
                         <span class="loading-spinner" style="width: 12px; height: 12px; border: 2px solid #fbbf24; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></span>
-                        처리中...
+                        처리 중...
                     </span>
                 </td>
                 <td style="padding: 1rem; color: #6b7280;">-</td>
@@ -3335,7 +3335,7 @@
                 // 保存到全局變量
                 allDocuments = documents;
                 window.allDocuments = documents;
-                window.filteredDocuments = [...documents]; // 初始化過濾列表
+                window.filteredDocuments = [...documents]; // 필터 목록 초기화
                 
                 const tbody = document.getElementById('team-project-tbody');
                 
@@ -3370,7 +3370,7 @@
         }
         
         /**
-         * 恢復처리中斷的문서
+         * 恢復처리 중斷的문서
          * 當用戶重新訪問페이지面時，自動繼續처리 pending 상태的문서
          */
         async function resumePendingDocuments(documents) {
@@ -3386,7 +3386,7 @@
                 try {
                     const pages = doc.pages || 1;
                     
-                    // ✅ 檢查문서創建時間，5分鐘內創建的不처리（可能正在 AI 처리中）
+                    // ✅ 檢查문서創建時間，5分鐘內創建的不처리（可能正在 AI 처리 중）
                     let createdTime = 0;
                     if (doc.createdAt) {
                         if (typeof doc.createdAt === 'object' && doc.createdAt.seconds) {
@@ -3397,11 +3397,11 @@
                     }
                     
                     const now = Date.now();
-                    const fiveMinutes = 5 * 60 * 1000; // 5 分鐘
+                    const fiveMinutes = 5 * 60 * 1000; // 5분
                     
                     if (now - createdTime < fiveMinutes) {
                         logger.log(`⏳ 문서 ${doc.fileName} 創建於 ${Math.round((now - createdTime) / 1000)} 秒前，可能처리 중中，跳過`);
-                        continue; // 跳過最近創建的문서
+                        continue; // 최근 생성된 문서 건너뛰기
                     }
                     
                     logger.log(`🔄 恢復처리: ${doc.fileName} (${pages} 페이지)`);
@@ -3412,7 +3412,7 @@
                         
                         await window.simpleDataManager.updateDocument(currentProjectId, doc.id, {
                             status: 'failed',
-                            error: '처리超時，請삭제後重新업로드此문서'
+                            error: '처리 시간 초과. 삭제 후 다시 업로드해 주세요.'
                         });
                         await loadDocuments();
                     } else {
@@ -3563,7 +3563,7 @@
         window.addEventListener('beforeunload', (e) => {
             if (isProcessingFiles && processingCount > 0) {
                 e.preventDefault();
-                e.returnValue = ''; // 必须设置，但浏览器会显示自己的消息
+                e.returnValue = ''; // 설정 필수, 브라우저가 자체 메시지 표시
                 return '';
             }
         });
@@ -3579,17 +3579,17 @@
             if (isProcessingFiles && processingCount > 0) {
                 e.preventDefault();
                 e.stopPropagation();
-                e.stopImmediatePropagation(); // 阻止其他事件监听器
+                e.stopImmediatePropagation(); // 다른 이벤트 리스너 차단
                 
                 // 显示自定义警告（这个会显示我们的文本）
-                alert('文件轉換進行中，請勿離開本페이지。');
+                alert('파일 변환 중입니다. 이 페이지를 떠나지 마세요.');
                 
                 return false;
             }
-        }, true); // ✅ 使用捕获阶段，优先级最高
+        }, true); // ✅ 캡처 단계 사용, 최고 우선순위
         
         window.handleUpload = async function handleUpload(files) {
-            // 1. 先為每個文件創建"처리中"的문서記錄（立即顯示在列表中）
+            // 1. 先為每個文件創建"처리 중"的문서記錄（立即顯示在列表中）
             const docIds = [];
             for (let file of files) {
                 const placeholderDoc = {
@@ -3600,7 +3600,7 @@
                     documentType: selectedDocumentType,
                     status: 'processing',
                     createdAt: new Date().toISOString(),
-                    pages: 0, // 暫時設為0，稍後更新
+                    pages: 0, // 임시로 0 설정, 나중에 업데이트
                     originalFileType: file.type
                 };
                 
@@ -3609,7 +3609,7 @@
                 logger.log(`✅ 문서記錄已創建: ${file.name} (ID: ${docId})`);
             }
             
-            // 立即刷新문서列表，讓用戶看到"처리中"的文件
+            // 立即刷新문서列表，讓用戶看到"처리 중"的文件
             await loadDocuments();
             
             // 2. 計算所有文件的總페이지數
@@ -3705,7 +3705,7 @@
                         // 更新문서상태為실패
                         await window.simpleDataManager.updateDocument(currentProjectId, docId, {
                             status: 'failed',
-                            error: `PDF 轉換실패: ${pdfError.message}`
+                            error: `PDF 변환 실패: ${pdfError.message}`
                         });
                         await loadDocuments();
                         return;
@@ -3775,7 +3775,7 @@
                         logger.log(`📄 將처리所有 ${imageFiles.length} 페이지`);
                     } catch (pdfError) {
                         console.error('❌ PDF 轉換실패:', pdfError);
-                        alert(`PDF 轉換실패: ${pdfError.message}\n\n請확인文件是否有效。`);
+                        alert(`PDF 변환 실패: ${pdfError.message}\n\n파일이 유효한지 확인해 주세요.`);
                         return;
                     }
                 }
@@ -3798,7 +3798,7 @@
                     createdAt: new Date().toISOString(),
                     pages: filesToProcess.length,
                     imageUrl: imageUrls[0],
-                    imageUrls: imageUrls, // ✅ 所有페이지面
+                    imageUrls: imageUrls, // ✅ 모든 페이지
                     downloadURL: imageUrls[0],
                     url: imageUrls[0],
                     originalFileType: file.type,
@@ -3840,7 +3840,7 @@
                 }
                 
                 // ✅ 3. 如果是 PDF，先轉換為圖片（Vision API 不支持 PDF base64 업로드）
-                let filesToProcess = [file]; // 改為數組以支持多페이지
+                let filesToProcess = [file]; // 다중 페이지 지원을 위해 배열로 변경
                 let isPDFConverted = false;
                 
                 if (window.pdfToImageConverter && window.pdfToImageConverter.isPDF(file)) {
@@ -3848,13 +3848,13 @@
                         logger.log('📄 檢測到 PDF 文件，開始轉換為圖片...');
                         const imageFiles = await window.pdfToImageConverter.convertPDFToImages(file);
                         logger.log(`✅ PDF 轉換完成，生成 ${imageFiles.length} 張圖片`);
-                        filesToProcess = imageFiles; // ✅ 使用所有페이지面
+                        filesToProcess = imageFiles; // ✅ 모든 페이지 사용
                         isPDFConverted = true;
                         logger.log(`📄 將처리所有 ${imageFiles.length} 페이지`);
                     } catch (pdfError) {
                         console.error('❌ PDF 轉換실패:', pdfError);
-                        alert(`PDF 轉換실패: ${pdfError.message}\n\n請확인文件是否有效，또는嘗試直接업로드 JPG/PNG 圖片。`);
-                        return; // ⚠️ 這裡돌아가기，Credits 還沒有被扣除
+                        alert(`PDF 변환 실패: ${pdfError.message}\n\n파일이 유효한지 확인하거나, JPG/PNG 이미지를 직접 업로드해 주세요.`);
+                        return; // ⚠️ 여기서 돌아감, Credits 아직 차감되지 않음
                     }
                 }
                 
@@ -3867,20 +3867,20 @@
                 logger.log(`✅ ${imageUrls.length} 個文件已업로드到 Storage`);
                 
                 const docData = {
-                    name: file.name, // 保留原始文件名
+                    name: file.name, // 원본 파일명 유지
                     fileName: file.name,
                     fileSize: file.size,
-                    fileType: filesToProcess[0].type, // 使用第一個文件的유형
+                    fileType: filesToProcess[0].type, // 첫 번째 파일의 유형 사용
                     documentType: selectedDocumentType,
                     status: 'processing',
                     createdAt: new Date().toISOString(),
-                    pages: filesToProcess.length, // 實際페이지數
-                    imageUrl: imageUrls[0], // 第一페이지的 URL（向後兼容）
-                    imageUrls: imageUrls, // ✅ 所有페이지面的 URL 數組
+                    pages: filesToProcess.length, // 실제 페이지 수
+                    imageUrl: imageUrls[0], // 첫 페이지 URL (하위 호환)
+                    imageUrls: imageUrls, // ✅ 모든 페이지 URL 배열
                     downloadURL: imageUrls[0],
                     url: imageUrls[0],
-                    originalFileType: file.type, // 記錄原始文件유형
-                    isPDFConverted: isPDFConverted // 標記是否是 PDF 轉換
+                    originalFileType: file.type, // 원본 파일 유형 기록
+                    isPDFConverted: isPDFConverted // PDF 변환 여부 플래그
                 };
                 
                 // ✅ 5. 樂觀 UI 更新：立即在表格中顯示佔位符
@@ -4015,7 +4015,7 @@
                         const health = await Promise.race([
                             backendClient.healthCheck(),
                             new Promise((_, reject) => 
-                                setTimeout(() => reject(new Error('超時')), 3000)
+                                setTimeout(() => reject(new Error('타임아웃')), 3000)
                             )
                         ]);
                         
@@ -4049,7 +4049,7 @@
                     logger.log('🤖 使用千問AI처리 (Qwen-VL Max):', file.name, `(${pages} 페이지)`);
                     
                     if (!window.QwenVLMaxProcessor) {
-                        throw new Error('AI 처리器未로드');
+                        throw new Error('AI 프로세서가 로드되지 않았습니다');
                     }
                     
                     const processor = new window.QwenVLMaxProcessor();
@@ -4068,7 +4068,7 @@
                     processor: result.processor,
                     model: result.model,
                     usage: result.usage,
-                    extractionMethod: extractionMethod  // 記錄使用的方法
+                    extractionMethod: extractionMethod  // 사용된 추출 방법 기록
                 });
                 
                 logger.log(`✅ 문서완료 (方法: ${extractionMethod})`);
@@ -4082,7 +4082,7 @@
                     try {
                         logger.log(`💰 準備退回 ${pages} Credits（문서 ID: ${docId}）`);
                         await window.creditsManager.refundCredits(pages);
-                        refundedDocuments.add(docId); // 標記已退回
+                        refundedDocuments.add(docId); // 환불 처리 표시
                         logger.log(`✅ 已退回 ${pages} Credits（문서 ID: ${docId}）`);
                         logger.log(`📋 已退回的문서列表:`, Array.from(refundedDocuments));
                     } catch (refundError) {
@@ -4125,7 +4125,7 @@
                     logger.log(`   - documentType 是否為 undefined: ${documentType === undefined}`);
                 
                 if (!window.QwenVLMaxProcessor) {
-                    throw new Error('AI 처리器未로드');
+                    throw new Error('AI 프로세서가 로드되지 않았습니다');
                 }
                 
                 const processor = new window.QwenVLMaxProcessor();
@@ -4134,7 +4134,7 @@
                 if (files.length > 1) {
                     logger.log(`📚 使用批量처리模式（${files.length} 페이지）`);
                     
-                    // 更新상태為처리中
+                    // 更新상태為처리 중
                     await window.simpleDataManager.updateDocument(currentProjectId, docId, {
                         status: 'processing'
                     });
@@ -4183,7 +4183,7 @@
                             const health = await Promise.race([
                                 backendClient.healthCheck(),
                                 new Promise((_, reject) => 
-                                    setTimeout(() => reject(new Error('超時')), 3000)
+                                    setTimeout(() => reject(new Error('타임아웃')), 3000)
                                 )
                             ]);
                             
@@ -4243,7 +4243,7 @@
                     try {
                         logger.log(`💰 準備退回 ${files.length} Credits（문서 ID: ${docId}）`);
                         await window.creditsManager.refundCredits(files.length);
-                        refundedDocuments.add(docId); // 標記已退回
+                        refundedDocuments.add(docId); // 환불 처리 표시
                         logger.log(`✅ 已退回 ${files.length} Credits（문서 ID: ${docId}）`);
                     } catch (refundError) {
                         console.error('❌ 退回 Credits 실패:', refundError);
@@ -4262,7 +4262,7 @@
                     processingDocuments.delete(docId);
                     logger.log(`🔓 解鎖문서 ${docId}，완료`);
                 }
-            }, fileName); // ✅ 傳遞文件名用於日誌
+            }, fileName); // ✅ 로그용 파일명 전달
         }
         
         // ✅ 合併多페이지結果的函數
@@ -4364,7 +4364,7 @@
         
         // ==================== 삭제문서 ====================
         async function deleteDocument(docId) {
-            if (!confirm('確定要삭제這個문서嗎？')) return;
+            if (!confirm('이 문서를 삭제하시겠습니까?')) return;
             
             try {
                 await window.simpleDataManager.deleteDocument(currentProjectId, docId);
@@ -4436,12 +4436,12 @@
         window.deleteSelectedDocuments = async function() {
             const selectedCheckboxes = document.querySelectorAll('.document-checkbox:checked');
             if (selectedCheckboxes.length === 0) {
-                alert('請先選擇要삭제的문서');
+                alert('삭제할 문서를 먼저 선택해 주세요.');
                 return;
             }
             
             const count = selectedCheckboxes.length;
-            if (!confirm(`確定要삭제 ${count} 個문서嗎？此작업無法復原。`)) {
+            if (!confirm(`${count}개의 문서를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`)) {
                 return;
             }
             
@@ -4454,7 +4454,7 @@
                 
                 await Promise.all(deletePromises);
                 logger.log(`✅ 已삭제 ${count} 個문서`);
-                alert(`成功삭제 ${count} 個문서`);
+                alert(`${count}개의 문서를 삭제했습니다.`);
                 await loadDocuments();
             } catch (error) {
                 console.error('❌ 삭제실패:', error);
@@ -4463,7 +4463,7 @@
         };
         
         window.confirmDeleteProject = function() {
-            if (!confirm('確定要삭제整個프로젝트嗎？')) return;
+            if (!confirm('이 프로젝트 전체를 삭제하시겠습니까?')) return;
             
             window.simpleDataManager.deleteProject(currentProjectId).then(() => {
                 window.location.href = 'dashboard.html';
@@ -4495,7 +4495,7 @@
             const projectName = input.value.trim();
             
             if (!projectName) {
-                alert('請輸入프로젝트 이름');
+                alert('프로젝트 이름을 입력해 주세요.');
                 return;
             }
             
@@ -4535,13 +4535,13 @@
                 const row = checkbox.closest('tr');
                 if (!row) return;
                 
-                const typeCell = row.querySelector('td:nth-child(3)'); // 유형列
+                const typeCell = row.querySelector('td:nth-child(3)'); // 유형 열
                 if (!typeCell) return;
                 
                 const typeText = typeCell.textContent.trim();
                 if (typeText === '송장' | typeText.includes('송장')) {
                     hasInvoice = true;
-                } else if (typeText === '은행 명세서' | typeText.includes('銀行')) {
+                } else if (typeText === '은행 명세서' | typeText.includes('은행')) {
                     hasBankStatement = true;
                 }
             });
@@ -4654,7 +4654,7 @@
             menuHTML += `
                 <div style="padding: 1rem; margin-top: 0.5rem; background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border-radius: 8px; border-left: 3px solid #10b981;">
                     <div style="font-size: 0.75rem; color: #065f46; font-weight: 500; margin-bottom: 0.25rem;">
-                        💡 不確定選哪個？
+                        💡 어떤 것을 선택해야 할지 모르겠나요?
                     </div>
                     <div style="font-size: 0.7rem; color: #059669; line-height: 1.4;">
                         대부분의 사용자가 선택 <strong>범용 CSV</strong> 또는 <strong>QBO 파일</strong>
@@ -4705,7 +4705,7 @@
             logger.log('✅ 已選中문서數量:', checkboxes.length);
             
             if (checkboxes.length === 0) {
-                alert('請先選擇要導出的문서');
+                alert('내보낼 문서를 먼저 선택해 주세요.');
                 return;
             }
             
@@ -4723,9 +4723,9 @@
                 menu.style.right = 'auto';
                 menu.style.width = '90%';
                 menu.style.maxWidth = '400px';
-                menu.style.backgroundColor = '#ffffff'; // 🔥 白色背景
-                menu.style.border = 'none'; // 🔥 無邊框
-                menu.style.boxShadow = 'none'; // 🔥 無陰影
+                menu.style.backgroundColor = '#ffffff'; // 🔥 흰색 배경
+                menu.style.border = 'none'; // 🔥 테두리 없음
+                menu.style.boxShadow = 'none'; // 🔥 그림자 없음
                 menu.style.borderRadius = '12px';
                 logger.log('📱 手機版：菜單居中顯示（全白色）');
                 
@@ -4862,12 +4862,12 @@
                     logger.log(`📋 導出 ${docsToExport.length} 個已勾選的문서（共選中 ${selectedDocIds.length} 個）`);
                 } else {
                     // 如果沒有勾選，提示用戶
-                    alert('請先選擇要導出的문서');
+                    alert('내보낼 문서를 먼저 선택해 주세요.');
                     return;
                 }
                 
                 if (docsToExport.length === 0) {
-                    alert('所選문서中沒有완료처리的문서。\n請確保所選문서완료처리。');
+                    alert('선택한 문서 중 처리가 완료된 문서가 없습니다.\n처리가 완료되었는지 확인해 주세요.');
                     return;
                 }
                 
@@ -4920,7 +4920,7 @@
                     }
                     
                     toggleExportMenu();
-                    alert(`✅ 導出成功！\n共導出 ${exportedCount} 個 CSV 文件`);
+                    alert(`✅ 내보내기 성공!\n${exportedCount}개의 CSV 파일을 내보냈습니다.`);
                     return;
                 }
                 
@@ -4973,20 +4973,20 @@
                                 
                                 // ✅ 发票Excel标题（包含所有重要字段）
                                 const excelData = [[
-                                    'Invoice Number',      // 发票编号
+                                    'Invoice Number',      // 송장 번호
                                     'Date',               // 날짜
-                                    'Supplier Name',      // 供应商名称
-                                    'Supplier Phone',     // 供应商电话
-                                    'Supplier Email',     // 供应商邮箱
-                                    'Item Code',          // 项目编码
-                                    'Item Description',   // 项目描述
-                                    'Quantity',           // 数量
-                                    'Unit',               // 单位
-                                    'Unit Price',         // 单价
-                                    'Amount',             // 小计
-                                    'Total Amount',       // 总金额
-                                    'Tax',                // 税额
-                                    'Status'              // 状态
+                                    'Supplier Name',      // 공급업체명
+                                    'Supplier Phone',     // 공급업체 전화
+                                    'Supplier Email',     // 공급업체 이메일
+                                    'Item Code',          // 항목 코드
+                                    'Item Description',   // 항목 설명
+                                    'Quantity',           // 수량
+                                    'Unit',               // 단위
+                                    'Unit Price',         // 단가
+                                    'Amount',             // 소계
+                                    'Total Amount',       // 총 금액
+                                    'Tax',                // 세액
+                                    'Status'              // 상태
                                 ]];
                                 
                                 groupedDocs.invoices.forEach(doc => {
@@ -5000,7 +5000,7 @@
                                     const supplierEmail = data.vendorEmail || data.email || data.supplier_email || '';
                                     const totalAmount = parseFloat(data.totalAmount || data.total || data.amount || 0);
                                     const tax = parseFloat(data.taxAmount || data.tax || 0);
-                                    const status = data.status || data.paymentStatus || '未付款';
+                                    const status = data.status || data.paymentStatus || '미결제';
                                     
                                     // 提取项目明细
                                     const items = data.items || data.lineItems || [];
@@ -5014,7 +5014,7 @@
                                             supplierPhone,
                                             supplierEmail,
                                             '',
-                                            '總計',
+                                            '합계',
                                             1,
                                             '',
                                             totalAmount,
@@ -5029,7 +5029,7 @@
                                             const itemCode = item.code || item.itemCode || '';
                                             const itemDescription = item.description || item.itemName || item.name || '';
                                             const quantity = parseFloat(item.quantity || item.qty || 1);
-                                            const unit = item.unit || '件';
+                                            const unit = item.unit || '개';
                                             const unitPrice = parseFloat(item.unitPrice || item.unit_price || item.price || 0);
                                             const amount = parseFloat(item.amount || item.subtotal || (quantity * unitPrice) || 0);
                                             
@@ -5083,14 +5083,14 @@
                             
                             // ✅ 显示导出成功消息
                             if (exportedCount > 0) {
-                                alert(`✅ 導出成功！\n已다운로드 ${exportedCount} 個 Excel 文件`);
+                                alert(`✅ 내보내기 성공!\n${exportedCount}개의 Excel 파일을 다운로드했습니다.`);
                             } else {
-                                alert('沒有可導出的문서');
+                                alert('내보낼 수 있는 문서가 없습니다.');
                             }
                             return;
                         } catch (error) {
                             console.error('❌ Excel 导出失败:', error);
-                            alert('Excel 导出失败，请重试또는使用 CSV 형식');
+                            alert('Excel 내보내기 실패. 다시 시도하거나 CSV 형식을 사용해 주세요.');
                             return;
                         }
                     
@@ -5115,7 +5115,7 @@
                             mimeType = 'text/csv;charset=utf-8;';
                             logger.log('✅ 標準은행 명세서 CSV 導出');
                         } else {
-                            alert('은행 명세서導出模塊未로드，請刷新페이지面後重試');
+                            alert('은행 명세서 내보내기 모듈이 로드되지 않았습니다. 페이지를 새로고침해 주세요.');
                             return;
                         }
                         break;
@@ -5128,7 +5128,7 @@
                             mimeType = 'text/csv;charset=utf-8;';
                             logger.log('✅ 범용 CSV 導出');
                         } else {
-                            alert('導出模塊未로드，請刷新페이지面後重試');
+                            alert('내보내기 모듈이 로드되지 않았습니다. 페이지를 새로고침해 주세요.');
                             return;
                         }
                         break;
@@ -5141,7 +5141,7 @@
                             mimeType = 'text/csv;charset=utf-8;';
                             logger.log('✅ Sage CSV 導出');
                         } else {
-                            alert('導出模塊未로드，請刷新페이지面後重試');
+                            alert('내보내기 모듈이 로드되지 않았습니다. 페이지를 새로고침해 주세요.');
                             return;
                         }
                         break;
@@ -5154,7 +5154,7 @@
                             mimeType = 'text/csv;charset=utf-8;';
                             logger.log('✅ Zoho Books CSV 導出');
                         } else {
-                            alert('導出模塊未로드，請刷新페이지面後重試');
+                            alert('내보내기 모듈이 로드되지 않았습니다. 페이지를 새로고침해 주세요.');
                             return;
                         }
                         break;
@@ -5181,7 +5181,7 @@
                             fileName = `Invoice_${new Date().toISOString().split('T')[0]}_Xero.csv`;
                             logger.log('✅ Xero CSV 導出（송장）');
                         } else {
-                            alert('沒有可導出的문서또는導出模塊未로드');
+                            alert('내보낼 수 있는 문서가 없거나 모듈이 로드되지 않았습니다.');
                             return;
                         }
                         mimeType = 'text/csv;charset=utf-8;';
@@ -5208,7 +5208,7 @@
                             fileName = `Invoice_${new Date().toISOString().split('T')[0]}_QuickBooks.csv`;
                             logger.log('✅ QuickBooks CSV 導出（송장）');
                         } else {
-                            alert('沒有可導出的문서또는導出模塊未로드');
+                            alert('내보낼 수 있는 문서가 없거나 모듈이 로드되지 않았습니다.');
                             return;
                         }
                         mimeType = 'text/csv;charset=utf-8;';
@@ -5222,7 +5222,7 @@
                             mimeType = 'text/csv;charset=utf-8;';
                             logger.log('✅ 송장總數 CSV 導出');
                         } else {
-                            alert('송장導出模塊未로드，請刷新페이지面後重試');
+                            alert('송장 내보내기 모듈이 로드되지 않았습니다. 페이지를 새로고침해 주세요.');
                             return;
                         }
                         break;
@@ -5235,7 +5235,7 @@
                             mimeType = 'text/csv;charset=utf-8;';
                             logger.log('✅ 通用송장 CSV 導出');
                         } else {
-                            alert('通用송장導出模塊未로드，請刷新페이지面後重試');
+                            alert('범용 송장 내보내기 모듈이 로드되지 않았습니다. 페이지를 새로고침해 주세요.');
                             return;
                         }
                         break;
@@ -5248,7 +5248,7 @@
                             mimeType = 'text/csv;charset=utf-8;';
                             logger.log('✅ Sage 송장 CSV 導出');
                         } else {
-                            alert('Sage 송장導出模塊未로드，請刷新페이지面後重試');
+                            alert('Sage 송장 내보내기 모듈이 로드되지 않았습니다. 페이지를 새로고침해 주세요.');
                             return;
                         }
                         break;
@@ -5261,7 +5261,7 @@
                             mimeType = 'text/csv;charset=utf-8;';
                             logger.log('✅ Zoho Books 송장 CSV 導出');
                         } else {
-                            alert('Zoho Books 송장導出模塊未로드，請刷新페이지面後重試');
+                            alert('Zoho Books 송장 내보내기 모듈이 로드되지 않았습니다. 페이지를 새로고침해 주세요.');
                             return;
                         }
                         break;
@@ -5280,7 +5280,7 @@
                                     data.vendorName || data.vendor || data.supplier || '',
                                     parseFloat(data.totalAmount || data.total || 0).toFixed(2),
                                     parseFloat(data.taxAmount || data.tax || 0).toFixed(2),
-                                    data.status || data.paymentStatus || '未付款'
+                                    data.status || data.paymentStatus || '미결제'
                                 ]);
                             });
                             
@@ -5294,7 +5294,7 @@
                             return;
                         } catch (error) {
                             console.error('❌ 송장 Excel 導出실패:', error);
-                            alert('Excel 導出실패，請重試');
+                            alert('Excel 내보내기 실패. 다시 시도해 주세요.');
                             return;
                         }
                     
@@ -5317,14 +5317,14 @@
                                 const supplierEmail = data.vendorEmail || data.email || '';
                                 const totalAmount = parseFloat(data.totalAmount || data.total || 0);
                                 const tax = parseFloat(data.taxAmount || data.tax || 0);
-                                const status = data.status || '未付款';
+                                const status = data.status || '미결제';
                                 
                                 const items = data.items || data.lineItems || [];
                                 
                                 if (items.length === 0) {
                                     excelData.push([
                                         invoiceNumber, invoiceDate, supplierName, supplierPhone, supplierEmail,
-                                        '', '總計', 1, '', totalAmount,
+                                        '', '합계', 1, '', totalAmount,
                                         totalAmount, totalAmount, tax, status
                                     ]);
                                 } else {
@@ -5332,7 +5332,7 @@
                                         const itemCode = item.code || item.itemCode || '';
                                         const itemDescription = item.description || item.itemName || '';
                                         const quantity = parseFloat(item.quantity || 1);
-                                        const unit = item.unit || '件';
+                                        const unit = item.unit || '개';
                                         const unitPrice = parseFloat(item.unitPrice || item.price || 0);
                                         const amount = parseFloat(item.amount || (quantity * unitPrice));
                                         
@@ -5359,7 +5359,7 @@
                             return;
                         } catch (error) {
                             console.error('❌ 송장 Excel 導出실패:', error);
-                            alert('Excel 導出실패，請重試');
+                            alert('Excel 내보내기 실패. 다시 시도해 주세요.');
                             return;
                         }
                     
@@ -5422,18 +5422,18 @@
                             
                             // ✅ 显示导出成功消息
                             if (exportedCount > 0) {
-                                alert(`✅ 導出成功！\n已다운로드 ${exportedCount} 個 QBO 파일`);
+                                alert(`✅ 내보내기 성공!\n${exportedCount}개의 QBO 파일을 다운로드했습니다.`);
                             } else {
-                                alert('沒有可導出的문서');
+                                alert('내보낼 수 있는 문서가 없습니다.');
                             }
-                            return; // 直接돌아가기，不执行后面的通用下载代码
+                            return; // 바로 돌아감, 범용 다운로드 코드 건너뛰기
                         } catch (error) {
                             console.error('❌ QBO 导出失败:', error);
-                            alert('QBO 导出失败，请重试');
+                            alert('QBO 내보내기 실패. 다시 시도해 주세요.');
                             return;
                         }
                     default:
-                        alert('不支持的導出格式');
+                        alert('지원되지 않는 내보내기 형식입니다.');
                         return;
                 }
                 
@@ -5451,7 +5451,7 @@
                 
             } catch (error) {
                 console.error('❌ 導出실패:', error);
-                alert('導出실패: ' + error.message);
+                alert('내보내기 실패: ' + error.message);
             }
         };
         
@@ -5461,24 +5461,24 @@
             const headers = [
                 '파일 이름',
                 '문서유형',
-                '송장號碼',
+                '송장 번호',
                 '날짜',
                 '공급업체 / 출처 / 은행',
-                '供應商地址',
-                '供應商電話',
-                '供應商電郵',
-                '客戶名稱',
-                '客戶地址',
-                '프로젝트明細',
-                '小計',
-                '稅額',
-                '稅率',
-                '總금액',
-                '幣別',
-                '付款條款',
-                '付款方式',
-                '銀行賬號',
-                '備註',
+                '공급업체 주소',
+                '공급업체 전화',
+                '공급업체 이메일',
+                '고객명',
+                '고객 주소',
+                '항목 명세',
+                '소계',
+                '세액',
+                '세율',
+                '총 금액',
+                '통화',
+                '결제 조건',
+                '결제 방법',
+                '은행 계좌',
+                '비고',
                 '상태',
                 '업로드날짜'
             ];
@@ -5556,7 +5556,7 @@
                 let memo = data.notes || data.memo | doc.fileName || '';
                 if (data.items && Array.isArray(data.items) && data.items.length > 0) {
                     const itemsSummary = data.items.map(item => item.description | item.name).join(', ');
-                    memo = itemsSummary.substring(0, 100); // 限制長度
+                    memo = itemsSummary.substring(0, 100); // 길이 제한
                 }
                 
                 const transactionType = data.documentType === 'invoice' ? 'BILL' : 'GENERAL JOURNAL';
@@ -5645,7 +5645,7 @@
                     dtposted = new Date(dateStr).toISOString().replace(/[-:]/g, '').split('.')[0];
                 }
                 
-                const trnamt = -(parseFloat(data.totalAmount || data.total || data.amount | '0.00')); // 負數表示支出
+                const trnamt = -(parseFloat(data.totalAmount || data.total || data.amount | '0.00')); // 음수는 지출을 의미
                 const name = data.vendor || data.supplier || data.merchantName || data.source | 'Unknown Vendor';
                 const invoiceNumber = data.invoiceNumber || data.receiptNumber || data.documentNumber || '';
                 
@@ -5665,9 +5665,9 @@
                 // 確定交易유형
                 let trntype = 'OTHER';
                 if (data.documentType === 'invoice') {
-                    trntype = 'DEBIT'; // 송장通常是支出
+                    trntype = 'DEBIT'; // 송장은 보통 지출
                 } else if (data.documentType === 'receipt') {
-                    trntype = 'POS'; // 영수증可能是 POS 交易
+                    trntype = 'POS'; // 영수증은 POS 거래일 수 있음
                 }
                 
                 qbo += '<STMTTRN>\n';
@@ -5713,8 +5713,8 @@
             // 檢查 email 驗證상태（顯示提示但不阻止페이지面）
             if (window.checkEmailVerification) {
                 await checkEmailVerification({
-                    showNotice: true,  // 顯示提示橫幅
-                    blockPage: false   // 不阻止페이지面使用
+                    showNotice: true,  // 알림 배너 표시
+                    blockPage: false   // 페이지 사용 차단 안 함
                 });
             }
         })();
@@ -5738,7 +5738,7 @@
                     row.style.display = '';
                 }
                 logger.log(`✅ 顯示所有 ${rows.length} 個문서`);
-                updateDocumentTotal(); // 更新總計
+                updateDocumentTotal(); // 합계 업데이트
                 return;
             }
             
@@ -5774,7 +5774,7 @@
             }
             
             logger.log(`✅ 顯示 ${visibleCount} 個문서（검색: "${term}"）`);
-            updateDocumentTotal(); // 更新總計
+            updateDocumentTotal(); // 합계 업데이트
         }
         
         // 暴露到全局供검색框使用
@@ -5851,7 +5851,7 @@
                     취소
                 </button>
 <button onclick="createNewProject()" style="background: #3b82f6; border: none; color: white; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500;">
-                    創建
+                    생성
                 </button>
 </div>
 </div>
@@ -5886,7 +5886,7 @@
                 overlay.style.opacity = '0';
                 setTimeout(() => {
                     overlay.style.display = 'none';
-                }, 300); // 等待動畫完成（與 CSS transition 一致）
+                }, 300); // 애니메이션 완료 대기 (CSS transition과 일치)
                 document.body.style.overflow = 'auto';
                 logger.log('✅ 側邊欄已關閉');
             }
@@ -5959,7 +5959,7 @@
         
         // Flatpickr 配置（繁體中文）
         const flatpickrConfig = {
-            locale: 'zh_tw',  // 繁體中文
+            locale: 'ko',  // 한국어
             dateFormat: 'Y-m-d',
             allowInput: true,
             disableMobile: false,
@@ -5981,7 +5981,7 @@
         // ==================== 分페이지기능初始化 ====================
         // 初始化分페이지參數
         window.currentPage = 1;
-        window.rowsPerPage = 10;  // 默認每페이지10行
+        window.rowsPerPage = 10;  // 기본 페이지당 10행
         
         // 監聽 페이지당 행 수 下拉選單
         const rowsPerPageSelect = document.querySelector('select[style*="padding: 0.25rem 0.5rem"]');
@@ -5992,7 +5992,7 @@
             // 監聽變化
             rowsPerPageSelect.addEventListener('change', function(e) {
                 window.rowsPerPage = parseInt(e.target.value);
-                window.currentPage = 1;  // 重置到第一페이지
+                window.currentPage = 1;  // 첫 페이지로 리셋
                 logger.log('📄 每페이지行數改變:', window.rowsPerPage);
                 
                 // 重新渲染문서列表
@@ -6178,7 +6178,7 @@
                                 console.log('🔍 嘗試查找所有 file input:', document.querySelectorAll('input[type="file"]'));
                             }
                         }
-                    }, 3000); // 等待3秒讓페이지面完全初始化
+                    }, 3000); // 3초 대기 후 페이지 완전 초기화
                     
                 } else {
                     console.log('⏭️ IndexedDB 中沒有文件');
