@@ -22,7 +22,7 @@
 // ============================================
 const firebaseConfig = {
     apiKey: "AIzaSyA_zC38DTF8lyOvLOfU7HHaBd3v2YCyMCs",
-    authDomain: "vaultcaddy-production-cbbe2.firebaseapp.com",
+    authDomain: "vaultcaddy.com",
     projectId: "vaultcaddy-production-cbbe2",
     storageBucket: "vaultcaddy-production-cbbe2.firebasestorage.app",
     messagingSenderId: "708649491465",
