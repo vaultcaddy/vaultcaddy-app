@@ -22,7 +22,7 @@
 // ============================================
 const firebaseConfig = {
     apiKey: "AIzaSyA_zC38DTF8lyOvLOfU7HHaBd3v2YCyMCs",
-    authDomain: "vaultcaddy.com",
+    authDomain: "vaultcaddy-production-cbbe2.firebaseapp.com",  // ⚠️ 必須用 Firebase 預設域名，因為網站託管在 GitHub Pages，沒有 __/auth/handler
     projectId: "vaultcaddy-production-cbbe2",
     storageBucket: "vaultcaddy-production-cbbe2.firebasestorage.app",
     messagingSenderId: "708649491465",
