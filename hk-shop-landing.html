@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>香港小店專用扣稅神器｜店員拍照上傳，老闆零跟進 - VaultCaddy</title>
+    <meta name="description" content="專為香港茶飲店、小食店、零售店設計的收據管理工具。店員用手機一鍵拍照上傳，AI 自動分類 IRD 扣稅項目，月底自動生成 Excel 給會計師，幫你省下幾千蚊 bookkeeping 費用。">
+    
+    <!-- 資源預連接 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+HK:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- 核心樣式 -->
+    <link rel="stylesheet" href="styles.css">
+    
+    <style>
+        :root {
+            --primary-color: #4F46E5;
+            --primary-hover: #4338CA;
+            --secondary-color: #10B981;
+            --text-main: #1F2937;
+            --text-light: #6B7280;
+            --bg-light: #F9FAFB;
+        }
+        
+        body {
+            font-family: 'Noto Sans HK', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+        
+        /* 導航欄覆蓋樣式 */
+        .vaultcaddy-navbar {
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05) !important;
+        }
+        
+        /* Hero 區塊 */
+        .hero-section {
+            padding: 120px 20px 80px;
+            background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%);
+            text-align: center;
+        }
+        
+        .hero-badge {
+            display: inline-block;
+            background: rgba(79, 70, 229, 0.1);
+            color: var(--primary-color);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+        
+        .hero-title {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #111827;
+            margin-bottom: 24px;
+            line-height: 1.2;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .hero-title span {
+            color: var(--primary-color);
+        }
+        
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--text-light);
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .hero-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--primary-color);
+            color: white;
+            padding: 16px 32px;
+            border-radius: 8px;
+            font-size: 1.125rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);
+        }
+        
+        .hero-cta:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+        }
+        
+        /* 痛點對比區塊 */
+        .pain-points-section {
+            padding: 80px 20px;
+            background: white;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 2.25rem;
+            font-weight: 700;
+            margin-bottom: 48px;
+        }
+        
+        .comparison-container {
+            display: flex;
+            max-width: 1000px;
+            margin: 0 auto;
+            gap: 32px;
+        }
+        
+        .comparison-card {
+            flex: 1;
+            padding: 40px;
+            border-radius: 16px;
+        }
+        
+        .card-old {
+            background: #FEF2F2;
+            border: 1px solid #FCA5A5;
+        }
+        
+        .card-new {
+            background: #F0FDF4;
+            border: 1px solid #6EE7B7;
+            position: relative;
+        }
+        
+        .card-new::before {
+            content: '推薦做法';
+            position: absolute;
+            top: -12px;
+            right: 24px;
+            background: var(--secondary-color);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .comparison-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .card-old .comparison-title { color: #DC2626; }
+        .card-new .comparison-title { color: #059669; }
+        
+        .comparison-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .comparison-list li {
+            margin-bottom: 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        
+        .card-old .comparison-list i { color: #EF4444; margin-top: 4px; }
+        .card-new .comparison-list i { color: #10B981; margin-top: 4px; }
+        
+        /* 運作流程區塊 */
+        .how-it-works {
+            padding: 80px 20px;
+            background: var(--bg-light);
+        }
+        
+        .steps-container {
+            display: flex;
+            max-width: 1000px;
+            margin: 0 auto;
+            gap: 24px;
+        }
+        
+        .step-card {
+            flex: 1;
+            background: white;
+            padding: 32px 24px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            position: relative;
+        }
+        
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 0 auto 20px;
+        }
+        
+        .step-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        
+        .step-desc {
+            color: var(--text-light);
+            font-size: 0.9375rem;
+        }
+        
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .hero-title { font-size: 2rem; }
+            .comparison-container, .steps-container { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 導航欄佔位符 -->
+    <div id="navbar-placeholder"></div>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-badge">香港小店老闆專用</div>
+        <h1 class="hero-title">告別年底「鞋盒找單」<br>一年省下 <span>$5,000</span> 會計費</h1>
+        <p class="hero-subtitle">店員每日一鍵拍照上傳，AI 自動做好 IRD 扣稅分類。月底直接發 Excel 給會計師，老闆零跟進，報稅超輕鬆。</p>
+        <a href="auth.html" class="hero-cta">
+            免費試用 30 張單據
+            <i class="fas fa-arrow-right"></i>
+        </a>
+        <p style="margin-top: 16px; font-size: 0.875rem; color: #6B7280;">無需信用卡 • 隨時取消</p>
+    </section>
+
+    <!-- 痛點對比 -->
+    <section class="pain-points-section">
+        <h2 class="section-title">為什麼你需要 VaultCaddy？</h2>
+        <div class="comparison-container">
+            <!-- 傳統做法 -->
+            <div class="comparison-card card-old">
+                <h3 class="comparison-title">
+                    <i class="fas fa-times-circle"></i>
+                    傳統「鞋盒」做法
+                </h3>
+                <ul class="comparison-list">
+                    <li><i class="fas fa-times"></i> <strong>容易遺失：</strong> 店員收單隨手放，熱敏紙字跡變淡，一年下來漏單無數。</li>
+                    <li><i class="fas fa-times"></i> <strong>老闆心累：</strong> 每天忙到半夜還要整理收據，或者年底一次過處理，痛苦不堪。</li>
+                    <li><i class="fas fa-times"></i> <strong>會計費貴：</strong> 會計師要逐張單入機分類，bookkeeping 費用每年高達 $10,000+。</li>
+                </ul>
+            </div>
+            
+            <!-- 新做法 -->
+            <div class="comparison-card card-new">
+                <h3 class="comparison-title">
+                    <i class="fas fa-check-circle"></i>
+                    VaultCaddy 智能做法
+                </h3>
+                <ul class="comparison-list">
+                    <li><i class="fas fa-check"></i> <strong>即時上傳：</strong> 店員用專屬連結，一鍵拍照即上傳，單據永不遺失。</li>
+                    <li><i class="fas fa-check"></i> <strong>老闆零跟進：</strong> AI 自動提取金額、日期，並根據 IRD 標準自動分類可扣稅項目。</li>
+                    <li><i class="fas fa-check"></i> <strong>省會計費：</strong> 提供整理好的 Excel，會計師工時大減，bookkeeping 費用可省 30-50%。</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- 運作流程 -->
+    <section class="how-it-works" id="features">
+        <h2 class="section-title">極簡 3 步，搞定全年收據</h2>
+        <div class="steps-container">
+            <div class="step-card">
+                <div class="step-number">1</div>
+                <div style="font-size: 3rem; margin-bottom: 16px;">📸</div>
+                <h3 class="step-title">店員拍照</h3>
+                <p class="step-desc">掃描收銀機旁的 QR Code，免登入直接拍照。極簡介面，店員 5 秒完成上傳。</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">2</div>
+                <div style="font-size: 3rem; margin-bottom: 16px;">🤖</div>
+                <h3 class="step-title">AI 自動分類</h3>
+                <p class="step-desc">專為香港餐飲/零售微調的 AI，精準識別進貨單、水電費，並標註 IRD 扣稅可能性。</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">3</div>
+                <div style="font-size: 3rem; margin-bottom: 16px;">📊</div>
+                <h3 class="step-title">老闆一鍵匯出</h3>
+                <p class="step-desc">月底在 Dashboard 點擊匯出，自動生成會計師最愛的 Excel 格式，直接 WhatsApp 發送。</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 價格方案 -->
+    <section class="pain-points-section" id="pricing">
+        <h2 class="section-title">簡單透明的定價</h2>
+        <div style="max-width: 800px; margin: 0 auto; text-align: center;">
+            <div style="display: flex; flex-wrap: wrap; gap: 24px; justify-content: center;">
+                <!-- 免費版 -->
+                <div style="flex: 1; min-width: 300px; padding: 40px; border-radius: 16px; border: 1px solid #E5E7EB; background: white;">
+                    <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 8px;">免費體驗</h3>
+                    <div style="font-size: 2.5rem; font-weight: 800; margin-bottom: 24px;">$0</div>
+                    <ul style="text-align: left; list-style: none; padding: 0; margin-bottom: 32px;">
+                        <li style="margin-bottom: 12px;"><i class="fas fa-check" style="color: #10B981; margin-right: 8px;"></i> 30 張單據處理額度</li>
+                        <li style="margin-bottom: 12px;"><i class="fas fa-check" style="color: #10B981; margin-right: 8px;"></i> 包含 IRD 扣稅分類</li>
+                        <li style="margin-bottom: 12px;"><i class="fas fa-check" style="color: #10B981; margin-right: 8px;"></i> 基礎 Excel 匯出</li>
+                    </ul>
+                    <a href="auth.html" style="display: block; width: 100%; padding: 12px; background: #F3F4F6; color: #374151; text-decoration: none; border-radius: 8px; font-weight: 600;">開始免費試用</a>
+                </div>
+                
+                <!-- 專業版 -->
+                <div style="flex: 1; min-width: 300px; padding: 40px; border-radius: 16px; border: 2px solid var(--primary-color); background: white; position: relative; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+                    <div style="position: absolute; top: -14px; left: 50%; transform: translateX(-50%); background: var(--primary-color); color: white; padding: 4px 16px; border-radius: 20px; font-size: 0.875rem; font-weight: 600;">最受小店歡迎</div>
+                    <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 8px;">無限任用</h3>
+                    <div style="font-size: 2.5rem; font-weight: 800; margin-bottom: 8px;">$78 <span style="font-size: 1rem; color: #6B7280; font-weight: 400;">/ 月</span></div>
+                    <p style="color: var(--secondary-color); font-size: 0.875rem; font-weight: 600; margin-bottom: 24px;">💡 系統費用本身也可扣稅！</p>
+                    <ul style="text-align: left; list-style: none; padding: 0; margin-bottom: 32px;">
+                        <li style="margin-bottom: 12px;"><i class="fas fa-check" style="color: #10B981; margin-right: 8px;"></i> <strong>無限量</strong>單據處理</li>
+                        <li style="margin-bottom: 12px;"><i class="fas fa-check" style="color: #10B981; margin-right: 8px;"></i> 店員專屬拍照 PWA 連結</li>
+                        <li style="margin-bottom: 12px;"><i class="fas fa-check" style="color: #10B981; margin-right: 8px;"></i> 完整 IRD 扣稅分析報告</li>
+                        <li style="margin-bottom: 12px;"><i class="fas fa-check" style="color: #10B981; margin-right: 8px;"></i> 會計師專用 Excel 格式</li>
+                    </ul>
+                    <a href="auth.html" style="display: block; width: 100%; padding: 12px; background: var(--primary-color); color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">升級無限版</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 頁腳 -->
+    <footer style="background: #1F2937; color: white; padding: 40px 20px; text-align: center;">
+        <div style="font-size: 1.5rem; font-weight: 700; margin-bottom: 16px;">VaultCaddy</div>
+        <p style="color: #9CA3AF; margin-bottom: 24px;">專為香港小店設計的 AI 會計助手</p>
+        <div style="color: #6B7280; font-size: 0.875rem;">
+            &copy; 2026 VaultCaddy. All rights reserved.
+        </div>
+    </footer>
+
+    <!-- 腳本 -->
+    <script src="navbar-component.js"></script>
+</body>
+</html>

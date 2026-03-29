@@ -828,7 +828,7 @@
 <a href="index.html#pricing" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">價格</a>
 <a href="dashboard.html" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">儀表板</a>
 </div>
-<div id="language-switcher" style="display: inline-block; margin-right: 1rem;"></div>
+<div id="language-switcher" style="display: none !important;"></div>
 <div id="user-menu" style="position: relative; display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;">
 <div id="user-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">Y</div>
 </div>
@@ -1194,26 +1194,90 @@
 <!-- 主要內容區域 -->
 <div class="main-content" style="display: block !important; visibility: visible !important;">
 <!-- 項目列表標題 -->
-<div class="projects-header" style="display: flex; align-items: center; justify-content: flex-end; margin-bottom: 1.5rem;">
-<!-- Create 按鈕 -->
-<div class="header-actions">
-<button class="create-btn" onclick="openCreateProjectModal()">
-<i class="fas fa-plus"></i>
-<span>Create</span>
-</button>
+<div class="projects-header" style="display: flex; flex-direction: column; gap: 1.5rem; margin-bottom: 2rem;">
+    
+    <!-- 頂部概覽卡片 -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+        <div style="background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%); border-radius: 12px; padding: 1.5rem; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <div style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 0.5rem;">本月已收集單據</div>
+            <div style="font-size: 2.5rem; font-weight: 700; display: flex; align-items: baseline; gap: 0.5rem;">
+                128 <span style="font-size: 1rem; font-weight: 400; opacity: 0.8;">張</span>
+            </div>
+            <div style="margin-top: 1rem; font-size: 0.875rem; background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-arrow-up"></i> 比上月增加 12%
+            </div>
+        </div>
+        
+        <div style="background: white; border: 1px solid #E5E7EB; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+            <div style="font-size: 0.875rem; color: #6B7280; margin-bottom: 0.5rem;">預計可扣稅總額</div>
+            <div style="font-size: 2.5rem; font-weight: 700; color: #1F2937; display: flex; align-items: baseline; gap: 0.5rem;">
+                <span style="font-size: 1.5rem;">HK$</span> 45,200
+            </div>
+            <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                <button onclick="window.location.href='firstproject.html'" style="flex: 1; background: #10B981; color: white; border: none; padding: 0.5rem; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                    <i class="fas fa-file-excel"></i> 匯出本月 Excel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 操作列 -->
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #F3F4F6; padding-bottom: 1rem;">
+        <h2 style="font-size: 1.25rem; font-weight: 700; color: #1F2937; margin: 0;">歷史月份紀錄</h2>
+        <div class="header-actions">
+            <button class="create-btn" onclick="openCreateProjectModal()" style="background: #F3F4F6; color: #374151; border: 1px solid #D1D5DB;">
+                <i class="fas fa-qrcode"></i>
+                <span>獲取店員上傳 QR Code</span>
+            </button>
+        </div>
+    </div>
 </div>
-</div>
+
 <!-- 項目表格 -->
 <table class="projects-table">
-<thead>
-<tr>
-<th>Name</th>
-<th>Last modified</th>
-<th>Created</th>
-<th style="width: 80px; text-align: center;">操作</th>
-</tr>
-</thead>
-<tbody id="projects-tbody">
+    <thead>
+        <tr>
+            <th>月份</th>
+            <th>單據數量</th>
+            <th>狀態</th>
+            <th style="width: 120px; text-align: center;">操作</th>
+        </tr>
+    </thead>
+    <tbody id="projects-tbody">
+        <!-- 靜態展示用數據 -->
+        <tr style="cursor: pointer;" onclick="window.location.href='firstproject.html'">
+            <td style="font-weight: 600; color: #1F2937;">
+                <i class="fas fa-folder" style="color: #4F46E5; margin-right: 8px;"></i>
+                2026年 3月
+            </td>
+            <td>128 張</td>
+            <td><span style="background: #DEF7EC; color: #046C4E; padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">收集中</span></td>
+            <td style="text-align: center;">
+                <button style="background: none; border: none; color: #4F46E5; cursor: pointer; font-weight: 600;">查看明細</button>
+            </td>
+        </tr>
+        <tr style="cursor: pointer;" onclick="window.location.href='firstproject.html'">
+            <td style="font-weight: 600; color: #1F2937;">
+                <i class="fas fa-folder" style="color: #9CA3AF; margin-right: 8px;"></i>
+                2026年 2月
+            </td>
+            <td>342 張</td>
+            <td><span style="background: #F3F4F6; color: #4B5563; padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">已結算</span></td>
+            <td style="text-align: center;">
+                <button style="background: none; border: none; color: #4F46E5; cursor: pointer; font-weight: 600;">查看明細</button>
+            </td>
+        </tr>
+        <tr style="cursor: pointer;" onclick="window.location.href='firstproject.html'">
+            <td style="font-weight: 600; color: #1F2937;">
+                <i class="fas fa-folder" style="color: #9CA3AF; margin-right: 8px;"></i>
+                2026年 1月
+            </td>
+            <td>289 張</td>
+            <td><span style="background: #F3F4F6; color: #4B5563; padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">已結算</span></td>
+            <td style="text-align: center;">
+                <button style="background: none; border: none; color: #4F46E5; cursor: pointer; font-weight: 600;">查看明細</button>
+            </td>
+        </tr>
 <!-- 項目列表將在這裡動態生成 -->
 <tr>
 <td colspan="4">

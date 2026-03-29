@@ -167,7 +167,7 @@ class VaultCaddyNavbar {
                         <a href="index.html#pricing" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">價格</a>
                         <a href="dashboard.html" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">儀表板</a>
                     </div>
-                    <div id="language-selector" style="position: relative; display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; cursor: pointer; border-radius: 6px; transition: background 0.2s;">
+                    <div id="language-selector" style="display: none !important;">
                         <i class="fas fa-language"></i>
                         <span id="current-language">繁體中文</span>
                         <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
@@ -262,7 +262,7 @@ class VaultCaddyNavbar {
         const currentLangName = languages[currentLang] || languages['zh-tw'];
         
         return `
-            <div class="language-selector" style="position: relative;">
+            <div class="language-selector" style="display: none !important;">
                 <button class="language-btn" onclick="window.vaultcaddyNavbar.toggleLanguageDropdown(event)" style="
                     display: flex;
                     align-items: center;

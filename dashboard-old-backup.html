@@ -1,0 +1,1753 @@
+<!DOCTYPE html>
+
+<html lang="zh-TW">
+<head>
+<!-- 资源预连接 - 性能优化 -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://cdnjs.cloudflare.com" rel="preconnect"/>
+<link href="https://www.gstatic.com" rel="dns-prefetch"/>
+<link href="https://www.googletagmanager.com" rel="dns-prefetch"/>
+<meta charset="utf-8"/><link crossorigin="" href="https://www.gstatic.com" rel="preconnect"/>
+<!-- 性能优化：关键CSS内联 -->
+<style>
+        /* 关键CSS - 首屏渲染必需 */
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;line-height:1.6;color:#1f2937}
+        .vaultcaddy-navbar{position:fixed;top:0;width:100%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.1);z-index:1000}
+        .hero-section{min-height:100vh;display:flex;align-items:center;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff}
+        .container{max-width:1200px;margin:0 auto;padding:0 1rem}
+        .loading{opacity:0.5}
+    </style>
+<!-- 🔒 頁面保護：立即隱藏內容，等待 Auth 檢查 -->
+<style>
+        /* 頁面加載時隱藏內容 */
+        body.auth-checking {
+            visibility: hidden !important;
+        }
+        
+        /* 顯示加載動畫 */
+        .auth-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999999 !important; /* ✅ 超高z-index确保显示在最上层 */
+            visibility: visible !important;
+            pointer-events: auto !important;
+        }
+        
+        body.auth-ready .auth-loading {
+            display: none;
+        }
+        
+        /* ✅ 确保 auth-ready 时页面可见 */
+        body.auth-ready {
+            visibility: visible !important;
+        }
+        
+        html.auth-ready {
+            visibility: visible !important;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+<script>
+        // 立即添加 auth-checking 類，防止未登入用戶看到內容
+        document.documentElement.classList.add('auth-checking');
+        if (document.body) {
+            document.body.classList.add('auth-checking');
+        } else {
+            document.addEventListener('DOMContentLoaded', function() {
+                document.body.classList.add('auth-checking');
+            });
+        }
+        
+        // ✅ 安全超时：3秒后强制显示页面（防止卡在认证检查）
+        setTimeout(function() {
+            logger.log('⏰ 认证超时保护：强制显示页面');
+            logger.log('   - 当前body类:', document.body ? document.body.className : 'body不存在');
+            logger.log('   - 当前html类:', document.documentElement.className);
+            
+            document.documentElement.classList.remove('auth-checking');
+            document.documentElement.classList.add('auth-ready');
+            if (document.body) {
+                document.body.classList.remove('auth-checking');
+                document.body.classList.add('auth-ready');
+                document.body.style.visibility = 'visible';
+                document.body.style.overflow = 'auto';
+            }
+            
+            // 隐藏加载动画
+            const authLoading = document.querySelector('.auth-loading');
+            if (authLoading) {
+                authLoading.style.display = 'none';
+                logger.log('   - 已隐藏auth-loading');
+            }
+            
+            logger.log('   ✅ 超时保护完成');
+        }, 3000); // 3秒超时保护
+    </script>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<!-- 🔇 安全隐藏控制台日志（不删除代码） -->
+<script defer="" src="disable-console-safe.js"></script>
+<title>Dashboard - VaultCaddy</title>
+<meta content="VaultCaddy AI 文件處理儀表板" name="description"/>
+<link href="https://vaultcaddy.com/favicon.png" rel="icon" type="image/png"/>
+<link href="https://vaultcaddy.com/dashboard" rel="canonical"/>
+<link href="styles.css" rel="stylesheet"/>
+<link href="dashboard.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
+    
+    <!-- 优化后的公共组件 (2026-01-23) -->
+    <link rel="stylesheet" href="user-menu-styles.css">
+    <script defer src="logger.js"></script>
+    <script defer src="init-manager.js"></script>
+    <script defer src="user-menu-manager.js"></script>
+    <script defer src="mobile-menu-manager.js"></script>
+<script defer="" src="config.js"></script>
+<script defer="" src="translations.js?v=20251031"></script>
+<!-- ✅ 統一導航欄系統：靜態 HTML + navbar-component.js -->
+<script defer="" src="navbar-component.js?v=20260125-user-menu-v2"></script>
+<script defer="" src="sidebar-component.js?v=20251107-rebuild"></script>
+<!-- Firebase SDK（CDN 版本 - compat）- defer 確保 DOM 載入後才執行 -->
+<script defer="" src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script defer="" src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+<script defer="" src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
+<script defer="" src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+<!-- Firebase Functions SDK -->
+<script defer="" src="https://www.gstatic.com/firebasejs/10.7.0/firebase-functions-compat.js"></script>
+<!-- Firebase 配置和數據管理器 - defer 確保按順序執行 -->
+<script defer="" src="firebase-config.js?v=20251105-force-init"></script>
+<!-- 🔥 新的簡化系統 - defer 確保 Firebase 初始化後才執行 -->
+<script defer="" src="simple-auth.js?v=20251105-force-init"></script>
+<script defer="" src="user-profile-manager.js?v=20251120"></script>
+<script defer="" src="simple-data-manager.js?v=20251105-force-init"></script>
+<!-- Email 驗證檢查 -->
+<script defer="" src="email-verification-check.js"></script>
+<!-- 導航欄交互功能 -->
+<script defer="" src="navbar-interactions.js?v=20251108"></script>
+<!-- ✅ Google Ads 轉換追蹤 -->
+<script defer="" src="google-ads-conversion-tracking.js?v=20260213"></script>
+<style>
+        body {
+            background: #ffffff;
+            color: #1f2937;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .dashboard-container {
+            display: flex;
+            min-height: calc(100vh - 60px);
+            background: #ffffff;
+            padding-top: 10px; /* 60px (navbar) + 10pt */
+        }
+
+        .main-content {
+            flex: 1;
+            background: #ffffff;
+            overflow-y: auto;
+            min-height: calc(100vh - 60px);
+            padding: 2rem 3rem;
+            margin-top: 10pt; /* 向下 10pt */
+        }
+
+        .projects-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .projects-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .projects-title h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0;
+        }
+
+        .projects-title i {
+            color: #6b7280;
+            font-size: 1.25rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .filter-dropdown {
+            position: relative;
+        }
+
+        .filter-btn {
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            color: #374151;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filter-btn:hover {
+            background: #f9fafb;
+        }
+
+        .create-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .create-btn:hover {
+            background: #2563eb;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 0.25rem;
+            background: #f3f4f6;
+            padding: 0.25rem;
+            border-radius: 6px;
+        }
+
+        .view-btn {
+            background: transparent;
+            border: none;
+            padding: 0.5rem;
+            cursor: pointer;
+            color: #6b7280;
+            border-radius: 4px;
+        }
+
+        .view-btn.active {
+            background: #ffffff;
+            color: #1f2937;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .projects-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .projects-table thead {
+            background: #f9fafb;
+        }
+
+        .projects-table th {
+            text-align: left;
+            padding: 0.75rem 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .projects-table tbody tr {
+            border-bottom: 1px solid #e5e7eb;
+            transition: background 0.2s;
+        }
+
+        .projects-table tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .projects-table td {
+            padding: 1rem;
+            color: #1f2937;
+        }
+
+        .project-name {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .project-thumbnail {
+            width: 60px;
+            height: 40px;
+            background: #f3f4f6;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .project-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .project-thumbnail i {
+            color: #9ca3af;
+            font-size: 1.25rem;
+        }
+
+        .project-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .project-title {
+            font-weight: 500;
+            color: #1f2937;
+            font-size: 0.875rem;
+        }
+
+        .project-meta {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        .date-cell {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: #d1d5db;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0 0 0.5rem 0;
+        }
+
+        .empty-state p {
+            color: #6b7280;
+            margin: 0;
+        }
+
+        /* 創建項目模態框 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0;
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            font-size: 1.5rem;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+        }
+
+        .modal-close:hover {
+            background: #f3f4f6;
+            color: #1f2937;
+        }
+
+        .modal-body {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            color: #1f2937;
+            box-sizing: border-box;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+
+        .btn-cancel {
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            color: #374151;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .btn-cancel:hover {
+            background: #f9fafb;
+        }
+
+        .btn-create {
+            background: #3b82f6;
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .btn-create:hover {
+            background: #2563eb;
+        }
+
+        .btn-create:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+    
+        @media (max-width: 768px) {
+            /* 導航欄 */
+            .vaultcaddy-navbar {
+                padding: 0 0.75rem !important;
+            }
+            
+            /* 顯示漢堡菜單按鈕 */
+            #mobile-menu-btn {
+                display: block !important;
+            }
+            
+            /* 手機版顯示 logo，隱藏文字 */
+            .desktop-logo {
+                display: flex !important; /* ✅ 顯示 V 圖標 */
+            }
+            
+            .desktop-logo-text {
+                display: none !important; /* ✅ 隱藏 "VaultCaddy" 文字 */
+            }
+        
+        /* 手機版 UI 優化樣式 */
+/* 適用於 dashboard.html, firstproject.html, account.html, billing.html */
+
+@media (max-width: 768px) {
+    /* ==================== 通用樣式 ==================== */
+    
+    /* 主容器 */
+    body {
+        padding-top: 60px !important;
+    }
+    
+    .main-container,
+    .content-wrapper {
+        padding: 0.75rem !important;
+        margin: 0 !important;
+    }
+    
+    /* 所有卡片 */
+    .card,
+    div[style*="border-radius"][style*="padding"] {
+        padding: 1rem !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    /* 標題 */
+    h1 {
+        font-size: 1.5rem !important;
+    }
+    
+    h2 {
+        font-size: 1.25rem !important;
+    }
+    
+    h3 {
+        font-size: 1.125rem !important;
+    }
+    
+    /* 按鈕 */
+    button,
+    .btn {
+        padding: 0.75rem 1rem !important;
+        font-size: 0.875rem !important;
+    }
+    
+    /* 輸入框 */
+    input,
+    select,
+    textarea {
+        font-size: 1rem !important;
+        padding: 0.75rem !important;
+    }
+    
+    /* ==================== Dashboard 專用 ==================== */
+    
+    /* 項目列表 */
+    .projects-header {
+        flex-direction: column !important;
+        gap: 1rem !important;
+    }
+    
+    .projects-header > div {
+        width: 100% !important;
+    }
+    
+    /* 表格 */
+    table {
+        font-size: 0.875rem !important;
+    }
+    
+    table th,
+    table td {
+        padding: 0.5rem !important;
+    }
+    
+    /* 隱藏部分列（手機版） */
+    table th:nth-child(3),
+    table td:nth-child(3) {
+        display: none !important; /* 隱藏 CREATED 列 */
+    }
+    
+    /* ==================== First Project 專用 ==================== */
+    
+    /* 文檔類型選擇器 */
+    .document-type-selector {
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem !important;
+    }
+    
+    /* 上傳區域 */
+    .upload-area {
+        padding: 2rem 1rem !important;
+    }
+    
+    /* 導出按鈕組 */
+    .export-buttons {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+    }
+    
+    .export-buttons button {
+        width: 100% !important;
+    }
+    
+    /* 文檔表格 */
+    #team-project-tbody tr {
+        font-size: 0.8125rem !important;
+    }
+    
+    /* 隱藏部分列 */
+    .document-table th:nth-child(4),
+    .document-table td:nth-child(4),
+    .document-table th:nth-child(5),
+    .document-table td:nth-child(5) {
+        display: none !important; /* 隱藏金額和日期列 */
+    }
+    
+    /* ==================== Account 專用 ==================== */
+    
+    /* 個人資料卡片 */
+    .profile-card {
+        flex-direction: column !important;
+        text-align: center !important;
+    }
+    
+    .profile-avatar {
+        margin: 0 auto 1rem !important;
+    }
+    
+    /* Credits 使用情況 */
+    .credits-usage {
+        flex-direction: column !important;
+    }
+    
+    .credits-bar {
+        width: 100% !important;
+    }
+    
+    /* 表單 */
+    .form-group {
+        margin-bottom: 1rem !important;
+    }
+    
+    .form-row {
+        flex-direction: column !important;
+        gap: 1rem !important;
+    }
+    
+    /* ==================== Billing 專用 ==================== */
+    
+    /* 價格卡片 */
+    .pricing-cards {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+    }
+    
+    /* 交易記錄表格 */
+    .transaction-table {
+        font-size: 0.8125rem !important;
+    }
+    
+    .transaction-table th:nth-child(2),
+    .transaction-table td:nth-child(2) {
+        display: none !important; /* 隱藏描述列 */
+    }
+    
+    /* ==================== 模態框 ==================== */
+    
+    .modal-content {
+        width: 95% !important;
+        max-width: 95% !important;
+        margin: 1rem !important;
+        padding: 1rem !important;
+    }
+    
+    .modal-header {
+        padding: 1rem !important;
+    }
+    
+    .modal-body {
+        padding: 1rem !important;
+    }
+    
+    .modal-footer {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+    }
+    
+    .modal-footer button {
+        width: 100% !important;
+    }
+    
+    /* ==================== 側邊欄 ==================== */
+    
+    .sidebar {
+        width: 100% !important;
+        position: fixed !important;
+        top: 60px !important;
+        left: -100% !important;
+        height: calc(100vh - 60px) !important;
+        transition: left 0.3s ease !important;
+        z-index: 999 !important;
+    }
+    
+    .sidebar.active {
+        left: 0 !important;
+    }
+    
+    /* ==================== 其他優化 ==================== */
+    
+    /* 隱藏不必要的元素 */
+    .desktop-only {
+        display: none !important;
+    }
+    
+    /* 顯示手機版元素 */
+    .mobile-only {
+        display: block !important;
+    }
+    
+    /* 間距調整 */
+    section {
+        padding: 1.5rem 0 !important;
+    }
+    
+    /* 按鈕組 */
+    .button-group {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+    }
+    
+    .button-group button,
+    .button-group a {
+        width: 100% !important;
+    }
+}
+
+        /* Dashboard 特定樣式 */
+        @media (max-width: 768px) {
+            .create-btn {
+                width: 100% !important;
+                justify-content: center !important;
+            }
+            
+            .projects-table {
+                font-size: 0.875rem !important;
+            }
+            
+            .projects-table td {
+                padding: 0.75rem 0.5rem !important;
+            }
+        }
+        
+        </style>
+<!-- Favicon -->
+<link href="favicon.svg" rel="icon" type="image/svg+xml"/>
+<link href="favicon.png" rel="alternate icon" type="image/png"/>
+<link href="mobile-responsive.css" rel="stylesheet"/>
+<!-- Google Analytics 4 -->
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-LWPEKNC7RQ"></script>
+<script>
+      window.dataLayer = window.dataLayer | [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-LWPEKNC7RQ');
+    </script>
+<!-- 资源提示 - 优化加载速度 -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://www.googletagmanager.com" rel="dns-prefetch"/>
+<link href="https://images.unsplash.com" rel="dns-prefetch"/>
+<link href="https://cdn.jsdelivr.net" rel="dns-prefetch"/>
+<script src="/multilingual-data-sync.js"></script>
+</head>
+<body class="auth-checking">
+<!-- 🔒 Auth 加載動畫 -->
+<div class="auth-loading">
+<div style="text-align: center;">
+<div style="width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
+<p style="color: #6b7280; font-size: 0.875rem;">正在驗證身份...</p>
+</div>
+</div>
+<script>
+        // 立即執行的頁面可見性腳本
+        (function() {
+            document.documentElement.style.cssText = 'display: block !important; visibility: visible !important;';
+            document.body.style.cssText = 'display: block !important; visibility: visible !important; background: #ffffff;';
+        })();
+    </script>
+<!-- ✅ 統一靜態導航欄 -->
+<!-- ✅ 統一靜態導航欄（與 firstproject.html 完全一致）-->
+<nav class="vaultcaddy-navbar" id="main-navbar" style="position: fixed; top: 0; left: 0; right: 0; height: 60px; background: #ffffff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; z-index: 1000; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);">
+<div style="display: flex; align-items: center; gap: 0.5rem;">
+<!-- 漢堡菜單按鈕（僅手機顯示）-->
+<button id="mobile-menu-btn" onclick="openMobileSidebar()" style="display: none; background: none; border: none; cursor: pointer; padding: 0.5rem; color: #1f2937; font-size: 1.5rem;">
+<i class="fas fa-bars"></i>
+</button>
+<a href="index.html" style="display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: #1f2937; font-weight: 600; font-size: 1.125rem;">
+<div class="desktop-logo" style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.25rem;">
+                    V
+                </div>
+<div class="desktop-logo-text">
+<div>VaultCaddy</div>
+<div style="font-size: 0.75rem; color: #6b7280; font-weight: 400; text-transform: uppercase; letter-spacing: 0.05em;">AI DOCUMENT PROCESSING</div>
+</div>
+</a>
+</div>
+<div style="display: flex; align-items: center; gap: 2rem;">
+<div style="display: flex; align-items: center; gap: 2rem;">
+<a href="index.html#features" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">功能</a>
+<a href="index.html#pricing" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">價格</a>
+<a href="dashboard.html" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">儀表板</a>
+</div>
+<div id="language-switcher" style="display: none !important;"></div>
+<div id="user-menu" style="position: relative; display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: background 0.2s;">
+<div id="user-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">Y</div>
+</div>
+</div>
+</nav>
+<!-- 手機側邊欄菜單 -->
+<div id="mobile-sidebar" style="position: fixed; top: 0; left: -100%; width: 280px; height: 100vh; background: white; z-index: 2000; transition: left 0.3s ease; box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto;">
+<div style="padding: 1.5rem;">
+<!-- 菜單項 -->
+<div style="display: flex; flex-direction: column; gap: 0.5rem;">
+<a href="index.html" onclick="closeMobileSidebar()" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;">
+<i class="fas fa-home" style="width: 20px; color: #667eea;"></i>
+<span>首頁</span>
+</a>
+<a href="index.html#features" onclick="closeMobileSidebar()" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;">
+<i class="fas fa-star" style="width: 20px; color: #667eea;"></i>
+<span>功能</span>
+</a>
+<a href="index.html#pricing" onclick="closeMobileSidebar()" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;">
+<i class="fas fa-dollar-sign" style="width: 20px; color: #667eea;"></i>
+<span>價格</span>
+</a>
+<a href="dashboard.html" onclick="closeMobileSidebar()" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;">
+<i class="fas fa-th-large" style="width: 20px; color: #667eea;"></i>
+<span>儀表板</span>
+</a>
+<div style="height: 1px; background: #e5e7eb; margin: 1rem 0;"></div>
+<div style="height: 1px; background: #e5e7eb; margin: 1rem 0;"></div>
+<a href="privacy.html" onclick="closeMobileSidebar()" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;">
+<i class="fas fa-shield-alt" style="width: 20px; color: #6b7280;"></i>
+<span>隱私政策</span>
+</a>
+<a href="terms.html" onclick="closeMobileSidebar()" style="padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: background 0.2s; display: flex; align-items: center; gap: 0.75rem;">
+<i class="fas fa-file-contract" style="width: 20px; color: #6b7280;"></i>
+<span>服務條款</span>
+</a>
+</div>
+</div>
+</div>
+<!-- 側邊欄遮罩 -->
+<div id="mobile-sidebar-overlay" onclick="closeMobileSidebar()" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; display: none; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;"></div>
+<!-- ✅ 新版用戶菜單（2026-01-25 優化）-->
+<div id="user-dropdown" style="display: none; position: fixed; top: 70px; right: 2rem; background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); min-width: 280px; z-index: 2000; border: 1px solid #e5e7eb; overflow: hidden;">
+    <!-- 用戶信息頭部（漸變背景）-->
+    <div style="padding: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+            <div id="dropdown-avatar" style="width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: 600; border: 2px solid rgba(255,255,255,0.3);">U</div>
+            <div style="flex: 1; min-width: 0;">
+                <div id="dropdown-name" style="font-weight: 600; font-size: 1rem; margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">User</div>
+                <div id="dropdown-email" style="font-size: 0.75rem; opacity: 0.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">user@example.com</div>
+            </div>
+        </div>
+        <div style="display: flex; gap: 0.75rem;">
+            <div style="flex: 1; background: rgba(255,255,255,0.15); border-radius: 8px; padding: 0.75rem; text-align: center; backdrop-filter: blur(10px);">
+                <div style="font-size: 0.75rem; opacity: 0.9; margin-bottom: 0.25rem;">Credits</div>
+                <div id="dropdown-credits" style="font-size: 1.25rem; font-weight: 700;">0</div>
+            </div>
+            <div style="flex: 1; background: rgba(255,255,255,0.15); border-radius: 8px; padding: 0.75rem; text-align: center; backdrop-filter: blur(10px);">
+                <div style="font-size: 0.75rem; opacity: 0.9; margin-bottom: 0.25rem;">套餐</div>
+                <div id="dropdown-plan" style="font-size: 0.875rem; font-weight: 600;">Free Plan</div>
+            </div>
+        </div>
+    </div>
+    <!-- 菜單項目 -->
+    <div style="padding: 0.5rem;">
+        <a href="account.html" onmouseout="this.style.backgroundColor='transparent'; this.style.transform='translateX(0)'" onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.transform='translateX(4px)'" style="display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: all 0.2s ease; font-weight: 500;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px;">
+                    <i class="fas fa-user" style="color: white; font-size: 0.875rem;"></i>
+                </div>
+                <span>帳戶</span>
+            </div>
+            <span style="font-size: 0.75rem; color: #9ca3af;">⌘A</span>
+        </a>
+        <a href="billing.html" onmouseout="this.style.backgroundColor='transparent'; this.style.transform='translateX(0)'" onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.transform='translateX(4px)'" style="display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1rem; color: #374151; text-decoration: none; border-radius: 8px; transition: all 0.2s ease; font-weight: 500;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 8px;">
+                    <i class="fas fa-credit-card" style="color: white; font-size: 0.875rem;"></i>
+                </div>
+                <span>計費</span>
+            </div>
+            <span style="font-size: 0.75rem; color: #9ca3af;">⌘B</span>
+        </a>
+    </div>
+    <!-- 登出按鈕 -->
+    <div style="padding: 0.5rem; border-top: 1px solid #e5e7eb;">
+        <button onclick="handleLogout()" onmouseout="this.style.backgroundColor='transparent'; this.style.transform='translateX(0)'" onmouseover="this.style.backgroundColor='#fef2f2'; this.style.transform='translateX(4px)'" style="width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1rem; color: #dc2626; background: transparent; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; font-weight: 500; text-align: left;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: #fef2f2; border-radius: 8px;">
+                    <i class="fas fa-sign-out-alt" style="color: #dc2626; font-size: 0.875rem;"></i>
+                </div>
+                <span>登出</span>
+            </div>
+            <span style="font-size: 0.75rem; color: #9ca3af;">⌘Q</span>
+        </button>
+    </div>
+</div>
+<!-- ✅ index.html 動態更新用戶狀態 -->
+<script>
+        document.addEventListener('DOMContentLoaded', function() {
+            logger.log('✅ index.html 初始化');
+            
+            let userCredits = 0;
+            let userEmail = '';
+            let userDisplayName = '';
+            
+            // 獲取用戶首字母
+            function getUserInitial() {
+                // 優先使用 displayName 的第一個字母
+                if (userDisplayName && userDisplayName.trim()) {
+                    return userDisplayName.charAt(0).toUpperCase();
+                }
+                // 否則使用 email 的第一個字母
+                if (userEmail && userEmail.trim()) {
+                    return userEmail.charAt(0).toUpperCase();
+                }
+                return 'U';
+            }
+            
+            // 🔥 漢堡菜單功能（立即執行，不等待 DOMContentLoaded）
+            (function() {
+                logger.log('🔵 初始化漢堡菜單...');
+                
+                // 打開側邊欄
+                window.openMobileSidebar = function() {
+                    logger.log('🔵 openMobileSidebar 被調用');
+                    const sidebar = document.getElementById('mobile-sidebar');
+                    const overlay = document.getElementById('mobile-sidebar-overlay');
+                    logger.log('🔵 sidebar:', sidebar);
+                    logger.log('🔵 overlay:', overlay);
+                    
+                    if (sidebar && overlay) {
+                        sidebar.style.left = '0';
+                        overlay.style.display = 'block';
+                        document.body.style.overflow = 'hidden';
+                        logger.log('✅ 側邊欄已打開');
+                    } else {
+                        console.error('❌ 找不到側邊欄或遮罩元素');
+                    }
+                };
+                
+                // 關閉側邊欄
+                window.closeMobileSidebar = function() {
+                    logger.log('🔵 closeMobileSidebar 被調用');
+                    const sidebar = document.getElementById('mobile-sidebar');
+                    const overlay = document.getElementById('mobile-sidebar-overlay');
+                    
+                    if (sidebar && overlay) {
+                        sidebar.style.left = '-100%';
+                        overlay.style.display = 'none';
+                        document.body.style.overflow = 'auto';
+                        logger.log('✅ 側邊欄已關閉');
+                    }
+                };
+                
+                // 漢堡菜單按鈕使用 onclick，無需額外綁定
+                logger.log('✅ 漢堡菜單功能已就緒（使用 onclick）');
+            })();
+                
+                // 手機版自動輪播（僅在手機版啟用）
+                if (window.innerWidth <= 768) {
+                    // 評價輪播
+                    const testimonialsContainer = document.getElementById('testimonials-container');
+                    if (testimonialsContainer) {
+                        let testimonialIndex = 0;
+                        const testimonialCards = testimonialsContainer.children;
+                        
+                        setInterval(() => {
+                            testimonialIndex = (testimonialIndex + 1) % testimonialCards.length;
+                            const scrollAmount = testimonialCards[testimonialIndex].offsetLeft - testimonialsContainer.offsetLeft;
+                            testimonialsContainer.scrollTo({
+                                left: scrollAmount,
+                                behavior: 'smooth'
+                            });
+                        }, 4000); // 每4秒切換
+                    }
+                    
+                    // 學習中心輪播
+                    const learningContainer = document.getElementById('learning-center-container');
+                    if (learningContainer) {
+                        let learningIndex = 0;
+                        const learningCards = learningContainer.children;
+                        
+                        setInterval(() => {
+                            learningIndex = (learningIndex + 1) % learningCards.length;
+                            const scrollAmount = learningCards[learningIndex].offsetLeft - learningContainer.offsetLeft;
+                            learningContainer.scrollTo({
+                                left: scrollAmount,
+                                behavior: 'smooth'
+                            });
+                        }, 5000); // 每5秒切換
+                    }
+                }
+            
+            // 切換下拉菜單
+            async function toggleDropdown() {
+                const dropdown = document.getElementById('user-dropdown');
+                if (dropdown.style.display === 'none') {
+                    dropdown.style.display = 'block';
+                    
+                    // 🔥 即時從 SimpleDataManager 獲取最新用戶數據
+                    let planType = 'Free Plan';
+                    if (window.simpleDataManager && window.simpleDataManager.initialized) {
+                        try {
+                            userCredits = await window.simpleDataManager.getUserCredits();
+                            logger.log('✅ 即時獲取 Credits:', userCredits);
+                            
+                            // 獲取套餐類型
+                            const currentUser = window.simpleAuth?.getCurrentUser();
+                            if (currentUser) {
+                                const userDoc = await window.simpleDataManager.db.collection('users').doc(currentUser.uid).get();
+                                if (userDoc.exists) {
+                                    planType = userDoc.data().planType || 'Free Plan';
+                                }
+                            }
+                        } catch (error) {
+                            console.error('❌ 無法獲取用戶數據:', error);
+                        }
+                    }
+                    
+                    // ✅ 更新下拉菜單內容（新版）
+                    const avatarEl = document.getElementById('dropdown-avatar');
+                    const nameEl = document.getElementById('dropdown-name');
+                    const emailEl = document.getElementById('dropdown-email');
+                    const creditsEl = document.getElementById('dropdown-credits');
+                    const planEl = document.getElementById('dropdown-plan');
+                    
+                    if (avatarEl) avatarEl.textContent = getUserInitial();
+                    if (nameEl) nameEl.textContent = userDisplayName || userEmail.split('@')[0] || 'User';
+                    if (emailEl) emailEl.textContent = userEmail;
+                    if (creditsEl) creditsEl.textContent = userCredits.toLocaleString();
+                    if (planEl) planEl.textContent = planType;
+                } else {
+                    dropdown.style.display = 'none';
+                }
+            }
+            
+            // 點擊外部關閉下拉菜單
+            document.addEventListener('click', function(event) {
+                const dropdown = document.getElementById('user-dropdown');
+                const userMenu = document.getElementById('user-menu');
+                
+                if (dropdown && userMenu && 
+                    !dropdown.contains(event.target) && 
+                    !userMenu.contains(event.target)) {
+                    dropdown.style.display = 'none';
+                }
+            });
+            
+            // 登出功能
+            window.handleLogout = async function() {
+                try {
+                    if (window.simpleAuth) {
+                        await window.simpleAuth.logout();
+                        window.location.href = 'index.html';
+                    }
+                } catch (error) {
+                    console.error('登出失敗:', error);
+                    alert('登出失敗，請重試');
+                }
+            };
+            
+            // 等待 Firebase 和 simpleAuth 加載
+            async function updateUserMenu() {
+                const userMenu = document.getElementById('user-menu');
+                if (!userMenu) return;
+                
+                try {
+                    const isLoggedIn = window.simpleAuth && window.simpleAuth.isLoggedIn();
+                    
+                    if (isLoggedIn) {
+                        // ✅ 已登入：顯示用戶頭像
+                        const currentUser = window.simpleAuth.getCurrentUser();
+                        userEmail = currentUser.email || '';
+                        userDisplayName = currentUser.displayName || '';
+                        
+                        // 🔥 從 Firestore 獲取 displayName 和 credits
+                        if (window.simpleDataManager && window.simpleDataManager.initialized) {
+                            try {
+                                const userDoc = await window.simpleDataManager.getUserDocument();
+                                if (userDoc) {
+                                    userDisplayName = userDoc.displayName | userDisplayName;
+                                    userCredits = userDoc.credits | 0;
+                                    logger.log('✅ index.html 獲取 Credits:', userCredits);
+                                }
+                            } catch (error) {
+                                logger.log('⚠️ 無法從 Firestore 獲取用戶資料:', error);
+                            }
+                        } else {
+                            logger.log('⏳ SimpleDataManager 尚未初始化，等待中...');
+                            // 延遲重試
+                            setTimeout(async () => {
+                                if (window.simpleDataManager && window.simpleDataManager.initialized) {
+                                    try {
+                                        userCredits = await window.simpleDataManager.getUserCredits();
+                                        logger.log('✅ 延遲獲取 Credits:', userCredits);
+                                    } catch (error) {
+                                        console.error('❌ 延遲獲取失敗:', error);
+                                    }
+                                }
+                            }, 1000);
+                        }
+                        
+                        const userInitial = getUserInitial();
+                        logger.log(`👤 用戶首字母: "${userInitial}" (displayName: "${userDisplayName}")`);
+                        
+                        userMenu.innerHTML = `
+                            <div onclick="toggleDropdown()" class="user-menu-trigger">
+                                <div class="user-avatar">${userInitial}</div>
+                            </div>
+                        `;
+                        logger.log('✅ 用戶已登入，顯示頭像');
+                    } else {
+                        // ✅ 未登入：顯示登入按鈕
+                        userMenu.innerHTML = `
+                            <button onclick="window.location.href='auth.html'" class="login-button">登入</button>
+                        `;
+                        logger.log('✅ 用戶未登入，顯示登入按鈕');
+                    }
+                } catch (e) {
+                    logger.log('❌ 無法更新用戶菜單:', e);
+                }
+            }
+            
+            // ✅ 等待 simpleAuth 初始化後再更新用戶菜單
+            async function waitForAuthAndUpdate() {
+                if (window.simpleAuth && window.simpleAuth.initialized) {
+                    updateUserMenu();
+                    return;
+                }
+                let attempts = 0;
+                const checkInterval = setInterval(() => {
+                    attempts++;
+                    if (window.simpleAuth && window.simpleAuth.initialized) {
+                        clearInterval(checkInterval);
+                        console.log('✅ simpleAuth 初始化完成，更新用戶菜單');
+                        updateUserMenu();
+                    } else if (attempts > 50) {
+                        clearInterval(checkInterval);
+                        console.warn('⚠️ simpleAuth 初始化超時，強制更新用戶菜單');
+                        updateUserMenu();
+                    }
+                }, 100);
+            }
+            waitForAuthAndUpdate();
+            
+            // 監聽 Firebase 和 Auth 事件
+            window.addEventListener('firebase-ready', updateUserMenu);
+            window.addEventListener('user-logged-in', updateUserMenu);
+            window.addEventListener('user-logged-out', updateUserMenu);
+            window.addEventListener('auth-state-changed', updateUserMenu);
+            
+            // 暴露 toggleDropdown 到全局
+            window.toggleDropdown = toggleDropdown;
+        });
+    </script>
+<!-- 主要內容區域 -->
+<main style="padding-top: 70px;">
+<!-- Dashboard 容器 -->
+<div class="dashboard-container" style="display: flex !important; visibility: visible !important;">
+<!-- 左側邊欄 (由 sidebar-component.js 動態生成) -->
+<aside class="sidebar"></aside>
+<!-- 主要內容區域 -->
+<div class="main-content" style="display: block !important; visibility: visible !important;">
+<!-- 項目列表標題 -->
+<div class="projects-header" style="display: flex; align-items: center; justify-content: flex-end; margin-bottom: 1.5rem;">
+<!-- Create 按鈕 -->
+<div class="header-actions">
+<button class="create-btn" onclick="openCreateProjectModal()">
+<i class="fas fa-plus"></i>
+<span>Create</span>
+</button>
+</div>
+</div>
+<!-- 項目表格 -->
+<table class="projects-table">
+<thead>
+<tr>
+<th>Name</th>
+<th>Last modified</th>
+<th>Created</th>
+<th style="width: 80px; text-align: center;">操作</th>
+</tr>
+</thead>
+<tbody id="projects-tbody">
+<!-- 項目列表將在這裡動態生成 -->
+<tr>
+<td colspan="4">
+<div class="empty-state">
+<i class="fas fa-folder-open"></i>
+<h3>No projects yet</h3>
+<p>Create your first project to get started</p>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- 創建項目模態框 -->
+<div class="modal-overlay" id="createProjectModal">
+<div class="modal-content">
+<div class="modal-header">
+<h2 data-translate="create_new_project">Create New Project</h2>
+<button class="modal-close" onclick="closeCreateProjectModal()">
+<i class="fas fa-times"></i>
+</button>
+</div>
+<div class="modal-body">
+<div class="form-group">
+<label class="form-label" data-translate="project_name" for="projectName">Project Name</label>
+<input class="form-input" id="projectName" onkeypress="if(event.key === 'Enter') createProject()" placeholder="Enter project name..." type="text"/>
+</div>
+</div>
+<div class="modal-footer">
+<button class="btn-cancel" onclick="closeCreateProjectModal()"><span data-translate="cancel">Cancel</span></button>
+<button class="btn-create" id="createBtn" onclick="createProject()">Create</button>
+</div>
+</div>
+</div>
+<!-- 刪除項目模態框 -->
+<div id="deleteProjectModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+<div style="background: white; border-radius: 12px; padding: 2rem; width: 90%; max-width: 500px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
+<div style="display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1.5rem;">
+<div style="width: 48px; height: 48px; border-radius: 50%; background: #fee2e2; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+<i class="fas fa-exclamation-triangle" style="color: #ef4444; font-size: 1.5rem;"></i>
+</div>
+<div style="flex: 1;">
+<h2 style="font-size: 1.25rem; font-weight: 600; color: #1f2937; margin: 0 0 0.5rem 0;">刪除項目</h2>
+<p style="color: #6b7280; font-size: 0.875rem; margin: 0;">
+                        是否刪除文件夾 '<span id="deleteProjectName" style="font-weight: 600; color: #1f2937;"></span>'？<br/>
+                        刪除後無法復原文件夾及當中內容。
+                    </p>
+</div>
+</div>
+<div style="margin-bottom: 1.5rem;">
+<label style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem;">
+                    請輸入項目名稱以確認刪除
+                </label>
+<input id="deleteProjectConfirmInput" oninput="validateDeleteInput()" placeholder="輸入項目名稱" style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem; color: #1f2937; box-sizing: border-box;" type="text"/>
+</div>
+<div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+<button onclick="closeDeleteProjectModal()" style="background: #ffffff; border: 1px solid #d1d5db; color: #374151; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500;">
+                    取消
+                </button>
+<button disabled="" id="confirmDeleteBtn" onclick="confirmDeleteProject()" style="background: #ef4444; border: none; color: white; padding: 0.5rem 1rem; border-radius: 6px; cursor: not-allowed; font-size: 0.875rem; font-weight: 500; opacity: 0.5;"><span data-translate="yes_delete">是</span></button>
+</div>
+</div>
+</div>
+<script>
+        // 打開創建項目模態框
+        function openCreateProjectModal() {
+            const modal = document.getElementById('createProjectModal');
+            const input = document.getElementById('projectName');
+            modal.classList.add('active');
+            input.value = '';
+            input.focus();
+        }
+
+        // 關閉創建項目模態框
+        function closeCreateProjectModal() {
+            const modal = document.getElementById('createProjectModal');
+            modal.classList.remove('active');
+        }
+
+        // 創建新項目
+        async function createProject() {
+            const input = document.getElementById('projectName');
+            const projectName = input.value.trim();
+            
+            if (!projectName) {
+                alert('Please enter a project name');
+                return;
+            }
+            
+            // 保存到 Firebase
+            try {
+                const projectData = await window.simpleDataManager.createProject(projectName);
+                logger.log('✅ 項目已保存到 Firebase:', projectData);
+            
+            // 關閉模態框
+            closeCreateProjectModal();
+            
+                // 🔥 修復：使用 Firebase 返回的真實 projectId
+                const projectId = projectData.id;
+                logger.log('🚀 跳轉到新項目頁面:', projectId);
+                
+                // 跳轉到新項目頁面
+                window.location.href = `firstproject.html?project=${projectId}`;
+            } catch (error) {
+                console.error('❌ 保存到 Firebase 失敗:', error);
+                alert('創建項目失敗，請重試');
+                return;
+            }
+        }
+
+        // ✅ 簡化：直接使用 SimpleAuth
+        function checkLoginStatus() {
+            return window.simpleAuth && window.simpleAuth.isLoggedIn();
+        }
+
+        // 載入項目列表
+        async function loadProjects() {
+            logger.log('🔄 載入項目列表');
+            
+            // 從 Firebase 獲取項目數據
+            let projects = [];
+            try {
+                projects = await window.simpleDataManager.getProjects();
+                logger.log(`✅ 從 Firebase 加載 ${projects.length} 個項目`);
+            } catch (error) {
+                console.error('❌ 從 Firebase 加載項目失敗:', error);
+                projects = [];
+            }
+            
+            const tbody = document.getElementById('projects-tbody');
+            
+            if (projects.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4">
+                            <div class="empty-state">
+                                <i class="fas fa-folder-open"></i>
+                                <h3>No projects yet</h3>
+                                <p>Create your first project to get started</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = projects.map(project => `
+                <tr onclick="window.location.href='firstproject.html?project=${project.id}'" style="cursor: pointer;">
+                    <td>
+                        <div class="project-name">
+                            <div class="project-thumbnail">
+                                ${project.thumbnail ? 
+                                    `<img src="${project.thumbnail}" alt="${project.name}" loading="lazy" decoding="async">` : 
+                                    '<i class="fas fa-file-alt"></i>'
+                                }
+                            </div>
+                            <div class="project-info">
+                                <div class="project-title">${project.name}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="date-cell">${formatDate(project.updatedAt || project.lastModified || project.createdAt)}</td>
+                    <td class="date-cell">${formatDate(project.createdAt || project.created)}</td>
+                    <td style="text-align: center;">
+                        <button 
+                            onclick="event.stopPropagation(); showDeleteProjectModal('${project.id}', '${project.name.replace(/'/g, "\\'")}')" 
+                            style="background: none; border: none; color: #9ca3af; cursor: pointer; padding: 0.5rem; border-radius: 4px; transition: all 0.2s;"
+                            onmouseover="this.style.color='#ef4444'; this.style.backgroundColor='#fee2e2'"
+                            onmouseout="this.style.color='#9ca3af'; this.style.backgroundColor='transparent'"
+                            title="刪除項目">
+                            <i class="fas fa-trash" style="font-size: 1rem;"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 格式化日期
+        function formatDate(dateValue) {
+            if (!dateValue) return '-';
+            
+            let date;
+            
+            // 處理 Firebase Timestamp 對象
+            if (typeof dateValue === 'object' && dateValue.seconds) {
+                // 檢查 seconds 是否為有效值（不為 0 或負數）
+                if (dateValue.seconds <= 0) {
+                    logger.warn('⚠️ 無效的 Firebase Timestamp:', dateValue);
+                    return '-';
+                }
+                date = new Date(dateValue.seconds * 1000);
+            } 
+            // 處理 Date 對象
+            else if (dateValue instanceof Date) {
+                date = dateValue;
+            }
+            // 處理數字時間戳
+            else if (typeof dateValue === 'number') {
+                // 檢查時間戳是否為有效值
+                if (dateValue <= 0) {
+                    logger.warn('⚠️ 無效的時間戳:', dateValue);
+                    return '-';
+                }
+                date = new Date(dateValue);
+            }
+            // 處理字符串
+            else if (typeof dateValue === 'string') {
+                date = new Date(dateValue);
+            }
+            else {
+                logger.warn('⚠️ 未知的日期格式:', dateValue);
+                return '-';
+            }
+            
+            // 檢查日期是否有效
+            if (isNaN(date.getTime()) || date.getTime() <= 0) {
+                logger.warn('⚠️ 無效的日期:', date);
+                return '-';
+            }
+            
+            // 返回格式化的日期
+            return date.toLocaleDateString('zh-TW', { 
+                year: 'numeric', 
+                month: '2-digit', 
+                day: '2-digit' 
+            });
+        }
+
+        // ==================== 刪除項目模態框 ====================
+        let projectToDelete = null;
+
+        function showDeleteProjectModal(projectId, projectName) {
+            projectToDelete = { id: projectId, name: projectName };
+            const modal = document.getElementById('deleteProjectModal');
+            const nameDisplay = document.getElementById('deleteProjectName');
+            const confirmInput = document.getElementById('deleteProjectConfirmInput');
+            const confirmBtn = document.getElementById('confirmDeleteBtn');
+            
+            nameDisplay.textContent = projectName;
+            confirmInput.value = '';
+            confirmBtn.disabled = true;
+            modal.style.display = 'flex';
+            
+            setTimeout(() => confirmInput.focus(), 100);
+        }
+
+        function closeDeleteProjectModal() {
+            const modal = document.getElementById('deleteProjectModal');
+            modal.style.display = 'none';
+            projectToDelete = null;
+        }
+
+        function validateDeleteInput() {
+            const confirmInput = document.getElementById('deleteProjectConfirmInput');
+            const confirmBtn = document.getElementById('confirmDeleteBtn');
+            
+            if (projectToDelete && confirmInput.value === projectToDelete.name) {
+                confirmBtn.disabled = false;
+                confirmBtn.style.opacity = '1';
+                confirmBtn.style.cursor = 'pointer';
+            } else {
+                confirmBtn.disabled = true;
+                confirmBtn.style.opacity = '0.5';
+                confirmBtn.style.cursor = 'not-allowed';
+            }
+        }
+
+        async function confirmDeleteProject() {
+            if (!projectToDelete) return;
+            
+            try {
+                await window.simpleDataManager.deleteProject(projectToDelete.id);
+                logger.log('✅ 項目已刪除:', projectToDelete.name);
+                
+                // 觸發側邊欄更新
+                window.dispatchEvent(new Event('projectDeleted'));
+                
+                // 關閉模態框
+                closeDeleteProjectModal();
+                
+                // 重新加載項目列表
+                loadProjects();
+                
+                alert('項目已成功刪除');
+            } catch (error) {
+                console.error('❌ 刪除項目失敗:', error);
+                alert('刪除項目失敗: ' + error.message);
+            }
+        }
+
+        // 初始化示例項目函數已移除 - 新用戶應該看到空白項目列表
+        // function initializeSampleProjects() {
+        //     新用戶註冊時不應該有任何預設項目
+        // }
+
+        // 🔥 監聽 SimpleAuth 初始化完成事件
+        let authInitialized = false;
+        let dataManagerInitialized = false;
+        
+        window.addEventListener('auth-state-changed', async function(e) {
+            logger.log('🔥 收到 auth-state-changed 事件');
+            authInitialized = true;
+            
+            // 檢查是否已登入
+            if (!e.detail.user) {
+                logger.log('❌ 用戶未登入');
+                return; // SimpleAuth 會自動處理重定向
+            }
+            
+            logger.log('✅ 用戶已登入:', e.detail.user.email);
+            
+            // 初始化側邊欄
+            initializeDashboard();
+        });
+        
+        // 初始化 Dashboard
+        function initializeDashboard() {
+            logger.log('🎯 初始化 Dashboard...');
+            
+            // 初始化側邊欄
+            if (window.VaultCaddySidebar && !window.dashboardSidebar) {
+                window.dashboardSidebar = new VaultCaddySidebar('dashboard');
+                logger.log('✅ 側邊欄已初始化');
+            }
+            
+            // 如果 SimpleDataManager 已初始化，載入項目
+            if (window.simpleDataManager && window.simpleDataManager.initialized) {
+                logger.log('✅ SimpleDataManager 已就緒，載入項目');
+                loadProjects();
+            }
+        }
+        
+        // 監聽 SimpleDataManager 初始化完成
+        // （通過輪詢檢查，因為 simple-data-manager.js 沒有觸發專用事件）
+        const checkDataManager = setInterval(() => {
+            if (window.simpleDataManager && window.simpleDataManager.initialized && !dataManagerInitialized) {
+                dataManagerInitialized = true;
+                clearInterval(checkDataManager);
+                logger.log('✅ SimpleDataManager 已初始化');
+                
+                // 如果用戶已登入，載入項目
+                if (authInitialized && window.simpleAuth && window.simpleAuth.isLoggedIn()) {
+                    logger.log('✅ 用戶已登入 + SimpleDataManager 已就緒，載入項目');
+                    loadProjects();
+                }
+            }
+        }, 100);
+        
+        // 超時保護（15 秒）
+        setTimeout(() => {
+            clearInterval(checkDataManager);
+            if (!dataManagerInitialized) {
+                console.error('❌ SimpleDataManager 初始化超時');
+            }
+        }, 15000);
+        
+        // ==================== Email 驗證檢查 ====================
+        (async function initEmailVerification() {
+            try {
+                // 等待 Firebase 和驗證檢查器初始化
+                await new Promise((resolve) => {
+                    const checkReady = setInterval(() => {
+                        if (window.emailVerificationChecker && firebase.auth) {
+                            clearInterval(checkReady);
+                            resolve();
+                        }
+                    }, 100);
+                    
+                    setTimeout(() => {
+                        clearInterval(checkReady);
+                        resolve();
+                    }, 10000);
+                });
+                
+                // 檢查驗證狀態並顯示提示（不阻擋功能）
+                await checkEmailVerification({ showNotice: true, blockPage: false });
+            } catch (error) {
+                console.error('❌ Email 驗證檢查失敗:', error);
+            }
+        })();
+    </script>
+<!-- 🔥 漢堡菜單超級簡單修復方案 -->
+<script>
+        logger.log('🔥 開始初始化漢堡菜單...');
+        
+        // 打開側邊欄函數
+        function openSidebar() {
+            logger.log('🔵 打開側邊欄');
+            const sidebar = document.getElementById('mobile-sidebar');
+            const overlay = document.getElementById('mobile-sidebar-overlay');
+            
+            if (sidebar && overlay) {
+                sidebar.style.left = '0';
+                overlay.style.display = 'block';
+                overlay.style.pointerEvents = 'auto';
+                // 触发重排后再改透明度，确保动画生效
+                setTimeout(() => {
+                    overlay.style.opacity = '1';
+                }, 10);
+                document.body.style.overflow = 'hidden';
+                logger.log('✅ 側邊欄已打開');
+            }
+        }
+        
+        // 關閉側邊欄函數
+        function closeSidebar() {
+            logger.log('🔵 關閉側邊欄');
+            const sidebar = document.getElementById('mobile-sidebar');
+            const overlay = document.getElementById('mobile-sidebar-overlay');
+            
+            if (sidebar && overlay) {
+                sidebar.style.left = '-100%';
+                overlay.style.opacity = '0';
+                overlay.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                }, 300); // 等待動畫完成（與 CSS transition 一致）
+                document.body.style.overflow = 'auto';
+                logger.log('✅ 側邊欄已關閉');
+            }
+        }
+        
+        // 超級簡單的初始化函數
+        function simpleInitMenu() {
+            const btn = document.getElementById('mobile-menu-btn');
+            const overlay = document.getElementById('mobile-sidebar-overlay');
+            
+            if (!btn || !overlay) {
+                logger.log('⏳ 元素未找到，200ms後重試');
+                setTimeout(simpleInitMenu, 200);
+                return;
+            }
+            
+            // ✅ 确保遮罩初始状态是隐藏的
+            overlay.style.display = 'none';
+            overlay.style.opacity = '0';
+            overlay.style.pointerEvents = 'none';
+            
+            // ✅ 确保认证加载动画已隐藏
+            const authLoading = document.querySelector('.auth-loading');
+            if (authLoading) {
+                authLoading.style.display = 'none';
+            }
+            
+            // ✅ 确保 body 有 auth-ready 类
+            document.body.classList.add('auth-ready');
+            document.body.classList.remove('auth-checking');
+            document.documentElement.classList.add('auth-ready');
+            document.documentElement.classList.remove('auth-checking');
+            
+            logger.log('✅ 找到所有元素！');
+            
+            // 按鈕點擊處理
+            btn.addEventListener('click', function() {
+                logger.log('🔵 按鈕被點擊！');
+                openSidebar();
+            });
+            
+            // 觸摸處理
+            btn.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                logger.log('🔵 觸摸事件！');
+                openSidebar();
+            });
+            
+            // 遮罩點擊關閉
+            overlay.addEventListener('click', function() {
+                logger.log('🔵 點擊遮罩關閉');
+                closeSidebar();
+            });
+            
+            // 遮罩觸摸關閉
+            overlay.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                logger.log('🔵 觸摸遮罩關閉');
+                closeSidebar();
+            });
+            
+            logger.log('✅ 所有事件監聽器已綁定');
+        }
+        
+        // 立即嘗試初始化
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', simpleInitMenu);
+        } else {
+            setTimeout(simpleInitMenu, 100);
+        }
+        
+        // ✅ 紧急修复：页面加载后立即执行（不等待load事件）
+        function emergencyOverlayCleanup() {
+            logger.log('🔧 执行紧急遮罩清理...');
+            
+            // 隐藏所有可能的遮罩层
+            const overlays = [
+                document.getElementById('mobile-sidebar-overlay'),
+                document.querySelector('.auth-loading'),
+                document.querySelector('.modal-overlay'),
+                document.getElementById('deleteProjectModal')
+            ];
+            
+            overlays.forEach(overlay => {
+                if (overlay) {
+                    overlay.style.display = 'none';
+                    overlay.style.opacity = '0';
+                    overlay.style.pointerEvents = 'none';
+                }
+            });
+            
+            // 确保 body 可见
+            document.body.classList.add('auth-ready');
+            document.body.classList.remove('auth-checking');
+            document.documentElement.classList.add('auth-ready');
+            document.documentElement.classList.remove('auth-checking');
+            document.body.style.visibility = 'visible';
+            document.body.style.overflow = 'auto';
+            
+            logger.log('✅ 遮罩清理完成');
+        }
+        
+        // 立即执行一次
+        setTimeout(emergencyOverlayCleanup, 1000); // 1秒后强制清理
+        
+        // load事件也执行一次
+        window.addEventListener('load', emergencyOverlayCleanup);
+        
+        // DOMContentLoaded也执行一次
+        document.addEventListener('DOMContentLoaded', emergencyOverlayCleanup);
+        
+        // 暴露函數供側邊欄內的連結使用
+        window.closeMobileSidebar = closeSidebar;
+    </script>
+</main>
+    <!-- Google Analytics 事件跟踪 -->
+    <script src="/ga-event-tracking.js"></script>
+</body>
+</html>
