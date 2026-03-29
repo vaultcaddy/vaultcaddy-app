@@ -241,8 +241,24 @@
         <div class="hero-badge">香港小店老闆專用</div>
         <h1 class="hero-title">告別年底「鞋盒找單」<br>一年省下 <span>$5,000</span> 會計費</h1>
         <p class="hero-subtitle">店員每日一鍵拍照上傳，AI 自動做好 IRD 扣稅分類。月底直接發 Excel 給會計師，老闆零跟進，報稅超輕鬆。</p>
+        
+        <!-- 一鍵試用上載區塊 -->
+        <div style="max-width: 600px; margin: 0 auto 30px; background: white; border-radius: 16px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+            <div id="dropzone" style="border: 2px dashed #CBD5E1; border-radius: 12px; padding: 32px 20px; text-align: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#4F46E5'; this.style.backgroundColor='#F5F3FF'" onmouseout="this.style.borderColor='#CBD5E1'; this.style.backgroundColor='transparent'">
+                <div style="width: 64px; height: 64px; background: #EEF2FF; color: #4F46E5; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 16px;">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <h3 style="font-size: 1.25rem; font-weight: 700; color: #1F2937; margin-bottom: 8px;">拖放收據到此處或點擊上傳</h3>
+                <p style="color: #6B7280; font-size: 0.875rem; margin-bottom: 16px;">支援 PDF、JPG、PNG 格式</p>
+                <div style="display: inline-flex; align-items: center; gap: 6px; background: #FEF3C7; color: #D97706; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">
+                    <i class="fas fa-sparkles"></i> 立即體驗 AI 智能分類
+                </div>
+            </div>
+            <input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png" multiple style="display: none;">
+        </div>
+
         <a href="auth.html" class="hero-cta">
-            免費試用 30 張單據
+            免費註冊，獲取 30 張單據額度
             <i class="fas fa-arrow-right"></i>
         </a>
         <p style="margin-top: 16px; font-size: 0.875rem; color: #6B7280;">無需信用卡 • 隨時取消</p>
@@ -355,7 +371,6 @@
     <script defer src="user-menu-manager.js"></script>
     <script defer src="mobile-menu-manager.js"></script>
     <script defer src="config.js"></script>
-    <script defer src="translations.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
@@ -366,5 +381,66 @@
     <script defer src="user-profile-manager.js"></script>
     <script defer src="simple-data-manager.js"></script>
     <script defer src="navbar-component.js"></script>
+    
+    <!-- 首頁上傳功能腳本 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropzone = document.getElementById('dropzone');
+            const fileInput = document.getElementById('file-input');
+            
+            if (!dropzone || !fileInput) return;
+            
+            // 點擊上傳
+            dropzone.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            // 文件選擇
+            fileInput.addEventListener('change', (e) => {
+                handleFiles(e.target.files);
+            });
+            
+            // 拖放事件
+            dropzone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropzone.style.borderColor = '#4F46E5';
+                dropzone.style.background = '#F5F3FF';
+                dropzone.style.transform = 'scale(1.02)';
+            });
+            
+            dropzone.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                dropzone.style.borderColor = '#CBD5E1';
+                dropzone.style.background = 'transparent';
+                dropzone.style.transform = 'scale(1)';
+            });
+            
+            dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropzone.style.borderColor = '#CBD5E1';
+                dropzone.style.background = 'transparent';
+                dropzone.style.transform = 'scale(1)';
+                handleFiles(e.dataTransfer.files);
+            });
+            
+            function handleFiles(files) {
+                if (!files || files.length === 0) return;
+                
+                // 檢查用戶是否已登入
+                const isLoggedIn = window.simpleAuth && window.simpleAuth.isLoggedIn();
+                
+                if (isLoggedIn) {
+                    // 已登入，跳轉到 dashboard 或 firstproject
+                    // 這裡可以選擇保存文件到 indexedDB 然後跳轉，但為了簡單，先提示用戶去儀表板上傳
+                    alert('您已登入！即將為您跳轉至儀表板進行上傳。');
+                    window.location.href = 'dashboard.html';
+                } else {
+                    // 未登入，提示註冊
+                    alert('請先登入或註冊以體驗 AI 智能分類功能！註冊即送 30 張免費額度。');
+                    window.location.href = 'auth.html';
+                }
+            }
+        });
+    </script>
 </body>
 </html>

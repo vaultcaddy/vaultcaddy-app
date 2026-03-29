@@ -1190,21 +1190,11 @@ function displayDocumentContent() {
     }
     
     const data = currentDocument.processedData || {};
-    const docType = currentDocument.type || currentDocument.documentType || 'general';
     
-    console.log('📊 文檔類型:', docType);
     console.log('📊 處理數據:', data);
     
-    // 根據文檔類型顯示不同內容
-    if (docType === 'invoice') {
-        displayInvoiceContent(data);
-    } else if (docType === 'bank_statement') {
-        displayBankStatementContent(data);
-    } else if (docType === 'receipt') {
-        displayReceiptContent(data);
-    } else {
-        displayGeneralContent(data);
-    }
+    // 統一使用發票/收據的 IRD 扣稅分析介面
+    displayInvoiceContent(data);
 }
 
 // ============================================

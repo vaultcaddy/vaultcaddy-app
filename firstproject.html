@@ -94,13 +94,10 @@
     <script defer src="mobile-menu-manager.js"></script>
 <!-- ✅ 核心配置 -->
 <script defer="" src="config.js"></script>
-<script defer="" src="translations.js?v=20251102"></script>
 <!-- ✅ UI 組件 -->
 <script defer="" src="navbar-component.js?v=20260125-user-menu-v2"></script>
 <script defer="" src="sidebar-component.js?v=20251107-rebuild"></script>
 <!-- ✅ 銀行對帳單導出模塊 -->
-<script defer="" src="bank-statement-export.js?v=20260107-v3-sage-fix"></script>
-<script defer="" src="invoice-export.js?v=20260107"></script>
 <!-- ✅ Firebase SDK（CDN 版本）-->
 <script defer="" src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script defer="" src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
@@ -1892,7 +1889,6 @@
 <link href="https://www.googletagmanager.com" rel="dns-prefetch"/>
 <link href="https://images.unsplash.com" rel="dns-prefetch"/>
 <link href="https://cdn.jsdelivr.net" rel="dns-prefetch"/>
-<script src="/multilingual-data-sync.js"></script>
 <!-- Backend API Client (PaddleOCR) -->
 <script src="/backend-api-client.js"></script>
 </head>
@@ -2775,7 +2771,7 @@
         // ==================== 全局變量 ====================
         let currentProjectId = null;
         let currentProject = null;
-        let selectedDocumentType = 'bank_statement';
+        let selectedDocumentType = 'invoice';
         
         // ==================== 初始化 ====================
         window.addEventListener('auth-state-changed', async (e) => {
@@ -3157,7 +3153,13 @@
                     taxReason = data.tax_deductibility?.reason || '';
                     
                     // 根據扣稅可能性設定顏色
-                    if (taxDeductibility === 'High') {
+                    if (isFailed) {
+                        taxColor = '#dc2626'; taxBg = '#fee2e2'; // 紅色
+                        taxDeductibility = '❌ 提取失敗';
+                    } else if (isProcessing) {
+                        taxColor = '#2563eb'; taxBg = '#dbeafe'; // 藍色
+                        taxDeductibility = '⏳ 處理中...';
+                    } else if (taxDeductibility === 'High') {
                         taxColor = '#065f46'; taxBg = '#d1fae5'; // 綠色
                         taxDeductibility = '✅ 100% 可扣稅';
                     } else if (taxDeductibility === 'Medium') {
@@ -3171,7 +3173,7 @@
                         taxDeductibility = '🚫 不可扣稅';
                     } else {
                         taxColor = '#4b5563'; taxBg = '#f3f4f6';
-                        taxDeductibility = isProcessing ? '處理中' : '未分析';
+                        taxDeductibility = '未分析';
                     }
                     
                     return `
@@ -3180,9 +3182,9 @@
                             
                             <!-- 單據圖片 -->
                             <td class="document-name-cell" style="padding: 1rem;">
-                                <div style="display: flex; align-items: center; gap: 0.75rem; ${!isProcessing && !isFailed ? 'cursor: pointer;' : 'cursor: default;'}" ${!isProcessing && !isFailed ? `onclick="viewDocument('${doc.id}')"` : ''}>
-                                    <i class="fas fa-image" style="color: #4F46E5; font-size: 1.25rem;"></i>
-                                    <span style="font-weight: 500; color: #1f2937;">${doc.name || doc.fileName || '未命名'}</span>
+                                <div style="display: flex; align-items: center; gap: 0.75rem; ${!isProcessing ? 'cursor: pointer;' : 'cursor: default;'}" ${!isProcessing ? `onclick="viewDocument('${doc.id}')"` : ''}>
+                                    <i class="fas fa-image" style="color: ${isFailed ? '#dc2626' : '#4F46E5'}; font-size: 1.25rem;"></i>
+                                    <span style="font-weight: 500; color: ${isFailed ? '#dc2626' : '#1f2937'};">${doc.name || doc.fileName || '未命名'}</span>
                                 </div>
                             </td>
                             
@@ -3452,7 +3454,7 @@
             if (modal) {
                 modal.style.display = 'flex';
                 // 預設選擇發票/收據類型，因為我們已經隱藏了選擇器
-                currentDocumentType = 'invoice';
+                selectedDocumentType = 'invoice';
                 initializeAIUpload();
             } else {
                 console.error('❌ 找不到上傳模態框');
@@ -4541,139 +4543,19 @@
                 return;
             }
             
-            // 分析選中文檔的類型
-            let hasBankStatement = false;
-            let hasInvoice = false;
-            
-            checkboxes.forEach(checkbox => {
-                const row = checkbox.closest('tr');
-                if (!row) return;
-                
-                const typeCell = row.querySelector('td:nth-child(3)'); // 類型列
-                if (!typeCell) return;
-                
-                const typeText = typeCell.textContent.trim();
-                if (typeText === '發票' | typeText.includes('發票')) {
-                    hasInvoice = true;
-                } else if (typeText === '銀行對帳單' | typeText.includes('銀行')) {
-                    hasBankStatement = true;
-                }
-            });
-            
             // 動態生成菜單內容
             let menuHTML = '<div style="padding: 0.5rem 0; background: #ffffff;">';
             
-            // 銀行對帳單選項
-            if (hasBankStatement) {
-                menuHTML += `
-                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">CSV 格式</div>
-                    
-                    <button onclick="exportDocuments('universal_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s; background: linear-gradient(90deg, rgba(16,185,129,0.05) 0%, transparent 100%);">
-                        <i class="fas fa-globe" style="color: #10b981; width: 20px;"></i>
-                        <div>
-                            <div style="font-weight: 600;">🌐 通用 CSV</div>
-                            <div style="font-size: 0.75rem; color: #059669; font-weight: 500;">✨ Xero, Wave, QuickBooks, MYOB</div>
-                        </div>
-                    </button>
-                    
-                    <button onclick="exportDocuments('sage_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                        <i class="fas fa-file-csv" style="color: #3b82f6; width: 20px;"></i>
-                        <div>
-                            <div style="font-weight: 500;">📄 Sage CSV</div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">🇬🇧 Sage 50, Sage Accounting</div>
-                        </div>
-                    </button>
-                    
-                    <button onclick="exportDocuments('zoho_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                        <i class="fas fa-file-csv" style="color: #f59e0b; width: 20px;"></i>
-                        <div>
-                            <div style="font-weight: 500;">📄 Zoho Books CSV</div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">🇮🇳 Zoho Books 格式</div>
-                        </div>
-                    </button>
-                `;
-            }
-            
-            // 發票選項
-            if (hasInvoice) {
-                menuHTML += `
-                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">CSV 格式</div>
-                    
-                    <button onclick="exportDocuments('invoice_universal_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s; background: linear-gradient(90deg, rgba(16,185,129,0.05) 0%, transparent 100%);">
-                        <i class="fas fa-globe" style="color: #10b981; width: 20px;"></i>
-                        <div>
-                            <div style="font-weight: 600;">🌐 通用 CSV</div>
-                            <div style="font-size: 0.75rem; color: #059669; font-weight: 500;">✨ Xero, Wave, QuickBooks, MYOB</div>
-                        </div>
-                    </button>
-                    
-                    <button onclick="exportDocuments('invoice_sage_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                        <i class="fas fa-file-csv" style="color: #3b82f6; width: 20px;"></i>
-                        <div>
-                            <div style="font-weight: 500;">📄 Sage CSV</div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">🇬🇧 Sage 50, Sage Accounting</div>
-                        </div>
-                    </button>
-                    
-                    <button onclick="exportDocuments('invoice_zoho_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                        <i class="fas fa-file-csv" style="color: #f59e0b; width: 20px;"></i>
-                        <div>
-                            <div style="font-weight: 500;">📄 Zoho Books CSV</div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">🇮🇳 Zoho Books 格式</div>
-                        </div>
-                    </button>
-                    
-                    <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.5rem;">Excel 格式</div>
-                    
-                    <button onclick="exportDocuments('invoice_summary_excel')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                        <i class="fas fa-file-excel" style="color: #059669; width: 20px;"></i>
-                        <div>
-                            <div style="font-weight: 500;">標準 Excel（總數）</div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">快速對帳</div>
-                        </div>
-                    </button>
-                    
-                    <button onclick="exportDocuments('invoice_detailed_excel')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                        <i class="fas fa-file-excel" style="color: #059669; width: 20px;"></i>
-                        <div>
-                            <div style="font-weight: 500;">完整交易數據 Excel</div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">詳細記錄</div>
-                        </div>
-                    </button>
-                `;
-            }
-            
-            // 其他格式（始終顯示）
             menuHTML += `
-                <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.5rem;">其他格式</div>
+                <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">導出格式</div>
                 
-                <button onclick="exportDocuments('qbo')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                    <i class="fas fa-cloud" style="color: #8b5cf6; width: 20px;"></i>
+                <button onclick="exportDocuments('universal_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s; background: linear-gradient(90deg, rgba(16,185,129,0.05) 0%, transparent 100%);">
+                    <i class="fas fa-file-excel" style="color: #10b981; width: 20px;"></i>
                     <div>
-                        <div style="font-weight: 500;">☁️ QBO 文件</div>
-                        <div style="font-size: 0.75rem; color: #6b7280;">QuickBooks Online 官方格式</div>
+                        <div style="font-weight: 600;">匯出 Excel (CSV)</div>
+                        <div style="font-size: 0.75rem; color: #059669; font-weight: 500;">適合會計師報稅使用</div>
                     </div>
                 </button>
-                
-                <button onclick="exportDocuments('excel')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s;">
-                    <i class="fas fa-file-excel" style="color: #059669; width: 20px;"></i>
-                    <div>
-                        <div style="font-weight: 500;">📊 Excel (.xlsx)</div>
-                        <div style="font-size: 0.75rem; color: #6b7280;">Microsoft Excel 試算表</div>
-                    </div>
-                </button>
-            `;
-            
-            // 💡 添加格式說明
-            menuHTML += `
-                <div style="padding: 1rem; margin-top: 0.5rem; background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border-radius: 8px; border-left: 3px solid #10b981;">
-                    <div style="font-size: 0.75rem; color: #065f46; font-weight: 500; margin-bottom: 0.25rem;">
-                        💡 不確定選哪個？
-                    </div>
-                    <div style="font-size: 0.7rem; color: #059669; line-height: 1.4;">
-                        大多數用戶選擇 <strong>通用 CSV</strong> 或 <strong>QBO 文件</strong>
-                    </div>
-                </div>
             `;
             
             menuHTML += '</div>';
@@ -4851,621 +4733,65 @@
             logger.log(`✅ 已導出: ${fileName}`);
         }
         
-        window.exportDocuments = async function(format) {
-            logger.log('📤 開始導出:', format);
-            
-            // 🔥 關閉菜單
-            closeExportMenu();
-            
+                window.exportDocuments = async function(format) {
             try {
-                // 🔥 直接從 DOM 獲取選中的文檔 ID
-                const selectedCheckboxes = document.querySelectorAll('.document-checkbox:checked');
-                const selectedDocIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.docId);
+                // 獲取選中的文檔
+                const checkboxes = document.querySelectorAll('.document-checkbox:checked');
+                const selectedDocIds = Array.from(checkboxes).map(cb => cb.dataset.docId);
                 
-                logger.log('📋 選中的文檔 ID:', selectedDocIds);
-                
-                let docsToExport;
-                
-                if (selectedDocIds.length > 0) {
-                    // 🔥 只導出已勾選且已完成的文檔
-                    docsToExport = allDocuments.filter(doc => 
-                        selectedDocIds.includes(doc.id) && 
-                        doc.status === 'completed' && 
-                        doc.processedData
-                    );
-                    logger.log(`📋 導出 ${docsToExport.length} 個已勾選的文檔（共選中 ${selectedDocIds.length} 個）`);
-                } else {
-                    // 如果沒有勾選，提示用戶
+                if (selectedDocIds.length === 0) {
                     alert('請先選擇要導出的文檔');
                     return;
                 }
                 
-                if (docsToExport.length === 0) {
-                    alert('所選文檔中沒有已完成處理的文檔。\n請確保所選文檔已完成處理。');
-                    return;
+                // 關閉菜單
+                closeExportMenu();
+                
+                // 顯示加載狀態
+                const exportBtn = document.getElementById('export-btn-desktop');
+                const originalText = exportBtn ? exportBtn.innerHTML : '';
+                if (exportBtn) {
+                    exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 導出中...';
+                    exportBtn.disabled = true;
                 }
                 
-                // ✅ 按類型分組文檔
-                const groupedDocs = {
-                    bank_statements: [],
-                    invoices: [],
-                    receipts: [],
-                    general: []
-                };
+                // 獲取文檔數據
+                const docsToExport = window.allDocuments.filter(doc => selectedDocIds.includes(doc.id));
                 
-                docsToExport.forEach(doc => {
-                    const docType = (doc.documentType || '').toLowerCase();
-                    if (docType === 'bank_statement' || docType === 'bank_statements') {
-                        groupedDocs.bank_statements.push(doc);
-                    } else if (docType === 'invoice' || docType === 'invoices') {
-                        groupedDocs.invoices.push(doc);
-                    } else if (docType === 'receipt' || docType === 'receipts') {
-                        groupedDocs.receipts.push(doc);
-                    } else {
-                        groupedDocs.general.push(doc);
-                    }
-                });
+                logger.log(`📤 開始導出 ${docsToExport.length} 個文檔，格式: ${format}`);
                 
-                logger.log('📊 文檔分組結果:', {
-                    bank_statements: groupedDocs.bank_statements.length,
-                    invoices: groupedDocs.invoices.length,
-                    receipts: groupedDocs.receipts.length,
-                    general: groupedDocs.general.length
-                });
-                
-                // ✅ 如果是 CSV（通用）格式，按類型分別導出
-                if (format === 'csv') {
-                    let exportedCount = 0;
-                    
-                    if (groupedDocs.bank_statements.length > 0) {
-                        await exportByType(groupedDocs.bank_statements, 'bank_statement_csv');
-                        exportedCount++;
-                    }
-                    
-                    if (groupedDocs.invoices.length > 0) {
-                        await exportByType(groupedDocs.invoices, 'invoice_summary_csv');
-                        exportedCount++;
-                    }
-                    
-                    if (groupedDocs.receipts.length > 0 | groupedDocs.general.length > 0) {
-                        const otherDocs = [...groupedDocs.receipts, ...groupedDocs.general];
-                        await exportByType(otherDocs, 'general_csv');
-                        exportedCount++;
-                    }
-                    
-                    toggleExportMenu();
-                    alert(`✅ 導出成功！\n共導出 ${exportedCount} 個 CSV 文件`);
-                    return;
+                if (format === 'universal_csv') {
+                    const blob = window.exportManager.exportToCSV(docsToExport);
+                    const fileName = `vaultcaddy_export_${new Date().toISOString().split('T')[0]}.csv`;
+                    window.exportManager.downloadFile(blob, fileName);
+                    alert(`✅ 導出成功！\n已下載 1 個 CSV 文件`);
+                } else {
+                    alert('不支持的導出格式');
                 }
                 
-                let exportContent = '';
-                let fileName = '';
-                let mimeType = '';
-                
-                switch(format) {
-                    case 'excel':
-                        // 📊 Excel (.xlsx) - 使用 SheetJS 生成真正的 Excel 文件
-                        try {
-                            const dateStr = new Date().toISOString().split('T')[0];
-                            let exportedCount = 0;
-                            
-                            // ✅ 分别导出银行对账单和发票为独立的Excel文件
-                            
-                            // 1️⃣ 导出银行对账单 Excel
-                            if (groupedDocs.bank_statements.length > 0) {
-                                const wb = XLSX.utils.book_new();
-                                const excelData = [['Date', 'Type', 'Description', 'Payee', 'Reference', 'Amount', 'Balance']];
-                                groupedDocs.bank_statements.forEach(doc => {
-                                    const data = doc.processedData;
-                                    if (data.transactions) {
-                                        data.transactions.forEach(t => {
-                                            excelData.push([
-                                                t.date || '',
-                                                t.transactionType || '',
-                                                t.description || '',
-                                                t.payee || '',
-                                                t.referenceNumber || '',
-                                                parseFloat(t.amount || 0),
-                                                parseFloat(t.balance || 0)
-                                            ]);
-                                        });
-                                    }
-                                });
-                                const ws = XLSX.utils.aoa_to_sheet(excelData);
-                                ws['!cols'] = [{wch: 12}, {wch: 10}, {wch: 40}, {wch: 25}, {wch: 15}, {wch: 12}, {wch: 12}];
-                                XLSX.utils.book_append_sheet(wb, ws, "Bank Statements");
-                                
-                                fileName = `BankStatement_${dateStr}.xlsx`;
-                                XLSX.writeFile(wb, fileName);
-                                logger.log('✅ 銀行對帳單 Excel 文件已下載:', fileName);
-                                exportedCount++;
-                            }
-                            
-                            // 2️⃣ 导出发票 Excel（完整格式，包含项目明细）
-                            if (groupedDocs.invoices.length > 0) {
-                                const wb = XLSX.utils.book_new();
-                                
-                                // ✅ 发票Excel标题（包含所有重要字段）
-                                const excelData = [[
-                                    'Invoice Number',      // 发票编号
-                                    'Date',               // 日期
-                                    'Supplier Name',      // 供应商名称
-                                    'Supplier Phone',     // 供应商电话
-                                    'Supplier Email',     // 供应商邮箱
-                                    'Item Code',          // 项目编码
-                                    'Item Description',   // 项目描述
-                                    'Quantity',           // 数量
-                                    'Unit',               // 单位
-                                    'Unit Price',         // 单价
-                                    'Amount',             // 小计
-                                    'Total Amount',       // 总金额
-                                    'Tax',                // 税额
-                                    'Status'              // 状态
-                                ]];
-                                
-                                groupedDocs.invoices.forEach(doc => {
-                                    const data = doc.processedData;
-                                    
-                                    // 提取基本信息
-                                    const invoiceNumber = data.invoiceNumber || data.invoice_number || '';
-                                    const invoiceDate = data.invoiceDate || data.date || data.invoice_date || '';
-                                    const supplierName = data.vendorName || data.vendor || data.supplier || data.supplierName || '';
-                                    const supplierPhone = data.vendorPhone || data.phone || data.supplier_phone || '';
-                                    const supplierEmail = data.vendorEmail || data.email || data.supplier_email || '';
-                                    const totalAmount = parseFloat(data.totalAmount || data.total || data.amount || 0);
-                                    const tax = parseFloat(data.taxAmount || data.tax || 0);
-                                    const status = data.status || data.paymentStatus || '未付款';
-                                    
-                                    // 提取项目明细
-                                    const items = data.items || data.lineItems || [];
-                                    
-                                    if (items.length === 0) {
-                                        // 如果没有项目明细，添加一行汇总
-                                        excelData.push([
-                                            invoiceNumber,
-                                            invoiceDate,
-                                            supplierName,
-                                            supplierPhone,
-                                            supplierEmail,
-                                            '',
-                                            '總計',
-                                            1,
-                                            '',
-                                            totalAmount,
-                                            totalAmount,
-                                            totalAmount,
-                                            tax,
-                                            status
-                                        ]);
-                                    } else {
-                                        // 为每个项目添加一行
-                                        items.forEach(item => {
-                                            const itemCode = item.code || item.itemCode || '';
-                                            const itemDescription = item.description || item.itemName || item.name || '';
-                                            const quantity = parseFloat(item.quantity || item.qty || 1);
-                                            const unit = item.unit || '件';
-                                            const unitPrice = parseFloat(item.unitPrice || item.unit_price || item.price || 0);
-                                            const amount = parseFloat(item.amount || item.subtotal || (quantity * unitPrice) || 0);
-                                            
-                                            excelData.push([
-                                                invoiceNumber,
-                                                invoiceDate,
-                                                supplierName,
-                                                supplierPhone,
-                                                supplierEmail,
-                                                itemCode,
-                                                itemDescription,
-                                                quantity,
-                                                unit,
-                                                unitPrice.toFixed(2),
-                                                amount.toFixed(2),
-                                                totalAmount.toFixed(2),
-                                                tax.toFixed(2),
-                                                status
-                                            ]);
-                                        });
-                                    }
-                                });
-                                
-                                const ws = XLSX.utils.aoa_to_sheet(excelData);
-                                
-                                // ✅ 设置列宽（14列）
-                                ws['!cols'] = [
-                                    {wch: 15},  // Invoice Number
-                                    {wch: 12},  // Date
-                                    {wch: 25},  // Supplier Name
-                                    {wch: 15},  // Supplier Phone
-                                    {wch: 25},  // Supplier Email
-                                    {wch: 12},  // Item Code
-                                    {wch: 40},  // Item Description
-                                    {wch: 10},  // Quantity
-                                    {wch: 8},   // Unit
-                                    {wch: 12},  // Unit Price
-                                    {wch: 12},  // Amount
-                                    {wch: 12},  // Total Amount
-                                    {wch: 10},  // Tax
-                                    {wch: 10}   // Status
-                                ];
-                                
-                                XLSX.utils.book_append_sheet(wb, ws, "Invoices");
-                                
-                                fileName = `Invoice_${dateStr}.xlsx`;
-                                XLSX.writeFile(wb, fileName);
-                                logger.log('✅ 發票 Excel 文件已下載:', fileName);
-                                exportedCount++;
-                            }
-                            
-                            // ✅ 显示导出成功消息
-                            if (exportedCount > 0) {
-                                alert(`✅ 導出成功！\n已下載 ${exportedCount} 個 Excel 文件`);
-                            } else {
-                                alert('沒有可導出的文檔');
-                            }
-                            return;
-                        } catch (error) {
-                            console.error('❌ Excel 导出失败:', error);
-                            alert('Excel 导出失败，请重试或使用 CSV 格式');
-                            return;
-                        }
-                    
-                    case 'csv':
-                        // 使用優化版 ExportOptimizer（如果可用）
-                        if (window.ExportOptimizer) {
-                            exportContent = ExportOptimizer.generateCSV(docsToExport);
-                            logger.log('✅ 使用優化版 CSV 導出');
-                        } else {
-                            exportContent = generateCSV(docsToExport);
-                            logger.log('⚠️ 使用舊版 CSV 導出');
-                        }
-                        fileName = `vaultcaddy_export_${new Date().toISOString().split('T')[0]}.csv`;
-                        mimeType = 'text/csv;charset=utf-8;';
-                        break;
-                    
-                    case 'bank_statement_csv':
-                        // 標準銀行對帳單 CSV（完整欄位）
-                        if (window.BankStatementExport) {
-                            exportContent = window.BankStatementExport.generateBankStatementCSV(docsToExport);
-                            fileName = `BankStatement_${new Date().toISOString().split('T')[0]}.csv`;
-                            mimeType = 'text/csv;charset=utf-8;';
-                            logger.log('✅ 標準銀行對帳單 CSV 導出');
-                        } else {
-                            alert('銀行對帳單導出模塊未載入，請刷新頁面後重試');
-                            return;
-                        }
-                        break;
-                    
-                    case 'universal_csv':
-                        // 🌐 通用 CSV (適用於 Xero, Wave, QuickBooks, MYOB)
-                        if (window.BankStatementExport) {
-                            exportContent = window.BankStatementExport.generateUniversalCSV(docsToExport);
-                            fileName = `Universal_BankStatement_${new Date().toISOString().split('T')[0]}.csv`;
-                            mimeType = 'text/csv;charset=utf-8;';
-                            logger.log('✅ 通用 CSV 導出');
-                        } else {
-                            alert('導出模塊未載入，請刷新頁面後重試');
-                            return;
-                        }
-                        break;
-                    
-                    case 'sage_csv':
-                        // 📄 Sage CSV (英國格式 - 借貸分離)
-                        if (window.BankStatementExport) {
-                            exportContent = window.BankStatementExport.generateSageCSV(docsToExport);
-                            fileName = `Sage_BankStatement_${new Date().toISOString().split('T')[0]}.csv`;
-                            mimeType = 'text/csv;charset=utf-8;';
-                            logger.log('✅ Sage CSV 導出');
-                        } else {
-                            alert('導出模塊未載入，請刷新頁面後重試');
-                            return;
-                        }
-                        break;
-                    
-                    case 'zoho_csv':
-                        // 📄 Zoho Books CSV (印度格式 - 借貸分離)
-                        if (window.BankStatementExport) {
-                            exportContent = window.BankStatementExport.generateZohoCSV(docsToExport);
-                            fileName = `ZohoBooks_BankStatement_${new Date().toISOString().split('T')[0]}.csv`;
-                            mimeType = 'text/csv;charset=utf-8;';
-                            logger.log('✅ Zoho Books CSV 導出');
-                        } else {
-                            alert('導出模塊未載入，請刷新頁面後重試');
-                            return;
-                        }
-                        break;
-                    
-                    case 'xero_csv':
-                        // Xero CSV（根據文檔類型導出）
-                        // 分離銀行對帳單和發票
-                        const xeroBankDocs = docsToExport.filter(d => 
-                            (d.documentType || d.type || '').toLowerCase().includes('bank')
-                        );
-                        const xeroInvoiceDocs = docsToExport.filter(d => 
-                            (d.documentType || d.type || '').toLowerCase().includes('invoice')
-                        );
-                        
-                        if (xeroBankDocs.length > 0 && window.BankStatementExport) {
-                            exportContent = window.BankStatementExport.generateXeroCSV(xeroBankDocs);
-                            fileName = `BankStatement_${new Date().toISOString().split('T')[0]}_Xero.csv`;
-                            logger.log('✅ Xero CSV 導出（銀行對帳單）');
-                        } else if (xeroInvoiceDocs.length > 0 && window.InvoiceExport) {
-                            // 🔥 發票導出 Xero 格式
-                            exportContent = window.InvoiceExport.generateXeroCSV ? 
-                                window.InvoiceExport.generateXeroCSV(xeroInvoiceDocs) :
-                                window.InvoiceExport.generateInvoiceSummaryCSV(xeroInvoiceDocs);
-                            fileName = `Invoice_${new Date().toISOString().split('T')[0]}_Xero.csv`;
-                            logger.log('✅ Xero CSV 導出（發票）');
-                        } else {
-                            alert('沒有可導出的文檔或導出模塊未載入');
-                            return;
-                        }
-                        mimeType = 'text/csv;charset=utf-8;';
-                        break;
-                    
-                    case 'quickbooks_csv':
-                        // QuickBooks CSV（根據文檔類型導出）
-                        const qbBankDocs = docsToExport.filter(d => 
-                            (d.documentType || d.type || '').toLowerCase().includes('bank')
-                        );
-                        const qbInvoiceDocs = docsToExport.filter(d => 
-                            (d.documentType || d.type || '').toLowerCase().includes('invoice')
-                        );
-                        
-                        if (qbBankDocs.length > 0 && window.BankStatementExport) {
-                            exportContent = window.BankStatementExport.generateQuickBooksCSV(qbBankDocs);
-                            fileName = `BankStatement_${new Date().toISOString().split('T')[0]}_QuickBooks.csv`;
-                            logger.log('✅ QuickBooks CSV 導出（銀行對帳單）');
-                        } else if (qbInvoiceDocs.length > 0 && window.InvoiceExport) {
-                            // 🔥 發票導出 QuickBooks 格式
-                            exportContent = window.InvoiceExport.generateQuickBooksCSV ? 
-                                window.InvoiceExport.generateQuickBooksCSV(qbInvoiceDocs) :
-                                window.InvoiceExport.generateInvoiceSummaryCSV(qbInvoiceDocs);
-                            fileName = `Invoice_${new Date().toISOString().split('T')[0]}_QuickBooks.csv`;
-                            logger.log('✅ QuickBooks CSV 導出（發票）');
-                        } else {
-                            alert('沒有可導出的文檔或導出模塊未載入');
-                            return;
-                        }
-                        mimeType = 'text/csv;charset=utf-8;';
-                        break;
-                    
-                    case 'invoice_summary_csv':
-                        // 發票總數 CSV（快速對帳）
-                        if (window.InvoiceExport) {
-                            exportContent = window.InvoiceExport.generateInvoiceSummaryCSV(docsToExport);
-                            fileName = `Invoice_Summary_${new Date().toISOString().split('T')[0]}.csv`;
-                            mimeType = 'text/csv;charset=utf-8;';
-                            logger.log('✅ 發票總數 CSV 導出');
-                        } else {
-                            alert('發票導出模塊未載入，請刷新頁面後重試');
-                            return;
-                        }
-                        break;
-                    
-                    case 'invoice_universal_csv':
-                        // 通用發票 CSV 格式
-                        if (window.InvoiceExport && window.InvoiceExport.generateUniversalCSV) {
-                            exportContent = window.InvoiceExport.generateUniversalCSV(docsToExport);
-                            fileName = `Invoice_Universal_${new Date().toISOString().split('T')[0]}.csv`;
-                            mimeType = 'text/csv;charset=utf-8;';
-                            logger.log('✅ 通用發票 CSV 導出');
-                        } else {
-                            alert('通用發票導出模塊未載入，請刷新頁面後重試');
-                            return;
-                        }
-                        break;
-                    
-                    case 'invoice_sage_csv':
-                        // Sage 發票 CSV 格式
-                        if (window.InvoiceExport && window.InvoiceExport.generateSageCSV) {
-                            exportContent = window.InvoiceExport.generateSageCSV(docsToExport);
-                            fileName = `Invoice_Sage_${new Date().toISOString().split('T')[0]}.csv`;
-                            mimeType = 'text/csv;charset=utf-8;';
-                            logger.log('✅ Sage 發票 CSV 導出');
-                        } else {
-                            alert('Sage 發票導出模塊未載入，請刷新頁面後重試');
-                            return;
-                        }
-                        break;
-                    
-                    case 'invoice_zoho_csv':
-                        // Zoho Books 發票 CSV 格式
-                        if (window.InvoiceExport && window.InvoiceExport.generateZohoCSV) {
-                            exportContent = window.InvoiceExport.generateZohoCSV(docsToExport);
-                            fileName = `Invoice_ZohoBooks_${new Date().toISOString().split('T')[0]}.csv`;
-                            mimeType = 'text/csv;charset=utf-8;';
-                            logger.log('✅ Zoho Books 發票 CSV 導出');
-                        } else {
-                            alert('Zoho Books 發票導出模塊未載入，請刷新頁面後重試');
-                            return;
-                        }
-                        break;
-                    
-                    case 'invoice_summary_excel':
-                        // 發票標準 Excel（總數）
-                        try {
-                            const wb = XLSX.utils.book_new();
-                            const excelData = [['Invoice Number', 'Date', 'Supplier', 'Amount', 'Tax', 'Status']];
-                            
-                            docsToExport.forEach(doc => {
-                                const data = doc.processedData;
-                                excelData.push([
-                                    data.invoiceNumber || data.invoice_number || '',
-                                    data.invoiceDate || data.date || '',
-                                    data.vendorName || data.vendor || data.supplier || '',
-                                    parseFloat(data.totalAmount || data.total || 0).toFixed(2),
-                                    parseFloat(data.taxAmount || data.tax || 0).toFixed(2),
-                                    data.status || data.paymentStatus || '未付款'
-                                ]);
-                            });
-                            
-                            const ws = XLSX.utils.aoa_to_sheet(excelData);
-                            ws['!cols'] = [{wch: 15}, {wch: 12}, {wch: 25}, {wch: 12}, {wch: 10}, {wch: 12}];
-                            XLSX.utils.book_append_sheet(wb, ws, "Invoice Summary");
-                            
-                            fileName = `Invoice_Summary_${new Date().toISOString().split('T')[0]}.xlsx`;
-                            XLSX.writeFile(wb, fileName);
-                            logger.log('✅ 發票標準 Excel 已下載');
-                            return;
-                        } catch (error) {
-                            console.error('❌ 發票 Excel 導出失敗:', error);
-                            alert('Excel 導出失敗，請重試');
-                            return;
-                        }
-                    
-                    case 'invoice_detailed_excel':
-                        // 發票完整交易數據 Excel
-                        try {
-                            const wb = XLSX.utils.book_new();
-                            const excelData = [[
-                                'Invoice Number', 'Date', 'Supplier Name', 'Supplier Phone', 'Supplier Email',
-                                'Item Code', 'Item Description', 'Quantity', 'Unit', 'Unit Price',
-                                'Amount', 'Total Amount', 'Tax', 'Status'
-                            ]];
-                            
-                            docsToExport.forEach(doc => {
-                                const data = doc.processedData;
-                                const invoiceNumber = data.invoiceNumber || data.invoice_number || '';
-                                const invoiceDate = data.invoiceDate || data.date || '';
-                                const supplierName = data.vendorName || data.vendor || data.supplier || '';
-                                const supplierPhone = data.vendorPhone || data.phone || '';
-                                const supplierEmail = data.vendorEmail || data.email || '';
-                                const totalAmount = parseFloat(data.totalAmount || data.total || 0);
-                                const tax = parseFloat(data.taxAmount || data.tax || 0);
-                                const status = data.status || '未付款';
-                                
-                                const items = data.items || data.lineItems || [];
-                                
-                                if (items.length === 0) {
-                                    excelData.push([
-                                        invoiceNumber, invoiceDate, supplierName, supplierPhone, supplierEmail,
-                                        '', '總計', 1, '', totalAmount,
-                                        totalAmount, totalAmount, tax, status
-                                    ]);
-                                } else {
-                                    items.forEach(item => {
-                                        const itemCode = item.code || item.itemCode || '';
-                                        const itemDescription = item.description || item.itemName || '';
-                                        const quantity = parseFloat(item.quantity || 1);
-                                        const unit = item.unit || '件';
-                                        const unitPrice = parseFloat(item.unitPrice || item.price || 0);
-                                        const amount = parseFloat(item.amount || (quantity * unitPrice));
-                                        
-                                        excelData.push([
-                                            invoiceNumber, invoiceDate, supplierName, supplierPhone, supplierEmail,
-                                            itemCode, itemDescription, quantity, unit, unitPrice.toFixed(2),
-                                            amount.toFixed(2), totalAmount.toFixed(2), tax.toFixed(2), status
-                                        ]);
-                                    });
-                                }
-                            });
-                            
-                            const ws = XLSX.utils.aoa_to_sheet(excelData);
-                            ws['!cols'] = [
-                                {wch: 15}, {wch: 12}, {wch: 25}, {wch: 15}, {wch: 25},
-                                {wch: 12}, {wch: 40}, {wch: 10}, {wch: 8}, {wch: 12},
-                                {wch: 12}, {wch: 12}, {wch: 10}, {wch: 10}
-                            ];
-                            XLSX.utils.book_append_sheet(wb, ws, "Invoice Details");
-                            
-                            fileName = `Invoice_Detailed_${new Date().toISOString().split('T')[0]}.xlsx`;
-                            XLSX.writeFile(wb, fileName);
-                            logger.log('✅ 發票完整 Excel 已下載');
-                            return;
-                        } catch (error) {
-                            console.error('❌ 發票 Excel 導出失敗:', error);
-                            alert('Excel 導出失敗，請重試');
-                            return;
-                        }
-                    
-                    case 'iif':
-                        // IIF 格式（根據文檔類型導出）
-                        const iifBankDocs = docsToExport.filter(d => 
-                            (d.documentType || d.type || '').toLowerCase().includes('bank')
-                        );
-                        const iifInvoiceDocs = docsToExport.filter(d => 
-                            (d.documentType || d.type || '').toLowerCase().includes('invoice')
-                        );
-                        
-                        if (iifBankDocs.length > 0) {
-                            exportContent = generateIIF(iifBankDocs);
-                            fileName = `BankStatement_${new Date().toISOString().split('T')[0]}.iif`;
-                        } else if (iifInvoiceDocs.length > 0) {
-                            // 🔥 發票導出 IIF 格式
-                            exportContent = window.InvoiceExport && window.InvoiceExport.generateIIF ? 
-                                window.InvoiceExport.generateIIF(iifInvoiceDocs) :
-                                generateIIF(iifInvoiceDocs);
-                            fileName = `Invoice_${new Date().toISOString().split('T')[0]}.iif`;
-                        } else {
-                            exportContent = generateIIF(docsToExport);
-                            fileName = `vaultcaddy_export_${new Date().toISOString().split('T')[0]}.iif`;
-                        }
-                        mimeType = 'text/plain;charset=utf-8;';
-                        break;
-                        
-                    case 'qbo':
-                        // QBO 格式 - 分別導出銀行對帳單和發票為獨立文件
-                        try {
-                            const dateStr = new Date().toISOString().split('T')[0];
-                            let exportedCount = 0;
-                            
-                            // 1️⃣ 导出银行对账单 QBO
-                            if (groupedDocs.bank_statements.length > 0) {
-                                const qboContent = generateQBO(groupedDocs.bank_statements);
-                                const blob = new Blob([qboContent], { type: 'application/vnd.intu.qbo;charset=utf-8;' });
-                                const link = document.createElement('a');
-                                link.href = URL.createObjectURL(blob);
-                                link.download = `BankStatement_${dateStr}.qbo`;
-                                link.click();
-                                logger.log('✅ 銀行對帳單 QBO 文件已下載');
-                                exportedCount++;
-                            }
-                            
-                            // 2️⃣ 导出发票 QBO
-                            if (groupedDocs.invoices.length > 0) {
-                                const qboContent = window.InvoiceExport && window.InvoiceExport.generateQBO ? 
-                                    window.InvoiceExport.generateQBO(groupedDocs.invoices) :
-                                    generateQBO(groupedDocs.invoices);
-                                const blob = new Blob([qboContent], { type: 'application/vnd.intu.qbo;charset=utf-8;' });
-                                const link = document.createElement('a');
-                                link.href = URL.createObjectURL(blob);
-                                link.download = `Invoice_${dateStr}.qbo`;
-                                link.click();
-                                logger.log('✅ 發票 QBO 文件已下載');
-                                exportedCount++;
-                            }
-                            
-                            // ✅ 显示导出成功消息
-                            if (exportedCount > 0) {
-                                alert(`✅ 導出成功！\n已下載 ${exportedCount} 個 QBO 文件`);
-                            } else {
-                                alert('沒有可導出的文檔');
-                            }
-                            return; // 直接返回，不执行后面的通用下载代码
-                        } catch (error) {
-                            console.error('❌ QBO 导出失败:', error);
-                            alert('QBO 导出失败，请重试');
-                            return;
-                        }
-                    default:
-                        alert('不支持的導出格式');
-                        return;
+                // 恢復按鈕狀態
+                if (exportBtn) {
+                    exportBtn.innerHTML = originalText;
+                    exportBtn.disabled = false;
                 }
                 
-                // 下載文件
-                const blob = new Blob([exportContent], { type: mimeType });
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = fileName;
-                link.click();
-                
-                // 隱藏下拉菜單
-                toggleExportMenu();
-                
-                logger.log('✅ 導出成功:', fileName);
+                // 取消全選
+                const selectAllCheckbox = document.getElementById('select-all-checkbox');
+                if (selectAllCheckbox) {
+                    selectAllCheckbox.checked = false;
+                    toggleAllDocuments(selectAllCheckbox);
+                }
                 
             } catch (error) {
                 console.error('❌ 導出失敗:', error);
                 alert('導出失敗: ' + error.message);
+                
+                // 恢復按鈕狀態
+                const exportBtn = document.getElementById('export-btn-desktop');
+                if (exportBtn) {
+                    exportBtn.innerHTML = '<i class="fas fa-file-export"></i> <span>Export</span>';
+                    exportBtn.disabled = false;
+                }
             }
         };
         
@@ -5863,7 +5189,6 @@
         window.updateDocumentTotal = updateDocumentTotal;
     </script>
 <!-- CSV 導出優化模塊 -->
-<script defer="" src="export-optimizer.js"></script>
 <!-- 創建項目模態框 -->
 <div id="createProjectModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
 <div style="background: white; border-radius: 12px; padding: 2rem; width: 90%; max-width: 500px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
