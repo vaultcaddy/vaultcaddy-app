@@ -328,37 +328,60 @@ The FIRST transaction row MUST contain one of these keywords in description:
 {"date":"2023/07/07","description":"SIC ALIPAY HK LTD","debit":21.62,"credit":0,"balance":35667.34}
 `;
         } else {
-            // 發票
-            return `你是一個專業的發票數據提取專家。請從圖片中提取所有發票資料，並以 JSON 格式返回。
+            // 發票 (香港小店專用 IRD 扣稅分類版)
+            return `你是一個專業的香港執業會計師，專門為香港的小型餐飲店（如茶飲店、小食店）和零售店處理帳務。
+請分析這張收據/發票的圖片，提取關鍵資訊，並根據香港稅務局 (IRD) 的標準，評估這筆開支的「可扣稅可能性」。
 
-必須提取的字段：
+請嚴格以 JSON 格式輸出，不要包含任何其他文字或 Markdown 標記。
+
+必須提取並輸出的 JSON 結構如下：
 {
-  "invoiceNumber": "發票編號",
-  "date": "日期（YYYY-MM-DD 格式）",
-  "supplier": "供應商名稱",
-  "supplierAddress": "供應商地址",
-  "customerName": "客戶名稱",
-  "customerAddress": "客戶地址",
-  "currency": "貨幣（如 HKD, USD）",
-  "subtotal": 小計金額（數字）,
-  "tax": 稅額（數字）,
-  "totalAmount": 總金額（數字）,
-  "items": [
-    {
-      "description": "商品描述",
-      "quantity": 數量（數字）,
-      "unitPrice": 單價（數字）,
-      "amount": 金額（數字）
-    }
-  ]
+  "merchant_name": "商戶名稱（如：百佳超級市場、中電、HKT、某某茶葉批發）",
+  "date": "收據日期（格式：YYYY-MM-DD）",
+  "total_amount": "總金額（純數字，不含貨幣符號）",
+  "currency": "貨幣（如：HKD, USD，預設為 HKD）",
+  "expense_category": "開支類別（請從下方列表中選擇最合適的一項）",
+  "items_summary": "購買項目簡述（用 5-10 個字總結，例如：茶葉及糖漿批發、店鋪電費、員工聚餐）",
+  "tax_deductibility": {
+    "level": "High, Medium, Low, 或 None",
+    "reason": "給會計師的簡短說明（為什麼給這個評級）"
+  }
 }
 
-請確保：
-1. 所有日期格式為 YYYY-MM-DD
-2. 所有金額為數字（不包含貨幣符號）
-3. JSON 格式正確，可以直接解析
-4. 如果某字段無法提取，設為 null
-5. 提取所有項目明細（不要遺漏）`;
+【開支類別 (expense_category) 選擇列表】：
+1. Cost of Goods Sold (銷貨成本) - 如：食材、茶葉、包裝杯、外賣袋
+2. Utilities (水電煤) - 如：水費、電費、煤氣費
+3. Rent & Rates (租金及差餉) - 如：店鋪租金、管理費
+4. Salary & MPF (薪金及強積金)
+5. Office & Admin (辦公室及行政) - 如：文具、打印紙、上網費、電話費
+6. Marketing & Promotion (市場推廣) - 如：FB/IG 廣告費、傳單印製
+7. Transportation (交通費) - 如：進貨車費、Gogovan
+8. Meals & Entertainment (交際費) - 如：請客吃飯、員工聚餐
+9. Personal/Uncategorized (私人/未能分類) - 任何看起來像老闆私人消費的項目
+
+【扣稅可能性 (tax_deductibility) 評估指南】：
+根據香港 IRD 第 16(1) 條，只有「為產生應評稅利潤而招致的各項開支」才能扣稅。
+
+- High (高可能性 - 100% 業務相關)：
+  - 特徵：明顯是店鋪營運必需品。
+  - 例子：批發商的食材單、印有店鋪地址的水電煤單、商業寬頻單、包裝物料。
+  - Reason 範例：「明顯為產生營業收入的直接成本 (COGS)。」
+
+- Medium (中可能性 - 需證明與業務相關)：
+  - 特徵：可能是業務用途，但也可能是私人用途。
+  - 例子：超市買的清潔用品、文具店買的筆、普通的交通費收據、電子產品 (iPad/手機)。
+  - Reason 範例：「屬日常消耗品，但需會計師確認是否全數用於店鋪營運。」
+
+- Low (低可能性 - 交際費或疑似私人消費)：
+  - 特徵：餐飲收據（除非註明是員工福利）、服裝、個人護理產品、週末的超市大採購。
+  - 例子：兩人在高級餐廳的晚餐、買衣服的收據、買個人保健品的收據。
+  - Reason 範例：「交際費 (Entertainment) 扣稅審查較嚴，或疑似私人消費，建議向老闆確認。」
+
+- None (不可扣稅)：
+  - 特徵：交通違例罰款、稅款、明顯的私人旅遊開支。
+
+請仔細觀察收據上的明細，如果收據模糊，請盡力推斷，如果完全無法辨識金額，請在 total_amount 填入 null。
+確保輸出的 JSON 格式絕對正確，可以直接被 JSON.parse() 解析。`;
         }
     }
     
@@ -436,40 +459,46 @@ For EACH ROW across ALL ${pageCount} pages:
 {"date":"2023/07/07","description":"SIC ALIPAY HK LTD","debit":21.62,"credit":0,"balance":35667.34}
 `;
         } else {
-            return `你是一個專業的發票數據提取專家。我發送了 ${pageCount} 張圖片，它們是同一份發票的多個頁面。請綜合分析所有頁面，提取完整的發票資料和項目明細，並以 JSON 格式返回。
+            return `你是一個專業的香港執業會計師，專門為香港的小型餐飲店和零售店處理帳務。我發送了 ${pageCount} 張圖片，它們是同一份收據/發票的多個頁面。請綜合分析所有頁面，提取關鍵資訊，並根據香港稅務局 (IRD) 的標準，評估這筆開支的「可扣稅可能性」。
 
-必須提取的字段：
+請嚴格以 JSON 格式輸出，不要包含任何其他文字或 Markdown 標記。
+
+必須提取並輸出的 JSON 結構如下：
 {
-  "invoiceNumber": "發票號碼",
-  "invoiceDate": "發票日期（YYYY-MM-DD 格式）",
-  "dueDate": "到期日（YYYY-MM-DD 格式）",
-  "vendor": "供應商名稱",
-  "vendorAddress": "供應商地址",
-  "customer": "客戶名稱",
-  "customerAddress": "客戶地址",
-  "currency": "貨幣（如 HKD, USD）",
-  "subtotal": 小計金額（數字）,
-  "tax": 稅額（數字）,
-  "total": 總金額（數字）,
-  "items": [
-    {
-      "description": "項目描述",
-      "quantity": 數量（數字）,
-      "unitPrice": 單價（數字）,
-      "amount": 金額（數字）
-    }
-  ]
+  "merchant_name": "商戶名稱（如：百佳超級市場、中電、HKT、某某茶葉批發）",
+  "date": "收據日期（格式：YYYY-MM-DD）",
+  "total_amount": "總金額（純數字，不含貨幣符號）",
+  "currency": "貨幣（如：HKD, USD，預設為 HKD）",
+  "expense_category": "開支類別（請從下方列表中選擇最合適的一項）",
+  "items_summary": "購買項目簡述（用 5-10 個字總結，例如：茶葉及糖漿批發、店鋪電費、員工聚餐）",
+  "tax_deductibility": {
+    "level": "High, Medium, Low, 或 None",
+    "reason": "給會計師的簡短說明（為什麼給這個評級）"
+  }
 }
 
-請特別注意：
-1. **綜合所有 ${pageCount} 頁的信息**，不要遺漏任何項目明細
-2. 所有日期格式為 YYYY-MM-DD
-3. 所有金額為數字（不包含貨幣符號）
-4. JSON 格式正確，可以直接解析
-5. 如果某字段無法提取，設為 null
-6. 確保項目明細的完整性
+【開支類別 (expense_category) 選擇列表】：
+1. Cost of Goods Sold (銷貨成本)
+2. Utilities (水電煤)
+3. Rent & Rates (租金及差餉)
+4. Salary & MPF (薪金及強積金)
+5. Office & Admin (辦公室及行政)
+6. Marketing & Promotion (市場推廣)
+7. Transportation (交通費)
+8. Meals & Entertainment (交際費)
+9. Personal/Uncategorized (私人/未能分類)
 
-只返回 JSON，不要包含任何額外文字。`;
+【扣稅可能性 (tax_deductibility) 評估指南】：
+- High (高可能性)：明顯是店鋪營運必需品（如食材批發、水電煤、商業寬頻）。
+- Medium (中可能性)：可能是業務用途，但也可能是私人用途（如超市清潔用品、文具、電子產品）。
+- Low (低可能性)：交際費或疑似私人消費（如高級餐廳晚餐、服裝、個人保健品）。
+- None (不可扣稅)：交通違例罰款、稅款、明顯的私人旅遊開支。
+
+請特別注意：
+1. **綜合所有 ${pageCount} 頁的信息**，不要遺漏任何重要數據。
+2. 所有日期格式為 YYYY-MM-DD，金額為純數字。
+3. 如果某字段無法提取，設為 null。
+4. 只返回 JSON，不要包含任何額外文字。`;
         }
     }
     

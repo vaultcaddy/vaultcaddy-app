@@ -83,58 +83,34 @@ class ExportManager {
      */
     exportToCSVSummary(invoices) {
         const headers = [
-            'Invoice Number',
-            'Invoice Date',
-            'Due Date',
-            'Supplier Name',
-            'Supplier Name (EN)',
-            'Supplier Address',
-            'Supplier Phone',
-            'Supplier Email',
-            'Customer Name',
-            'Customer Address',
-            'Customer Contact',
-            'Customer Phone',
-            'Subtotal',
-            'Discount',
-            'Tax',
-            'Total',
-            'Currency',
-            'Payment Method',
-            'Payment Status',
-            'FPS ID',
-            'PayMe Number',
-            'Notes'
+            '收據日期',
+            '商戶名稱',
+            '開支類別',
+            '購買項目簡述',
+            '總金額',
+            '貨幣',
+            'IRD 扣稅可能性',
+            '扣稅原因說明',
+            '發票編號',
+            '客戶名稱',
+            '備註'
         ];
         
         const rows = invoices.map(invoice => {
             const data = invoice.processedData || invoice;
-            const supplier = data.supplier || {};
-            const customer = data.customer || {};
-            const paymentInfo = data.payment_info || {};
+            const taxInfo = data.tax_deductibility || {};
             
             return [
-                this.escapeCSV(data.invoice_number || ''),
-                this.escapeCSV(data.date || ''),
-                this.escapeCSV(data.due_date || ''),
-                this.escapeCSV(supplier.name || ''),
-                this.escapeCSV(supplier.name_en || ''),
-                this.escapeCSV(supplier.address || ''),
-                this.escapeCSV(supplier.phone || ''),
-                this.escapeCSV(supplier.email || ''),
-                this.escapeCSV(customer.name || ''),
-                this.escapeCSV(customer.address || ''),
-                this.escapeCSV(customer.contact || ''),
-                this.escapeCSV(customer.phone || ''),
-                data.subtotal || 0,
-                data.discount || 0,
-                data.tax || 0,
-                data.total || 0,
+                this.escapeCSV(data.date || data.invoice_number || ''),
+                this.escapeCSV(data.merchant_name || data.supplier?.name || ''),
+                this.escapeCSV(data.expense_category || ''),
+                this.escapeCSV(data.items_summary || ''),
+                data.total_amount || data.total || 0,
                 this.escapeCSV(data.currency || 'HKD'),
-                this.escapeCSV(data.payment_method || ''),
-                this.escapeCSV(data.payment_status || ''),
-                this.escapeCSV(paymentInfo.fps_id || ''),
-                this.escapeCSV(paymentInfo.payme_number || ''),
+                this.escapeCSV(taxInfo.level || ''),
+                this.escapeCSV(taxInfo.reason || ''),
+                this.escapeCSV(data.invoice_number || ''),
+                this.escapeCSV(data.customerName || data.customer?.name || ''),
                 this.escapeCSV(data.notes || '')
             ].join(',');
         });
