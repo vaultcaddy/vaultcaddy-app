@@ -1230,37 +1230,51 @@ function displayInvoiceContent(data) {
         return;
     }
     
-    // 發票詳情卡片（桌面版2列，手機版1列）
+    // 發票/收據詳情卡片（桌面版2列，手機版1列）
     detailsSection.innerHTML = `
         <div class="bank-details-card">
             <h3 class="card-title" style="margin-bottom: 1.5rem;">
-                <i class="fas fa-file-invoice" style="color: #3b82f6; margin-right: 0.5rem;"></i>
-                ${t('invoice_details')}
+                <i class="fas fa-receipt" style="color: #4F46E5; margin-right: 0.5rem;"></i>
+                單據詳情 (IRD 扣稅分析)
             </h3>
             <div class="invoice-details-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('invoice_number')}</label>
-                    <input type="text" id="invoiceNumber" value="${data.invoiceNumber || data.invoice_number || '—'}" 
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">商戶名稱</label>
+                    <input type="text" id="vendor" value="${data.merchant_name || data.vendor || data.supplier || data.merchantName || '—'}" 
                            onchange="autoSaveInvoiceDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('date')}</label>
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">收據日期</label>
                     <input type="date" id="invoiceDate" value="${data.date || data.invoice_date || ''}" 
                            onchange="autoSaveInvoiceDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
                 </div>
                 <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('vendor')}</label>
-                    <input type="text" id="vendor" value="${data.vendor || data.supplier || data.merchantName || '—'}" 
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">總金額</label>
+                    <input type="text" id="totalAmount" value="${formatCurrency(data.total_amount || data.total || data.totalAmount || 0)}" 
+                           onchange="autoSaveInvoiceDetails()"
+                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; font-weight: 700; color: #1f2937; background: white;">
+                </div>
+                <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
+                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">開支類別</label>
+                    <input type="text" id="expenseCategory" value="${data.expense_category || '未分類'}" 
                            onchange="autoSaveInvoiceDetails()"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
                 </div>
-                <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <label style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 600;">${t('total_amount')}</label>
-                    <input type="text" id="totalAmount" value="${formatCurrency(data.total || data.totalAmount || 0)}" 
-                           onchange="autoSaveInvoiceDetails()"
-                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; font-weight: 600; color: #10b981; background: white;">
+                <div style="grid-column: 1 / -1; background: ${getTaxBgColor(data.tax_deductibility?.level)}; padding: 1rem; border-radius: 8px; border: 1px solid ${getTaxBorderColor(data.tax_deductibility?.level)};">
+                    <label style="display: block; font-size: 0.75rem; color: ${getTaxTextColor(data.tax_deductibility?.level)}; margin-bottom: 0.5rem; font-weight: 700;">IRD 扣稅可能性</label>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <select id="taxLevel" onchange="autoSaveInvoiceDetails()" style="padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white; font-weight: 600;">
+                            <option value="High" ${data.tax_deductibility?.level === 'High' ? 'selected' : ''}>✅ 100% 可扣稅 (High)</option>
+                            <option value="Medium" ${data.tax_deductibility?.level === 'Medium' ? 'selected' : ''}>⚠️ 需確認 (Medium)</option>
+                            <option value="Low" ${data.tax_deductibility?.level === 'Low' ? 'selected' : ''}>❌ 私人/交際 (Low)</option>
+                            <option value="None" ${data.tax_deductibility?.level === 'None' ? 'selected' : ''}>🚫 不可扣稅 (None)</option>
+                        </select>
+                        <input type="text" id="taxReason" value="${data.tax_deductibility?.reason || ''}" placeholder="扣稅原因說明..."
+                               onchange="autoSaveInvoiceDetails()"
+                               style="flex: 1; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: white;">
+                    </div>
                 </div>
             </div>
             <style>
@@ -1269,60 +1283,68 @@ function displayInvoiceContent(data) {
                     .invoice-details-grid {
                         grid-template-columns: 1fr !important;
                     }
+                    .invoice-details-grid > div:last-child > div {
+                        flex-direction: column;
+                    }
+                    .invoice-details-grid > div:last-child select,
+                    .invoice-details-grid > div:last-child input {
+                        width: 100%;
+                    }
                 }
             </style>
         </div>
     `;
     
-    // 項目明細表格（可編輯）
-    const items = data.items || data.lineItems || [];
+    // 輔助函數：獲取扣稅標籤顏色
+    function getTaxBgColor(level) {
+        if (level === 'High') return '#ecfdf5';
+        if (level === 'Medium') return '#fffbeb';
+        if (level === 'Low') return '#fef2f2';
+        return '#f9fafb';
+    }
+    function getTaxBorderColor(level) {
+        if (level === 'High') return '#a7f3d0';
+        if (level === 'Medium') return '#fde68a';
+        if (level === 'Low') return '#fecaca';
+        return '#e5e7eb';
+    }
+    function getTaxTextColor(level) {
+        if (level === 'High') return '#065f46';
+        if (level === 'Medium') return '#92400e';
+        if (level === 'Low') return '#991b1b';
+        return '#4b5563';
+    }
     
-    let itemsHTML = '';
-    items.forEach((item, index) => {
-        // 安全地轉換為數字
-        const unitPrice = parseFloat(item.unit_price || item.unitPrice || 0) || 0;
-        const amount = parseFloat(item.amount || 0) || 0;
-        const quantity = parseFloat(item.quantity || 0) || 0;
-        
-        itemsHTML += `
-            <tr>
-                <td contenteditable="true" data-field="code" data-index="${index}" style="padding: 0.75rem; color: #6b7280; cursor: text;">${item.code || item.itemCode || '—'}</td>
-                <td contenteditable="true" data-field="description" data-index="${index}" style="padding: 0.75rem; color: #1f2937; font-weight: 500; cursor: text;">${item.description || '—'}</td>
-                <td contenteditable="true" data-field="quantity" data-index="${index}" style="padding: 0.75rem; text-align: right; color: #1f2937; cursor: text;">${quantity}</td>
-                <td contenteditable="true" data-field="unit" data-index="${index}" style="padding: 0.75rem; text-align: right; color: #6b7280; cursor: text;">${item.unit || t('unit_default')}</td>
-                <td contenteditable="true" data-field="unit_price" data-index="${index}" style="padding: 0.75rem; text-align: right; color: #1f2937; cursor: text;">${unitPrice.toFixed(2)}</td>
-                <td contenteditable="true" data-field="amount" data-index="${index}" style="padding: 0.75rem; text-align: right; color: #1f2937; font-weight: 500; cursor: text;">${amount.toFixed(2)}</td>
-            </tr>
-        `;
-    });
+    // 項目明細表格（改為顯示購買項目簡述）
+    const itemsSummary = data.items_summary || '無項目簡述';
     
     dataSection.innerHTML = `
         <div class="transactions-section">
             <h3 class="transactions-title" style="margin-bottom: 1rem;">
                 <i class="fas fa-list" style="color: #8b5cf6; margin-right: 0.5rem;"></i>
-                ${t('line_items')}
-                <span style="font-size: 0.875rem; color: #6b7280; font-weight: normal; margin-left: 0.5rem;">${t('editable')}</span>
+                購買項目簡述
             </h3>
-            <table class="transactions-table invoice-items-table">
-                <thead>
-                    <tr>
-                        <th>${t('code')}</th>
-                        <th>${t('description')}</th>
-                        <th style="text-align: right;">${t('quantity')}</th>
-                        <th style="text-align: right;">${t('unit')}</th>
-                        <th style="text-align: right;">${t('unit_price')}</th>
-                        <th style="text-align: right;">${t('amount')}</th>
-                    </tr>
-                </thead>
-                <tbody id="itemsTableBody">
-                    ${itemsHTML || '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: #6b7280;">No item data</td></tr>'}
-                </tbody>
-            </table>
+            <div style="background: #f9fafb; padding: 1.5rem; border-radius: 8px; border: 1px solid #e5e7eb;">
+                <textarea id="itemsSummary" onchange="autoSaveItemsSummary()" style="width: 100%; min-height: 80px; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.95rem; background: white; resize: vertical; line-height: 1.5;">${itemsSummary}</textarea>
+            </div>
+            
+            <!-- 隱藏原有的複雜明細表，保留代碼以防未來需要 -->
+            <div style="display: none;">
+                <table class="transactions-table invoice-items-table">
+                    <tbody id="itemsTableBody"></tbody>
+                </table>
+            </div>
         </div>
     `;
     
-    // 添加編輯事件監聽器
-    addEditableListeners();
+    // 添加全局函數處理簡述更新
+    window.autoSaveItemsSummary = function() {
+        const summary = document.getElementById('itemsSummary')?.value;
+        if (currentDocument && currentDocument.processedData) {
+            currentDocument.processedData.items_summary = summary;
+            markAsChanged();
+        }
+    };
 }
 
 // ============================================
@@ -2061,23 +2083,27 @@ async function autoSaveAllChanges() {
 // 自動保存發票詳情（觸發自動保存）
 async function autoSaveInvoiceDetails() {
     // 獲取所有發票字段
-    const invoiceNumber = document.getElementById('invoiceNumber')?.value;
-    const invoiceDate = document.getElementById('invoiceDate')?.value;
     const vendor = document.getElementById('vendor')?.value;
+    const invoiceDate = document.getElementById('invoiceDate')?.value;
     const totalAmount = document.getElementById('totalAmount')?.value;
+    const expenseCategory = document.getElementById('expenseCategory')?.value;
+    const taxLevel = document.getElementById('taxLevel')?.value;
+    const taxReason = document.getElementById('taxReason')?.value;
     
     // 更新 currentDocument
     if (currentDocument && currentDocument.processedData) {
         currentDocument.processedData = {
             ...currentDocument.processedData,
-            invoiceNumber: invoiceNumber,
-            invoice_number: invoiceNumber,
-            date: invoiceDate,
-            invoice_date: invoiceDate,
+            merchant_name: vendor,
             vendor: vendor,
-            supplier: vendor,
-            total: totalAmount,
-            totalAmount: totalAmount
+            date: invoiceDate,
+            total_amount: parseFloat(totalAmount.replace(/[^0-9.-]+/g,"")) || 0,
+            total: parseFloat(totalAmount.replace(/[^0-9.-]+/g,"")) || 0,
+            expense_category: expenseCategory,
+            tax_deductibility: {
+                level: taxLevel,
+                reason: taxReason
+            }
         };
     }
     

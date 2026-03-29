@@ -179,7 +179,7 @@ class VaultCaddySidebar {
             const isActive = currentProjectId === project.id;
             return `
             <div class="project-item" onclick="window.location.href='firstproject.html?project=${project.id}'" style="display: flex; align-items: center; padding: 0.5rem; color: ${isActive ? '#2563eb' : '#6b7280'}; cursor: pointer; border-radius: 4px; transition: background 0.2s; margin-bottom: 0.25rem; ${isActive ? 'background: #eff6ff; border-left: 3px solid #2563eb; margin-left: -1.5rem; padding-left: calc(0.5rem + 1.5rem - 3px);' : ''}">
-                <i class="fas fa-folder" style="margin-right: 0.5rem; font-size: 1rem;"></i>
+                <i class="fas fa-calendar-alt" style="margin-right: 0.5rem; font-size: 1rem;"></i>
                 <span class="project-name" style="font-size: 0.875rem;">${project.name}</span>
             </div>
         `;
@@ -189,12 +189,12 @@ class VaultCaddySidebar {
             <!-- Project 區塊 -->
             <div style="margin-bottom: auto;">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
-                    <span style="font-size: 0.875rem; font-weight: 500; color: #6b7280;">project</span>
-                    <button onclick="openCreateProjectModal()" style="background: none; border: none; color: #6b7280; cursor: pointer; font-size: 1.25rem; padding: 0; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;">+</button>
+                    <span style="font-size: 0.875rem; font-weight: 500; color: #6b7280;">月份帳單</span>
+                    <button onclick="openCreateProjectModal()" style="background: none; border: none; color: #6b7280; cursor: pointer; font-size: 1.25rem; padding: 0; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;" title="新增月份">+</button>
                 </div>
                 
-                <!-- 🔍 搜尋框 (保留功能，清空placeholder) -->
-                <input type="text" id="project-search-input" placeholder="" oninput="filterProjects(this.value)" style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem; margin-bottom: 0.75rem; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#d1d5db'">
+                <!-- 🔍 搜尋框 -->
+                <input type="text" id="project-search-input" placeholder="搜尋月份..." oninput="filterProjects(this.value)" style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem; margin-bottom: 0.75rem; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#d1d5db'">
                 
                 ${projectsHTML}
             </div>

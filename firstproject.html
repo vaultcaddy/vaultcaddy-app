@@ -3042,32 +3042,36 @@
                         aVal = (a.name || a.fileName || '').toLowerCase();
                         bVal = (b.name || b.fileName || '').toLowerCase();
                         break;
-                    case 'type':
-                        aVal = (a.documentType || a.type || '').toLowerCase();
-                        bVal = (b.documentType || b.type || '').toLowerCase();
-                        break;
                     case 'vendor':
                         const aData = a.processedData || {};
                         const bData = b.processedData || {};
-                        aVal = (aData.vendor || aData.supplier || aData.merchantName || '-').toLowerCase();
-                        bVal = (bData.vendor || bData.supplier || bData.merchantName || '-').toLowerCase();
+                        aVal = (aData.merchant_name || aData.vendor || aData.supplier || aData.merchantName || '-').toLowerCase();
+                        bVal = (bData.merchant_name || bData.vendor || bData.supplier || bData.merchantName || '-').toLowerCase();
                         break;
                     case 'amount':
-                        const aAmount = (a.processedData?.totalAmount || a.processedData?.amount || a.processedData?.total || 0);
-                        const bAmount = (b.processedData?.totalAmount || b.processedData?.amount || b.processedData?.total || 0);
+                        const aAmount = (a.processedData?.total_amount || a.processedData?.totalAmount || a.processedData?.amount || a.processedData?.total || 0);
+                        const bAmount = (b.processedData?.total_amount || b.processedData?.totalAmount || b.processedData?.amount || b.processedData?.total || 0);
                         aVal = parseFloat(aAmount) || 0;
                         bVal = parseFloat(bAmount) || 0;
                         break;
                     case 'date':
-                        const aDate = a.processedData?.invoiceDate || a.processedData?.transactionDate || a.processedData?.date || '';
-                        const bDate = b.processedData?.invoiceDate || b.processedData?.transactionDate || b.processedData?.date || '';
+                        const aDate = a.processedData?.date || a.processedData?.invoiceDate || a.processedData?.transactionDate || '';
+                        const bDate = b.processedData?.date || b.processedData?.invoiceDate || b.processedData?.transactionDate || '';
                         aVal = aDate ? new Date(aDate).getTime() : 0;
                         bVal = bDate ? new Date(bDate).getTime() : 0;
                         break;
+                    case 'type':
+                        const aType = (a.processedData?.expense_category || a.documentType || a.type || '').toLowerCase();
+                        const bType = (b.processedData?.expense_category || b.documentType || b.type || '').toLowerCase();
+                        aVal = aType;
+                        bVal = bType;
+                        break;
                     case 'status':
-                        const statusOrder = { 'processing': 1, 'failed': 2, 'completed': 3 };
-                        aVal = statusOrder[a.status] || 999;
-                        bVal = statusOrder[b.status] || 999;
+                        const aTax = a.processedData?.tax_deductibility?.level || '';
+                        const bTax = b.processedData?.tax_deductibility?.level || '';
+                        const taxOrder = { 'High': 1, 'Medium': 2, 'Low': 3, 'None': 4 };
+                        aVal = taxOrder[aTax] || 999;
+                        bVal = taxOrder[bTax] || 999;
                         break;
                     case 'uploadDate':
                         aVal = a.createdAt ? (typeof a.createdAt === 'object' && a.createdAt.seconds ? a.createdAt.seconds * 1000 : new Date(a.createdAt).getTime()) : 0;
@@ -4410,7 +4414,7 @@
                 if (deleteBtn) {
                     const deleteSpan = deleteBtn.querySelector('span');
                     if (deleteSpan) {
-                        deleteSpan.textContent = selectedCount > 0 ? `Delete ${selectedCount}` : 'Delete';
+                        deleteSpan.textContent = selectedCount > 0 ? `刪除 (${selectedCount})` : '刪除';
                     }
                     deleteBtn.disabled = selectedCount === 0;
                     deleteBtn.style.opacity = selectedCount > 0 ? '1' : '0.5';

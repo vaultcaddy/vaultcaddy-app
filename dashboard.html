@@ -1296,20 +1296,20 @@
 <div class="modal-overlay" id="createProjectModal">
 <div class="modal-content">
 <div class="modal-header">
-<h2 data-translate="create_new_project">Create New Project</h2>
+<h2>新增帳單月份</h2>
 <button class="modal-close" onclick="closeCreateProjectModal()">
 <i class="fas fa-times"></i>
 </button>
 </div>
 <div class="modal-body">
 <div class="form-group">
-<label class="form-label" data-translate="project_name" for="projectName">Project Name</label>
-<input class="form-input" id="projectName" onkeypress="if(event.key === 'Enter') createProject()" placeholder="Enter project name..." type="text"/>
+<label class="form-label" for="projectName">選擇月份</label>
+<input class="form-input" id="projectName" onkeypress="if(event.key === 'Enter') createProject()" placeholder="例如：2026年3月" type="month" style="font-family: inherit;"/>
 </div>
 </div>
 <div class="modal-footer">
-<button class="btn-cancel" onclick="closeCreateProjectModal()"><span data-translate="cancel">Cancel</span></button>
-<button class="btn-create" id="createBtn" onclick="createProject()">Create</button>
+<button class="btn-cancel" onclick="closeCreateProjectModal()"><span>取消</span></button>
+<button class="btn-create" id="createBtn" onclick="createProject()">確認新增</button>
 </div>
 </div>
 </div>
@@ -1415,9 +1415,12 @@
                     <tr>
                         <td colspan="4">
                             <div class="empty-state">
-                                <i class="fas fa-folder-open"></i>
-                                <h3>No projects yet</h3>
-                                <p>Create your first project to get started</p>
+                                <i class="fas fa-calendar-plus" style="font-size: 3rem; color: #d1d5db; margin-bottom: 1rem;"></i>
+                                <h3 style="font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem;">尚未建立任何月份</h3>
+                                <p style="color: #6b7280; margin-bottom: 1.5rem;">點擊上方按鈕新增一個帳單月份開始使用</p>
+                                <button onclick="openCreateProjectModal()" style="background: #4F46E5; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; font-weight: 600; cursor: pointer;">
+                                    <i class="fas fa-plus" style="margin-right: 0.5rem;"></i> 新增月份
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -1426,29 +1429,26 @@
             }
             
             tbody.innerHTML = projects.map(project => `
-                <tr onclick="window.location.href='firstproject.html?project=${project.id}'" style="cursor: pointer;">
-                    <td>
-                        <div class="project-name">
-                            <div class="project-thumbnail">
-                                ${project.thumbnail ? 
-                                    `<img src="${project.thumbnail}" alt="${project.name}" loading="lazy" decoding="async">` : 
-                                    '<i class="fas fa-file-alt"></i>'
-                                }
-                            </div>
-                            <div class="project-info">
-                                <div class="project-title">${project.name}</div>
-                            </div>
-                        </div>
+                <tr onclick="window.location.href='firstproject.html?project=${project.id}'" style="cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='transparent'">
+                    <td style="font-weight: 600; color: #1F2937; padding: 1rem;">
+                        <i class="fas fa-folder" style="color: #4F46E5; margin-right: 8px;"></i>
+                        ${project.name}
                     </td>
-                    <td class="date-cell">${formatDate(project.updatedAt || project.lastModified || project.createdAt)}</td>
-                    <td class="date-cell">${formatDate(project.createdAt || project.created)}</td>
-                    <td style="text-align: center;">
+                    <td style="padding: 1rem; color: #4B5563;">
+                        <i class="fas fa-receipt" style="color: #9CA3AF; margin-right: 4px;"></i> 
+                        ${project.documentCount || 0} 張
+                    </td>
+                    <td style="padding: 1rem;">
+                        <span style="background: #DEF7EC; color: #046C4E; padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">收集中</span>
+                    </td>
+                    <td style="text-align: center; padding: 1rem;">
                         <button 
                             onclick="event.stopPropagation(); showDeleteProjectModal('${project.id}', '${project.name.replace(/'/g, "\\'")}')" 
                             style="background: none; border: none; color: #9ca3af; cursor: pointer; padding: 0.5rem; border-radius: 4px; transition: all 0.2s;"
                             onmouseover="this.style.color='#ef4444'; this.style.backgroundColor='#fee2e2'"
                             onmouseout="this.style.color='#9ca3af'; this.style.backgroundColor='transparent'"
-                            title="刪除項目">
+                            title="刪除月份"
+                        >
                             <i class="fas fa-trash" style="font-size: 1rem;"></i>
                         </button>
                     </td>

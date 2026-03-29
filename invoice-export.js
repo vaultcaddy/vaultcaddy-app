@@ -136,42 +136,32 @@
     function generateUniversalCSV(invoices) {
         console.log(`📊 生成通用發票 CSV，共 ${invoices.length} 個發票`);
         
-        const headers = ['Date', 'Invoice Number', 'Supplier', 'Description', 'Amount'];
+        const headers = ['收據日期', '商戶名稱', '開支類別', '購買項目簡述', '總金額', 'IRD 扣稅可能性', '扣稅原因說明', '備註'];
         const rows = [headers];
         
         invoices.forEach(invoice => {
             const data = invoice.processedData || {};
             
-            const date = data.invoiceDate || data.date || data.issueDate || '';
-            const invoiceNumber = data.invoiceNumber || data.invoice_number || data.number || '';
-            const supplier = data.vendorName || data.vendor || data.supplier || data.supplierName || '';
-            const total = parseFloat(data.totalAmount || data.total || data.amount || 0);
+            const date = data.date || data.invoiceDate || data.issueDate || '';
+            const supplier = data.merchant_name || data.vendorName || data.vendor || data.supplier || '';
+            const category = data.expense_category || '未分類';
+            const summary = data.items_summary || '';
+            const total = parseFloat(data.total_amount || data.totalAmount || data.total || data.amount || 0);
             
-            // 如果有項目明細，每個項目一行
-            const items = data.items || data.lineItems || [];
+            const taxLevel = data.tax_deductibility?.level || '';
+            const taxReason = data.tax_deductibility?.reason || '';
+            const notes = data.notes || '';
             
-            if (items.length === 0) {
-                rows.push([
-                    date,
-                    invoiceNumber,
-                    supplier,
-                    'Invoice Total',
-                    total.toFixed(2)
-                ]);
-            } else {
-                items.forEach(item => {
-                    const description = item.description || item.itemName || item.name || '';
-                    const amount = parseFloat(item.amount || item.subtotal || 0);
-                    
-                    rows.push([
-                        date,
-                        invoiceNumber,
-                        supplier,
-                        description,
-                        amount.toFixed(2)
-                    ]);
-                });
-            }
+            rows.push([
+                date,
+                supplier,
+                category,
+                summary,
+                total.toFixed(2),
+                taxLevel,
+                taxReason,
+                notes
+            ]);
         });
         
         const csv = rows.map(row => row.map(escapeCSV).join(',')).join('\n');
