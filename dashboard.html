@@ -116,7 +116,7 @@
     <script defer src="mobile-menu-manager.js?v=20260329"></script>
 <script defer="" src="config.js?v=20260329"></script>
 <!-- ✅ 統一導航欄系統：靜態 HTML + navbar-component.js -->
-<script defer="" src="navbar-component.js?v=20260330.03"></script>
+<script defer="" src="navbar-component.js?v=20260330.05"></script>
 <script defer="" src="sidebar-component.js?v=20260329"></script>
 <!-- Firebase SDK（CDN 版本 - compat）- defer 確保 DOM 載入後才執行 -->
 <script defer="" src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
@@ -855,7 +855,7 @@
                 <span style="font-size: 1.5rem;">HK$</span> <span id="dashboard-total-tax">0</span>
             </div>
             <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
-                <button onclick="window.location.href='firstproject.html'" style="flex: 1; background: #10B981; color: white; border: none; padding: 0.5rem; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                <button onclick="exportCurrentMonth()" style="flex: 1; background: #10B981; color: white; border: none; padding: 0.5rem; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
                     <i class="fas fa-file-excel"></i> 匯出本月 Excel
                 </button>
             </div>
@@ -911,10 +911,12 @@
                 <img id="qrcode-image" src="" alt="QR Code" style="max-width: 100%; max-height: 100%; display: none;">
                 <div id="qrcode-loading" style="color: #6B7280; font-size: 0.875rem;">生成中...</div>
             </div>
-            <div style="width: 100%; margin-top: 1rem;">
-                <input type="text" id="upload-link-input" readonly style="width: 100%; padding: 0.75rem; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 0.875rem; color: #6B7280; background: #F9FAFB; text-align: center; margin-bottom: 0.75rem;">
-                <button onclick="copyUploadLink()" style="width: 100%; padding: 0.75rem; background: #F3F4F6; color: #374151; border: 1px solid #D1D5DB; border-radius: 6px; font-weight: 500; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+            <div style="width: 100%; margin-top: 1rem; display: flex; gap: 0.5rem;">
+                <button onclick="copyUploadLink()" style="flex: 1; padding: 0.75rem; background: #F3F4F6; color: #374151; border: 1px solid #D1D5DB; border-radius: 6px; font-weight: 500; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
                     <i class="fas fa-copy"></i> 複製連結
+                </button>
+                <button onclick="downloadQrCode()" style="flex: 1; padding: 0.75rem; background: #4F46E5; color: white; border: none; border-radius: 6px; font-weight: 500; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                    <i class="fas fa-download"></i> 下載圖片
                 </button>
             </div>
         </div>
@@ -1050,8 +1052,8 @@
             const baseUrl = window.location.origin;
             const uploadUrl = `${baseUrl}/staff-upload.html?shopId=${user.uid}`;
             
-            // 設置輸入框
-            linkInput.value = uploadUrl;
+            // 設置輸入框 (已移除，改為直接複製)
+            // linkInput.value = uploadUrl;
             
             // 顯示模態框
             modal.classList.add('active');
@@ -1082,13 +1084,14 @@
         }
 
         function copyUploadLink() {
-            const linkInput = document.getElementById('upload-link-input');
-            linkInput.select();
-            linkInput.setSelectionRange(0, 99999); /* For mobile devices */
+            // 由於我們移除了輸入框，現在直接複製變量
+            const user = firebase.auth().currentUser;
+            if (!user) return;
+            const baseUrl = window.location.origin;
+            const uploadUrl = `${baseUrl}/staff-upload.html?shopId=${user.uid}`;
             
-            try {
-                document.execCommand('copy');
-                const btn = linkInput.nextElementSibling;
+            navigator.clipboard.writeText(uploadUrl).then(() => {
+                const btn = document.querySelector('button[onclick="copyUploadLink()"]');
                 const originalText = btn.innerHTML;
                 btn.innerHTML = '<i class="fas fa-check"></i> 已複製';
                 btn.style.background = '#10B981';
@@ -1101,8 +1104,29 @@
                     btn.style.color = '#374151';
                     btn.style.borderColor = '#D1D5DB';
                 }, 2000);
-            } catch (err) {
+            }).catch(err => {
                 alert('複製失敗，請手動複製連結');
+            });
+        }
+
+        function downloadQrCode() {
+            const qrImage = document.getElementById('qrcode-image');
+            if (qrImage && qrImage.src) {
+                // 為了避免跨域污染，我們使用 fetch 獲取圖片 Blob
+                fetch(qrImage.src)
+                    .then(response => response.blob())
+                    .then(blob => {
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.style.display = 'none';
+                        a.href = url;
+                        a.download = 'VaultCaddy_Staff_Upload_QRCode.png';
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
+                    })
+                    .catch(() => alert('下載失敗，請嘗試右鍵另存圖片'));
             }
         }
 
@@ -1287,6 +1311,16 @@
                 projects = await window.simpleDataManager.getProjects();
                 logger.log(`✅ 從 Firebase 加載 ${projects.length} 個項目`);
                 
+                // 找出當前月份的項目 ID，供匯出按鈕使用
+                const now = new Date();
+                const currentMonthName = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`;
+                const currentProject = projects.find(p => p.name === currentMonthName);
+                if (currentProject) {
+                    window.currentMonthProjectId = currentProject.id;
+                } else {
+                    window.currentMonthProjectId = null;
+                }
+                
                 // 計算總數據
                 for (const project of projects) {
                     // 獲取每個項目的文檔來計算總扣稅額和真實單據數量
@@ -1337,14 +1371,26 @@
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="4">
-                            <div class="empty-state">
+                            <div class="empty-state" style="padding: 3rem 1rem; text-align: center; background: #F9FAFB; border-radius: 12px; border: 2px dashed #E5E7EB; position: relative;">
+                                <div style="position: absolute; top: -30px; right: 20px; animation: bounce 2s infinite;">
+                                    <div style="background: #10B981; color: white; padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 0.9rem; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);">
+                                        👉 第一步：點擊右上角獲取店員上傳 QR Code
+                                    </div>
+                                    <div style="width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 10px solid #10B981; margin: 0 auto;"></div>
+                                </div>
                                 <i class="fas fa-calendar-plus" style="font-size: 3rem; color: #d1d5db; margin-bottom: 1rem;"></i>
                                 <h3 style="font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem;">尚未建立任何月份</h3>
-                                <p style="color: #6b7280; margin-bottom: 1.5rem;">點擊上方按鈕新增一個帳單月份開始使用</p>
-                                <button onclick="openCreateProjectModal()" style="background: #4F46E5; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; font-weight: 600; cursor: pointer;">
-                                    <i class="fas fa-plus" style="margin-right: 0.5rem;"></i> 新增月份
+                                <p style="color: #6b7280; margin-bottom: 1.5rem;">點擊上方按鈕新增一個帳單月份，或直接讓店員掃描 QR Code 上傳，系統會自動為您建立！</p>
+                                <button onclick="openCreateProjectModal()" style="background: #4F46E5; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#4338CA'" onmouseout="this.style.background='#4F46E5'">
+                                    <i class="fas fa-plus" style="margin-right: 0.5rem;"></i> 手動新增月份
                                 </button>
                             </div>
+                            <style>
+                                @keyframes bounce {
+                                    0%, 100% { transform: translateY(0); }
+                                    50% { transform: translateY(-10px); }
+                                }
+                            </style>
                         </td>
                     </tr>
                 `;
@@ -1377,6 +1423,16 @@
                     </td>
                 </tr>
             `).join('');
+        }
+
+        // 匯出當前月份 Excel
+        function exportCurrentMonth() {
+            if (window.currentMonthProjectId) {
+                // 如果有當前月份項目，跳轉到該項目並觸發匯出（這裡我們先簡單跳轉到該項目）
+                window.location.href = `firstproject.html?project=${window.currentMonthProjectId}`;
+            } else {
+                alert('本月尚未建立任何帳單項目，請先新增月份並上傳單據。');
+            }
         }
 
         // 格式化日期
