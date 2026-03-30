@@ -37,6 +37,107 @@ class QwenVLMaxProcessor {
     }
     
     /**
+     * 处理 Base64 文档
+     * @param {string} base64DataUrl - data:image/jpeg;base64,... 格式的字符串
+     * @param {string} documentType - 'invoice' 或 'bank_statement'
+     * @returns {Object} 提取的结构化数据
+     */
+    async processBase64Document(base64DataUrl, documentType = 'invoice') {
+        const startTime = Date.now();
+        
+        try {
+            // 解析 Base64 Data URL
+            const matches = base64DataUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+            let mimeType = 'image/jpeg';
+            let base64Data = base64DataUrl;
+            
+            if (matches && matches.length === 3) {
+                mimeType = matches[1];
+                base64Data = matches[2];
+            }
+            
+            // 2. 生成提示词
+            const prompt = this.generatePrompt(documentType);
+            
+            // 3. 根据文档类型选择模型和参数（统一使用标准模式）
+            const selectedModel = this.models[documentType === 'bank_statement' ? 'bankStatement' : 'receipt'];
+            const enableThinking = false;
+            
+            console.log(`📊 文档类型: ${documentType} → 模型: ${selectedModel}, 模式: 标准模式（快速）`);
+            
+            // 4. 构建请求
+            const requestBody = {
+                model: selectedModel,
+                messages: [
+                    {
+                        role: 'user',
+                        content: [
+                            {
+                                type: 'image_url',
+                                image_url: {
+                                    url: `data:${mimeType};base64,${base64Data}`
+                                }
+                            },
+                            {
+                                type: 'text',
+                                text: prompt
+                            }
+                        ]
+                    }
+                ],
+                temperature: 0.1,
+                max_tokens: 8000
+            };
+            
+            // 5. 调用 Qwen-VL API
+            const response = await fetch(this.qwenWorkerUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(`Qwen-VL API 错误: ${response.status} - ${errorData.message || response.statusText}`);
+            }
+            
+            const data = await response.json();
+            
+            // 6. 解析结果
+            let resultText = data.choices[0].message.content;
+            
+            // 移除可能存在的 Markdown 代码块标记
+            resultText = resultText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+            
+            // 解析 JSON
+            let parsedData;
+            try {
+                parsedData = JSON.parse(resultText);
+            } catch (e) {
+                console.error('JSON 解析失败，原始文本:', resultText);
+                throw new Error('AI 返回的数据格式不正确（非标准 JSON）');
+            }
+            
+            // 7. 记录统计信息
+            this.stats.documentsProcessed++;
+            this.stats.totalTimeMs += (Date.now() - startTime);
+            
+            return {
+                data: parsedData,
+                rawText: resultText,
+                processingTime: Date.now() - startTime
+            };
+            
+        } catch (error) {
+            this.stats.failedDocuments++;
+            console.error('❌ Qwen-VL Max 处理失败:', error);
+            throw error;
+        }
+    }
+
+    /**
      * 处理文档（单页）
      * @param {File} file - 图片或 PDF 文件
      * @param {string} documentType - 'invoice' 或 'bank_statement'

@@ -116,7 +116,7 @@
     <script defer src="mobile-menu-manager.js?v=20260329"></script>
 <script defer="" src="config.js?v=20260329"></script>
 <!-- ✅ 統一導航欄系統：靜態 HTML + navbar-component.js -->
-<script defer="" src="navbar-component.js?v=20260329.97"></script>
+<script defer="" src="navbar-component.js?v=20260330.03"></script>
 <script defer="" src="sidebar-component.js?v=20260329"></script>
 <!-- Firebase SDK（CDN 版本 - compat）- defer 確保 DOM 載入後才執行 -->
 <script defer="" src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
@@ -131,6 +131,8 @@
 <script defer="" src="simple-auth.js?v=20260329"></script>
 <script defer="" src="user-profile-manager.js?v=20260329"></script>
 <script defer="" src="simple-data-manager.js?v=20260329"></script>
+<!-- 引入 Qwen-VL-Max 處理器 -->
+<script defer="" src="qwen-vl-max-processor.js?v=20260330"></script>
 <!-- Email 驗證檢查 -->
 <script defer="" src="email-verification-check.js"></script>
 <!-- 導航欄交互功能 -->
@@ -930,8 +932,29 @@
 </div>
 <div class="modal-body">
 <div class="form-group">
-<label class="form-label" for="projectName">選擇月份</label>
-<input class="form-input" id="projectName" onkeypress="if(event.key === 'Enter') createProject()" placeholder="例如：2026年3月" type="month" style="font-family: inherit;"/>
+<label class="form-label">選擇年份和月份</label>
+<div style="display: flex; gap: 10px;">
+    <select class="form-input" id="projectYear" style="flex: 1;">
+        <option value="2024">2024年</option>
+        <option value="2025">2025年</option>
+        <option value="2026" selected>2026年</option>
+        <option value="2027">2027年</option>
+    </select>
+    <select class="form-input" id="projectMonth" style="flex: 1;">
+        <option value="01">1月</option>
+        <option value="02">2月</option>
+        <option value="03" selected>3月</option>
+        <option value="04">4月</option>
+        <option value="05">5月</option>
+        <option value="06">6月</option>
+        <option value="07">7月</option>
+        <option value="08">8月</option>
+        <option value="09">9月</option>
+        <option value="10">10月</option>
+        <option value="11">11月</option>
+        <option value="12">12月</option>
+    </select>
+</div>
 </div>
 </div>
 <div class="modal-footer">
@@ -973,10 +996,22 @@
         // 打開創建項目模態框
         function openCreateProjectModal() {
             const modal = document.getElementById('createProjectModal');
-            const input = document.getElementById('projectName');
             modal.classList.add('active');
-            input.value = '';
-            input.focus();
+            
+            // 自動設置為當前年月
+            const now = new Date();
+            const currentYear = now.getFullYear().toString();
+            const currentMonth = (now.getMonth() + 1).toString().padStart(2, '0');
+            
+            const yearSelect = document.getElementById('projectYear');
+            const monthSelect = document.getElementById('projectMonth');
+            
+            if (yearSelect && [...yearSelect.options].some(o => o.value === currentYear)) {
+                yearSelect.value = currentYear;
+            }
+            if (monthSelect) {
+                monthSelect.value = currentMonth;
+            }
         }
 
         // 關閉創建項目模態框
@@ -1073,11 +1108,12 @@
 
         // 創建新項目
         async function createProject() {
-            const input = document.getElementById('projectName');
-            const projectName = input.value.trim();
+            const yearSelect = document.getElementById('projectYear');
+            const monthSelect = document.getElementById('projectMonth');
+            const projectName = `${yearSelect.value}-${monthSelect.value}`;
             
             if (!projectName) {
-                alert('Please enter a project name');
+                alert('請選擇年份和月份');
                 return;
             }
             
@@ -1085,10 +1121,10 @@
             try {
                 const projectData = await window.simpleDataManager.createProject(projectName);
                 logger.log('✅ 項目已保存到 Firebase:', projectData);
-            
-            // 關閉模態框
-            closeCreateProjectModal();
-            
+                
+                // 關閉模態框
+                closeCreateProjectModal();
+                
                 // 🔥 修復：使用 Firebase 返回的真實 projectId
                 const projectId = projectData.id;
                 logger.log('🚀 跳轉到新項目頁面:', projectId);
@@ -1097,7 +1133,7 @@
                 window.location.href = `firstproject.html?project=${projectId}`;
             } catch (error) {
                 console.error('❌ 保存到 Firebase 失敗:', error);
-                alert('創建項目失敗，請重試');
+                alert(error.message || '創建項目失敗，請重試');
                 return;
             }
         }
@@ -1105,6 +1141,137 @@
         // ✅ 簡化：直接使用 SimpleAuth
         function checkLoginStatus() {
             return window.simpleAuth && window.simpleAuth.isLoggedIn();
+        }
+
+        // 輔助函數：Base64 轉 File 對象
+        function base64ToFile(base64Data, filename) {
+            const arr = base64Data.split(',');
+            const mime = arr[0].match(/:(.*?);/)[1];
+            const bstr = atob(arr[1]);
+            let n = bstr.length;
+            const u8arr = new Uint8Array(n);
+            while (n--) {
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+            return new File([u8arr], filename, { type: mime });
+        }
+
+        // 檢查並處理店員上傳的單據
+        async function checkStaffUploads() {
+            try {
+                const user = firebase.auth().currentUser;
+                if (!user) return;
+                
+                const db = firebase.firestore();
+                const uploadsRef = db.collection('users').doc(user.uid).collection('staff_uploads');
+                const snapshot = await uploadsRef.where('status', '==', 'pending').get();
+                
+                if (snapshot.empty) {
+                    return; // 沒有待處理的單據
+                }
+                
+                console.log(`📦 發現 ${snapshot.size} 張店員上傳的單據，準備處理...`);
+                
+                // 顯示處理中提示
+                const processingBanner = document.createElement('div');
+                processingBanner.id = 'staff-processing-banner';
+                processingBanner.style.cssText = 'position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: #4F46E5; color: white; padding: 10px 20px; border-radius: 8px; z-index: 9999; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 10px; font-weight: 500;';
+                processingBanner.innerHTML = `<i class="fas fa-spinner fa-spin"></i> 正在處理 ${snapshot.size} 張店員上傳的單據...`;
+                document.body.appendChild(processingBanner);
+                
+                const processor = new QwenVLMaxProcessor();
+                let processedCount = 0;
+                
+                for (const doc of snapshot.docs) {
+                    try {
+                        const data = doc.data();
+                        console.log(`⚙️ 正在處理單據: ${doc.id}`);
+                        
+                        // 1. AI 辨識
+                        const aiResult = await processor.processBase64Document(data.imageBase64, 'invoice');
+                        const extractedData = aiResult.data;
+                        
+                        // 2. 獲取日期並決定月份 (格式: YYYY-MM)
+                        let targetMonth = '';
+                        if (extractedData && extractedData.date) {
+                            // 嘗試解析日期
+                            const dateMatch = extractedData.date.match(/^(\d{4})[-\/](\d{1,2})/);
+                            if (dateMatch) {
+                                const year = dateMatch[1];
+                                const month = dateMatch[2].padStart(2, '0');
+                                targetMonth = `${year}-${month}`;
+                            }
+                        }
+                        
+                        // 如果無法獲取日期，使用當前月份
+                        if (!targetMonth) {
+                            const now = new Date();
+                            targetMonth = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`;
+                        }
+                        
+                        // 3. 確保項目(月份)存在
+                        const projects = await window.simpleDataManager.getProjects();
+                        let targetProject = projects.find(p => p.name === targetMonth);
+                        
+                        if (!targetProject) {
+                            console.log(`📁 創建新月份資料夾: ${targetMonth}`);
+                            targetProject = await window.simpleDataManager.createProject(targetMonth);
+                        }
+                        
+                        // 4. 上傳圖片到 Firebase Storage
+                        const fileName = data.fileName || `Staff_Upload_${Date.now()}.jpg`;
+                        const fileObj = base64ToFile(data.imageBase64, fileName);
+                        const fileUrl = await window.simpleDataManager.uploadFile(targetProject.id, fileObj);
+                        
+                        // 5. 儲存單據到該項目
+                        const documentData = {
+                            fileName: fileName,
+                            fileType: 'image/jpeg',
+                            fileUrl: fileUrl, // 使用 Storage URL 而不是 Base64
+                            uploadDate: firebase.firestore.FieldValue.serverTimestamp(),
+                            status: 'completed',
+                            processedData: extractedData,
+                            rawText: aiResult.rawText,
+                            source: 'staff_upload'
+                        };
+                        
+                        await window.simpleDataManager.createDocument(targetProject.id, documentData);
+                        
+                        // 6. 標記為已處理並清理 Base64 數據以節省空間
+                        await uploadsRef.doc(doc.id).update({
+                            status: 'processed',
+                            processedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            projectId: targetProject.id,
+                            imageBase64: firebase.firestore.FieldValue.delete() // 刪除 Base64 數據
+                        });
+                        
+                        processedCount++;
+                        processingBanner.innerHTML = `<i class="fas fa-spinner fa-spin"></i> 正在處理店員上傳... (${processedCount}/${snapshot.size})`;
+                        
+                    } catch (err) {
+                        console.error(`❌ 處理單據 ${doc.id} 失敗:`, err);
+                        // 標記為失敗
+                        await uploadsRef.doc(doc.id).update({
+                            status: 'failed',
+                            error: err.message || '處理失敗'
+                        });
+                    }
+                }
+                
+                // 處理完成
+                processingBanner.style.background = '#10B981';
+                processingBanner.innerHTML = `<i class="fas fa-check-circle"></i> 成功處理 ${processedCount} 張單據！`;
+                
+                // 重新載入項目列表以更新 UI
+                loadProjects();
+                
+                setTimeout(() => {
+                    processingBanner.remove();
+                }, 3000);
+                
+            } catch (error) {
+                console.error('❌ 檢查店員上傳失敗:', error);
+            }
         }
 
         // 載入項目列表
@@ -1122,11 +1289,14 @@
                 
                 // 計算總數據
                 for (const project of projects) {
-                    totalDocs += (project.documentCount || 0);
-                    
-                    // 獲取每個項目的文檔來計算總扣稅額
+                    // 獲取每個項目的文檔來計算總扣稅額和真實單據數量
                     try {
                         const docs = await window.simpleDataManager.getDocuments(project.id);
+                        
+                        // 更新項目的真實單據數量
+                        project.documentCount = docs.length;
+                        totalDocs += docs.length;
+                        
                         for (const doc of docs) {
                             if (doc.processedData && doc.processedData.tax_deductibility) {
                                 const level = doc.processedData.tax_deductibility.level;
@@ -1149,10 +1319,10 @@
                 // 更新頂部卡片
                 document.getElementById('dashboard-total-docs').textContent = totalDocs;
                 
-                // 格式化總金額
+                // 格式化總金額 (顯示小數點後2位)
                 const formattedTax = new Intl.NumberFormat('en-US', {
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
                 }).format(totalTax);
                 document.getElementById('dashboard-total-tax').textContent = formattedTax;
                 
@@ -1361,6 +1531,7 @@
             if (window.simpleDataManager && window.simpleDataManager.initialized) {
                 logger.log('✅ SimpleDataManager 已就緒，載入項目');
                 loadProjects();
+                checkStaffUploads(); // 檢查店員上傳
             }
         }
         

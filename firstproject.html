@@ -96,7 +96,7 @@
 <!-- ✅ 核心配置 -->
 <script defer="" src="config.js?v=20260329"></script>
 <!-- ✅ UI 組件 -->
-<script defer="" src="navbar-component.js?v=20260329.96"></script>
+<script defer="" src="navbar-component.js?v=20260330.03"></script>
 <script defer="" src="sidebar-component.js?v=20260329"></script>
 <!-- ✅ 銀行對帳單導出模塊 -->
 <!-- ✅ Firebase SDK（CDN 版本）-->
@@ -2754,8 +2754,14 @@
                             <!-- 單據圖片 -->
                             <td class="document-name-cell" style="padding: 1rem;">
                                 <div style="display: flex; align-items: center; gap: 0.75rem; ${!isProcessing ? 'cursor: pointer;' : 'cursor: default;'}" ${!isProcessing ? `onclick="viewDocument('${doc.id}')"` : ''}>
-                                    <i class="fas fa-image" style="color: ${isFailed ? '#dc2626' : '#4F46E5'}; font-size: 1.25rem;"></i>
-                                    <span style="font-weight: 500; color: ${isFailed ? '#dc2626' : '#1f2937'};">${doc.name || doc.fileName || '未命名'}</span>
+                                    <div class="doc-image-preview" style="position: relative;">
+                                        <i class="fas fa-image" style="color: ${isFailed ? '#dc2626' : '#4F46E5'}; font-size: 1.25rem;" 
+                                           ${doc.fileUrl || doc.downloadURL || doc.imageBase64 ? `onmouseover="showImagePreview(event, '${doc.fileUrl || doc.downloadURL || doc.imageBase64}')" onmouseout="hideImagePreview()"` : ''}></i>
+                                    </div>
+                                    <span style="font-weight: 500; color: ${isFailed ? '#dc2626' : '#1f2937'};" 
+                                          ${doc.fileUrl || doc.downloadURL || doc.imageBase64 ? `onmouseover="showImagePreview(event, '${doc.fileUrl || doc.downloadURL || doc.imageBase64}')" onmouseout="hideImagePreview()"` : ''}>
+                                        ${doc.name || doc.fileName || '未命名'}
+                                    </span>
                                 </div>
                             </td>
                             
@@ -5113,6 +5119,46 @@
                 localStorage.removeItem('hasPendingFiles');
             }
         })();
+    </script>
+
+    <!-- 圖片預覽容器 -->
+    <div id="image-preview-container" style="display: none; position: fixed; z-index: 10000; background: white; padding: 5px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border: 1px solid #e5e7eb; pointer-events: none;">
+        <img id="image-preview-img" src="" style="max-width: 300px; max-height: 400px; object-fit: contain; border-radius: 4px;">
+    </div>
+    
+    <script>
+        // 圖片預覽功能
+        function showImagePreview(event, url) {
+            if (!url) return;
+            
+            const container = document.getElementById('image-preview-container');
+            const img = document.getElementById('image-preview-img');
+            
+            img.src = url;
+            container.style.display = 'block';
+            
+            // 計算位置，確保不會超出螢幕
+            let left = event.clientX + 15;
+            let top = event.clientY + 15;
+            
+            // 處理右側邊界
+            if (left + 320 > window.innerWidth) {
+                left = event.clientX - 320 - 15;
+            }
+            
+            // 處理底部邊界
+            if (top + 420 > window.innerHeight) {
+                top = window.innerHeight - 420 - 15;
+            }
+            
+            container.style.left = `${left}px`;
+            container.style.top = `${top}px`;
+        }
+        
+        function hideImagePreview() {
+            const container = document.getElementById('image-preview-container');
+            container.style.display = 'none';
+        }
     </script>
 
     <!-- Google Analytics 事件跟踪 -->

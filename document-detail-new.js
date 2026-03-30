@@ -796,7 +796,8 @@ async function displayPDFPreview() {
     imageUrl = currentDocument.imageUrl || 
                currentDocument.downloadURL || 
                currentDocument.url || 
-               currentDocument.fileUrl;
+               currentDocument.fileUrl ||
+               currentDocument.imageBase64;
     
     console.log('📌 方法1 - 文檔對象 URL:', imageUrl || '無');
     
