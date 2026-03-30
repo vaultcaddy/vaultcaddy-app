@@ -71,7 +71,7 @@
     <script defer src="navbar-interactions.js?v=20251108"></script>
     
     <!-- ✅ 統一導航欄系統：靜態 HTML + navbar-component.js -->
-    <script defer src="navbar-component.js?v=20260330.06"></script>
+    <script defer src="navbar-component.js?v=20260330.08"></script>
     <script defer src="sidebar-component.js?v=20251106-editable"></script>
     
     <!-- 功能模块 - 簡化版 -->
@@ -1095,6 +1095,8 @@
                 display: flex !important;
                 flex-direction: column !important;
                 height: auto !important;
+                gap: 1rem !important;
+                padding-bottom: 2rem !important;
             }
             
             /* 🔥 手機版布局順序：圖片 > 詳情 > 數據 */
@@ -1102,19 +1104,98 @@
                 order: 1 !important;
                 width: 100% !important;
                 height: auto !important;
-                min-height: 50vh !important;
+                min-height: auto !important;
+                border-right: none !important;
+                border-bottom: 1px solid #e5e7eb !important;
+                border-radius: 12px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+                overflow: hidden;
             }
             
             .data-panel {
                 order: 2 !important;
                 width: 100% !important;
                 border-left: none !important;
-                border-top: 1px solid #e5e7eb !important;
+                border-top: none !important;
+                padding: 1rem !important;
+                height: auto !important;
+                overflow-y: visible !important;
+                margin: 0 !important;
             }
             
             /* 🔥 手機版：PDF查看器優化 */
             .pdf-viewer {
-                height: 50vh !important;
+                height: auto !important;
+                min-height: 250px !important;
+                max-height: 40vh !important;
+                background: #f3f4f6 !important;
+                padding: 0.5rem !important;
+            }
+            
+            /* 手機版：圖片控制列優化 */
+            .pdf-controls {
+                padding: 0.5rem !important;
+                gap: 0.5rem !important;
+                flex-wrap: nowrap !important;
+                justify-content: center !important;
+                background: #1f2937 !important;
+                border-radius: 8px !important;
+                margin: 0.5rem auto !important;
+                width: 90% !important;
+            }
+            
+            .pdf-controls .page-nav-btn {
+                width: 36px !important;
+                height: 36px !important;
+                background: transparent !important;
+                border: none !important;
+                color: white !important;
+            }
+            
+            .pdf-controls .page-indicator {
+                color: white !important;
+            }
+            
+            /* 手機版：表單卡片優化 */
+            .invoice-details-grid {
+                grid-template-columns: 1fr !important; /* 單列顯示 */
+                gap: 1rem !important;
+            }
+            
+            .invoice-field {
+                margin-bottom: 0 !important;
+            }
+            
+            .invoice-field label {
+                font-size: 0.85rem !important;
+                margin-bottom: 0.25rem !important;
+            }
+            
+            .invoice-field input, 
+            .invoice-field select {
+                padding: 0.75rem !important;
+                font-size: 1rem !important; /* 避免 iOS 縮放 */
+            }
+            
+            /* 手機版：扣稅分析卡片優化 */
+            .tax-analysis-card {
+                padding: 1rem !important;
+                margin-top: 1rem !important;
+            }
+            
+            .tax-analysis-card .invoice-field {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 0.5rem !important;
+            }
+            
+            .tax-analysis-card select {
+                width: 100% !important;
+            }
+            
+            .tax-analysis-card .tax-reason {
+                width: 100% !important;
+                padding: 0.75rem !important;
             }
             
             /* 隱藏語言選擇器 */
@@ -1129,18 +1210,16 @@
             
             /* 詳情頁面頂部 - 更現代化 */
             .detail-header {
-                padding: 0.75rem 1rem !important;
-                padding-top: 0 !important;
-                flex-direction: row !important;
-                flex-wrap: wrap !important;
-                align-items: flex-start !important;
-                gap: 0.75rem !important;
-                position: sticky !important;
-                top: 60px !important;
+                padding: 1rem !important;
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 1rem !important;
+                position: relative !important;
+                top: 0 !important;
                 background: white !important;
                 z-index: 100 !important;
                 border-bottom: 1px solid #e5e7eb !important;
-                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+                box-shadow: none !important;
             }
             
             /* 手機版：左側按鈕組 */
@@ -1149,8 +1228,7 @@
                 flex-direction: row !important;
                 gap: 0.5rem !important;
                 width: 100% !important;
-                flex-basis: 100% !important;
-                margin-bottom: 0.5rem !important;
+                margin-bottom: 0 !important;
             }
             
             .detail-header .back-btn {
@@ -1163,6 +1241,7 @@
                 font-weight: 500 !important;
                 color: #374151 !important;
                 transition: all 0.2s !important;
+                justify-content: center !important;
             }
             
             .detail-header .back-btn:hover {
@@ -1178,6 +1257,7 @@
                 background: #fee2e2 !important;
                 border: 1px solid #fecaca !important;
                 color: #ef4444 !important;
+                justify-content: center !important;
             }
             
             .detail-header .header-left .icon-btn.delete:hover {
@@ -1193,56 +1273,28 @@
                 line-height: 1.5 !important;
                 margin: 0 !important;
                 width: 100% !important;
-                flex-basis: 100% !important;
+                text-align: center !important;
             }
             
             /* 🔥 手機版：按鈕組改為左右排列 */
             .detail-header .top-actions {
                 display: flex !important;
                 flex-direction: row !important;
-                width: auto !important;
-                flex: 0 0 auto !important;
+                width: 100% !important;
                 gap: 0.5rem !important;
+                justify-content: center !important;
             }
             
             .detail-header .top-actions .saved-indicator {
-                width: 100% !important;
-                justify-content: center !important;
-                padding: 0.5rem !important;
-                font-size: 0.875rem !important;
+                display: none !important; /* 手機版隱藏 saved 以節省空間 */
             }
             
-            .detail-header .top-actions .export-dropdown {
+            .detail-header .top-actions button {
                 flex: 1 !important;
-            }
-            
-            .detail-header .top-actions .export-dropdown button {
-                width: 100% !important;
                 justify-content: center !important;
                 padding: 0.75rem 0.5rem !important;
                 font-size: 0.875rem !important;
                 border-radius: 8px !important;
-            }
-            
-            .detail-header .top-actions .icon-btn {
-                flex: 1 !important;
-                padding: 0.75rem 0.5rem !important;
-                font-size: 0.875rem !important;
-                border-radius: 8px !important;
-            }
-            
-            .detail-header .top-actions .icon-btn.delete {
-                flex: 0 0 auto !important;
-                width: auto !important;
-                white-space: nowrap !important;
-                background: #fee2e2 !important;
-                border: 1px solid #fecaca !important;
-                color: #ef4444 !important;
-                justify-content: center !important;
-            }
-            
-            .detail-header .top-actions .icon-btn.delete:hover {
-                background: #fecaca !important;
             }
 
             /* 所有卡片 */
@@ -1258,8 +1310,8 @@
             }
             
             .data-panel {
-                margin: 0.75rem !important;
-                border-radius: 8px !important;
+                margin: 0 !important;
+                border-radius: 0 !important;
             }
             
             /* 標題字體大小 */
@@ -1380,55 +1432,84 @@
             
             /* 🔥 手機版：PDF查看器區域 */
             .pdf-viewer {
-                padding: 1rem !important;
+                padding: 0.5rem !important;
                 background: #f9fafb !important;
+                height: auto !important;
+                min-height: 250px !important;
+                max-height: 40vh !important;
             }
             
             /* PDF 預覽容器 - 更大更美觀 */
             #pdf-container {
-                height: 50vh !important;
+                height: 100% !important;
                 max-width: 100% !important;
                 margin: 0 auto !important;
                 background: white !important;
-                border-radius: 12px !important;
+                border-radius: 8px !important;
                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
                 overflow: hidden !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
             }
             
             #pdf-container canvas,
             #pdf-container img {
                 max-width: 100% !important;
+                max-height: 100% !important;
+                width: auto !important;
                 height: auto !important;
                 object-fit: contain !important;
             }
             
             /* 🔥 手機版：PDF控制按鈕 - 縮小30%以適應屏幕 */
             .pdf-controls {
-                padding: 0.25rem 0.35rem !important;
-                gap: 0.175rem !important;
+                padding: 0.5rem !important;
+                gap: 0.5rem !important;
                 flex-wrap: nowrap !important;
                 justify-content: center !important;
-                background: white !important;
-                border-radius: 4px !important;
-                margin: 0.175rem !important;
-                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
-                max-width: 70% !important; /* 縮小30% */
-                overflow-x: auto !important;
-                transform: scale(0.7); /* 整體縮小30% */
-                transform-origin: center;
+                background: #1f2937 !important; /* 改為深色背景 */
+                border-radius: 8px !important;
+                margin: 0.5rem auto !important;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+                max-width: 90% !important;
+                overflow-x: visible !important;
+                transform: none !important; /* 移除縮放，改用具體尺寸 */
             }
             
-            .pdf-controls button {
-                padding: 0.175rem 0.28rem !important;
-                font-size: 0.49rem !important; /* 0.7 * 0.7 = 0.49 */
-                min-width: 22px !important; /* 32 * 0.7 = 22.4 */
-                border-radius: 3px !important;
-                background: #f3f4f6 !important;
-                border: 1px solid #e5e7eb !important;
+            .pdf-controls button,
+            .page-nav-btn {
+                padding: 0.5rem !important;
+                font-size: 1rem !important;
+                width: 36px !important;
+                height: 36px !important;
+                border-radius: 6px !important;
+                background: transparent !important;
+                border: none !important;
+                color: white !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
             }
             
-            .pdf-controls button i {
-                font-size: 0.455rem !important; /* 0.65 * 0.7 = 0.455 */
+            .pdf-controls button i,
+            .page-nav-btn i {
+                font-size: 1rem !important;
+            }
+            
+            .page-indicator {
+                color: white !important;
+                font-size: 0.9rem !important;
+                font-weight: 500 !important;
+                padding: 0 0.5rem !important;
+            }
+            
+            .pdf-zoom-controls {
+                display: flex !important;
+                gap: 0.25rem !important;
+                border-left: 1px solid rgba(255,255,255,0.2) !important;
+                padding-left: 0.5rem !important;
+                margin-left: 0.5rem !important;
             }
             
             /* 🔥 手機版：頁面指示器縮小 */
