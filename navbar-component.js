@@ -22,14 +22,25 @@ class VaultCaddyNavbar {
      * 初始化導航欄
      */
     async init() {
+        // 先同步渲染一次，確保佔位符不為空
+        this.render();
+        
         await this.loadUserState();
         
         // 檢查 DOM 是否準備好
-        if (document.getElementById('navbar-placeholder')) {
+        if (document.getElementById('navbar-placeholder') || document.getElementById('navbar-root')) {
             this.render();
             this.bindEvents();
         } else {
             console.log('⏳ navbar-placeholder 尚未準備好，等待 DOM...');
+            // 如果還沒準備好，等一下再試
+            setTimeout(() => {
+                if (document.getElementById('navbar-placeholder') || document.getElementById('navbar-root')) {
+                    console.log('✅ 延遲檢查：navbar-placeholder 已準備好');
+                    this.render();
+                    this.bindEvents();
+                }
+            }, 100);
         }
         
         // 監聽用戶狀態變化
@@ -128,20 +139,19 @@ class VaultCaddyNavbar {
      * 渲染導航欄（統一使用靜態導航欄的樣式）
      */
     render() {
-        // ✅ 防抖動：300ms 內只渲染一次
-        const now = Date.now();
-        if (now - this._lastRenderTime < 300) {
-            this._renderCount++;
-            console.log(`⏳ 導航欄渲染被跳過（300ms 內已渲染，第 ${this._renderCount} 次跳過）`);
-            return;
-        }
-        this._lastRenderTime = now;
-        this._renderCount = 0;
-        
         // 支持兩種 ID：navbar-placeholder（舊版）和 navbar-root（新版）
         const navbarPlaceholder = document.getElementById('navbar-placeholder') || document.getElementById('navbar-root');
         if (!navbarPlaceholder) {
             console.error('找不到導航欄占位符 #navbar-placeholder 或 #navbar-root');
+            // 如果找不到，試著在 body 最前面插入一個
+            if (document.body) {
+                console.log('🔄 嘗試自動創建 navbar-placeholder');
+                const newPlaceholder = document.createElement('div');
+                newPlaceholder.id = 'navbar-placeholder';
+                document.body.insertBefore(newPlaceholder, document.body.firstChild);
+                // 遞歸調用一次
+                setTimeout(() => this.render(), 50);
+            }
             return;
         }
         
@@ -149,43 +159,153 @@ class VaultCaddyNavbar {
         
         // ✅ 使用與 index.html 靜態導航欄完全一致的樣式
         const navbarHTML = `
-            <nav class="vaultcaddy-navbar" id="main-navbar" style="position: fixed; top: 0; left: 0; right: 0; height: 60px; background: #ffffff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; z-index: 1000; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);">
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <a href="${this.getIndexPath()}" style="display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: #1f2937; font-weight: 600; font-size: 1.125rem;">
-                        <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.25rem;">
+            <nav class="vaultcaddy-navbar" id="main-navbar" style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; height: 60px !important; width: 100% !important; background: #ffffff !important; border-bottom: 1px solid #e5e7eb !important; display: flex !important; align-items: center !important; justify-content: space-between !important; padding: 0 2rem !important; z-index: 999999 !important; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; box-sizing: border-box !important; margin: 0 !important; overflow: visible !important;">
+                <div style="display: flex !important; align-items: center !important; gap: 0.5rem !important; z-index: 10000 !important; pointer-events: auto !important; visibility: visible !important; opacity: 1 !important;">
+                    <a href="index.html" style="display: flex !important; align-items: center !important; gap: 0.75rem !important; text-decoration: none !important; color: #1f2937 !important; font-weight: 600 !important; font-size: 1.125rem !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important;">
+                        <div style="width: 32px !important; height: 32px !important; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border-radius: 8px !important; display: flex !important; align-items: center !important; justify-content: center !important; color: white !important; font-weight: 700 !important; font-size: 1.25rem !important; visibility: visible !important; opacity: 1 !important;">
                             V
                         </div>
-                        <div>
-                            <div>VaultCaddy</div>
-                            <div style="font-size: 0.75rem; color: #6b7280; font-weight: 400; text-transform: uppercase; letter-spacing: 0.05em;">AI DOCUMENT PROCESSING</div>
+                        <div style="display: flex !important; flex-direction: column !important; visibility: visible !important; opacity: 1 !important;">
+                            <div style="color: #1f2937 !important; display: block !important; visibility: visible !important; opacity: 1 !important; font-size: 1.125rem !important; font-weight: 600 !important; line-height: 1.2 !important;">VaultCaddy</div>
+                            <div style="font-size: 0.75rem !important; color: #6b7280 !important; font-weight: 400 !important; text-transform: uppercase !important; letter-spacing: 0.05em !important; display: block !important; visibility: visible !important; opacity: 1 !important; line-height: 1.2 !important;">AI DOCUMENT PROCESSING</div>
                         </div>
                     </a>
                 </div>
-                <div style="display: flex; align-items: center; gap: 2rem;">
-                    <div style="display: flex; align-items: center; gap: 2rem;">
-                        <a href="index.html#features" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">功能</a>
-                        <a href="index.html#pricing" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">價格</a>
-                        <a href="dashboard.html" style="color: #4b5563; text-decoration: none; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s;">儀表板</a>
+                <div style="display: flex !important; align-items: center !important; gap: 2rem !important; z-index: 10000 !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; height: 100% !important;">
+                    <div style="display: flex !important; align-items: center !important; gap: 2rem !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; height: 100% !important;">
+                        <a href="index.html#features" style="color: #4b5563 !important; text-decoration: none !important; font-size: 0.9375rem !important; font-weight: 500 !important; transition: color 0.2s !important; visibility: visible !important; opacity: 1 !important; display: flex !important; pointer-events: auto !important; cursor: pointer !important; align-items: center !important; height: 100% !important;">功能</a>
+                        <a href="index.html#pricing" style="color: #4b5563 !important; text-decoration: none !important; font-size: 0.9375rem !important; font-weight: 500 !important; transition: color 0.2s !important; visibility: visible !important; opacity: 1 !important; display: flex !important; pointer-events: auto !important; cursor: pointer !important; align-items: center !important; height: 100% !important;">價格</a>
+                        <a href="dashboard.html" style="color: #4b5563 !important; text-decoration: none !important; font-size: 0.9375rem !important; font-weight: 500 !important; transition: color 0.2s !important; visibility: visible !important; opacity: 1 !important; display: flex !important; pointer-events: auto !important; cursor: pointer !important; align-items: center !important; height: 100% !important;">儀表板</a>
                     </div>
-                    <div id="language-selector" style="display: none !important;">
-                        <i class="fas fa-language"></i>
-                        <span id="current-language">繁體中文</span>
-                        <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
+                    <div style="display: flex !important; align-items: center !important; height: 100% !important; z-index: 10000 !important; visibility: visible !important; opacity: 1 !important;">
+                        ${this.getUserSection()}
                     </div>
-                    ${this.getUserSection()}
                 </div>
             </nav>
         `;
         
         // 更新導航欄內容
-        navbarPlaceholder.innerHTML = navbarHTML;
+        // 為了確保不覆蓋靜態導航欄，我們將動態導航欄附加到容器中
+        const existingMainNavbar = navbarPlaceholder.querySelector('#main-navbar');
+        if (existingMainNavbar) {
+            existingMainNavbar.outerHTML = navbarHTML;
+        } else {
+            // 隱藏所有現有的靜態導航欄
+            const staticNavs = navbarPlaceholder.querySelectorAll('nav:not(#main-navbar)');
+            staticNavs.forEach(nav => {
+                nav.style.setProperty('display', 'none', 'important');
+                nav.style.setProperty('opacity', '0', 'important');
+                nav.style.setProperty('visibility', 'hidden', 'important');
+                nav.style.setProperty('z-index', '-1', 'important');
+                nav.remove(); // 確保移除
+            });
+            // 清除可能殘留的文本節點或其他元素
+            navbarPlaceholder.innerHTML = '';
+            navbarPlaceholder.innerHTML = navbarHTML; // 直接替換，因為我們已經移除了靜態導航欄
+        }
         console.log('✅ 導航欄 HTML 已插入，長度:', navbarHTML.length);
+        
+        // 強制移除可能隱藏導航欄的類或樣式
+        navbarPlaceholder.classList.remove('hidden', 'invisible');
+        
+        // 確保導航欄可見
+        navbarPlaceholder.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important; height: 60px !important; width: 100% !important; position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; z-index: 999999 !important; background: #ffffff !important; margin: 0 !important; padding: 0 !important;';
+        
+        // 確保內部 nav 也可見
+        let innerNav = navbarPlaceholder.querySelector('nav#main-navbar');
+        
+        // 如果沒有找到 innerNav，這意味著插入失敗，我們需要重新插入
+        if (!innerNav) {
+            console.error('❌ 導航欄插入失敗，嘗試重新插入');
+            navbarPlaceholder.innerHTML = navbarHTML;
+            innerNav = navbarPlaceholder.querySelector('nav#main-navbar');
+        }
+        
+        if (innerNav) {
+            innerNav.style.cssText = 'position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; height: 60px !important; width: 100% !important; background: #ffffff !important; border-bottom: 1px solid #e5e7eb !important; display: flex !important; align-items: center !important; justify-content: space-between !important; padding: 0 2rem !important; z-index: 999999 !important; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; box-sizing: border-box !important; margin: 0 !important;';
+            
+            // 移除任何可能覆蓋樣式的 inline style
+            innerNav.style.setProperty('display', 'flex', 'important');
+            innerNav.style.setProperty('visibility', 'visible', 'important');
+            innerNav.style.setProperty('opacity', '1', 'important');
+            
+            // 強制顯示所有子元素 (只針對 main-navbar 內的元素)
+            const allChildren = innerNav.querySelectorAll('*');
+            allChildren.forEach(child => {
+                if (child.id !== 'user-dropdown-menu' && !child.closest('#user-dropdown-menu')) {
+                    child.classList.remove('hidden', 'invisible');
+                    
+                    // 確保 a 標籤正確顯示
+                    if (child.tagName === 'A') {
+                        child.style.setProperty('display', 'inline-flex', 'important');
+                        child.style.setProperty('align-items', 'center', 'important');
+                    } else if (child.tagName === 'DIV') {
+                        child.style.setProperty('display', 'flex', 'important');
+                        child.style.setProperty('align-items', 'center', 'important');
+                    } else if (child.tagName === 'SPAN') {
+                        child.style.setProperty('display', 'inline-block', 'important');
+                    } else {
+                        child.style.setProperty('display', 'block', 'important');
+                    }
+                    
+                    child.style.setProperty('visibility', 'visible', 'important');
+                    child.style.setProperty('opacity', '1', 'important');
+                    
+                    // 確保文字顏色正確
+                    if (!child.style.color && !child.classList.contains('user-avatar') && !child.closest('#user-menu')) {
+                        child.style.setProperty('color', '#1f2937', 'important');
+                    }
+                }
+            });
+        }
+        
+        // 強制檢查 user-menu 內的元素
+        const userMenu = navbarPlaceholder.querySelector('#main-navbar #user-menu');
+        if (userMenu) {
+            userMenu.style.setProperty('display', 'flex', 'important');
+            userMenu.style.setProperty('visibility', 'visible', 'important');
+            userMenu.style.setProperty('opacity', '1', 'important');
+            
+            const loginBtn = userMenu.querySelector('a');
+            if (loginBtn) {
+                loginBtn.style.setProperty('display', 'inline-flex', 'important');
+                loginBtn.style.setProperty('visibility', 'visible', 'important');
+                loginBtn.style.setProperty('opacity', '1', 'important');
+                loginBtn.style.setProperty('color', 'white', 'important');
+                loginBtn.style.setProperty('background', 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 'important');
+            }
+        }
+        
+        // 確保整個導航欄不會被隱藏
+        if (innerNav) {
+            innerNav.classList.remove('hidden', 'invisible');
+            innerNav.style.setProperty('display', 'flex', 'important');
+        }
         
         // 重新綁定事件
         this.bindEvents();
         
         // 設置 Google 登入按鈕（如果用戶未登入）
         this.setupGoogleSignInButton();
+        
+        // 確保預設靜態導航欄被隱藏（如果存在）
+        const staticNavs = navbarPlaceholder.querySelectorAll('nav:not(#main-navbar)');
+        staticNavs.forEach(nav => {
+            nav.style.setProperty('display', 'none', 'important');
+            nav.style.setProperty('opacity', '0', 'important');
+            nav.style.setProperty('visibility', 'hidden', 'important');
+            nav.style.setProperty('z-index', '-1', 'important');
+            nav.remove(); // 直接移除靜態導航欄
+        });
+        
+        // 確保 main-navbar 顯示
+        const mainNav = navbarPlaceholder.querySelector('#main-navbar');
+        if (mainNav) {
+            mainNav.style.setProperty('display', 'flex', 'important');
+            mainNav.style.setProperty('opacity', '1', 'important');
+            mainNav.style.setProperty('visibility', 'visible', 'important');
+            mainNav.style.setProperty('z-index', '999999', 'important');
+        }
     }
     
     /**
@@ -342,17 +462,17 @@ class VaultCaddyNavbar {
         let isFirebaseUser = false;
         let isGoogleUser = false;
         
-        if (window.authHandler && window.authHandler.initialized) {
-            const firebaseUser = window.authHandler.getCurrentUser();
+        if (window.simpleAuth && window.simpleAuth.isLoggedIn()) {
+            const firebaseUser = window.simpleAuth.getCurrentUser();
             if (firebaseUser) {
                 currentUser = firebaseUser;
                 userPhotoURL = firebaseUser.photoURL || userPhotoURL;
                 userName = firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User';
                 userEmail = firebaseUser.email || '';
                 userCredits = this.credits || 0;
-                userPlanType = this.planType || 'Free Plan';  // 🎯 獲取套餐類型
+                userPlanType = this.planType || 'Free Plan';
                 isFirebaseUser = true;
-                console.log('🔥 導航欄顯示 Firebase Auth 用戶:', userEmail);
+                console.log('🔥 導航欄顯示 SimpleAuth 用戶:', userEmail);
             }
         }
         
@@ -385,9 +505,9 @@ class VaultCaddyNavbar {
         if (currentUser) {
             
             return `
-                <div class="user-profile" id="user-profile" style="position: relative;">
-                    <img src="${userPhotoURL}" alt="${userName}" class="user-avatar" onclick="window.vaultcaddyNavbar.toggleUserDropdown(event)" style="cursor: pointer; border-radius: 50%; width: 32px; height: 32px; object-fit: cover; border: 2px solid #e5e7eb; transition: border-color 0.2s;" onmouseover="this.style.borderColor='#667eea'" onmouseout="this.style.borderColor='#e5e7eb'">
-                    <div class="user-dropdown-menu" id="user-dropdown-menu" style="display: none; position: absolute; top: 100%; right: 0; background: white; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); min-width: 280px; z-index: 1000; padding: 0; margin-top: 8px; overflow: hidden;">
+                <div class="user-profile" id="user-profile" style="position: relative; display: flex !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; align-items: center !important; height: 100% !important; z-index: 10000 !important;">
+                    <img src="${userPhotoURL}" alt="${userName}" class="user-avatar" onclick="window.vaultcaddyNavbar.toggleUserDropdown(event)" style="cursor: pointer; border-radius: 50%; width: 32px; height: 32px; object-fit: cover; border: 2px solid #e5e7eb; transition: border-color 0.2s; display: block !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; z-index: 10000 !important;" onmouseover="this.style.borderColor='#667eea'" onmouseout="this.style.borderColor='#e5e7eb'">
+                    <div class="user-dropdown-menu" id="user-dropdown-menu" style="display: none !important; position: absolute !important; top: 100% !important; right: 0 !important; background: white !important; border: 1px solid #e5e7eb !important; border-radius: 12px !important; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important; min-width: 280px !important; z-index: 1000000 !important; padding: 0 !important; margin-top: 8px !important; overflow: hidden !important;">
                         <!-- 用戶信息區 -->
                         <div class="user-info" style="padding: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
                             <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
@@ -447,8 +567,8 @@ class VaultCaddyNavbar {
         } else {
             // ✅ 未登入：顯示「登入 →」按鈕（與圖1靜態導航欄樣式一致）
             return `
-                <div id="user-menu" style="position: relative; display: flex; align-items: center; gap: 0.75rem;">
-                    <a href="auth.html" style="display: inline-flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.625rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; font-size: 0.9375rem; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                <div id="user-menu" style="position: relative; display: flex !important; align-items: center !important; gap: 0.75rem !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important;">
+                    <a href="auth.html" style="display: inline-flex !important; align-items: center !important; gap: 0.5rem !important; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; color: white !important; padding: 0.625rem 1.5rem !important; border-radius: 8px !important; text-decoration: none !important; font-weight: 500 !important; font-size: 0.9375rem !important; transition: transform 0.2s, box-shadow 0.2s !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
                         ${lang.login}
                     </a>
                 </div>
@@ -665,10 +785,11 @@ class VaultCaddyNavbar {
         const menu = document.getElementById('user-dropdown-menu');
         if (menu) {
             // 切換顯示狀態
-            if (menu.style.display === 'none' || menu.style.display === '') {
-                menu.style.display = 'block';
+            const currentDisplay = window.getComputedStyle(menu).getPropertyValue('display');
+            if (currentDisplay === 'none' || menu.style.getPropertyValue('display') === 'none') {
+                menu.style.setProperty('display', 'block', 'important');
             } else {
-                menu.style.display = 'none';
+                menu.style.setProperty('display', 'none', 'important');
             }
         }
     }
@@ -904,34 +1025,19 @@ class VaultCaddyNavbar {
 }
 
 // 創建全局實例
-// 等待 Firebase Auth 初始化完成後再創建 navbar
 function initNavbar() {
-    console.log('🎨 開始初始化 VaultCaddy Navbar... [VERSION: 20251105-force-init]');
+    console.log('🎨 開始初始化 VaultCaddy Navbar... [VERSION: 20260329.52]');
     
-    // ✅ 使用 SimpleAuth 而不是舊的 authHandler
-    if (window.simpleAuth && window.simpleAuth.initialized) {
-        console.log('✅ SimpleAuth 已初始化，立即創建 navbar');
+    // 不再等待 SimpleAuth，直接創建並渲染導航欄（未登入狀態）
+    // 當 SimpleAuth 初始化完成並觸發狀態變化時，導航欄會自動更新
+    if (!window.vaultcaddyNavbar) {
+        console.log('✅ 創建 navbar 實例');
         window.vaultcaddyNavbar = new VaultCaddyNavbar();
+        // 強制立即渲染一次
+        window.vaultcaddyNavbar.render();
     } else {
-        console.log('⏳ 等待 SimpleAuth 初始化...');
-        
-        // 監聽 SimpleAuth 初始化完成事件
-        const checkAuth = setInterval(() => {
-            if (window.simpleAuth && window.simpleAuth.initialized) {
-                console.log('✅ SimpleAuth 初始化完成，創建 navbar');
-                clearInterval(checkAuth);
-                window.vaultcaddyNavbar = new VaultCaddyNavbar();
-            }
-        }, 100); // 每 100ms 檢查一次
-        
-        // 超時保護：5 秒後強制創建（向後兼容）
-        setTimeout(() => {
-            if (!window.vaultcaddyNavbar) {
-                console.warn('⚠️ SimpleAuth 初始化超時，強制創建 navbar');
-                clearInterval(checkAuth);
-                window.vaultcaddyNavbar = new VaultCaddyNavbar();
-            }
-        }, 5000);
+        console.log('✅ navbar 實例已存在，強制重新渲染');
+        window.vaultcaddyNavbar.render();
     }
 }
 
@@ -939,6 +1045,7 @@ function initNavbar() {
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initNavbar);
 } else {
+    // 立即執行，不要延遲
     initNavbar();
 }
 
@@ -967,7 +1074,7 @@ function navigateToSection(sectionId) {
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         // 確保 navbar-placeholder 存在後再初始化
-        if (document.getElementById('navbar-placeholder')) {
+        if (document.getElementById('navbar-placeholder') || document.getElementById('navbar-root')) {
             console.log('🔄 DOMContentLoaded: 重新初始化導航欄');
             if (window.vaultcaddyNavbar && window.vaultcaddyNavbar.render) {
                 window.vaultcaddyNavbar.render();
@@ -978,14 +1085,18 @@ if (document.readyState === 'loading') {
         }
     });
 } else {
-    // 如果文檔已載入，立即檢查並渲染
-    if (document.getElementById('navbar-placeholder')) {
-        console.log('🔄 Document Ready: 立即渲染導航欄');
-        window.vaultcaddyNavbar.render();
-        
-        // 監聽全域身份驗證狀態變化
-        initNavbarGlobalAuthListener();
-    }
+    // 如果文檔已載入，延遲一下確保 DOM 真的準備好了
+    setTimeout(() => {
+        if (document.getElementById('navbar-placeholder') || document.getElementById('navbar-root')) {
+            console.log('🔄 Document Ready: 立即渲染導航欄');
+            if (window.vaultcaddyNavbar && window.vaultcaddyNavbar.render) {
+                window.vaultcaddyNavbar.render();
+            }
+            
+            // 監聽全域身份驗證狀態變化
+            initNavbarGlobalAuthListener();
+        }
+    }, 50);
 }
 
 // 初始化導航欄的全域身份驗證監聽器
@@ -999,9 +1110,10 @@ function initNavbarGlobalAuthListener() {
             
             // 重新載入用戶狀態並渲染導航欄
             if (window.vaultcaddyNavbar) {
-                window.vaultcaddyNavbar.loadUserState();
-                window.vaultcaddyNavbar.render();
-                console.log('✅ 導航欄已根據新的身份驗證狀態重新渲染');
+                window.vaultcaddyNavbar.loadUserState().then(() => {
+                    window.vaultcaddyNavbar.render();
+                    console.log('✅ 導航欄已根據新的身份驗證狀態重新渲染');
+                });
             }
         });
     }
@@ -1012,9 +1124,20 @@ function initNavbarGlobalAuthListener() {
         console.log('📡 導航欄收到自定義身份驗證事件:', event.detail);
         
         if (window.vaultcaddyNavbar) {
-            window.vaultcaddyNavbar.loadUserState();
-            window.vaultcaddyNavbar.render();
-            console.log('✅ 導航欄已根據自定義事件重新渲染');
+            window.vaultcaddyNavbar.loadUserState().then(() => {
+                window.vaultcaddyNavbar.render();
+                console.log('✅ 導航欄已根據自定義事件重新渲染');
+            });
+        }
+    });
+    
+    // 監聽 auth-state-changed 事件（由 simple-auth.js 觸發）
+    window.addEventListener('auth-state-changed', (event) => {
+        console.log('📡 導航欄收到 auth-state-changed 事件:', event.detail);
+        if (window.vaultcaddyNavbar) {
+            window.vaultcaddyNavbar.loadUserState().then(() => {
+                window.vaultcaddyNavbar.render();
+            });
         }
     });
 }
