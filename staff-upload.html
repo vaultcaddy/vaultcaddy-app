@@ -6,6 +6,7 @@
     <title>店員上傳 - VaultCaddy</title>
     
     <!-- PWA 相關設置 -->
+    <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#4F46E5">
@@ -21,6 +22,90 @@
     <script defer src="firebase-config.js?v=20260330.01"></script>
     
     <style>
+        /* PWA 安裝提示樣式 */
+        #pwa-install-prompt {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: white;
+            padding: 16px 20px;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+            border-top-left-radius: 16px;
+            border-top-right-radius: 16px;
+            transform: translateY(100%);
+            transition: transform 0.3s ease-out;
+        }
+        
+        #pwa-install-prompt.show {
+            display: block;
+            transform: translateY(0);
+        }
+        
+        .pwa-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .pwa-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #1F2937;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .pwa-close {
+            background: none;
+            border: none;
+            color: #9CA3AF;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 4px;
+        }
+        
+        .pwa-content {
+            font-size: 0.9rem;
+            color: #4B5563;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+        
+        .pwa-btn {
+            width: 100%;
+            background: #4F46E5;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .ios-instruction {
+            display: none;
+            background: #F3F4F6;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 12px;
+            font-size: 0.85rem;
+            color: #4B5563;
+        }
+        
+        .ios-instruction.show {
+            display: block;
+        }
+        
         * {
             margin: 0;
             padding: 0;
@@ -242,6 +327,32 @@
         </div>
     </div>
 
+    <!-- PWA 安裝提示 -->
+    <div id="pwa-install-prompt">
+        <div class="pwa-header">
+            <div class="pwa-title">
+                <i class="fas fa-mobile-alt" style="color: #4F46E5;"></i>
+                安裝到手機桌面
+            </div>
+            <button class="pwa-close" onclick="closeInstallPrompt()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="pwa-content">
+            將此上傳頁面加到手機桌面，以後店員只需點擊圖示，即可秒速開啟相機上傳收據！
+        </div>
+        <button class="pwa-btn" id="install-btn" onclick="handleInstallClick()">
+            <i class="fas fa-download"></i> 立即安裝
+        </button>
+        
+        <!-- iOS 專屬提示 -->
+        <div class="ios-instruction" id="ios-instruction">
+            <div style="font-weight: 600; margin-bottom: 4px;">🍎 iPhone 用戶請這樣做：</div>
+            1. 點擊瀏覽器底部的 <i class="fas fa-external-link-alt"></i>「分享」按鈕<br>
+            2. 向下滑動並選擇 <i class="fas fa-plus-square"></i>「加入主畫面」
+        </div>
+    </div>
+
     <script>
         const fileInput = document.getElementById('file-input');
         const overlay = document.getElementById('status-overlay');
@@ -353,6 +464,70 @@
         }
         
         
+        // ================= PWA 安裝邏輯 =================
+        let deferredPrompt;
+        const installPrompt = document.getElementById('pwa-install-prompt');
+        const installBtn = document.getElementById('install-btn');
+        const iosInstruction = document.getElementById('ios-instruction');
+        
+        // 檢查是否為 iOS
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        
+        // 檢查是否已經安裝 (Standalone mode)
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone || document.referrer.includes('android-app://');
+
+        // 監聽 Android/Chrome 的安裝事件
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // 防止 Chrome 預設的迷你提示欄出現
+            e.preventDefault();
+            // 保存事件以便稍後觸發
+            deferredPrompt = e;
+            
+            // 如果還沒安裝，顯示自定義提示
+            if (!isStandalone && !localStorage.getItem('pwaPromptDismissed')) {
+                setTimeout(() => {
+                    installPrompt.classList.add('show');
+                }, 1500); // 延遲 1.5 秒顯示，避免干擾一進來的體驗
+            }
+        });
+
+        // iOS 處理邏輯 (iOS 不支援 beforeinstallprompt)
+        if (isIOS && !isStandalone && !localStorage.getItem('pwaPromptDismissed')) {
+            setTimeout(() => {
+                installPrompt.classList.add('show');
+                installBtn.style.display = 'none'; // 隱藏安裝按鈕
+                iosInstruction.classList.add('show'); // 顯示 iOS 專屬文字教學
+            }, 1500);
+        }
+
+        // 點擊安裝按鈕
+        async function handleInstallClick() {
+            if (deferredPrompt) {
+                // 顯示原生的安裝對話框
+                deferredPrompt.prompt();
+                // 等待用戶選擇
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    console.log('User accepted the install prompt');
+                } else {
+                    console.log('User dismissed the install prompt');
+                }
+                // 清除變量，它只能被使用一次
+                deferredPrompt = null;
+                closeInstallPrompt();
+            }
+        }
+
+        // 關閉提示
+        function closeInstallPrompt() {
+            installPrompt.classList.remove('show');
+            // 記錄用戶已關閉，7天內不再顯示
+            localStorage.setItem('pwaPromptDismissed', 'true');
+            setTimeout(() => {
+                localStorage.removeItem('pwaPromptDismissed');
+            }, 7 * 24 * 60 * 60 * 1000);
+        }
+
         // 獲取 URL 參數
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
