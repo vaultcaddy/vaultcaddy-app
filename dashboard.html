@@ -116,7 +116,7 @@
     <script defer src="mobile-menu-manager.js?v=20260329"></script>
 <script defer="" src="config.js?v=20260329"></script>
 <!-- ✅ 統一導航欄系統：靜態 HTML + navbar-component.js -->
-<script defer="" src="navbar-component.js?v=20260329.96"></script>
+<script defer="" src="navbar-component.js?v=20260329.97"></script>
 <script defer="" src="sidebar-component.js?v=20260329"></script>
 <!-- Firebase SDK（CDN 版本 - compat）- defer 確保 DOM 載入後才執行 -->
 <script defer="" src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
@@ -864,7 +864,7 @@
     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #F3F4F6; padding-bottom: 1rem;">
         <h2 style="font-size: 1.25rem; font-weight: 700; color: #1F2937; margin: 0;">歷史月份紀錄</h2>
         <div class="header-actions">
-            <button class="create-btn" onclick="alert('QR Code 功能開發中，即將推出！\n此功能將允許店員掃描 QR Code 直接上傳收據，無需登入老闆帳號。')" style="background: #F3F4F6; color: #374151; border: 1px solid #D1D5DB;">
+            <button class="create-btn" onclick="openQrCodeModal()" style="background: #F3F4F6; color: #374151; border: 1px solid #D1D5DB;">
                 <i class="fas fa-qrcode"></i>
                 <span>獲取店員上傳 QR Code</span>
             </button>
@@ -893,6 +893,32 @@
 </table>
 </div>
 </div>
+
+<!-- QR Code 模態框 -->
+<div class="modal-overlay" id="qrCodeModal">
+    <div class="modal-content" style="max-width: 400px; text-align: center;">
+        <div class="modal-header">
+            <h2>店員專屬上傳 QR Code</h2>
+            <button class="modal-close" onclick="closeQrCodeModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body" style="padding: 1.5rem; display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+            <p style="color: #4B5563; font-size: 0.9rem; margin-bottom: 0.5rem;">請店員用手機掃描下方 QR Code，即可免登入直接拍照上傳收據。</p>
+            <div style="background: white; padding: 1rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #E5E7EB; width: 220px; height: 220px; display: flex; justify-content: center; align-items: center;">
+                <img id="qrcode-image" src="" alt="QR Code" style="max-width: 100%; max-height: 100%; display: none;">
+                <div id="qrcode-loading" style="color: #6B7280; font-size: 0.875rem;">生成中...</div>
+            </div>
+            <div style="width: 100%; margin-top: 1rem;">
+                <input type="text" id="upload-link-input" readonly style="width: 100%; padding: 0.75rem; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 0.875rem; color: #6B7280; background: #F9FAFB; text-align: center; margin-bottom: 0.75rem;">
+                <button onclick="copyUploadLink()" style="width: 100%; padding: 0.75rem; background: #F3F4F6; color: #374151; border: 1px solid #D1D5DB; border-radius: 6px; font-weight: 500; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                    <i class="fas fa-copy"></i> 複製連結
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- 創建項目模態框 -->
 <div class="modal-overlay" id="createProjectModal">
 <div class="modal-content">
@@ -957,6 +983,92 @@
         function closeCreateProjectModal() {
             const modal = document.getElementById('createProjectModal');
             modal.classList.remove('active');
+        }
+
+        // 點擊模態框外部關閉
+        window.addEventListener('click', function(event) {
+            const createModal = document.getElementById('createProjectModal');
+            const qrModal = document.getElementById('qrCodeModal');
+            if (event.target === createModal) {
+                closeCreateProjectModal();
+            }
+            if (event.target === qrModal) {
+                closeQrCodeModal();
+            }
+        });
+
+        // QR Code 模態框功能
+        function openQrCodeModal() {
+            const modal = document.getElementById('qrCodeModal');
+            const qrImage = document.getElementById('qrcode-image');
+            const qrLoading = document.getElementById('qrcode-loading');
+            const linkInput = document.getElementById('upload-link-input');
+            
+            // 獲取當前用戶 UID
+            const user = firebase.auth().currentUser;
+            if (!user) {
+                alert('請先登入！');
+                return;
+            }
+            
+            // 生成專屬上傳連結
+            const baseUrl = window.location.origin;
+            const uploadUrl = `${baseUrl}/staff-upload.html?shopId=${user.uid}`;
+            
+            // 設置輸入框
+            linkInput.value = uploadUrl;
+            
+            // 顯示模態框
+            modal.classList.add('active');
+            
+            // 顯示加載中
+            qrImage.style.display = 'none';
+            qrLoading.style.display = 'block';
+            
+            // 使用 api.qrserver.com 生成 QR Code
+            const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(uploadUrl)}`;
+            
+            // 預加載圖片
+            const img = new Image();
+            img.onload = function() {
+                qrImage.src = qrApiUrl;
+                qrLoading.style.display = 'none';
+                qrImage.style.display = 'block';
+            };
+            img.onerror = function() {
+                qrLoading.textContent = '生成失敗，請重試';
+            };
+            img.src = qrApiUrl;
+        }
+
+        function closeQrCodeModal() {
+            const modal = document.getElementById('qrCodeModal');
+            modal.classList.remove('active');
+        }
+
+        function copyUploadLink() {
+            const linkInput = document.getElementById('upload-link-input');
+            linkInput.select();
+            linkInput.setSelectionRange(0, 99999); /* For mobile devices */
+            
+            try {
+                document.execCommand('copy');
+                const btn = linkInput.nextElementSibling;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> 已複製';
+                btn.style.background = '#10B981';
+                btn.style.color = 'white';
+                btn.style.borderColor = '#10B981';
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.style.background = '#F3F4F6';
+                    btn.style.color = '#374151';
+                    btn.style.borderColor = '#D1D5DB';
+                }, 2000);
+            } catch (err) {
+                alert('複製失敗，請手動複製連結');
+            }
         }
 
         // 創建新項目

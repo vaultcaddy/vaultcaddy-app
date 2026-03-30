@@ -273,12 +273,14 @@
             }, 1500);
         }
         
-        // 獲取 URL 參數（例如 ?shop=MK01）來顯示店鋪名稱
+        // 獲取 URL 參數
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
-            const shopId = urlParams.get('shop');
+            const shopId = urlParams.get('shopId') || urlParams.get('shop');
             if (shopId) {
-                document.getElementById('shop-name').textContent = `店鋪：${shopId}`;
+                // 這裡暫時顯示 ID 的前幾碼作為店鋪標識，未來可以從數據庫讀取真實店名
+                const shortId = shopId.substring(0, 6).toUpperCase();
+                document.getElementById('shop-name').textContent = `店鋪：${shortId}`;
             }
         };
     </script>
