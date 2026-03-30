@@ -481,7 +481,7 @@
 <!-- Firebase 配置 -->
 <script src="firebase-config.js?v=20251101"></script>
 <!-- 🔥 新的簡化系統 -->
-<script defer="" src="simple-auth.js?v=20251101"></script>
+<script defer="" src="simple-auth.js?v=20260330.01"></script>
 <script defer="" src="simple-data-manager.js?v=20251101"></script>
 <script defer="" src="config.js"></script>
 <script>
@@ -520,18 +520,6 @@
         });
         
         document.addEventListener('DOMContentLoaded', function() {
-            // 等待 Google Auth 初始化完成
-            const initGoogleButton = () => {
-                if (window.googleAuth && window.googleAuth.isInitialized) {
-                    window.googleAuth.renderSignInButton('google-signin-button-auth');
-                    console.log('✅ Auth 頁面 Google 登入按鈕已設置');
-                } else {
-                    setTimeout(initGoogleButton, 500);
-                }
-            };
-            
-            initGoogleButton();
-            
             // 監聽 Google 登入成功
             window.addEventListener('authStateChanged', function(e) {
                 if (e.detail.isLoggedIn) {
@@ -580,7 +568,7 @@
                     console.error('4. 在 "Authorized domains" 中添加: vaultcaddy.com');
                     showNotification(errorMessage, 'error');
                 } else {
-                    errorMessage = error.message | 'Google 登入失敗';
+                    errorMessage = error.message || 'Google 登入失敗';
                     showNotification(errorMessage, 'error');
                 }
             }

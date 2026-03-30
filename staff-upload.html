@@ -14,6 +14,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+HK:wght@400;500;700&display=swap" rel="stylesheet">
     
+    <!-- Firebase SDK -->
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
+    <script defer src="firebase-config.js?v=20260330.01"></script>
+    
     <style>
         * {
             margin: 0;
@@ -249,28 +255,97 @@
             }
         });
         
-        // 模擬上傳過程
-        function handleUpload(file) {
+        // 壓縮圖片並轉換為 Base64
+        function compressImage(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = event => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        // 限制最大寬度或高度為 1200px
+                        const MAX_SIZE = 1200;
+                        let width = img.width;
+                        let height = img.height;
+                        
+                        if (width > height) {
+                            if (width > MAX_SIZE) {
+                                height *= MAX_SIZE / width;
+                                width = MAX_SIZE;
+                            }
+                        } else {
+                            if (height > MAX_SIZE) {
+                                width *= MAX_SIZE / height;
+                                height = MAX_SIZE;
+                            }
+                        }
+                        
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        // 壓縮為 JPEG，質量 0.7
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                        resolve(dataUrl);
+                    };
+                    img.onerror = error => reject(error);
+                };
+                reader.onerror = error => reject(error);
+            });
+        }
+        
+        // 真實上傳過程
+        async function handleUpload(file) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const shopId = urlParams.get('shopId') || urlParams.get('shop');
+            
+            if (!shopId) {
+                alert('錯誤：找不到店鋪 ID，請重新掃描 QR Code。');
+                return;
+            }
+
             // 1. 顯示加載中
             overlay.className = 'overlay active';
-            overlayText.textContent = '正在上傳...';
+            overlayText.textContent = '正在處理並上傳...';
             
-            // 模擬網絡請求延遲 (1.5秒)
-            setTimeout(() => {
-                // 2. 顯示成功
+            try {
+                // 2. 壓縮圖片
+                const base64Image = await compressImage(file);
+                
+                // 3. 寫入 Firestore staff_uploads 集合
+                const db = firebase.firestore();
+                await db.collection('users').doc(shopId).collection('staff_uploads').add({
+                    imageBase64: base64Image,
+                    fileName: file.name || `receipt_${Date.now()}.jpg`,
+                    uploadedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    status: 'pending'
+                });
+                
+                // 4. 顯示成功
                 overlay.className = 'overlay active success';
                 overlayText.textContent = '上傳成功！';
                 
-                // 這裡未來會串接 Firebase Storage 和 Firestore
-                console.log('File ready for upload:', file.name);
-                
-                // 3. 2秒後自動恢復初始狀態，準備拍下一張
+                // 5. 2秒後自動恢復初始狀態
                 setTimeout(() => {
                     overlay.className = 'overlay';
                     fileInput.value = ''; // 清空 input
                 }, 2000);
                 
-            }, 1500);
+            } catch (error) {
+                console.error('上傳失敗:', error);
+                overlay.className = 'overlay active';
+                overlayText.textContent = '上傳失敗，請重試';
+                overlayText.style.color = '#EF4444';
+                
+                setTimeout(() => {
+                    overlay.className = 'overlay';
+                    overlayText.style.color = 'white';
+                    fileInput.value = '';
+                }, 3000);
+            }
         }
         
         // 獲取 URL 參數

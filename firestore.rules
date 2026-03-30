@@ -6,6 +6,12 @@ service cloud.firestore {
       allow read: if request.auth != null && request.auth.uid == userId;
       allow write: if request.auth != null && request.auth.uid == userId;
       
+      // 店員上傳收件箱 (允許任何人創建，但只有老闆能讀取)
+      match /staff_uploads/{uploadId} {
+        allow create: if true;
+        allow read, update, delete: if request.auth != null && request.auth.uid == userId;
+      }
+      
       // Credits 歷史記錄
       match /creditsHistory/{historyId} {
         allow read: if request.auth != null && request.auth.uid == userId;
