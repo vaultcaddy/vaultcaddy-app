@@ -174,6 +174,13 @@ class VaultCaddyNavbar {
                     #main-navbar > div:nth-child(2) > div:first-child {
                         display: none !important; /* 手機版隱藏中間的功能/價格/儀表板連結 */
                     }
+                    #main-navbar .mobile-menu-btn {
+                        display: block !important;
+                    }
+                    #mobile-dropdown.active {
+                        display: flex !important;
+                    }
+                    }
                     #main-navbar > div:nth-child(1) .desktop-text {
                         display: none !important; /* 手機版隱藏 VaultCaddy 文字，只留 V logo */
                     }
@@ -206,9 +213,20 @@ class VaultCaddyNavbar {
                         <a href="index.html#pricing" style="color: #4b5563 !important; text-decoration: none !important; font-size: 0.9375rem !important; font-weight: 500 !important; transition: color 0.2s !important; visibility: visible !important; opacity: 1 !important; display: flex !important; pointer-events: auto !important; cursor: pointer !important; align-items: center !important; height: 100% !important;">價格</a>
                         <a href="dashboard.html" style="color: #4b5563 !important; text-decoration: none !important; font-size: 0.9375rem !important; font-weight: 500 !important; transition: color 0.2s !important; visibility: visible !important; opacity: 1 !important; display: flex !important; pointer-events: auto !important; cursor: pointer !important; align-items: center !important; height: 100% !important;">儀表板</a>
                     </div>
+                    <!-- Hamburger Menu for Mobile -->
+                    <div class="mobile-menu-btn" style="display: none !important; cursor: pointer; padding: 0.5rem; z-index: 10001;" onclick="document.getElementById('mobile-dropdown').classList.toggle('active')">
+                        <i class="fas fa-bars" style="font-size: 1.25rem; color: #4b5563;"></i>
+                    </div>
+                    
                     <div style="display: flex !important; align-items: center !important; height: 100% !important; z-index: 10000 !important; visibility: visible !important; opacity: 1 !important;">
                         ${this.getUserSection()}
                     </div>
+                </div>
+                <!-- Mobile Dropdown Menu -->
+                <div id="mobile-dropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border-bottom: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); padding: 1rem; flex-direction: column; gap: 1rem; z-index: 99999;">
+                    <a href="index.html#features" style="color: #4b5563; text-decoration: none; font-weight: 500; padding: 0.5rem 0; border-bottom: 1px solid #f3f4f6;">功能</a>
+                    <a href="index.html#pricing" style="color: #4b5563; text-decoration: none; font-weight: 500; padding: 0.5rem 0; border-bottom: 1px solid #f3f4f6;">價格</a>
+                    <a href="dashboard.html" style="color: #4b5563; text-decoration: none; font-weight: 500; padding: 0.5rem 0; border-bottom: 1px solid #f3f4f6;">儀表板</a>
                 </div>
             </nav>
         `;
