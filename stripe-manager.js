@@ -49,7 +49,7 @@ window.StripeManager = {
                         symbol: 'HK$'
                     }
                 },
-                paymentLink: 'https://buy.stripe.com/REPLACE_WITH_YOUR_MONTHLY_LINK' // TODO: 替換為實際 Stripe Payment Link
+                paymentLink: 'https://buy.stripe.com/dRmeVecXW9h8a9o0RYf7i0c' // 💰 真實 Stripe Payment Link
             },
             // 年費方案：無限 Credits
             yearly: {
