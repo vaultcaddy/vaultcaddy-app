@@ -116,7 +116,7 @@
     <script defer src="mobile-menu-manager.js?v=20260329"></script>
 <script defer="" src="config.js?v=20260329"></script>
 <!-- ✅ 統一導航欄系統：靜態 HTML + navbar-component.js -->
-<script defer="" src="navbar-component.js?v=20260330.10"></script>
+<script defer="" src="navbar-component.js?v=20260330.165"></script>
 <script defer="" src="sidebar-component.js?v=20260329"></script>
 <!-- Firebase SDK（CDN 版本 - compat）- defer 確保 DOM 載入後才執行 -->
 <script defer="" src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
@@ -162,6 +162,35 @@
             min-height: calc(100vh - 60px);
             padding: 2rem 3rem;
             margin-top: 10pt; /* 向下 10pt */
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-container {
+                padding-top: 36px !important;
+            }
+            .main-content {
+                padding: 0 0.125rem !important;
+                margin-top: 0 !important;
+            }
+            .projects-header {
+                gap: 0.125rem !important;
+                margin-bottom: 0 !important;
+            }
+            .overview-cards {
+                grid-template-columns: 1fr !important; /* 手機版單欄顯示 */
+                gap: 0.125rem !important;
+            }
+            .overview-cards > div {
+                padding: 0 0.125rem !important;
+            }
+            .history-header {
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: 0.125rem;
+            }
+            .history-header button {
+                width: 100%;
+            }
         }
 
         .projects-header {
@@ -269,7 +298,7 @@
 
         .projects-table th {
             text-align: left;
-            padding: 0.75rem 1rem;
+            padding: 0 0.125rem;
             font-size: 0.75rem;
             font-weight: 600;
             color: #6b7280;
@@ -288,7 +317,7 @@
         }
 
         .projects-table td {
-            padding: 1rem;
+            padding: 0 0.125rem;
             color: #1f2937;
         }
 
@@ -575,11 +604,18 @@
     /* 項目列表 */
     .projects-header {
         flex-direction: column !important;
-        gap: 1rem !important;
+        gap: 0.125rem !important;
+        margin-bottom: 0 !important;
     }
     
     .projects-header > div {
         width: 100% !important;
+    }
+    
+    /* 頂部概覽卡片手機版優化 */
+    .projects-header > div:first-child {
+        grid-template-columns: 1fr !important; /* 手機版改為單列 */
+        gap: 1rem !important;
     }
     
     /* 表格 */
@@ -763,10 +799,14 @@
             
             .projects-table {
                 font-size: 0.875rem !important;
+                min-width: 300px !important; /* 確保表格不會過度擠壓 */
             }
             
             .projects-table td {
-                padding: 0.75rem 0.5rem !important;
+                padding: 0 !important;
+            }
+            .projects-table th {
+                padding: 0 !important;
             }
         }
         
@@ -806,25 +846,35 @@
         })();
     </script>
 <!-- ✅ 統一靜態導航欄 -->
-<div id="navbar-placeholder" style="display: block !important; visibility: visible !important; opacity: 1 !important; min-height: 60px; width: 100% !important; position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; z-index: 999999; background: #ffffff !important;">
-    <!-- 預設靜態導航欄，防止閃爍 -->
-    <nav class="vaultcaddy-navbar" style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; height: 60px !important; width: 100% !important; background: #ffffff !important; border-bottom: 1px solid #e5e7eb !important; display: flex !important; align-items: center !important; justify-content: space-between !important; padding: 0 2rem !important; z-index: 999999 !important; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important; visibility: visible !important; opacity: 1 !important;">
+<div id="navbar-placeholder" style="display: block !important; visibility: visible !important; opacity: 1 !important; width: 100% !important; position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; z-index: 999999; background: #ffffff !important; min-height: 60px;">
+            <!-- 預設靜態導航欄，防止閃爍 -->
+            <nav class="vaultcaddy-navbar" style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; height: 60px !important; width: 100% !important; background: #ffffff !important; border-bottom: 1px solid #e5e7eb !important; display: flex !important; align-items: center !important; justify-content: space-between !important; padding: 0 1rem !important; z-index: 999999 !important; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important; visibility: visible !important; opacity: 1 !important;">
         <div style="display: flex !important; align-items: center !important; gap: 0.5rem !important;">
             <a href="index.html" style="display: flex !important; align-items: center !important; gap: 0.75rem !important; text-decoration: none !important; color: #1f2937 !important; font-weight: 600 !important; font-size: 1.125rem !important;">
                 <div style="width: 32px !important; height: 32px !important; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border-radius: 8px !important; display: flex !important; align-items: center !important; justify-content: center !important; color: white !important; font-weight: 700 !important; font-size: 1.25rem !important;">V</div>
-                <div style="display: flex !important; flex-direction: column !important;">
+                <div class="desktop-text" style="display: flex !important; flex-direction: column !important;">
                     <div style="color: #1f2937 !important; display: block !important; font-size: 1.125rem !important; font-weight: 600 !important; line-height: 1.2 !important;">VaultCaddy</div>
                     <div style="font-size: 0.75rem !important; color: #6b7280 !important; font-weight: 400 !important; text-transform: uppercase !important; letter-spacing: 0.05em !important; display: block !important; line-height: 1.2 !important;">AI DOCUMENT PROCESSING</div>
                 </div>
             </a>
         </div>
-        <div style="display: flex !important; align-items: center !important; gap: 2rem !important;">
-            <a href="index.html#features" style="color: #4b5563 !important; text-decoration: none !important; font-size: 0.9375rem !important; font-weight: 500 !important;">功能</a>
-            <a href="index.html#pricing" style="color: #4b5563 !important; text-decoration: none !important; font-size: 0.9375rem !important; font-weight: 500 !important;">價格</a>
-            <a href="dashboard.html" style="color: #4b5563 !important; text-decoration: none !important; font-size: 0.9375rem !important; font-weight: 500 !important;">儀表板</a>
-            <a href="auth.html" style="display: inline-flex !important; align-items: center !important; gap: 0.5rem !important; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; color: white !important; padding: 0.625rem 1.5rem !important; border-radius: 8px !important; text-decoration: none !important; font-weight: 500 !important; font-size: 0.9375rem !important;">登入 →</a>
+        <div style="display: flex !important; align-items: center !important; gap: 1rem !important;">
+            <div class="desktop-links" style="display: flex !important; gap: 2rem !important;">
+                <a href="index.html#features" style="color: #4b5563 !important; text-decoration: none !important; font-size: 0.9375rem !important; font-weight: 500 !important;">功能</a>
+                <a href="index.html#pricing" style="color: #4b5563 !important; text-decoration: none !important; font-size: 0.9375rem !important; font-weight: 500 !important;">價格</a>
+                <a href="dashboard.html" style="color: #4b5563 !important; text-decoration: none !important; font-size: 0.9375rem !important; font-weight: 500 !important;">儀表板</a>
+            </div>
+            <a href="auth.html" style="display: inline-flex !important; align-items: center !important; gap: 0.5rem !important; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; color: white !important; padding: 0.5rem 1rem !important; border-radius: 8px !important; text-decoration: none !important; font-weight: 500 !important; font-size: 0.875rem !important; white-space: nowrap !important;">登入 →</a>
         </div>
     </nav>
+    <style>
+        @media (max-width: 768px) {
+            .vaultcaddy-navbar .desktop-text, .vaultcaddy-navbar .desktop-links { display: none !important; }
+            .vaultcaddy-navbar { padding: 0 0.25rem !important; }
+            #navbar-placeholder { min-height: 36px !important; }
+            .vaultcaddy-navbar { height: 36px !important; min-height: 36px !important; }
+        }
+    </style>
 </div>
 <!-- 主要內容區域 -->
 <main style="padding-top: 60px !important;">
@@ -835,38 +885,42 @@
 <!-- 主要內容區域 -->
 <div class="main-content" style="display: block !important; visibility: visible !important;">
 <!-- 項目列表標題 -->
-<div class="projects-header" style="display: flex; flex-direction: column; align-items: stretch; gap: 1.5rem; margin-bottom: 2rem;">
+<div class="projects-header" style="display: flex; flex-direction: column; align-items: stretch; gap: 0.125rem; margin-bottom: 0;">
     
     <!-- 頂部概覽卡片 -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
-        <div style="background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%); border-radius: 12px; padding: 1.5rem; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-            <div style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 0.5rem;">本月已收集單據</div>
-            <div style="font-size: 2.5rem; font-weight: 700; display: flex; align-items: baseline; gap: 0.5rem;">
-                <span id="dashboard-total-docs">0</span> <span style="font-size: 1rem; font-weight: 400; opacity: 0.8;">張</span>
+    <div class="overview-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 0.125rem;">
+        <div style="background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%); border-radius: 12px; padding: 0 0.25rem; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; overflow: hidden;">
+            <div style="font-size: 0.75rem; opacity: 0.9; margin-bottom: 0; position: relative; z-index: 1;">本月已收集單據</div>
+            <div style="font-size: 1.125rem; font-weight: 700; display: flex; align-items: baseline; gap: 0.25rem; position: relative; z-index: 1;">
+                <span id="dashboard-total-docs">0</span> <span style="font-size: 0.75rem; font-weight: 400; opacity: 0.8;">張</span>
             </div>
-            <div style="margin-top: 1rem; font-size: 0.875rem; background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.5rem;">
+            <div style="margin-top: 0; font-size: 0.65rem; background: rgba(255,255,255,0.2); padding: 0 0.25rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.125rem; position: relative; z-index: 1;">
                 <i class="fas fa-chart-line"></i> 數據即時同步中
             </div>
+            <!-- 裝飾背景 -->
+            <i class="fas fa-receipt" style="position: absolute; right: -20px; bottom: -20px; font-size: 2.5rem; opacity: 0.1; transform: rotate(-15deg);"></i>
         </div>
         
-        <div style="background: white; border: 1px solid #E5E7EB; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-            <div style="font-size: 0.875rem; color: #6B7280; margin-bottom: 0.5rem;">預計可扣稅總額</div>
-            <div style="font-size: 2.5rem; font-weight: 700; color: #1F2937; display: flex; align-items: baseline; gap: 0.5rem;">
-                <span style="font-size: 1.5rem;">HK$</span> <span id="dashboard-total-tax">0</span>
+        <div style="background: white; border: 1px solid #E5E7EB; border-radius: 12px; padding: 0 0.25rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05); position: relative; overflow: hidden;">
+            <div style="font-size: 0.75rem; color: #6B7280; margin-bottom: 0; position: relative; z-index: 1;">預計可扣稅總額</div>
+            <div style="font-size: 1.125rem; font-weight: 700; color: #1F2937; display: flex; align-items: baseline; gap: 0.25rem; position: relative; z-index: 1;">
+                <span style="font-size: 0.75rem;">HK$</span> <span id="dashboard-total-tax">0</span>
             </div>
-            <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
-                <button onclick="exportCurrentMonth()" style="flex: 1; background: #10B981; color: white; border: none; padding: 0.5rem; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+            <div style="margin-top: 0; display: flex; gap: 0.25rem; position: relative; z-index: 1;">
+                <button onclick="exportCurrentMonth()" style="flex: 1; background: #10B981; color: white; border: none; padding: 0 0.25rem; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.125rem; font-size: 0.65rem; min-height: 20px;">
                     <i class="fas fa-file-excel"></i> 匯出本月 Excel
                 </button>
             </div>
+            <!-- 裝飾背景 -->
+            <i class="fas fa-calculator" style="position: absolute; right: -10px; bottom: -10px; font-size: 6rem; color: #F3F4F6; z-index: 0;"></i>
         </div>
     </div>
 
     <!-- 操作列 -->
-    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #F3F4F6; padding-bottom: 1rem;">
-        <h2 style="font-size: 1.25rem; font-weight: 700; color: #1F2937; margin: 0;">歷史月份紀錄</h2>
+    <div class="history-header" style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0; margin-top: 0; margin-bottom: 0.125rem;">
+        <h2 style="font-size: 0.65rem; font-weight: 700; color: #1F2937; margin: 0;">歷史月份紀錄</h2>
         <div class="header-actions">
-            <button class="create-btn" onclick="openQrCodeModal()" style="background: #F3F4F6; color: #374151; border: 1px solid #D1D5DB;">
+            <button class="create-btn" onclick="openQrCodeModal()" style="background: #F3F4F6; color: #374151; border: 1px solid #D1D5DB; padding: 0 0.25rem; font-size: 0.65rem; min-height: 20px;">
                 <i class="fas fa-qrcode"></i>
                 <span>獲取店員上傳 QR Code</span>
             </button>
@@ -874,7 +928,35 @@
     </div>
 </div>
 
+    <style>
+    @media (max-width: 768px) {
+        .history-header {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 0.125rem !important;
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+            padding-bottom: 0 !important;
+            border-bottom: none !important;
+        }
+        .history-header h2 {
+            font-size: 0.65rem !important;
+        }
+        .history-header .header-actions {
+            width: 100% !important;
+        }
+        .history-header .header-actions button {
+            width: 100% !important;
+            justify-content: center !important;
+            padding: 0 !important;
+            font-size: 0.65rem !important;
+            min-height: 20px !important;
+        }
+    }
+</style>
+
 <!-- 項目表格 -->
+<div class="table-responsive" style="overflow-x: auto; margin: 0; padding: 0; -webkit-overflow-scrolling: touch;">
 <table class="projects-table">
     <thead>
         <tr>
@@ -893,6 +975,7 @@
         </tr>
     </tbody>
 </table>
+</div>
 </div>
 </div>
 

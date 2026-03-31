@@ -159,13 +159,42 @@ class VaultCaddyNavbar {
         
         // ✅ 使用與 index.html 靜態導航欄完全一致的樣式
         const navbarHTML = `
-            <nav class="vaultcaddy-navbar" id="main-navbar" style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; height: 60px !important; width: 100% !important; background: #ffffff !important; border-bottom: 1px solid #e5e7eb !important; display: flex !important; align-items: center !important; justify-content: space-between !important; padding: 0 2rem !important; z-index: 999999 !important; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; box-sizing: border-box !important; margin: 0 !important; overflow: visible !important;">
+            <style>
+                /* 手機版導航欄樣式優化 */
+                @media (max-width: 768px) {
+                    #main-navbar {
+                        padding: 0 0.25rem !important;
+                        height: 36px !important;
+                        min-height: 36px !important;
+                    }
+                    .vaultcaddy-navbar {
+                        height: 36px !important;
+                        min-height: 36px !important;
+                    }
+                    #main-navbar > div:nth-child(2) > div:first-child {
+                        display: none !important; /* 手機版隱藏中間的功能/價格/儀表板連結 */
+                    }
+                    #main-navbar > div:nth-child(1) .desktop-text {
+                        display: none !important; /* 手機版隱藏 VaultCaddy 文字，只留 V logo */
+                    }
+                    #main-navbar .user-menu-item span {
+                        display: none !important; /* 手機版隱藏用戶選單文字 */
+                    }
+                    #main-navbar .user-menu-item {
+                        padding: 0.25rem !important;
+                    }
+                    #main-navbar .user-menu-item i {
+                        font-size: 1rem !important;
+                    }
+                }
+            </style>
+            <nav class="vaultcaddy-navbar" id="main-navbar" style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; height: 60px; width: 100% !important; background: #ffffff !important; border-bottom: 1px solid #e5e7eb !important; display: flex !important; align-items: center !important; justify-content: space-between !important; padding: 0 2rem !important; z-index: 999999 !important; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; box-sizing: border-box !important; margin: 0 !important; overflow: visible !important;">
                 <div style="display: flex !important; align-items: center !important; gap: 0.5rem !important; z-index: 10000 !important; pointer-events: auto !important; visibility: visible !important; opacity: 1 !important;">
                     <a href="index.html" style="display: flex !important; align-items: center !important; gap: 0.75rem !important; text-decoration: none !important; color: #1f2937 !important; font-weight: 600 !important; font-size: 1.125rem !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important;">
-                        <div style="width: 32px !important; height: 32px !important; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border-radius: 8px !important; display: flex !important; align-items: center !important; justify-content: center !important; color: white !important; font-weight: 700 !important; font-size: 1.25rem !important; visibility: visible !important; opacity: 1 !important;">
+                        <div style="width: 32px !important; height: 32px !important; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border-radius: 8px !important; display: flex !important; align-items: center !important; justify-content: center !important; color: white !important; font-weight: 700 !important; font-size: 1.25rem !important; visibility: visible !important; opacity: 1 !important; flex-shrink: 0 !important;">
                             V
                         </div>
-                        <div style="display: flex !important; flex-direction: column !important; visibility: visible !important; opacity: 1 !important;">
+                        <div class="desktop-text" style="display: flex !important; flex-direction: column !important; visibility: visible !important; opacity: 1 !important;">
                             <div style="color: #1f2937 !important; display: block !important; visibility: visible !important; opacity: 1 !important; font-size: 1.125rem !important; font-weight: 600 !important; line-height: 1.2 !important;">VaultCaddy</div>
                             <div style="font-size: 0.75rem !important; color: #6b7280 !important; font-weight: 400 !important; text-transform: uppercase !important; letter-spacing: 0.05em !important; display: block !important; visibility: visible !important; opacity: 1 !important; line-height: 1.2 !important;">AI DOCUMENT PROCESSING</div>
                         </div>
@@ -209,7 +238,7 @@ class VaultCaddyNavbar {
         navbarPlaceholder.classList.remove('hidden', 'invisible');
         
         // 確保導航欄可見
-        navbarPlaceholder.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important; height: 60px !important; width: 100% !important; position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; z-index: 999999 !important; background: #ffffff !important; margin: 0 !important; padding: 0 !important;';
+        navbarPlaceholder.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important; width: 100% !important; position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; z-index: 999999 !important; background: #ffffff !important; margin: 0 !important; padding: 0 !important; min-height: 60px;';
         
         // 確保內部 nav 也可見
         let innerNav = navbarPlaceholder.querySelector('nav#main-navbar');
@@ -222,7 +251,7 @@ class VaultCaddyNavbar {
         }
         
         if (innerNav) {
-            innerNav.style.cssText = 'position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; height: 60px !important; width: 100% !important; background: #ffffff !important; border-bottom: 1px solid #e5e7eb !important; display: flex !important; align-items: center !important; justify-content: space-between !important; padding: 0 2rem !important; z-index: 999999 !important; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; box-sizing: border-box !important; margin: 0 !important;';
+            innerNav.style.cssText = 'position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; height: 60px; width: 100% !important; background: #ffffff !important; border-bottom: 1px solid #e5e7eb !important; display: flex !important; align-items: center !important; justify-content: space-between !important; padding: 0 2rem !important; z-index: 999999 !important; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; box-sizing: border-box !important; margin: 0 !important;';
             
             // 移除任何可能覆蓋樣式的 inline style
             innerNav.style.setProperty('display', 'flex', 'important');
@@ -507,7 +536,7 @@ class VaultCaddyNavbar {
             return `
                 <div class="user-profile" id="user-profile" style="position: relative; display: flex !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; align-items: center !important; height: 100% !important; z-index: 10000 !important;">
                     <img src="${userPhotoURL}" alt="${userName}" class="user-avatar" onclick="window.vaultcaddyNavbar.toggleUserDropdown(event)" style="cursor: pointer; border-radius: 50%; width: 32px; height: 32px; object-fit: cover; border: 2px solid #e5e7eb; transition: border-color 0.2s; display: block !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; z-index: 10000 !important;" onmouseover="this.style.borderColor='#667eea'" onmouseout="this.style.borderColor='#e5e7eb'">
-                    <div class="user-dropdown-menu" id="user-dropdown-menu" style="display: none !important; position: absolute !important; top: 100% !important; right: 0 !important; background: white !important; border: 1px solid #e5e7eb !important; border-radius: 12px !important; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important; min-width: 280px !important; z-index: 1000000 !important; padding: 0 !important; margin-top: 8px !important; overflow: hidden !important;">
+                    <div class="user-dropdown-menu" id="user-dropdown-menu" style="display: none !important; position: absolute !important; top: 100% !important; right: -10px !important; background: white !important; border: 1px solid #e5e7eb !important; border-radius: 12px !important; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important; min-width: 280px !important; z-index: 1000000 !important; padding: 0 !important; margin-top: 8px !important; overflow: hidden !important; max-width: calc(100vw - 2rem) !important;">
                         <!-- 用戶信息區 -->
                         <div class="user-info" style="padding: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
                             <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
@@ -568,7 +597,7 @@ class VaultCaddyNavbar {
             // ✅ 未登入：顯示「登入 →」按鈕（與圖1靜態導航欄樣式一致）
             return `
                 <div id="user-menu" style="position: relative; display: flex !important; align-items: center !important; gap: 0.75rem !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important;">
-                    <a href="auth.html" style="display: inline-flex !important; align-items: center !important; gap: 0.5rem !important; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; color: white !important; padding: 0.625rem 1.5rem !important; border-radius: 8px !important; text-decoration: none !important; font-weight: 500 !important; font-size: 0.9375rem !important; transition: transform 0.2s, box-shadow 0.2s !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                    <a href="auth.html" style="display: inline-flex !important; align-items: center !important; gap: 0.5rem !important; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; color: white !important; padding: 0.5rem 1rem !important; border-radius: 8px !important; text-decoration: none !important; font-weight: 500 !important; font-size: 0.875rem !important; transition: transform 0.2s, box-shadow 0.2s !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; white-space: nowrap !important;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
                         ${lang.login}
                     </a>
                 </div>
@@ -610,7 +639,7 @@ class VaultCaddyNavbar {
             const userDropdown = document.getElementById('user-dropdown-menu');
             
             if (userDropdown && userProfile && !userProfile.contains(event.target)) {
-                userDropdown.style.display = 'none';
+                userDropdown.style.setProperty('display', 'none', 'important');
             }
         });
         
@@ -756,7 +785,7 @@ class VaultCaddyNavbar {
     userAction(action) {
         const userDropdown = document.getElementById('user-dropdown-menu');
         if (userDropdown) {
-            userDropdown.style.display = 'none';
+            userDropdown.style.setProperty('display', 'none', 'important');
         }
         
         switch(action) {

@@ -96,7 +96,7 @@
 <!-- ✅ 核心配置 -->
 <script defer="" src="config.js?v=20260329"></script>
 <!-- ✅ UI 組件 -->
-<script defer="" src="navbar-component.js?v=20260330.10"></script>
+<script defer="" src="navbar-component.js?v=20260330.165"></script>
 <script defer="" src="sidebar-component.js?v=20260329"></script>
 <!-- ✅ 銀行對帳單導出模塊 -->
 <!-- ✅ Firebase SDK（CDN 版本）-->
@@ -215,7 +215,7 @@
         /* 日期範圍篩選區域優化 */
         .date-filter-content {
             flex-direction: column !important;
-            gap: 1rem !important;
+            gap: 0.125rem !important;
         }
         
         .date-filter-group {
@@ -224,15 +224,15 @@
         }
         
         .date-filter-inputs {
-            flex-direction: column !important;
-            gap: 0.75rem !important;
+            flex-direction: row !important;
+            gap: 0.125rem !important;
         }
         
         .date-filter-inputs input {
-            width: 100% !important;
+            width: 50% !important;
             font-size: 16px !important;
-            padding: 12px !important;
-            min-height: 44px !important;
+            padding: 2px !important;
+            min-height: 20px !important;
         }
         
         .date-filter-inputs span {
@@ -242,9 +242,9 @@
         /* 清除按鈕優化 */
         .date-filter-clear-btn button {
             width: 100% !important;
-            padding: 12px 16px !important;
-            font-size: 16px !important;
-            min-height: 44px !important;
+            padding: 2px 8px !important;
+            font-size: 12px !important;
+            min-height: 20px !important;
         }
     }
     
@@ -426,19 +426,37 @@
         /* 🔥 手機版：減少內容距離（最高優先級）*/
         @media (max-width: 768px) {
             .dashboard-container {
-                padding-top: 60px !important; /* 只需要導航欄高度 */
+                padding-top: 36px !important; /* 只需要導航欄高度 */
             }
             .main-content {
                 margin-left: 0 !important;
                 padding-top: 0 !important;
             }
             #team-project-view {
-                padding: 0 0.75rem !important; /* 最小 padding */
+                padding: 0 0.125rem !important; /* 最小 padding */
             }
             #project-header {
-                margin-top: 0.5rem !important; /* 只有 0.5rem 的距離 */
-                margin-bottom: 0.5rem !important;
+                margin-top: 0 !important; /* 完全無間距 */
+                margin-bottom: 0.125rem !important;
                 padding-top: 0 !important;
+            }
+            /* 調整標題大小 */
+            #team-project-title {
+                font-size: 1.25rem !important;
+            }
+            .stats-cards-container {
+                gap: 0.125rem !important;
+                margin-bottom: 0.125rem !important;
+            }
+            .stats-card {
+                padding: 0 0.125rem !important;
+            }
+            .table-container table {
+                min-width: 300px !important; /* 稍微縮小最小寬度 */
+            }
+            .table-container {
+                margin: 0 !important;
+                padding: 0 !important;
             }
         }
         
@@ -1483,7 +1501,7 @@
     
     /* 🔥 手機版內容距離導航欄減少 */
     #project-header {
-        margin-top: 5pt !important;
+        margin-top: 0 !important;
     }
     
     /* 導航欄 */
@@ -1512,7 +1530,7 @@
     
     /* 🔥 手機版內容距離導航欄減少 */
     #project-header {
-        margin-top: 5pt !important;
+        margin-top: 0 !important;
     }
     
     /* ==================== Export 菜單手機版樣式（已統一）==================== */
@@ -1636,7 +1654,7 @@
     
     /* 🔧 文檔名稱只顯示10個字符 */
     .table-container table tbody td:nth-child(2) {
-        max-width: 120px !important;
+        max-width: 60px !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
         white-space: nowrap !important;
@@ -1645,21 +1663,28 @@
     /* 🔧 手機版：所有列都顯示，但文字截斷為10個字符 */
     .table-container table thead th,
     .table-container table tbody td {
-        max-width: 120px !important;
+        max-width: 60px !important; /* 稍微放寬限制 */
         overflow: hidden !important;
         text-overflow: ellipsis !important;
         white-space: nowrap !important;
-        padding: 0.5rem 0.25rem !important;
+        padding: 0 0.125rem !important;
+        font-size: 0.75rem !important; /* 稍微調大字體 */
+    }
+    
+    /* 調整表格內邊距和字體大小 */
+    .table-container table th,
+    .table-container table td {
+        padding: 0 0.125rem !important;
         font-size: 0.75rem !important;
     }
     
     /* 🔧 手機版：Checkbox列保持小尺寸 */
     .table-container table thead th:nth-child(1),
     .table-container table tbody td:nth-child(1) {
-        max-width: 40px !important;
-        min-width: 40px !important;
-        width: 40px !important;
-        padding: 0.5rem 0.25rem !important;
+        max-width: 24px !important;
+        min-width: 24px !important;
+        width: 24px !important;
+        padding: 0 !important;
     }
     
     /* 🔧 手機版：類型列（第3列）文字大小與其他一樣 */
@@ -1667,22 +1692,28 @@
     .table-container table tbody td:nth-child(3) {
         font-size: 0.75rem !important;
         text-align: center !important;
+        max-width: 60px !important;
     }
     
     /* 🔧 手機版：類型列顯示圖標和文字（不再隱藏） */
     .table-container table tbody td:nth-child(3) span {
-        display: inline !important;
+        display: inline-block !important;
+        max-width: 60px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
     
     /* 🔧 手機版：狀態列（第4列，在類型和供應商中間） */
     .table-container table thead th:nth-child(4),
     .table-container table tbody td:nth-child(4) {
         text-align: center !important;
+        max-width: 60px !important;
     }
     
-    /* 🔧 手機版：操作列（第9列） */
-    .table-container table thead th:nth-child(9),
-    .table-container table tbody td:nth-child(9) {
+    /* 🔧 手機版：操作列（第8列，因為隱藏了上傳時間列） */
+    .table-container table thead th:nth-child(8),
+    .table-container table tbody td:nth-child(8) {
         text-align: center !important;
     }
     
@@ -1690,10 +1721,12 @@
     .table-container {
         overflow-x: auto !important;
         -webkit-overflow-scrolling: touch !important;
+        margin: 0 !important; /* 讓表格稍微超出容器，利用螢幕邊緣 */
+        padding: 0 !important;
     }
     
     .table-container table {
-        min-width: 800px !important; /* 確保表格寬度觸發滾動 */
+        min-width: 300px !important; /* 縮小最小寬度，適應手機，但保留足夠空間顯示內容 */
     }
     
     /* 隱藏部分列 */
@@ -1860,7 +1893,7 @@
 <style id="mobile-force-styles">
         @media screen and (max-width: 768px) {
             html body .dashboard-container {
-                padding-top: 20px !important; /* 🔥 手機導航欄高度 56px - 15pt 上移 */
+                padding-top: 36px !important; /* 🔥 手機導航欄高度 36px */
             }
             html body .main-content {
                 margin-left: 0 !important;
@@ -1868,12 +1901,12 @@
                 padding-top: 0 !important;
             }
             html body #team-project-view {
-                padding: 0.5rem 0.75rem !important;
+                padding: 0.125rem 0.125rem !important;
                 padding-top: 0 !important;
             }
             html body #project-header {
                 margin-top: 0 !important; /* 🔥 完全無間距 */
-                margin-bottom: 0.5rem !important;
+                margin-bottom: 0.125rem !important;
                 padding: 0 !important;
             }
         }
@@ -1896,25 +1929,35 @@
 <script src="/backend-api-client.js"></script>
 </head>
 <body class="auth-checking">
-<div id="navbar-placeholder" style="display: block !important; visibility: visible !important; opacity: 1 !important; min-height: 60px; width: 100% !important; position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; z-index: 999999; background: #ffffff !important;">
-    <!-- 預設靜態導航欄，防止閃爍 -->
-    <nav class="vaultcaddy-navbar" style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; height: 60px !important; width: 100% !important; background: #ffffff !important; border-bottom: 1px solid #e5e7eb !important; display: flex !important; align-items: center !important; justify-content: space-between !important; padding: 0 2rem !important; z-index: 999999 !important; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important; visibility: visible !important; opacity: 1 !important;">
+<div id="navbar-placeholder" style="display: block !important; visibility: visible !important; opacity: 1 !important; width: 100% !important; position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; z-index: 999999; background: #ffffff !important; min-height: 60px;">
+            <!-- 預設靜態導航欄，防止閃爍 -->
+            <nav class="vaultcaddy-navbar" style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; height: 60px !important; width: 100% !important; background: #ffffff !important; border-bottom: 1px solid #e5e7eb !important; display: flex !important; align-items: center !important; justify-content: space-between !important; padding: 0 1rem !important; z-index: 999999 !important; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important; visibility: visible !important; opacity: 1 !important;">
         <div style="display: flex !important; align-items: center !important; gap: 0.5rem !important;">
             <a href="index.html" style="display: flex !important; align-items: center !important; gap: 0.75rem !important; text-decoration: none !important; color: #1f2937 !important; font-weight: 600 !important; font-size: 1.125rem !important;">
                 <div style="width: 32px !important; height: 32px !important; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border-radius: 8px !important; display: flex !important; align-items: center !important; justify-content: center !important; color: white !important; font-weight: 700 !important; font-size: 1.25rem !important;">V</div>
-                <div style="display: flex !important; flex-direction: column !important;">
+                <div class="desktop-text" style="display: flex !important; flex-direction: column !important;">
                     <div style="color: #1f2937 !important; display: block !important; font-size: 1.125rem !important; font-weight: 600 !important; line-height: 1.2 !important;">VaultCaddy</div>
                     <div style="font-size: 0.75rem !important; color: #6b7280 !important; font-weight: 400 !important; text-transform: uppercase !important; letter-spacing: 0.05em !important; display: block !important; line-height: 1.2 !important;">AI DOCUMENT PROCESSING</div>
                 </div>
             </a>
         </div>
-        <div style="display: flex !important; align-items: center !important; gap: 2rem !important;">
-            <a href="index.html#features" style="color: #4b5563 !important; text-decoration: none !important; font-size: 0.9375rem !important; font-weight: 500 !important;">功能</a>
-            <a href="index.html#pricing" style="color: #4b5563 !important; text-decoration: none !important; font-size: 0.9375rem !important; font-weight: 500 !important;">價格</a>
-            <a href="dashboard.html" style="color: #4b5563 !important; text-decoration: none !important; font-size: 0.9375rem !important; font-weight: 500 !important;">儀表板</a>
-            <a href="auth.html" style="display: inline-flex !important; align-items: center !important; gap: 0.5rem !important; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; color: white !important; padding: 0.625rem 1.5rem !important; border-radius: 8px !important; text-decoration: none !important; font-weight: 500 !important; font-size: 0.9375rem !important;">登入 →</a>
+        <div style="display: flex !important; align-items: center !important; gap: 1rem !important;">
+            <div class="desktop-links" style="display: flex !important; gap: 2rem !important;">
+                <a href="index.html#features" style="color: #4b5563 !important; text-decoration: none !important; font-size: 0.9375rem !important; font-weight: 500 !important;">功能</a>
+                <a href="index.html#pricing" style="color: #4b5563 !important; text-decoration: none !important; font-size: 0.9375rem !important; font-weight: 500 !important;">價格</a>
+                <a href="dashboard.html" style="color: #4b5563 !important; text-decoration: none !important; font-size: 0.9375rem !important; font-weight: 500 !important;">儀表板</a>
+            </div>
+            <a href="auth.html" style="display: inline-flex !important; align-items: center !important; gap: 0.5rem !important; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; color: white !important; padding: 0.5rem 1rem !important; border-radius: 8px !important; text-decoration: none !important; font-weight: 500 !important; font-size: 0.875rem !important; white-space: nowrap !important;">登入 →</a>
         </div>
     </nav>
+    <style>
+        @media (max-width: 768px) {
+            .vaultcaddy-navbar .desktop-text, .vaultcaddy-navbar .desktop-links { display: none !important; }
+            .vaultcaddy-navbar { padding: 0 0.25rem !important; }
+            #navbar-placeholder { min-height: 36px !important; }
+            .vaultcaddy-navbar { height: 36px !important; min-height: 36px !important; }
+        }
+    </style>
 </div>
 <!-- 🔒 Auth 加載動畫 -->
 <div class="auth-loading">
@@ -2011,11 +2054,11 @@
 <div class="view-container" id="team-project-view" style="display: block !important; visibility: visible !important; background: #ffffff;">
 <!-- 頁面標題和控制欄 -->
 <!-- 🔥 移除 inline margin-top，由 CSS 控制（手機版 5pt，桌面版 30pt）-->
-<header id="project-header" style="margin-bottom: 2rem;">
+<header id="project-header" style="margin-bottom: 0.125rem;">
 <!-- 第一行：標題（桌面版）或獨立一行（手機版） -->
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-<div style="display: flex; align-items: center; gap: 0.75rem;">
-<h1 contenteditable="false" id="team-project-title" style="font-size: 2rem; font-weight: 700; color: #1f2937; margin: 0; outline: none; border: 2px solid transparent; padding: 0.25rem 0; border-radius: 4px; transition: all 0.2s;">2026年 3月</h1>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+<div style="display: flex; align-items: center; gap: 0.5rem;">
+<h1 contenteditable="false" id="team-project-title" style="font-size: 1.5rem; font-weight: 700; color: #1f2937; margin: 0; outline: none; border: 2px solid transparent; padding: 0.25rem 0; border-radius: 4px; transition: all 0.2s;">2026年 3月</h1>
 <button id="edit-project-name-btn" onclick="toggleProjectNameEdit()" style="background: transparent; border: none; cursor: pointer; color: #6b7280; padding: 0.5rem; border-radius: 4px; transition: all 0.2s;" title="編輯月份名稱">
 <i class="fas fa-pen" style="font-size: 1.25rem;"></i>
 </button>
@@ -2041,40 +2084,55 @@
 </div>
 
 <!-- 📊 總計數據卡片 (新增) -->
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
-    <div style="background: white; border: 1px solid #E5E7EB; border-radius: 12px; padding: 1.25rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-        <div style="font-size: 0.875rem; color: #6B7280; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+<div class="stats-cards-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.125rem; margin-bottom: 0.125rem; margin-top: 0.125rem;">
+    <div style="background: white; border: 1px solid #E5E7EB; border-radius: 12px; padding: 0 0.125rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02); position: relative; overflow: hidden;">
+        <div style="font-size: 0.75rem; color: #6B7280; margin-bottom: 0; display: flex; align-items: center; gap: 0.25rem; position: relative; z-index: 1;">
             <i class="fas fa-receipt" style="color: #4F46E5;"></i> 本月單據數量
         </div>
-        <div style="font-size: 2rem; font-weight: 700; color: #1F2937;" id="summary-doc-count">0 <span style="font-size: 1rem; font-weight: 400; color: #6B7280;">張</span></div>
+        <div style="font-size: 1rem; font-weight: 700; color: #1F2937; position: relative; z-index: 1;" id="summary-doc-count">0 <span style="font-size: 0.65rem; font-weight: 400; color: #6B7280;">張</span></div>
+        <i class="fas fa-file-invoice" style="position: absolute; right: -10px; bottom: -10px; font-size: 2rem; color: #F3F4F6; z-index: 0; transform: rotate(-15deg);"></i>
     </div>
-    <div style="background: white; border: 1px solid #E5E7EB; border-radius: 12px; padding: 1.25rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-        <div style="font-size: 0.875rem; color: #6B7280; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+    <div style="background: white; border: 1px solid #E5E7EB; border-radius: 12px; padding: 0 0.125rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02); position: relative; overflow: hidden;">
+        <div style="font-size: 0.75rem; color: #6B7280; margin-bottom: 0; display: flex; align-items: center; gap: 0.25rem; position: relative; z-index: 1;">
             <i class="fas fa-calculator" style="color: #F59E0B;"></i> 本月總開支
         </div>
-        <div style="font-size: 2rem; font-weight: 700; color: #1F2937;" id="summary-total-amount"><span style="font-size: 1.25rem;">HK$</span> 0</div>
+        <div style="font-size: 1rem; font-weight: 700; color: #1F2937; position: relative; z-index: 1;" id="summary-total-amount"><span style="font-size: 0.65rem;">HK$</span> 0</div>
+        <i class="fas fa-coins" style="position: absolute; right: -10px; bottom: -10px; font-size: 2rem; color: #F3F4F6; z-index: 0; transform: rotate(-15deg);"></i>
     </div>
-    <div style="background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%); border: 1px solid #86EFAC; border-radius: 12px; padding: 1.25rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-        <div style="font-size: 0.875rem; color: #047857; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+    <div style="background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%); border: 1px solid #86EFAC; border-radius: 12px; padding: 0 0.125rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02); position: relative; overflow: hidden;">
+        <div style="font-size: 0.75rem; color: #047857; margin-bottom: 0; display: flex; align-items: center; gap: 0.25rem; font-weight: 600; position: relative; z-index: 1;">
             <i class="fas fa-check-circle"></i> 預計可扣稅總額 (High/Medium)
         </div>
-        <div style="font-size: 2rem; font-weight: 800; color: #065F46;" id="summary-tax-deductible"><span style="font-size: 1.25rem;">HK$</span> 0</div>
+        <div style="font-size: 1rem; font-weight: 800; color: #065F46; position: relative; z-index: 1;" id="summary-tax-deductible"><span style="font-size: 0.65rem;">HK$</span> 0</div>
+        <i class="fas fa-shield-alt" style="position: absolute; right: -10px; bottom: -10px; font-size: 2rem; color: rgba(16, 185, 129, 0.1); z-index: 0; transform: rotate(-15deg);"></i>
     </div>
 </div>
 
+    <style>
+    @media (max-width: 768px) {
+        .stats-cards-container {
+            grid-template-columns: 1fr !important; /* 手機版改為單列 */
+            gap: 0.125rem !important;
+            margin-bottom: 0.125rem !important;
+        }
+        .stats-cards-container > div {
+            padding: 0 0.125rem !important;
+        }
+        .stats-cards-container > div > div:first-child {
+            margin-bottom: 0 !important;
+        }
+    }
+</style>
+
 <!-- 手機版操作按鈕（獨立一行） -->
-<div id="action-buttons-container-mobile" style="display: none; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
-<button id="upload-btn-mobile" onclick="openUploadModal()" style="background: #4F46E5; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 600; flex: 1; min-width: 120px; justify-content: center; box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2);">
+<div id="action-buttons-container-mobile" style="display: none; gap: 0.125rem; flex-wrap: nowrap; margin-bottom: 0;">
+<button id="upload-btn-mobile" onclick="openUploadModal()" style="background: #4F46E5; color: white; border: none; padding: 0 0.25rem; border-radius: 6px; display: flex; align-items: center; gap: 0.125rem; cursor: pointer; font-weight: 600; flex: 1; min-width: 0; justify-content: center; box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2); font-size: 0.75rem; white-space: nowrap; min-height: 20px;">
 <i class="fas fa-plus"></i>
 <span>新增單據</span>
 </button>
-<button id="export-btn-mobile" onclick="toggleExportMenu()" style="background: #10b981; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 600; flex: 1; min-width: 100px; justify-content: center; position: relative; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);">
+<button id="export-btn-mobile" onclick="toggleExportMenu()" style="background: #10b981; color: white; border: none; padding: 0 0.25rem; border-radius: 6px; display: flex; align-items: center; gap: 0.125rem; cursor: pointer; font-weight: 600; flex: 1; min-width: 0; justify-content: center; position: relative; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2); font-size: 0.75rem; white-space: nowrap; min-height: 20px;">
 <i class="fas fa-file-excel"></i>
-<span>匯出給會計師</span>
-</button>
-<button disabled="" id="delete-selected-btn-mobile" onclick="deleteSelectedDocuments()" style="background: #ef4444; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500; opacity: 0.5; flex: 1; min-width: 100px; justify-content: center;">
-<i class="fas fa-trash"></i>
-<span>刪除</span>
+<span>匯出 Excel</span>
 </button>
 </div>
 </header>
@@ -2116,7 +2174,7 @@
     
     /* 🔥 手機版內容距離導航欄減少 */
     #project-header {
-        margin-top: 5pt !important;
+        margin-top: 0 !important;
     }
     
     /* Export 菜單項更大觸控區域 */
@@ -2133,12 +2191,42 @@
                         
                         /* 🔥 日期篩選器手機版樣式 */
                         .date-filter-container {
-                            padding: 0.75rem !important;
+                            padding: 0 !important;
+                            border: none !important;
+                            background: transparent !important;
+                            margin-bottom: 0 !important;
+                        }
+                        
+                        #date-filter-toggle-mobile {
+                            display: flex !important;
+                            align-items: center !important;
+                            justify-content: space-between !important;
+                            background: white !important;
+                            border: 1px solid #e5e7eb !important;
+                            margin-bottom: 0 !important;
+                            padding: 0 0.125rem !important;
+                            font-size: 0.75rem !important;
+                            min-height: 20px !important;
+                        }
+                        
+                        #date-filter-content {
+                            display: none; /* 預設隱藏 */
+                            background: white;
+                            padding: 0.25rem;
+                            border: 1px solid #e5e7eb;
+                            border-top: none;
+                            border-radius: 0 0 8px 8px;
+                            margin-top: -4px;
+                            margin-bottom: 0.25rem;
+                        }
+                        
+                        #date-filter-content.show {
+                            display: flex !important;
                         }
                         
                         .date-filter-wrapper {
                             flex-direction: column !important;
-                            gap: 1rem !important;
+                            gap: 0.125rem !important;
                         }
                         
                         .date-filter-group {
@@ -2146,19 +2234,21 @@
                         }
                         
                         .date-filter-group label {
-                            font-size: 0.8125rem !important;
+                            font-size: 0.75rem !important;
+                            margin-bottom: 0 !important;
                         }
                         
                         .date-filter-inputs {
                             display: flex !important;
-                            flex-direction: column !important;
-                            gap: 0.5rem !important;
+                            flex-direction: row !important;
+                            gap: 0.125rem !important;
                         }
                         
                         .date-filter-inputs input[type="date"] {
-                            width: 100% !important;
-                            font-size: 0.875rem !important;
-                            padding: 0.625rem !important;
+                            width: 50% !important;
+                            font-size: 16px !important; /* 防止 iOS 縮放 */
+                            padding: 0 !important;
+                            min-height: 20px !important;
                         }
                         
                         .date-filter-inputs span {
@@ -2167,13 +2257,22 @@
                         
                         .date-filter-clear-btn {
                             width: 100% !important;
+                            margin-top: 0.125rem !important;
+                        }
+                        
+                        .date-filter-clear-btn button {
+                            width: 100% !important;
                             justify-content: center !important;
-                            padding: 0.625rem 1rem !important;
+                            padding: 0 !important;
+                            font-size: 0.75rem !important;
+                            min-height: 20px !important;
                         }
                         
                         /* 🔥 手機版日期篩選折疊按鈕 */
                         #date-filter-toggle-mobile {
-                            display: block !important;
+                            display: flex !important;
+                            align-items: center !important;
+                            justify-content: space-between !important;
                         }
                         
                         /* 🔥 手機版默認收起日期篩選內容 */
@@ -2181,48 +2280,50 @@
                             display: none !important;
                         }
                         
-                        #date-filter-content.expanded {
+                        #date-filter-content.show {
                             display: flex !important;
                             flex-direction: column !important;
                         }
                     }
                 </style>
 <!-- 日期篩選器 -->
-<div class="date-filter-container" style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+<div class="date-filter-container" style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 0.125rem; margin-bottom: 0; margin-top: 0.125rem;">
 <!-- 手機版折疊按鈕 -->
-<button id="date-filter-toggle-mobile" onclick="toggleDateFilter()" style="display: none; width: 100%; background: #f8f9fa; border: 1px solid #e5e7eb; border-radius: 6px; padding: 0.75rem; margin-bottom: 1rem; cursor: pointer; text-align: left; font-weight: 600; color: #374151;">
+<button id="date-filter-toggle-mobile" onclick="toggleDateFilter()" style="display: none; width: 100%; background: #f8f9fa; border: 1px solid #e5e7eb; border-radius: 6px; padding: 0 0.125rem; margin-bottom: 0; cursor: pointer; text-align: left; font-weight: 600; color: #374151; align-items: center; justify-content: space-between; font-size: 0.75rem; min-height: 20px;">
+<div style="display: flex; align-items: center;">
 <i class="fas fa-calendar-alt" style="margin-right: 0.5rem; color: #8b5cf6;"></i>
 <span>日期篩選</span>
-<i class="fas fa-chevron-down" id="date-filter-toggle-icon" style="float: right; transition: transform 0.2s;"></i>
+</div>
+<i class="fas fa-chevron-down" id="date-filter-toggle-icon" style="transition: transform 0.2s;"></i>
 </button>
-<div class="date-filter-wrapper" id="date-filter-content" style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;">
+<div class="date-filter-wrapper" id="date-filter-content" style="display: flex; flex-wrap: wrap; gap: 0.125rem; align-items: center;">
 <!-- 日期篩選 -->
-<div class="date-filter-group" style="flex: 1; min-width: 200px;">
-<label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+<div class="date-filter-group" style="flex: 1; min-width: 150px;">
+<label style="display: block; font-size: 0.75rem; font-weight: 600; color: #374151; margin-bottom: 0;">
 <i class="fas fa-calendar-alt" style="margin-right: 0.5rem; color: #8b5cf6;"></i>
                                 日期範圍
                             </label>
-<div class="date-filter-inputs" style="display: flex; gap: 0.5rem; align-items: center;">
-<input id="date-from" placeholder="開始日期" style="flex: 1; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem;" type="date"/>
+<div class="date-filter-inputs" style="display: flex; gap: 0.125rem; align-items: center;">
+<input id="date-from" placeholder="開始日期" style="flex: 1; padding: 0 2px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;" type="date"/>
 <span style="color: #6b7280;">至</span>
-<input id="date-to" placeholder="結束日期" style="flex: 1; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem;" type="date"/>
+<input id="date-to" placeholder="結束日期" style="flex: 1; padding: 0 2px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;" type="date"/>
 </div>
 </div>
 <!-- 上傳日期篩選 -->
-<div class="date-filter-group" style="flex: 1; min-width: 200px;">
-<label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+<div class="date-filter-group" style="flex: 1; min-width: 150px;">
+<label style="display: block; font-size: 0.75rem; font-weight: 600; color: #374151; margin-bottom: 0;">
 <i class="fas fa-upload" style="margin-right: 0.5rem; color: #8b5cf6;"></i>
                                 上傳日期範圍
                             </label>
-<div class="date-filter-inputs" style="display: flex; gap: 0.5rem; align-items: center;">
-<input id="upload-date-from" placeholder="開始日期" style="flex: 1; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem;" type="date"/>
+<div class="date-filter-inputs" style="display: flex; gap: 0.125rem; align-items: center;">
+<input id="upload-date-from" placeholder="開始日期" style="flex: 1; padding: 0 2px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;" type="date"/>
 <span style="color: #6b7280;">至</span>
-<input id="upload-date-to" placeholder="結束日期" style="flex: 1; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem;" type="date"/>
+<input id="upload-date-to" placeholder="結束日期" style="flex: 1; padding: 0 2px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;" type="date"/>
 </div>
 </div>
 <!-- 清除按鈕 -->
-<div class="date-filter-clear-btn" style="align-self: flex-end;">
-<button onclick="clearDateFilters()" onmouseout="this.style.background='#f3f4f6'" onmouseover="this.style.background='#e5e7eb'" style="padding: 0.5rem 1rem; background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem; cursor: pointer; white-space: nowrap; transition: all 0.2s;">
+<div class="date-filter-clear-btn" style="align-self: flex-end; width: 100%;">
+<button onclick="clearDateFilters()" onmouseout="this.style.background='#f3f4f6'" onmouseover="this.style.background='#e5e7eb'" style="padding: 0; background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.75rem; cursor: pointer; white-space: nowrap; transition: all 0.2s; width: 100%; display: flex; align-items: center; justify-content: center; min-height: 20px;">
 <i class="fas fa-times" style="margin-right: 0.5rem;"></i>
                                 清除篩選
                             </button>
@@ -2230,13 +2331,13 @@
 </div> <!-- 關閉 date-filter-content -->
 </div>
 <!-- 文檔表格 -->
-<div class="table-container" style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; overflow-x: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
-<table style="width: 100%; border-collapse: collapse; min-width: 1000px;">
+<div class="table-container" style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; overflow-x: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.02); -webkit-overflow-scrolling: touch; margin: 0; padding: 0;">
+<table style="width: 100%; border-collapse: collapse; min-width: 800px;">
 <thead style="background: #f8fafc;">
 <tr>
 <!-- Checkbox 列 -->
-<th style="text-align: left; padding: 0.75rem 1rem; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; font-size: 0.875rem; width: 50px;">
-<input id="select-all-checkbox" onchange="toggleSelectAll()" type="checkbox"/>
+<th style="text-align: left; padding: 0.75rem 1rem; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; font-size: 0.875rem; width: 40px;">
+<input id="select-all-checkbox" onchange="toggleSelectAll()" type="checkbox" style="width: 16px; height: 16px;"/>
 </th>
 <!-- 文檔名稱列 -->
 <th onclick="sortTable('name')" onmouseout="this.style.background='transparent'" onmouseover="this.style.background='#f3f4f6'" style="text-align: left; padding: 0.75rem 1rem; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; font-size: 0.875rem; cursor: pointer; user-select: none;">
@@ -2269,7 +2370,7 @@
 <i class="fas fa-filter" style="margin-left: 0.5rem; color: #8b5cf6;"></i>
 </th>
 <!-- 上傳日期列 -->
-<th style="text-align: left; padding: 0.75rem 1rem; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; font-size: 0.875rem;">
+<th style="text-align: left; padding: 0.75rem 1rem; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; font-size: 0.875rem; display: none;">
 <span>上傳時間</span>
 <i class="fas fa-filter" style="margin-left: 0.5rem; color: #8b5cf6;"></i>
 </th>
@@ -2514,15 +2615,24 @@
         window.toggleDateFilter = function() {
             const content = document.getElementById('date-filter-content');
             const icon = document.getElementById('date-filter-toggle-icon');
+            const btn = document.getElementById('date-filter-toggle-mobile');
             
             if (content && icon) {
-                content.classList.toggle('expanded');
+                content.classList.toggle('show');
                 
-                // 更新圖標
-                if (content.classList.contains('expanded')) {
+                // 更新圖標和按鈕樣式
+                if (content.classList.contains('show')) {
                     icon.style.transform = 'rotate(180deg)';
+                    if(btn) {
+                        btn.style.borderRadius = '6px 6px 0 0';
+                        btn.style.borderBottom = 'none';
+                    }
                 } else {
                     icon.style.transform = 'rotate(0deg)';
+                    if(btn) {
+                        btn.style.borderRadius = '6px';
+                        btn.style.borderBottom = '1px solid #e5e7eb';
+                    }
                 }
             }
         };
@@ -2731,7 +2841,7 @@
                         taxDeductibility = '❌ 提取失敗';
                     } else if (isProcessing) {
                         taxColor = '#2563eb'; taxBg = '#dbeafe'; // 藍色
-                        taxDeductibility = '⏳ 處理中...';
+                        taxDeductibility = '⏳ 處理中';
                     } else if (taxDeductibility === 'High') {
                         taxColor = '#065f46'; taxBg = '#d1fae5'; // 綠色
                         taxDeductibility = '✅ 100% 可扣稅';
@@ -2751,16 +2861,16 @@
                     
                     return `
                         <tr onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='transparent'">
-                            <td style="padding: 1rem;"><input type="checkbox" class="document-checkbox" data-doc-id="${doc.id}"></td>
+                            <td style="padding: 1rem;"><input type="checkbox" class="document-checkbox" data-doc-id="${doc.id}" style="width: 16px; height: 16px;"></td>
                             
                             <!-- 單據圖片 -->
                             <td class="document-name-cell" style="padding: 1rem;">
-                                <div style="display: flex; align-items: center; gap: 0.75rem; ${!isProcessing ? 'cursor: pointer;' : 'cursor: default;'}" ${!isProcessing ? `onclick="viewDocument('${doc.id}')"` : ''}>
-                                    <div class="doc-image-preview" style="position: relative;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; ${!isProcessing ? 'cursor: pointer;' : 'cursor: default;'}" ${!isProcessing ? `onclick="viewDocument('${doc.id}')"` : ''}>
+                                    <div class="doc-image-preview" style="position: relative; flex-shrink: 0;">
                                         <i class="fas fa-image" style="color: ${isFailed ? '#dc2626' : '#4F46E5'}; font-size: 1.25rem;" 
                                            ${doc.fileUrl || doc.downloadURL || doc.imageBase64 ? `onmouseover="showImagePreview(event, '${doc.fileUrl || doc.downloadURL || doc.imageBase64}')" onmouseout="hideImagePreview()"` : ''}></i>
                                     </div>
-                                    <span style="font-weight: 500; color: ${isFailed ? '#dc2626' : '#1f2937'};" 
+                                    <span style="font-weight: 500; color: ${isFailed ? '#dc2626' : '#1f2937'}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 120px;" 
                                           ${doc.fileUrl || doc.downloadURL || doc.imageBase64 ? `onmouseover="showImagePreview(event, '${doc.fileUrl || doc.downloadURL || doc.imageBase64}')" onmouseout="hideImagePreview()"` : ''}>
                                         ${doc.name || doc.fileName || '未命名'}
                                     </span>
@@ -2769,36 +2879,36 @@
                             
                             <!-- 商戶名稱 -->
                             <td class="document-vendor-cell" style="padding: 1rem;">
-                                <div style="color: #1f2937; font-weight: 600; line-height: 1.6;">${vendor}</div>
+                                <div style="color: #1f2937; font-weight: 600; line-height: 1.6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 120px;">${vendor}</div>
                             </td>
                             
                             <!-- 開支類別 -->
                             <td class="document-type-cell" style="padding: 1rem;">
-                                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <span style="font-size: 0.875rem; color: #4b5563; background: #f3f4f6; padding: 4px 8px; border-radius: 6px;">${expenseCategory}</span>
+                                <div style="display: flex; align-items: center; gap: 0.5rem; overflow: hidden;">
+                                    <span style="font-size: 0.875rem; color: #4b5563; background: #f3f4f6; padding: 4px 8px; border-radius: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 120px;">${expenseCategory}</span>
                                 </div>
                             </td>
                             
                             <!-- 扣稅可能性 -->
-                            <td style="padding: 1rem;">
-                                <span title="${taxReason}" style="padding: 0.375rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 600; white-space: nowrap; background: ${taxBg}; color: ${taxColor}; cursor: help;">
+                            <td style="padding: 1rem; text-align: center;">
+                                <span title="${taxReason}" style="padding: 0.375rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; background: ${taxBg}; color: ${taxColor}; cursor: help; display: inline-block;">
                                     ${taxDeductibility}
                                 </span>
                             </td>
                             
                             <!-- 總金額 -->
-                            <td class="document-amount-cell" style="padding: 1rem; text-align: right; min-width: 120px;">
-                                <div style="font-weight: 700; color: #1f2937; font-size: 1rem; line-height: 1.6; white-space: nowrap;">${amountDisplay}</div>
+                            <td class="document-amount-cell" style="padding: 1rem; text-align: right; min-width: 60px;">
+                                <div style="font-weight: 700; color: #1f2937; font-size: 0.9rem; line-height: 1.6; white-space: nowrap;">${amountDisplay}</div>
                             </td>
                             
                             <!-- 收據日期 -->
                             <td class="document-date-cell" style="padding: 1rem;">
-                                <span style="color: #374151;">${date}</span>
+                                <span style="color: #374151; white-space: nowrap; font-size: 0.75rem;">${date}</span>
                             </td>
                             
                             <!-- 上傳時間 -->
-                            <td style="padding: 1rem;">
-                                <span style="color: #6b7280; font-size: 0.875rem;">${uploadDate}</span>
+                            <td style="padding: 1rem; display: none;">
+                                <span style="color: #6b7280; font-size: 0.75rem; white-space: nowrap;">${uploadDate}</span>
                             </td>
                             
                             <!-- 操作 -->
