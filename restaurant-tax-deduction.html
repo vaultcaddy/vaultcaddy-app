@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- SEO Meta Tags 專為餐飲業優化 -->
+    <title>香港餐廳/茶餐廳報稅神器｜街市買餸單自動分類 - VaultCaddy</title>
+    <meta name="description" content="專為香港餐飲業（茶餐廳、冰室、Cafe）設計的收據管理工具。店員手機一拍，AI 自動識別街市手寫單、凍肉單，按 IRD 標準分類 Cost of Goods，幫老闆每年慳幾千蚊會計費。">
+    <meta name="keywords" content="香港餐廳報稅, 茶餐廳記帳, 街市買餸單報稅, 餐飲業會計, 餐廳收據管理, IRD 扣稅, VaultCaddy">
+    
+    <!-- Open Graph for Social Media -->
+    <meta property="og:title" content="香港餐廳/茶餐廳報稅神器｜街市買餸單自動分類">
+    <meta property="og:description" content="店員手機一拍，AI 自動識別街市手寫單、凍肉單，按 IRD 標準分類，幫老闆每年慳幾千蚊會計費。">
+    <meta property="og:type" content="website">
+    
+    <!-- 資源預連接 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+HK:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- 核心樣式 -->
+    <link rel="stylesheet" href="styles.css?v=20260329.4">
+    <link rel="stylesheet" href="user-menu-styles.css?v=20260329.4">
+    
+    <style>
+        :root {
+            --primary-color: #F59E0B; /* 餐飲業改用溫暖的橙色調 */
+            --primary-hover: #D97706;
+            --secondary-color: #10B981;
+            --text-main: #1F2937;
+            --text-light: #6B7280;
+            --bg-light: #FFFBEB; /* 配合橙色的淺背景 */
+        }
+        
+        body {
+            font-family: 'Noto Sans HK', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: var(--text-main);
+            line-height: 1.6;
+            background-color: #ffffff;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        /* 導航欄樣式覆蓋 */
+        .vaultcaddy-navbar {
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
+        }
+
+        /* Hero Section 專屬樣式 */
+        .restaurant-hero {
+            padding: 100px 20px 60px;
+            background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .restaurant-hero::before {
+            content: '🍜 ☕ 🥩 🥬';
+            position: absolute;
+            font-size: 8rem;
+            opacity: 0.05;
+            top: 10%;
+            left: 5%;
+            letter-spacing: 2rem;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: rgba(245, 158, 11, 0.1);
+            color: #D97706;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .hero-title {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #111827;
+            margin-bottom: 16px;
+            line-height: 1.2;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-title span {
+            color: var(--primary-color);
+            position: relative;
+        }
+
+        .hero-title span::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            left: 0;
+            width: 100%;
+            height: 8px;
+            background: rgba(245, 158, 11, 0.3);
+            z-index: -1;
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--text-light);
+            margin-bottom: 32px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--primary-color);
+            color: white;
+            padding: 16px 32px;
+            border-radius: 8px;
+            font-size: 1.125rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px rgba(245, 158, 11, 0.2);
+        }
+
+        .cta-button:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(245, 158, 11, 0.3);
+        }
+
+        /* 痛點計算機區塊 */
+        .calculator-section {
+            padding: 80px 20px;
+            background: white;
+        }
+
+        .calc-card {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            border: 1px solid #E5E7EB;
+            overflow: hidden;
+        }
+
+        .calc-header {
+            background: #1F2937;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .calc-body {
+            padding: 32px;
+        }
+
+        .loss-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 1px dashed #E5E7EB;
+        }
+
+        .loss-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .loss-icon {
+            width: 48px;
+            height: 48px;
+            background: #FEF2F2;
+            color: #EF4444;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .loss-content h4 {
+            margin: 0 0 8px 0;
+            font-size: 1.125rem;
+            color: #111827;
+        }
+
+        .loss-content p {
+            margin: 0;
+            color: #6B7280;
+            font-size: 0.9375rem;
+        }
+
+        .loss-amount {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #EF4444;
+            margin-top: 8px;
+        }
+
+        /* 專屬功能對比 */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 32px;
+            border-radius: 16px;
+            border: 1px solid #E5E7EB;
+            transition: transform 0.2s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary-color);
+            box-shadow: 0 10px 20px rgba(245, 158, 11, 0.05);
+        }
+
+        @media (max-width: 768px) {
+            .restaurant-hero { padding: 80px 16px 40px; }
+            .hero-title { font-size: 2rem; }
+            .hero-subtitle { font-size: 1rem; }
+            .loss-item { flex-direction: column; gap: 12px; }
+            .calc-body { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 導航欄佔位符 (復用主站導航) -->
+    <div id="navbar-placeholder" style="display: block !important; visibility: visible !important; opacity: 1 !important; width: 100% !important; position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; z-index: 999999; background: #ffffff !important; min-height: 60px;">
+        <nav class="vaultcaddy-navbar" style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; height: 60px !important; width: 100% !important; background: #ffffff !important; border-bottom: 1px solid #e5e7eb !important; display: flex !important; align-items: center !important; justify-content: space-between !important; padding: 0 1rem !important; z-index: 999999 !important; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;">
+            <div style="display: flex !important; align-items: center !important; gap: 0.5rem !important;">
+                <a href="index.html" style="display: flex !important; align-items: center !important; gap: 0.75rem !important; text-decoration: none !important; color: #1f2937 !important; font-weight: 600 !important; font-size: 1.125rem !important;">
+                    <div style="width: 32px !important; height: 32px !important; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border-radius: 8px !important; display: flex !important; align-items: center !important; justify-content: center !important; color: white !important; font-weight: 700 !important; font-size: 1.25rem !important;">V</div>
+                    <div class="desktop-text" style="display: flex !important; flex-direction: column !important;">
+                        <div style="color: #1f2937 !important; display: block !important; font-size: 1.125rem !important; font-weight: 600 !important; line-height: 1.2 !important;">VaultCaddy</div>
+                    </div>
+                </a>
+            </div>
+            <div style="display: flex !important; align-items: center !important; gap: 1rem !important;">
+                <a href="auth.html" style="display: inline-flex !important; align-items: center !important; gap: 0.5rem !important; background: var(--primary-color) !important; color: white !important; padding: 0.5rem 1rem !important; border-radius: 8px !important; text-decoration: none !important; font-weight: 500 !important; font-size: 0.875rem !important; white-space: nowrap !important;">免費試用 →</a>
+            </div>
+        </nav>
+    </div>
+
+    <!-- 首屏：直擊餐飲業痛點 -->
+    <section class="restaurant-hero">
+        <div class="hero-badge">餐飲業 / 茶餐廳 / Cafe 專用</div>
+        <h1 class="hero-title">街市手寫單、凍肉單<br>AI 幫你<span>自動分類報稅</span></h1>
+        <p class="hero-subtitle">伙記收工前 5 秒拍照，AI 讀懂「菜心、肥牛、洗潔精」，自動按 IRD 標準歸類 Cost of Goods。月底一鍵出 Excel，會計師唔使再追單。</p>
+        
+        <a href="auth.html" class="cta-button">
+            免費註冊，即享 30 張單據額度 <i class="fas fa-arrow-right"></i>
+        </a>
+        <p style="margin-top: 12px; font-size: 0.875rem; color: #6B7280;">無需信用卡 • 隨時取消</p>
+
+        <!-- 信任橫幅 -->
+        <div style="margin-top: 40px; display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; color: #4B5563; font-size: 0.875rem; font-weight: 600;">
+            <div style="display: flex; align-items: center; gap: 8px;"><i class="fas fa-check-circle" style="color: var(--secondary-color);"></i> 支援手寫單據</div>
+            <div style="display: flex; align-items: center; gap: 8px;"><i class="fas fa-check-circle" style="color: var(--secondary-color);"></i> 支援熱敏紙收據</div>
+            <div style="display: flex; align-items: center; gap: 8px;"><i class="fas fa-check-circle" style="color: var(--secondary-color);"></i> 符合 IRD 報稅標準</div>
+        </div>
+    </section>
+
+    <!-- 算帳區塊：為什麼要付費？ -->
+    <section class="calculator-section">
+        <div style="text-align: center; margin-bottom: 48px;">
+            <h2 style="font-size: 2.25rem; font-weight: 700; margin-bottom: 16px;">開餐廳，你每個月「唔見咗」幾多錢？</h2>
+            <p style="color: #6B7280; font-size: 1.125rem;">你付的不是軟體費，是買回漏報稅的損失和高昂的會計費。</p>
+        </div>
+
+        <div class="calc-card">
+            <div class="calc-header">
+                傳統「鞋盒裝單」的隱藏成本（每月）
+            </div>
+            <div class="calc-body">
+                <div class="loss-item">
+                    <div class="loss-icon"><i class="fas fa-receipt"></i></div>
+                    <div class="loss-content">
+                        <h4>單據遺失 / 熱敏紙褪色</h4>
+                        <p>伙記隨手塞櫃桶，或者熱敏紙放久了變白紙。保守估計每月遺失 $1,500 開支單據，按 16.5% 利得稅計，你白交了稅。</p>
+                        <div class="loss-amount">隱藏損失：約 $247 / 月</div>
+                    </div>
+                </div>
+                <div class="loss-item">
+                    <div class="loss-icon"><i class="fas fa-calculator"></i></div>
+                    <div class="loss-content">
+                        <h4>高昂的 Bookkeeping 費用</h4>
+                        <p>會計師要逐張手寫單、凍肉單幫你入機分類。如果交給他們「執單」，每年收費起碼貴 $5,000。</p>
+                        <div class="loss-amount">多付費用：約 $416 / 月</div>
+                    </div>
+                </div>
+                <div class="loss-item">
+                    <div class="loss-icon"><i class="fas fa-clock"></i></div>
+                    <div class="loss-content">
+                        <h4>老闆親自對單的時間</h4>
+                        <p>每個月花 5 小時對單、貼單、計數。老闆的時間用來研發新菜式或休息，價值遠超這幾個小時。</p>
+                        <div class="loss-amount">時間成本：無價</div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 32px; padding: 24px; background: #F0FDF4; border-radius: 12px; border: 1px solid #6EE7B7; text-align: center;">
+                    <h4 style="color: #059669; font-size: 1.25rem; margin: 0 0 8px 0;">使用 VaultCaddy 無限版</h4>
+                    <div style="font-size: 2rem; font-weight: 800; color: #047857; margin-bottom: 8px;">只需 $78 / 月</div>
+                    <p style="color: #065f46; margin: 0; font-weight: 500;">幫你執返每月最少 $600 的實質金錢，外加 5 小時休息時間！</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 解決「人」的惰性 -->
+    <section style="padding: 80px 20px; background: var(--bg-light);">
+        <div style="text-align: center; margin-bottom: 48px;">
+            <h2 style="font-size: 2.25rem; font-weight: 700; margin-bottom: 16px;">伙記嫌麻煩唔肯用？</h2>
+            <p style="color: #6B7280; font-size: 1.125rem;">我們懂。所以 VaultCaddy 設計到「零學習成本」。</p>
+        </div>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div style="font-size: 2.5rem; margin-bottom: 16px;">📱</div>
+                <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 12px;">店員端：免下載，掃碼即拍</h3>
+                <p style="color: #6B7280; margin: 0;">收銀機旁貼一張專屬 QR Code。伙記收工前用自己手機一掃，直接拍照上傳。<strong>不用下載 App，不用登入密碼，5秒搞定。</strong></p>
+            </div>
+            <div class="feature-card">
+                <div style="font-size: 2.5rem; margin-bottom: 16px;">🧠</div>
+                <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 12px;">老闆端：零跟進，AI 自動做</h3>
+                <p style="color: #6B7280; margin: 0;">單據上傳後，你不需要每天登入檢查。AI 會在後台自動將圖片轉文字，並識別這是「食材採購」還是「水電煤」。</p>
+            </div>
+            <div class="feature-card">
+                <div style="font-size: 2.5rem; margin-bottom: 16px;">📊</div>
+                <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 12px;">會計端：一鍵發送 Excel</h3>
+                <p style="color: #6B7280; margin: 0;">月底只需按一個掣，系統自動生成包含 IRD 扣稅評級的 Excel 報表。直接 WhatsApp 傳給會計師，他們最愛這種格式。</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 為什麼是我們 (USP) -->
+    <section style="padding: 80px 20px; background: white; text-align: center;">
+        <h2 style="font-size: 2.25rem; font-weight: 700; margin-bottom: 48px;">為什麼不用普通掃描 App 或 Excel？</h2>
+        
+        <div style="max-width: 800px; margin: 0 auto; text-align: left;">
+            <div style="display: flex; gap: 16px; margin-bottom: 24px; padding: 24px; background: #F9FAFB; border-radius: 12px;">
+                <i class="fas fa-times-circle" style="color: #EF4444; font-size: 1.5rem; margin-top: 4px;"></i>
+                <div>
+                    <h4 style="font-size: 1.125rem; font-weight: 700; margin: 0 0 8px 0;">自己打 Excel</h4>
+                    <p style="color: #6B7280; margin: 0;">浪費時間，打錯字會計師會追問。最慘的是，你根本不知道街市買的「洗潔精」和「豬肉」在報稅時要分開填。</p>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 16px; margin-bottom: 24px; padding: 24px; background: #F9FAFB; border-radius: 12px;">
+                <i class="fas fa-times-circle" style="color: #EF4444; font-size: 1.5rem; margin-top: 4px;"></i>
+                <div>
+                    <h4 style="font-size: 1.125rem; font-weight: 700; margin: 0 0 8px 0;">大型會計軟件 (如 Xero)</h4>
+                    <p style="color: #6B7280; margin: 0;">月費貴，介面複雜，那是給有專職會計的大公司用的。小店老闆用是「殺雞用牛刀」。</p>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 16px; padding: 24px; background: #FFFBEB; border: 1px solid #FCD34D; border-radius: 12px;">
+                <i class="fas fa-check-circle" style="color: var(--primary-color); font-size: 1.5rem; margin-top: 4px;"></i>
+                <div>
+                    <h4 style="font-size: 1.125rem; font-weight: 700; margin: 0 0 8px 0; color: #92400E;">VaultCaddy 的獨家武器</h4>
+                    <p style="color: #92400E; margin: 0;">我們是<strong>全港唯一內建 IRD 扣稅評級 AI</strong> 的小店工具。我們懂「街市買餸單」是 Cost of Goods。我們不是做掃描，我們是做<strong>「會計師的 AI 前置作業」</strong>。</p>
+                </div>
+            </div>
+        </div>
+        
+        <div style="margin-top: 48px;">
+            <a href="auth.html" class="cta-button">
+                立即開始免費試用
+            </a>
+        </div>
+    </section>
+
+    <!-- 簡單頁腳 -->
+    <footer style="background: #111827; color: #9CA3AF; padding: 40px 20px; text-align: center; font-size: 0.875rem;">
+        <div style="max-width: 1000px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+            <div>&copy; 2026 VaultCaddy. All rights reserved.</div>
+            <div>
+                <a href="index.html" style="color: #9CA3AF; text-decoration: none; margin-left: 16px;">返回主頁</a>
+                <a href="mailto:support@vaultcaddy.com" style="color: #9CA3AF; text-decoration: none; margin-left: 16px;">聯絡我們</a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
