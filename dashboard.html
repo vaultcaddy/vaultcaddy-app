@@ -829,6 +829,34 @@
 <link href="https://www.googletagmanager.com" rel="dns-prefetch"/>
 <link href="https://images.unsplash.com" rel="dns-prefetch"/>
 <link href="https://cdn.jsdelivr.net" rel="dns-prefetch"/>
+<!-- Mobile UI Upgrades -->
+<style>
+@media (max-width: 768px) {
+    /* Floating Action Button */
+    .mobile-fab {
+        display: flex !important;
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        width: 56px;
+        height: 56px;
+        border-radius: 28px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        z-index: 999;
+        cursor: pointer;
+    }
+}
+@media (min-width: 769px) {
+    .mobile-fab {
+        display: none !important;
+    }
+}
+</style>
 </head>
 <body class="auth-checking">
 <!-- 🔒 Auth 加載動畫 -->
@@ -888,31 +916,31 @@
 <div class="projects-header" style="display: flex; flex-direction: column; align-items: stretch; gap: 0.125rem; margin-bottom: 0;">
     
     <!-- 頂部概覽卡片 -->
-    <div class="overview-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 0.125rem;">
-        <div style="background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%); border-radius: 12px; padding: 0 0.25rem; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; overflow: hidden;">
-            <div style="font-size: 0.75rem; opacity: 0.9; margin-bottom: 0; position: relative; z-index: 1;">本月已收集單據</div>
-            <div style="font-size: 1.125rem; font-weight: 700; display: flex; align-items: baseline; gap: 0.25rem; position: relative; z-index: 1;">
-                <span id="dashboard-total-docs">0</span> <span style="font-size: 0.75rem; font-weight: 400; opacity: 0.8;">張</span>
+    <div class="overview-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 0.5rem;">
+        <div style="background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%); border-radius: 12px; padding: 0.75rem; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="font-size: 0.75rem; opacity: 0.9; margin-bottom: 0.25rem; position: relative; z-index: 1;">本月已收集單據</div>
+            <div style="font-size: 1.5rem; font-weight: 800; display: flex; align-items: baseline; gap: 0.25rem; position: relative; z-index: 1;">
+                <span id="dashboard-total-docs">0</span> <span style="font-size: 0.875rem; font-weight: 400; opacity: 0.8;">張</span>
             </div>
-            <div style="margin-top: 0; font-size: 0.65rem; background: rgba(255,255,255,0.2); padding: 0 0.25rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.125rem; position: relative; z-index: 1;">
+            <div style="margin-top: 0.5rem; font-size: 0.75rem; background: rgba(255,255,255,0.2); padding: 0.25rem 0.5rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.25rem; position: relative; z-index: 1; width: fit-content;">
                 <i class="fas fa-chart-line"></i> 數據即時同步中
             </div>
             <!-- 裝飾背景 -->
-            <i class="fas fa-receipt" style="position: absolute; right: -20px; bottom: -20px; font-size: 2.5rem; opacity: 0.1; transform: rotate(-15deg);"></i>
+            <i class="fas fa-receipt" style="position: absolute; right: -10px; bottom: -10px; font-size: 5rem; opacity: 0.1; transform: rotate(-15deg);"></i>
         </div>
         
-        <div style="background: white; border: 1px solid #E5E7EB; border-radius: 12px; padding: 0 0.25rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05); position: relative; overflow: hidden;">
-            <div style="font-size: 0.75rem; color: #6B7280; margin-bottom: 0; position: relative; z-index: 1;">預計可扣稅總額</div>
-            <div style="font-size: 1.125rem; font-weight: 700; color: #1F2937; display: flex; align-items: baseline; gap: 0.25rem; position: relative; z-index: 1;">
-                <span style="font-size: 0.75rem;">HK$</span> <span id="dashboard-total-tax">0</span>
+        <div style="background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%); border: 1px solid #a7f3d0; border-radius: 12px; padding: 0.5rem; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.1), 0 2px 4px -1px rgba(16, 185, 129, 0.06); position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="font-size: 0.75rem; color: #065f46; margin-bottom: 0; position: relative; z-index: 1; font-weight: 600;">預計可扣稅總額</div>
+            <div style="font-size: 1.5rem; font-weight: 800; color: #047857; display: flex; align-items: baseline; gap: 0.25rem; position: relative; z-index: 1; text-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                <span style="font-size: 0.875rem;">HK$</span> <span id="dashboard-total-tax">0</span>
             </div>
-            <div style="margin-top: 0; display: flex; gap: 0.25rem; position: relative; z-index: 1;">
-                <button onclick="exportCurrentMonth()" style="flex: 1; background: #10B981; color: white; border: none; padding: 0 0.25rem; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.125rem; font-size: 0.65rem; min-height: 20px;">
+            <div style="margin-top: 0.25rem; display: flex; gap: 0.25rem; position: relative; z-index: 1;">
+                <button onclick="exportCurrentMonth()" style="flex: 1; background: #059669; color: white; border: none; padding: 0.25rem; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.125rem; font-size: 0.75rem; min-height: 24px; box-shadow: 0 2px 4px rgba(5, 150, 105, 0.3);">
                     <i class="fas fa-file-excel"></i> 匯出本月 Excel
                 </button>
             </div>
             <!-- 裝飾背景 -->
-            <i class="fas fa-calculator" style="position: absolute; right: -10px; bottom: -10px; font-size: 6rem; color: #F3F4F6; z-index: 0;"></i>
+            <i class="fas fa-calculator" style="position: absolute; right: -10px; bottom: -10px; font-size: 5rem; color: rgba(16, 185, 129, 0.1); z-index: 0;"></i>
         </div>
     </div>
 
@@ -1876,5 +1904,9 @@
 </main>
     <!-- Google Analytics 事件跟踪 -->
     <script src="/ga-event-tracking.js"></script>
+<!-- Mobile FAB -->
+<div class="mobile-fab" onclick="window.location.href='firstproject.html">
+<i class="fas fa-plus"></i>
+</div>
 </body>
 </html>
