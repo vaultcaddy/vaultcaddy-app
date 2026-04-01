@@ -171,14 +171,22 @@ class VaultCaddyNavbar {
                         height: 50px !important;
                         min-height: 50px !important;
                     }
-                    .desktop-nav-links {
+                    #main-navbar .desktop-nav-links {
                         display: none !important; /* 手機版隱藏中間的功能/價格/儀表板連結 */
                     }
                     #main-navbar .mobile-menu-btn {
                         display: block !important;
                     }
+                    #mobile-dropdown {
+                        display: none !important;
+                    }
                     #mobile-dropdown.active {
                         display: flex !important;
+                        flex-direction: column !important;
+                    }
+                    #mobile-dropdown.active {
+                        display: flex !important;
+                        flex-direction: column !important;
                     }
                     #main-navbar > div:nth-child(1) .desktop-text {
                         display: none !important; /* 手機版隱藏 VaultCaddy 文字，只留 V logo */
@@ -192,24 +200,30 @@ class VaultCaddyNavbar {
                     #main-navbar .user-menu-item i {
                         font-size: 1.2rem !important;
                     }
+                    #main-navbar .desktop-nav-links {
+                        display: none !important;
+                    }
                 }
                 /* 桌面版導航欄樣式優化 */
                 @media (min-width: 769px) {
-                    .desktop-nav-links {
+                    #main-navbar .desktop-nav-links {
                         display: flex !important;
+                        align-items: center !important;
+                        gap: 2rem !important;
+                        margin-right: 2rem !important;
                     }
                     /* 確保中間的導航連結在桌面版正確顯示且不重疊 */
                     #main-navbar > div:nth-child(2) {
                         flex: 1;
                         justify-content: flex-end;
                     }
-                    .desktop-nav-links {
-                        margin-right: 2rem;
-                    }
                     #main-navbar .mobile-menu-btn {
                         display: none !important;
                     }
                     #mobile-dropdown {
+                        display: none !important;
+                    }
+                    #mobile-dropdown.active {
                         display: none !important;
                     }
                 }
@@ -227,13 +241,13 @@ class VaultCaddyNavbar {
                     </a>
                 </div>
                 <div style="display: flex !important; align-items: center !important; gap: 1rem !important; z-index: 10000 !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; height: 100% !important; justify-content: flex-end !important; flex: 1 !important;">
-                    <div class="desktop-nav-links" style="display: flex !important; align-items: center !important; gap: 2rem !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; height: 100% !important; margin-right: 1.5rem !important;">
+                    <div class="desktop-nav-links" style="visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; height: 100% !important;">
                         <a href="index.html#features" style="color: #4b5563 !important; text-decoration: none !important; font-size: 0.9375rem !important; font-weight: 500 !important; transition: color 0.2s !important; visibility: visible !important; opacity: 1 !important; display: flex !important; pointer-events: auto !important; cursor: pointer !important; align-items: center !important; height: 100% !important;">功能</a>
                         <a href="index.html#pricing" style="color: #4b5563 !important; text-decoration: none !important; font-size: 0.9375rem !important; font-weight: 500 !important; transition: color 0.2s !important; visibility: visible !important; opacity: 1 !important; display: flex !important; pointer-events: auto !important; cursor: pointer !important; align-items: center !important; height: 100% !important;">價格</a>
                         <a href="dashboard.html" style="color: #4b5563 !important; text-decoration: none !important; font-size: 0.9375rem !important; font-weight: 500 !important; transition: color 0.2s !important; visibility: visible !important; opacity: 1 !important; display: flex !important; pointer-events: auto !important; cursor: pointer !important; align-items: center !important; height: 100% !important;">儀表板</a>
                     </div>
                     <!-- Hamburger Menu for Mobile -->
-                    <div class="mobile-menu-btn" style="display: none !important; cursor: pointer; padding: 0.5rem; z-index: 10001;" onclick="document.getElementById('mobile-dropdown').classList.toggle('active')">
+                    <div class="mobile-menu-btn" style="cursor: pointer; padding: 0.5rem; z-index: 10001;" onclick="const dropdown = document.getElementById('mobile-dropdown'); if(dropdown) { dropdown.classList.toggle('active'); if(dropdown.classList.contains('active')) { dropdown.style.setProperty('display', 'flex', 'important'); } else { dropdown.style.setProperty('display', 'none', 'important'); } }">
                         <i class="fas fa-bars" style="font-size: 1.25rem; color: #4b5563;"></i>
                     </div>
                     
@@ -254,21 +268,37 @@ class VaultCaddyNavbar {
         // 為了確保不覆蓋靜態導航欄，我們將動態導航欄附加到容器中
         const existingMainNavbar = navbarPlaceholder.querySelector('#main-navbar');
         if (existingMainNavbar) {
-            existingMainNavbar.outerHTML = navbarHTML;
-        } else {
-            // 隱藏所有現有的靜態導航欄
-            const staticNavs = navbarPlaceholder.querySelectorAll('nav:not(#main-navbar)');
-            staticNavs.forEach(nav => {
-                nav.style.setProperty('display', 'none', 'important');
-                nav.style.setProperty('opacity', '0', 'important');
-                nav.style.setProperty('visibility', 'hidden', 'important');
-                nav.style.setProperty('z-index', '-1', 'important');
-                nav.remove(); // 確保移除
-            });
-            // 清除可能殘留的文本節點或其他元素
-            navbarPlaceholder.innerHTML = '';
-            navbarPlaceholder.innerHTML = navbarHTML; // 直接替換，因為我們已經移除了靜態導航欄
+            existingMainNavbar.remove();
         }
+        
+        // 隱藏靜態導航欄（如果存在）
+        const staticNavbar = navbarPlaceholder.querySelector('nav:not(#main-navbar)');
+        if (staticNavbar) {
+            staticNavbar.style.setProperty('display', 'none', 'important');
+            staticNavbar.remove(); // 直接移除靜態導航欄
+        }
+        
+        // 確保所有靜態導航欄都被移除
+        const allStaticNavs = document.querySelectorAll('.vaultcaddy-navbar:not(#main-navbar)');
+        allStaticNavs.forEach(nav => {
+            nav.style.setProperty('display', 'none', 'important');
+            nav.remove();
+        });
+        if (existingMainNavbar) {
+            existingMainNavbar.remove();
+        }
+        
+        // 隱藏所有現有的靜態導航欄
+        const staticNavs = navbarPlaceholder.querySelectorAll('nav:not(#main-navbar)');
+        staticNavs.forEach(nav => {
+            nav.style.setProperty('display', 'none', 'important');
+            nav.style.setProperty('opacity', '0', 'important');
+            nav.style.setProperty('visibility', 'hidden', 'important');
+            nav.style.setProperty('z-index', '-1', 'important');
+            nav.remove(); // 確保移除
+        });
+        // 清除可能殘留的文本節點或其他元素
+        navbarPlaceholder.innerHTML = navbarHTML;
         console.log('✅ 導航欄 HTML 已插入，長度:', navbarHTML.length);
         
         // 強制移除可能隱藏導航欄的類或樣式
@@ -283,7 +313,7 @@ class VaultCaddyNavbar {
         // 如果沒有找到 innerNav，這意味著插入失敗，我們需要重新插入
         if (!innerNav) {
             console.error('❌ 導航欄插入失敗，嘗試重新插入');
-            navbarPlaceholder.innerHTML = navbarHTML;
+            navbarPlaceholder.insertAdjacentHTML('beforeend', navbarHTML);
             innerNav = navbarPlaceholder.querySelector('nav#main-navbar');
         }
         
@@ -363,6 +393,85 @@ class VaultCaddyNavbar {
             nav.style.setProperty('z-index', '-1', 'important');
             nav.remove(); // 直接移除靜態導航欄
         });
+        
+        // 確保靜態下拉選單被隱藏
+        const staticDropdowns = document.querySelectorAll('#mobile-dropdown-static');
+        staticDropdowns.forEach(dropdown => {
+            dropdown.style.setProperty('display', 'none', 'important');
+            dropdown.remove();
+        });
+        
+        const staticDropdown2 = document.getElementById('mobile-dropdown');
+        if (staticDropdown2 && !staticDropdown2.closest('#main-navbar')) {
+            staticDropdown2.style.setProperty('display', 'none', 'important');
+            staticDropdown2.remove();
+        }
+        
+        // 確保靜態漢堡菜單按鈕被隱藏
+        const staticMobileMenuBtns1 = document.querySelectorAll('.mobile-menu-btn');
+        staticMobileMenuBtns1.forEach(btn => {
+            if (!btn.closest('#main-navbar')) {
+                btn.style.setProperty('display', 'none', 'important');
+                btn.remove();
+            }
+        });
+        
+        // 確保靜態 desktop-links 被隱藏
+        const staticDesktopLinks = document.querySelectorAll('.desktop-links');
+        staticDesktopLinks.forEach(links => {
+            if (!links.closest('#main-navbar')) {
+                links.style.setProperty('display', 'none', 'important');
+                links.remove();
+            }
+        });
+        
+        // 確保靜態 .desktop-nav-links 被隱藏
+        const staticDesktopNavLinks = document.querySelectorAll('.desktop-nav-links');
+        staticDesktopNavLinks.forEach(links => {
+            if (!links.closest('#main-navbar')) {
+                links.style.setProperty('display', 'none', 'important');
+                links.remove();
+            }
+        });
+        
+        // 確保 main-navbar 的漢堡菜單按鈕在手機版顯示
+        const mainMobileMenuBtn = document.querySelector('#main-navbar .mobile-menu-btn');
+        if (mainMobileMenuBtn) {
+            if (window.innerWidth <= 768) {
+                mainMobileMenuBtn.style.setProperty('display', 'block', 'important');
+            } else {
+                mainMobileMenuBtn.style.setProperty('display', 'none', 'important');
+            }
+            
+            // 監聽視窗大小改變
+            window.addEventListener('resize', () => {
+                if (window.innerWidth <= 768) {
+                    mainMobileMenuBtn.style.setProperty('display', 'block', 'important');
+                } else {
+                    mainMobileMenuBtn.style.setProperty('display', 'none', 'important');
+                    // 桌面版自動關閉下拉選單
+                    const dropdown = document.getElementById('mobile-dropdown');
+                    if (dropdown) {
+                        dropdown.classList.remove('active');
+                        dropdown.style.setProperty('display', 'none', 'important');
+                    }
+                }
+            });
+        }
+        
+        // 確保靜態漢堡菜單按鈕被隱藏
+        const staticMobileMenuBtns2 = document.querySelectorAll('.mobile-menu-btn:not(#main-navbar .mobile-menu-btn)');
+        staticMobileMenuBtns2.forEach(btn => {
+            btn.style.setProperty('display', 'none', 'important');
+            btn.remove();
+        });
+        
+        // 確保動態下拉選單預設隱藏
+        const dynamicDropdown = document.getElementById('mobile-dropdown');
+        if (dynamicDropdown) {
+            dynamicDropdown.classList.remove('active');
+            dynamicDropdown.style.setProperty('display', 'none', 'important');
+        }
         
         // 確保 main-navbar 顯示
         const mainNav = navbarPlaceholder.querySelector('#main-navbar');
