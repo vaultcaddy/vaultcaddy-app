@@ -206,6 +206,12 @@ class VaultCaddyNavbar {
                     .desktop-nav-links {
                         margin-right: 2rem;
                     }
+                    #main-navbar .mobile-menu-btn {
+                        display: none !important;
+                    }
+                    #mobile-dropdown {
+                        display: none !important;
+                    }
                 }
             </style>
             <nav class="vaultcaddy-navbar" id="main-navbar" style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; height: 60px; width: 100% !important; background: #ffffff !important; border-bottom: 1px solid #e5e7eb !important; display: flex !important; align-items: center !important; justify-content: space-between !important; padding: 0 2rem !important; z-index: 999999 !important; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; box-sizing: border-box !important; margin: 0 !important; overflow: visible !important;">
@@ -236,7 +242,7 @@ class VaultCaddyNavbar {
                     </div>
                 </div>
                 <!-- Mobile Dropdown Menu -->
-                <div id="mobile-dropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border-bottom: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); padding: 1rem; flex-direction: column; gap: 1rem; z-index: 99999;">
+                <div id="mobile-dropdown" style="display: none !important; position: absolute; top: 100%; left: 0; right: 0; background: white; border-bottom: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); padding: 1rem; flex-direction: column; gap: 1rem; z-index: 99999;">
                     <a href="index.html#features" style="color: #4b5563; text-decoration: none; font-weight: 500; padding: 0.5rem 0; border-bottom: 1px solid #f3f4f6;">功能</a>
                     <a href="index.html#pricing" style="color: #4b5563; text-decoration: none; font-weight: 500; padding: 0.5rem 0; border-bottom: 1px solid #f3f4f6;">價格</a>
                     <a href="dashboard.html" style="color: #4b5563; text-decoration: none; font-weight: 500; padding: 0.5rem 0; border-bottom: 1px solid #f3f4f6;">儀表板</a>
