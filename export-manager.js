@@ -12,14 +12,14 @@
 class ExportManager {
     constructor() {
         this.version = '3.0.0';
-        this.supportedFormats = ['csv'];
+        this.supportedFormats = ['csv', 'xero'];
     }
     
     /**
      * 導出發票數據
      * 
      * @param {Array} invoices - 發票列表
-     * @param {String} format - 導出格式 (csv)
+     * @param {String} format - 導出格式 (csv 或 xero)
      * @param {Object} options - 導出選項
      * @returns {Blob} 導出文件
      */
@@ -30,6 +30,10 @@ class ExportManager {
         
         if (!this.supportedFormats.includes(format)) {
             throw new Error(`不支持的導出格式: ${format}`);
+        }
+        
+        if (format === 'xero') {
+            return this.exportToXeroCSV(invoices);
         }
         
         return this.exportToCSV(invoices, options);
@@ -66,7 +70,8 @@ class ExportManager {
                 '貨幣': data.currency || 'HKD',
                 'IRD 扣稅可能性': taxInfo.level || '',
                 '扣稅原因說明': taxInfo.reason || '',
-                '備註': data.notes || ''
+                '備註': data.notes || '',
+                '收據圖片連結': invoice.fileUrl || invoice.url || ''
             };
         });
         
@@ -107,7 +112,8 @@ class ExportManager {
             {wch: 8},  // 貨幣
             {wch: 15}, // 扣稅可能性
             {wch: 40}, // 說明
-            {wch: 20}  // 備註
+            {wch: 20}, // 備註
+            {wch: 50}  // 圖片連結
         ];
         ws['!cols'] = wscols;
         
@@ -140,7 +146,8 @@ class ExportManager {
             '貨幣',
             'IRD 扣稅可能性',
             '扣稅原因說明',
-            '備註'
+            '備註',
+            '收據圖片連結'
         ];
         
         const rows = invoices.map(invoice => {
@@ -156,7 +163,8 @@ class ExportManager {
                 this.escapeCSV(data.currency || 'HKD'),
                 this.escapeCSV(taxInfo.level || ''),
                 this.escapeCSV(taxInfo.reason || ''),
-                this.escapeCSV(data.notes || '')
+                this.escapeCSV(data.notes || ''),
+                this.escapeCSV(invoice.fileUrl || invoice.url || '')
             ].join(',');
         });
         
@@ -168,6 +176,64 @@ class ExportManager {
         
         console.log('✅ CSV 摘要格式導出完成');
         console.log(`   導出 ${invoices.length} 張發票`);
+        return blob;
+    }
+
+    /**
+     * 導出為 Xero 專用匯入 CSV 格式
+     */
+    exportToXeroCSV(invoices) {
+        console.log('📊 導出為 Xero 專用 CSV 格式...');
+        
+        // Xero 官方要求的必備欄位 (Bank Statement Import format)
+        const headers = [
+            '*Date',
+            '*Amount',
+            'Payee',
+            'Description',
+            'Reference',
+            'Cheque Number'
+        ];
+        
+        const rows = invoices.map(invoice => {
+            const data = invoice.processedData || invoice;
+            
+            // 處理日期格式 (Xero 偏好 DD/MM/YYYY 或 MM/DD/YYYY)
+            // 假設我們原本的 date 是 YYYY-MM-DD
+            let formattedDate = data.date || '';
+            if (formattedDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                const parts = formattedDate.split('-');
+                formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`; // 轉換為 DD/MM/YYYY
+            }
+            
+            // 處理金額 (支出在 Xero 中通常是負數)
+            let amount = parseFloat(data.total_amount || data.total || data.totalAmount || 0);
+            // 假設收據都是支出，所以加上負號
+            amount = -Math.abs(amount);
+            
+            // 組合描述 (包含 AI 分類和圖片連結，方便會計師查閱)
+            const category = data.expense_category ? `[${data.expense_category}] ` : '';
+            const summary = data.items_summary || '';
+            const imgLink = invoice.fileUrl || invoice.url ? ` (Receipt: ${invoice.fileUrl || invoice.url})` : '';
+            const description = `${category}${summary}${imgLink}`;
+            
+            return [
+                this.escapeCSV(formattedDate),
+                amount,
+                this.escapeCSV(data.merchant_name || data.vendor || data.supplier || data.merchantName || ''),
+                this.escapeCSV(description),
+                this.escapeCSV(`VC-${Date.now().toString().slice(-6)}`), // 生成一個簡單的 Reference ID
+                '' // Cheque Number 留空
+            ].join(',');
+        });
+        
+        const csv = [headers.join(','), ...rows].join('\n');
+        
+        // 添加 BOM 以支持 Excel 正確顯示
+        const bom = '\uFEFF';
+        const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+        
+        console.log('✅ Xero CSV 導出完成');
         return blob;
     }
 

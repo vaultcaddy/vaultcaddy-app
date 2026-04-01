@@ -4353,9 +4353,19 @@
                 <button onclick="exportDocuments('universal_csv')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s; background: linear-gradient(90deg, rgba(16,185,129,0.05) 0%, transparent 100%);">
                     <i class="fas fa-file-excel" style="color: #10b981; width: 20px;"></i>
                     <div>
-                        <div style="font-weight: 600;">匯出 Excel</div>
-                        <div style="font-size: 0.75rem; color: #059669; font-weight: 500;">適合會計師報稅使用</div>
+                        <div style="font-weight: 600;">匯出 Excel (附圖片)</div>
+                        <div style="font-size: 0.75rem; color: #059669; font-weight: 500;">最適合香港會計師報稅</div>
                     </div>
+                </button>
+                
+                <button onclick="exportDocuments('xero')" class="export-menu-item" style="width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #374151; transition: background 0.2s; margin-top: 4px;">
+                    <i class="fas fa-cloud-upload-alt" style="color: #13b5ea; width: 20px;"></i>
+                    <div>
+                        <div style="font-weight: 600;">Xero 專用匯入檔</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">一鍵匯入 Xero 系統</div>
+                    </div>
+                </button>
+            `;
                 </button>
             `;
             
@@ -4568,6 +4578,11 @@
                     const fileName = `VaultCaddy_Export_${new Date().toISOString().split('T')[0]}.${ext}`;
                     window.exportManager.downloadFile(blob, fileName);
                     alert(`✅ 導出成功！\n已下載 1 個 ${fileType} 文件`);
+                } else if (format === 'xero') {
+                    const blob = window.exportManager.exportToXeroCSV(docsToExport);
+                    const fileName = `VaultCaddy_Xero_Import_${new Date().toISOString().split('T')[0]}.csv`;
+                    window.exportManager.downloadFile(blob, fileName);
+                    alert(`✅ Xero 專用檔導出成功！\n請將此 CSV 檔案直接匯入 Xero 系統`);
                 } else {
                     alert('不支持的導出格式');
                 }

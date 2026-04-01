@@ -49,7 +49,7 @@ window.StripeManager = {
                         symbol: 'HK$'
                     }
                 },
-                paymentLink: 'https://buy.stripe.com/dRmeVecXW9h8a9o0RYf7i0c' // 💰 真實 Stripe Payment Link
+                paymentLink: 'https://buy.stripe.com/dRmeVecXW9h8a9o0RYf7i0c' // 💰 真實 Stripe Payment Link (月費)
             },
             // 年費方案：無限 Credits
             yearly: {
@@ -69,7 +69,7 @@ window.StripeManager = {
                         symbol: 'HK$'
                     }
                 },
-                paymentLink: 'https://buy.stripe.com/REPLACE_WITH_YOUR_YEARLY_LINK' // TODO: 替換為實際 Stripe Payment Link
+                paymentLink: 'https://buy.stripe.com/dRmaEU6vC2WM4OQ28a' // 💰 真實 Stripe Payment Link (年費)
             },
             
             // 舊方案（保留兼容性）
@@ -199,8 +199,19 @@ window.StripeManager = {
         
         localStorage.setItem('pendingPurchase', JSON.stringify(purchaseData));
         
+        // 獲取當前用戶的 Email (如果已登入)
+        const userEmail = window.simpleAuth?.currentUser?.email || '';
+        
+        // 構建帶有 prefilled_email 的 Stripe 連結
+        let finalPaymentLink = product.paymentLink;
+        if (userEmail) {
+            // 檢查連結是否已經有參數
+            const separator = finalPaymentLink.includes('?') ? '&' : '?';
+            finalPaymentLink = `${finalPaymentLink}${separator}prefilled_email=${encodeURIComponent(userEmail)}`;
+        }
+        
         // 跳轉到 Stripe Payment Link
-        window.location.href = product.paymentLink;
+        window.location.href = finalPaymentLink;
     },
     
     /**
@@ -246,10 +257,19 @@ window.StripeManager = {
         
         localStorage.setItem('pendingSubscription', JSON.stringify(subscriptionData));
         
+        // 獲取當前用戶的 Email (如果已登入)
+        const userEmail = window.simpleAuth?.currentUser?.email || '';
+        
+        // 構建帶有 prefilled_email 的 Stripe 連結
+        let finalPaymentLink = plan.paymentLink;
+        if (userEmail) {
+            // 檢查連結是否已經有參數
+            const separator = finalPaymentLink.includes('?') ? '&' : '?';
+            finalPaymentLink = `${finalPaymentLink}${separator}prefilled_email=${encodeURIComponent(userEmail)}`;
+        }
+        
         // 跳轉到 Stripe Payment Link
-        window.location.href = plan.paymentLink;
-    }
-        window.location.href = plan.paymentLink;
+        window.location.href = finalPaymentLink;
     },
     
     /**

@@ -163,15 +163,15 @@ class VaultCaddyNavbar {
                 /* 手機版導航欄樣式優化 */
                 @media (max-width: 768px) {
                     #main-navbar {
-                        padding: 0 0.25rem !important;
-                        height: 36px !important;
-                        min-height: 36px !important;
+                        padding: 0 1rem !important;
+                        height: 50px !important;
+                        min-height: 50px !important;
                     }
                     .vaultcaddy-navbar {
-                        height: 36px !important;
-                        min-height: 36px !important;
+                        height: 50px !important;
+                        min-height: 50px !important;
                     }
-                    #main-navbar > div:nth-child(2) > div:first-child {
+                    .desktop-nav-links {
                         display: none !important; /* 手機版隱藏中間的功能/價格/儀表板連結 */
                     }
                     #main-navbar .mobile-menu-btn {
@@ -179,7 +179,6 @@ class VaultCaddyNavbar {
                     }
                     #mobile-dropdown.active {
                         display: flex !important;
-                    }
                     }
                     #main-navbar > div:nth-child(1) .desktop-text {
                         display: none !important; /* 手機版隱藏 VaultCaddy 文字，只留 V logo */
@@ -191,7 +190,21 @@ class VaultCaddyNavbar {
                         padding: 0.25rem !important;
                     }
                     #main-navbar .user-menu-item i {
-                        font-size: 1rem !important;
+                        font-size: 1.2rem !important;
+                    }
+                }
+                /* 桌面版導航欄樣式優化 */
+                @media (min-width: 769px) {
+                    .desktop-nav-links {
+                        display: flex !important;
+                    }
+                    /* 確保中間的導航連結在桌面版正確顯示且不重疊 */
+                    #main-navbar > div:nth-child(2) {
+                        flex: 1;
+                        justify-content: flex-end;
+                    }
+                    .desktop-nav-links {
+                        margin-right: 2rem;
                     }
                 }
             </style>
@@ -207,8 +220,8 @@ class VaultCaddyNavbar {
                         </div>
                     </a>
                 </div>
-                <div style="display: flex !important; align-items: center !important; gap: 2rem !important; z-index: 10000 !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; height: 100% !important;">
-                    <div style="display: flex !important; align-items: center !important; gap: 2rem !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; height: 100% !important;">
+                <div style="display: flex !important; align-items: center !important; gap: 1rem !important; z-index: 10000 !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; height: 100% !important; justify-content: flex-end !important; flex: 1 !important;">
+                    <div class="desktop-nav-links" style="display: flex !important; align-items: center !important; gap: 2rem !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; height: 100% !important; margin-right: 1.5rem !important;">
                         <a href="index.html#features" style="color: #4b5563 !important; text-decoration: none !important; font-size: 0.9375rem !important; font-weight: 500 !important; transition: color 0.2s !important; visibility: visible !important; opacity: 1 !important; display: flex !important; pointer-events: auto !important; cursor: pointer !important; align-items: center !important; height: 100% !important;">功能</a>
                         <a href="index.html#pricing" style="color: #4b5563 !important; text-decoration: none !important; font-size: 0.9375rem !important; font-weight: 500 !important; transition: color 0.2s !important; visibility: visible !important; opacity: 1 !important; display: flex !important; pointer-events: auto !important; cursor: pointer !important; align-items: center !important; height: 100% !important;">價格</a>
                         <a href="dashboard.html" style="color: #4b5563 !important; text-decoration: none !important; font-size: 0.9375rem !important; font-weight: 500 !important; transition: color 0.2s !important; visibility: visible !important; opacity: 1 !important; display: flex !important; pointer-events: auto !important; cursor: pointer !important; align-items: center !important; height: 100% !important;">儀表板</a>

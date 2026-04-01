@@ -429,20 +429,20 @@ The FIRST transaction row MUST contain one of these keywords in description:
 {"date":"2023/07/07","description":"SIC ALIPAY HK LTD","debit":21.62,"credit":0,"balance":35667.34}
 `;
         } else {
-            // 發票 (香港小店專用 IRD 扣稅分類版)
-            return `你是一個專業的香港執業會計師，專門為香港的小型餐飲店（如茶飲店、小食店）和零售店處理帳務。
+            // 發票 (香港中小企專用 IRD 扣稅分類版)
+            return `你是一個專業的香港執業會計師，專門為香港的中小企（SME）、一人公司和零售店處理帳務。
 請分析這張收據/發票的圖片，提取關鍵資訊，並根據香港稅務局 (IRD) 的標準，評估這筆開支的「可扣稅可能性」。
 
 請嚴格以 JSON 格式輸出，不要包含任何其他文字或 Markdown 標記。
 
 必須提取並輸出的 JSON 結構如下：
 {
-  "merchant_name": "商戶名稱（如：百佳超級市場、中電、HKT、某某茶葉批發）",
+  "merchant_name": "商戶名稱（如：百佳超級市場、中電、HKT、某某批發）",
   "date": "收據日期（格式：YYYY-MM-DD）",
   "total_amount": "總金額（純數字，不含貨幣符號）",
   "currency": "貨幣（如：HKD, USD，預設為 HKD）",
   "expense_category": "開支類別（請從下方列表中選擇最合適的一項）",
-  "items_summary": "購買項目簡述（用 5-10 個字總結，例如：茶葉及糖漿批發、店鋪電費、員工聚餐）",
+  "items_summary": "購買項目簡述（用 5-10 個字總結，例如：辦公室文具、店鋪電費、客戶聚餐）",
   "tax_deductibility": {
     "level": "High, Medium, Low, 或 None",
     "reason": "給會計師的簡短說明（為什麼給這個評級）"
@@ -450,15 +450,17 @@ The FIRST transaction row MUST contain one of these keywords in description:
 }
 
 【開支類別 (expense_category) 選擇列表】：
-1. Cost of Goods Sold (銷貨成本) - 如：食材、茶葉、包裝杯、外賣袋
+1. Cost of Goods Sold (銷貨成本) - 如：進貨、原材料、包裝
 2. Utilities (水電煤) - 如：水費、電費、煤氣費
-3. Rent & Rates (租金及差餉) - 如：店鋪租金、管理費
+3. Rent & Rates (租金及差餉) - 如：店鋪/辦公室租金、管理費
 4. Salary & MPF (薪金及強積金)
-5. Office & Admin (辦公室及行政) - 如：文具、打印紙、上網費、電話費
+5. Office & Admin (辦公室及行政) - 如：文具、打印紙、上網費、電話費、雲端軟體訂閱
 6. Marketing & Promotion (市場推廣) - 如：FB/IG 廣告費、傳單印製
-7. Transportation (交通費) - 如：進貨車費、Gogovan
-8. Meals & Entertainment (交際費) - 如：請客吃飯、員工聚餐
-9. Personal/Uncategorized (私人/未能分類) - 任何看起來像老闆私人消費的項目
+7. Transportation & Motor (交通及汽車) - 如：的士、Gogovan、入油費、停車費
+8. Meals & Entertainment (交際費) - 如：與客戶開會吃飯、員工聚餐
+9. Repairs & Maintenance (維修及保養) - 如：冷氣維修、電腦維修
+10. Professional Fees (專業費用) - 如：會計費、商業登記費(BR)、法律諮詢
+11. Personal/Uncategorized (私人/未能分類) - 任何看起來像老闆私人消費的項目
 
 【扣稅可能性 (tax_deductibility) 評估指南】：
 根據香港 IRD 第 16(1) 條，只有「為產生應評稅利潤而招致的各項開支」才能扣稅。
