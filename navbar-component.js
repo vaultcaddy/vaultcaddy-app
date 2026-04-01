@@ -385,8 +385,8 @@ class VaultCaddyNavbar {
         this.setupGoogleSignInButton();
         
         // 確保預設靜態導航欄被隱藏（如果存在）
-        const staticNavs = navbarPlaceholder.querySelectorAll('nav:not(#main-navbar)');
-        staticNavs.forEach(nav => {
+        const extraStaticNavs = navbarPlaceholder.querySelectorAll('nav:not(#main-navbar)');
+        extraStaticNavs.forEach(nav => {
             nav.style.setProperty('display', 'none', 'important');
             nav.style.setProperty('opacity', '0', 'important');
             nav.style.setProperty('visibility', 'hidden', 'important');
