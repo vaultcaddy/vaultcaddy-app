@@ -318,19 +318,27 @@ class VaultCaddyNavbar {
             const allChildren = innerNav.querySelectorAll('*');
             allChildren.forEach(child => {
                 if (child.id !== 'user-dropdown-menu' && !child.closest('#user-dropdown-menu')) {
+                    // 避免覆蓋由 CSS 媒體查詢控制的元素的 display 屬性
+                    const isResponsiveElement = child.classList.contains('desktop-only-link') || 
+                                                child.classList.contains('desktop-text') || 
+                                                child.classList.contains('desktop-nav-links') ||
+                                                child.classList.contains('mobile-menu-btn');
+                                                
                     child.classList.remove('hidden', 'invisible');
                     
-                    // 確保 a 標籤正確顯示
-                    if (child.tagName === 'A') {
-                        child.style.setProperty('display', 'inline-flex', 'important');
-                        child.style.setProperty('align-items', 'center', 'important');
-                    } else if (child.tagName === 'DIV') {
-                        child.style.setProperty('display', 'flex', 'important');
-                        child.style.setProperty('align-items', 'center', 'important');
-                    } else if (child.tagName === 'SPAN') {
-                        child.style.setProperty('display', 'inline-block', 'important');
-                    } else {
-                        child.style.setProperty('display', 'block', 'important');
+                    if (!isResponsiveElement) {
+                        // 確保標籤正確顯示
+                        if (child.tagName === 'A') {
+                            child.style.setProperty('display', 'inline-flex', 'important');
+                            child.style.setProperty('align-items', 'center', 'important');
+                        } else if (child.tagName === 'DIV') {
+                            child.style.setProperty('display', 'flex', 'important');
+                            child.style.setProperty('align-items', 'center', 'important');
+                        } else if (child.tagName === 'SPAN') {
+                            child.style.setProperty('display', 'inline-block', 'important');
+                        } else {
+                            child.style.setProperty('display', 'block', 'important');
+                        }
                     }
                     
                     child.style.setProperty('visibility', 'visible', 'important');
