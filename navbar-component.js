@@ -174,8 +174,11 @@ class VaultCaddyNavbar {
                     #main-navbar .desktop-nav-links {
                         display: none !important; /* 手機版隱藏中間的功能/價格/儀表板連結 */
                     }
+                    .desktop-only-link {
+                        display: none !important; /* 確保隱藏所有桌面專屬連結 */
+                    }
                     #main-navbar .mobile-menu-btn {
-                        display: block !important;
+                        display: block !important; /* 恢復顯示漢堡菜單 */
                     }
                     #mobile-dropdown {
                         display: none !important;
@@ -183,10 +186,8 @@ class VaultCaddyNavbar {
                     #mobile-dropdown.active {
                         display: flex !important;
                         flex-direction: column !important;
-                    }
-                    #mobile-dropdown.active {
-                        display: flex !important;
-                        flex-direction: column !important;
+                        top: 50px !important; /* 確保下拉選單在手機版導航欄正下方 */
+                        background: white !important; /* 確保背景為白色 */
                     }
                     #main-navbar > div:nth-child(1) .desktop-text {
                         display: none !important; /* 手機版隱藏 VaultCaddy 文字，只留 V logo */
@@ -200,17 +201,11 @@ class VaultCaddyNavbar {
                     #main-navbar .user-menu-item i {
                         font-size: 1.2rem !important;
                     }
-                    #main-navbar .desktop-nav-links {
-                        display: none !important;
-                    }
                 }
                 /* 桌面版導航欄樣式優化 */
                 @media (min-width: 769px) {
                     #main-navbar .desktop-nav-links {
-                        display: flex !important;
-                        align-items: center !important;
-                        gap: 2rem !important;
-                        margin-right: 2rem !important;
+                        display: none !important; /* 隱藏桌面版中間的功能/價格/儀表板連結 */
                     }
                     /* 確保中間的導航連結在桌面版正確顯示且不重疊 */
                     #main-navbar > div:nth-child(2) {
@@ -241,10 +236,7 @@ class VaultCaddyNavbar {
                     </a>
                 </div>
                 <div style="display: flex !important; align-items: center !important; gap: 1rem !important; z-index: 10000 !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; height: 100% !important; justify-content: flex-end !important; flex: 1 !important;">
-                    <div class="desktop-nav-links" style="visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; height: 100% !important;">
-                        <a href="index.html#features" style="color: #4b5563 !important; text-decoration: none !important; font-size: 0.9375rem !important; font-weight: 500 !important; transition: color 0.2s !important; visibility: visible !important; opacity: 1 !important; display: flex !important; pointer-events: auto !important; cursor: pointer !important; align-items: center !important; height: 100% !important;">功能</a>
-                        <a href="index.html#pricing" style="color: #4b5563 !important; text-decoration: none !important; font-size: 0.9375rem !important; font-weight: 500 !important; transition: color 0.2s !important; visibility: visible !important; opacity: 1 !important; display: flex !important; pointer-events: auto !important; cursor: pointer !important; align-items: center !important; height: 100% !important;">價格</a>
-                        <a href="dashboard.html" style="color: #4b5563 !important; text-decoration: none !important; font-size: 0.9375rem !important; font-weight: 500 !important; transition: color 0.2s !important; visibility: visible !important; opacity: 1 !important; display: flex !important; pointer-events: auto !important; cursor: pointer !important; align-items: center !important; height: 100% !important;">儀表板</a>
+                    <div class="desktop-nav-links" style="display: none !important;">
                     </div>
                     <!-- Hamburger Menu for Mobile -->
                     <div class="mobile-menu-btn" style="cursor: pointer; padding: 0.5rem; z-index: 10001;" onclick="const dropdown = document.getElementById('mobile-dropdown'); if(dropdown) { dropdown.classList.toggle('active'); if(dropdown.classList.contains('active')) { dropdown.style.setProperty('display', 'flex', 'important'); } else { dropdown.style.setProperty('display', 'none', 'important'); } }">
@@ -256,10 +248,7 @@ class VaultCaddyNavbar {
                     </div>
                 </div>
                 <!-- Mobile Dropdown Menu -->
-                <div id="mobile-dropdown" style="display: none !important; position: absolute; top: 100%; left: 0; right: 0; background: white; border-bottom: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); padding: 1rem; flex-direction: column; gap: 1rem; z-index: 99999;">
-                    <a href="index.html#features" style="color: #4b5563; text-decoration: none; font-weight: 500; padding: 0.5rem 0; border-bottom: 1px solid #f3f4f6;">功能</a>
-                    <a href="index.html#pricing" style="color: #4b5563; text-decoration: none; font-weight: 500; padding: 0.5rem 0; border-bottom: 1px solid #f3f4f6;">價格</a>
-                    <a href="dashboard.html" style="color: #4b5563; text-decoration: none; font-weight: 500; padding: 0.5rem 0; border-bottom: 1px solid #f3f4f6;">儀表板</a>
+                <div id="mobile-dropdown" style="display: none !important; position: absolute; top: 50px; left: 0; right: 0; background: white !important; border-bottom: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); padding: 1rem; flex-direction: column; gap: 1rem; z-index: 99999;">
                 </div>
             </nav>
         `;
@@ -530,13 +519,13 @@ class VaultCaddyNavbar {
      */
     getMainNavigation() {
         let navigation = `
-            <a href="index.html#features" class="nav-link" data-translate="nav_features" onclick="navigateToSection('features')">功能</a>
-            <a href="index.html#pricing" class="nav-link" data-translate="nav_pricing" onclick="navigateToSection('pricing')">價格</a>
+            <a href="index.html#features" class="nav-link desktop-only-link" data-translate="nav_features" onclick="navigateToSection('features')">功能</a>
+            <a href="index.html#pricing" class="nav-link desktop-only-link" data-translate="nav_pricing" onclick="navigateToSection('pricing')">價格</a>
         `;
         
         // Dashboard 按鈕 - 前往Team Project視圖
         navigation += `
-            <a href="dashboard.html" class="nav-link" data-translate="nav_dashboard">儀表板</a>
+            <a href="dashboard.html" class="nav-link desktop-only-link" data-translate="nav_dashboard">儀表板</a>
         `;
         
         return navigation;

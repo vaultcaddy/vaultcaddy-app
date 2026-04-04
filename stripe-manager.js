@@ -34,7 +34,7 @@ window.StripeManager = {
         subscriptions: {
             // 月費方案：無限 Credits
             monthly: {
-                productId: 'prod_TSmKnHeaQVxZXC',  // VaultCaddy Monthly
+                productId: 'prod_UFBOv0VPfnG0qz',  // VaultCaddy Monthly
                 credits: 99999, // 代表無限
                 monthly_credits: 99999,
                 period: 'monthly',
@@ -53,7 +53,7 @@ window.StripeManager = {
             },
             // 年費方案：無限 Credits
             yearly: {
-                productId: 'prod_TSsEWI5bv9pSkz',  // VaultCaddy Yearly
+                productId: 'prod_UFlaAAvEfrp7eM',  // VaultCaddy Yearly
                 credits: 99999,
                 monthly_credits: 99999,
                 period: 'yearly',
@@ -69,7 +69,7 @@ window.StripeManager = {
                         symbol: 'HK$'
                     }
                 },
-                paymentLink: 'https://buy.stripe.com/dRmaEU6vC2WM4OQ28a' // 💰 真實 Stripe Payment Link (年費)
+                paymentLink: 'https://buy.stripe.com/8x26oIga87902GWbwCf7i0d' // 💰 真實 Stripe Payment Link (年費)
             },
             
             // 舊方案（保留兼容性）

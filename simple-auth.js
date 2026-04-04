@@ -223,8 +223,8 @@ class SimpleAuth {
                     email: normalizedEmail,
                     displayName: user.displayName || '',
                     company: '',
-                    credits: 20,
-                    currentCredits: 20,
+                    credits: 30,
+                    currentCredits: 30,
                     emailVerified: user.emailVerified,
                     planType: 'Free Plan',
                     photoURL: user.photoURL || '',
@@ -255,11 +255,11 @@ class SimpleAuth {
                     const historyRef = userRef.collection('creditsHistory').doc();
                     await historyRef.set({
                         type: 'bonus',
-                        amount: 20,
+                        amount: 30,
                         reason: 'registration_bonus',
                         description: 'Google 註冊獎勵',
                         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                        balanceAfter: 20
+                        balanceAfter: 30
                     });
                 } catch (historyError) {
                     console.error('⚠️ 添加 Credits 歷史記錄失敗:', historyError);
@@ -317,10 +317,10 @@ class SimpleAuth {
                         email: normalizedEmail,
                         displayName: result.user.displayName || '',
                         company: '',  // 🏢 Google 登入時公司名稱為空，用戶可後續填寫
-                        credits: 20,  // 🎁 註冊即送 20 個 Credits
-                        currentCredits: 20,  // 🎁 註冊即送 20 個 Credits
-                        emailVerified: result.user.emailVerified,
-                        planType: 'Free Plan',  // 📋 初始為 Free Plan
+                    credits: 30,  // 🎁 註冊即送 30 個 Credits
+                    currentCredits: 30,  // 🎁 註冊即送 30 個 Credits
+                    emailVerified: result.user.emailVerified,
+                    planType: 'Free Plan',  // 📋 初始為 Free Plan
                         photoURL: result.user.photoURL || '',
                         provider: 'google',
                         createdAt: firebase.firestore.FieldValue.serverTimestamp(),

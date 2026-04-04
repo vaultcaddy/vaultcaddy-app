@@ -1545,7 +1545,7 @@
                         </div>
                         
                         <!-- CTA 按鈕 -->
-                        <button onclick="createCheckoutSession('monthly', event)" data-i18n="pricing.cta" class="cta-btn" style="width: 100%; padding: 1rem; font-size: 1rem; font-weight: 600; background: #8b5cf6; color: white; border: none; border-radius: 8px; cursor: pointer; display: block; text-align: center; text-decoration: none; transition: background 0.2s;">開始使用</button>
+                        <button onclick="createCheckoutSession('monthly', event)" class="cta-btn" style="width: 100%; padding: 1rem; font-size: 1rem; font-weight: 600; background: #8b5cf6; color: white; border: none; border-radius: 8px; cursor: pointer; display: block; text-align: center; text-decoration: none; transition: background 0.2s;">月付 HK$78</button>
                     </div>
 
                     <!-- 年付方案 -->
@@ -1575,7 +1575,7 @@
                         </div>
                         
                         <!-- CTA 按鈕 -->
-                        <button onclick="createCheckoutSession('yearly', event)" data-i18n="pricing.cta" class="cta-btn" style="width: 100%; padding: 1rem; font-size: 1rem; font-weight: 600; background: #8b5cf6; color: white; border: none; border-radius: 8px; cursor: pointer; display: block; text-align: center; text-decoration: none; transition: background 0.2s;">開始使用</button>
+                        <button onclick="createCheckoutSession('yearly', event)" class="cta-btn" style="width: 100%; padding: 1rem; font-size: 1rem; font-weight: 600; background: #8b5cf6; color: white; border: none; border-radius: 8px; cursor: pointer; display: block; text-align: center; text-decoration: none; transition: background 0.2s;">年付 HK$780</button>
                     </div>
                 </div>
             </div>
@@ -2036,7 +2036,7 @@
          * @param {boolean} isTest - 是否為測試模式（可選，默認 false）
          */
         async function createCheckoutSession(planType, event, isTest = false) {
-            logger.log(`🛒 創建 ${planType} 訂閱...`, { isTest });
+            logger.log(`🛒 跳轉至 ${planType} 訂閱付款頁面...`);
             
             // 檢查用戶是否登錄
             if (!window.simpleAuth || !window.simpleAuth.isLoggedIn()) {
@@ -2045,72 +2045,37 @@
                 return;
             }
             
-            // 獲取按鈕元素（在 try 外定義，避免作用域問題）
             const button = event?.target || event?.currentTarget;
             const originalText = button?.textContent || '開始使用';
             
             try {
-                // 顯示加載狀態
                 if (button) {
                     button.disabled = true;
                     button.textContent = '正在跳轉到支付頁面...';
                     button.style.opacity = '0.6';
                 }
                 
-                // 獲取當前用戶
                 const currentUser = window.simpleAuth.getCurrentUser();
                 const userEmail = currentUser.email;
                 const userId = currentUser.uid;
                 
-                logger.log(`👤 用戶信息:`, { userEmail, userId });
-                
-                // 調用 Firebase Function 創建 Checkout Session
-                const createSession = firebase.functions().httpsCallable('createStripeCheckoutSession');
-                
-                logger.log(`📞 調用 Firebase Function...`, { planType, userId, email: userEmail, isTest });
-                const result = await createSession({
-                    planType: planType,
-                    userId: userId,
-                    email: userEmail,
-                    isTest: isTest  // 🧪 傳遞測試模式標記
-                });
-                
-                logger.log(`✅ Checkout Session 創建成功:`, result.data);
-                
-                // 跳轉到 Stripe Checkout
-                if (result.data && result.data.url) {
-                    window.location.href = result.data.url;
+                // 直接使用 Stripe Payment Links (HKD 20,000 MRR 戰略)
+                if (planType === 'monthly') {
+                    window.location.href = `https://buy.stripe.com/dRmeVecXW9h8a9o0RYf7i0c?client_reference_id=${userId}&prefilled_email=${encodeURIComponent(userEmail)}`;
+                } else if (planType === 'yearly') {
+                    window.location.href = `https://buy.stripe.com/8x26oIga87902GWbwCf7i0d?client_reference_id=${userId}&prefilled_email=${encodeURIComponent(userEmail)}`;
                 } else {
-                    throw new Error('未收到支付頁面 URL');
+                    throw new Error('未知的訂閱方案');
                 }
                 
             } catch (error) {
-                console.error('❌ 創建支付會話失敗:', error);
-                console.error('錯誤詳情:', error.code, error.message);
-                
-                // 恢復按鈕狀態
+                console.error('❌ 跳轉支付頁面失敗:', error);
                 if (button) {
                     button.disabled = false;
                     button.textContent = originalText;
                     button.style.opacity = '1';
                 }
-                
-                // 顯示友好的錯誤信息
-                let errorMsg = '創建支付會話失敗，請重試或聯繫客服';
-                
-                if (error.code === 'functions/unauthenticated') {
-                    errorMsg = '請先登錄';
-                    alert(errorMsg);
-                    window.location.href = 'auth.html';
-                } else if (error.code === 'functions/not-found') {
-                    errorMsg = '訂閱計劃配置錯誤，請聯繫客服';
-                    alert(errorMsg);
-                } else if (error.message) {
-                    errorMsg = `創建支付會話失敗: ${error.message}`;
-                    alert(errorMsg);
-                } else {
-                    alert(errorMsg);
-                }
+                alert('跳轉支付頁面失敗，請重試');
             }
         }
         

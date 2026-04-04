@@ -152,13 +152,13 @@ exports.qwenProxy = functions
  */
 const PRICE_IDS = {
     monthly: {
-        hkd: 'price_1SuruFJmiQ31C0GTdJxUaknj',  // HKD $38/月
+        hkd: 'price_1SuruFJmiQ31C0GTdJxUaknj',  // 舊 HKD $38/月 (保留供舊用戶)
         usd: 'price_1SuruGJmiQ31C0GThdoiTbTM',  // USD $4.88/月
         jpy: 'price_1SuruGJmiQ31C0GTGQVpiEuP',  // JPY ¥788/月
         krw: 'price_1SuruGJmiQ31C0GTpBz3jbMo'   // KRW ₩6,988/月
     },
     yearly: {
-        hkd: 'price_1SuruEJmiQ31C0GTWqMAZeuM',  // HKD $336/年 ($28/月)
+        hkd: 'price_1SuruEJmiQ31C0GTWqMAZeuM',  // 舊 HKD $336/年 (保留供舊用戶)
         usd: 'price_1SuruEJmiQ31C0GTBVhLSAtA',  // USD $42.96/年 ($3.58/月)
         jpy: 'price_1SuruEJmiQ31C0GTde3o97rx',  // JPY ¥7056/年 (¥588/月)
         krw: 'price_1SuruFJmiQ31C0GTUL0Yxltm'   // KRW ₩62,256/年 (₩5,188/月)
@@ -582,24 +582,32 @@ exports.stripeWebhook = functions
  */
 async function handleCheckoutCompleted(session) {
     const userId = session.metadata?.userId || session.client_reference_id;
-    const planType = session.metadata?.planType;
-    const currency = session.metadata?.currency;
-
+    
     if (!userId) {
         console.error('⚠️ Checkout session 沒有 userId');
         return;
     }
 
-    console.log(`💳 訂閱成功: userId=${userId}, planType=${planType}`);
-
     const subscriptionId = session.subscription;
-    
-    // 獲取訂閱詳情
     const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    
+    const price = subscription.items.data[0].price;
+    const amount = price.unit_amount; // e.g., 7800 for HKD 78
+    const currency = price.currency; // e.g., 'hkd'
+    
+    let planType = session.metadata?.planType;
+    if (!planType) {
+        // 從金額推斷方案類型 (HKD 20,000 MRR 戰略)
+        if (amount === 7800) planType = 'monthly';
+        else if (amount === 78000) planType = 'yearly';
+        else planType = 'monthly'; // 默認回退
+    }
 
-    // 計算 Credits
-    const credits = planType === 'yearly' ? 1200 : 100;
-    const monthlyCredits = 100;
+    console.log(`💳 訂閱成功: userId=${userId}, planType=${planType}, amount=${amount}`);
+
+    // 新的無限量方案
+    const credits = 99999; // 無限量
+    const monthlyCredits = 99999;
 
     // 更新 Firestore
     const db = admin.firestore();
@@ -607,7 +615,7 @@ async function handleCheckoutCompleted(session) {
         subscription: {
             stripeSubscriptionId: subscriptionId,
             stripeCustomerId: session.customer,
-            stripePriceId: subscription.items.data[0].price.id,
+            stripePriceId: price.id,
             planType: planType,
             currency: currency,
             monthlyCredits: monthlyCredits,
@@ -615,8 +623,8 @@ async function handleCheckoutCompleted(session) {
             currentPeriodEnd: new Date(subscription.current_period_end * 1000),
             status: 'active'
         },
-        credits: admin.firestore.FieldValue.increment(credits),
-        planType: 'Pro Plan',
+        credits: credits, // 直接設置為無限量
+        planType: 'Pro Unlimited',
         usageThisPeriod: {
             totalPages: 0,
             overagePages: 0
@@ -624,7 +632,7 @@ async function handleCheckoutCompleted(session) {
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
 
-    console.log(`✅ 用戶訂閱數據已更新: +${credits} Credits`);
+    console.log(`✅ 用戶訂閱數據已更新為無限量 (Pro Unlimited)`);
 }
 
 /**
@@ -713,81 +721,29 @@ async function handleInvoicePaymentSucceeded(invoice) {
 
     console.log(`💰 續費成功: userId=${userId}, planType=${planType}, billingReason=${billingReason}`);
 
-    // 根據計劃類型處理
-    if (planType === 'monthly') {
-        // 🔄 月付：每月重置 Credits 為 100
-        const creditsToAdd = 100;
+    // 根據計劃類型處理 (HKD 20,000 MRR 戰略 - 無限量方案)
+    // 🔄 統一重置 Credits 為無限量
+    const creditsToAdd = 99999;
 
-        await db.collection('users').doc(userId).update({
-            credits: creditsToAdd,
-            'usageThisPeriod.totalPages': 0,
-            'usageThisPeriod.overagePages': 0,
-            'subscription.currentPeriodStart': new Date(subscription.current_period_start * 1000),
-            'subscription.currentPeriodEnd': new Date(subscription.current_period_end * 1000),
-            updatedAt: admin.firestore.FieldValue.serverTimestamp()
-        });
+    await db.collection('users').doc(userId).update({
+        credits: creditsToAdd,
+        'usageThisPeriod.totalPages': 0,
+        'usageThisPeriod.overagePages': 0,
+        'subscription.currentPeriodStart': new Date(subscription.current_period_start * 1000),
+        'subscription.currentPeriodEnd': new Date(subscription.current_period_end * 1000),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
 
-        // 記錄歷史
-        await db.collection('users').doc(userId).collection('creditsHistory').add({
-            type: 'renewal',
-            amount: creditsToAdd,
-            reason: 'monthly_renewal',
-            description: `月付續費，重置 Credits 為 ${creditsToAdd}`,
-            createdAt: admin.firestore.FieldValue.serverTimestamp()
-        });
+    // 記錄歷史
+    await db.collection('users').doc(userId).collection('creditsHistory').add({
+        type: 'renewal',
+        amount: creditsToAdd,
+        reason: 'subscription_renewal',
+        description: `續費成功，重置 Credits 為無限量`,
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
+    });
 
-        console.log(`✅ 月付續費: Credits 已重置為 ${creditsToAdd}`);
-
-    } else if (isYearlyRenewal) {
-        // 🔄 年付 - 年度續費：重置 Credits 為 1200
-        const creditsToAdd = 1200;
-
-        await db.collection('users').doc(userId).update({
-            credits: creditsToAdd,
-            'usageThisPeriod.totalPages': 0,
-            'usageThisPeriod.overagePages': 0,
-            'subscription.currentPeriodStart': new Date(subscription.current_period_start * 1000),
-            'subscription.currentPeriodEnd': new Date(subscription.current_period_end * 1000),
-            updatedAt: admin.firestore.FieldValue.serverTimestamp()
-        });
-
-        // 記錄歷史
-        await db.collection('users').doc(userId).collection('creditsHistory').add({
-            type: 'renewal',
-            amount: creditsToAdd,
-            reason: 'yearly_renewal',
-            description: `年付續費，重置 Credits 為 ${creditsToAdd}`,
-            createdAt: admin.firestore.FieldValue.serverTimestamp()
-        });
-
-        console.log(`✅ 年付續費: Credits 已重置為 ${creditsToAdd}`);
-
-    } else if (isMonthlyOverage) {
-        // 💰 年付 - 月度超額：僅清除超額統計，不重置 Credits
-        const currentCredits = userData.credits || 0;
-
-        await db.collection('users').doc(userId).update({
-            // ⚠️ 不重置 Credits！保持當前值（可能是負數）
-            'usageThisPeriod.totalPages': 0,
-            'usageThisPeriod.overagePages': 0,
-            updatedAt: admin.firestore.FieldValue.serverTimestamp()
-        });
-
-        // 記錄歷史
-        await db.collection('users').doc(userId).collection('creditsHistory').add({
-            type: 'overage_billing',
-            amount: 0,  // 不改變 Credits
-            reason: 'monthly_overage_billing',
-            description: `年付月度超額計費，Credits 保持為 ${currentCredits}`,
-            metadata: {
-                invoiceId: invoice.id,
-                overageAmount: invoice.amount_due / 100  // Stripe 金額單位為分
-            },
-            createdAt: admin.firestore.FieldValue.serverTimestamp()
-        });
-
-        console.log(`✅ 年付月度超額計費: Credits 保持為 ${currentCredits}`);
-    }
+    console.log(`✅ 續費成功: Credits 已重置為無限量`);
 }
 
 /**

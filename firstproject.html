@@ -2176,7 +2176,7 @@
 </button>
 </div>
 <!-- 桌面版操作按鈕 -->
-<div id="action-buttons-container-desktop" style="display: flex; gap: 1rem; align-items: center;">
+<div id="action-buttons-container-desktop" class="desktop-only" style="display: flex; gap: 1rem; align-items: center;">
 <button id="upload-btn-desktop" onclick="openUploadModal()" style="background: #4F46E5; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 600; box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2);">
 <i class="fas fa-plus"></i>
 <span>新增單據</span>
@@ -2237,7 +2237,7 @@
 </style>
 
 <!-- 手機版操作按鈕（獨立一行） -->
-<div id="action-buttons-container-mobile" style="display: none; gap: 0.125rem; flex-wrap: nowrap; margin-bottom: 0;">
+<div id="action-buttons-container-mobile" class="mobile-only" style="display: flex; gap: 0.125rem; flex-wrap: nowrap; margin-bottom: 0;">
 <button id="upload-btn-mobile" onclick="openUploadModal()" style="background: #4F46E5; color: white; border: none; padding: 0 0.25rem; border-radius: 6px; display: flex; align-items: center; gap: 0.125rem; cursor: pointer; font-weight: 600; flex: 1; min-width: 0; justify-content: center; box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2); font-size: 0.75rem; white-space: nowrap; min-height: 20px;">
 <i class="fas fa-plus"></i>
 <span>新增單據</span>
@@ -3249,7 +3249,39 @@
         }
         
         // ==================== 上傳模態框 ====================
-        window.openUploadModal = function() {
+        window.openUploadModal = async function() {
+            logger.log('🎯 準備打開上傳模態框...');
+            
+            // 檢查用戶是否登錄
+            if (!window.simpleAuth || !window.simpleAuth.isLoggedIn()) {
+                alert('請先登錄');
+                window.location.href = 'auth.html';
+                return;
+            }
+            
+            try {
+                // 檢查用戶 Credits 和 Plan
+                const currentUser = window.simpleAuth.getCurrentUser();
+                const db = firebase.firestore();
+                const userDoc = await db.collection('users').doc(currentUser.uid).get();
+                
+                if (userDoc.exists) {
+                    const userData = userDoc.data();
+                    const credits = userData.credits || 0;
+                    const planType = userData.planType || 'Free Plan';
+                    
+                    // Paywall 邏輯：如果免費方案且額度 <= 5，強制彈出升級提示
+                    if (planType === 'Free Plan' && credits <= 5) {
+                        logger.log('⚠️ 觸發 Paywall：免費額度即將耗盡');
+                        showPaywallModal(credits);
+                        return; // 阻止打開上傳模態框
+                    }
+                }
+            } catch (error) {
+                console.error('❌ 檢查用戶額度失敗:', error);
+                // 發生錯誤時，為了不影響用戶體驗，仍允許打開上傳模態框
+            }
+            
             logger.log('🎯 打開上傳模態框');
             const modal = document.getElementById('aiUploadModal');
             if (modal) {
@@ -3260,6 +3292,61 @@
             } else {
                 console.error('❌ 找不到上傳模態框');
             }
+        };
+        
+        // 顯示 Paywall 模態框
+        window.showPaywallModal = function(remainingCredits) {
+            let paywallModal = document.getElementById('paywallModal');
+            
+            if (!paywallModal) {
+                // 動態創建 Paywall 模態框
+                paywallModal = document.createElement('div');
+                paywallModal.id = 'paywallModal';
+                paywallModal.style.cssText = 'display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 100000; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px);';
+                
+                paywallModal.innerHTML = `
+                    <div style="background: white; border-radius: 16px; width: 90%; max-width: 450px; padding: 2rem; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); position: relative; animation: slideUp 0.3s ease-out;">
+                        <button onclick="document.getElementById('paywallModal').style.display='none'" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.5rem; color: #9CA3AF; cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='#4B5563'" onmouseout="this.style.color='#9CA3AF'"><i class="fas fa-times"></i></button>
+                        
+                        <div style="width: 64px; height: 64px; background: #FEF3C7; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                            <i class="fas fa-crown" style="font-size: 2rem; color: #D97706;"></i>
+                        </div>
+                        
+                        <h2 style="font-size: 1.5rem; font-weight: 700; color: #1F2937; margin-bottom: 0.5rem;">免費額度即將耗盡！</h2>
+                        <p style="color: #4B5563; margin-bottom: 1.5rem; font-size: 1rem;">您只剩下 <strong style="color: #EF4444; font-size: 1.1rem;" id="paywall-credits-count">0</strong> 張免費上傳額度。升級至無限量方案，讓 AI 繼續為您節省理帳時間！</p>
+                        
+                        <div style="background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem; text-align: left;">
+                            <ul style="list-style: none; padding: 0; margin: 0;">
+                                <li style="margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;"><i class="fas fa-check-circle" style="color: #10B981;"></i> <span style="color: #374151; font-weight: 500;">無限量單據上傳</span></li>
+                                <li style="margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;"><i class="fas fa-check-circle" style="color: #10B981;"></i> <span style="color: #374151; font-weight: 500;">店員專屬拍照連結</span></li>
+                                <li style="display: flex; align-items: center; gap: 0.5rem;"><i class="fas fa-check-circle" style="color: #10B981;"></i> <span style="color: #374151; font-weight: 500;">會計師專用 Excel 匯出</span></li>
+                            </ul>
+                        </div>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            <button onclick="window.location.href='billing.html'" style="background: #4F46E5; color: white; border: none; padding: 1rem; border-radius: 8px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: background 0.2s; box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2);" onmouseover="this.style.background='#4338CA'" onmouseout="this.style.background='#4F46E5'">
+                                立即升級 (HK$78/月)
+                            </button>
+                            <button onclick="document.getElementById('paywallModal').style.display='none'; document.getElementById('aiUploadModal').style.display='flex'; initializeAIUpload();" style="background: transparent; color: #6B7280; border: none; padding: 0.75rem; font-weight: 500; cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#6B7280'">
+                                先用完剩下的額度
+                            </button>
+                        </div>
+                    </div>
+                    <style>
+                        @keyframes slideUp {
+                            from { transform: translateY(20px); opacity: 0; }
+                            to { transform: translateY(0); opacity: 1; }
+                        }
+                    </style>
+                `;
+                document.body.appendChild(paywallModal);
+            }
+            
+            // 更新剩餘額度顯示
+            const countEl = document.getElementById('paywall-credits-count');
+            if (countEl) countEl.textContent = remainingCredits;
+            
+            paywallModal.style.display = 'flex';
         };
         
         window.closeAIUploadModal = function() {
@@ -5405,7 +5492,7 @@
     <!-- Google Analytics 事件跟踪 -->
     <script src="/ga-event-tracking.js"></script>
 <!-- Mobile FAB -->
-<div class="mobile-fab" onclick="openUploadModal()">
+<div class="mobile-fab" onclick="openUploadModal()" style="display: none !important;">
 <i class="fas fa-plus"></i>
 </div>
 </body>
