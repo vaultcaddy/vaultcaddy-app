@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VaultCaddy - 員工收據上傳 (Safe-Entry)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- 引入現有 Firebase 配置 (從備份中借用) -->
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-functions-compat.js"></script>
+    <!-- 假設根目錄有 firebase-config.js -->
+    <script defer src="../firebase-config.js"></script>
+
+    <style>
+        :root {
+            --primary: #10B981;
+            --primary-dark: #059669;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: var(--primary);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .container {
+            flex: 1;
+            padding: 1rem;
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Upload Area */
+        .upload-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 2rem 1rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 1rem;
+            border: 2px dashed #d1d5db;
+            transition: all 0.3s ease;
+        }
+
+        .upload-card.dragover {
+            border-color: var(--primary);
+            background: #ecfdf5;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .upload-text {
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-subtext {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn:active {
+            background: var(--primary-dark);
+            transform: scale(0.98);
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        /* Result Area (Hidden by default) */
+        .result-card {
+            display: none;
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .preview-img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border: 1px solid #e5e7eb;
+        }
+
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .data-row:last-child {
+            border-bottom: none;
+        }
+
+        .data-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .data-value {
+            font-weight: 600;
+            color: var(--text-main);
+            text-align: right;
+        }
+
+        .tax-tag {
+            display: inline-block;
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-main);
+            border: 1px solid #d1d5db;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .success-message {
+            display: none;
+            text-align: center;
+            padding: 3rem 1rem;
+        }
+
+        .success-icon {
+            font-size: 4rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1><i class="fas fa-receipt"></i> VaultCaddy 員工上傳</h1>
+    </div>
+
+    <div class="container">
+        <!-- Step 1: Upload -->
+        <div class="upload-card" id="uploadSection">
+            <i class="fas fa-camera upload-icon"></i>
+            <h2 class="upload-text">拍攝或上傳收據</h2>
+            <p class="upload-subtext">AI 將自動提取金額並分類 (支援的士單、手寫單)</p>
+            
+            <input type="file" id="fileInput" accept="image/*" capture="environment">
+            <button class="btn" onclick="document.getElementById('fileInput').click()">
+                <i class="fas fa-camera"></i> 開啟相機 / 相簿
+            </button>
+        </div>
+
+        <!-- Step 2: Verification -->
+        <div class="result-card" id="resultSection">
+            <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">AI 提取結果核對</h3>
+            <img id="previewImage" class="preview-img" src="" alt="Receipt Preview">
+            
+            <div class="data-row">
+                <span class="data-label">商戶名稱</span>
+                <span class="data-value" id="valMerchant">--</span>
+            </div>
+            <div class="data-row">
+                <span class="data-label">日期</span>
+                <span class="data-value" id="valDate">--</span>
+            </div>
+            <div class="data-row">
+                <span class="data-label">總金額</span>
+                <span class="data-value" style="color: var(--primary); font-size: 1.2rem;" id="valAmount">--</span>
+            </div>
+            <div class="data-row">
+                <span class="data-label">稅務分類 (IRD)</span>
+                <span class="data-value"><span class="tax-tag" id="valCategory">--</span></span>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-outline" onclick="resetUpload()">
+                    <i class="fas fa-redo"></i> 重拍
+                </button>
+                <button class="btn" onclick="submitReceipt()">
+                    <i class="fas fa-paper-plane"></i> 確認提交
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 3: Success -->
+        <div class="success-message" id="successSection">
+            <i class="fas fa-check-circle success-icon"></i>
+            <h2 style="margin-bottom: 0.5rem;">提交成功！</h2>
+            <p style="color: var(--text-muted); margin-bottom: 2rem;">收據已安全傳送至公司後台。<br>基於安全理由，此頁面不會保留任何紀錄。</p>
+            <button class="btn" onclick="resetUpload()">
+                <i class="fas fa-plus"></i> 繼續上傳下一張
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading UI -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <h3 style="color: var(--text-main);">AI 正在辨識收據...</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;">預計需時 3 秒</p>
+    </div>
+
+    <script>
+        // DOM Elements
+        const fileInput = document.getElementById('fileInput');
+        const uploadSection = document.getElementById('uploadSection');
+        const resultSection = document.getElementById('resultSection');
+        const successSection = document.getElementById('successSection');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const previewImage = document.getElementById('previewImage');
+
+        let currentFile = null;
+        let currentExtractedData = null;
+
+        // Handle File Selection
+        fileInput.addEventListener('change', function(e) {
+            if (e.target.files && e.target.files[0]) {
+                currentFile = e.target.files[0];
+                
+                // Show preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                }
+                reader.readAsDataURL(currentFile);
+
+                // Call Real AI Processing
+                processReceiptWithAI(currentFile);
+            }
+        });
+
+        // Convert file to Base64 for Qwen-VL API
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        // Call Firebase Cloud Function (Secure Backend OCR)
+        async function processReceiptWithAI(file) {
+            uploadSection.style.display = 'none';
+            loadingOverlay.style.display = 'flex';
+
+            try {
+                const base64Image = await fileToBase64(file);
+                
+                // 呼叫 Firebase Cloud Function
+                const processReceiptFn = firebase.functions().httpsCallable('processReceipt');
+                const response = await processReceiptFn({ base64Image: base64Image });
+                
+                if (!response.data.success) {
+                    throw new Error('AI Processing failed on backend');
+                }
+
+                currentExtractedData = response.data.data;
+
+                // Update UI
+                document.getElementById('valMerchant').textContent = currentExtractedData.merchantName || '未知商戶';
+                document.getElementById('valDate').textContent = currentExtractedData.date || new Date().toISOString().split('T')[0];
+                document.getElementById('valAmount').textContent = `HK$ ${(currentExtractedData.amount || 0).toFixed(2)}`;
+                document.getElementById('valCategory').textContent = currentExtractedData.categoryLabel || '未分類';
+
+                loadingOverlay.style.display = 'none';
+                resultSection.style.display = 'block';
+            } catch (error) {
+                console.error('Backend AI Processing Error:', error);
+                alert('AI 辨識失敗，請確保圖片清晰或重試。');
+                resetUpload();
+            }
+        }
+
+        // Submit to Firebase (Reusing existing setup)
+        async function submitReceipt() {
+            if (!currentFile || !currentExtractedData) return;
+
+            resultSection.style.display = 'none';
+            loadingOverlay.style.display = 'flex';
+            loadingOverlay.querySelector('h3').textContent = '正在加密上傳...';
+
+            try {
+                // 1. Upload Image to Firebase Hot Storage
+                const storageRef = firebase.storage().ref();
+                const fileName = `receipts_hot/${Date.now()}_${currentFile.name}`;
+                const fileRef = storageRef.child(fileName);
+                await fileRef.put(currentFile);
+                const downloadURL = await fileRef.getDownloadURL();
+
+                // 2. Save Data to Firestore with pending_verification status
+                // 這裡會自動繼承你在 firebase-config.js 中的配置
+                await firebase.firestore().collection('expenses').add({
+                    merchantName: currentExtractedData.merchantName,
+                    date: currentExtractedData.date,
+                    amount: currentExtractedData.amount,
+                    category: currentExtractedData.category,
+                    categoryLabel: currentExtractedData.categoryLabel,
+                    receiptImageUrl: downloadURL,
+                    status: 'pending_verification', // PRD 要求的狀態流轉起點
+                    uploadDate: firebase.firestore.FieldValue.serverTimestamp(),
+                    // employeeId: firebase.auth().currentUser?.uid || 'anonymous',
+                });
+
+                // Clear session data immediately (Stateless Safe-Entry)
+                fileInput.value = '';
+                previewImage.src = '';
+                currentFile = null;
+                currentExtractedData = null;
+                
+                loadingOverlay.style.display = 'none';
+                successSection.style.display = 'block';
+            } catch (error) {
+                console.error('Upload Error:', error);
+                alert('上傳失敗，請檢查網絡連線。');
+                resetUpload();
+            }
+        }
+
+        // Reset UI for next upload
+        function resetUpload() {
+            fileInput.value = '';
+            resultSection.style.display = 'none';
+            successSection.style.display = 'none';
+            uploadSection.style.display = 'block';
+            loadingOverlay.querySelector('h3').textContent = 'AI 正在辨識收據...';
+        }
+    </script>
+</body>
+</html>

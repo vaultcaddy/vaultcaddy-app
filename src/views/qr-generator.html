@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VaultCaddy - 員工專屬 QR Code 海報</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- 引入 QRCode.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        :root {
+            --primary: #10B981;
+            --bg-color: #f3f4f6;
+            --text-main: #1f2937;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg-color);
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        /* 控制面板 (列印時隱藏) */
+        .control-panel {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+        
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 0.5rem;
+            transition: transform 0.2s;
+        }
+        .btn:hover { transform: scale(1.05); }
+        .btn-outline { background: white; color: var(--primary); border: 2px solid var(--primary); }
+        
+        /* 海報預覽區 (A4 比例) */
+        .poster-container {
+            background: white;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 40mm 20mm;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            box-sizing: border-box;
+        }
+        
+        .poster-title { font-size: 3rem; font-weight: 800; color: var(--text-main); margin-bottom: 1rem; }
+        .poster-subtitle { font-size: 1.5rem; color: #6b7280; margin-bottom: 3rem; }
+        .qr-wrapper { padding: 2rem; background: white; border: 4px solid var(--primary); border-radius: 24px; margin-bottom: 3rem; }
+        .poster-footer { font-size: 1.25rem; color: var(--primary); font-weight: 600; margin-top: auto; }
+        
+        /* 列印樣式 */
+        @media print {
+            body { background: white; padding: 0; }
+            .control-panel { display: none !important; }
+            .poster-container { box-shadow: none; width: 100%; height: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="control-panel">
+        <h2 style="margin-bottom: 1rem;">店鋪專屬上傳連結</h2>
+        <p style="color: #6b7280; margin-bottom: 1.5rem;" id="linkDisplay">https://vaultcaddy.com/upload/BR12345678</p>
+        
+        <div>
+            <button class="btn btn-outline" onclick="copyLink()">
+                <i class="fas fa-copy"></i> 複製連結 (發給員工)
+            </button>
+            <button class="btn" onclick="window.print()">
+                <i class="fas fa-print"></i> 列印實體海報
+            </button>
+        </div>
+    </div>
+
+    <!-- 實體海報 A4 -->
+    <div class="poster-container">
+        <div style="font-size: 4rem; color: var(--primary); margin-bottom: 1rem;">
+            <i class="fas fa-receipt"></i>
+        </div>
+        <div class="poster-title">員工收據上傳區</div>
+        <div class="poster-subtitle">請掃描下方 QR Code 拍照上傳收據<br>無需下載 App，5 秒完成！</div>
+        
+        <div class="qr-wrapper" id="qrcode"></div>
+        
+        <div style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem;">
+            步驟：掃描 ➔ 拍照 ➔ 提交
+        </div>
+        
+        <div class="poster-footer">
+            Powered by VaultCaddy AI 財稅助手
+        </div>
+    </div>
+
+    <script>
+        // 假設從老闆的 Session 中獲取專屬連結
+        const companyBrNumber = 'BR12345678'; // 替換為實際 BR
+        const uploadLink = `https://vaultcaddy.com/safe-entry.html?br=${companyBrNumber}`;
+        
+        document.getElementById('linkDisplay').textContent = uploadLink;
+
+        // 生成 QR Code
+        new QRCode(document.getElementById("qrcode"), {
+            text: uploadLink,
+            width: 300,
+            height: 300,
+            colorDark : "#1f2937",
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.H
+        });
+
+        // 複製連結功能
+        function copyLink() {
+            navigator.clipboard.writeText(uploadLink).then(() => {
+                alert('連結已複製！您可以直接 WhatsApp 發給員工。');
+            }).catch(err => {
+                console.error('複製失敗:', err);
+            });
+        }
+    </script>
+</body>
+</html>
