@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="alternate icon" type="image/png" href="favicon.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>項目 - VaultCaddy對賬單轉換 | PDF轉Excel/QuickBooks | 98%準確率 | VaultCaddy</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- 核心配置 -->
+    <script src="config.js"></script>
+    <script src="translations.js?v=20251102"></script>
+    
+    <!-- UI 組件 -->
+    <script src="navbar-component.js?v=20251105-force-init"></script>
+    <script src="sidebar-component.js?v=20251105-force-init"></script>
+    
+    <!-- Firebase SDK -->
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    
+    <!-- Firebase 初始化 -->
+    <script defer src="firebase-config.js?v=20251105-force-init"></script>
+    <script defer src="simple-auth.js?v=20251105-force-init"></script>
+    <script defer src="simple-data-manager.js?v=20251105-force-init"></script>
+    
+    <!-- AI 處理器 -->
+    <script src="hybrid-vision-deepseek.js?v=20251104-final"></script>
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #ffffff;
+        }
+        
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+            padding-top: 60px;
+        }
+        
+        .sidebar {
+            width: 280px;
+            border-right: 1px solid #e5e7eb;
+            position: fixed;
+            top: 60px;
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
+            background: #ffffff;
+            padding: 1.5rem;
+        }
+        
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 2rem;
+        }
+        
+        .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .project-title-section h1 {
+            font-size: 2rem;
+            margin: 0;
+            color: #1f2937;
+        }
+        
+        .project-title-section p {
+            color: #6b7280;
+            margin: 0.5rem 0 0 0;
+        }
+        
+        .delete-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .controls-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+        }
+        
+        .upload-btn {
+            background: #8b5cf6;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        .documents-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .documents-table thead {
+            background: #f8fafc;
+        }
+        
+        .documents-table th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .documents-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .documents-table tbody tr:hover {
+            background: #f9fafb;
+        }
+        
+        .document-name {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .document-name i {
+            color: #3b82f6;
+            font-size: 1.25rem;
+        }
+        
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .status-processing {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #6b7280;
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            color: #d1d5db;
+            margin-bottom: 1rem;
+        }
+    </style>
+
+    <meta name="description" content="AI驅動的項目 - VaultCaddy對賬單轉換工具。3秒內將PDF轉為Excel/QuickBooks/Xero，準確率98%。免費試用20頁，無需信用卡。HKD$46/月起，香港500+企業信賴。">
+
+    <link rel="canonical" href="https://vaultcaddy.com/firstproject-simple.html">
+
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "VaultCaddy - 項目 - VaultCaddy Statement Converter",
+  "applicationCategory": "FinanceApplication",
+  "operatingSystem": "Web, iOS, Android",
+  "offers": {
+    "@type": "Offer",
+    "price": "46",
+    "priceCurrency": "HKD",
+    "priceValidUntil": "2026-12-31"
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.8",
+    "ratingCount": "127",
+    "bestRating": "5"
+  },
+  "featureList": [
+    "AI-powered recognition",
+    "Excel/QuickBooks/Xero export",
+    "98% accuracy",
+    "3-second processing",
+    "Batch processing",
+    "Cloud storage"
+  ]
+}
+</script>
+    </head>
+<body>
+    <!-- 導航欄 -->
+    <div id="navbar-placeholder"></div>
+    
+    <!-- Dashboard 容器 -->
+    <div class="dashboard-container">
+        <!-- 左側欄（由 sidebar-component.js 生成）-->
+        <aside class="sidebar"></aside>
+        
+        <!-- 主內容 -->
+        <main class="main-content">
+            <!-- 項目標題 -->
+            <div class="project-header">
+                <div class="project-title-section">
+                    <h1 id="project-name">載入中...</h1>
+                    <p>管理和查看您的文檔</p>
+                </div>
+                <button class="delete-btn" onclick="deleteProject()">
+                    <i class="fas fa-trash"></i>
+                    <span>刪除</span>
+                </button>
+            </div>
+            
+            <!-- 控制欄 -->
+            <div class="controls-bar">
+                <input type="text" placeholder="篩選文檔名稱..." style="padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; width: 300px;">
+                <button class="upload-btn" onclick="openUploadModal()">
+                    <i class="fas fa-upload"></i>
+                    上傳文件
+                </button>
+            </div>
+            
+            <!-- 文檔表格 -->
+            <table class="documents-table">
+                <thead>
+                    <tr>
+                        <th>文檔</th>
+                        <th>上傳日期</th>
+                        <th>狀態</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="documents-tbody">
+                    <tr>
+                        <td colspan="4">
+                            <div class="empty-state">
+                                <i class="fas fa-file-alt"></i>
+                                <h3>沒有文檔</h3>
+                                <p>上傳您的第一個文檔開始使用</p>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </main>
+    </div>
+    
+    <!-- 上傳模態框（簡化版）-->
+    <div id="upload-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+        <div style="background: white; padding: 2rem; border-radius: 12px; max-width: 500px; width: 90%;">
+            <h2>上傳文件</h2>
+            <input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png" multiple style="margin: 1rem 0;">
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <button onclick="closeUploadModal()" style="padding: 0.75rem 1.5rem; border: 1px solid #d1d5db; background: white; border-radius: 6px; cursor: pointer;">取消</button>
+                <button onclick="handleUpload()" style="padding: 0.75rem 1.5rem; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer;">上傳</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // ==================== 全局變量 ====================
+        let currentProjectId = null;
+        let currentProject = null;
+        
+        // ==================== 初始化 ====================
+        window.addEventListener('auth-state-changed', async (e) => {
+            console.log('🔥 收到 auth-state-changed 事件');
+            
+            if (!e.detail.user) {
+                console.log('❌ 用戶未登入');
+                return;
+            }
+            
+            console.log('✅ 用戶已登入:', e.detail.user.email);
+            
+            // 創建側邊欄
+            if (window.VaultCaddySidebar && !window.unifiedSidebar) {
+                console.log('🎨 創建側邊欄');
+                window.unifiedSidebar = new VaultCaddySidebar();
+            }
+            
+            // 載入項目數據
+            await loadProject();
+            await loadDocuments();
+        });
+        
+        // ==================== 載入項目 ====================
+        async function loadProject() {
+            try {
+                // 從 URL 獲取項目 ID
+                const urlParams = new URLSearchParams(window.location.search);
+                currentProjectId = urlParams.get('project');
+                
+                if (!currentProjectId) {
+                    console.error('❌ 沒有項目 ID');
+                    return;
+                }
+                
+                console.log('📂 載入項目:', currentProjectId);
+                
+                // 從 Firebase 獲取項目
+                const projects = await window.simpleDataManager.getProjects();
+                currentProject = projects.find(p => p.id === currentProjectId);
+                
+                if (currentProject) {
+                    document.getElementById('project-name').textContent = currentProject.name;
+                    console.log('✅ 項目名稱:', currentProject.name);
+                } else {
+                    console.error('❌ 找不到項目');
+                    document.getElementById('project-name').textContent = '找不到項目';
+                }
+                
+            } catch (error) {
+                console.error('❌ 載入項目失敗:', error);
+            }
+        }
+        
+        // ==================== 載入文檔 ====================
+        async function loadDocuments() {
+            try {
+                if (!currentProjectId) return;
+                
+                console.log('📄 載入文檔列表');
+                
+                // 從 Firebase 獲取文檔
+                const documents = await window.simpleDataManager.getDocuments(currentProjectId);
+                console.log('✅ 找到', documents.length, '個文檔');
+                
+                const tbody = document.getElementById('documents-tbody');
+                
+                if (documents.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="4">
+                                <div class="empty-state">
+                                    <i class="fas fa-file-alt"></i>
+                                    <h3>沒有文檔</h3>
+                                    <p>上傳您的第一個文檔開始使用</p>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                // 渲染文檔列表
+                tbody.innerHTML = documents.map(doc => {
+                    const isProcessing = doc.status === 'processing';
+                    const canClick = !isProcessing;
+                    const statusClass = isProcessing ? 'status-processing' : 'status-completed';
+                    const statusText = isProcessing ? '處理中' : '已完成';
+                    
+                    return `
+                        <tr ${canClick ? `onclick="viewDocument('${doc.id}')" style="cursor: pointer;"` : ''}>
+                            <td>
+                                <div class="document-name">
+                                    <i class="fas fa-file-pdf"></i>
+                                    <span>${doc.name | doc.fileName | '未命名'}</span>
+                                </div>
+                            </td>
+                            <td>${new Date(doc.createdAt).toLocaleDateString('zh-TW')}</td>
+                            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                            <td>
+                                ${canClick ? `<button onclick="event.stopPropagation(); deleteDocument('${doc.id}')" style="background: none; border: none; color: #ef4444; cursor: pointer;"><i class="fas fa-trash"></i></button>` : '-'}
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+                
+            } catch (error) {
+                console.error('❌ 載入文檔失敗:', error);
+            }
+        }
+        
+        // ==================== 上傳文件 ====================
+        function openUploadModal() {
+            document.getElementById('upload-modal').style.display = 'flex';
+        }
+        
+        function closeUploadModal() {
+            document.getElementById('upload-modal').style.display = 'none';
+            document.getElementById('file-input').value = '';
+        }
+        
+        async function handleUpload() {
+            const fileInput = document.getElementById('file-input');
+            const files = fileInput.files;
+            
+            if (files.length === 0) {
+                alert('請選擇文件');
+                return;
+            }
+            
+            console.log('📤 開始上傳', files.length, '個文件');
+            
+            closeUploadModal();
+            
+            for (let file of files) {
+                await uploadFile(file);
+            }
+            
+            // 重新載入文檔列表
+            await loadDocuments();
+        }
+        
+        async function uploadFile(file) {
+            try {
+                console.log('📤 上傳文件:', file.name);
+                
+                // 1. 創建文檔記錄（狀態：處理中）
+                const docData = {
+                    name: file.name,
+                    fileName: file.name,
+                    fileSize: file.size,
+                    fileType: file.type,
+                    status: 'processing',
+                    createdAt: new Date().toISOString()
+                };
+                
+                const docId = await window.simpleDataManager.createDocument(currentProjectId, docData);
+                console.log('✅ 文檔記錄已創建:', docId);
+                
+                // 2. 後台處理 AI（不阻塞 UI）
+                processFileWithAI(file, docId).catch(err => {
+                    console.error('❌ AI 處理失敗:', err);
+                });
+                
+            } catch (error) {
+                console.error('❌ 上傳失敗:', error);
+                alert('上傳失敗: ' + error.message);
+            }
+        }
+        
+        async function processFileWithAI(file, docId) {
+            try {
+                console.log('🤖 開始 AI 處理:', file.name);
+                
+                // 使用 HybridVisionDeepSeekProcessor
+                if (!window.HybridVisionDeepSeekProcessor) {
+                    throw new Error('AI 處理器未載入');
+                }
+                
+                const processor = new window.HybridVisionDeepSeekProcessor();
+                const result = await processor.processDocument(file, 'bank-statement');
+                
+                console.log('✅ AI 處理完成');
+                
+                // 更新文檔狀態
+                await window.simpleDataManager.updateDocument(currentProjectId, docId, {
+                    status: 'completed',
+                    processedData: result.data | result.extractedData
+                });
+                
+                console.log('✅ 文檔狀態已更新');
+                
+                // 重新載入列表
+                await loadDocuments();
+                
+            } catch (error) {
+                console.error('❌ AI 處理失敗:', error);
+                
+                // 更新為失敗狀態
+                await window.simpleDataManager.updateDocument(currentProjectId, docId, {
+                    status: 'failed',
+                    error: error.message
+                });
+            }
+        }
+        
+        // ==================== 查看文檔 ====================
+        function viewDocument(docId) {
+            window.location.href = `document-detail.html?project=${currentProjectId}&id=${docId}`;
+        }
+        
+        // ==================== 刪除文檔 ====================
+        async function deleteDocument(docId) {
+            if (!confirm('確定要刪除這個文檔嗎？')) return;
+            
+            try {
+                await window.simpleDataManager.deleteDocument(currentProjectId, docId);
+                console.log('✅ 文檔已刪除');
+                await loadDocuments();
+            } catch (error) {
+                console.error('❌ 刪除失敗:', error);
+                alert('刪除失敗: ' + error.message);
+            }
+        }
+        
+        // ==================== 刪除項目 ====================
+        async function deleteProject() {
+            if (!confirm('確定要刪除整個項目嗎？這將刪除所有文檔！')) return;
+            
+            try {
+                await window.simpleDataManager.deleteProject(currentProjectId);
+                console.log('✅ 項目已刪除');
+                window.location.href = 'dashboard.html';
+            } catch (error) {
+                console.error('❌ 刪除失敗:', error);
+                alert('刪除失敗: ' + error.message);
+            }
+        }
+    </script>
+
+    <!-- Google Analytics 事件跟踪 -->
+    <script src="/ga-event-tracking.js"></script>
+</body>
+</html>
+
