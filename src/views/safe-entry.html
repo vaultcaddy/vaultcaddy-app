@@ -327,17 +327,51 @@
             }
         });
 
-        // Convert file to Base64 for Qwen-VL API
+                // Convert file to Base64 for Qwen-VL API (with Compression)
         function fileToBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        
+                        // 限制最大寬高為 1024px (節省 Qwen Token 費用)
+                        const MAX_WIDTH = 1024;
+                        const MAX_HEIGHT = 1024;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > MAX_WIDTH) {
+                                height *= MAX_WIDTH / width;
+                                width = MAX_WIDTH;
+                            }
+                        } else {
+                            if (height > MAX_HEIGHT) {
+                                width *= MAX_HEIGHT / height;
+                                height = MAX_HEIGHT;
+                            }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        // 壓縮為 JPEG，品質 0.7
+                        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                        resolve(compressedBase64);
+                    };
+                    img.onerror = error => reject(error);
+                };
                 reader.onerror = error => reject(error);
             });
         }
 
-        // Call Firebase Cloud Function (Secure Backend OCR)
+                // Call Firebase Cloud Function (Secure Backend OCR)
         async function processReceiptWithAI(file) {
             uploadSection.style.display = 'none';
             loadingOverlay.style.display = 'flex';
@@ -345,9 +379,16 @@
             try {
                 const base64Image = await fileToBase64(file);
                 
+                // 從 URL 獲取 companyId (老闆生成的 QR Code 會帶這個參數)
+                const urlParams = new URLSearchParams(window.location.search);
+                const companyId = urlParams.get('c') || 'demo_company_123'; // 預設給個 demo ID 防呆
+                
                 // 呼叫 Firebase Cloud Function
-                const processReceiptFn = firebase.functions().httpsCallable('processReceipt');
-                const response = await processReceiptFn({ base64Image: base64Image });
+                const processReceiptFn = firebase.functions('asia-east1').httpsCallable('processReceipt');
+                const response = await processReceiptFn({ 
+                    base64Image: base64Image,
+                    companyId: companyId
+                });
                 
                 if (!response.data.success) {
                     throw new Error('AI Processing failed on backend');
@@ -365,12 +406,14 @@
                 resultSection.style.display = 'block';
             } catch (error) {
                 console.error('Backend AI Processing Error:', error);
-                alert('AI 辨識失敗，請確保圖片清晰或重試。');
+                // 顯示後端回傳的具體錯誤 (例如額度耗盡)
+                const errorMsg = error.message || 'AI 辨識失敗，請確保圖片清晰或重試。';
+                alert(errorMsg);
                 resetUpload();
             }
         }
 
-        // Submit to Firebase (Reusing existing setup)
+                // Submit to Firebase (Reusing existing setup)
         async function submitReceipt() {
             if (!currentFile || !currentExtractedData) return;
 
@@ -386,18 +429,22 @@
                 await fileRef.put(currentFile);
                 const downloadURL = await fileRef.getDownloadURL();
 
+                // 從 URL 獲取 companyId
+                const urlParams = new URLSearchParams(window.location.search);
+                const companyId = urlParams.get('c') || 'demo_company_123';
+
                 // 2. Save Data to Firestore with pending_verification status
                 // 這裡會自動繼承你在 firebase-config.js 中的配置
-                await firebase.firestore().collection('expenses').add({
+                await firebase.firestore().collection('documents').add({
+                    companyId: companyId,
                     merchantName: currentExtractedData.merchantName,
                     date: currentExtractedData.date,
-                    amount: currentExtractedData.amount,
-                    category: currentExtractedData.category,
-                    categoryLabel: currentExtractedData.categoryLabel,
-                    receiptImageUrl: downloadURL,
+                    totalAmount: currentExtractedData.amount,
+                    category: currentExtractedData.categoryLabel,
+                    imageUrl: downloadURL,
                     status: 'pending_verification', // PRD 要求的狀態流轉起點
                     uploadDate: firebase.firestore.FieldValue.serverTimestamp(),
-                    // employeeId: firebase.auth().currentUser?.uid || 'anonymous',
+                    source: 'safe-entry'
                 });
 
                 // Clear session data immediately (Stateless Safe-Entry)
