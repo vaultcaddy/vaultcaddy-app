@@ -30,7 +30,7 @@ window.StripeManager = {
             }
         },
         
-        // ✅ 訂閱計劃（2026-03-30 更新 - 專注香港市場）
+        // ✅ 訂閱計劃（2026-04-04 更新 - 專注 VaultCaddyCloud API Gateway）
         subscriptions: {
             // 月費方案：無限 Credits
             monthly: {
@@ -42,11 +42,11 @@ window.StripeManager = {
                 
                 // 價格配置
                 prices: {
-                    hkd: {
+                    usd: {
                         priceId: 'price_REPLACE_WITH_YOUR_MONTHLY_PRICE_ID', // TODO: 替換為實際 Stripe Price ID
-                        amount: 78,  // HKD $78/月
-                        currency: 'HKD',
-                        symbol: 'HK$'
+                        amount: 19,  // USD $19/月
+                        currency: 'USD',
+                        symbol: '$'
                     }
                 },
                 paymentLink: 'https://buy.stripe.com/dRmeVecXW9h8a9o0RYf7i0c' // 💰 真實 Stripe Payment Link (月費)
@@ -61,12 +61,12 @@ window.StripeManager = {
                 
                 // 價格配置
                 prices: {
-                    hkd: {
+                    usd: {
                         priceId: 'price_REPLACE_WITH_YOUR_YEARLY_PRICE_ID', // TODO: 替換為實際 Stripe Price ID
-                        amount: 780,  // HKD $780/年 (相當於 $65/月)
-                        monthlyEquivalent: 65,
-                        currency: 'HKD',
-                        symbol: 'HK$'
+                        amount: 190,  // USD $190/年
+                        monthlyEquivalent: 15.83,
+                        currency: 'USD',
+                        symbol: '$'
                     }
                 },
                 paymentLink: 'https://buy.stripe.com/8x26oIga87902GWbwCf7i0d' // 💰 真實 Stripe Payment Link (年費)
@@ -227,7 +227,7 @@ window.StripeManager = {
             return;
         }
         
-        const priceInfo = plan.prices.hkd;
+        const priceInfo = plan.prices.usd;
         console.log(`訂閱 ${planKey} 計劃，價格 ${priceInfo.symbol}${priceInfo.amount}`);
         
         // 確認訂閱
